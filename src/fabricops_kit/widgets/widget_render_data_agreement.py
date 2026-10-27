@@ -82,7 +82,7 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
     spark = get_spark_session(context=context)
     startup = WidgetStartup("Data Agreement")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
-        config, env, _context = resolve_fabric_context(context=context)
+        config, active_workspace_id, _context = resolve_fabric_context(context=context)
     widgets = require_ipywidgets()
 
     kind = "data_agreement_widget"
@@ -106,7 +106,7 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
 
     with startup.phase("metadata_loading", "Loading configured metadata…"):
         existing_rows = [
-            row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)
+            row for row in list_data_agreements(config, active_workspace_id, spark_session=spark, missing_ok=True) if _row_id(row)
         ]
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
@@ -123,7 +123,7 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
     selected = selected_selector["selector"]
 
     with startup.phase("metadata_loading", "Loading Data Stewards…"):
-        active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+        active_steward_rows = list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=True, missing_ok=True)
     active_steward_ids = {
         steward_id for row in active_steward_rows if (steward_id := str(row.get("steward_id") or "").strip())
     }
@@ -232,13 +232,13 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
             status.value = ""
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
-        rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
+        rows = [row for row in list_data_agreements(config, active_workspace_id, spark_session=spark, missing_ok=True) if _row_id(row)]
         _refresh_lookup(rows)
         selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
 
     def _refresh_steward_dropdowns() -> None:
         nonlocal active_steward_rows, active_steward_ids
-        active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+        active_steward_rows = list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=True, missing_ok=True)
         active_steward_ids = {
             steward_id for row in active_steward_rows if (steward_id := str(row.get("steward_id") or "").strip())
         }
@@ -333,7 +333,7 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
             row = _create_or_update_data_agreement(
                 spark=spark,
                 config=config,
-                env=env,
+                active_workspace_id=active_workspace_id,
                 values=draft,
                 selected_agreement=row_lookup.get(selected.value) if selected.value else None,
                 custom_fields=collect_custom_fields(widget_config, custom),
@@ -605,7 +605,7 @@ def _create_or_update_data_agreement(
     *,
     spark: Any,
     config: Any,
-    env: str,
+    active_workspace_id: str,
     values: dict[str, Any],
     selected_agreement: dict[str, Any] | None = None,
     custom_fields: dict[str, Any] | None = None,
@@ -615,7 +615,7 @@ def _create_or_update_data_agreement(
     active_steward_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     row = {field: values.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
-    existing_rows = list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
+    existing_rows = list_all_data_agreement_rows(config, active_workspace_id, spark_session=spark, missing_ok=True)
     selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
     if selected_id:
         same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
@@ -662,7 +662,7 @@ def _create_or_update_data_agreement(
         raise ValueError("expiry_date must be on or after start_date.")
     if active_steward_ids is None:
         active_steward_ids = {
-            str(item["steward_id"]) for item in list_data_stewards(config, env, spark_session=spark, active_only=True)
+            str(item["steward_id"]) for item in list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=True)
         }
     provider_id = str(row["provider_steward_id"])
     recipient_id = str(row["recipient_steward_id"])
@@ -674,7 +674,7 @@ def _create_or_update_data_agreement(
         raise ValueError("recipient_steward_id must reference an active data steward.")
     steward_names = {
         str(item.get("steward_id") or ""): str(item.get("steward_name") or "")
-        for item in list_data_stewards(config, env, spark_session=spark, active_only=False)
+        for item in list_data_stewards(config, active_workspace_id, spark_session=spark, active_only=False)
     }
     row["provider_steward_name"] = steward_names.get(provider_id, "")
     row["recipient_steward_name"] = steward_names.get(recipient_id, "")
@@ -697,7 +697,7 @@ def _create_or_update_data_agreement(
     row.update(
         build_runtime_audit_fields(
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             committed_by=committed_by,
             committed_at=committed_at,
             runtime_context=runtime_context,
@@ -707,7 +707,7 @@ def _create_or_update_data_agreement(
     write_widget_metadata_row(
         spark=spark,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
         row=row,
     )

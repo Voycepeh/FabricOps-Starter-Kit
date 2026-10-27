@@ -43,7 +43,7 @@ def _definition(row: dict, *, guardrail: bool) -> dict:
     if not guardrail and not str(result.get("enrichment_id") or "").strip():
         result["enrichment_id"] = str(uuid.uuid5(
             uuid.NAMESPACE_URL,
-            _json([row.get("environment_name"), row.get("contract_id"),
+            _json([row.get("workspace_id"), row.get("contract_id"),
                    row.get("enrichment_level"), result["column_id"], row.get("enrichment_type")]),
         ))
     if guardrail:
@@ -74,7 +74,7 @@ def _differences(left: Any, right: Any, prefix: str = "") -> list[tuple[str, Any
 
 
 def _plan_contract_definition_migration(
-    *, contract_rows: Any, enrichment_rows: Any, guardrail_rows: Any, environment_name: str,
+    *, contract_rows: Any, enrichment_rows: Any, guardrail_rows: Any, workspace_id: str,
 ) -> dict[str, Any]:
     """Return proposed draft rows and exact conflicts without performing any IO.
 
@@ -82,10 +82,10 @@ def _plan_contract_definition_migration(
     Existing open drafts are left for Governance to finish or discard first.
     Repeated identical source snapshots are recognized through payload provenance.
     """
-    if not str(environment_name or "").strip():
-        raise ValueError("environment_name is required for definition migration.")
-    report: dict[str, Any] = {"environment_name": environment_name, "drafts": [], "conflicts": [], "already_migrated": []}
-    rows = [row for row in contracts.row_dicts(contract_rows) if row.get("environment_name") == environment_name]
+    if not str(workspace_id or "").strip():
+        raise ValueError("workspace_id is required for definition migration.")
+    report: dict[str, Any] = {"workspace_id": workspace_id, "drafts": [], "conflicts": [], "already_migrated": []}
+    rows = [row for row in contracts.row_dicts(contract_rows) if row.get("workspace_id") == workspace_id]
     indexed: dict[tuple[str, int], dict] = {}
 
     def conflict(identity, version, rule, field, old, new):
@@ -102,10 +102,10 @@ def _plan_contract_definition_migration(
     sources: dict[str, list[tuple[dict, bool]]] = {}
     for values, guardrail in ((enrichment_rows, False), (guardrail_rows, True)):
         for raw in contracts.row_dicts(values):
-            if not str(raw.get("environment_name") or "").strip():
-                conflict(raw.get("contract_id"), raw.get("contract_version"), _key(raw, guardrail=guardrail), "environment_name", environment_name, raw.get("environment_name"))
+            if not str(raw.get("workspace_id") or "").strip():
+                conflict(raw.get("contract_id"), raw.get("contract_version"), _key(raw, guardrail=guardrail), "workspace_id", workspace_id, raw.get("workspace_id"))
                 continue
-            if raw.get("environment_name") != environment_name:
+            if raw.get("workspace_id") != workspace_id:
                 continue
             try:
                 identity, version = contracts.validate_contract_identity(raw.get("contract_id"), raw.get("contract_version"))
@@ -221,7 +221,7 @@ def _plan_contract_definition_migration(
 
 
 def migrate_contract_definitions(
-    *, config: Any, env: str, dry_run: bool = True,
+    *, config: Any, active_workspace_id: str, dry_run: bool = True,
     reviewed_snapshot: str | None = None, authoring_paused: bool = False,
 ) -> dict[str, Any]:
     """Report retired table conflicts or append reviewed new draft versions.
@@ -236,7 +236,7 @@ def migrate_contract_definitions(
     never updates or deletes an existing row and never deletes a physical table.
     """
     spark_session = get_spark_session()
-    context = {"config": config, "env": env, "_fabricops_suppress_io_log": True}
+    context = {"config": config, "scope_workspace_id": active_workspace_id, "_fabricops_suppress_io_log": True}
     schema = metadata_table_physical_schema(config, contracts.DATA_CONTRACT_TABLE)
     snapshots = []
     for name in (contracts.DATA_CONTRACT_TABLE, _LEGACY_ENRICHMENT, _LEGACY_GUARDRAIL):
@@ -250,7 +250,7 @@ def migrate_contract_definitions(
             values = []
         snapshots.append(values)
     report = _plan_contract_definition_migration(
-        contract_rows=snapshots[0], enrichment_rows=snapshots[1], guardrail_rows=snapshots[2], environment_name=env,
+        contract_rows=snapshots[0], enrichment_rows=snapshots[1], guardrail_rows=snapshots[2], workspace_id=active_workspace_id,
     )
     report["applied"] = False
     if dry_run:
@@ -264,7 +264,7 @@ def migrate_contract_definitions(
     if reviewed_snapshot != report["snapshot_fingerprint"]:
         raise ValueError("Migration snapshot changed since dry-run; review a new report before applying.")
     if report["drafts"]:
-        audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+        audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
         rows = [coerce_metadata_row_types(contracts.DATA_CONTRACT_TABLE, {**row, **audit}) for row in report["drafts"]]
         frame = spark_session.createDataFrame(rows, schema=metadata_table_schema_registry()[contracts.DATA_CONTRACT_TABLE])
         write_lakehouse_table(frame, contracts.DATA_CONTRACT_TABLE, store="Metadata", schema=schema, context=context, mode="append")

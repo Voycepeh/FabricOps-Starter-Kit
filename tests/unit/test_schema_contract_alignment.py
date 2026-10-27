@@ -28,8 +28,8 @@ def frozen_contract(required):
             "table_id": "orders", "table_name": "orders",
             "processing": {"load_strategy": "overwrite"},
             "columns": [
-                {"column_id": "col-id", "column_name": "id", "data_type": "bigint"},
-                {"column_id": "col-note", "column_name": "note", "data_type": "string"},
+                {"column_id": "col-id", "column_name": "id", "data_type": "bigint", "presence": "required" if required else "optional"},
+                {"column_id": "col-note", "column_name": "note", "data_type": "string", "presence": "optional"},
             ],
         },
         "enrichment": {"table": [], "columns": []},
@@ -43,7 +43,7 @@ def frozen_contract(required):
     }
     return {
         "contract_id": "contract-orders", "contract_version": 1,
-        "table_id": "orders", "environment_name": "dev", "status": "frozen",
+        "table_id": "orders", "workspace_id": "dev", "status": "frozen",
         "contract_payload_json": json.dumps(payload),
     }
 
@@ -71,17 +71,17 @@ def schema_frame(dtypes):
 )
 def test_adapter_and_evaluator(dtypes, required, missing, mismatches, unexpected, identifier):
     contract = frozen_contract([identifier] if required else [])
-    rows = shared.contract_guardrail_rows(contract, environment_name="dev", table_id="orders")
+    rows = shared.contract_guardrail_rows(contract, workspace_id="dev", table_id="orders")
     params = json.loads(rows[0]["rule_parameters_json"])
     assert params["required_columns"] == (["id"] if required else [])
     assert params["data_types"] == {"id": "bigint", "note": "string"}
 
     result = shared.schema_check_core(
-        schema_frame(dtypes), rules_df=rows, table_id="orders", environment_name="dev",
+        schema_frame(dtypes), rules_df=rows, table_id="orders", workspace_id="dev",
     )
 
-    violation = bool(missing or mismatches)
-    status = "failed" if violation else "warning" if unexpected else "passed"
+    violation = bool(missing or mismatches or unexpected)
+    status = "failed" if violation else "passed"
     assert result["status"] == status
     assert result["can_continue"] is (status != "failed")
     assert result["missing_columns"] == missing
@@ -93,11 +93,11 @@ def test_adapter_and_evaluator(dtypes, required, missing, mismatches, unexpected
 
 def test_required_is_presence_even_with_null_values():
     rows = shared.contract_guardrail_rows(
-        frozen_contract(["col-id"]), environment_name="dev", table_id="orders",
+        frozen_contract(["col-id"]), workspace_id="dev", table_id="orders",
     )
     result = shared.schema_check_core(
         pd.DataFrame({"id": pd.Series([None], dtype="Int64")}),
-        rules_df=rows, table_id="orders", environment_name="dev",
+        rules_df=rows, table_id="orders", workspace_id="dev",
     )
     assert result["status"] == "passed"
     assert result["can_continue"] is True
@@ -117,7 +117,7 @@ def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     config = framework_config()
     monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *_a, **_k: [spark.createDataFrame.call_args.args[0][0]])
     saved = contracts.save_contract_draft(
-        draft=draft, payload=payload, config=config, env="dev", spark_session=spark,
+        draft=draft, payload=payload, config=config, active_workspace_id="dev", spark_session=spark,
     )
     delta.forPath.return_value.alias.return_value.merge.return_value.whenMatchedUpdateAll.return_value.execute.assert_called_once()
     written = spark.createDataFrame.call_args.args[0][0]
@@ -126,8 +126,8 @@ def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *_a, **_k: RecordingFrame([frozen]))
     resolved = shared.resolve_data_contract_version(config, "dev", "orders", "contract-orders", 1)
     assert resolved["contract_payload"]["guardrails"][0]["rule_parameters"] == {"required_columns": required}
-    rows = shared.contract_guardrail_rows(resolved, environment_name="dev", table_id="orders")
-    result = shared.schema_check_core(schema_frame([]), rules_df=rows, table_id="orders", environment_name="dev")
+    rows = shared.contract_guardrail_rows(resolved, workspace_id="dev", table_id="orders")
+    result = shared.schema_check_core(schema_frame([]), rules_df=rows, table_id="orders", workspace_id="dev")
     assert result["missing_columns"] == (["id"] if required else [])
     assert result["status"] == ("failed" if required else "passed")
 
@@ -143,9 +143,9 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     # The current Catalogue has drifted to string; the frozen contract remains bigint.
     catalogue = [
         {"table_id": "orders", "table_name": "orders", "metadata_level": "table",
-         "environment_name": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo"},
+         "workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo"},
         {"table_id": "orders", "column_id": "col-id", "column_name": "id",
-         "metadata_level": "column", "environment_name": "dev", "data_type": "string"},
+         "metadata_level": "column", "workspace_id": "dev", "data_type": "string"},
     ]
     monkeypatch.setattr(
         shared, "read_lakehouse_table",
@@ -162,7 +162,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
         "datatype": [("id", "string")],
         "additional": [("id", "bigint"), ("extra", "string")],
     }[difference])
-    blocking = difference in {"missing", "datatype"}
+    blocking = difference in {"missing", "datatype", "additional"}
     arguments = dict(dataframe=dataframe, table_id="orders", verbose=False)
     monkeypatch.setattr(module, "get_spark_session", lambda **kwargs: spark)
     result = module.check_schema(**arguments)
@@ -171,7 +171,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     persisted = frame.rows[0]
     assert table == "METADATA_GUARDRAIL_RESULTS"
     assert routing["store"] == "Metadata"
-    expected_status = "failed" if blocking else "warning" if difference == "additional" else "passed"
+    expected_status = "failed" if blocking else "failed" if difference == "additional" else "passed"
     assert persisted["status"] == result["status"] == expected_status
     assert persisted["can_continue"] == result["can_continue"] == (not blocking)
     assert persisted["action"] == "Block"

@@ -104,7 +104,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     config = framework_config()
     config.path_config.paths["prod"] = dict(config.path_config.paths["dev"])
     now = datetime.now()
-    context = {"config": config, "env": "dev", "activity_id": "authoring", "notebook_id": "pipeline-id",
+    context = {"config": config, "scope_workspace_id": "dev", "activity_id": "authoring", "notebook_id": "pipeline-id",
                "notebook_name": "pipeline", "workspace_id": "workspace-id", "workspace_name": "workspace"}
     audit = {"_committed_at": now, "_committed_by": "test@example.test", "_workspace_id": "workspace-id",
              "_workspace_name": "workspace", "_notebook_id": "pipeline-id", "_notebook_name": "pipeline",
@@ -148,7 +148,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
 
     def resolve(context=None, **kwargs):
         selected = context if context is not None else state.context
-        return config, selected.get("env", "dev"), selected
+        return config, selected.get("scope_workspace_id", "dev"), selected
 
     def path(store, name, schema=None, **kwargs):
         return store, name, schema, name
@@ -186,7 +186,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         identity = runtime.resolve_physical_table_identity(config, "dev", store=layer, schema="dbo", table_name=name)
         table_id = identity["table_id"]
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
-        table = {"table_id": table_id, "table_name": name, "environment_name": "dev", "metadata_level": "table",
+        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "metadata_level": "table",
                  "column_id": None, "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
                  "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
                  "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
@@ -205,7 +205,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
 
 def _author_and_freeze(state, table_id, *, source, schema_only=False):
     """Persist authored definitions, hydrate the real widget, edit, save, reopen and freeze."""
-    draft = contracts.create_contract_draft(table_id=table_id, config=state.config, env="dev", spark_session=state.spark)
+    draft = contracts.create_contract_draft(table_id=table_id, config=state.config, active_workspace_id="dev", spark_session=state.spark)
     payload = json.loads(draft["contract_payload_json"])
     specs = [("schema", "required_columns", "", {"required_columns": [f"{table_id}/id"]}),
              ("grain", "uniqueness", "", {"columns": ["id"]}),
@@ -223,7 +223,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
         for kind, rule_type, column, params in specs]
     payload["enrichment"]["columns"] = [{"enrichment_id": f"{table_id}:description", "enrichment_level": "column",
         "column_id": f"{table_id}/email", "enrichment_type": "Description", "value": "Contact email"}]
-    contracts.save_contract_draft(draft=draft, payload=payload, config=state.config, env="dev", spark_session=state.spark)
+    contracts.save_contract_draft(draft=draft, payload=payload, config=state.config, active_workspace_id="dev", spark_session=state.spark)
     widget_module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
     widget["_controls"]["open"].click()

@@ -27,9 +27,9 @@ def check_sensitive_data(
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(dataframe=dataframe, context=context)
-    contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark_session, context=context)
+    contract = resolve_pipeline_data_contract(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
     if contract is None:
         result = {
             "status": "skipped",
@@ -45,20 +45,20 @@ def check_sensitive_data(
             verbose=verbose,
             table_id=table_id,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
-    identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
+    identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
     rules = [
         row
         for row in observation_rows(
             load_table_guardrail_rules(
                 config,
-                env,
+                active_workspace_id,
                 spark_session=spark_session,
                 table_id=identity["table_id"],
                 context=context,
@@ -72,7 +72,7 @@ def check_sensitive_data(
         rules=rules,
         identity=identity,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark_session,
         run_id=run_id,
         existing_mapping=existing_mapping,
@@ -85,7 +85,7 @@ def check_sensitive_data(
         verbose=verbose,
         table_id=table_id,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark_session,
         context=context,
     )

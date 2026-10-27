@@ -49,12 +49,12 @@ def _observations_df(spark, rows: list[dict[str, str]]):
     return spark.createDataFrame([tuple(row.get(name) for name in fields) for row in rows], schema)
 
 
-def _target_workspaces_df(spark, *, config, environment_name: str, targets: list[str]):
+def _target_workspaces_df(spark, *, config, workspace_id: str, targets: list[str]):
     """Return configured target-to-workspace mappings for the scan."""
     from pyspark.sql import types as T
 
     rows = [
-        (target, get_store(config, environment_name, target).workspace_id)
+        (target, get_store(config, workspace_id, target).workspace_id)
         for target in targets
     ]
     schema = T.StructType(
@@ -77,7 +77,7 @@ def _map_to_catalogue(observations, registered_tables, target_workspaces):
     )
 
 
-def _access_rows(mapped, *, environment_name: str, access_snapshot_id: str, audit_fields: dict[str, Any]):
+def _access_rows(mapped, *, workspace_id: str, access_snapshot_id: str, audit_fields: dict[str, Any]):
     """Project workspace access observations into METADATA_DATA_ACCESS."""
     from pyspark.sql import functions as F
 
@@ -99,7 +99,7 @@ def _access_rows(mapped, *, environment_name: str, access_snapshot_id: str, audi
             "user_principal",
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(environment_name).alias("environment_name"),
+            F.lit(workspace_id).alias("workspace_id"),
             F.lit("WORKSPACE").alias("access_level"),
             "access_value",
             "access_state",
@@ -146,7 +146,7 @@ def scan_workspace_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...],
-    environment_name: str | None = None,
+    workspace_id: str | None = None,
     access_snapshot_id: str | None = None,
     access_token: str | None = None,
     persist: bool = True,
@@ -167,12 +167,12 @@ def scan_workspace_access(
     Parameters
     ----------
     catalogue_df : pyspark.sql.DataFrame
-        Active Data Catalogue rows for the configured environment. Its Spark
+        Active Data Catalogue rows for the configured workspace_id. Its Spark
         session is used for mapping and persistence.
     targets : str or list[str] or tuple[str, ...]
         Configured Fabric store keys whose permissions should be inventoried.
-    environment_name : str, optional
-        Catalogue and configured-store environment; defaults to the active environment.
+    workspace_id : str, optional
+        Catalogue and configured-store workspace_id; defaults to the active workspace_id.
     access_snapshot_id : str, optional
         Shared scan identifier; a new UUID is generated when omitted.
     access_token : str, optional
@@ -206,15 +206,15 @@ def scan_workspace_access(
     >>> display(result["unmatched"])
 
     """
-    config, active_env, runtime_context = resolve_fabric_context(context=context)
-    resolved_environment = str(active_env if environment_name is None else environment_name)
-    scan_context = {**runtime_context, "config": config, "env": resolved_environment}
+    config, active_workspace_id, runtime_context = resolve_fabric_context(context=context)
+    resolved_workspace_id = str(active_workspace_id if workspace_id is None else workspace_id)
+    scan_context = {**runtime_context, "config": config, "scope_workspace_id": resolved_workspace_id}
     resolved_targets = normalise_targets(targets)
-    resolved_store_kinds = target_store_kinds(config, resolved_environment, resolved_targets)
+    resolved_store_kinds = target_store_kinds(config, resolved_workspace_id, resolved_targets)
     token = fabric_access_token(access_token)
 
     stores = {
-        target: get_store(config, resolved_environment, target)
+        target: get_store(config, resolved_workspace_id, target)
         for target in resolved_targets
     }
     unique_workspace_ids = list(dict.fromkeys(store.workspace_id for store in stores.values()))
@@ -234,32 +234,32 @@ def scan_workspace_access(
     observations = _observations_df(spark, rows)
     registered_tables = catalogue_tables(
         catalogue_df,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         target_store_kinds=resolved_store_kinds,
     )
     target_workspaces = _target_workspaces_df(
         spark,
         config=config,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         targets=resolved_targets,
     )
     mapped = _map_to_catalogue(observations, registered_tables, target_workspaces)
     snapshot_id = str(access_snapshot_id or uuid4())
     audit_fields = build_runtime_audit_fields(
         config=config,
-        env=resolved_environment,
+        active_workspace_id=resolved_workspace_id,
         runtime_context=scan_context,
     )
     access = _access_rows(
         mapped,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )
     persist_access_rows(
         access,
         config=config,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         context=scan_context,
         persist=persist,
     )

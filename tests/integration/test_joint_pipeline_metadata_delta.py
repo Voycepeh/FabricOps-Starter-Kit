@@ -44,7 +44,7 @@ def test_finalized_test_approval_and_live_reference_the_retained_test_run(runs_d
     r.complete(live)
     pipeline.finalize_pipeline_run(live, spark_session=r.spark)
     _token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
-    current = authority.environment_activation(state, "DEV")
+    current = authority.workspace_activation(state, "DEV")
     assert not current["runs"] and len(current["history"]) == 1
     # Reapproval is independent decision history over the same retained Test Run.
     request["pipeline_version"] = "2"
@@ -54,7 +54,7 @@ def test_finalized_test_approval_and_live_reference_the_retained_test_run(runs_d
     native = authority.authority_records(context=r.context, spark_session=r.spark)
     assert len(native["approvals"]) == 2 and len({item["testing_run_id"] for item in native["approvals"]}) == 1
     token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
-    current = authority.environment_activation(state, "DEV")
+    current = authority.workspace_activation(state, "DEV")
     current["history"].pop(next(key for key in current["history"] if key != current["pipelines"][test.pipeline_id]["approval_id"]))
     with pytest.raises(ValueError, match="immutable and retained"):
         authority.commit_pipeline_authority(state, expected_token=token, context=r.context, spark_session=r.spark)
@@ -92,7 +92,7 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
     test, request, _approved = approved_runtime(r, monkeypatch)
     from types import SimpleNamespace
     physical = test.runtime_context["_pipeline_bindings"]["table0"]
-    monkeypatch.setattr(pipeline, "profiling_context_key", lambda *a, **kw: ("profile-key", {"table_id": "table0", "environment": "DEV", "physical": physical}))
+    monkeypatch.setattr(pipeline, "profiling_context_key", lambda *a, **kw: ("profile-key", {"table_id": "table0", "workspace_id": "DEV", "physical": physical}))
     monkeypatch.setattr(pipeline, "profiling_completion_history", lambda *a, **kw: {})
     commit = authority.commit_pipeline_authority
     barrier, thread = Barrier(2), local()
@@ -126,7 +126,7 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
     assert sum(item is not None for item in outcomes) == 1
     monkeypatch.setattr(authority, "commit_pipeline_authority", commit)
     token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
-    current = authority.environment_activation(state, "DEV")
+    current = authority.workspace_activation(state, "DEV")
     assert len(current["history"]) in {1, 2}
     if outcomes[0] is not None:
         assert len(current["runs"]) == 1
@@ -141,7 +141,7 @@ def test_exact_content_readback_after_lost_authority_acknowledgement(authority_d
     from delta.tables import DeltaTable
     r = authority_delta
     token, state = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
-    authority.environment_activation(state, "DEV")["revision"] = "committed"
+    authority.workspace_activation(state, "DEV")["revision"] = "committed"
     original = DeltaTable.merge
     class LostAck:
         def __init__(self, builder): self.builder = builder
@@ -163,7 +163,7 @@ def test_persisted_profile_renewal_completion_and_owner_fencing(authority_delta,
     from datetime import timedelta
     r = authority_delta
     physical = {"workspace_id": "workspace", "item_id": "lakehouse", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
-    descriptor = {"table_id": "orders", "environment": "DEV", "physical": physical}
+    descriptor = {"table_id": "orders", "workspace_id": "DEV", "physical": physical}
     monkeypatch.setattr(pipeline, "profiling_context_key", lambda *a, **kw: ("profile-key", descriptor))
     monkeypatch.setattr(pipeline, "profiling_completion_history", lambda *a, **kw: {})
     now = datetime.now(UTC)

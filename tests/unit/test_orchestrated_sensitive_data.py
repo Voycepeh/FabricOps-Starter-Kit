@@ -29,7 +29,7 @@ def write_workflow(monkeypatch):
     monkeypatch.setattr(sensitive_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(sensitive_module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: {"contract_id": "contract", "contract_version": 1})
     monkeypatch.setattr(sensitive_module, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: identity)
-    context = {"config": object(), "env": "dev", **execution_context_stub({"target-id": {"contract_id": "contract", "contract_version": 1, "contract_payload_json": "{}"}}, {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]})}
+    context = {"config": object(), "scope_workspace_id": "dev", **execution_context_stub({"target-id": {"contract_id": "contract", "contract_version": 1, "contract_payload_json": "{}"}}, {"target-id": [{"guardrail_type": kind} for kind in ("schema", "sensitive_data", "data_quality")]})}
     def prepare(*args, **kwargs):
         context["execution_plan"] = kwargs["execution_plan"]
         return context
@@ -114,20 +114,20 @@ def test_frozen_widget_rule_materializes_for_internal_schema_stage(spark_session
     draft = {"contract_id": "contract", "contract_version": 1, "table_id": "target-id", "status": "draft",
              "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}})}
     rule = {"guardrail_rule_id": "schema", "guardrail_version": 1, "contract_id": "contract", "contract_version": 1,
-            "environment_name": "dev", "column_id": "", "guardrail_type": "schema", "rule_id": "required_columns",
+            "workspace_id": "dev", "column_id": "", "guardrail_type": "schema", "rule_id": "required_columns",
             "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["email-id"]}', "action": "Block"}
     payload, _warnings = contracts.assemble_contract_payload(
-        draft=draft, environment_name="dev", catalogue_rows=[
-                {"table_id": "target-id", "metadata_level": "table", "environment_name": "dev"},
-                {"table_id": "target-id", "metadata_level": "column", "environment_name": "dev",
+        draft=draft, workspace_id="dev", catalogue_rows=[
+                {"table_id": "target-id", "metadata_level": "table", "workspace_id": "dev"},
+                {"table_id": "target-id", "metadata_level": "column", "workspace_id": "dev",
                  "column_id": "email-id", "column_name": "email", "data_type": "string"},
             ], enrichment_rows=[], guardrail_rows=[rule],
     )
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(payload)}, audit={})
-    rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="target-id")
+    rows = shared.contract_guardrail_rows(frozen, workspace_id="dev", table_id="target-id")
     rules_frame = spark_session.createDataFrame(rows)
     frame = spark_session.createDataFrame([("treated",)], ["email"])
-    result = shared.schema_check_core(frame, rules_df=rules_frame, table_id="target-id", environment_name="dev")
+    result = shared.schema_check_core(frame, rules_df=rules_frame, table_id="target-id", workspace_id="dev")
     assert result["status"] == "passed"
     assert result["can_continue"] is True
 

@@ -24,7 +24,7 @@ class RecordingFrame:
     def filter(self, predicate):
         self.operations.append(("filter", predicate))
         rows = self.rows
-        for column in ("table_id", "contract_id", "environment_name"):
+        for column in ("table_id", "contract_id", "workspace_id"):
             match = re.search(rf"`{column}` = '((?:''|[^'])*)'", predicate)
             if match:
                 value = match.group(1).replace("''", "'")
@@ -63,7 +63,7 @@ def contract_row(
         "table_id": table_id,
         "status": status,
         "is_active": is_active,
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "agreement_id": "agreement-a",
         "agreement_version": "1",
         "contract_payload_json": json.dumps(payload),

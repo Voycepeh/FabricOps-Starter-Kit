@@ -41,7 +41,7 @@ state = m.widget_render_data_steward()
         else:
             setup += '''
 m = importlib.import_module("fabricops_kit.pipeline.shared")
-m.get_default_fabric_context = lambda **kw: {"config": framework_config(), "env": "dev"}
+m.get_default_fabric_context = lambda **kw: {"config": framework_config(), "scope_workspace_id": "dev"}
 m.resolve_fabric_context = lambda **kw: (framework_config(), "dev", {})
 m.get_spark_session = lambda: object()
 m.resolve_pipeline_registration = lambda identity, **kw: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"}

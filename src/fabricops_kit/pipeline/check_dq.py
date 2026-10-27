@@ -22,11 +22,11 @@ def check_dq(
     diagnostics="sample",
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(dataframe=dataframe, context=context)
     contract = resolve_pipeline_data_contract(
         config,
-        env,
+        active_workspace_id,
         table_id,
         spark_session=spark_session,
         context=context,
@@ -38,7 +38,7 @@ def check_dq(
             "checks": [],
             "reason": "Explicit No Contract selected.",
             "table_id": table_id,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
         }
         print_guardrail_result(
             "Data Quality",
@@ -46,7 +46,7 @@ def check_dq(
             verbose=verbose,
             table_id=table_id,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
@@ -55,7 +55,7 @@ def check_dq(
         return result
     identity = resolve_catalogue_table_identity(
         config,
-        env,
+        active_workspace_id,
         table_id,
         spark_session=spark_session,
         context=context,
@@ -63,7 +63,7 @@ def check_dq(
     result = check_dq_runtime(
         dataframe,
         config,
-        env,
+        active_workspace_id,
         identity["table_name"],
         table_id=identity["table_id"],
         store=identity["store"],
@@ -84,7 +84,7 @@ def check_dq(
         verbose=verbose,
         table_id=table_id,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark_session,
         context=context,
     )

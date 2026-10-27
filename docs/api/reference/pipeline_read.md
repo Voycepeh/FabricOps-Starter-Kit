@@ -145,7 +145,7 @@ dict
     - ``table_id``: the canonical identity of the governed physical source.
     - ``is_query``: whether ``dataframe`` is a custom Warehouse query
       result rather than the complete physical table.
-    - ``has_contract``: whether an environment-selected immutable Data
+    - ``has_contract``: whether an workspace_id-selected immutable Data
       Contract applies. The contract record itself is not exposed.
     - ``read_mode``: the explicit source read mode.
     - ``has_data`` and ``should_process``: whether this read contributes

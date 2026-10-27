@@ -358,11 +358,11 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
     if collision:
         with pytest.raises(ValueError, match='reuses one token'):
             shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub(mode)})
+                existing_mapping=None, config=config, active_workspace_id='dev', context={"execution_plan": execution_plan_stub(mode)})
         stored.unpersist()
         return
     mapping = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-        existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub(mode)})
+        existing_mapping=None, config=config, active_workspace_id='dev', context={"execution_plan": execution_plan_stub(mode)})
     try:
         values = {r.original_value: r.token_value for r in mapping.collect()}
         assert set(values) == {'known', 'new'}
@@ -372,7 +372,7 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
         assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'live' else {'known', 'absent'})
         if mode == 'live':
             again = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, env='dev', context={"execution_plan": execution_plan_stub("live")})
+                existing_mapping=None, config=config, active_workspace_id='dev', context={"execution_plan": execution_plan_stub("live")})
             try:
                 assert {r.original_value: r.token_value for r in again.collect()} == values
                 assert merges == [1]  # Reusing known assignments must not perform another Delta merge.

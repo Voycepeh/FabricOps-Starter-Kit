@@ -25,12 +25,12 @@ def check_freshness(
     context=None,
 ) -> dict:
     """Evaluate the resolved contract stage and return its continuation decision."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(context=context)
     requested_table_id = str(table_id).strip()
     contract = resolve_pipeline_data_contract(
         config,
-        env,
+        active_workspace_id,
         requested_table_id,
         context=context,
     )
@@ -41,7 +41,7 @@ def check_freshness(
             "checks": [],
             "reason": "Explicit No Contract selected.",
             "table_id": requested_table_id,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
         }
         print_guardrail_result(
             "Freshness",
@@ -49,17 +49,17 @@ def check_freshness(
             verbose=verbose,
             table_id=requested_table_id,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
         if verbose:
             print(f"  Reason {result['reason']}")
         return result
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     identity = resolve_catalogue_table_identity(
         config,
-        env,
+        active_workspace_id,
         requested_table_id,
         spark_session=spark_session,
         context=context,
@@ -67,7 +67,7 @@ def check_freshness(
     table_id = identity["table_id"]
     rules_df = load_table_guardrail_rules(
         config,
-        env,
+        active_workspace_id,
         spark_session=spark_session,
         table_id=table_id,
         context=context,
@@ -76,7 +76,7 @@ def check_freshness(
         rules_df,
         guardrail_type="freshness",
         table_id=table_id,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     if freshness_rule is None:
         raise ValueError(f"No active approved freshness rule exists for {table_id!r}.")
@@ -85,7 +85,7 @@ def check_freshness(
             [],
             config=config,
             rules_df=rules_df,
-            environment_name=env,
+            workspace_id=active_workspace_id,
             table_id=table_id,
         )
         print_guardrail_result(
@@ -94,7 +94,7 @@ def check_freshness(
             verbose=verbose,
             table_id=table_id,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
@@ -102,7 +102,7 @@ def check_freshness(
             print("  No refresh is expected for this source; freshness age evaluation skipped.")
         return result
     evidence = get_current_freshness_evidence(
-        environment_name=env,
+        workspace_id=active_workspace_id,
         activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
         table_id=table_id,
     )
@@ -111,7 +111,7 @@ def check_freshness(
         [{freshness_column: evidence.get("latest_value")}],
         config=config,
         rules_df=rules_df,
-        environment_name=env,
+        workspace_id=active_workspace_id,
         table_id=table_id,
     )
     if result.get("guardrail_rule_id"):
@@ -123,7 +123,7 @@ def check_freshness(
         write_guardrail_result_row(
             spark_session=spark_session,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             run_id=str(evidence.get("_activity_id") or ""),
             dataset_name="",
             table_name=str(identity.get("table_name") or ""),
@@ -145,7 +145,7 @@ def check_freshness(
         verbose=verbose,
         table_id=table_id,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         spark_session=spark_session,
         context=context,
     )

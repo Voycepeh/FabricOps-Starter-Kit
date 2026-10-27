@@ -25,7 +25,7 @@ _GUARDRAIL_COLUMNS = [
     "table_name",
     "column_id",
     "column_name",
-    "environment_name",
+    "workspace_id",
     "guardrail_type",
     "rule_id",
     "rule_type",
@@ -45,7 +45,7 @@ _RESULT_COLUMNS = [
     "contract_version",
     "execution_type",
     "run_id",
-    "environment_name",
+    "workspace_id",
     "status",
     "can_continue",
     "severity",
@@ -79,7 +79,7 @@ _PROCESSING_STATE_COLUMNS = [
     "source_table_name",
     "target_table_id",
     "target_table_name",
-    "environment_name",
+    "workspace_id",
     "observed_at",
     "accepted_at",
     "partition_column",
@@ -186,7 +186,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "column_id": "column-id",
         "metadata_table_key": "legacy-table-id",
         "metadata_column_key": "legacy-column-id",
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "guardrail_type": "data_quality",
         "rule_id": "completeness",
         "rule_type": "completeness",
@@ -200,7 +200,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "columns": [{"column_id": "column-id", "column_name": "order_id"}],
     }
 
-    row = guardrail_shared.canonical_guardrail_rule_record(source, config=framework_config(), env="dev")
+    row = guardrail_shared.canonical_guardrail_rule_record(source, config=framework_config(), active_workspace_id="dev")
 
     assert list(row) == _GUARDRAIL_COLUMNS
     assert row["guardrail_version"] == 3
@@ -232,7 +232,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     guardrails_shared.write_guardrail_result_row(
         spark_session=FakeSpark(),
         config=framework_config(),
-        env="dev",
+        active_workspace_id="dev",
         run_id="run-1",
         dataset_name="ignored",
         table_name="orders",
@@ -287,7 +287,7 @@ def test_runtime_result_writer_rejects_missing_guardrail_version(monkeypatch) ->
         guardrails_shared.write_guardrail_result_row(
             spark_session=FakeSpark(),
             config=framework_config(),
-            env="dev",
+            active_workspace_id="dev",
             run_id="run-1",
             dataset_name="",
             table_name="",
@@ -308,7 +308,7 @@ def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
 
     with pytest.raises(TypeError, match="execution_type"):
         guardrails_shared.write_guardrail_result_row(
-            spark_session=FakeSpark(), config=framework_config(), env="dev", run_id="run-1",
+            spark_session=FakeSpark(), config=framework_config(), active_workspace_id="dev", run_id="run-1",
             dataset_name="", table_name="", store_type="", layer="",
             guardrail_type="schema", rule_type="strict", execution_type=execution_type,
             result={"guardrail_rule_id": "rule-1", "guardrail_version": 1, "status": "passed"},

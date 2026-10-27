@@ -22,16 +22,16 @@ NOW = datetime(2026, 10, 23, 9, tzinfo=UTC)
 
 @pytest.fixture
 def metadata(monkeypatch):
-    store = {'token': '0', 'state': {"environments": {}, "registrations": [], "profiling_claims": {}}, 'commits': 0}
+    store = {'token': '0', 'state': {"workspaces": {}, "registrations": [], "profiling_claims": {}}, 'commits': 0}
     lock = Lock()
     rows = {'METADATA_PIPELINE_RUN': {}, 'METADATA_DATA_PROFILED': [], 'METADATA_DATA_PROFILED_FREQUENCY': []}
     def context(run_id='A', **overrides):
-        return {'config': {}, 'env': 'dev', '_pipeline_identities': {
+        return {'config': {}, 'scope_workspace_id': 'dev', '_pipeline_identities': {
             'orders': {'table_id': 'orders', 'store': 'Bronze', 'schema': 'demo', 'table_name': 'orders'}},
             '_pipeline_contracts': {'orders': None},
             'execution_plan': SimpleNamespace(plan_id=run_id, permits_persistence=True, evidence={}), **overrides}
-    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['env'], context))
-    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, environment: {
+    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
+    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
         table_id: {'workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
                    'kind': 'lakehouse', 'schema': identity['schema'], 'table_name': identity['table_name']}
         for table_id, identity in identities.items()})
@@ -53,11 +53,11 @@ def metadata(monkeypatch):
         history_reads.append(activity)
         key, _descriptor = shared.profiling_context_key(table_id, context=context)
         result_ids = {kind: {row['profile_snapshot_id'] for row in rows[table]
-                            if row['table_id'] == table_id and row['environment_name'] == context['env']}
+                            if row['table_id'] == table_id and row['workspace_id'] == context['scope_workspace_id']}
                       for kind, table in [('standard', 'METADATA_DATA_PROFILED'), ('frequency', 'METADATA_DATA_PROFILED_FREQUENCY')]}
         completed = {}
         for run in rows['METADATA_PIPELINE_RUN'].values():
-            if run['environment_name'] != context['env']:
+            if run['workspace_id'] != context['scope_workspace_id']:
                 continue
             for event in run.get('profiling', []):
                 kind = event['activity']
@@ -74,13 +74,13 @@ def metadata(monkeypatch):
     def persist(plan, **kwargs):
         if plan.permits_persistence:
             rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-                'run_id': plan.plan_id, 'environment_name': next((outcome['environment'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
+                'run_id': plan.plan_id, 'workspace_id': next((outcome['workspace_id'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     def execute(*, table_id, context, activities, **kwargs):
         activity = next(iter(activities))
         if shared.persistence_permitted(context) and activity != 'grain':
             table = 'METADATA_DATA_PROFILED' if activity == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
-            rows[table].append({'table_id': table_id, 'environment_name': context['env'],
+            rows[table].append({'table_id': table_id, 'workspace_id': context['scope_workspace_id'],
                                 'profile_snapshot_id': context['_profile_snapshot_id']})
         return {'row_count': 100}
     profiler = Mock(side_effect=execute)
@@ -131,13 +131,13 @@ def test_shared_history_survives_a_new_pipeline_and_process(metadata):
     assert result['activities']['standard']['reason'] == 'interval_not_elapsed'
     assert result['activities']['grain']['reason'] == 'already_completed'
     assert not metadata.store['state']['profiling_claims']
-    assert set(metadata.store['state']) == {'registrations', 'environments', 'profiling_claims'}
+    assert set(metadata.store['state']) == {'registrations', 'workspaces', 'profiling_claims'}
     assert len(metadata.rows['METADATA_PIPELINE_RUN']) == 2
 
 
 def test_environment_and_physical_destinations_are_independent(metadata):
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
-    for index, overrides in enumerate(({'env': 'prod'}, {'config': {'workspace': 'other'}}, {'config': {'item': 'other'}},
+    for index, overrides in enumerate(({'scope_workspace_id': 'prod'}, {'config': {'workspace': 'other'}}, {'config': {'item': 'other'}},
         {'_pipeline_identities': {'orders': {**metadata.context['_pipeline_identities']['orders'], 'schema': 'other'}}},
         {'_pipeline_identities': {'orders': {**metadata.context['_pipeline_identities']['orders'], 'table_name': 'other'}}})):
         shared.schedule_table_profiling('orders', 'read', context=metadata.make_context(str(index), **overrides))
@@ -278,7 +278,7 @@ def test_real_profiler_activities_publish_independent_metadata(activity,spark_se
     for name in ['_replace_snapshot_rows','_replace_frequency_rows','_upsert_catalogue_identities','_persist_grain_candidates','_stage_catalogue_profile_retry']:
         spies[name]=Mock(return_value=False)
         monkeypatch.setattr(module,name,spies[name])
-    result=module.execute_table_profile(table_id='orders',context={'config':{},'env':'dev'},
+    result=module.execute_table_profile(table_id='orders',context={'config':{},'scope_workspace_id':'dev'},
         spark_session=spark_session,activities={activity},verbose=False)
     assert reader.call_args.kwargs['table_id']=='orders' and result['row_count']==3
     assert spies['_replace_snapshot_rows'].called is (activity=='standard')
@@ -300,7 +300,7 @@ def test_run_commit_failure_does_not_leave_in_memory_success_as_durable_history(
             plan.evidence['persistence_failed'] = True
             raise RuntimeError('run commit failed')
         metadata.rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-            'environment_name': 'dev', 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
+            'workspace_id': 'dev', 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     with pytest.raises(RuntimeError, match='run commit failed'):
         shared.schedule_table_profiling('orders', 'read', context=metadata.context)
@@ -407,17 +407,17 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     completed = shared.profiling_completion_history('orders', context=metadata.context)
     metadata.rows['METADATA_PIPELINE_RUN']['unrelated'] = {
-        'run_id': 'unrelated', 'environment_name': 'dev', 'profiling': [
+        'run_id': 'unrelated', 'workspace_id': 'dev', 'profiling': [
             {'context_key': 'other-destination', 'activity': 'standard', 'status': 'passed',
              'results_persisted': True, 'profile_snapshot_id': 'other-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'},
             {'context_key': shared.profiling_context_key('orders', context=metadata.context)[0],
              'activity': 'standard', 'status': 'passed', 'results_persisted': True,
              'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]}
-    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'environment_name': 'dev', 'profile_snapshot_id': 'other-snapshot'})
+    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
         list(rows.values()) if isinstance(rows, dict) else rows,
-        'run_id string, environment_name string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, environment_name string, profile_snapshot_id string')
+        'run_id string, workspace_id string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
+        else 'table_id string, workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []
     def reader(table, **kwargs):

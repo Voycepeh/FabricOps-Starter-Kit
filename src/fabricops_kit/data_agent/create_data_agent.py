@@ -54,10 +54,10 @@ def create_data_agent(
 
     Notes
     -----
-    This Preview API requires a supported Fabric capacity, access to the Production
+    This Preview API requires a supported Fabric capacity, access to the selected source workspace
     Lakehouse or Warehouse, and permission to create and configure Data Agents in
-    the target workspace. It builds governed consumer context from the active
-    Production Data Contract, renders deterministic instructions, creates a staging
+    the target workspace. It builds governed consumer context from the workspace-approved
+    Data Contract, renders deterministic instructions, creates a staging
     datasource, selects one table, and applies the datasource and agent instructions.
     It does not publish the agent.
 
@@ -74,9 +74,9 @@ def create_data_agent(
     """
     if not str(target_workspace_id or "").strip() or not str(display_name or "").strip():
         raise ValueError("target_workspace_id and display_name must be non-empty strings.")
-    resolved_config = configured_context(config, context)
+    resolved_config, source_workspace, _ = configured_context(config, context)
     spark_session = get_spark_session(context=context)
-    governed = consumer_context(resolved_config, table_id, spark_session=spark_session)
+    governed = consumer_context(resolved_config, table_id, workspace_id=source_workspace, spark_session=spark_session)
     return provision_data_agent(
         governed, target_workspace_id=target_workspace_id.strip(), display_name=display_name.strip(),
         description=str(description or "").strip(), token_provider=token_provider, transport=transport,

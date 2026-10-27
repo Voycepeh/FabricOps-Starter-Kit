@@ -1,4 +1,4 @@
-"""Data Contract approval, coordinated activation and environment execution."""
+"""Data Contract approval, coordinated activation and workspace_id execution."""
 from __future__ import annotations
 
 import hashlib
@@ -20,14 +20,15 @@ def manifest_digest(value):
     return hashlib.sha256(canonical_pipeline_json(pipeline_record_content(value)).encode("utf-8")).hexdigest()
 
 
-def metadata_records(table, *, context, spark_session=None, run_id=None):
+def metadata_records(table, *, context, spark_session=None, run_id=None, all_workspaces=False):
     """Read domain metadata through its configured owner schema."""
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
                                 context={**(context or {}), "_spark_session": spark_session})
     if table == "METADATA_PIPELINE_RUN":
         from pyspark.sql import functions as F
-        frame = frame.filter(F.col("environment_name") == _env)
+        if not all_workspaces:
+            frame = frame.filter(F.col("workspace_id") == _env)
         if run_id is not None:
             frame = frame.filter(F.col("run_id") == run_id)
     rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in frame.collect()]
@@ -73,7 +74,7 @@ def run_contracts(run, *, context, spark_session=None):
         if (contract["table_id"] != table_id or contract["status"] != "frozen"
                 or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != operation["payload_sha256"]):
             raise ValueError("Frozen contract changed since Testing.")
-        selected = {key: contract[key] for key in ("contract_id", "contract_version", "table_id", "status", "contract_payload_json", "environment_name")}
+        selected = {key: contract[key] for key in ("contract_id", "contract_version", "table_id", "status", "contract_payload_json")}
         if table_id in contracts and contracts[table_id] != selected:
             raise ValueError("A run cannot select different contract versions for the same table.")
         contracts[table_id] = selected
@@ -87,7 +88,7 @@ def testing_run_evidence(run, *, context, spark_session=None):
     if run["execution_mode"] != "testing" or run["status"] != "succeeded":
         raise ValueError("Activation requires a complete successful Testing run.")
     mappings = pipeline_table_mappings(run)
-    rules = {table_id: contract_guardrail_rows(contract, environment_name=run["environment_name"], table_id=table_id)
+    rules = {table_id: contract_guardrail_rows(contract, workspace_id=run["workspace_id"], table_id=table_id)
              for table_id, contract in contracts.items()}
     drift_sources = {table_id for table_id, entries in rules.items() if any(rule["guardrail_type"] == "source_drift" for rule in entries)}
     labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "freshness": "Freshness", "sensitive_data": "Sensitive Data"}
@@ -114,7 +115,7 @@ def testing_run_evidence(run, *, context, spark_session=None):
     if len({item["guardrail_result_id"] for item in diagnostics}) != len(diagnostics):
         raise ValueError("Duplicate Testing Guardrail results.")
     if any(item.get("can_continue") is not True or item.get("execution_type") != "testing"
-           or item.get("environment_name") != run["environment_name"] or any(
+           or item.get("workspace_id") != run["workspace_id"] or any(
                item.get(key) != run.get(key) for key in ("_workspace_id", "_notebook_id", "_activity_id")) for item in diagnostics):
         raise ValueError("Testing Guardrail diagnostics are blocking or have invalid run provenance.")
     from collections import Counter
@@ -140,15 +141,15 @@ def testing_run_evidence(run, *, context, spark_session=None):
 
 def tested_pipeline_run(*, testing_run_id, pipeline_name, pipeline_version, agreement_id, agreement_version, context, spark_session=None):
     """Review an exact retained Test run; no separate configuration is created."""
-    config, env, runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session,
                                        run_id=testing_run_id), run_id=testing_run_id)
     validate_pipeline_id(run["pipeline_id"])
     _token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
-    registration = exact_record(registrations, pipeline_id=run["pipeline_id"], environment_name=env)
-    if registration["registration_status"] != "Active" or run["environment_name"] != env:
-        raise ValueError("Testing requires the Active registration in the activation environment.")
+    registration = exact_record(registrations, pipeline_id=run["pipeline_id"], workspace_id=active_workspace_id)
+    if registration["registration_status"] != "Active" or run["workspace_id"] != active_workspace_id:
+        raise ValueError("Testing requires the Active registration in the activation workspace_id.")
     if any(run.get("_" + key) != registration[key] for key in ("workspace_id", "notebook_id")):
         raise ValueError("Testing was not run by the current registered notebook; rerun Test after rebinding.")
     evidence, contracts = testing_run_evidence(run, context=context, spark_session=spark_session)
@@ -157,14 +158,14 @@ def tested_pipeline_run(*, testing_run_id, pipeline_name, pipeline_version, agre
     validate_agreement(agreement)
     if not str(pipeline_name).strip() or not str(pipeline_version).strip():
         raise ValueError("Pipeline name and version are required.")
-    native = {"pipeline_id": run["pipeline_id"], "environment_name": env,
+    native = {"pipeline_id": run["pipeline_id"], "workspace_id": active_workspace_id,
         "pipeline_name": str(pipeline_name).strip(), "pipeline_version": str(pipeline_version).strip(),
         "testing_run_id": testing_run_id, "testing_evidence_sha256": manifest_digest(pipeline_record_content(evidence)),
         "agreement_id": agreement_id, "agreement_version": agreement_version,
         "agreement_sha256": manifest_digest(agreement_definition(agreement)),
         "warnings": ["Approval validates table contracts and operation modes, not notebook transformation code."]}
     native["approval_id"] = manifest_digest(native)
-    native.update(**build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
+    native.update(**build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime))
     return {**native, "operations": run["operations"], "contracts": contracts, "testing_run": run}
 
 
@@ -198,7 +199,7 @@ def approval_record(row, *, context, spark_session=None):
                              agreement_id=row["agreement_id"], agreement_version=row["agreement_version"])
     if (manifest_digest(pipeline_record_content(evidence)) != row["testing_evidence_sha256"]
             or manifest_digest(agreement_definition(agreement)) != row["agreement_sha256"]
-            or run["pipeline_id"] != row["pipeline_id"] or run["environment_name"] != row["environment_name"]):
+            or run["pipeline_id"] != row["pipeline_id"] or run["workspace_id"] != row["workspace_id"]):
         raise ValueError("Approved Test or Agreement changed; restore exact retained history.")
     return {**row, "operations": run["operations"], "contracts": contracts, "testing_run": run}
 
@@ -208,25 +209,25 @@ def validate_authority_collections(row):
     from fabricops_kit.pipeline.shared import validate_pipeline_registrations
     validate_pipeline_registrations(row["registrations"])
     keys = {
-        "revisions": ("environment_name",), "approvals": ("approval_id",),
-        "selections": ("environment_name", "pipeline_id"), "table_ownership": ("environment_name", "table_id"),
-        "reservations": ("environment_name", "reservation_id"), "profiling_claims": ("claim_key",),
+        "revisions": ("workspace_id",), "approvals": ("approval_id",),
+        "selections": ("workspace_id", "pipeline_id"), "table_ownership": ("workspace_id", "table_id"),
+        "reservations": ("workspace_id", "reservation_id"), "profiling_claims": ("claim_key",),
     }
     for collection, fields in keys.items():
         values = [tuple(item.get(key) for key in fields) for item in row[collection]]
         if any(any(value is None or value == "" for value in key) for key in values) or len(values) != len(set(values)):
             raise ValueError("Duplicate or incomplete Pipeline Registry fact; reconcile metadata.")
-    environments = {item["environment_name"] for item in row["revisions"]}
+    workspaces = {item["workspace_id"] for item in row["revisions"]}
     for collection in ("approvals", "selections", "table_ownership", "reservations"):
-        if any(item["environment_name"] not in environments for item in row[collection]):
-            raise ValueError("Pipeline Registry member has no exact environment revision.")
+        if any(item["workspace_id"] not in workspaces for item in row[collection]):
+            raise ValueError("Pipeline Registry member has no exact workspace_id revision.")
     approvals = {item["approval_id"]: item for item in row["approvals"]}
-    labels = [(item["environment_name"], item["pipeline_id"], item["pipeline_version"]) for item in row["approvals"]]
+    labels = [(item["workspace_id"], item["pipeline_id"], item["pipeline_version"]) for item in row["approvals"]]
     if len(labels) != len(set(labels)):
         raise ValueError("Pipeline version contents are immutable; duplicate approval label.")
     for item in row["selections"]:
         approval = approvals.get(item["approval_id"])
-        if not approval or any(approval[key] != item[key] for key in ("pipeline_id", "environment_name")):
+        if not approval or any(approval[key] != item[key] for key in ("pipeline_id", "workspace_id")):
             raise ValueError("Incomplete Registry selection; exact approval is missing.")
     for item in row["reservations"]:
         if item["mode"] not in {"live", "rebind"} or not item.get("pipeline_id"):
@@ -241,36 +242,36 @@ def validate_authority_collections(row):
 def read_pipeline_authority(*, context, spark_session=None):
     """Decode native facts from one atomic Registry snapshot and validate every reference."""
     row = authority_records(context=context, spark_session=spark_session)
-    state = {"environments": {}, "registrations": row["registrations"], "profiling_claims": {}}
+    state = {"workspaces": {}, "registrations": row["registrations"], "profiling_claims": {}}
     validate_authority_collections(row)
     for revision in row["revisions"]:
-        environment_activation(state, revision["environment_name"])["revision"] = revision["revision"]
+        workspace_activation(state, revision["workspace_id"])["revision"] = revision["revision"]
     for approval in row["approvals"]:
-        # Each environment resolves its own Run history, including during another environment's mutation.
+        # Each workspace_id resolves its own Run history, including during another workspace_id's mutation.
         _config, _env, runtime = resolve_fabric_context(context=context)
-        scoped = {**runtime, "config": _config, "env": approval["environment_name"]}
+        scoped = {**runtime, "config": _config, "scope_workspace_id": approval["workspace_id"]}
         item = approval_record(approval, context=scoped, spark_session=spark_session)
-        environment_activation(state, approval["environment_name"])["history"][approval["approval_id"]] = item
+        workspace_activation(state, approval["workspace_id"])["history"][approval["approval_id"]] = item
     for selection in row["selections"]:
-        current = environment_activation(state, selection["environment_name"])
+        current = workspace_activation(state, selection["workspace_id"])
         item = current["history"].get(selection["approval_id"])
         if not item or item["pipeline_id"] != selection["pipeline_id"]:
             raise ValueError("Incomplete Registry selection; exact approval is missing.")
         current["pipelines"][selection["pipeline_id"]] = item
     for item in row["table_ownership"]:
-        environment_activation(state, item["environment_name"])["tables"][item["table_id"]] = {
-            key: value for key, value in item.items() if key not in {"table_id", "environment_name"}}
+        workspace_activation(state, item["workspace_id"])["tables"][item["table_id"]] = {
+            key: value for key, value in item.items() if key not in {"table_id", "workspace_id"}}
     for item in row["reservations"]:
-        environment_activation(state, item["environment_name"])["runs"][item["reservation_id"]] = {
-            key: value for key, value in item.items() if key not in {"environment_name", "reservation_id"} and value is not None}
+        workspace_activation(state, item["workspace_id"])["runs"][item["reservation_id"]] = {
+            key: value for key, value in item.items() if key not in {"workspace_id", "reservation_id"} and value is not None}
     state["profiling_claims"] = {item["claim_key"]: {key: value for key, value in item.items() if value is not None}
                                 for item in row["profiling_claims"]}
     return row["token"], state
 
 
-def environment_activation(state, environment):
-    """Return an isolated environment's approved configurations and run reservations."""
-    return state["environments"].setdefault(environment, {"revision": "initial", "pipelines": {}, "history": {}, "tables": {}, "runs": {}})
+def workspace_activation(state, workspace_id):
+    """Return an isolated workspace_id's approved configurations and run reservations."""
+    return state["workspaces"].setdefault(workspace_id, {"revision": "initial", "pipelines": {}, "history": {}, "tables": {}, "runs": {}})
 
 
 def pipeline_authority_row(state, *, context, spark_session=None):
@@ -279,15 +280,15 @@ def pipeline_authority_row(state, *, context, spark_session=None):
     row = empty_pipeline_authority()
     row["registrations"] = state.get("registrations", [])
     row["profiling_claims"] = list(state.get("profiling_claims", {}).values())
-    for environment, current in sorted(state["environments"].items()):
-        row["revisions"].append({"environment_name": environment, "revision": current["revision"]})
+    for workspace_id, current in sorted(state["workspaces"].items()):
+        row["revisions"].append({"workspace_id": workspace_id, "revision": current["revision"]})
         for approval_id, item in sorted(current["history"].items()):
             row["approvals"].append({key: item[key] for key, *_rest in APPROVAL_FIELDS})
-        row["selections"].extend({"environment_name": environment, "pipeline_id": key, "approval_id": item["approval_id"]}
+        row["selections"].extend({"workspace_id": workspace_id, "pipeline_id": key, "approval_id": item["approval_id"]}
             for key, item in sorted(current["pipelines"].items()))
-        row["table_ownership"].extend({"environment_name": environment, "table_id": key, **item}
+        row["table_ownership"].extend({"workspace_id": workspace_id, "table_id": key, **item}
             for key, item in sorted(current["tables"].items()))
-        row["reservations"].extend({"environment_name": environment, "reservation_id": key, **item}
+        row["reservations"].extend({"workspace_id": workspace_id, "reservation_id": key, **item}
             for key, item in sorted(current["runs"].items()))
     return row
 
@@ -301,7 +302,7 @@ def commit_pipeline_authority(state, *, expected_token, context, spark_session=N
     """
     from delta.tables import DeltaTable
     from uuid import uuid4
-    config, env, runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     table = PIPELINE_AUTHORITY_TABLE
     previous = authority_records(context=context, spark_session=spark_session)
     row = pipeline_authority_row(state, context=context, spark_session=spark_session)
@@ -312,21 +313,21 @@ def commit_pipeline_authority(state, *, expected_token, context, spark_session=N
     new = {item["approval_id"]: item for item in wanted["approvals"]}
     if any(pipeline_record_content(new.get(key)) != pipeline_record_content(value) for key, value in old.items()):
         raise ValueError("Approved decision history is immutable and retained.")
-    old_bindings = {(item["pipeline_id"], item["environment_name"]) for item in previous["registrations"]}
-    new_bindings = {(item["pipeline_id"], item["environment_name"]) for item in wanted["registrations"]}
+    old_bindings = {(item["pipeline_id"], item["workspace_id"]) for item in previous["registrations"]}
+    new_bindings = {(item["pipeline_id"], item["workspace_id"]) for item in wanted["registrations"]}
     if old_bindings - new_bindings:
         raise ValueError("Permanent pipeline registrations must be retained; retire explicitly.")
     # New references must already be sealed and reconstruct exactly before authority publication.
     for approval in wanted["approvals"]:
         if approval["approval_id"] not in old:
-            scoped = {**runtime, "config": config, "env": approval["environment_name"]}
+            scoped = {**runtime, "config": config, "scope_workspace_id": approval["workspace_id"]}
             approval_record(approval, context=scoped, spark_session=spark_session)
-    for current in state["environments"].values():
+    for current in state["workspaces"].values():
         if current["pipelines"]:
             impact = activation_impact(current, {})
             if impact["tables"] != current["tables"] or impact["blocking_conflicts"]:
                 raise ValueError("Registry selections and table ownership are inconsistent.")
-    wanted.update(token=str(uuid4()), **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime))
+    wanted.update(token=str(uuid4()), **build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime))
     spark = get_spark_session(spark_session, context=context)
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
         metadata_table_physical_schema(config, table), context=context)
@@ -414,10 +415,10 @@ def activation_impact(current, proposed):
 
 
 def review_pipeline_release(requests, *, context, spark_session=None):
-    """Revalidate every Testing candidate and compute environment-specific readiness."""
-    config, env, runtime = resolve_fabric_context(context=context)
+    """Revalidate every Testing candidate and compute workspace-specific readiness."""
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = workspace_activation(state, active_workspace_id)
     proposed = {}
     for request in requests:
         row = tested_pipeline_run(**request, context=context, spark_session=spark_session)
@@ -434,7 +435,7 @@ def review_pipeline_release(requests, *, context, spark_session=None):
     report = activation_impact(current, proposed)
     report["ready"] = not report["blocking_conflicts"]
     report["review_digest"] = manifest_digest({key: row["approval_id"] for key, row in proposed.items()})
-    return token, state, proposed, {**report, "environment": env}
+    return token, state, proposed, {**report, "workspace_id": active_workspace_id}
 
 
 def approve_pipeline_release(requests, *, expected_token, expected_review_digest, governance_confirmed=False, context=None, spark_session=None):
@@ -448,20 +449,20 @@ def approve_pipeline_release(requests, *, expected_token, expected_review_digest
         raise ValueError("Reviewed Test results or Agreement changed; refresh and review before approval.")
     if not report["ready"]:
         raise ValueError(" ".join(report["blocking_conflicts"]))
-    current = environment_activation(state, report["environment"])
+    current = workspace_activation(state, report["workspace_id"])
     current["pipelines"].update(proposed)
     current["history"].update({row["approval_id"]: row for row in proposed.values()})
     current["tables"] = report["tables"]
     current["revision"] = manifest_digest({"previous": current["revision"], "pipelines": current["pipelines"]})
     commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
-    return {"environment": report["environment"], "revision": current["revision"], "pipelines": proposed}
+    return {"workspace_id": report["workspace_id"], "revision": current["revision"], "pipelines": proposed}
 
 
 def release_pipeline_lease(plan, *, spark_session=None):
     """Release only this completed run's reservation; failed release remains fail-closed."""
     for _attempt in range(5):
         token, state = read_pipeline_authority(context=plan.runtime_context, spark_session=spark_session)
-        current = environment_activation(state, plan.environment)
+        current = workspace_activation(state, plan.workspace_id)
         lease = current["runs"].get(plan.plan_id)
         if lease is None:
             return
@@ -480,9 +481,9 @@ def release_pipeline_lease(plan, *, spark_session=None):
 def reserve_pipeline_rebind(pipeline_id, *, context, spark_session=None):
     """Block new Live reservations while an idle pipeline changes notebook owner."""
     from uuid import uuid4
-    _config, env, _runtime = resolve_fabric_context(context=context)
+    _config, active_workspace_id, _runtime = resolve_fabric_context(context=context)
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = workspace_activation(state, active_workspace_id)
     if any(run["pipeline_id"] == pipeline_id for run in current["runs"].values()):
         raise ValueError("Drain active Live runs or another rebind before changing notebook ownership.")
     lease_id = str(uuid4())
@@ -493,10 +494,10 @@ def reserve_pipeline_rebind(pipeline_id, *, context, spark_session=None):
 
 def release_pipeline_rebind(pipeline_id, lease_id, *, context, spark_session=None):
     """Remove exactly the rebind barrier created by this registration attempt."""
-    _config, env, _runtime = resolve_fabric_context(context=context)
+    _config, active_workspace_id, _runtime = resolve_fabric_context(context=context)
     for attempt in range(5):
         token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-        current = environment_activation(state, env)
+        current = workspace_activation(state, active_workspace_id)
         if current["runs"].get(lease_id) != {"pipeline_id": pipeline_id, "tables": [], "mode": "rebind"}:
             raise ValueError("Pipeline rebind reservation changed; inspect Pipeline Registry before retrying.")
         del current["runs"][lease_id]
@@ -509,14 +510,14 @@ def release_pipeline_rebind(pipeline_id, lease_id, *, context, spark_session=Non
 
 
 def activation_version(approval_id, *, context, spark_session=None, require_active=True):
-    """Resolve an immutable approval from the environment's atomic authority."""
-    _config, env, _runtime = resolve_fabric_context(context=context)
+    """Resolve an immutable approval from the workspace_id's atomic authority."""
+    _config, active_workspace_id, _runtime = resolve_fabric_context(context=context)
     _token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-    current = environment_activation(state, env)
+    current = workspace_activation(state, active_workspace_id)
     matches = [row for row in (current["pipelines"] if require_active else current["history"]).values()
                if row["approval_id"] == approval_id]
     if len(matches) != 1:
-        raise ValueError("Approved version is missing or inactive in this environment.")
+        raise ValueError("Approved version is missing or inactive in this workspace_id.")
     return matches[0]
 
 
@@ -525,11 +526,11 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     from types import MappingProxyType
     from uuid import uuid4
     from fabricops_kit.pipeline.shared import persist_pipeline_run, pipeline_physical_bindings
-    config, env, runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
     pipeline_id = validate_pipeline_id(pipeline_id)
     _registration_token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
-    registration = exact_record(registrations, pipeline_id=pipeline_id, environment_name=env)
+    registration = exact_record(registrations, pipeline_id=pipeline_id, workspace_id=active_workspace_id)
     if registration["registration_status"] != "Active" or any(
         registration[key] != runtime.get(key) for key in ("workspace_id", "notebook_id")
     ):
@@ -537,13 +538,13 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
     if token != _registration_token:
         raise ValueError("Pipeline binding changed during Live admission; retry setup.")
-    current = environment_activation(state, env)
+    current = workspace_activation(state, active_workspace_id)
     if any(run["pipeline_id"] == pipeline_id and run.get("mode") == "rebind"
            for run in current["runs"].values()):
         raise ValueError("Pipeline notebook rebinding is in progress; retry Live setup afterward.")
     approved = current["pipelines"].get(pipeline_id)
     if not approved:
-        raise ValueError("No approved pipeline configuration for this environment and pipeline_id.")
+        raise ValueError("No approved pipeline configuration for this workspace_id and pipeline_id.")
     integrity = activation_impact(current, {})
     if integrity["tables"] != current["tables"] or integrity["blocking_conflicts"]:
         raise ValueError("Pipeline Registry has inconsistent table mappings or ownership.")
@@ -555,17 +556,17 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     validate_agreement(agreement)
     mappings = pipeline_table_mappings(approved)
     logical = {item["table_id"]: item["operation_key"].split(":", 1)[1] for item in approved["operations"]}
-    identities = resolve_pipeline_participants(config, env,
+    identities = resolve_pipeline_participants(config, active_workspace_id,
         sources=[{"table_id": key, "logical_id": logical[key]} for key, item in mappings.items() if "source" in item["roles"]],
         targets=[{"table_id": key, "logical_id": logical[key]} for key, item in mappings.items() if "target" in item["roles"]],
         context=runtime, spark_session=spark_session)
     contracts = {key: {**value, "contract_payload": json.loads(value["contract_payload_json"])} for key, value in approved["contracts"].items()}
-    physical = pipeline_physical_bindings(identities, config=config, environment=env)
+    physical = pipeline_physical_bindings(identities, config=config, workspace_id=active_workspace_id)
     if physical != {key: item["destination"] for key, item in mappings.items()} or {
             key: sorted(item["roles"]) for key, item in identities.items()} != {key: sorted(item["roles"]) for key, item in mappings.items()}:
         raise ValueError("Live tables or physical destinations differ from the approved Test run.")
-    plan = PipelineExecutionPlan("live", env, str(runtime.get("notebook_id") or ""), str(uuid4()), canonical_pipeline_json(identities),
-        "{}", canonical_pipeline_json(contracts), MappingProxyType({**runtime, "config": config, "env": env,
+    plan = PipelineExecutionPlan("live", active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()), canonical_pipeline_json(identities),
+        "{}", canonical_pipeline_json(contracts), MappingProxyType({**runtime, "config": config, "scope_workspace_id": active_workspace_id,
             "_pipeline_spark": spark_session, "_pipeline_bindings": physical}), pipeline_id=pipeline_id,
         approval_id=approved["approval_id"], approved_operations_json=json.dumps(approved["operations"], default=str),
         activation_revision=current["revision"])
@@ -584,7 +585,7 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
 def verify_live_plan(plan, *, spark_session=None):
     """Verify the pinned approval, exact table contracts, destinations and reservation."""
     _token, state = read_pipeline_authority(context=plan.runtime_context, spark_session=spark_session)
-    current = environment_activation(state, plan.environment)
+    current = workspace_activation(state, plan.workspace_id)
     lease = current["runs"].get(plan.plan_id)
     if not lease or lease.get("revision") != plan.activation_revision or lease.get("pipeline_id") != plan.pipeline_id:
         raise ValueError("Live run has no valid pinned activation reservation.")
@@ -593,7 +594,7 @@ def verify_live_plan(plan, *, spark_session=None):
     if not approved or not active or active["approval_id"] != plan.approval_id:
         raise ValueError("Pinned pipeline is no longer active; stop this run.")
     from fabricops_kit.pipeline.shared import pipeline_physical_bindings
-    physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], environment=plan.environment)
+    physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], workspace_id=plan.workspace_id)
     if physical != {key: item["destination"] for key, item in pipeline_table_mappings(approved).items()}:
         raise ValueError("Live destinations changed during execution.")
     pinned = json.loads(plan.contracts_json)
@@ -605,10 +606,10 @@ def verify_live_plan(plan, *, spark_session=None):
     validate_agreement(agreement)
 
 
-def resolve_approved_consumer_contract(config, env, table_id, *, spark_session=None):
-    """Resolve the single approved table mapping in an environment's revision."""
-    _token, state = read_pipeline_authority(context={"config": config, "env": env}, spark_session=spark_session)
-    current = environment_activation(state, env)
+def resolve_approved_consumer_contract(config, active_workspace_id, table_id, *, spark_session=None):
+    """Resolve the single approved table mapping in an workspace_id's revision."""
+    _token, state = read_pipeline_authority(context={"config": config, "scope_workspace_id": active_workspace_id}, spark_session=spark_session)
+    current = workspace_activation(state, active_workspace_id)
     matches = []
     for row in current["pipelines"].values():
         contract = row["contracts"].get(table_id)

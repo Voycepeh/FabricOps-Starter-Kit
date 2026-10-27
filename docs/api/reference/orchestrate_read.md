@@ -157,7 +157,6 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.commit_pipeline_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.environment_activation</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
@@ -169,6 +168,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_authority_collections</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.workspace_activation</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>

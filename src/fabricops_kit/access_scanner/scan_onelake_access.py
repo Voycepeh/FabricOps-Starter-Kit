@@ -82,7 +82,7 @@ def _map_to_catalogue(observations, registered_tables):
     )
 
 
-def _access_rows(mapped, *, environment_name: str, access_snapshot_id: str, audit_fields: dict[str, Any]):
+def _access_rows(mapped, *, workspace_id: str, access_snapshot_id: str, audit_fields: dict[str, Any]):
     """Project matched OneLake observations into METADATA_DATA_ACCESS."""
     from pyspark.sql import functions as F
 
@@ -107,7 +107,7 @@ def _access_rows(mapped, *, environment_name: str, access_snapshot_id: str, audi
             "user_principal",
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(environment_name).alias("environment_name"),
+            F.lit(workspace_id).alias("workspace_id"),
             F.lit("ONELAKE_PATH").alias("access_level"),
             "access_value",
             "access_state",
@@ -159,7 +159,7 @@ def scan_onelake_access(
     catalogue_df,
     *,
     targets: str | list[str] | tuple[str, ...],
-    environment_name: str | None = None,
+    workspace_id: str | None = None,
     access_snapshot_id: str | None = None,
     access_token: str | None = None,
     persist: bool = True,
@@ -181,12 +181,12 @@ def scan_onelake_access(
     Parameters
     ----------
     catalogue_df : pyspark.sql.DataFrame
-        Active Data Catalogue rows for the configured environment. Its Spark
+        Active Data Catalogue rows for the configured workspace_id. Its Spark
         session is used for mapping and persistence.
     targets : str or list[str] or tuple[str, ...]
         Configured Lakehouse keys whose permissions should be inventoried.
-    environment_name : str, optional
-        Catalogue and configured-store environment; defaults to the active environment.
+    workspace_id : str, optional
+        Catalogue and configured-store workspace_id; defaults to the active workspace_id.
     access_snapshot_id : str, optional
         Shared scan identifier; a new UUID is generated when omitted.
     access_token : str, optional
@@ -220,11 +220,11 @@ def scan_onelake_access(
     >>> display(result["unmatched"])
 
     """
-    config, active_env, runtime_context = resolve_fabric_context(context=context)
-    resolved_environment = str(active_env if environment_name is None else environment_name)
-    scan_context = {**runtime_context, "config": config, "env": resolved_environment}
+    config, active_workspace_id, runtime_context = resolve_fabric_context(context=context)
+    resolved_workspace_id = str(active_workspace_id if workspace_id is None else workspace_id)
+    scan_context = {**runtime_context, "config": config, "scope_workspace_id": resolved_workspace_id}
     resolved_targets = normalise_targets(targets)
-    resolved_store_kinds = target_store_kinds(config, resolved_environment, resolved_targets)
+    resolved_store_kinds = target_store_kinds(config, resolved_workspace_id, resolved_targets)
     unsupported = [target for target, kind in resolved_store_kinds.items() if kind != "lakehouse"]
     if unsupported:
         raise ValueError(
@@ -235,7 +235,7 @@ def scan_onelake_access(
     token = fabric_access_token(access_token)
     rows: list[dict[str, Any]] = []
     for target in resolved_targets:
-        store = get_store(config, resolved_environment, target)
+        store = get_store(config, resolved_workspace_id, target)
         roles = _list_data_access_roles(
             workspace_id=store.workspace_id,
             item_id=store.item_id,
@@ -253,26 +253,26 @@ def scan_onelake_access(
     observations = _observations_df(catalogue_df.sparkSession, rows)
     registered_tables = catalogue_tables(
         catalogue_df,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         target_store_kinds=resolved_store_kinds,
     )
     mapped = _map_to_catalogue(observations, registered_tables)
     snapshot_id = str(access_snapshot_id or uuid4())
     audit_fields = build_runtime_audit_fields(
         config=config,
-        env=resolved_environment,
+        active_workspace_id=resolved_workspace_id,
         runtime_context=scan_context,
     )
     access = _access_rows(
         mapped,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )
     persist_access_rows(
         access,
         config=config,
-        environment_name=resolved_environment,
+        workspace_id=resolved_workspace_id,
         context=scan_context,
         persist=persist,
     )

@@ -27,7 +27,7 @@ def _contract(payload=None):
     payload = payload or _payload()
     return {
         "contract_id": "c", "contract_version": payload["contract"]["contract_version"],
-        "table_id": "orders", "table_name": "orders", "environment_name": "dev",
+        "table_id": "orders", "table_name": "orders", "workspace_id": "dev",
         "status": payload["contract"]["status"], "is_active": True,
         "agreement_id": "a", "agreement_version": "1",
         "contract_payload_json": json.dumps(payload),
@@ -36,7 +36,7 @@ def _contract(payload=None):
 
 def _enrichment(**changes):
     return {
-        "contract_id": "c", "contract_version": 1, "environment_name": "dev",
+        "contract_id": "c", "contract_version": 1, "workspace_id": "dev",
         "enrichment_id": "description", "enrichment_level": "table", "column_id": "",
         "enrichment_type": "Description", "value": "Orders", **changes,
     }
@@ -45,7 +45,7 @@ def _enrichment(**changes):
 def _rule(kind="schema", **changes):
     return {
         "guardrail_rule_id": kind, "guardrail_version": 1,
-        "contract_id": "c", "contract_version": 1, "environment_name": "dev",
+        "contract_id": "c", "contract_version": 1, "workspace_id": "dev",
         "column_id": "id" if kind == "sensitive_data" else "",
         "guardrail_type": kind, "rule_id": kind, "rule_type": "uniqueness" if kind == "grain" else kind,
         "action": "Block" if kind in {"schema", "grain", "sensitive_data"} else "Warn",
@@ -58,7 +58,7 @@ def _rule(kind="schema", **changes):
 def _plan(rows=None, enrichment=None, guardrails=None):
     return migration._plan_contract_definition_migration(
         contract_rows=rows if rows is not None else [_contract()],
-        enrichment_rows=enrichment or [], guardrail_rows=guardrails or [], environment_name="dev",
+        enrichment_rows=enrichment or [], guardrail_rows=guardrails or [], workspace_id="dev",
     )
 
 
@@ -126,7 +126,7 @@ def test_matching_existing_definitions_need_no_migration():
     payload = _payload()
     payload["enrichment"]["table"] = [_enrichment(enrichment_id="canonical-id")]
     assert _plan([_contract(payload)], [_enrichment(_activity_id="another")])["drafts"] == []
-    assert _plan(enrichment=[_enrichment(environment_name="prod")])["drafts"] == []
+    assert _plan(enrichment=[_enrichment(workspace_id="prod")])["drafts"] == []
 
 
 def test_apply_requires_reviewed_snapshot_and_writes_only_contract_drafts(monkeypatch):
@@ -151,7 +151,7 @@ def test_apply_requires_reviewed_snapshot_and_writes_only_contract_drafts(monkey
     monkeypatch.setattr(migration, "coerce_metadata_row_types", lambda _name, row: row)
     monkeypatch.setattr(migration, "build_runtime_audit_fields", lambda **_kwargs: {})
     spark = SimpleNamespace(createDataFrame=lambda rows, schema: rows)
-    args = dict(config={"governance_metadata_schema": "approved"}, env="dev")
+    args = dict(config={"governance_metadata_schema": "approved"}, active_workspace_id="dev")
     monkeypatch.setattr(migration, "get_spark_session", lambda *_args: spark)
     report = migration.migrate_contract_definitions(**args)
     assert not writes and not report["applied"]
@@ -191,10 +191,10 @@ def test_payload_roundtrip_retains_all_supported_rules_and_disabled_state(kind):
     saved = json.loads(frozen["contract_payload_json"])
     assert saved["enrichment"] == payload["enrichment"]
     assert saved["guardrails"] == payload["guardrails"]
-    rows = runtime.contract_guardrail_rows(frozen, environment_name="dev", table_id="orders")
-    assert rows[0]["guardrail_rule_id"] == kind
+    rows = runtime.contract_guardrail_rows(frozen, workspace_id="dev", table_id="orders")
+    assert any(row["guardrail_type"] == kind for row in rows)
     saved["guardrails"][0]["is_active"] = False
-    assert runtime.contract_guardrail_rows(_contract(saved), environment_name="dev", table_id="orders") == []
+    assert all(row["guardrail_type"] == "schema" for row in runtime.contract_guardrail_rows(_contract(saved), workspace_id="dev", table_id="orders"))
 
 
 @pytest.mark.parametrize("field,value", [("enrichment", None), ("guardrails", None), ("guardrails", [{}])])
@@ -221,8 +221,8 @@ def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monke
     tables = {
         contracts.DATA_CONTRACT_TABLE: [frozen],
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "orders", "table_name": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True},
-            {"table_id": "orders", "column_id": "id", "column_name": "order_id", "data_type": "int", "metadata_level": "column", "environment_name": "dev", "is_active": True},
+            {"table_id": "orders", "table_name": "orders", "metadata_level": "table", "workspace_id": "dev", "is_active": True},
+            {"table_id": "orders", "column_id": "id", "column_name": "order_id", "data_type": "int", "metadata_level": "column", "workspace_id": "dev", "is_active": True},
         ],
     }
     if not column_available:
@@ -233,19 +233,20 @@ def test_new_draft_inherits_frozen_definitions_without_reading_side_tables(monke
     writes = []
     monkeypatch.setattr(contracts, "write_lakehouse_table", lambda rows, *_args, **_kwargs: writes.extend(rows))
     spark = SimpleNamespace(createDataFrame=lambda rows, schema: rows)
-    draft = contracts.create_contract_draft(table_id="orders", config={}, env="dev", spark_session=spark)
+    draft = contracts.create_contract_draft(table_id="orders", config={}, active_workspace_id="dev", spark_session=spark)
     copied = json.loads(draft["contract_payload_json"])
     state = contracts.get_contract_authoring_state(
-        config={}, env="dev", spark_session=spark, contract_id=identity, contract_version=2, contract=draft,
+        config={}, active_workspace_id="dev", spark_session=spark, contract_id=identity, contract_version=2, contract=draft,
     )
     assert state["enrichment"] and state["guardrails"]
     if not column_available:
-        with pytest.raises(ValueError, match="payload scope"):
-            contracts.freeze_contract_record(draft=draft, audit={})
+        assert not copied["table"]["columns"]
+        assert all(not row.get("column_id") for row in state["enrichment"])
+        contracts.freeze_contract_record(draft=draft, audit={})
     assert frozen == before
     assert len(writes) == 1 and draft["contract_version"] == 2
     assert copied["enrichment"]["table"][0]["value"] == "One row per order"
-    assert len(copied["guardrails"]) == 6
+    assert len(copied["guardrails"]) == (6 if column_available else 4)
     assert all(item["contract_version"] == 2 for item in copied["guardrails"])
     assert json.loads(frozen["contract_payload_json"])["guardrails"][0]["contract_version"] == 1
 
@@ -258,11 +259,11 @@ def test_missing_legacy_tables_are_empty_but_other_read_errors_propagate(monkeyp
         raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
 
     monkeypatch.setattr(migration, "read_lakehouse_table", read)
-    report = call_with_spark(object(), migration.migrate_contract_definitions, config={}, env="dev")
+    report = call_with_spark(object(), migration.migrate_contract_definitions, config={}, active_workspace_id="dev")
     assert report["can_apply"] and not report["drafts"]
     monkeypatch.setattr(migration, "read_lakehouse_table", lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("Access denied")))
     with pytest.raises(RuntimeError, match="Access denied"):
-        call_with_spark(object(), migration.migrate_contract_definitions, config={}, env="dev")
+        call_with_spark(object(), migration.migrate_contract_definitions, config={}, active_workspace_id="dev")
 
 
 def test_malformed_frozen_payload_is_a_migration_blocker():
@@ -274,10 +275,10 @@ def test_malformed_frozen_payload_is_a_migration_blocker():
 
 
 def test_missing_environment_and_competing_active_policies_are_reported():
-    """Unknown environment and independently identified competing rules are never chosen."""
-    report = _plan(enrichment=[_enrichment(environment_name=None)])
+    """Unknown workspace_id and independently identified competing rules are never chosen."""
+    report = _plan(enrichment=[_enrichment(workspace_id=None)])
     assert not report["can_apply"]
-    assert report["conflicts"][0]["field"] == "environment_name"
+    assert report["conflicts"][0]["field"] == "workspace_id"
     competing = _plan(guardrails=[_rule(), _rule(guardrail_rule_id="second-schema")])
     assert not competing["can_apply"] and not competing["drafts"]
     assert "Competing active Guardrails" in competing["conflicts"][0]["side_table_value"]
@@ -287,10 +288,10 @@ def test_widget_assembly_preserves_migration_provenance():
     """Saving a migrated draft cannot lose the fingerprint needed for repeat-run detection."""
     draft = _plan(enrichment=[_enrichment()])["drafts"][0]
     payload = json.loads(draft["contract_payload_json"])
-    enrichment = [{**row, "environment_name": "dev"} for row in payload["enrichment"]["table"]]
+    enrichment = [{**row, "workspace_id": "dev"} for row in payload["enrichment"]["table"]]
     assembled, _ = contracts.assemble_contract_payload(
-        draft=draft, environment_name="dev", enrichment_rows=enrichment, guardrail_rows=[],
-        catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}],
+        draft=draft, workspace_id="dev", enrichment_rows=enrichment, guardrail_rows=[],
+        catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "workspace_id": "dev", "is_active": True}],
     )
     assert assembled["definition_migration"] == payload["definition_migration"]
 
@@ -302,13 +303,13 @@ def test_migrated_missing_enrichment_ids_survive_save_and_freeze(missing_id):
     report = _plan(enrichment=side)
     draft = report["drafts"][0]
     payload = json.loads(draft["contract_payload_json"])
-    rows = [{**item, "environment_name": "dev"} for item in payload["enrichment"]["table"]]
+    rows = [{**item, "workspace_id": "dev"} for item in payload["enrichment"]["table"]]
     ids = [item["enrichment_id"] for item in rows]
     assert all(ids) and len(set(ids)) == 2
     assert report["drafts"] == _plan(enrichment=side)["drafts"]
     assembled, _ = contracts.assemble_contract_payload(
-        draft=draft, catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "environment_name": "dev"}],
-        enrichment_rows=rows, guardrail_rows=[], environment_name="dev",
+        draft=draft, catalogue_rows=[{"table_id": "orders", "table_name": "orders", "metadata_level": "table", "workspace_id": "dev"}],
+        enrichment_rows=rows, guardrail_rows=[], workspace_id="dev",
     )
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(assembled)}, audit={})
     assert len(json.loads(frozen["contract_payload_json"])["enrichment"]["table"]) == 2
@@ -348,7 +349,7 @@ def test_contract_mutations_confirm_persistence_before_reporting_success(monkeyp
     monkeypatch.setattr(contracts, "build_runtime_audit_fields", lambda **k: {"_activity_id": "this-save"})
     monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda name, row: row)
     monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *a, **k: [] if persisted_status == "missing" else [persisted])
-    args = dict(draft=draft, config={}, env="dev", spark_session=SimpleNamespace(createDataFrame=create))
+    args = dict(draft=draft, config={}, active_workspace_id="dev", spark_session=SimpleNamespace(createDataFrame=create))
     def invoke():
         return contracts.save_contract_draft(**args, payload=payload) if operation == "save" else contracts.freeze_contract(**args)
     if persisted_status == "draft":

@@ -43,7 +43,7 @@ def _store(
     store: str, kind: str, name: str | None = None, *, schema_enabled: bool = False, schema: str | None = None
 ) -> FabricStore:
     return FabricStore(
-        env="dev",
+
         workspace_id=f"dev-{store}-workspace",
         item_id=f"dev-{store}-item",
         kind=kind,
@@ -81,7 +81,7 @@ def _schema_io_config() -> PathConfig:
 def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
     """Verify lakehouse table read routes every configured lakehouse store."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
 
     for target in ("Bronze", "Silver", "Gold"):
         spark = _Spark()
@@ -106,7 +106,7 @@ def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
     from fabricops_kit.pipeline import shared as pipeline_shared
 
     config = _schema_io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
     monkeypatch.setattr(
         pipeline_shared,
@@ -129,7 +129,7 @@ def test_lakehouse_table_read_resolves_registered_table_id(monkeypatch):
 def test_lakehouse_table_write_routes_to_configured_store():
     """Verify lakehouse table write routes to configured store."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     frame = _Frame()
 
     io.write_lakehouse_table(
@@ -156,7 +156,7 @@ def test_lakehouse_table_write_routes_to_configured_store():
 def test_read_lakehouse_table_forwards_delta_reader_options():
     """Verify Lakehouse table reads pass options to Spark Delta reader."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
 
     call_with_spark(spark, io.read_lakehouse_table,
@@ -178,7 +178,7 @@ def test_read_lakehouse_table_forwards_delta_reader_options():
 def test_lakehouse_file_readers_build_configured_files_paths():
     """Verify lakehouse file readers build configured files paths."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
 
     call_with_spark(spark, io.read_lakehouse_csv, "Files/raw/orders.csv", store="Bronze",  context=context)
@@ -203,7 +203,7 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
     from fabricops_kit.io.read_lakehouse_csv import read_lakehouse_csv
 
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
 
     result = call_with_spark(spark, read_lakehouse_csv,
@@ -240,7 +240,7 @@ def test_read_lakehouse_json_resolves_paths_and_forwards_options(relative_path, 
     """Verify JSON reads delegate files and folders to Spark with reader options."""
     from fabricops_kit.io.read_lakehouse_json import read_lakehouse_json
 
-    context = {"config": _io_config(), "env": "dev"}
+    context = {"config": _io_config(), "scope_workspace_id": "dev"}
     spark_override = _Spark()
 
     result = call_with_spark(spark_override, read_lakehouse_json,
@@ -277,7 +277,7 @@ def test_read_lakehouse_json_is_exported_from_public_surfaces():
 def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
     """Verify Parquet file reads accept root and nested paths and forward options."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     root_spark = _Spark()
     nested_spark = _Spark()
 
@@ -311,7 +311,7 @@ def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
 def test_read_lakehouse_parquet_forwards_options_to_fallback():
     """Verify Parquet fallback reads use the same Spark reader options."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
 
     class FallbackFrame:
         def limit(self, _count):
@@ -370,7 +370,7 @@ def test_configured_file_path_resolution_normalizes_files_prefix():
     store, normalized, path = resolve_configured_file_path(
         "Bronze",
         "/Files/raw/orders.csv",
-        context={"config": config, "env": "dev"},
+        context={"config": config, "scope_workspace_id": "dev"},
     )
 
     assert store.key == "Bronze"
@@ -406,7 +406,7 @@ def test_lakehouse_excel_remains_exposed_and_callable():
 def test_warehouse_helpers_build_configured_query(monkeypatch):
     """Verify warehouse helpers build configured query."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
 
     class Constants:
         WorkspaceId = "workspace_id"
@@ -613,7 +613,7 @@ def test_explicit_io_callables_are_public_exports_with_stable_signatures():
 def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
     """Verify canonical metadata reads ignore caller schemas in favor of ownership."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
 
     call_with_spark(spark, io.read_lakehouse_table,
@@ -628,7 +628,7 @@ def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
 def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
     """Verify canonical metadata writes ignore caller schemas in favor of ownership."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     frame = _Frame()
 
     io.write_lakehouse_table(
@@ -650,7 +650,7 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
 def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
     """Verify canonical metadata ownership overrides a configured caller schema."""
     config = _schema_io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
     frame = _Frame()
 
@@ -694,7 +694,7 @@ def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
             "TABLE",
             store="Metadata",
             schema=schema,
-            context={"config": _io_config(), "env": "dev"},
+            context={"config": _io_config(), "scope_workspace_id": "dev"},
         )
 
 
@@ -706,7 +706,7 @@ def test_lakehouse_table_validation_rejects_unsafe_names(table):
             table,
             store="Metadata",
             schema=None,
-            context={"config": _io_config(), "env": "dev"},
+            context={"config": _io_config(), "scope_workspace_id": "dev"},
         )
 
 
@@ -714,7 +714,7 @@ def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse reads can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "scope_workspace_id": "dev"}, raising=False)
     spark = _Spark()
 
     call_with_spark(spark, io.read_lakehouse_table, "orders")
@@ -727,7 +727,7 @@ def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
     """Verify lakehouse writes can default to the active Fabric context."""
     import builtins
 
-    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "env": "dev"}, raising=False)
+    monkeypatch.setattr(builtins, "FABRIC_CONTEXT", {"config": _io_config(), "scope_workspace_id": "dev"}, raising=False)
     frame = _Frame()
 
     io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
@@ -752,7 +752,7 @@ def test_missing_active_context_has_clear_error(monkeypatch):
 def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     """Verify warehouse query pushdown validates SQL and builds connector calls."""
     config = _io_config()
-    context = {"config": config, "env": "dev"}
+    context = {"config": config, "scope_workspace_id": "dev"}
 
     class Constants:
         WorkspaceId = "workspace_id"
@@ -802,9 +802,9 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
 
     calls = []
-    store = FabricStore(env="dev", workspace_id="workspace", item_id="item", kind="warehouse")
+    store = FabricStore( workspace_id="workspace", item_id="item", kind="warehouse")
     lakehouse_store = FabricStore(
-        env="dev", workspace_id="workspace", item_id="item", kind="lakehouse"
+         workspace_id="workspace", item_id="item", kind="lakehouse"
     )
 
     monkeypatch.setattr(

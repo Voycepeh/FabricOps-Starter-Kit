@@ -79,20 +79,20 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
     steward = steward_widget._create_or_update_data_steward(
-        spark=object(), config=config, env="dev", values=steward_row(), custom_fields={"group": "Shared Services"}
+        spark=object(), config=config, active_workspace_id="dev", values=steward_row(), custom_fields={"group": "Shared Services"}
     )
     created = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=config, env="dev", values=agreement_row(), custom_fields={"consumer_group": "ODI"}
+        spark=object(), config=config, active_workspace_id="dev", values=agreement_row(), custom_fields={"consumer_group": "ODI"}
     )
     updated = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=config, env="dev", values=agreement_row(), selected_agreement=created
+        spark=object(), config=config, active_workspace_id="dev", values=agreement_row(), selected_agreement=created
     )
 
     assert steward["custom_fields_json"]
     assert created["agreement_id"] == updated["agreement_id"] == "33333333-3333-4333-8333-333333333333"
     assert (created["agreement_version"], updated["agreement_version"]) == ("1.0.0", "1.1.0")
     assert [write["table"] for write in writes] == ["CUSTOM_STEWARD", "CUSTOM_AGREEMENT", "CUSTOM_AGREEMENT"]
-    assert all(write["env"] == "dev" for write in writes)
+    assert all(write["active_workspace_id"] == "dev" for write in writes)
 
 
 def test_agreement_validation_fails_before_writes(monkeypatch):
@@ -102,7 +102,7 @@ def test_agreement_validation_fails_before_writes(monkeypatch):
     monkeypatch.setattr(steward_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
 
     with pytest.raises(ValueError, match="steward_name"):
-        steward_widget._create_or_update_data_steward(spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_name=""))
+        steward_widget._create_or_update_data_steward(spark=object(), config=agreement_config(), active_workspace_id="dev", values=steward_row(steward_name=""))
 
 
 def test_new_and_existing_steward_uuid_identity(monkeypatch):
@@ -112,13 +112,13 @@ def test_new_and_existing_steward_uuid_identity(monkeypatch):
     monkeypatch.setattr(steward_widget, "write_widget_metadata_row", lambda **kwargs: writes.append(kwargs["row"]))
 
     first = steward_widget._create_or_update_data_steward(
-        spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_id="")
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=steward_row(steward_id="")
     )
     second = steward_widget._create_or_update_data_steward(
-        spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_id="")
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=steward_row(steward_id="")
     )
     edited = steward_widget._create_or_update_data_steward(
-        spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_id=first["steward_id"])
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=steward_row(steward_id=first["steward_id"])
     )
 
     assert uuid.UUID(first["steward_id"]).version == 4
@@ -169,17 +169,17 @@ def test_agreement_two_party_append_only_identity_and_no_change(monkeypatch):
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: (writes.append(kwargs), stored.append(kwargs["row"])))
 
     created = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=agreement_config(), env="dev", values=agreement_row()
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=agreement_row()
     )
     unchanged = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=agreement_config(), env="dev", values=agreement_row(), selected_agreement=created
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=agreement_row(), selected_agreement=created
     )
     changed_values = agreement_row(approved_usage=["internal single domain", "research"])
     updated = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=agreement_config(), env="dev", values=changed_values, selected_agreement=created
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=changed_values, selected_agreement=created
     )
     separate = agreement_widget._create_or_update_data_agreement(
-        spark=object(), config=agreement_config(), env="dev", values=agreement_row(agreement_name="Separate")
+        spark=object(), config=agreement_config(), active_workspace_id="dev", values=agreement_row(agreement_name="Separate")
     )
 
     assert uuid.UUID(created["agreement_id"]).version == 4
@@ -216,7 +216,7 @@ def test_agreement_requires_two_different_active_stewards(monkeypatch, overrides
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("must not write"))
     with pytest.raises(ValueError, match=message):
         agreement_widget._create_or_update_data_agreement(
-            spark=object(), config=agreement_config(), env="dev", values=agreement_row(**overrides)
+            spark=object(), config=agreement_config(), active_workspace_id="dev", values=agreement_row(**overrides)
         )
 
 
@@ -479,7 +479,7 @@ def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatc
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
 
     agreement.write_widget_metadata_row(
-        spark=Spark(), config=config, env="dev", table="CUSTOM_STEWARD", row=steward_row()
+        spark=Spark(), config=config, active_workspace_id="dev", table="CUSTOM_STEWARD", row=steward_row()
     )
 
     assert created["schema"].fieldNames() == [

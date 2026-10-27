@@ -14,9 +14,9 @@ from fabricops_kit.pipeline import shared
 @pytest.fixture
 def registry(monkeypatch):
     rows, token, lock = [], ["initial"], Lock()
-    context = {"config": {}, "env": "Development", "workspace_id": "workspace-dev",
+    context = {"config": {}, "scope_workspace_id": "workspace-dev", "workspace_id": "workspace-dev",
                "notebook_id": "notebook-one", "notebook_name": "Supplier Ingestion"}
-    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context: (context["config"], context["env"], context))
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context: (context["config"], context["scope_workspace_id"], context))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: {"_committed_by": "engineer"})
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "reserve_pipeline_rebind", lambda *args, **kwargs: "rebind-lease")
@@ -31,7 +31,7 @@ def registry(monkeypatch):
             if token[0] != expected_token:
                 raise RuntimeError("Stale Pipeline Registry")
             token[0] = str(uuid4())
-            rows[:] = [old for old in rows if (old['pipeline_id'], old['environment_name']) != (row['pipeline_id'], row['environment_name'])]
+            rows[:] = [old for old in rows if (old['pipeline_id'], old['workspace_id']) != (row['pipeline_id'], row['workspace_id'])]
             rows.append(deepcopy(row))
 
     monkeypatch.setattr(shared, "read_pipeline_registry", read)
@@ -103,8 +103,8 @@ def test_failed_atomic_rebind_preserves_binding(registry, monkeypatch):
 def test_promotion_adds_binding_without_activation(registry):
     context, rows, *_ = registry
     identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
-    prod = {**context, 'env': 'Production', 'workspace_id': 'workspace-prod', 'notebook_id': 'promoted'}
-    assert shared.resolve_pipeline_registration(identity, context=prod)['resolution'] == 'Promoted'
+    prod = {**context, 'scope_workspace_id': 'workspace-prod', 'workspace_id': 'workspace-prod', 'notebook_id': 'promoted'}
+    assert shared.resolve_pipeline_registration(identity, context=prod)['resolution'] == 'Registered'
     assert len(rows) == 2 and {row['pipeline_id'] for row in rows} == {identity}
     assert all('manifest_json' not in row for row in rows)
 
@@ -144,10 +144,9 @@ def test_concurrent_first_registration_cannot_commit_two_identities(registry, mo
 @pytest.mark.parametrize('conflict', ['logical', 'notebook'])
 def test_duplicate_bindings_fail_closed(monkeypatch, conflict):
     identity = str(uuid4())
-    rows = [{'pipeline_id': 'central', 'environment_name': '*', 'registration_status': 'Authority', 'registry_token': 'one'},
-            {'pipeline_id': identity, 'environment_name': 'Development', 'workspace_id': 'w', 'notebook_id': 'n', 'registration_status': 'Active'},
-            {'pipeline_id': identity if conflict == 'logical' else str(uuid4()), 'environment_name': 'Development',
-             'workspace_id': 'w', 'notebook_id': 'n', 'registration_status': 'Active'}]
+    rows = [{'pipeline_id': 'central', 'workspace_id': '*', 'registration_status': 'Authority', 'registry_token': 'one'},
+            {'pipeline_id': identity, 'workspace_id': 'w', 'notebook_id': 'n', 'registration_status': 'Active'},
+            {'pipeline_id': identity if conflict == 'logical' else str(uuid4()), 'workspace_id': 'w', 'notebook_id': 'n', 'registration_status': 'Active'}]
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda **kwargs: ({}, 'Development', {}))
     from fabricops_kit.activated_pipeline import shared as authority
     monkeypatch.setattr(authority, 'authority_records', lambda **kw: {'token': 'one', 'registrations': rows[1:]})
@@ -179,8 +178,8 @@ def test_live_recovers_registered_identity_without_mutation(registry, monkeypatc
 def test_explicit_promotion_preserves_registration_semantics_without_new_identity(registry, monkeypatch):
     context, rows, *_ = registry
     identity = shared.resolve_pipeline_registration(context=context)['pipeline_id']
-    prod = {**context, 'env': 'Production', 'workspace_id': 'workspace-prod', 'notebook_id': 'promoted'}
+    prod = {**context, 'scope_workspace_id': 'workspace-prod', 'workspace_id': 'workspace-prod', 'notebook_id': 'promoted'}
     monkeypatch.setattr(shared, 'uuid4', Mock(side_effect=AssertionError('unexpected UUID')))
     promoted = shared.resolve_pipeline_registration(identity, context=prod, allow_new_identity=False)
-    assert promoted['pipeline_id'] == identity and promoted['resolution'] == 'Promoted'
+    assert promoted['pipeline_id'] == identity and promoted['resolution'] == 'Registered'
     assert len(rows) == 2 and {row['pipeline_id'] for row in rows} == {identity}

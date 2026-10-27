@@ -14,7 +14,7 @@ module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
 
 def _catalogue_rows(count: int = 2) -> list[dict]:
     rows = [{
-        "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
+        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append",
         "load_strategy_parameters_json": {}, "is_active": True,
@@ -22,7 +22,7 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
     }]
     for index in range(count):
         rows.append({
-            "table_id": "orders", "environment_name": "dev", "metadata_level": "column",
+            "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
             "column_id": f"col-{index}", "column_name": f"column_{index}",
             "data_type": (
                 "long" if index == 0 else "timestamp" if index == 1 else "string"
@@ -41,6 +41,13 @@ def _use_text_identifier(runtime):
     sensitive.update({"rule_type": "mask", "rule_parameters_json": json.dumps({
         "scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*",
     })})
+
+
+def _capture_fixture_columns(runtime):
+    """Simulate creating a draft after the test's Engineering schema change."""
+    payload = json.loads(runtime["contract"]["contract_payload_json"])
+    payload["table"]["columns"] = [{**row, "presence": "required"} for row in runtime["catalogue"][1:]]
+    runtime["contract"]["contract_payload_json"] = json.dumps(payload)
 
 
 @pytest.fixture
@@ -170,22 +177,22 @@ def widget_runtime(monkeypatch):
             **catalogue[0],
             "processing": {"load_strategy": "append"},
             "processing_source": "catalogue",
-            "columns": [dict(row) for row in catalogue[1:]],
+            "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[1:])],
         },
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
     }
     contract = {
         "contract_id": "contract-orders", "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "contract_payload_json": json.dumps(contract_payload, sort_keys=True, separators=(",", ":")),
         "status": "draft", "is_active": False,
     }
     enrichment = [
-        {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
-        {"enrichment_id": "table-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Classification", "value": "Restricted"},
-        {"enrichment_id": "column-description", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Description", "value": "Order identifier"},
-        {"enrichment_id": "column-classification", "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Classification", "value": "Confidential"},
+        {"enrichment_id": "table-description", "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Description", "value": "Orders table"},
+        {"enrichment_id": "table-classification", "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev", "enrichment_level": "table", "column_id": "", "enrichment_type": "Classification", "value": "Restricted"},
+        {"enrichment_id": "column-description", "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Description", "value": "Order identifier"},
+        {"enrichment_id": "column-classification", "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev", "enrichment_level": "column", "column_id": "col-0", "enrichment_type": "Classification", "value": "Confidential"},
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
@@ -200,7 +207,7 @@ def widget_runtime(monkeypatch):
         row.update({
             "contract_id": "contract-orders",
             "contract_version": 1,
-            "environment_name": "dev",
+            "workspace_id": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
     class ScheduleState(dict):
@@ -222,16 +229,16 @@ def widget_runtime(monkeypatch):
         if contract["status"] == "draft":
             return {
                 "contract": dict(contract), "contract_id": contract["contract_id"],
-                "contract_version": 1, "table_id": "orders", "environment_name": "dev",
+                "contract_version": 1, "table_id": "orders", "workspace_id": "dev",
                 "catalogue_rows": [dict(row) for row in catalogue],
-                "available_columns": [dict(row) for row in catalogue[1:]],
+                "available_columns": json.loads(contract["contract_payload_json"])["table"]["columns"],
                 "enrichment": [dict(row) for row in enrichment],
                 "guardrails": [dict(row) for row in guardrails],
             }
         return {
             "contract": dict(contract), "contract_id": contract["contract_id"],
-            "contract_version": 1, "table_id": "orders", "environment_name": "dev",
-            "catalogue_rows": [], "available_columns": [dict(row) for row in catalogue[1:]],
+            "contract_version": 1, "table_id": "orders", "workspace_id": "dev",
+            "catalogue_rows": [], "available_columns": json.loads(contract["contract_payload_json"])["table"]["columns"],
             "enrichment": [dict(row) for row in enrichment], "guardrails": [dict(row) for row in guardrails],
             "payload": manifest(),
         }
@@ -312,7 +319,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",
-            "environment_name": "PROD",
+            "workspace_id": "PROD",
             "pipeline_name": "02_pipeline",
             "committed_by": "voyce@example.com",
             "committed_at": "2026-09-26T02:45:00",
@@ -321,11 +328,11 @@ def widget_runtime(monkeypatch):
         "reader_count": 2,
         "lineage": [
             {
-                "environment_name": "DEV", "relationship": "Writer",
+                "workspace_id": "DEV", "relationship": "Writer",
                 "pipeline_name": "02_pipeline", "last_seen": "2026-09-26T03:00:00",
             },
             {
-                "environment_name": "PROD", "relationship": "Reader",
+                "workspace_id": "PROD", "relationship": "Reader",
                 "pipeline_name": "04_reporting", "last_seen": "2026-09-26T02:30:00",
             },
         ],
@@ -352,6 +359,7 @@ def widget_runtime(monkeypatch):
 
     def open_widget():
         state = start()
+        state["_controls"]["workspace_select"].value = "dev"
         state["_controls"]["open"].click()
         return state
 
@@ -424,25 +432,16 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["current"] is None
     assert state["table_id"] is None
     assert state["pending_table_id"] == "orders"
-    assert controls["store"].value == "Silver"
-    store_labels = [label for label, _value in controls["store"].options]
-    assert "Silver · Lakehouse" in store_labels
-    assert "Metadata · Lakehouse" not in store_labels
-    assert controls["schema"].value == "sales"
+    assert controls["workspace_select"].value == ""
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
-    assert controls["schema_search"].placeholder == "Search schemas..."
-    assert controls["schema_search"].options == ["sales"]
-    assert controls["table_search"].placeholder == "Search governed tables..."
     assert controls["table_search"].options == ["Select governed table", "orders"]
-    assert controls["contract_search"].placeholder == "Search contract versions..."
-    assert controls["contract_search"].options == ["v1 · Draft", "New draft"]
+    assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New draft"]
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
-        "<b>Fabric store</b>",
-        "<b>Schema</b>",
         "<b>Table</b>",
         "<b>Contract</b>",
+        "<b>Workspace</b>",
     ]
     assert all(field.children[1].layout.width == "100%" for field in selector.children)
     assert controls["selector_panel"].layout.display != "none"
@@ -483,7 +482,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 def test_contract_selector_defaults_to_latest_version_or_new_draft(
     widget_runtime, monkeypatch, versions, expected
 ):
-    """Tables without versions start a draft; versioned tables default to the latest."""
+    """Global history remains available without automatically choosing a version."""
     monkeypatch.setattr(
         module.contracts,
         "list_contract_governance_state",
@@ -497,13 +496,12 @@ def test_contract_selector_defaults_to_latest_version_or_new_draft(
     )
     state = module.widget_data_contract()
     controls = state["_controls"]
-    controls["store"].value = "Silver"
     controls["table_search"].value = "orders"
 
-    assert controls["contract"].value == expected
-    assert state["pending_contract_version"] == (None if expected == "new" else int(expected))
+    assert controls["contract"].value == ""
+    assert state["pending_contract_version"] is None
     assert [value for _label, value in controls["contract"].options] == [
-        *map(str, versions), "new"
+        "", *map(str, versions), "new"
     ]
     assert controls["contract_search"].options[-1] == "New draft"
 
@@ -514,8 +512,7 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     state = module.widget_data_contract()
     controls = state["_controls"]
 
-    assert controls["store"].value == "Bronze"
-    assert controls["schema"].value == "demo"
+    assert controls["workspace_select"].value == ""
     assert controls["table"].value == ""
     assert controls["table_search"].value == ""
     assert "orders" in controls["table_search"].options
@@ -526,47 +523,25 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     assert state["pending_table_id"] == "orders"
 
 
-def test_selector_refresh_is_atomic_after_observers_are_registered(
-    widget_runtime, monkeypatch
-):
-    """Store/schema interaction settles once without leaking transient selector state."""
-    bronze_table = {
-        "table_id": "inventory",
-        "environment_name": "dev",
-        "metadata_level": "table",
-        "schema_name": "ops",
-        "table_name": "inventory",
-        "store_type": "Lakehouse",
-        "layer": "Bronze",
-        "load_strategy": "overwrite",
-        "load_strategy_parameters_json": {},
-        "is_active": True,
-    }
-    monkeypatch.setattr(
-        module.contracts,
-        "list_contract_governance_state",
-        lambda **_kwargs: {
-            "tables": [widget_runtime["catalogue"][0], bronze_table],
-            "contracts": [widget_runtime["contract"]],
-        },
-    )
-    state = widget_runtime["start"]()
+def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):
+    """Table and Workspace filtering clears stale selections in either direction."""
+    rows = [dict(widget_runtime["catalogue"][0]),
+            {**widget_runtime["catalogue"][0], "table_id": "inventory", "table_name": "inventory", "workspace_id": "other"},
+            {**widget_runtime["catalogue"][0], "workspace_id": "other"}]
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {"tables": rows, "contracts": [widget_runtime["contract"]]})
+    state = module.widget_data_contract()
     controls = state["_controls"]
-
-    controls["store"].value = "Bronze"
-
-    assert state["_selector_refreshing"] is False
-    assert controls["schema"].value == "ops"
-    assert controls["table"].value == ""
-    assert controls["table_search"].value == ""
-    assert controls["table_search"].options == ["Select governed table", "inventory"]
-    assert controls["contract"].value == "new"
-    assert state["pending_table_id"] is None
-    assert state["pending_contract_version"] is None
-
+    assert controls["table"].value == controls["workspace_select"].value == ""
+    controls["workspace_select"].value = "dev"
+    assert [value for label, value in controls["table"].options] == ["", "orders"]
+    controls["table"].value = "orders"
+    assert [value for label, value in controls["workspace_select"].options] == ["", "dev", "other"]
+    controls["workspace_select"].value = "other"
+    assert controls["table"].value == "orders"
     controls["table"].value = "inventory"
-    assert state["pending_table_id"] == "inventory"
-    assert controls["contract"].value == "new"
+    assert [value for label, value in controls["workspace_select"].options] == ["", "other"]
+    assert state["_selector_refreshing"] is False
+    assert controls["contract"].value == ""
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
@@ -647,7 +622,7 @@ def test_profile_context_renders_compact_datatype_aware_evidence():
     })
     assert "highly unique" in high_cardinality
     assert "value frequency profiling was skipped" in high_cardinality
-    assert "No profile values available" in module._profile_html({"kind": "unavailable"})
+    assert "Not yet profiled" in module._profile_html({"kind": "unavailable"})
 
 
 def test_shared_layout_and_existing_state_hydrate(widget_runtime):
@@ -685,7 +660,7 @@ def test_existing_grain_hydrates_row_key(widget_runtime):
     widget_runtime["guardrails"].append({
         "guardrail_rule_id": "grain", "guardrail_version": 1, "guardrail_type": "grain",
         "column_id": "", "rule_type": "uniqueness", "rule_parameters_json": '{"columns":["column_0","column_1"]}',
-        "action": "Warn", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
+        "action": "Warn", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev",
     })
     controls = widget_runtime["open"]()["_controls"]
     assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
@@ -731,7 +706,7 @@ def test_general_table_uniqueness_is_not_reinterpreted_as_grain(widget_runtime):
         widget_runtime["guardrails"].append({
             "guardrail_rule_id": rule_id, "guardrail_version": 1, "guardrail_type": "data_quality",
             "column_id": "", "rule_type": "uniqueness", "rule_parameters_json": json.dumps({"columns": columns}),
-            "action": "Block", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
+            "action": "Block", "is_active": True, "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev",
         })
     state = widget_runtime["open"]()
     controls = state["_controls"]
@@ -968,6 +943,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):
     """Large schemas remain bounded and column selection rehydrates a single editor."""
     widget_runtime["catalogue"][:] = _catalogue_rows(250)
+    _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
     controls = state["_controls"]
     editor_identity = id(controls["column_description"])
@@ -1493,6 +1469,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
 
     assert widget_runtime["calls"]["guardrails"] == []
     controls["save_data_contract"].click()
+    assert widget_runtime["calls"]["draft"], (state.get("message"), state.get("_validation_errors"))
     saved_sensitive = next(
         record for record in widget_runtime["calls"]["guardrails"][-1]
         if record.get("guardrail_type") == "sensitive_data"
@@ -2622,6 +2599,9 @@ def test_clearing_required_removes_id_and_name_through_save_freeze_runtime(widge
 
     rule = next(row for row in widget_runtime["guardrails"] if row["guardrail_type"] == "schema")
     rule["rule_parameters_json"] = json.dumps({"required_columns": [*identifiers, "col-1"]})
+    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    payload["table"]["columns"][1]["presence"] = "required"
+    widget_runtime["contract"]["contract_payload_json"] = json.dumps(payload)
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_select"].value = "col-0"
@@ -2645,10 +2625,10 @@ def test_clearing_required_removes_id_and_name_through_save_freeze_runtime(widge
             "table_id": "orders", "status": "draft", "contract_payload_json": json.dumps(payload),
         }, audit={},
     )
-    rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="orders")
+    rows = shared.contract_guardrail_rows(frozen, workspace_id="dev", table_id="orders")
     result = shared.schema_check_core(
         types.SimpleNamespace(columns=["column_1"], dtypes=[("column_1", "timestamp")]),
-        rules_df=rows, table_id="orders", environment_name="dev",
+        rules_df=rows, table_id="orders", workspace_id="dev",
     )
     assert result["missing_columns"] == []
     assert result["status"] == "passed"
@@ -2666,7 +2646,7 @@ def test_required_schema_authors_block_and_reaches_runtime(widget_runtime):
     controls["save_data_contract"].click()
     payload = widget_runtime["calls"]["draft"][-1]
     schema_rule = next(rule for rule in payload["guardrails"] if rule["guardrail_type"] == "schema")
-    assert schema_rule["rule_type"] == "required_columns"
+    assert schema_rule["rule_type"] == "strict"
     assert schema_rule["action"] == "Block"
     assert schema_rule["rule_parameters"] == {"required_columns": ["col-0", "col-1"]}
     frozen = module.contracts.freeze_contract_record(
@@ -2675,10 +2655,10 @@ def test_required_schema_authors_block_and_reaches_runtime(widget_runtime):
             "table_id": "orders", "status": "draft", "contract_payload_json": json.dumps(payload),
         }, audit={},
     )
-    rows = shared.contract_guardrail_rows(frozen, environment_name="dev", table_id="orders")
+    rows = shared.contract_guardrail_rows(frozen, workspace_id="dev", table_id="orders")
     result = shared.schema_check_core(
         types.SimpleNamespace(columns=[], dtypes=[]),
-        rules_df=rows, table_id="orders", environment_name="dev",
+        rules_df=rows, table_id="orders", workspace_id="dev",
     )
     assert result["missing_columns"] == ["column_0", "column_1"]
     assert result["status"] == "failed"
@@ -2869,13 +2849,14 @@ def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget
     """Timestamp dropdown options stay valid when temporal columns are present."""
     widget_runtime["catalogue"].append({
         "table_id": widget_runtime["catalogue"][0]["table_id"],
-        "environment_name": widget_runtime["catalogue"][0]["environment_name"],
+        "workspace_id": widget_runtime["catalogue"][0]["workspace_id"],
         "metadata_level": "column",
         "column_id": "col-date",
         "column_name": "snapshot_date",
         "data_type": "date",
         "is_active": True,
     })
+    _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1]
 
@@ -2960,7 +2941,7 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
         assert "One row per combination" in content
         assert "Schema · 1 required column" in content
         assert "column_0: long" in content and "column_1: timestamp" in content
-        assert "additional columns Warn" in content
+        assert "extra columns" in content
         assert "Data Quality · 3 rules across 2 columns" in content
         assert "Accepted failure rate %" in content
         assert "Operator" in content
@@ -3023,7 +3004,7 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
         if kwargs["contract_id"] != "contract-inventory":
             return original_review(**kwargs)
         return {"contract": other_contract, "contract_id": "contract-inventory", "contract_version": 1,
-                "table_id": "inventory", "environment_name": "dev", "catalogue_rows": other_catalogue,
+                "table_id": "inventory", "workspace_id": "dev", "catalogue_rows": other_catalogue,
                 "available_columns": other_catalogue[1:], "enrichment": [], "guardrails": []}
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kw: {
@@ -3157,12 +3138,12 @@ def test_removed_column_definitions_are_reviewed_and_explicitly_removed(widget_r
     """Opening a draft preserves unavailable definitions until Governance removes them."""
     widget_runtime["enrichment"].append({
         "enrichment_id": "removed-description", "contract_id": "contract-orders", "contract_version": 1,
-        "environment_name": "dev", "enrichment_level": "column", "column_id": "removed-column",
+        "workspace_id": "dev", "enrichment_level": "column", "column_id": "removed-column",
         "enrichment_type": "Description", "value": "Keep this until reviewed",
     })
     widget_runtime["guardrails"].append({
         "guardrail_rule_id": "removed-sensitive", "guardrail_version": 1,
-        "contract_id": "contract-orders", "contract_version": 1, "environment_name": "dev",
+        "contract_id": "contract-orders", "contract_version": 1, "workspace_id": "dev",
         "guardrail_type": "sensitive_data", "column_id": "removed-column", "rule_type": "remove",
         "rule_parameters_json": '{"scope":"column","treatment":"remove"}', "action": "Block", "is_active": True,
     })

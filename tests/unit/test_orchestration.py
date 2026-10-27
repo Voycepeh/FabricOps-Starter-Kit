@@ -5,7 +5,7 @@ import importlib
 from types import SimpleNamespace
 from tests.helpers import run_pipeline_operation
 
-LIVE_PLAN = SimpleNamespace(execution_mode="live", plan_id="plan", permits_persistence=True, runtime_context={}, environment="dev", results=[], simulations=[])
+LIVE_PLAN = SimpleNamespace(execution_mode="live", plan_id="plan", permits_persistence=True, runtime_context={}, workspace_id="dev", results=[], simulations=[])
 
 
 def test_dq_stage_prints_observed_percentages_independently_of_decision(capsys):
@@ -41,7 +41,7 @@ def planned_stages(monkeypatch):
     """Isolate stage ordering from metadata planning; integration tests exercise planning."""
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "source_guardrail_results", lambda *_args: [])
     def prepare(table_ids, **_kwargs):
-        return {"config": object(), "env": "dev", "execution_plan": LIVE_PLAN,
+        return {"config": object(), "scope_workspace_id": "dev", "execution_plan": LIVE_PLAN,
                 "_pipeline_identities": {tid: {"roles": ["source", "target"]} for tid in table_ids},
                 "_pipeline_contracts": {tid: {"contract_id": "contract", "contract_version": 1} for tid in table_ids},
                 "_pipeline_rules": {tid: [{"guardrail_type": kind} for kind in

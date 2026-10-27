@@ -41,8 +41,8 @@ def resolve_table_id(*, store: str, schema: str | None = None, table_name: str, 
     orchestrate_write, orchestrate_read
 
     """
-    config, env, _context = resolve_fabric_context() if context is None else resolve_fabric_context(context=context)
+    config, active_workspace_id, _context = resolve_fabric_context() if context is None else resolve_fabric_context(context=context)
     identity = resolve_physical_table_identity(
-        config, env, store=store, schema=schema, table_name=table_name
+        config, active_workspace_id, store=store, schema=schema, table_name=table_name
     )
     return str(identity["table_id"])

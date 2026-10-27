@@ -59,7 +59,7 @@ def test_guardrail_formatter_resolves_catalogue_labels(monkeypatch, capsys) -> N
         source_table_id="source-id",
         target_table_id="target-id",
         config=object(),
-        env="dev",
+        active_workspace_id="dev",
         spark_session=object(),
         context={},
     )
@@ -91,7 +91,7 @@ def test_guardrail_formatter_uses_current_run_identity_before_catalogue(monkeypa
         verbose=True,
         table_id=table_id,
         config=object(),
-        env="dev",
+        active_workspace_id="dev",
     )
 
     assert capsys.readouterr().out == (

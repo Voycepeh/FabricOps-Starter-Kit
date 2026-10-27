@@ -15,11 +15,11 @@ from fabricops_kit.pipeline.shared import (
 
 def check_grain(dataframe, *, table_id, scope, verbose=True, context=None):
     """Record the selected Grain result before orchestration decides continuation."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(dataframe=dataframe, context=context)
     spark = spark_session
-    contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark, context=context)
-    rules = observation_rows(load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark, context=context)) if contract else []
+    contract = resolve_pipeline_data_contract(config, active_workspace_id, table_id, spark_session=spark, context=context)
+    rules = observation_rows(load_table_guardrail_rules(config, active_workspace_id, table_id=table_id, spark_session=spark, context=context)) if contract else []
     grains = [rule for rule in rules if rule.get("guardrail_type") == "grain" and rule.get("is_active", True)]
     if not grains:
         return {"status": "skipped", "can_continue": True, "checks": [], "reason": "Grain is not enforced."}
@@ -27,13 +27,13 @@ def check_grain(dataframe, *, table_id, scope, verbose=True, context=None):
         raise ValueError("A Data Contract has one Grain definition.")
     rule = grains[0]
     result = grain_check_core(dataframe, rule, scope=scope)
-    identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark, context=context)
+    identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, spark_session=spark, context=context)
     write_guardrail_result_row(
-        spark_session=spark, config=config, env=env, run_id="", dataset_name="",
+        spark_session=spark, config=config, active_workspace_id=active_workspace_id, run_id="", dataset_name="",
         table_name=identity["table_name"], store_type=identity["store_type"], layer=identity["store"],
         schema_name=identity["schema"], guardrail_type="grain", rule_type="uniqueness",
         result=result, table_id=table_id, contract_id=contract["contract_id"],
         contract_version=contract["contract_version"], context=context,
     )
-    print_guardrail_result("Grain", result, verbose=verbose, table_id=table_id, config=config, env=env, spark_session=spark, context=context)
+    print_guardrail_result("Grain", result, verbose=verbose, table_id=table_id, config=config, active_workspace_id=active_workspace_id, spark_session=spark, context=context)
     return result

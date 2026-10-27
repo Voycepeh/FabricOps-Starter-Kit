@@ -7,7 +7,7 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Shared environment setup and runtime validation for notebook templates.
+Shared workspace setup and runtime validation for notebook templates.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">01_governance</span>
@@ -38,7 +38,7 @@ CONTEXT = setup_notebook()
 ```python
 def setup_notebook(
     config: FrameworkConfig | dict[str, Any] | None=None,
-    env: str='Sandbox',
+    workspace_id: str | None=None,
     required_targets: list[str] | None=None,
     notebook_name: str | None=None,
     run_id_prefix: str='run',
@@ -60,9 +60,9 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the environment and FrameworkConfig as JSON. Both configuration paths initialize the shared Fabric context and apply the configured Spark audit timezone. |
-| `env` | `str` | No | `'Sandbox'` | Environment section for explicit config only; automatic setup resolves it from the workspace. |
-| `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected environment are required. |
+| `config` | `FrameworkConfig \| dict[str, Any] \| None` | No | `None` | Explicit configuration for local or advanced use. When omitted, run 00_env_config in config_workspace_id (or the caller workspace when omitted), passing Fabric currentWorkspaceId. The notebook rejects unregistered workspaces and returns the workspace_id and FrameworkConfig as JSON. Both configuration paths initialize the shared Fabric context and apply the configured Spark audit timezone. |
+| `workspace_id` | `str \| None` | No | `None` | Workspace ID for explicit local configuration; Fabric setup derives the caller workspace. |
+| `required_targets` | `list[str] \| None` | No | `None` | Logical Fabric target names the notebook requires before execution can proceed. When omitted, all stores configured for the selected workspace_id are required. |
 | `notebook_name` | `str \| None` | No | `None` | Explicit notebook name override used for display and runtime metadata. |
 | `run_id_prefix` | `str` | No | `'run'` | Prefix used only when no Fabric runtime run identifier is available. |
 | `local_fallback_name` | `str \| None` | No | `None` | Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one. |
@@ -73,13 +73,13 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 NotebookSetupContext
-    A ``NotebookSetupContext`` containing the selected environment,
+    A ``NotebookSetupContext`` containing the selected workspace_id,
     resolved Fabric stores, runtime and user identity, startup validation
     results, generated or detected run ID, and overall readiness status.
     Returned fields are ``run_id`` (generated or detected run identifier),
     ``notebook_name`` (resolved notebook name), ``workspace_name``
     (resolved workspace name when available), ``user_name`` (resolved user
-    identity), ``environment`` (selected environment key), ``paths``
+    identity), ``workspace_id`` (selected workspace_id key), ``paths``
     (requested target names mapped to resolved Fabric store objects),
     ``validation_results`` (startup check results), ``runtime_metadata``
     (best-effort runtime metadata), and ``readiness_status`` (overall
@@ -98,7 +98,7 @@ RuntimeError
 ValueError
     Raised for unregistered workspaces, mismatched configuration responses,
     or when config sections are invalid or required targets cannot be
-    resolved for the selected environment.
+    resolved for the selected workspace_id.
 
 ### Common failure causes
 
@@ -124,7 +124,7 @@ metadata tables.
 
 Print a startup summary in the calling notebook with the installed FabricOps
 version, documentation link, configuration source, caller workspace, notebook
-and run identity, resolved environment, audit timezone, metadata schemas,
+and run identity, resolved workspace_id, audit timezone, metadata schemas,
 requested targets, readiness status, and any warning, skipped, or failed
 checks. This output is visible even when Fabric keeps the configuration
 notebook output in a separate execution snapshot. Explicit configuration
@@ -138,10 +138,10 @@ again after successful setup.
 Startup flow:
 
 1. Validate the supplied FabricOps framework configuration.
-2. Resolve the selected environment.
+2. Resolve the selected workspace_id.
 3. Resolve every target listed in ``required_targets``.
 4. Default ``required_targets`` to all stores configured for the selected
-   environment when omitted.
+   workspace_id when omitted.
 5. Collect Fabric notebook runtime information when available.
 6. Generate a fallback run ID when the Fabric runtime does not provide one.
 7. Check whether a Spark session is available.
@@ -161,7 +161,7 @@ store name, store kind, and derived path information where applicable.
 ``setup.paths`` maps each requested target name to its resolved Fabric
 store configuration. Conceptual example:
 
-``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver", "Gold", "Metadata"])``
+``setup = setup_notebook(CONFIG, workspace_id="<workspace-id>", required_targets=["Bronze", "Silver", "Gold", "Metadata"])``
 
 ``bronze_store = setup.paths["Bronze"]``
 
@@ -174,7 +174,7 @@ notebook execution merely because readiness is ``"not_ready"``. Caller-side
 enforcement is optional but recommended for delivery notebooks. Conceptual
 pattern:
 
-``setup = setup_notebook(CONFIG, env="Development", required_targets=["Bronze", "Silver"])``
+``setup = setup_notebook(CONFIG, workspace_id="<workspace-id>", required_targets=["Bronze", "Silver"])``
 
 ``if setup.readiness_status != "ready": raise RuntimeError("FabricOps notebook setup is not ready.")``
 
@@ -197,7 +197,7 @@ readiness checks.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Validate the selected FabricOps environment and resolve the Fabric targets
+Validate the selected FabricOps workspace_id and resolve the Fabric targets
 required by the notebook before downstream IO, profiling, and metadata
 functions run. The returned context contains resolved stores, runtime
 identity, startup checks, and an overall readiness status.

@@ -47,7 +47,7 @@ def test_markdown_variant_hook_preserves_current_source_paths(tmp_path: Path) ->
 
     expected_paths = []
     stale_flat_paths = [
-        site_dir / "how-fabricops-works" / "environment-config.md",
+        site_dir / "how-fabricops-works" / "workspace_id-config.md",
         site_dir / "how-fabricops-works" / "agreement-setup.md",
         site_dir / "how-fabricops-works" / "governance-review.md",
         site_dir / "how-fabricops-works" / "metadata-dashboard.md",

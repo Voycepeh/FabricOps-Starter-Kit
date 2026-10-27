@@ -54,7 +54,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
     else:
         monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
         monkeypatch.setattr(module, "read_pipeline_authority", read("activation", (None, {})))
-        monkeypatch.setattr(module, "environment_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
+        monkeypatch.setattr(module, "workspace_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
         monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
         state = module.widget_activate_pipeline()
         root = state["widget"]
@@ -88,7 +88,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     def reuse(**kwargs):
         assert outputs and "Pipeline execution" in outputs[0][1].data
         calls.append("reuse")
-        return {"config": config, "env": "dev"}
+        return {"config": config, "scope_workspace_id": "dev"}
 
     def collect():
         assert "Loading frozen" in outputs[-1][1].data
@@ -141,7 +141,7 @@ def test_notebook_setup_summary_uses_escaped_styled_html(monkeypatch, outputs):
     from fabricops_kit.config import shared
     monkeypatch.setattr(IPython, "get_ipython", lambda: object())
     context = SimpleNamespace(runtime_metadata={}, workspace_name="<workspace>", notebook_name="<notebook>",
-                              run_id="generic", environment="dev", paths={}, readiness_status="ready",
+                              run_id="generic", workspace_id="dev", paths={}, readiness_status="ready",
                               validation_results=[])
     shared._print_notebook_setup_summary(context, config=framework_config(), config_workspace_id=None)
     html = outputs[-1][1].data

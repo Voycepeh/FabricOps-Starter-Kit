@@ -29,7 +29,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned set of governed expectations for one table.",
-    "long_definition": "A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across environments. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.",
+    "long_definition": "A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across workspaces. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.",
     "preferred_usage": "Use Data Contract for reusable frozen table expectations; Activated Pipeline is whole-pipeline Live authority.",
     "avoid_usage": "data agreement when the steward-to-steward sharing relationship is meant"
   },
@@ -39,7 +39,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The validated execution decisions shared by every Read and Write in one pipeline run.",
-    "long_definition": "Internal run authority fixes exact table contracts, stable pipeline identity and environment destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.",
+    "long_definition": "Internal run authority fixes exact table contracts, stable pipeline identity and workspace destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.",
     "preferred_usage": "Pass one explicit plan throughout Read, Transform and Write; build a new plan after selection changes.",
     "avoid_usage": "mutable notebook-global contract overrides"
   },
@@ -50,7 +50,7 @@
     "category": "FabricOps concepts",
     "short_definition": "Pipeline execution against all frozen contracts, or explicit contract-free exploration.",
     "long_definition": "Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits during Read and Write. finalize_pipeline publishes the completed run and Guardrail results for activation review; approval still requires complete frozen-contract coverage and all existing checks.",
-    "preferred_usage": "Use Test for pipeline_mode, independently of the configured environment name.",
+    "preferred_usage": "Use Test for pipeline_mode, independently of the configured workspace name.",
     "avoid_usage": "successful Live publication when only dry-run checks passed"
   },
   {
@@ -59,9 +59,9 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.",
-    "long_definition": "Live automatically resolves an approved environment configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
-    "preferred_usage": "Use Live for the execution decision in any configured environment; scheduled runs select it explicitly.",
-    "avoid_usage": "an execution default inferred from an environment name"
+    "long_definition": "Live automatically resolves an approved workspace configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.",
+    "preferred_usage": "Use Live for the execution decision in any configured workspace; scheduled runs select it explicitly.",
+    "avoid_usage": "an execution default inferred from an workspace name"
   },
   {
     "id": "enrichment",
@@ -142,9 +142,9 @@
       "config-driven engineering"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Keeping reusable pipeline logic separate from environment-specific Fabric configuration.",
-    "long_definition": "00_env_config maps logical stores to the Fabric items for the active environment. The same 02_pipeline can therefore move between environments without hard-coded workspace IDs, item IDs, paths, or endpoints throughout the notebook.",
-    "preferred_usage": "Use configuration-driven engineering for the separation of reusable pipeline logic from environment-specific targets, paths, IDs, and repeatable processing settings.",
+    "short_definition": "Keeping reusable pipeline logic separate from workspace-specific Fabric configuration.",
+    "long_definition": "00_env_config maps logical stores to the Fabric items for the active workspace. The same 02_pipeline can therefore move between workspaces without hard-coded workspace IDs, item IDs, paths, or endpoints throughout the notebook.",
+    "preferred_usage": "Use configuration-driven engineering for the separation of reusable pipeline logic from workspace-specific targets, paths, IDs, and repeatable processing settings.",
     "avoid_usage": "using configuration-driven engineering to mean that all business transformation logic must be configurable"
   },
   {
@@ -271,7 +271,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "A check for unexpected changes to source data already consumed by a target.",
-    "long_definition": "FabricOps compares the current source observation with the last committed observation for the same source, target, and environment. A new observation is committed only after the target write succeeds.",
+    "long_definition": "FabricOps compares the current source observation with the last committed observation for the same source, target, and workspace. A new observation is committed only after the target write succeeds.",
     "preferred_usage": "Distinguish Source Drift from Freshness: Freshness asks whether data is current; Source Drift asks whether source history changed unexpectedly since this target last successfully consumed it.",
     "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
   },
@@ -306,7 +306,7 @@
     ],
     "category": "Microsoft Fabric concepts",
     "short_definition": "A collaborative container that brings related Fabric items together and controls access to them.",
-    "long_definition": "A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them.",
+    "long_definition": "A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps uses stable workspace_id for local observations, profiling, Testing and activation. Names are labels; global Data Contract identity does not include workspace.",
     "preferred_usage": "Use workspace for the Fabric collaborative container that holds related items.",
     "avoid_usage": "tenant",
     "source_url": "https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces"
@@ -474,7 +474,7 @@
     ],
     "category": "Data Engineering concepts",
     "short_definition": "Named settings that control system or pipeline behaviour without changing the underlying implementation.",
-    "long_definition": "FabricOps uses configuration to resolve environment-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.",
+    "long_definition": "FabricOps uses configuration to resolve workspace-specific Fabric items and repeatable pipeline settings without embedding them throughout project logic.",
     "preferred_usage": "Use configuration in narrative text; use config in code-oriented shorthand.",
     "avoid_usage": "hard-coded values when behaviour should be configurable"
   },
@@ -761,14 +761,14 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "An immutable approved version of a completely and successfully tested whole pipeline.",
-    "long_definition": "METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each environment and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.",
+    "long_definition": "METADATA_PIPELINE_REGISTRY contains typed immutable approval references and the active selections for each workspace and pipeline_id. Each decision binds a successful finalized Test, an exact Agreement version/hash and the table contracts, destinations and operation modes recorded by that Test. Governance approves affected pipelines together; new Live runs resolve the coordinated revision automatically. Activation neither deploys notebooks nor writes business data. Approval covers the recorded table contracts and operation modes; it does not verify arbitrary notebook transformation code.",
     "preferred_usage": "Use Activated Pipeline for exact whole-pipeline Live authority.",
     "avoid_usage": "activated contract as Live authority"
   },
   {
     "term": "table profiling policy",
     "category": "FabricOps concepts",
-    "long_definition": "METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, environment and physical destination.",
+    "long_definition": "METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table activity outcomes and completion markers linked to persisted METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. METADATA_PIPELINE_REGISTRY coordinates renewable claims. Schedules share successful history across pipelines for the same Table ID, workspace and physical destination.",
     "preferred_usage": "Describe scheduling as table-level operational configuration, independently of Guardrail enforcement.",
     "aliases": [],
     "id": "table-profiling-policy",

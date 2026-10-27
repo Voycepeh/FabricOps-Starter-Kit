@@ -26,7 +26,7 @@ Run the promoted `02A_full_refresh_demo` pipeline from start to finish.
 
 
 
-Production runs the same tested workflow in the Production environment. It follows the same visible lifecycle used in Development:
+Production runs the same tested workflow in the Production workspace. It follows the same visible lifecycle used in Development:
 
 ```text
 Read → Transform → Write
@@ -34,9 +34,9 @@ Read → Transform → Write
 
 The same source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Processing State](../reference/metadata/metadata_processing_state.md) flow run again against Production resources.
 
-Live uses the **same tested workflow in the Production environment**, with contracts resolved exclusively from the approved environment Activated Pipeline manifest. It verifies the exact effective Agreement, Data Contract versions, current active approval and configured physical bindings before execution. Read/Write behavior must match the approved operation configuration.
+Live uses the **same tested workflow in the Production workspace**, with contracts resolved exclusively from the approved workspace Activated Pipeline manifest. It verifies the exact effective Agreement, Data Contract versions, current active approval and configured physical bindings before execution. Read/Write behavior must match the approved operation configuration.
 
-Set `PIPELINE_MODE = "Live"` after Step 5. Headless setup resolves the currently approved environment revision automatically. There is no Live contract-selection widget or deployment-file selection. The environment name routes execution and never infers Live.
+Set `PIPELINE_MODE = "Live"` after Step 5. Headless setup resolves the currently approved workspace revision automatically. There is no Live contract-selection widget or deployment-file selection. The workspace name routes execution and never infers Live.
 
 Pass the shared `EXECUTION_PLAN` to every operation and execute reads, transformations and writes inside `with EXECUTION_PLAN:`. Its exit records the complete outcome automatically, including read-only runs. The plan pins one activation revision; affected running executions must drain before a coordinated switch. Changed code, dependencies, contract identity, unsafe destinations or transformation settings fail safely. Permitted operational differences warn and are recorded.
 

@@ -139,7 +139,7 @@ def setup_pipeline(
     Test run and Guardrail results for activation review. Engineering registration
     may also write during setup. Select frozen contracts in the returned interface before
     the first operation; headless Test explicitly uses No Contract. Live resolves
-    only the approved environment manifest and retains revision/ownership checks.
+    only the approved workspace_id manifest and retains revision/ownership checks.
     Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
     Parameters
@@ -148,7 +148,7 @@ def setup_pipeline(
         Permanent UUIDv4. Omit to recover the exact notebook binding or register
         a new UUID in Test. The session exposes pipeline.pipeline_id; retain it in
         source only for cross-workspace promotion. Live never allocates a new UUID.
-        A changed same-environment binding requires both previous notebook IDs.
+        A changed same-workspace_id binding requires both previous notebook IDs.
     pipeline_mode : {"Test", "Live"}, default="Test"
         Evaluation-only operations or execution under an approved manifest.
     new_pipeline : bool, default=False
@@ -169,7 +169,7 @@ def setup_pipeline(
     -----
     Call setup_notebook() first to initialize configuration and display notebook
     readiness. This function reuses that configuration without rerunning
-    00_env_config or displaying the environment summary. Cross-workspace
+    00_env_config or displaying the workspace_id summary. Cross-workspace
     configuration is selected only through setup_notebook(config_workspace_id=...).
     Repeated pipeline setup closes the preceding execution owned by this task.
     Repeated notebook setup closes its pipeline and invalidates prior configuration,

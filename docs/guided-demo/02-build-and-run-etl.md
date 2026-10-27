@@ -8,6 +8,11 @@
 
 The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
+!!! note "First run: Observe for Governance"
+    Complete the initial No Contract Test, then set `OBSERVE_FOR_GOVERNANCE = True` in the final cell and run that cell once. This is an explicit standalone observation step after Test finalization: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+
+    Return the flag to `False`, author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Keep the flag `False` during ordinary Testing and Live.
+
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">

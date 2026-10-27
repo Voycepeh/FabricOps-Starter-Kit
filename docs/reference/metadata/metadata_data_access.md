@@ -46,9 +46,9 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>access_id</code></td><td><code>string</code></td><td>Stable identifier for one observed SQL permission row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>user_principal</code></td><td><code>string</code></td><td>SQL principal name observed for the permission row.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across environment, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--engineering"><td><code>environment_name</code></td><td><code>string</code></td><td>Environment name recorded for the metadata row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_level</code></td><td><code>string</code></td><td>SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_value</code></td><td><code>string</code></td><td>SQL permission name, such as SELECT.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_state</code></td><td><code>string</code></td><td>Observed SQL permission state, such as GRANT or DENY.</td></tr>

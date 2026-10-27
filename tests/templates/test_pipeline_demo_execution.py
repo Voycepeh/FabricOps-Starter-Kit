@@ -61,7 +61,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert not {'execution-plan','inspect'}.intersection(ids)
     calls = {}
     for cell in notebook.cells:
-        if cell.cell_type != 'code' or cell.id == 'environment':
+        if cell.cell_type != 'code' or cell.id == 'workspace_id':
             continue
         for node in ast.walk(ast.parse(cell.source)):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):

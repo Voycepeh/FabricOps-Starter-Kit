@@ -79,15 +79,16 @@ METADATA_FIELD_DESCRIPTIONS = {
     "effective_to": "Date when the record stops being effective.",
     "is_active": "Whether the row is currently active.",
     "table_id": (
-        "Stable governed data asset key that identifies a table across environment, dataset, "
+        "Stable governed data asset key that identifies a table across workspace, dataset, "
         "and table context."
     ),
     "column_id": (
-        "Stable governed data asset key that identifies a column across environment, dataset, "
+        "Stable governed data asset key that identifies a column across workspace, dataset, "
         "table, and column context."
     ),
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
-    "environment_name": "Environment name recorded for the metadata row.",
+    "workspace_id": "Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.",
+    "evidence_workspace_id": "Workspace observation used to author this global Contract version; never part of Contract identity.",
     "store_type": "Configured Fabric store type recorded for the profiled dataset.",
     "layer": "The configured medallion layer where the table is stored.",
     "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
@@ -97,12 +98,11 @@ METADATA_FIELD_DESCRIPTIONS = {
     "contract_id": "Stable identifier for the contract row.",
     "contract_version": "Version recorded for the contract row.",
     "contract_status": "Lifecycle status recorded for the contract row.",
-    "contract_payload_json": "String column containing the JSON definition for this exact table/contract version and authoring environment, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table.",
+    "contract_payload_json": "String column containing the JSON definition for this exact table/contract version and authoring workspace, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table.",
     "lineage_event_id": "Deterministic runtime lineage event identifier.",
     "activity_id": "Runtime Fabric activity identifier captured for the lineage row.",
     "notebook_id": "Fabric notebook identifier captured for the lineage row.",
     "notebook_name": "Fabric notebook name captured for the lineage row.",
-    "workspace_id": "Fabric workspace identifier captured for the lineage row.",
     "workspace_name": "Fabric workspace name captured for the lineage row.",
     "profile_role": "Whether the profiled dataset participated as a source or target.",
     "profiled_at": "Timestamp when the dataset profile snapshot was captured.",
@@ -220,11 +220,11 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
     "approval_id": "Exact Governance decision retained in the Registry authority; Live runs pin this decision.",
-    "registrations": "Native permanent Pipeline UUID and environment notebook bindings; registration never permits Live.",
-    "revisions": "Native environment activation revisions published with selections and ownership.",
+    "registrations": "Native permanent Pipeline UUID and workspace notebook bindings; registration never permits Live.",
+    "revisions": "Native workspace activation revisions published with selections and ownership.",
     "approvals": "Append-only decisions referencing complete finalized Test Runs and exact Agreement versions/hashes.",
-    "selections": "Current approved decision per pipeline and environment, published atomically with ownership.",
-    "table_ownership": "Native exact contract, physical destination, writer and readers per environment/table.",
+    "selections": "Current approved decision per pipeline and workspace, published atomically with ownership.",
+    "table_ownership": "Native exact contract, physical destination, writer and readers per workspace/table.",
     "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
     "profiling_claims": "Renewable native claims with exact owner tokens, physical context and expiry.",
     "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",

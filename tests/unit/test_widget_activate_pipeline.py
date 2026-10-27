@@ -12,12 +12,22 @@ module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline
 
 @pytest.fixture
 def render(authority, monkeypatch):
+    monkeypatch.setattr(module, "get_spark_session", lambda **kw: object())
     from IPython import display as ip
     monkeypatch.setattr(ip, "display", lambda *_, **__: None)
     monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_pipeline_authority", authority.read)
-    return lambda **kw: module.widget_activate_pipeline(context=authority.context, **kw)
+    def render_selected(**kw):
+        state = module.widget_activate_pipeline(context=authority.context, **kw)
+        # Existing action tests deliberately select scope, pipeline and exact Test.
+        if state["eligible_runs"]:
+            row = next((row for row in state["eligible_runs"] if row["pipeline_id"] == kw.get("pipeline_id")), state["eligible_runs"][0])
+            state["workspace_select"].value = row["workspace_id"]
+            state["pipeline_select"].value = row["pipeline_id"]
+            state["run_select"].value = row["run_id"]
+        return state
+    return render_selected
 
 
 def test_single_pipeline_review_and_one_approval(authority, render):
@@ -186,3 +196,25 @@ def test_changed_successful_test_after_review_cannot_silently_activate(authority
     with pytest.raises(ValueError, match="Reviewed Test results"):
         widget["perform_activation"]()
     assert not authority.current()["pipelines"]
+
+
+def test_workspace_pipeline_selectors_have_no_defaults_and_filter_both_ways(authority, monkeypatch):
+    """Opening central Governance never silently chooses an activation workspace."""
+    first_pipeline = "4c7ae400-85ab-4023-9427-e8fde20bd596"
+    second_pipeline = "f5ee4669-5b76-4baf-9875-6cfecba2e031"
+    authority.candidate(first_pipeline, active_workspace_id="A")
+    authority.candidate(first_pipeline, active_workspace_id="B")
+    authority.candidate(second_pipeline, active_workspace_id="B")
+    monkeypatch.setattr(module, "get_spark_session", lambda **kw: object())
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "governance-workspace", authority.context))
+    monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
+    monkeypatch.setattr(module, "read_pipeline_authority", authority.read)
+    state = module.widget_activate_pipeline(context=authority.context)
+    assert state["workspace_select"].value == state["pipeline_select"].value == state["run_select"].value == ""
+    state["workspace_select"].value = "A"
+    assert [value for label, value in state["pipeline_select"].options] == ["", first_pipeline]
+    state["workspace_select"].value = ""
+    state["pipeline_select"].value = second_pipeline
+    assert [value for label, value in state["workspace_select"].options] == ["", "B"]
+    assert state["run_select"].value == ""
+    assert state["activate"].disabled

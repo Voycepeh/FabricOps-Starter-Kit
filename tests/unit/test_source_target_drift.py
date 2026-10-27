@@ -17,7 +17,7 @@ def row(*, target="", count=2, at=NOW, status="observed"):
         "observation_id": "snapshot",
         "source_table_id": "source",
         "target_table_id": target,
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "partition_value": "p1",
         "row_count": count,
         "min_change_value": "1",
@@ -37,7 +37,7 @@ def rule():
         "guardrail_rule_id": "stability",
         "guardrail_version": 1,
         "table_id": "source",
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "guardrail_type": "source_drift",
         "rule_type": "historical_mutation",
         "rule_parameters_json": json.dumps({"partition_column": "partition", "change_column": "changed"}),
@@ -50,7 +50,7 @@ def configure(monkeypatch, history):
     shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     shared.set_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source", observation=[row()]
+        workspace_id="dev", activity_id="run", table_id="source", observation=[row()]
     )
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "run"})
@@ -107,7 +107,7 @@ def test_success_for_one_target_does_not_advance_another(monkeypatch):
 def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
     configure(monkeypatch, [])
     first = shared.get_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source"
+        workspace_id="dev", activity_id="run", table_id="source"
     )
     for target in ("target-a", "target-b"):
         shared.check_source_drift_for_target(
@@ -115,7 +115,7 @@ def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
             source_processing={"load_strategy": "append"},
         )
     assert shared.get_current_source_observation(
-        environment_name="dev", activity_id="run", table_id="source"
+        workspace_id="dev", activity_id="run", table_id="source"
     ) is first
     assert {key[-1] for key in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS} == {"target-a", "target-b"}
 
@@ -132,7 +132,7 @@ def test_blocked_drift_discards_pending_acceptance(monkeypatch):
 
 def test_observed_and_other_environment_baselines_are_not_accepted(monkeypatch):
     configure(monkeypatch, [row(target="target-a", count=1),
-                           {**row(target="target-a", count=1, status="committed"), "environment_name": "prod"}])
+                           {**row(target="target-a", count=1, status="committed"), "workspace_id": "prod"}])
     result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
                                                  source_processing={"load_strategy": "append"})
     assert result["first_observation"] is True
@@ -145,7 +145,7 @@ def test_null_partition_after_an_empty_baseline_is_new_not_reappeared(monkeypatc
     header = {**row(target="target-a", status="committed", at=NOW - timedelta(hours=1)),
               "partition_value": None, "row_count": 0, "is_present": None}
     configure(monkeypatch, [header])
-    shared.set_current_source_observation(environment_name="dev", activity_id="run", table_id="source",
+    shared.set_current_source_observation(workspace_id="dev", activity_id="run", table_id="source",
         observation=[{**row(), "partition_value": None}])
     result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
         source_processing={"load_strategy": "append"})

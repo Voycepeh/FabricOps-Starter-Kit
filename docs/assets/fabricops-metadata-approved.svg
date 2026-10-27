@@ -129,8 +129,6 @@
 <text x="1256" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id</text>
 <text x="1218" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
 <text x="1256" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_version</text>
-<text x="1218" y="183" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="1256" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
 <title>Open metadata documentation: DATA_CONTRACT</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_guardrail_results/" target="_blank">
@@ -178,7 +176,7 @@
 <path d="M1209 423H1501Q1505 423 1505 427V460H1205V427Q1205 423 1209 423Z" fill="#1168B6"/>
 <text x="1355.0" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CATALOGUE</text>
 <text x="1218" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1256" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">environment_name</text>
+<text x="1256" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">workspace_id</text>
 <text x="1218" y="504" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
 <text x="1256" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
 <text x="1218" y="528" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>

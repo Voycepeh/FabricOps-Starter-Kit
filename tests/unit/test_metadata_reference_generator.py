@@ -134,7 +134,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "<code>destination.workspace_id</code>" in activated_page
     assert "`array<struct<" not in activated_page
     assert "via `agreement_id` + `agreement_version`" not in activated_page
-    assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
+    assert "`METADATA_DATA_CATALOGUE` **(N → M)**" in contract_page
+    assert "not a unique physical Catalogue foreign key" in contract_page
     assert "via `table_id`" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
     assert "monotonically increasing" not in contract_page

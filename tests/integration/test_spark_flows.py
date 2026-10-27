@@ -64,7 +64,7 @@ def active_contract_frame(spark_session, *, table_id, columns, guardrails):
     return spark_session.createDataFrame([{
         "contract_id": contract_id,
         "contract_version": contract_version,
-        "environment_name": "dev", "agreement_id": "agreement-orders",
+        "workspace_id": "dev", "agreement_id": "agreement-orders",
         "agreement_version": "1.0.0",
         "table_id": table_id,
         "contract_payload_json": json.dumps(payload),
@@ -172,7 +172,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     from fabricops_kit.pipeline import shared as guardrails_shared
 
     writes = []
-    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table", lambda df, table, *, store, context, **kwargs: writes.append((df, context["env"], store, table, kwargs)))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table", lambda df, table, *, store, context, **kwargs: writes.append((df, context["scope_workspace_id"], store, table, kwargs)))
 
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
@@ -182,7 +182,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     guardrails_shared.write_guardrail_result_row(
         spark_session=spark_session,
         config=framework_config(),
-        env="dev",
+        active_workspace_id="dev",
         run_id="run-1",
         dataset_name="sales",
         table_name="orders",
@@ -198,7 +198,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     assert writes[0][2:4] == ("Metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
     assert written_row["guardrail_rule_id"] == "freshness-rule"
-    assert written_row["environment_name"] == "dev"
+    assert written_row["workspace_id"] == "dev"
     assert written_row["status"] == "failed"
     assert written_row["can_continue"] is False
     assert written_row["severity"] == "blocking"

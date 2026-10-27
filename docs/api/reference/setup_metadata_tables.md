@@ -23,7 +23,7 @@ Use after setup_notebook in 00_env_config to create or validate the FabricOps me
 <div class="reference-example-usage" markdown="1">
 
 ```python
-setup_result = setup_metadata_tables(config=CONFIG, env=ENVIRONMENT_NAME)
+setup_result = setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)
 ```
 
 </div>
@@ -39,7 +39,7 @@ setup_result = setup_metadata_tables(config=CONFIG, env=ENVIRONMENT_NAME)
 def setup_metadata_tables(
     *,
     config: FrameworkConfig | dict[str, Any],
-    env: str,
+    workspace_id: str,
     require_active_steward: bool=False,
     verbose: bool=True,
     raise_on_failure: bool=False,
@@ -58,8 +58,8 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
-| `env` | `str` | Yes | `—` | Environment whose configured metadata lakehouse should be initialized or validated. |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected workspace_id and its metadata lakehouse. |
+| `workspace_id` | `str` | Yes | `—` | Workspace whose configured metadata lakehouse should be initialized or validated. |
 | `require_active_steward` | `bool` | No | `False` | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
 | `verbose` | `bool` | No | `True` | Controls whether the concise per-table setup summary is printed. |
 | `raise_on_failure` | `bool` | No | `False` | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
@@ -156,7 +156,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:394`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L394-L824">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L394-L825">View on GitHub</a>
 </div>
 
 
@@ -166,7 +166,7 @@ guardrail results.
 Setup flow:
 
 1. Validate the supplied FabricOps configuration.
-2. Find the metadata lakehouse configured for the selected environment.
+2. Find the metadata lakehouse configured for the selected workspace_id.
 3. Verify that the metadata target is a lakehouse.
 4. Resolve each table's physical schema from its canonical ownership and
    the configured governance/engineering schema names.
@@ -224,12 +224,12 @@ Detailed table contents:
   ``status='frozen'`` and uses ``is_active`` to identify the Production
   version while linking the exact Data Agreement version.
 - ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
-  ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,
+  ``metadata_level``, ``table_id``, ``column_id``, ``workspace_id``,
   physical table context, ``column_name``, ``data_type``, profiling dates,
   activation state, and the standard audit fields.
 - ``METADATA_DATA_PROFILED`` stores ``profile_id``,
   ``profile_snapshot_id``, ``table_id``, ``column_id``,
-  ``environment_name``, ``data_type``,
+  ``workspace_id``, ``data_type``,
   ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,
   ``distinct_count``, ``distinct_percent``, ``mean_value``,
   ``stddev_value``, ``min_value``, ``percentile_25_value``,
@@ -239,7 +239,7 @@ Detailed table contents:
   ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,
   percentage, rank, profiled row totals, and the standard audit fields.
 - ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,
-  ``environment_name``, ``pipeline_role``, and the
+  ``workspace_id``, ``pipeline_role``, and the
   standard audit fields.
 - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
   approval, expiry, table and column identity, and audit information.

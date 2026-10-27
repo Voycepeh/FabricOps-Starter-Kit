@@ -20,7 +20,7 @@ class PipelineExecutionPlan:
     """Immutable run authority with an isolated in-memory diagnostic journal."""
 
     execution_mode: str
-    environment: str
+    workspace_id: str
     notebook_id: str
     plan_id: str
     participants_json: str
@@ -95,7 +95,7 @@ def execution_result(context, table_id, *, stages=()):
     contract = context["_pipeline_contracts"].get(table_id)
     return {
         "execution_mode": plan.execution_mode, "execution_plan_id": plan.plan_id,
-        "execution_environment": plan.environment,
+        "execution_workspace_id": plan.workspace_id,
         "guardrail_outcomes": [dict(row) for row in plan.results if row.get("table_id") == table_id],
         "simulation_outcomes": list(plan.simulations),
         "selected_contract": ({"contract_id": contract["contract_id"],
@@ -259,7 +259,7 @@ from ..config.metadata_schemas import (
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
     "_pipeline_run_id",
     "_pipeline_name",
-    "_pipeline_environment",
+    "_pipeline_workspace_id",
     "_source_table",
     "_record_loaded_timestamp",
     "_notebook_name",
@@ -322,7 +322,7 @@ def display_table_identity(
     table_id: str,
     *,
     config: Any | None = None,
-    env: str | None = None,
+    active_workspace_id: str | None = None,
     spark_session=None,
     context=None,
 ) -> str:
@@ -331,11 +331,11 @@ def display_table_identity(
     if not raw_value:
         return raw_value
     identity = _CURRENT_TABLE_IDENTITIES.get(raw_value)
-    if identity is None and config is not None and env is not None:
+    if identity is None and config is not None and active_workspace_id is not None:
         try:
             identity = resolve_catalogue_table_identity(
                 config,
-                env,
+                active_workspace_id,
                 raw_value,
                 spark_session=spark_session,
                 context=context,
@@ -358,7 +358,7 @@ def print_guardrail_result(
     source_table_id: str | None = None,
     target_table_id: str | None = None,
     config: Any | None = None,
-    env: str | None = None,
+    active_workspace_id: str | None = None,
     spark_session=None,
     context=None,
 ) -> None:
@@ -372,7 +372,7 @@ def print_guardrail_result(
         return display_table_identity(
             value,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             spark_session=spark_session,
             context=context,
         )
@@ -398,17 +398,17 @@ def print_guardrail_result(
 
 
 def set_current_source_observation(
-    *, environment_name: str, activity_id: str, table_id: str, observation: Any
+    *, workspace_id: str, activity_id: str, table_id: str, observation: Any
 ) -> None:
     """Keep one source observation in private current-run pipeline state."""
-    _CURRENT_SOURCE_OBSERVATIONS[(environment_name, activity_id, table_id)] = observation
+    _CURRENT_SOURCE_OBSERVATIONS[(workspace_id, activity_id, table_id)] = observation
 
 
 def get_current_source_observation(
-    *, environment_name: str, activity_id: str, table_id: str
+    *, workspace_id: str, activity_id: str, table_id: str
 ) -> Any:
     """Return current-run source observation state for one governed table."""
-    key = (environment_name, activity_id, table_id)
+    key = (workspace_id, activity_id, table_id)
     if key not in _CURRENT_SOURCE_OBSERVATIONS:
         raise ValueError(
             f"No current source observation exists for {table_id!r}; call orchestrate_read() first."
@@ -417,10 +417,10 @@ def get_current_source_observation(
 
 
 def get_current_freshness_evidence(
-    *, environment_name: str, activity_id: str, table_id: str
+    *, workspace_id: str, activity_id: str, table_id: str
 ) -> dict[str, Any]:
     """Return current-run freshness evidence for one governed table."""
-    key = (environment_name, activity_id, table_id)
+    key = (workspace_id, activity_id, table_id)
     if key not in _CURRENT_FRESHNESS_EVIDENCE:
         raise ValueError(
             f"No current freshness evidence exists for {table_id!r}; call orchestrate_read() first."
@@ -454,8 +454,8 @@ def persist_lineage_participation(
     """Upsert one canonical source or target participant for an activity."""
     if not persistence_permitted(context):
         raise RuntimeError("Testing cannot commit Lineage.")
-    config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=resolved_context)
+    config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=resolved_context)
     effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
     audit["_activity_id"] = effective_activity_id
     identifier = lineage_id(
@@ -468,8 +468,8 @@ def persist_lineage_participation(
         {
             "lineage_id": identifier,
             "table_id": str(table_id).strip(),
-            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, env, table_id, context=resolved_context).get("table_name"),
-            "environment_name": env,
+            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=resolved_context).get("table_name"),
+            "workspace_id": active_workspace_id,
             "pipeline_role": str(pipeline_role).strip().lower(),
             **audit,
         },
@@ -492,7 +492,7 @@ def persist_lineage_participation(
         .alias("target")
         .merge(
             frame.alias("source"),
-            "target.environment_name = source.environment_name AND target.lineage_id = source.lineage_id",
+            "target.workspace_id = source.workspace_id AND target.lineage_id = source.lineage_id",
         )
         .whenMatchedUpdateAll()
         .whenNotMatchedInsertAll()
@@ -503,7 +503,7 @@ def persist_lineage_participation(
 
 def resolve_physical_table_identity(
     config: Any,
-    env: str,
+    active_workspace_id: str,
     *,
     store: Any,
     schema: Any,
@@ -515,7 +515,9 @@ def resolve_physical_table_identity(
     if not isinstance(table_name, str) or not table_name.strip():
         raise ValueError("table_name must be a non-empty string.")
     store_key = store.strip()
-    configured_store = get_store(config, env, store_key)
+    configured_store = get_store(config, active_workspace_id, store_key)
+    if str(configured_store.workspace_id).strip().lower() != str(active_workspace_id).strip().lower():
+        raise ValueError("Observed business tables must belong to the configured Engineering workspace; Metadata may be central.")
     store_kind = str(getattr(configured_store, "kind", "")).strip().lower()
     if store_kind == "lakehouse":
         if getattr(configured_store, "schema_enabled", False) and schema is None and not getattr(configured_store, "schema", None):
@@ -818,7 +820,7 @@ def _previous_source_target_observation(
     *,
     source_table_id: str,
     target_table_id: str,
-    environment_name: str,
+    workspace_id: str,
     committed_at: Any,
 ) -> list[dict[str, Any]]:
     """Return the latest baseline for one source-to-target relationship."""
@@ -827,7 +829,7 @@ def _previous_source_target_observation(
         for row in _processing_state_rows(history)
         if str(row.get("source_table_id") or "") == source_table_id
         and str(row.get("target_table_id") or "") == target_table_id
-        and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("workspace_id") or "") == workspace_id
         and row.get("record_type") == "drift_baseline"
         and row.get("status") == "committed"
         and row.get("_committed_at") < committed_at
@@ -841,7 +843,7 @@ def _latest_source_target_observation(
     *,
     source_table_id: str,
     target_table_id: str,
-    environment_name: str,
+    workspace_id: str,
 ) -> list[dict[str, Any]]:
     """Return the latest committed baseline for one source-to-target relationship."""
     candidates = [
@@ -849,7 +851,7 @@ def _latest_source_target_observation(
         for row in _processing_state_rows(history)
         if str(row.get("source_table_id") or "") == source_table_id
         and str(row.get("target_table_id") or "") == target_table_id
-        and str(row.get("environment_name") or "") == environment_name
+        and str(row.get("workspace_id") or "") == workspace_id
         and row.get("record_type") == "incremental_checkpoint"
         and row.get("status") == "committed"
     ]
@@ -993,7 +995,7 @@ class PublicationBatch:
             ]).first().asDict()
             self.input_rows = totals["rows"]
             boundary = {
-                "environment": self.context["env"], "target": self.identity["table_id"],
+                "workspace_id": self.context["scope_workspace_id"], "target": self.identity["table_id"],
                 "sources": sorted(self.source_table_ids), "processing": self.processing,
                 "schema": [(n, self.dataframe.schema[n].dataType.jsonValue()) for n in names],
                 "content": totals,
@@ -1016,7 +1018,7 @@ class PublicationBatch:
                 receipts = []
                 history_rows = _processing_state_rows(history)
                 for row in history_rows:
-                    if (row.get("record_type") != "publication_receipt" or row.get("environment_name") != self.context["env"]
+                    if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
                             or row.get("target_table_id") != self.identity["table_id"]):
                         continue
                     receipt = _publication_receipt(row, history_rows)
@@ -1044,7 +1046,7 @@ class PublicationBatch:
             self._active_sources = {
                 key: [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get(key, [])]
                 for source_id in self.source_table_ids
-                for key in [(self.context["env"], source_observation_run_id(self.context) or str(self.audit["_activity_id"]), source_id, self.identity["table_id"])]
+                for key in [(self.context["scope_workspace_id"], source_observation_run_id(self.context) or str(self.audit["_activity_id"]), source_id, self.identity["table_id"])]
             }
             _ACTIVE_PUBLICATION_SOURCES.update(self._active_sources)
             return self
@@ -1056,12 +1058,12 @@ class PublicationBatch:
     def _freeze_publication_snapshot(self, history):
         """Bind retry acknowledgement to the full durable membership of the winning receipt."""
         publication_id = _processing_state_id(
-            self.context["env"], self.identity["table_id"], self.receipt["batch_id"],
+            self.context["scope_workspace_id"], self.identity["table_id"], self.receipt["batch_id"],
             self.receipt["activity_id"], self.receipt["committed_at"],
         )
         self.publication_snapshot = [dict(row) for row in history
             if row.get("publication_id") == publication_id
-            and row.get("environment_name") == self.context["env"]
+            and row.get("workspace_id") == self.context["scope_workspace_id"]
             and row.get("target_table_id") == self.identity["table_id"]]
         self.finalization_recovery = any(row.get("status") == "staged" for row in self.publication_snapshot)
 
@@ -1109,7 +1111,7 @@ def _source_observation_signature(rows):
 def _verify_retry_observations(batch, history):
     """Refuse to attach a newer Read's checkpoint to an already-published frame."""
     for source_id in batch.source_table_ids:
-        key = (batch.context["env"], source_observation_run_id(batch.context) or str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
+        key = (batch.context["scope_workspace_id"], source_observation_run_id(batch.context) or str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
         for pending, record_type in (
             (_PENDING_SOURCE_OBSERVATIONS.get(key, []), "incremental_checkpoint"),
             (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), "drift_baseline"),
@@ -1118,7 +1120,7 @@ def _verify_retry_observations(batch, history):
                 continue
             candidates = {}
             for row in history:
-                if (row.get("environment_name") == batch.context["env"] and row.get("source_table_id") == source_id
+                if (row.get("workspace_id") == batch.context["scope_workspace_id"] and row.get("source_table_id") == source_id
                         and row.get("target_table_id") == batch.identity["table_id"] and row.get("record_type") == record_type
                         and _publication_receipt(row, history) == batch.receipt):
                     candidates.setdefault(row["observation_id"], []).append(row)
@@ -1133,11 +1135,11 @@ def _verify_publication_progress(batch, history):
     """Reject a retained batch after another run has advanced its source checkpoint."""
     execution_id = source_observation_run_id(batch.context) or str(batch.audit["_activity_id"])
     for source_id in batch.source_table_ids:
-        scope = _INCREMENTAL_SOURCE_SCOPES.get((batch.context["env"], execution_id, source_id, batch.identity["table_id"]))
+        scope = _INCREMENTAL_SOURCE_SCOPES.get((batch.context["scope_workspace_id"], execution_id, source_id, batch.identity["table_id"]))
         if not scope or not scope.get("has_data"):
             continue
         accepted = _latest_source_target_observation(
-            history, source_table_id=source_id, target_table_id=batch.identity["table_id"], environment_name=batch.context["env"],
+            history, source_table_id=source_id, target_table_id=batch.identity["table_id"], workspace_id=batch.context["scope_workspace_id"],
         )
         progress = max((row["max_change_value"] for row in accepted if row.get("max_change_value") is not None), key=_progress_key, default=None)
         expected = [scope.get("after")]
@@ -1220,7 +1222,7 @@ def _publication_receipt(row: Mapping[str, Any], history=()) -> dict[str, Any]:
     if row.get("record_type") != "publication_receipt":
         matches = [item for item in history if item.get("record_type") == "publication_receipt"
                    and item.get("publication_id") == row.get("publication_id")
-                   and item.get("environment_name") == row.get("environment_name")
+                   and item.get("workspace_id") == row.get("workspace_id")
                    and item.get("target_table_id") == row.get("target_table_id")]
         if not row.get("publication_id"):
             return {}
@@ -1336,23 +1338,23 @@ def _merge_source_observation_records(
 
 
 def _recover_completed_source_observations(
-    history: Any, *, config: Any, env: str, context: Mapping[str, Any],
+    history: Any, *, config: Any, active_workspace_id: str, context: Mapping[str, Any],
     source_table_id: str, target_table_id: str,
 ) -> list[dict[str, Any]]:
     """Accept an entire staged publication in one Delta transaction after verification."""
     rows = _processing_state_rows(history)
     publication_ids = {row.get("publication_id") for row in rows
-                       if row.get("environment_name") == env and row.get("source_table_id") == source_table_id
+                       if row.get("workspace_id") == active_workspace_id and row.get("source_table_id") == source_table_id
                        and row.get("target_table_id") == target_table_id and row.get("status") == "staged"}
     if not publication_ids:
         return rows
     identity = _CURRENT_TABLE_IDENTITIES.get(str(target_table_id))
-    identity = (_validated_observation_identity(config, env, target_table_id, identity) if identity is not None
-                else resolve_catalogue_table_identity(config, env, target_table_id, context=dict(context)))
+    identity = (_validated_observation_identity(config, active_workspace_id, target_table_id, identity) if identity is not None
+                else resolve_catalogue_table_identity(config, active_workspace_id, target_table_id, context=dict(context)))
     recovered = []
     for publication_id in publication_ids:
         members = [row for row in rows if row.get("publication_id") == publication_id
-                   and row.get("environment_name") == env and row.get("target_table_id") == target_table_id]
+                   and row.get("workspace_id") == active_workspace_id and row.get("target_table_id") == target_table_id]
         receipt = _publication_receipt(members[0], rows)
         if _physical_target_has_publication(identity, receipt, context=context):
             accepted_at = datetime.now(UTC)
@@ -1402,8 +1404,8 @@ def resolve_incremental_source_scope(
     context=None,
 ) -> dict[str, Any]:
     """Resolve and stage the unconsumed scope for one source-to-target relationship."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     current = observation_rows(observation)
     if not current:
@@ -1418,7 +1420,7 @@ def resolve_incremental_source_scope(
         history = _recover_completed_source_observations(
             history,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             context=context,
             source_table_id=source_table_id,
             target_table_id=target_table_id,
@@ -1427,7 +1429,7 @@ def resolve_incremental_source_scope(
             history,
             source_table_id=source_table_id,
             target_table_id=target_table_id,
-            environment_name=env,
+            workspace_id=active_workspace_id,
         )
     except Exception as exc:
         if not is_table_not_found_error(exc):
@@ -1488,7 +1490,7 @@ def resolve_incremental_source_scope(
                 row["partition_value"] = _watermark_timestamp(value)
     has_rows = any(int(row.get("row_count") or 0) > 0 for row in current)
     pending = [dict(row) for row in current] if has_rows else []
-    key = (env, activity_id, source_table_id, target_table_id)
+    key = (active_workspace_id, activity_id, source_table_id, target_table_id)
     _ensure_unambiguous_source_observation(key, pending, accepted=previous)
     _PENDING_SOURCE_OBSERVATIONS[key] = pending
 
@@ -1537,15 +1539,15 @@ def resolve_incremental_source_scope(
 
 
 def incremental_publication_scopes(
-    *, environment_name: str, activity_id: str, target_table_id: str, source_table_ids: list[str]
+    *, workspace_id: str, activity_id: str, target_table_id: str, source_table_ids: list[str]
 ) -> dict[str, dict[str, Any]]:
     """Return staged incremental scopes for one exact publication boundary."""
     return {
         source_table_id: _INCREMENTAL_SOURCE_SCOPES[
-            (environment_name, activity_id, source_table_id, target_table_id)
+            (workspace_id, activity_id, source_table_id, target_table_id)
         ]
         for source_table_id in source_table_ids
-        if (environment_name, activity_id, source_table_id, target_table_id)
+        if (workspace_id, activity_id, source_table_id, target_table_id)
         in _INCREMENTAL_SOURCE_SCOPES
     }
 
@@ -1559,12 +1561,12 @@ def check_source_drift_for_target(
     context=None,
 ) -> dict[str, Any]:
     """Evaluate source-governed drift against a target-specific baseline."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
     rules_df = load_table_guardrail_rules(
         config,
-        env,
+        active_workspace_id,
         spark_session=spark_session,
         table_id=source_table_id,
         context=context,
@@ -1573,12 +1575,12 @@ def check_source_drift_for_target(
         rules_df,
         guardrail_type="source_drift",
         table_id=source_table_id,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     if selected_rule is None:
         raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
     observation = get_current_source_observation(
-        environment_name=env, activity_id=activity_id, table_id=source_table_id
+        workspace_id=active_workspace_id, activity_id=activity_id, table_id=source_table_id
     )
     current = observation_rows(observation)
     if not current:
@@ -1592,14 +1594,14 @@ def check_source_drift_for_target(
             context={**(context or {}), "_spark_session": spark_session},
         )
         history = _recover_completed_source_observations(
-            history, config=config, env=env, context=context,
+            history, config=config, active_workspace_id=active_workspace_id, context=context,
             source_table_id=source_table_id, target_table_id=target_table_id,
         )
         previous = _previous_source_target_observation(
             history,
             source_table_id=source_table_id,
             target_table_id=target_table_id,
-            environment_name=env,
+            workspace_id=active_workspace_id,
             committed_at=committed_at,
         )
     except Exception as exc:
@@ -1651,7 +1653,7 @@ def check_source_drift_for_target(
         {
             "table_id": source_table_id,
             "target_table_id": target_table_id,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
             "observation_id": str(current[0].get("observation_id") or ""),
             "status": "changed" if has_changes else "unchanged",
             "can_continue": True,
@@ -1668,11 +1670,11 @@ def check_source_drift_for_target(
             "reason": "First target consumption." if first_observation else "Source comparison complete.",
         },
         rules_df=rules_df,
-        environment_name=env,
+        workspace_id=active_workspace_id,
         table_id=source_table_id,
         load_strategy=str(source_processing["load_strategy"]),
     )
-    key = (env, activity_id, source_table_id, target_table_id)
+    key = (active_workspace_id, activity_id, source_table_id, target_table_id)
     if result.get("can_continue"):
         _PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = pending
     else:
@@ -1681,7 +1683,7 @@ def check_source_drift_for_target(
         write_guardrail_result_row(
             spark_session=getattr(observation, "sparkSession", None),
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             run_id=activity_id,
             dataset_name="",
             table_name="",
@@ -1700,12 +1702,12 @@ def check_source_drift_for_target(
     return result
 
 
-def snapshot_pipeline_write_observations(*, environment_name, activity_id, target_table_id, source_table_ids):
+def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids):
     """Freeze source evidence so later reads cannot change a publication's checkpoint."""
     return {
         source_id: {
-            "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((environment_name, activity_id, source_id, target_table_id), [])],
-            "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((environment_name, activity_id, source_id, target_table_id), [])],
+            "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
+            "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
         }
         for source_id in source_table_ids
     }
@@ -1716,7 +1718,7 @@ def _processing_state_id(*values):
     return hashlib.sha256(json.dumps(values, default=str, separators=(",", ":")).encode()).hexdigest()
 
 
-def _pipeline_write_state_records(success_context, *, audit, env, status):
+def _pipeline_write_state_records(success_context, *, audit, active_workspace_id, status):
     """Build one publication receipt and its source members for a single atomic merge."""
     receipt = success_context.get("publication")
     if not receipt:
@@ -1727,10 +1729,10 @@ def _pipeline_write_state_records(success_context, *, audit, env, status):
                 {**row, "status": "committed", "accepted_at": audit["_committed_at"]} for row in persisted]
     context = success_context.get("context") or {}
     target_id = success_context["target_table_id"]
-    publication_id = _processing_state_id(env, target_id, receipt["batch_id"], receipt["activity_id"], receipt["committed_at"])
+    publication_id = _processing_state_id(active_workspace_id, target_id, receipt["batch_id"], receipt["activity_id"], receipt["committed_at"])
     target_name = success_context.get("target_table_name") or _CURRENT_TABLE_IDENTITIES.get(target_id, {}).get("table_name")
     accepted_at = audit["_committed_at"] if status == "committed" else None
-    common = {"environment_name": env, "target_table_id": target_id, "target_table_name": target_name,
+    common = {"workspace_id": active_workspace_id, "target_table_id": target_id, "target_table_name": target_name,
               "publication_id": publication_id, "status": status, "accepted_at": accepted_at,
               "pipeline_id": getattr(context.get("execution_plan"), "pipeline_id", None), **audit}
     records = [{**common, "record_id": publication_id, "record_type": "publication_receipt",
@@ -1740,7 +1742,7 @@ def _pipeline_write_state_records(success_context, *, audit, env, status):
     for source_id in success_context.get("source_table_ids", []):
         captured = success_context["observation_snapshot"][source_id]
         source_name = _CURRENT_TABLE_IDENTITIES.get(source_id, {}).get("table_name") or resolve_catalogue_table_identity(
-            context["config"], env, source_id, context=context).get("table_name")
+            context["config"], active_workspace_id, source_id, context=context).get("table_name")
         for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline")):
             for row in captured[kind]:
                 records.append({**{name: row.get(name) for name in (
@@ -1766,11 +1768,11 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     if not target_table_id or not activity_id or not notebook_name:
         raise ValueError("success_context is missing target, activity, or logical notebook identity.")
 
-    config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
+    config, active_workspace_id, context = resolve_fabric_context(context=success_context.get("context"))
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     audit["_activity_id"] = activity_id
     snapshot = success_context["observation_snapshot"]
-    records = _pipeline_write_state_records(success_context, audit=audit, env=env, status="committed")
+    records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="committed")
     for source_table_id in source_table_ids:
         persist_lineage_participation(
             table_id=source_table_id,
@@ -1786,7 +1788,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     )
     _merge_source_observation_records(records, config=config, context=context)
     for source_table_id in source_table_ids:
-        key = (env, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
+        key = (active_workspace_id, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
         captured = snapshot[source_table_id]
         if _PENDING_SOURCE_OBSERVATIONS.get(key, []) == captured["incremental"]:
             _PENDING_SOURCE_OBSERVATIONS.pop(key, None)
@@ -1803,10 +1805,10 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     notebook_name = str(success_context.get("notebook_name") or "").strip()
     if not target_table_id or not activity_id or not notebook_name:
         raise ValueError("success_context is missing target, activity, or logical notebook identity.")
-    config, env, context = resolve_fabric_context(context=success_context.get("context"))
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
+    config, active_workspace_id, context = resolve_fabric_context(context=success_context.get("context"))
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     audit["_activity_id"] = activity_id
-    records = _pipeline_write_state_records(success_context, audit=audit, env=env, status="staged")
+    records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="staged")
     _merge_source_observation_records(records, config=config, context=context)
     return records
 
@@ -1839,7 +1841,7 @@ def _validate_token_mapping(mapping):
 
 
 def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existing_mapping,
-                         config=None, env=None, context=None):
+                         config=None, active_workspace_id=None, context=None):
     """Materialize batch lookups for a vault, or cumulative caller-owned assignments."""
     from pyspark.sql import functions as F
 
@@ -1850,7 +1852,7 @@ def _build_token_mapping(dataframe, *, column_name, column_id, table_id, existin
     ).distinct()
     target = dict(getattr(getattr(config, "governance_config", None), "sensitive_data_token_mapping", {}) or {})
     vault, saved, established = None, None, None
-    io_context = {**(context or {}), "config": config, "env": env, "_fabricops_suppress_io_log": True}
+    io_context = {**(context or {}), "config": config, "scope_workspace_id": active_workspace_id, "_fabricops_suppress_io_log": True}
     if target:
         from delta.tables import DeltaTable
 
@@ -2019,7 +2021,7 @@ def check_sensitive_data_rules(
     rules: list[dict[str, Any]],
     identity: dict[str, Any],
     config,
-    env: str,
+    active_workspace_id: str,
     spark_session,
     run_id: str = "",
     existing_mapping=None,
@@ -2056,7 +2058,7 @@ def check_sensitive_data_rules(
                         column_id=column_id,
                         table_id=identity["table_id"],
                         existing_mapping=existing_mapping,
-                        config=config, env=env, context=context,
+                        config=config, active_workspace_id=active_workspace_id, context=context,
                     )
                     mappings.append(mapping)
                     token_columns.append((column_name, column_id))
@@ -2088,7 +2090,7 @@ def check_sensitive_data_rules(
             write_guardrail_result_row(
                 spark_session=spark_session,
                 config=config,
-                env=env,
+                active_workspace_id=active_workspace_id,
                 run_id=run_id,
                 dataset_name="",
                 table_name=identity["table_name"],
@@ -2146,7 +2148,7 @@ def write_guardrail_result_row(
     *,
     spark_session: Any,
     config: Any,
-    env: str,
+    active_workspace_id: str,
     run_id: str,
     dataset_name: str,
     table_name: str,
@@ -2175,7 +2177,7 @@ def write_guardrail_result_row(
     if guardrail_version <= 0:
         raise ValueError("guardrail_version is required to persist a Guardrail result.")
     plan = (context or {}).get("execution_plan")
-    audit = build_pipeline_audit_fields(config=config, env=env,
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id,
                                        runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
     resolved_execution_type = plan.execution_mode if plan is not None else "live"
@@ -2190,9 +2192,9 @@ def write_guardrail_result_row(
     if not rule_context:
         try:
             rules = load_table_guardrail_rules(
-                config, env, spark_session=spark_session,
+                config, active_workspace_id, spark_session=spark_session,
                 table_id=str(table_id or result.get("table_id") or "").strip(),
-                context=context or {"config": config, "env": env},
+                context=context or {"config": config, "scope_workspace_id": active_workspace_id},
             )
             for rule_row in observation_rows(rules):
                 if (str(rule_row.get("guardrail_rule_id") or "") == guardrail_rule_id
@@ -2211,7 +2213,7 @@ def write_guardrail_result_row(
         "contract_version": int(contract_version or result.get("contract_version") or 0),
         "execution_type": resolved_execution_type,
         "run_id": resolved_run_id,
-        "environment_name": env,
+        "workspace_id": active_workspace_id,
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
@@ -2234,7 +2236,7 @@ def write_guardrail_result_row(
         results_table,
         store="Metadata",
         schema=metadata_table_physical_schema(config, results_table),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
         mode="append",
     )
 
@@ -2624,7 +2626,7 @@ def _parse_rule_parameters(row: dict) -> dict:
     except Exception:
         return {}
 
-def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, environment_name: str = "", table_id: str = "") -> dict | None:
+def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name: str, table_name: str, workspace_id: str = "", table_id: str = "") -> dict | None:
     if rules_df is None:
         return None
     rows = rules_df.collect() if hasattr(rules_df, "collect") else ([rules_df] if isinstance(rules_df, dict) else rules_df)
@@ -2633,8 +2635,8 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         row = _row_to_dict(raw)
         if _string_value(_catalogue_value(row, "guardrail_type")).lower() != guardrail_type:
             continue
-        rule_environment = _string_value(_catalogue_value(row, "environment_name"))
-        if rule_environment and environment_name and rule_environment != environment_name:
+        rule_workspace_id = _string_value(_catalogue_value(row, "workspace_id"))
+        if rule_workspace_id and workspace_id and rule_workspace_id != workspace_id:
             continue
         if dataset_name and _string_value(_catalogue_value(row, "dataset_name")) != dataset_name:
             continue
@@ -2673,7 +2675,7 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
 
 def resolve_data_contract_version(
     config,
-    env: str,
+    active_workspace_id: str,
     table_id: str,
     contract_id: str,
     contract_version: Any,
@@ -2691,7 +2693,7 @@ def resolve_data_contract_version(
             DATA_CONTRACT_TABLE,
             store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context={**(context or {"config": config, "env": env}), "_spark_session": spark_session},
+            context={**(context or {"config": config, "scope_workspace_id": active_workspace_id}), "_spark_session": spark_session},
         )
     except Exception as exc:
         if is_table_not_found_error(exc):
@@ -2729,13 +2731,13 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
     if not isinstance(execution_plan, PipelineExecutionPlan):
         raise ValueError("An explicit PipelineExecutionPlan is required for every Read and Write.")
     plan = execution_plan
-    config, env, runtime = resolve_fabric_context(context=plan.runtime_context)
-    if env != plan.environment or str(runtime.get("notebook_id") or "") != plan.notebook_id:
-        raise ValueError("Execution plan environment or notebook identity changed; create a new plan.")
+    config, active_workspace_id, runtime = resolve_fabric_context(context=plan.runtime_context)
+    if active_workspace_id != plan.workspace_id or str(runtime.get("notebook_id") or "") != plan.notebook_id:
+        raise ValueError("Execution plan workspace_id or notebook identity changed; create a new plan.")
     identities = json.loads(plan.participants_json)
     if set(table_ids) - set(identities):
         raise ValueError("Every Read/Write table must participate in the execution plan.")
-    context = {**runtime, "config": config, "env": env, "execution_plan": plan,
+    context = {**runtime, "config": config, "scope_workspace_id": active_workspace_id, "execution_plan": plan,
                "_pipeline_contracts": json.loads(plan.contracts_json),
                "_pipeline_rules": {}, "_pipeline_identities": identities}
     # Isolate transient Testing caches without replacing persisted Fabric audit identity.
@@ -2746,7 +2748,7 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
         from fabricops_kit.activated_pipeline.shared import verify_live_plan
         verify_live_plan(plan, spark_session=spark_session)
     for table_id in identities:
-        load_table_guardrail_rules(config, env, table_id=table_id, spark_session=spark_session, context=context)
+        load_table_guardrail_rules(config, active_workspace_id, table_id=table_id, spark_session=spark_session, context=context)
     return context
 
 
@@ -2836,7 +2838,7 @@ def print_pipeline_contract(context, table_id, *, operation, guardrails, verbose
 
 def resolve_pipeline_data_contract(
     config,
-    env: str,
+    active_workspace_id: str,
     table_id: str,
     *,
     spark_session=None,
@@ -2851,7 +2853,7 @@ def resolve_pipeline_data_contract(
 
 def resolve_catalogue_table_id(
     config,
-    env: str,
+    active_workspace_id: str,
     *,
     store_type: str,
     layer: str,
@@ -2863,7 +2865,7 @@ def resolve_catalogue_table_id(
     frame = read_lakehouse_table(
         CATALOGUE_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env, "_spark_session": spark_session},
+        context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
     matches = []
@@ -2871,7 +2873,7 @@ def resolve_catalogue_table_id(
         row = _row_to_dict(raw)
         actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
         if (
-            str(row.get("environment_name") or "") == env
+            str(row.get("workspace_id") or "") == active_workspace_id
             and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
             and row.get("is_active") is not False
             and actual == expected
@@ -2890,7 +2892,7 @@ def resolve_catalogue_table_id(
 
 def resolve_catalogue_table_identity(
     config,
-    env: str,
+    active_workspace_id: str,
     table_id: str,
     *,
     spark_session=None,
@@ -2908,7 +2910,7 @@ def resolve_catalogue_table_identity(
         store="Metadata",
         schema=metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={
-            **(dict(context) if context is not None else {"config": config, "env": env}),
+            **(dict(context) if context is not None else {"config": config, "scope_workspace_id": active_workspace_id}),
             "_fabricops_suppress_io_log": True,
             "_spark_session": spark_session,
         },
@@ -2916,11 +2918,11 @@ def resolve_catalogue_table_identity(
     matches = []
     if hasattr(frame, "where"):
         from pyspark.sql import functions as F
-        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("environment_name") == env) & (F.col("metadata_level") == "table"))
+        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("workspace_id") == active_workspace_id) & (F.col("metadata_level") == "table"))
     for raw in frame.collect():
         row = _row_to_dict(raw)
         if (
-            str(row.get("environment_name") or "") == env
+            str(row.get("workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "").strip() == canonical_id
             and str(row.get("metadata_level") or "").strip().lower() == "table"
             and not str(row.get("column_id") or "").strip()
@@ -2930,7 +2932,7 @@ def resolve_catalogue_table_identity(
     if not matches:
         raise ValueError(
             f"No active registered Catalogue table exists for table_id {canonical_id!r} "
-            f"in environment {env!r}."
+            f"in workspace_id {active_workspace_id!r}."
         )
     if len(matches) != 1:
         raise RuntimeError(
@@ -3046,7 +3048,7 @@ def grain_check_core(dataframe, rule, *, scope):
     return result
 
 
-def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, table_id: str) -> list[dict[str, Any]]:
+def contract_guardrail_rows(contract: dict[str, Any], *, workspace_id: str, table_id: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
     table = payload.get("table")
@@ -3071,11 +3073,19 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
             raise ValueError(f"Active Data Contract table.columns contains duplicate column_name {column_name!r}.")
         expected_schema[column_name] = data_type
         column_names_by_id[column_id] = column_name
+    required_columns = [str(column["column_name"]) for column in columns if column.get("presence", "required") == "required"]
     rules = payload.get("guardrails")
     if not isinstance(rules, list):
         raise ValueError("Active Data Contract guardrails must be a list.")
+    authored_schema = next((rule for rule in rules if rule.get("guardrail_type") == "schema"), {})
+    structural = {
+        "guardrail_rule_id": authored_schema.get("guardrail_rule_id") or str(uuid5(NAMESPACE_URL, f"fabricops-schema:{contract['contract_id']}:{contract['contract_version']}")),
+        "guardrail_version": int(authored_schema.get("guardrail_version") or 1), "guardrail_type": "schema", "rule_id": "contract_schema", "rule_type": "strict",
+        "action": "Block", "is_active": True,
+        "rule_parameters": {"required_columns": required_columns},
+    }
     adapted = []
-    for raw in rules:
+    for raw in [structural, *[rule for rule in rules if rule.get("guardrail_type") != "schema"]]:
         if not isinstance(raw, dict):
             raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
         if raw.get("is_active", True) is False:
@@ -3111,7 +3121,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, environment_name: str, 
             **{name: value for name, value in raw.items() if name not in {"rule_parameters", "severity"}},
             "table_id": table_id,
             "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
-            "environment_name": environment_name,
+            "workspace_id": workspace_id,
             "rule_parameters_json": json.dumps(params, sort_keys=True),
             "is_active": True,
             "activation_state": "active",
@@ -3164,7 +3174,7 @@ def validated_processing(processing: Any) -> dict[str, Any]:
 
 def resolve_table_processing_definition(
     config,
-    env: str,
+    active_workspace_id: str,
     table_id: str,
     *,
     spark_session=None,
@@ -3173,7 +3183,7 @@ def resolve_table_processing_definition(
 ) -> dict[str, Any]:
     """Resolve authored processing and validate it against the applicable contract."""
     authored = validated_processing(dict(authored_processing)) if authored_processing is not None else None
-    contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark_session, context=context)
+    contract = resolve_pipeline_data_contract(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
     if contract is not None:
         payload = contract.get("contract_payload") or _contract_payload(contract)
         table_definition = payload.get("table") or {}
@@ -3255,7 +3265,7 @@ def resolve_target_audit_fields(context: Mapping[str, Any] | None) -> dict[str, 
     runtime_context = dict(context or {})
     values = build_pipeline_audit_fields(
         config=runtime_context.get("config"),
-        env=runtime_context.get("env"),
+        active_workspace_id=runtime_context.get("scope_workspace_id"),
         runtime_context=runtime_context,
     )
     return {name: values[name] for name in _TARGET_AUDIT_COLUMNS}
@@ -3425,7 +3435,7 @@ def execute_lakehouse_processing(
 
 def load_table_guardrail_rules(
     config,
-    env: str,
+    active_workspace_id: str,
     *,
     spark_session=None,
     table_id: str = "",
@@ -3437,18 +3447,18 @@ def load_table_guardrail_rules(
     cache = (context or {}).get("_pipeline_rules")
     if cache is not None and table_id in cache:
         return cache[table_id]
-    contract = resolve_pipeline_data_contract(config, env, table_id, spark_session=spark_session, context=context)
-    rows = contract_guardrail_rows(contract, environment_name=env, table_id=table_id) if contract else []
+    contract = resolve_pipeline_data_contract(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
+    rows = contract_guardrail_rows(contract, workspace_id=active_workspace_id, table_id=table_id) if contract else []
     if cache is not None:
         cache[table_id] = rows
     return rows
 
 
-def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str, environment_name: str = "") -> dict | None:
+def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str, workspace_id: str = "") -> dict | None:
     """Select the latest active approved table rule by canonical identity."""
     return _select_table_guardrail_rule(
         rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",
-        environment_name=environment_name, table_id=table_id,
+        workspace_id=workspace_id, table_id=table_id,
     )
 
 def resolve_source_drift_observation_columns(rule: dict) -> tuple[str, str]:
@@ -3510,14 +3520,14 @@ def evaluate_source_drift_guardrail(
     rules_df,
     dataset_name: str = "",
     table_name: str = "",
-    environment_name: str = "",
+    workspace_id: str = "",
     table_id: str = "",
     load_strategy: str,
 ) -> dict:
     """Validate detected historical mutation against a governed load strategy."""
     rule = _select_table_guardrail_rule(
         rules_df, guardrail_type="source_drift", dataset_name=dataset_name,
-        table_name=table_name, environment_name=environment_name,
+        table_name=table_name, workspace_id=workspace_id,
         table_id=table_id,
     )
     if not rule:
@@ -3681,7 +3691,7 @@ def _guardrail_schema_check_base(
     rules_df=None,
     dataset_name: str = "",
     table_name: str = "",
-    environment_name: str = "",
+    workspace_id: str = "",
     table_id: str = "",
 ) -> dict:
     """Apply an internal runtime schema check for the governed runtime checks.
@@ -3707,8 +3717,8 @@ def _guardrail_schema_check_base(
         Dataset identity used to select an approved rule.
     table_name : str, optional
         Table identity used to select an approved rule.
-    environment_name : str, optional
-        Environment identity used to select an approved rule.
+    workspace_id : str, optional
+        Workspace identity used to select an approved rule.
     table_id : str, optional
         Canonical table identity used to select an approved rule.
 
@@ -3736,7 +3746,7 @@ def _guardrail_schema_check_base(
     if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
         rules_df, expected_schema = expected_schema, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, workspace_id=workspace_id, table_id=table_id)
         if not rule:
             expected_schema, preset = {}, "monitor_only"
         else:
@@ -3916,7 +3926,7 @@ def freshness_check_core(
     rules_df=None,
     dataset_name: str = "",
     table_name: str = "",
-    environment_name: str = "",
+    workspace_id: str = "",
     table_id: str = "",
     config: Any = None,
 ) -> dict:
@@ -3943,8 +3953,8 @@ def freshness_check_core(
         Dataset identity used to select an approved rule.
     table_name : str, optional
         Table identity used to select an approved rule.
-    environment_name : str, optional
-        Environment identity used to select an approved rule.
+    workspace_id : str, optional
+        Workspace identity used to select an approved rule.
     table_id : str, optional
         Canonical table identity used to select an approved rule.
     config : FrameworkConfig or dict, optional
@@ -3963,7 +3973,7 @@ def freshness_check_core(
     if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
         rules_df, freshness_column = freshness_column, None
     if rules_df is not None:
-        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, table_id=table_id)
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, workspace_id=workspace_id, table_id=table_id)
         if rule:
             params = _parse_rule_parameters(rule)
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
@@ -4401,13 +4411,13 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
             rule[tolerance] = value
     return rules
 
-def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+def _load_active_dq_rules(metadata_df, table_id: str, active_workspace_id: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
     """Load active DQ guardrail rules from append-only metadata rows."""
     if isinstance(metadata_df, list):
         latest = [row for row in metadata_df
                   if str(row.get("table_id") or "") == table_id
                   and str(row.get("guardrail_type") or "").lower() == "data_quality"
-                  and (env is None or row.get("environment_name") == env)
+                  and (active_workspace_id is None or row.get("workspace_id") == active_workspace_id)
                   and (dataset_name is None or "dataset_name" not in row or row.get("dataset_name") == dataset_name)
                   and _is_active_guardrail_rule(row)]
     else:
@@ -4426,8 +4436,8 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
         latest = metadata_df.filter(F.col("table_id") == table_id)
         if "guardrail_type" in columns:
             latest = latest.filter(F.lower(F.col("guardrail_type")) == "data_quality")
-        if env is not None and "environment_name" in columns:
-            latest = latest.filter(F.col("environment_name") == env)
+        if active_workspace_id is not None and "workspace_id" in columns:
+            latest = latest.filter(F.col("workspace_id") == active_workspace_id)
         if dataset_name is not None and "dataset_name" in columns:
             latest = latest.filter(F.col("dataset_name") == dataset_name)
         order_columns = [name for name in ("_committed_at", "approved_at") if name in columns]
@@ -4486,7 +4496,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, env: str | None = None, da
 def check_dq_runtime(
     dataframe,
     config,
-    env: str,
+    active_workspace_id: str,
     table_name: str,
     *,
     table_id: str,
@@ -4527,12 +4537,12 @@ def check_dq_runtime(
     metadata_df = rules_df
     if metadata_df is None:
         metadata_df = load_table_guardrail_rules(
-            config, env, spark_session=spark_session, table_id=table_id, context=context,
+            config, active_workspace_id, spark_session=spark_session, table_id=table_id, context=context,
         )
     rules = (
         []
         if isinstance(metadata_df, list) and not metadata_df
-        else _load_active_dq_rules(metadata_df, table_id, env=env, dataset_name=dataset_name or None)
+        else _load_active_dq_rules(metadata_df, table_id, active_workspace_id=active_workspace_id, dataset_name=dataset_name or None)
     )
     evaluation = _evaluate_dq_rules(
         dataframe, table_name, rules, sample_size=10 if diagnostics != "none" else 0,
@@ -4566,7 +4576,7 @@ def check_dq_runtime(
         result["failed_values"] = _dq_empty_failed_values(spark_session)
         return result
 
-    audit = build_pipeline_audit_fields(config=config, env=env,
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id,
                                        runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"]).strip()
     if plan is not None:
@@ -4585,7 +4595,7 @@ def check_dq_runtime(
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": ",".join(rule["columns"]),
@@ -4611,7 +4621,7 @@ def check_dq_runtime(
             spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
             "METADATA_GUARDRAIL_RESULTS", store="Metadata",
             schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
-            context=context or {"config": config, "env": env}, mode="append",
+            context=context or {"config": config, "scope_workspace_id": active_workspace_id}, mode="append",
         )
 
     if diagnostics == "full":
@@ -5079,7 +5089,7 @@ def _select_rule(
     *,
     guardrail_type: str,
     table_id: str,
-    environment_name: str = "",
+    workspace_id: str = "",
 ) -> dict[str, Any] | None:
     if rules_df is None:
         return None
@@ -5095,8 +5105,8 @@ def _select_rule(
             continue
         if str(row.get("table_id") or "") != table_id:
             continue
-        rule_environment = str(row.get("environment_name") or "")
-        if environment_name and rule_environment != environment_name:
+        rule_workspace_id = str(row.get("workspace_id") or "")
+        if workspace_id and rule_workspace_id != workspace_id:
             continue
         if row.get("is_active") is not True:
             continue
@@ -5120,7 +5130,7 @@ def schema_check_core(
     rules_df: Any = None,
     dataset_name: str = "",
     table_name: str = "",
-    environment_name: str = "",
+    workspace_id: str = "",
     table_id: str = "",
 ) -> dict[str, Any]:
     """Evaluate schema intent using the canonical Guardrail rule contract."""
@@ -5131,7 +5141,7 @@ def schema_check_core(
         rules_df,
         guardrail_type="schema",
         table_id=table_id,
-        environment_name=environment_name,
+        workspace_id=workspace_id,
     )
     if rule is None:
         return _guardrail_schema_check_base(dataframe, {}, preset="monitor_only")
@@ -5142,8 +5152,8 @@ def schema_check_core(
         str(column): str(expected.get(column, "")) for column in selected_columns
     }
     rule_type = str(rule.get("rule_type") or "relaxed").lower()
-    if rule_type == "required_columns":
-        required_columns = set(params.get("required_columns") or [])
+    if "required_columns" in params:
+        required_columns = set(params["required_columns"])
         actual_columns, _ = _actual_schema(dataframe)
         # Presence applies only to Required selections; every present contracted
         # column still uses its frozen datatype, regardless of that selection.
@@ -5151,12 +5161,7 @@ def schema_check_core(
             column: datatype for column, datatype in expected_schema.items()
             if column in required_columns or column in actual_columns
         }
-    resolved_preset = {
-        "strict": "strict",
-        "minimum_required": "allow_new_columns",
-        "relaxed": "allow_new_columns",
-        "skip": "monitor_only",
-    }.get(rule_type, "allow_new_columns")
+    resolved_preset = "strict"
     result = _guardrail_schema_check_base(dataframe, expected_schema, preset=resolved_preset)
     result.update(
         guardrail_type="schema",
@@ -5311,19 +5316,19 @@ def _observe_partition_dataframe(frame: Any, partition_column: str, change_colum
 
 
 def _validated_observation_identity(
-    config: Any, env: str, table_id: str, identity: Mapping[str, Any]
+    config: Any, active_workspace_id: str, table_id: str, identity: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Revalidate a cached physical identity against the active environment."""
+    """Revalidate a cached physical identity against the active workspace_id."""
     resolved = resolve_physical_table_identity(
         config,
-        env,
+        active_workspace_id,
         store=str(identity["store"]),
         schema=identity.get("schema"),
         table_name=str(identity["table_name"]),
     )
     if str(resolved["table_id"]) != str(table_id):
         raise ValueError(
-            f"Physical identity for {table_id!r} does not match environment {env!r}."
+            f"Physical identity for {table_id!r} does not match workspace_id {active_workspace_id!r}."
         )
     return resolved
 
@@ -5338,19 +5343,19 @@ def capture_source_observation(
     spark_session=None,
 ) -> Any:
     """Capture independently configured current-run source Guardrail evidence."""
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark = get_spark_session(spark_session, dataframe=dataframe, context=context)
     # An explicit physical source identity does not require Catalogue activation.
-    # Revalidate it against this environment rather than trusting global cache state.
+    # Revalidate it against this workspace_id rather than trusting global cache state.
     governed_source = (
-        _validated_observation_identity(config, env, table_id, source_identity)
+        _validated_observation_identity(config, active_workspace_id, table_id, source_identity)
         if source_identity is not None
         else None
     )
     if governed_source is None:
         governed_source = resolve_catalogue_table_identity(
             config,
-            env,
+            active_workspace_id,
             table_id,
             spark_session=spark,
             context=context,
@@ -5365,7 +5370,7 @@ def capture_source_observation(
     ).lower()
     if source_type not in {"lakehouse", "warehouse"}:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
-    configured_store = get_store(config, env, store_key)
+    configured_store = get_store(config, active_workspace_id, store_key)
     if source_type == "warehouse":
         configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
@@ -5382,7 +5387,7 @@ def capture_source_observation(
 
     rules_df = load_table_guardrail_rules(
         config,
-        env,
+        active_workspace_id,
         spark_session=spark,
         table_id=governed_table_id,
         context=context,
@@ -5391,15 +5396,15 @@ def capture_source_observation(
         rules_df,
         guardrail_type="source_drift",
         table_id=governed_table_id,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
     freshness_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="freshness",
         table_id=governed_table_id,
-        environment_name=env,
+        workspace_id=active_workspace_id,
     )
-    audit = build_pipeline_audit_fields(config=config, env=env, runtime_context=context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
 
     if (
         freshness_rule is not None
@@ -5428,10 +5433,10 @@ def capture_source_observation(
                 )
             latest_value = _max_column_value(freshness_frame, freshness_column)
         _CURRENT_FRESHNESS_EVIDENCE[
-            (env, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
+            (active_workspace_id, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
         ] = {
             "source_table_id": governed_table_id,
-            "environment_name": env,
+            "workspace_id": active_workspace_id,
             "freshness_column": freshness_column,
             "latest_value": latest_value,
             "_activity_id": str(audit["_activity_id"]),
@@ -5476,9 +5481,9 @@ def capture_source_observation(
                         "observation_id": observation_id,
                         "source_table_id": governed_table_id,
                         "target_table_id": None,
-                        "environment_name": env,
+                        "workspace_id": active_workspace_id,
                         "run_id": source_observation_run_id(context),
-                        "record_id": _processing_state_id(env, governed_table_id, observation_id,
+                        "record_id": _processing_state_id(active_workspace_id, governed_table_id, observation_id,
                             {"empty_source": True} if row.get("is_present") is None else row.get("partition_value")),
                         "record_type": "source_observation", "status": "observed",
                         "source_table_name": table_value, "observed_at": audit["_committed_at"],
@@ -5500,7 +5505,7 @@ def capture_source_observation(
             *resolve_source_drift_observation_columns(drift_rule)
         )
         set_current_source_observation(
-            environment_name=env,
+            workspace_id=active_workspace_id,
             activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
             table_id=governed_table_id,
             observation=drift_observation,
@@ -5535,11 +5540,13 @@ class ExecutionSummary:
         return elapsed
 
 
-def pipeline_physical_bindings(identities, *, config, environment):
+def pipeline_physical_bindings(identities, *, config, workspace_id):
     """Capture execution destinations separately from global logical table identities."""
     bindings = {}
     for table_id, item in identities.items():
-        store = get_store(config, environment, item["store"])
+        store = get_store(config, workspace_id, item["store"])
+        if str(store.workspace_id).strip().lower() != str(workspace_id).strip().lower():
+            raise ValueError("Pipeline business destinations must belong to the calling Engineering workspace.")
         bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
@@ -5548,17 +5555,17 @@ def pipeline_physical_bindings(identities, *, config, environment):
 def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None):
     """Freeze Test participants and exact contracts under a permanent UUIDv4."""
     if execution_mode == "live":
-        raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved environment authority.")
+        raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved workspace_id authority.")
     from types import MappingProxyType
 
     if execution_mode != "testing":
         raise ValueError("execution_mode must be testing or live.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
 
-    config, env, runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     notebook_id = str(runtime.get("notebook_id") or "").strip()
     identities = resolve_pipeline_participants(
-        config, env, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
+        config, active_workspace_id, sources=sources, targets=targets, context=runtime, spark_session=spark_session,
     )
     pipeline_id = validate_pipeline_id(pipeline_id)
     if selections is None:
@@ -5575,17 +5582,17 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         if set(choice) != {"contract_id", "contract_version"}:
             raise ValueError("Select exact contract_id/contract_version or explicit no_contract=True.")
         selected = resolve_data_contract_version(
-            config, env, table_id, choice["contract_id"], choice["contract_version"],
+            config, active_workspace_id, table_id, choice["contract_id"], choice["contract_version"],
             spark_session=spark_session, context=runtime,
         )
         validate_contract_definitions(selected["contract_payload"])
-        contract_guardrail_rows(selected, environment_name=env, table_id=table_id)
+        contract_guardrail_rows(selected, workspace_id=active_workspace_id, table_id=table_id)
         contracts[table_id] = selected
     plan_id = str(uuid4())
-    run_context = {**runtime, "config": config, "env": env, "_pipeline_spark": spark_session,
-                   "_pipeline_bindings": pipeline_physical_bindings(identities, config=config, environment=env)}
+    run_context = {**runtime, "config": config, "scope_workspace_id": active_workspace_id, "_pipeline_spark": spark_session,
+                   "_pipeline_bindings": pipeline_physical_bindings(identities, config=config, workspace_id=active_workspace_id)}
     plan = PipelineExecutionPlan(
-        execution_mode, env, notebook_id, plan_id,
+        execution_mode, active_workspace_id, notebook_id, plan_id,
         json.dumps(identities, default=str, sort_keys=True),
         json.dumps(selections, sort_keys=True), json.dumps(contracts, default=str, sort_keys=True),
         MappingProxyType(run_context),
@@ -5595,20 +5602,20 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
     return plan
 
 
-def resolve_pipeline_participants(config, env, *, sources, targets, context=None, spark_session=None):
+def resolve_pipeline_participants(config, active_workspace_id, *, sources, targets, context=None, spark_session=None):
     """Resolve configured participants once under the shared identity validation rules."""
     identities = {}
     for role, participants in (("source", sources), ("target", targets)):
         for participant in participants:
             if "store" in participant:
-                identity = resolve_physical_table_identity(config, env, **{
+                identity = resolve_physical_table_identity(config, active_workspace_id, **{
                     key: participant[key] for key in ("store", "schema", "table_name")
                 })
                 if participant.get("table_id") not in (None, identity["table_id"]):
                     raise ValueError("Configured participant does not match its canonical table_id.")
             else:
                 identity = resolve_catalogue_table_identity(
-                    config, env, participant["table_id"], context=context, spark_session=spark_session,
+                    config, active_workspace_id, participant["table_id"], context=context, spark_session=spark_session,
                 )
             identity = {**identity, "store_type": identity.get("store_type") or identity.get("store_kind")}
             table_id = identity["table_id"]
@@ -5692,14 +5699,14 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
     row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.approval_id or None,
-        "execution_mode": plan.execution_mode, "environment_name": plan.environment,
+        "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
         "activation_revision": plan.activation_revision or None,
         "boundary_completed": plan.evidence.get("boundary_completed", False),
         "operations": sorted(operations, key=lambda item: item["operation_key"]),
         "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
         "warnings_json": canonical_pipeline_json(plan.evidence.get("warnings", [])),
-        **(build_runtime_audit_fields(config=config, env=plan.environment, runtime_context=plan.runtime_context) if durable else {})}
+        **(build_runtime_audit_fields(config=config, active_workspace_id=plan.workspace_id, runtime_context=plan.runtime_context) if durable else {})}
     validate_pipeline_run(row)
     return coerce_metadata_row_types("METADATA_PIPELINE_RUN", row)
 
@@ -5804,7 +5811,7 @@ def publish_pipeline_testing_results(plan, *, spark_session=None):
         return plan.run_result
     if plan.evidence.get("persistence_failed"):
         raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
-    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], env=plan.environment,
+    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], active_workspace_id=plan.workspace_id,
         runtime_context=plan.runtime_context)
     rows = plan.evidence.get("guardrail_history", [])
     if rows:
@@ -5846,7 +5853,7 @@ class PipelineOperation:
             if plan.evidence["failures"] and plan.permits_persistence:
                 raise RuntimeError("Pipeline run previously failed; create a new plan.")
             physical_identity = resolve_physical_table_identity(
-                plan.runtime_context["config"], plan.environment,
+                plan.runtime_context["config"], plan.workspace_id,
                 **{key: args[key] for key in ("store", "schema", "table_name")})
             table_id = physical_identity["table_id"]
             identities = json.loads(plan.participants_json)
@@ -5854,7 +5861,7 @@ class PipelineOperation:
             if identity is None or self.role not in identity["roles"]:
                 raise ValueError("Operation must match a declared pipeline participant and role.")
             actual_binding = pipeline_physical_bindings(
-                {table_id: physical_identity}, config=plan.runtime_context["config"], environment=plan.environment,
+                {table_id: physical_identity}, config=plan.runtime_context["config"], workspace_id=plan.workspace_id,
             )[table_id]
             expected_binding = plan.runtime_context.get("_pipeline_bindings", {}).get(table_id)
             if actual_binding != expected_binding:
@@ -6049,7 +6056,7 @@ class PipelineSession:
             matches = [row for row in self.frozen_rows if row["table_id"] == table_id
                        and row["contract_id"] == contract_id and row["contract_version"] == contract_version]
             if not matches and self.shell is None:
-                matches = [resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
+                matches = [resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.workspace_id,
                     table_id, contract_id, contract_version, spark_session=self.spark, context=self.plan.runtime_context)]
             if len(matches) != 1:
                 raise ValueError("Select an available exact frozen contract version.")
@@ -6066,11 +6073,11 @@ class PipelineSession:
             if self.plan.execution_mode == "testing":
                 identities = json.loads(self.plan.participants_json)
                 requested = [(role, resolve_physical_table_identity(
-                    self.plan.runtime_context["config"], self.plan.environment,
+                    self.plan.runtime_context["config"], self.plan.workspace_id,
                     **{key: arguments[key] for key in ("store", "schema", "table_name")}))]
                 if arguments.get("target_table_id"):
                     requested.append(("target", resolve_catalogue_table_identity(
-                        self.plan.runtime_context["config"], self.plan.environment, arguments["target_table_id"],
+                        self.plan.runtime_context["config"], self.plan.workspace_id, arguments["target_table_id"],
                         context=self.plan.runtime_context, spark_session=self.spark)))
                 selections = json.loads(self.plan.selections_json)
                 contracts = json.loads(self.plan.contracts_json)
@@ -6085,7 +6092,7 @@ class PipelineSession:
                         if choice == {"no_contract": True}:
                             contracts[table_id] = None
                         else:
-                            selected = resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.environment,
+                            selected = resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.workspace_id,
                                 table_id, choice["contract_id"], choice["contract_version"],
                                 spark_session=self.spark, context=self.plan.runtime_context)
                             reviewed = self.selected_contracts.get(table_id, {})
@@ -6093,12 +6100,12 @@ class PipelineSession:
                                 raise RuntimeError("Frozen contract changed since selection; start a new execution.")
                             from fabricops_kit.data_contract.shared import validate_contract_definitions
                             validate_contract_definitions(selected["contract_payload"])
-                            contract_guardrail_rows(selected, environment_name=self.plan.environment, table_id=table_id)
+                            contract_guardrail_rows(selected, workspace_id=self.plan.workspace_id, table_id=table_id)
                             contracts[table_id] = selected
                         self.plan.evidence["operations"][f"{participant_role}:{logical}"] = {
                             "status": "not_started", "stages": []}
                 context = {**self.plan.runtime_context, "_pipeline_bindings": pipeline_physical_bindings(
-                    identities, config=self.plan.runtime_context["config"], environment=self.plan.environment)}
+                    identities, config=self.plan.runtime_context["config"], workspace_id=self.plan.workspace_id)}
                 from types import MappingProxyType
                 self.plan = replace(self.plan, participants_json=canonical_pipeline_json(identities),
                     selections_json=canonical_pipeline_json(selections), contracts_json=canonical_pipeline_json(contracts),
@@ -6162,7 +6169,7 @@ class PipelineSession:
                           _PENDING_SOURCE_OBSERVATIONS, _PENDING_SOURCE_DRIFT_OBSERVATIONS,
                           _INCREMENTAL_SOURCE_SCOPES, _ACTIVE_PUBLICATION_SOURCES):
                 for key in list(cache):
-                    if key[:2] == (self.plan.environment, self.plan.plan_id):
+                    if key[:2] == (self.plan.workspace_id, self.plan.plan_id):
                         cache.pop(key, None)
             if self.shell is not None:
                 self.shell.events.unregister("post_run_cell", self.cell_completed)
@@ -6202,12 +6209,12 @@ def validate_pipeline_id(pipeline_id):
 
 
 def validate_pipeline_registrations(bindings):
-    """Require unique permanent UUID/environment and active notebook bindings."""
+    """Require unique permanent UUID/workspace_id and active notebook bindings."""
     logical, notebooks = set(), set()
     for row in bindings:
         if validate_pipeline_id(row.get("pipeline_id")) != row["pipeline_id"]:
             raise ValueError("Pipeline Registry UUIDs must use canonical lowercase spelling.")
-        key = (row["pipeline_id"], row.get("environment_name"))
+        key = (row["pipeline_id"], row.get("workspace_id"))
         if key in logical or not key[1] or row.get("registration_status") not in {"Active", "Retired"}:
             raise ValueError("Ambiguous Pipeline Registry: conflicting logical bindings; repair the registry.")
         logical.add(key)
@@ -6229,33 +6236,35 @@ def read_pipeline_registry(*, context, spark_session=None):
 
 def commit_pipeline_registration(row, *, expected_token, context, spark_session=None):
     """Publish a binding through the same authority CAS as admission and approval."""
-    from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority, environment_activation
+    from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority, workspace_activation
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
     if token != expected_token:
         raise ValueError("Stale Pipeline Registry; rerun setup.")
     bindings = state["registrations"]
-    key = (row["pipeline_id"], row["environment_name"])
-    existing = next((item for item in bindings if (item["pipeline_id"], item["environment_name"]) == key), None)
+    key = (row["pipeline_id"], row["workspace_id"])
+    existing = next((item for item in bindings if (item["pipeline_id"], item["workspace_id"]) == key), None)
     if existing and (existing["workspace_id"], existing["notebook_id"]) != (row["workspace_id"], row["notebook_id"]):
-        current = environment_activation(state, row["environment_name"])
+        current = workspace_activation(state, row["workspace_id"])
         if any(run["pipeline_id"] == row["pipeline_id"] for run in current["runs"].values()):
             raise ValueError("Drain running execution or rebind before changing notebook ownership.")
     if any(item["registration_status"] == "Active" and (item["workspace_id"], item["notebook_id"]) == (row["workspace_id"], row["notebook_id"])
-           and (item["pipeline_id"], item["environment_name"]) != key for item in bindings):
+           and (item["pipeline_id"], item["workspace_id"]) != key for item in bindings):
         raise ValueError("Conflicting active notebook binding.")
-    config, env, runtime = resolve_fabric_context(context=context)
-    row = {**row, **build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)}
-    state["registrations"] = [item for item in bindings if (item["pipeline_id"], item["environment_name"]) != key] + [row]
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
+    row = {**row, **build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime)}
+    state["registrations"] = [item for item in bindings if (item["pipeline_id"], item["workspace_id"]) != key] + [row]
     commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
 
 
 def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=None, new_pipeline=False, previous_binding=None, allow_new_identity=True):
-    """Resolve, recover, promote or explicitly rebind one permanent pipeline UUID."""
+    """Resolve, recover or explicitly rebind one portable pipeline UUID in a workspace."""
     from datetime import datetime, timezone
-    config, env, runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     workspace, notebook = str(runtime.get("workspace_id") or ""), str(runtime.get("notebook_id") or "")
     if not workspace or not notebook:
         raise ValueError("Pipeline registration requires the caller's Fabric workspace_id and notebook_id.")
+    if workspace != active_workspace_id:
+        raise ValueError("Pipeline workspace scope must match the calling Engineering workspace.")
     supplied = pipeline_id is not None
     if new_pipeline and supplied:
         raise ValueError("New pipeline registration requires an omitted pipeline_id.")
@@ -6266,8 +6275,8 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
                   and (row["workspace_id"], row["notebook_id"]) == (workspace, notebook)), None)
     if exact and (new_pipeline or (pipeline_id and pipeline_id != exact["pipeline_id"])):
         raise ValueError("This notebook already owns a different Pipeline UUID; use a new notebook for an independent pipeline.")
-    if exact and exact["environment_name"] != env:
-        raise ValueError("This notebook is registered to another environment; review workspace configuration and registry bindings.")
+    if exact and exact["workspace_id"] != active_workspace_id:
+        raise ValueError("This notebook is registered to another workspace_id; review workspace configuration and registry bindings.")
     if not allow_new_identity and pipeline_id is None and exact is None:
         raise ValueError("Live requires an existing registered Pipeline ID and approved configuration. Run setup_pipeline(pipeline_mode='Test') first, or supply the approved pipeline_id for promotion.")
     if pipeline_id is None:
@@ -6275,27 +6284,27 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
         if exact is None:
             while any(row["pipeline_id"] == pipeline_id for row in rows):
                 pipeline_id = str(uuid4())
-    existing = next((row for row in rows if row["pipeline_id"] == pipeline_id and row["environment_name"] == env), None)
+    existing = next((row for row in rows if row["pipeline_id"] == pipeline_id and row["workspace_id"] == active_workspace_id), None)
     status = "Recovered" if exact else "New"
     if existing:
         if existing["registration_status"] != "Active":
-            raise ValueError("This Pipeline UUID is Retired in this environment; review its registration before reuse.")
+            raise ValueError("This Pipeline UUID is Retired in this workspace_id; review its registration before reuse.")
         old = (existing["workspace_id"], existing["notebook_id"])
         if old != (workspace, notebook):
             if previous_binding != old:
-                raise ValueError("Pipeline UUID belongs to another notebook in this environment. Call setup_pipeline with previous_workspace_id and previous_notebook_id to rebind, or omit pipeline_id with new_pipeline=True in an independent copy.")
+                raise ValueError("Pipeline UUID belongs to another notebook in this workspace_id. Call setup_pipeline with previous_workspace_id and previous_notebook_id to rebind, or omit pipeline_id with new_pipeline=True in an independent copy.")
             status = "Rebound"
         elif previous_binding is not None and previous_binding != old:
             raise ValueError("Previous binding changed; refresh the registry before rebinding.")
         else:
             status = "Existing" if supplied else "Recovered"
     elif previous_binding is not None:
-        raise ValueError("No existing environment binding to rebind; run setup_pipeline for promotion.")
+        raise ValueError("No existing workspace_id binding to rebind; run setup_pipeline for promotion.")
     elif any(row["pipeline_id"] == pipeline_id for row in rows):
-        status = "Promoted"
+        status = "Registered"
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime)
-    row = {"pipeline_id": pipeline_id, "environment_name": env, "workspace_id": workspace,
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime)
+    row = {"pipeline_id": pipeline_id, "workspace_id": workspace,
            "notebook_id": notebook, "notebook_name": str(runtime.get("notebook_name") or ""),
            "registered_at": existing["registered_at"] if existing else now,
            "registered_by": existing["registered_by"] if existing else audit["_committed_by"],
@@ -6327,9 +6336,9 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
     close_current_pipeline_session()
     with startup.phase("initialization", "Reusing notebook configuration…") if startup else nullcontext():
         runtime = get_default_fabric_context(require_notebook_setup=True)
-        config, env = runtime["config"], runtime["env"]
+        config, active_workspace_id = runtime["config"], runtime["scope_workspace_id"]
         runtime = {**runtime, **{key: value for key, value in resolve_runtime_context(context=runtime).items() if value is not None},
-                   "config": config, "env": env}
+                   "config": config, "scope_workspace_id": active_workspace_id}
     with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
         spark = get_spark_session()
     with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
@@ -6342,7 +6351,7 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
             from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
             plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
         else:
-            plan = PipelineExecutionPlan("testing", env, str(runtime.get("notebook_id") or ""), str(uuid4()),
+            plan = PipelineExecutionPlan("testing", active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()),
                 "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
@@ -6398,9 +6407,9 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
 
 
 
-def build_pipeline_audit_fields(*, config=None, env=None, runtime_context=None):
+def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtime_context=None):
     """Allow absent notebook audit fields only for nonpersisting Test diagnostics."""
-    return build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context,
+    return build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context,
         require_notebook_identity=persistence_permitted(runtime_context))
 
 
@@ -6458,13 +6467,13 @@ def profiling_due(settings, history, operation, now):
 
 
 def profiling_context_key(table_id, *, context, spark_session=None):
-    """Separate physical table bindings and environments while retaining global Table ID."""
-    config, env, runtime = resolve_fabric_context(context=context)
+    """Separate physical table bindings and workspaces while retaining global Table ID."""
+    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     identities = context.get("_pipeline_identities") or {}
     identity = identities.get(table_id) or resolve_catalogue_table_identity(
-        config, env, table_id, context=runtime, spark_session=spark_session)
-    physical = pipeline_physical_bindings({table_id: identity}, config=config, environment=env)[table_id]
-    descriptor = {"table_id": table_id, "environment": env, "physical": physical}
+        config, active_workspace_id, table_id, context=runtime, spark_session=spark_session)
+    physical = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
+    descriptor = {"table_id": table_id, "workspace_id": active_workspace_id, "physical": physical}
     return _metadata_hash(descriptor), descriptor
 
 
@@ -6481,12 +6490,12 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     """Aggregate confirmed physical-context completions in Spark before collecting."""
     from pyspark.sql import functions as F
 
-    config, env, _runtime = resolve_fabric_context(context=context)
+    config, active_workspace_id, _runtime = resolve_fabric_context(context=context)
     key, _descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
     def frame(table):
         return read_lakehouse_table(table, store="Metadata",
             schema=metadata_table_physical_schema(config, table),
-            context={**(context or {}), "_spark_session": spark_session}).filter(F.col("environment_name") == env)
+            context={**(context or {}), "_spark_session": spark_session}).filter(F.col("workspace_id") == active_workspace_id)
     events = (frame("METADATA_PIPELINE_RUN")
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
@@ -6719,7 +6728,7 @@ LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
 
 
 _PROFILE_EXCLUDED_NAMES = {
-    "_pipeline_run_id", "_pipeline_name", "_pipeline_environment", "_source_table",
+    "_pipeline_run_id", "_pipeline_name", "_pipeline_workspace_id", "_source_table",
     "_record_loaded_timestamp", "_notebook_name", "_loaded_by", "_dq_check_status",
     "_dq_failed_rules", "_source_system", "_source_extract_timestamp", "_watermark_value",
     "_sample_bucket", "_row_ingest_id", "_business_key_hash",
@@ -7285,7 +7294,7 @@ def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
         raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
 
 
-def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[str, str | None]:
+def _validate_resolved_identity(table: Any, *, config: Any, active_workspace_id: str) -> dict[str, str | None]:
     """Validate a caller-supplied identity against the active Fabric config."""
     if not isinstance(table, Mapping):
         raise ValueError("table must be a canonical table identity mapping.")
@@ -7295,7 +7304,7 @@ def _validate_resolved_identity(table: Any, *, config: Any, env: str) -> dict[st
         raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
     resolved = resolve_physical_table_identity(
         config,
-        env,
+        active_workspace_id,
         store=table["store"],
         schema=table["schema"],
         table_name=table["table_name"],
@@ -7366,11 +7375,11 @@ def _selected_frequency_columns(
     return _automatic_frequency_columns(profile_df, scalar_columns=scalar_columns, threshold_percent=threshold_percent)
 
 
-def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, Any]) -> dict[str, Any]:
+def _audit_literal_columns(*, config: Any, active_workspace_id: str, runtime_context: dict[str, Any]) -> dict[str, Any]:
     """Return Spark literals for the canonical runtime audit field set."""
     from pyspark.sql import functions as F
 
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     return {
         "_committed_by": F.lit(audit["_committed_by"]).cast("string"),
         "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp_ltz"),
@@ -7387,9 +7396,9 @@ def _canonical_profiled_dataframe(
     profile_df,
     *,
     config: Any,
-    env: str,
+    active_workspace_id: str,
     runtime_context: dict[str, Any],
-    environment_name: str,
+    workspace_id: str,
     table_id: str,
     profile_snapshot_id: str,
 ):
@@ -7402,7 +7411,7 @@ def _canonical_profiled_dataframe(
         lambda column_name: str(uuid5(NAMESPACE_URL, f"{profile_snapshot_id}|{build_column_id(table_id, column_name)}")),
         T.StringType(),
     )
-    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    audit_columns = _audit_literal_columns(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     base = profile_df.select(
         F.col("COLUMN_NAME").alias("_column_name"),
         F.col("DATA_TYPE").alias("data_type"),
@@ -7425,7 +7434,7 @@ def _canonical_profiled_dataframe(
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
-        F.lit(environment_name).cast("string").alias("environment_name"),
+        F.lit(workspace_id).cast("string").alias("workspace_id"),
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
@@ -7452,7 +7461,7 @@ def _frequency_metadata_dataframe(
     profiled_df,
     table_id: str,
     config: Any,
-    env: str,
+    active_workspace_id: str,
     runtime_context: dict[str, Any],
 ):
     """Map flattened frequency output to the same logical column profile."""
@@ -7462,14 +7471,14 @@ def _frequency_metadata_dataframe(
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select(
         "column_id", "column_name", "table_id", "table_name", "data_type",
-        "environment_name", "profile_id", "profile_snapshot_id",
+        "workspace_id", "profile_id", "profile_snapshot_id",
     )
     joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
         identities,
         (F.col("_column_id") == identities.column_id) & (frequency_df.DATA_TYPE == identities.data_type),
         "inner",
     )
-    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    audit_columns = _audit_literal_columns(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
     frequency_id_udf = F.udf(
         lambda profile_id, rank: str(uuid5(NAMESPACE_URL, f"{profile_id}|{rank}")),
         T.StringType(),
@@ -7483,7 +7492,7 @@ def _frequency_metadata_dataframe(
         identities.table_name.cast("string").alias("table_name"),
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
-        identities.environment_name.cast("string").alias("environment_name"),
+        identities.workspace_id.cast("string").alias("workspace_id"),
         F.col("VALUE").cast("string").alias("value"),
         F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
         F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
@@ -7495,7 +7504,7 @@ def _frequency_metadata_dataframe(
 
 
 def _replace_snapshot_rows(
-    *, dataframe: Any, table_name: str, row_id: str, config: Any, env: str, spark_session: Any
+    *, dataframe: Any, table_name: str, row_id: str, config: Any, active_workspace_id: str, spark_session: Any
 ) -> None:
     """Atomically replace one snapshot's rows using their deterministic row identities."""
     try:
@@ -7504,7 +7513,7 @@ def _replace_snapshot_rows(
         raise RuntimeError(f"Delta Lake support is required for replacement {table_name} writes.") from exc
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "Metadata", table_name, metadata_table_physical_schema(config, table_name),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
     )
     snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
     if snapshot is None:
@@ -7524,13 +7533,13 @@ def _replace_snapshot_rows(
 
 
 def _replace_frequency_rows(
-    *, frequency_df: Any | None, profiled_df: Any, config: Any, env: str, spark_session: Any
+    *, frequency_df: Any | None, profiled_df: Any, config: Any, active_workspace_id: str, spark_session: Any
 ) -> None:
     """Replace flattened Frequency rows only for the current profiling snapshot."""
     if frequency_df is not None:
         _replace_snapshot_rows(
             dataframe=frequency_df, table_name=PROFILED_FREQUENCY_TABLE,
-            row_id="frequency_id", config=config, env=env, spark_session=spark_session,
+            row_id="frequency_id", config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
         )
         return
     try:
@@ -7543,7 +7552,7 @@ def _replace_frequency_rows(
         "Metadata",
         PROFILED_FREQUENCY_TABLE,
         metadata_table_physical_schema(config, PROFILED_FREQUENCY_TABLE),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
     )
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
     (DeltaTable.forPath(spark_session, path).alias("target")
@@ -7552,7 +7561,7 @@ def _replace_frequency_rows(
 
 
 def _delete_profile_snapshot(
-    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+    *, profiled_df: Any, config: Any, active_workspace_id: str, spark_session: Any
 ) -> None:
     """Remove an uncommitted snapshot, deleting summary rows before orphan frequencies."""
     from delta.tables import DeltaTable
@@ -7561,7 +7570,7 @@ def _delete_profile_snapshot(
     for table_name in (PROFILED_TABLE, PROFILED_FREQUENCY_TABLE):
         _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
             "Metadata", table_name, metadata_table_physical_schema(config, table_name),
-            context={"config": config, "env": env},
+            context={"config": config, "scope_workspace_id": active_workspace_id},
         )
         (DeltaTable.forPath(spark_session, path).alias("target")
          .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
@@ -7569,25 +7578,25 @@ def _delete_profile_snapshot(
 
 
 def _stage_catalogue_profile_retry(
-    *, profiled_df: Any, config: Any, env: str, spark_session: Any
+    *, profiled_df: Any, config: Any, active_workspace_id: str, spark_session: Any
 ) -> bool:
     """Return whether this activity is a retry and hide its prior completion marker."""
     from delta.tables import DeltaTable
 
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
     )
     activities = profiled_df.select(
-        "environment_name", "table_id", "_activity_id"
+        "workspace_id", "table_id", "_activity_id"
     ).dropDuplicates()
     target = DeltaTable.forPath(spark_session, path)
     same_activity_retry = bool(
         target.toDF()
-        .select("environment_name", "table_id", "_activity_id")
+        .select("workspace_id", "table_id", "_activity_id")
         .join(
             activities,
-            on=["environment_name", "table_id", "_activity_id"],
+            on=["workspace_id", "table_id", "_activity_id"],
             how="inner",
         )
         .limit(1)
@@ -7597,7 +7606,7 @@ def _stage_catalogue_profile_retry(
         target.alias("target")
         .merge(
             activities.alias("source"),
-            "target.environment_name = source.environment_name "
+            "target.workspace_id = source.workspace_id "
             "AND target.table_id = source.table_id "
             "AND target._activity_id = source._activity_id",
         )
@@ -7607,14 +7616,14 @@ def _stage_catalogue_profile_retry(
     return same_activity_retry
 
 
-def _profile_snapshot_id(*, config: Any, env: str, context: dict[str, Any], table_id: str) -> str:
+def _profile_snapshot_id(*, config: Any, active_workspace_id: str, context: dict[str, Any], table_id: str) -> str:
     """Return the stable snapshot identity for one table and Fabric activity."""
     if context.get("_profile_snapshot_id"):
         return str(context["_profile_snapshot_id"])
     activity_id = build_runtime_audit_fields(
-        config=config, env=env, runtime_context=context
+        config=config, active_workspace_id=active_workspace_id, runtime_context=context
     )["_activity_id"]
-    return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{env}|{table_id}|{activity_id}"))
+    return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{active_workspace_id}|{table_id}|{activity_id}"))
 
 
 def _catalogue_dataframe_from_profiled(
@@ -7639,7 +7648,7 @@ def _catalogue_dataframe_from_profiled(
 
     first = profiled_df.select(
         "table_id",
-        "environment_name",
+        "workspace_id",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -7654,7 +7663,7 @@ def _catalogue_dataframe_from_profiled(
     audit = {name: first[name] for name in CATALOGUE_COLUMNS if name.startswith("_")}
     common = {
         "table_id": first["table_id"],
-        "environment_name": first["environment_name"],
+        "workspace_id": first["workspace_id"],
         "store_type": store_type,
         "layer": layer,
         "schema_name": schema_name,
@@ -7708,8 +7717,8 @@ def _catalogue_dataframe_from_profiled(
     return profiled_df.sparkSession.createDataFrame(rows, schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
 
 
-def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
-    """Upsert Catalogue rows by environment-aware asset grain and deactivate missing columns."""
+def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_workspace_id: str, spark_session: Any) -> None:
+    """Upsert Catalogue rows by workspace-aware asset grain and deactivate missing columns."""
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
@@ -7720,19 +7729,19 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         "Metadata",
         CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "env": env},
+        context={"config": config, "scope_workspace_id": active_workspace_id},
     )
-    first = catalogue_df.select("environment_name", "table_id").first()
+    first = catalogue_df.select("workspace_id", "table_id").first()
     if first is None:
         return
-    environment_name = str(first["environment_name"]).replace("'", "''")
+    workspace_id = str(first["workspace_id"]).replace("'", "''")
     table_id = str(first["table_id"]).replace("'", "''")
     target = DeltaTable.forPath(spark_session, path)
     (
         target.alias("target")
         .merge(
             catalogue_df.alias("source"),
-            "target.environment_name = source.environment_name "
+            "target.workspace_id = source.workspace_id "
             "AND target.metadata_level = source.metadata_level "
             "AND target.table_id = source.table_id "
             "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
@@ -7782,7 +7791,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         })
         .whenNotMatchedBySourceUpdate(
             condition=(
-                f"target.environment_name = '{environment_name}' AND target.table_id = '{table_id}' "
+                f"target.workspace_id = '{workspace_id}' AND target.table_id = '{table_id}' "
                 "AND target.metadata_level = 'column' AND target.is_active = true"
             ),
             set={"is_active": "false"},
@@ -7842,19 +7851,19 @@ def execute_table_profile(
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     spark_session = get_spark_session(spark_session, dataframe=dataframe, context=context)
     identity = None
-    config = env = None
+    config = active_workspace_id = None
     warehouse_fields = None
     warehouse_physical = False
     profile_input_label = "supplied DataFrame"
     backend_label = "PySpark"
 
     if table_id is not None or has_coordinates:
-        config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+        config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
         if table_id is not None:
-            identity = resolve_catalogue_table_identity(config, env, table_id, spark_session=spark_session, context=context)
+            identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
         else:
             identity = resolve_physical_table_identity(
-                config, env, store=store, schema=schema, table_name=table_name
+                config, active_workspace_id, store=store, schema=schema, table_name=table_name
             )
         store_kind = str(identity.get("store_kind") or identity.get("store_type") or "").lower()
         if store_kind not in {"lakehouse", "warehouse"}:
@@ -7936,18 +7945,18 @@ def execute_table_profile(
     if selected_activities == {"grain"}:
         validate_claim()
         _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
-            config=config, env=env, context=context, spark_session=spark_session)
+            config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
         return {**({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
 
     profile_snapshot_id = _profile_snapshot_id(
-        config=config, env=env, context=context, table_id=identity["table_id"]
+        config=config, active_workspace_id=active_workspace_id, context=context, table_id=identity["table_id"]
     )
     profiled_df = _canonical_profiled_dataframe(
         statistical_profile,
         config=config,
-        env=env,
+        active_workspace_id=active_workspace_id,
         runtime_context={**context, "table_name": identity.get("table_name")},
-        environment_name=env,
+        workspace_id=active_workspace_id,
         table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,
     ).cache()
@@ -7963,7 +7972,7 @@ def execute_table_profile(
                 profiled_df=profiled_df,
                 table_id=identity["table_id"],
                 config=config,
-                env=env,
+                active_workspace_id=active_workspace_id,
                 runtime_context=context,
             )
         if selected_activities == {"frequency"}:
@@ -7975,7 +7984,7 @@ def execute_table_profile(
             try:
                 validate_claim()
                 _replace_frequency_rows(frequency_df=frequency_metadata_df, profiled_df=profiled_df,
-                    config=config, env=env, spark_session=spark_session)
+                    config=config, active_workspace_id=active_workspace_id, spark_session=spark_session)
                 return {"frequency_profile": frequency_profile, "empty_result": frequency_metadata_df is None or frequency_metadata_df.isEmpty(), **profile_metrics}
             finally:
                 profiled_df.unpersist()
@@ -7984,12 +7993,12 @@ def execute_table_profile(
         try:
             validate_claim()
             same_activity_retry = _stage_catalogue_profile_retry(
-                profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+                profiled_df=profiled_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
             )
             validate_claim()
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
-                config=config, env=env, spark_session=spark_session,
+                config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
             )
             summary_persisted = True
             profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
@@ -7997,7 +8006,7 @@ def execute_table_profile(
             if frequency_enabled or activities is None:
                 _replace_frequency_rows(
                     frequency_df=frequency_metadata_df, profiled_df=profiled_df,
-                    config=config, env=env, spark_session=spark_session,
+                    config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
                 )
             if frequency_metadata_df is not None:
                 frequency_action = (
@@ -8026,13 +8035,13 @@ def execute_table_profile(
             )
             validate_claim()
             _upsert_catalogue_identities(
-                catalogue_df=catalogue_df, config=config, env=env, spark_session=spark_session,
+                catalogue_df=catalogue_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
             )
         except Exception:
             if summary_persisted:
                 try:
                     _delete_profile_snapshot(
-                        profiled_df=profiled_df, config=config, env=env, spark_session=spark_session
+                        profiled_df=profiled_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
                     )
                 except Exception as cleanup_error:
                     emit(
@@ -8053,18 +8062,18 @@ def execute_table_profile(
         raise
 
 
-def _persist_grain_candidates(identity, candidates, *, max_columns, config, env, context, spark_session):
+def _persist_grain_candidates(identity, candidates, *, max_columns, config, active_workspace_id, context, spark_session):
     """Update only discovered candidates on an existing Catalogue table identity."""
     from delta.tables import DeltaTable
     from pyspark.sql import functions as F
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
     table = DeltaTable.forPath(spark_session, path)
-    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("environment_name") == env)
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == active_workspace_id)
                  & (F.col("metadata_level") == "table"))
     if table.toDF().where(condition).limit(2).count() != 1:
-        raise RuntimeError("Grain Discovery requires one registered Catalogue table in this environment.")
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+        raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     def literal(value):
         if isinstance(value, dict):
             return F.struct(*[literal(item).alias(name) for name, item in value.items()])

@@ -32,13 +32,13 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         initial = [{**activation.empty_pipeline_authority(), **{name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}}] if table == 'METADATA_PIPELINE_REGISTRY' else []
         spark_session.createDataFrame(initial, registry[table]).write.format('delta').save(paths[table])
     audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
-    audit.update(_workspace_id='workspace', _notebook_id='notebook')
-    context = {'config': {}, 'env': 'DEV', 'workspace_id': 'workspace', 'notebook_id': 'notebook'}
+    audit.update(_workspace_id='DEV', _notebook_id='notebook')
+    context = {'config': {}, 'scope_workspace_id': 'DEV', 'workspace_id': 'DEV', 'notebook_id': 'notebook'}
     # Explicit plans isolate Delta persistence from Fabric notebook initialization.
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
     pipeline_id = '4c7ae400-85ab-4023-9427-e8fde20bd596'
     for module in (shared, activation):
-        monkeypatch.setattr(module, 'resolve_fabric_context', lambda context=None: (context['config'], context['env'], context))
+        monkeypatch.setattr(module, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
         monkeypatch.setattr(module, 'build_runtime_audit_fields', lambda **kwargs: dict(audit))
         monkeypatch.setattr(module, 'resolve_configured_lakehouse_table',
             lambda store, table, schema, **kwargs: (store, table, 'engineering', paths[table]))
@@ -65,8 +65,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                             'guardrail_type': 'schema', 'rule_type': 'required_columns',
                             'rule_parameters': {'required_columns': ['id-col']}, 'action': 'Block', 'is_active': True}]}
             contracts[table] = {'contract_id': 'contract-' + table, 'contract_version': 1, 'table_id': table,
-                'status': 'frozen', 'environment_name': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
-            bindings[table] = {'workspace_id': 'workspace', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
+                'status': 'frozen', 'evidence_workspace_id': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
+            bindings[table] = {'workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
         for contract in contracts.values():
             key = (contract['contract_id'], contract['contract_version'])
             if key not in retained:
@@ -87,7 +87,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         plan.evidence['guardrail_history'] = [
             {'guardrail_result_id': str(uuid4()), 'guardrail_rule_id': 'schema-' + table, 'guardrail_version': 1,
              'table_id': table, 'table_name': table, 'contract_id': 'contract-' + table, 'contract_version': 1,
-             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'environment_name': 'DEV',
+             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'workspace_id': 'DEV',
              'status': 'passed', 'can_continue': True, 'severity': 'blocking', 'result_payload_json': '{}'}
             for table in json.loads(plan.participants_json)]
         plan.evidence['boundary_completed'] = True
@@ -154,7 +154,7 @@ def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(
     r.complete(plan)
     plan.evidence['profiling'] = [{'context_key': 'physical-profile', 'activity': 'standard', 'status': 'passed',
         'results_persisted': True, 'empty_result': False, 'profile_snapshot_id': 'snapshot',
-        'completed_at': datetime.now(UTC).isoformat(), 'table_id': 'table0', 'environment': 'DEV',
+        'completed_at': datetime.now(UTC).isoformat(), 'table_id': 'table0', 'workspace_id': 'DEV',
         'physical': plan.runtime_context['_pipeline_bindings']['table0'], 'row_count': None}]
     from delta.tables import DeltaMergeBuilder
     execute = DeltaMergeBuilder.execute
@@ -217,13 +217,13 @@ def test_simultaneous_updates_accept_one_complete_run(runs_delta):
 
 
 def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
-    """Matching run/rule IDs from a different environment never count as Test proof."""
+    """Matching run/rule IDs from a different workspace_id never count as Test proof."""
     r = runs_delta
     plan = r.make(roles=('source',))
     r.complete(plan)
     finalize_pipeline(shared.PipelineSession(plan, r.spark))
     from delta.tables import DeltaTable
-    DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).update(set={'environment_name': "'FOREIGN'"})
+    DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).update(set={'workspace_id': "'FOREIGN'"})
     with pytest.raises(ValueError, match='provenance'):
         activation.tested_pipeline_run(testing_run_id=plan.plan_id,
             pipeline_name='Orders', pipeline_version='1',

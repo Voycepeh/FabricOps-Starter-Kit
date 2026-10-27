@@ -24,7 +24,7 @@ def _observation(source, *, target="target-x", notebook="02_pipeline"):
         "observation_id": f"{source}-observation",
         "source_table_id": source,
         "target_table_id": target,
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "partition_value": "2026-09-11",
         "row_count": 1,
         "min_change_value": "2026-09-11",
@@ -58,11 +58,11 @@ def _context(*, target="target-x", sources=("source-a", "source-b"), notebook="0
         "activity_id": "run-1",
         "notebook_name": notebook,
         "notebook_id": "physical-id",
-        "context": {"config": object(), "env": "dev"},
+        "context": {"config": object(), "scope_workspace_id": "dev"},
         "publication": {"batch_id": "batch", "activity_id": "run-1", "committed_at": "2026-09-11T02:00:00+00:00",
                         "input_rows": 1, "strategy": "append", "run_id": None},
         "observation_snapshot": shared.snapshot_pipeline_write_observations(
-            environment_name="dev", activity_id="run-1", target_table_id=target, source_table_ids=list(sources),
+            workspace_id="dev", activity_id="run-1", target_table_id=target, source_table_ids=list(sources),
         ),
     }
 
@@ -81,7 +81,7 @@ def _configure_commit(monkeypatch, observations=None):
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     for observation in observations:
-        shared.set_current_source_observation(environment_name="dev", activity_id="run-1", table_id=observation["source_table_id"], observation=Frame([observation]))
+        shared.set_current_source_observation(workspace_id="dev", activity_id="run-1", table_id=observation["source_table_id"], observation=Frame([observation]))
         shared._PENDING_SOURCE_OBSERVATIONS[("dev", "run-1", observation["source_table_id"], "target-x")] = [observation]
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: _audit())

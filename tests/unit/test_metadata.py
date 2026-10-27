@@ -21,7 +21,7 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     """Verify runtime audit fields resolve fabric context and allow overrides."""
     audit = audit_helpers.build_runtime_audit_fields(
         config=framework_config(),
-        env="dev",
+        active_workspace_id="dev",
         runtime_context={"activityId": "manual-activity"},
     )
 
@@ -41,7 +41,7 @@ def test_runtime_audit_fields_preserve_configured_timezone(monkeypatch, fake_not
 
     audit = audit_helpers.build_runtime_audit_fields(
         config=framework_config(),
-        env="dev",
+        active_workspace_id="dev",
     )
 
     assert audit["_committed_at"].isoformat() == "2026-09-21T15:34:44.879518+08:00"
@@ -68,7 +68,7 @@ def test_data_steward_widget_save_preserves_configured_timezone(monkeypatch, fak
         config=config_shared.FrameworkConfig(
             **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
         ),
-        env="dev",
+        active_workspace_id="dev",
         values={
             "steward_name": "Timezone Steward",
             "steward_role": "Data Owner",
@@ -112,14 +112,14 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     steward_rows = []
 
     def write_table(df, table, *, store, context, **kwargs):
-        assert context["env"] == "dev"
+        assert context["scope_workspace_id"] == "dev"
         assert store == "Metadata"
-        writes.append((table, df.rows, context["env"], store, kwargs))
+        writes.append((table, df.rows, context["scope_workspace_id"], store, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
 
     def read_table(table, *, store, context, **kwargs):
-        assert (context["env"], store) == ("dev", "Metadata")
+        assert (context["scope_workspace_id"], store) == ("dev", "Metadata")
         if table == agreement.DATA_STEWARD_TABLE:
             return steward_rows
         return []
@@ -130,7 +130,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     steward = steward_widget._create_or_update_data_steward(
         spark=FakeSpark(),
         config=framework_config(),
-        env="dev",
+        active_workspace_id="dev",
         values={
             "steward_name": "Ops Steward",
             "steward_role": "Data Owner",
@@ -314,7 +314,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
         guardrails_shared.write_guardrail_result_row(
             spark_session=FakeSpark(),
             config=framework_config(),
-            env="dev",
+            active_workspace_id="dev",
             run_id="run-1",
             dataset_name="sales",
             table_name="orders",
@@ -336,11 +336,11 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
     spark = FakeSpark()
     config = framework_config()
     config.path_config.paths["prod"] = config.path_config.paths["dev"]
-    for env in ("dev", "prod"):
+    for active_workspace_id in ("dev", "prod"):
         guardrails_shared.write_guardrail_result_row(
             spark_session=spark,
             config=config,
-            env=env,
+            active_workspace_id=active_workspace_id,
             run_id="run-1",
             dataset_name="sales",
             table_name="orders",
@@ -353,7 +353,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
         )
 
     assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]
-    assert [frame.rows[0]["environment_name"] for frame in writes] == ["dev", "prod"]
+    assert [frame.rows[0]["workspace_id"] for frame in writes] == ["dev", "prod"]
 
 
 def test_persistent_checkpoint_tables_are_not_registered():

@@ -13,7 +13,7 @@ def test_resolve_table_id_uses_physical_identity_without_catalogue(monkeypatch):
     monkeypatch.setattr(
         module,
         "resolve_physical_table_identity",
-        lambda config, env, **coordinates: {
+        lambda config, active_workspace_id, **coordinates: {
             "table_id": "lakehouse||unified||demo||orders",
             **coordinates,
         },

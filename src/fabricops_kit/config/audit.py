@@ -58,7 +58,7 @@ def _require_audit_values(values: dict[str, Any]) -> None:
 def build_runtime_audit_fields(
     *,
     config: Any = None,
-    env: str | None = None,
+    active_workspace_id: str | None = None,
     timestamp_field: str = "_committed_at",
     user_field: str = "_committed_by",
     workspace_id_field: str = "_workspace_id",
@@ -78,9 +78,9 @@ def build_runtime_audit_fields(
     Parameters
     ----------
     config : FrameworkConfig | dict, optional
-        Framework config containing ``path_config.paths[env]["Metadata"]``.
-    env : str, optional
-        Environment key paired with ``config`` when resolving the metadata
+        Framework config containing ``path_config.paths[active_workspace_id]["Metadata"]``.
+    active_workspace_id : str, optional
+        Workspace key paired with ``config`` when resolving the metadata
         Lakehouse name.
     timestamp_field, user_field, workspace_id_field, workspace_field, notebook_id_field, notebook_field : str
         Output keys for timestamp, user, workspace, and notebook audit values.
@@ -122,8 +122,8 @@ def build_runtime_audit_fields(
         timestamp_value = normalize_audit_datetime(committed_at, config)
 
     resolved_metadata_lakehouse = metadata_lakehouse_name
-    if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and env is not None:
-        resolved_metadata_lakehouse = get_store(config=config, env=env, store="Metadata").key
+    if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and active_workspace_id is not None:
+        resolved_metadata_lakehouse = get_store(config=config, active_workspace_id=active_workspace_id, store="Metadata").key
 
     values = {
         user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("user_name", "user_id"),

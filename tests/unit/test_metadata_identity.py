@@ -11,7 +11,7 @@ def test_table_id_is_normalized_and_deterministic():
 
 
 def test_environment_is_not_part_of_table_id_contract():
-    """The helper accepts only logical asset coordinates, not environment."""
+    """The helper accepts only logical asset coordinates, not workspace_id."""
     development = build_table_id("lakehouse", "Silver", "dbo", "orders")
     production = build_table_id("lakehouse", "Silver", "dbo", "orders")
 

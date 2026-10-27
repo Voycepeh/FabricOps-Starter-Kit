@@ -51,7 +51,7 @@ def test_env_config_optional_dropdowns_use_supported_widget_type() -> None:
 
 def _path_config_source():
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text())
-    return next("".join(cell["source"]) for cell in notebook["cells"] if "ENGINEERING_ENVIRONMENT_ITEMS = {" in "".join(cell["source"]))
+    return next("".join(cell["source"]) for cell in notebook["cells"] if "ENGINEERING_WORKSPACES = {" in "".join(cell["source"]))
 
 
 def _substituted_config_source(unresolved=None):
@@ -64,21 +64,21 @@ def test_generic_config_preserves_physical_names_and_metadata_routing():
     from fabricops_kit import FabricStore, PathConfig
     namespace = {"FabricStore": FabricStore, "PathConfig": PathConfig}
     exec(compile(_substituted_config_source(), "<00_env_config>", "exec"), namespace)
-    for env in ("dev", "test", "prod"):
-        stores = namespace["PATH_CONFIG"].paths[env]
+    for active_workspace_id in ("example_engineering_workspace_id",):
+        stores = namespace["PATH_CONFIG"].paths[active_workspace_id]
         assert stores["Gold"].name == "example_GOLD_NAME"
         assert stores["Gold"].item_id == "example_GOLD_ITEM_ID"
-        assert stores["Gold"].workspace_id == "example_" + env.upper() + "_WORKSPACE_ID"
+        assert stores["Gold"].workspace_id == active_workspace_id
         assert stores["Metadata"].schema == "governance"
-        assert stores["Metadata"].workspace_id == "example_GOVERNANCE_WORKSPACE_ID"
-    governance = namespace["PATH_CONFIG"].paths["governance"]
+        assert stores["Metadata"].workspace_id == "example_governance_workspace_id"
+    governance = namespace["PATH_CONFIG"].paths["example_governance_workspace_id"]
     assert set(governance) == {"Metadata"}
-    assert governance["Metadata"].env == "governance"
-    assert governance["Metadata"].workspace_id == "example_GOVERNANCE_WORKSPACE_ID"
+    assert not hasattr(governance["Metadata"], "env")
+    assert governance["Metadata"].workspace_id == "example_governance_workspace_id"
     assert governance["Metadata"].item_id == "example_GOVERNANCE_METADATA_LAKEHOUSE_ID"
 
 
-@pytest.mark.parametrize("unresolved", ["<DEV_WORKSPACE_ID>", "<GOLD_NAME>", "<GOLD_ITEM_ID>",
+@pytest.mark.parametrize("unresolved", ["<ENGINEERING_WORKSPACE_ID>", "<GOLD_NAME>", "<GOLD_ITEM_ID>",
                                         "<GOVERNANCE_WORKSPACE_ID>", "<GOVERNANCE_METADATA_LAKEHOUSE_ID>"])
 def test_generic_config_rejects_placeholders_before_io(unresolved):
     """Unresolved deployment values fail during configuration construction."""
@@ -89,17 +89,16 @@ def test_generic_config_rejects_placeholders_before_io(unresolved):
 
 
 def test_generic_config_supports_one_custom_environment_and_store():
-    """Example environment and layer names impose no mandatory topology."""
+    """Example workspace_id and layer names impose no mandatory topology."""
     from fabricops_kit import FabricStore, PathConfig
     source = _substituted_config_source()
     boundary = source.index("def _required_config_value")
     namespace = {"FabricStore": FabricStore, "PathConfig": PathConfig}
     exec(source[:boundary], namespace)
-    namespace["ENGINEERING_WORKSPACE_IDS"] = {"poc": "custom_workspace"}
-    namespace["ENGINEERING_ENVIRONMENT_ITEMS"] = {"poc": {"Product": {"name": "wh_Custom", "item_id": "custom_item", "kind": "warehouse"}}}
+    namespace["ENGINEERING_WORKSPACES"] = {"custom_workspace": {"name": "Custom", "stores": {"Product": {"name": "wh_Custom", "item_id": "custom_item", "kind": "warehouse"}}}}
     exec(source[boundary:], namespace)
-    assert set(namespace["PATH_CONFIG"].paths) == {"poc", "governance"}
-    assert set(namespace["PATH_CONFIG"].paths["poc"]) == {"Product", "Metadata"}
+    assert set(namespace["PATH_CONFIG"].paths) == {"custom_workspace", "example_governance_workspace_id"}
+    assert set(namespace["PATH_CONFIG"].paths["custom_workspace"]) == {"Product", "Metadata"}
 
 
 def test_generic_template_contains_no_deployment_identifiers_or_saved_outputs():
@@ -113,6 +112,6 @@ def test_generic_template_contains_no_deployment_identifiers_or_saved_outputs():
     assert 'caller_workspace_id = ""' in _env_config_source()
     assert 'INITIALIZE_METADATA = False' in _env_config_source()
     assert "GOVERNANCE_ENVIRONMENT" not in _env_config_source()
-    assert "ENGINEERING_WORKSPACES" not in _env_config_source()
+    assert "ENGINEERING_WORKSPACES" in _env_config_source()
     assert "METADATA_ITEM_ID" not in _env_config_source()
-    assert "ENGINEERING_WORKSPACE_IDS" in _env_config_source()
+    assert "ENV_PATHS" not in _env_config_source()

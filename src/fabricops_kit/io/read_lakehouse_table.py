@@ -77,9 +77,9 @@ def read_lakehouse_table(
         from fabricops_kit.config.shared import resolve_fabric_context
         from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity
 
-        config, env, resolved_context = resolve_fabric_context(context=context)
+        config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
         identity = resolve_catalogue_table_identity(
-            config, env, table_id, spark_session=spark_session, context=resolved_context,
+            config, active_workspace_id, table_id, spark_session=spark_session, context=resolved_context,
         )
         if str(identity.get("store_type") or identity.get("store_kind") or "").lower() != "lakehouse":
             raise ValueError(f"table_id {table_id!r} does not identify a Lakehouse table.")

@@ -60,7 +60,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     def row(**values):
         audit = {field.name: datetime(2020, 2, 3, 4, 5, 6, 123456) if field.name == '_committed_at' else 'original-' + field.name
                  for field in schema.fields if not field.nullable}
-        return {'metadata_level': 'table', 'table_id': 'table', 'environment_name': 'dev',
+        return {'metadata_level': 'table', 'table_id': 'table', 'workspace_id': 'dev',
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
     def seed(rows, native=(), extra=True):
@@ -70,10 +70,10 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
-        return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, env='dev', verbose=False)
+        return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, workspace_id='dev', verbose=False)
     def upgrade():
         return setup._upgrade_catalogue(spark=spark_session, table=read(TABLE, schema='custom_engineering'),
-            expected_schema=schema, metadata_schema='custom_engineering', context={'config': config, 'env': 'dev'})
+            expected_schema=schema, metadata_schema='custom_engineering', context={'config': config, 'scope_workspace_id': 'dev'})
     def version():
         from delta.tables import DeltaTable
         return DeltaTable.forPath(spark_session, path).history(1).first()['version']
@@ -293,7 +293,7 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     rt.seed([original_row])
     rt.upgrade()
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering')
-    context = {'config': config, 'env': 'dev'}
+    context = {'config': config, 'scope_workspace_id': 'dev'}
     def resolve(*args, **kwargs):
         return None, TABLE, 'custom_engineering', rt.path
     monkeypatch.setattr(write, 'resolve_configured_lakehouse_table', resolve)
@@ -304,9 +304,9 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     identity = {'table_id': 'table', 'store_type': 'lakehouse', 'store': 'Silver', 'schema': 'sales', 'table_name': 'orders'}
     parameters = {'key_columns': ['tenant', 'id'], 'effective_column': 'start', 'tracked_columns': ['amount']}
     write._persist_target_processing(identity=identity, processing={'load_strategy': 'scd2', **parameters},
-        scheduled_refresh=SCHEDULE, audit=audit, config=config, env='dev', dataframe=rt.read(),
+        scheduled_refresh=SCHEDULE, audit=audit, config=config, active_workspace_id='dev', dataframe=rt.read(),
         context=context, spark_session=rt.spark)
-    shared._persist_grain_candidates(identity, [CANDIDATE], max_columns=3, config=config, env='dev',
+    shared._persist_grain_candidates(identity, [CANDIDATE], max_columns=3, config=config, active_workspace_id='dev',
                                      context=context, spark_session=rt.spark)
     current = rt.read().first().asDict(recursive=True)
     assert current['scheduled_refresh_json'] == SCHEDULE
@@ -317,7 +317,7 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     profile_row = {**original_row, 'load_strategy': None, 'load_strategy_parameters_json': None,
                    'profile_key_candidates_json': {'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}}
     frame = rt.spark.createDataFrame([coerce_metadata_row_types(TABLE, profile_row)], rt.schema)
-    shared._upsert_catalogue_identities(catalogue_df=frame, config=config, env='dev', spark_session=rt.spark)
+    shared._upsert_catalogue_identities(catalogue_df=frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
     current = rt.read().first().asDict(recursive=True)
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json'] == profile_row['profile_key_candidates_json']
@@ -443,7 +443,7 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     rt.seed([original])
     rt.upgrade()
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering')
-    context = {'config': config, 'env': 'dev'}
+    context = {'config': config, 'scope_workspace_id': 'dev'}
     audit = {name: value for name, value in original.items() if name.startswith('_')}
     def resolve(*args, **kwargs):
         return None, TABLE, 'custom_engineering', rt.path
@@ -457,13 +457,13 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     # Insert a new target identity using the actual target-processing merge.
     inserted = {**identity, 'table_id': 'inserted', 'table_name': 'new_orders'}
     writer._persist_target_processing(identity=inserted, processing={'load_strategy': 'scd1', 'key_columns': ['id']},
-        scheduled_refresh=SCHEDULE, audit=audit, config=config, env='dev', dataframe=rt.read(),
+        scheduled_refresh=SCHEDULE, audit=audit, config=config, active_workspace_id='dev', dataframe=rt.read(),
         context=context, spark_session=rt.spark)
     resolved = shared.resolve_catalogue_table_identity(config, 'dev', 'inserted', spark_session=rt.spark, context=context)
     assert shared.catalogue_authored_processing(resolved) == {'load_strategy': 'scd1', 'key_columns': ['id']}
     assert resolved['scheduled_refresh_json'] == SCHEDULE and resolved['extension'] is None
     # Persist an empty discovery result using the grain-only update's typed literal.
-    shared._persist_grain_candidates(identity, [], max_columns=2, config=config, env='dev',
+    shared._persist_grain_candidates(identity, [], max_columns=2, config=config, active_workspace_id='dev',
                                      context=context, spark_session=rt.spark)
     assert rt.read().where("table_id='table'").first()['profile_key_candidates_json'].asDict(recursive=True) == {
         'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
@@ -474,7 +474,7 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
         store_type='lakehouse', layer='Silver', schema_name='sales', table_name='new_orders',
         profile_key_candidates_json={'status': 'resolved', 'max_combination_width': 2,
                                      'candidates': [{**CANDIDATE, 'columns': ['id'], 'column_count': 1}]})
-    shared._upsert_catalogue_identities(catalogue_df=profile_frame, config=config, env='dev', spark_session=rt.spark)
+    shared._upsert_catalogue_identities(catalogue_df=profile_frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
     inserted_rows = [row.asDict(recursive=True) for row in rt.read().where("table_id='inserted'").collect()]
     assert len(inserted_rows) == 3
     assert {row['column_name'] for row in inserted_rows if row['column_id']} == {'id', 'name'}
@@ -495,12 +495,12 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     monkeypatch.setattr(contracts, 'read_lakehouse_table', read)
     monkeypatch.setattr(contracts, 'write_lakehouse_table', write)
     monkeypatch.setattr(contracts, 'build_runtime_audit_fields', lambda **kw: audit)
-    draft = contracts.create_contract_draft(table_id='inserted', config=config, env='dev',
+    draft = contracts.create_contract_draft(table_id='inserted', config=config, active_workspace_id='dev',
         spark_session=rt.spark, context=context, schema='governance')
     payload = json.loads(draft['contract_payload_json'])
     assert payload['table']['processing'] == {'load_strategy': 'scd1', 'key_columns': ['id']}
     assert {column['column_name'] for column in payload['table']['columns']} == {'id', 'name'}
-    reopened = contracts.create_contract_draft(table_id='inserted', config=config, env='dev',
+    reopened = contracts.create_contract_draft(table_id='inserted', config=config, active_workspace_id='dev',
         spark_session=rt.spark, context=context, schema='governance')
     assert reopened['contract_payload_json'] == draft['contract_payload_json']
     assert rt.spark.read.format('delta').load(contract_path).count() == 1

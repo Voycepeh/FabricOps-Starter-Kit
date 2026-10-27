@@ -507,7 +507,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
             return self
 
         def first(self):
-            return {"environment_name": "dev", "table_id": "target-id"}
+            return {"workspace_id": "dev", "table_id": "target-id"}
 
         def alias(self, _name):
             return self
@@ -524,7 +524,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     module._upsert_catalogue_identities(
-        catalogue_df=Catalogue(), config={}, env="dev", spark_session=object()
+        catalogue_df=Catalogue(), config={}, active_workspace_id="dev", spark_session=object()
     )
 
     assert updates[0]["profile_key_candidates_json"] == (
@@ -558,11 +558,11 @@ def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_a
         lambda **_kwargs: {"_activity_id": activity["value"]},
     )
 
-    first = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
-    retry = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
+    first = module._profile_snapshot_id(config={}, active_workspace_id="dev", context={}, table_id="table-1")
+    retry = module._profile_snapshot_id(config={}, active_workspace_id="dev", context={}, table_id="table-1")
     activity["value"] = "activity-2"
-    later = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-1")
-    other_table = module._profile_snapshot_id(config={}, env="dev", context={}, table_id="table-2")
+    later = module._profile_snapshot_id(config={}, active_workspace_id="dev", context={}, table_id="table-1")
+    other_table = module._profile_snapshot_id(config={}, active_workspace_id="dev", context={}, table_id="table-2")
 
     assert retry == first
     assert later != first
@@ -577,11 +577,11 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     updates = []
     activities = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        ["workspace_id", "table_id", "_activity_id"],
     )
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        ["workspace_id", "table_id", "_activity_id"],
     )
 
     class Merge:
@@ -614,7 +614,7 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, env="dev", spark_session=spark_session
+        profiled_df=activities, config={}, active_workspace_id="dev", spark_session=spark_session
     )
 
     assert is_retry is True
@@ -626,11 +626,11 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     activities = spark_session.createDataFrame(
         [("dev", "table-1", "activity-2")],
-        ["environment_name", "table_id", "_activity_id"],
+        ["workspace_id", "table_id", "_activity_id"],
     )
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
-        ["environment_name", "table_id", "_activity_id"],
+        ["workspace_id", "table_id", "_activity_id"],
     )
 
     class Merge:
@@ -661,7 +661,7 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, env="dev", spark_session=spark_session
+        profiled_df=activities, config={}, active_workspace_id="dev", spark_session=spark_session
     )
 
     assert is_retry is False

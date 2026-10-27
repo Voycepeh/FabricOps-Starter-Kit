@@ -394,12 +394,12 @@ def _print_setup_summary(
 def setup_metadata_tables(
     *,
     config: FrameworkConfig | dict[str, Any],
-    env: str,
+    workspace_id: str,
     require_active_steward: bool = False,
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create or check the FabricOps metadata tables for one environment.
+    """Create or check the FabricOps metadata tables for one workspace_id.
 
     Spark is resolved automatically from the existing execution session.
     No session is created; Spark-dependent work raises
@@ -430,10 +430,10 @@ def setup_metadata_tables(
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        FabricOps configuration used to find the selected environment and its
+        FabricOps configuration used to find the selected workspace_id and its
         metadata lakehouse.
-    env : str
-        Environment whose configured metadata lakehouse should be initialized
+    workspace_id : str
+        Workspace whose configured metadata lakehouse should be initialized
         or validated.
     require_active_steward : bool, default=False
         When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active
@@ -485,7 +485,7 @@ def setup_metadata_tables(
     Setup flow:
 
     1. Validate the supplied FabricOps configuration.
-    2. Find the metadata lakehouse configured for the selected environment.
+    2. Find the metadata lakehouse configured for the selected workspace_id.
     3. Verify that the metadata target is a lakehouse.
     4. Resolve each table's physical schema from its canonical ownership and
        the configured governance/engineering schema names.
@@ -543,12 +543,12 @@ def setup_metadata_tables(
       ``status='frozen'`` and uses ``is_active`` to identify the Production
       version while linking the exact Data Agreement version.
     - ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
-      ``metadata_level``, ``table_id``, ``column_id``, ``environment_name``,
+      ``metadata_level``, ``table_id``, ``column_id``, ``workspace_id``,
       physical table context, ``column_name``, ``data_type``, profiling dates,
       activation state, and the standard audit fields.
     - ``METADATA_DATA_PROFILED`` stores ``profile_id``,
       ``profile_snapshot_id``, ``table_id``, ``column_id``,
-      ``environment_name``, ``data_type``,
+      ``workspace_id``, ``data_type``,
       ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,
       ``distinct_count``, ``distinct_percent``, ``mean_value``,
       ``stddev_value``, ``min_value``, ``percentile_25_value``,
@@ -558,7 +558,7 @@ def setup_metadata_tables(
       ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,
       percentage, rank, profiled row totals, and the standard audit fields.
     - ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,
-      ``environment_name``, ``pipeline_role``, and the
+      ``workspace_id``, ``pipeline_role``, and the
       standard audit fields.
     - ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
       approval, expiry, table and column identity, and audit information.
@@ -611,14 +611,15 @@ def setup_metadata_tables(
     their respective FabricOps workflows.
 
     """
+    active_workspace_id = workspace_id
     spark = get_spark_session()
     normalized = validate_framework_config(config)
-    metadata_store = get_store(config=normalized, env=env, store="Metadata")
+    metadata_store = get_store(config=normalized, active_workspace_id=active_workspace_id, store="Metadata")
     if getattr(metadata_store, "kind", None) != "lakehouse":
-        raise ValueError(f"Target '{env}/metadata' is not a lakehouse store.")
+        raise ValueError(f"Target '{active_workspace_id}/metadata' is not a lakehouse store.")
     if metadata_store.schema_enabled is not True:
         raise ValueError("FabricOps Metadata Lakehouse must be schema-enabled.")
-    context = {"config": normalized, "env": env, "_fabricops_suppress_io_log": not verbose}
+    context = {"config": normalized, "scope_workspace_id": active_workspace_id, "_fabricops_suppress_io_log": not verbose}
     registry = metadata_table_schema_registry()
 
     warnings = _retired_preview_warnings(config=normalized, spark=spark, context=context)
@@ -650,7 +651,7 @@ def setup_metadata_tables(
                     from fabricops_kit.config.audit import build_runtime_audit_fields
                     from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
                     initial_rows = [{**empty_pipeline_authority(),
-                                     **build_runtime_audit_fields(config=normalized, env=env, runtime_context=context)}]
+                                     **build_runtime_audit_fields(config=normalized, active_workspace_id=active_workspace_id, runtime_context=context)}]
                 empty_frame = spark.createDataFrame(initial_rows, schema=schema)
                 write_lakehouse_table(
                     empty_frame,

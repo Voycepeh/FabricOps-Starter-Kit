@@ -29,7 +29,7 @@ def _row(version=1, *, table_id="source", active=False):
                "table": {"table_id": table_id, "columns": columns, "processing": {"load_strategy": "overwrite"}},
                "guardrails": rules, "enrichment": {"table": [], "columns": []}}
     return {"contract_id": f"contract-{table_id}", "contract_version": version, "table_id": table_id,
-            "environment_name": "canary-east", "status": "frozen", "is_active": active,
+            "workspace_id": "canary-east", "status": "frozen", "is_active": active,
             "contract_payload_json": json.dumps(payload)}
 
 

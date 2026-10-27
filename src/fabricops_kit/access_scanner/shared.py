@@ -48,9 +48,9 @@ def normalise_targets(targets: str | list[str] | tuple[str, ...]) -> list[str]:
     return normalised
 
 
-def target_store_kinds(config, environment_name: str, targets: list[str]) -> dict[str, str]:
+def target_store_kinds(config, workspace_id: str, targets: list[str]) -> dict[str, str]:
     """Resolve configured physical data item targets to normalized store kinds."""
-    return {store: str(get_store(config, environment_name, store).kind).strip().lower() for store in targets}
+    return {store: str(get_store(config, workspace_id, store).kind).strip().lower() for store in targets}
 
 
 def fabric_access_token(access_token: str | None = None) -> str:
@@ -331,7 +331,7 @@ def read_discovered_sql_endpoint_query(
 ):
     """Read a discovered Warehouse or Lakehouse SQL endpoint."""
     store = FabricStore(
-        env="discovered",
+
         workspace_id=workspace_id,
         item_id=item_id,
         kind=item_kind,
@@ -348,7 +348,7 @@ def persist_access_rows(
     access_df,
     *,
     config,
-    environment_name: str,
+    workspace_id: str,
     context: dict[str, Any],
     persist: bool,
 ) -> None:
@@ -360,12 +360,12 @@ def persist_access_rows(
         ACCESS_TABLE,
         store="Metadata",
         schema=metadata_table_physical_schema(config, ACCESS_TABLE),
-        context={**context, "config": config, "env": environment_name},
+        context={**context, "config": config, "scope_workspace_id": workspace_id},
         mode="append",
     )
 
 
-def catalogue_tables(catalogue_df, *, environment_name: str, target_store_kinds: dict[str, str]):
+def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dict[str, str]):
     """Select active Catalogue tables belonging to configured scan targets."""
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
@@ -393,7 +393,7 @@ def catalogue_tables(catalogue_df, *, environment_name: str, target_store_kinds:
     return (
         catalogue_df.filter(
             (F.lower(F.col("metadata_level")) == F.lit("table"))
-            & (F.col("environment_name") == F.lit(environment_name))
+            & (F.col("workspace_id") == F.lit(workspace_id))
             & F.col("is_active")
         )
         .crossJoin(targets)

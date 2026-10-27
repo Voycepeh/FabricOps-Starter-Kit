@@ -56,16 +56,17 @@ def test_empty_input_and_blank_string_values(spark_session):
 @pytest.mark.parametrize("active", [True, False])
 def test_assembled_frozen_runtime_round_trip(active):
     """Inactive keys and descriptions survive assembly and freezing without active rules."""
-    draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "environment_name": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append"}}})}
-    rule = {**_rule(active=active), "contract_id": "c", "contract_version": 2, "environment_name": "dev"}
-    payload, _warnings = contracts.assemble_contract_payload(draft=draft, environment_name="dev", catalogue_rows=[{"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "history"}, *[
-            {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]], enrichment_rows=[{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "environment_name": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}], guardrail_rows=[rule])
+    draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "workspace_id": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append"}}})}
+    rule = {**_rule(active=active), "contract_id": "c", "contract_version": 2, "workspace_id": "dev"}
+    payload, _warnings = contracts.assemble_contract_payload(draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "t", "workspace_id": "dev", "metadata_level": "table", "table_name": "history"}, *[
+            {"table_id": "t", "workspace_id": "dev", "metadata_level": "column", "column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]], enrichment_rows=[{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "workspace_id": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}], guardrail_rows=[rule])
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(payload)}, audit={})
     frozen_payload = json.loads(frozen["contract_payload_json"])
     assert frozen_payload["guardrails"][0]["action"] == "Block"
     assert frozen_payload["guardrails"][0]["rule_parameters"] == {"columns": ["id", "version"]}
     assert frozen_payload["enrichment"]["table"][0]["value"] == "One row per version"
-    runtime = contract_guardrail_rows(frozen, environment_name="dev", table_id="t")
+    runtime = contract_guardrail_rows(frozen, workspace_id="dev", table_id="t")
+    runtime = [row for row in runtime if row["guardrail_type"] == "grain"]
     assert len(runtime) == int(active)
     if active:
         assert runtime[0]["guardrail_type"] == "grain"
@@ -81,26 +82,26 @@ def test_scd2_history_uses_version_aware_grain(spark_session):
 
 def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
     """Editable previews retain unfinished keys without weakening authoritative validation."""
-    draft = {"contract_id": "c", "contract_version": 1, "table_id": "t", "environment_name": "dev", "status": "draft",
+    draft = {"contract_id": "c", "contract_version": 1, "table_id": "t", "workspace_id": "dev", "status": "draft",
              "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}})}
     tables = {
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "t", "environment_name": "dev", "metadata_level": "table", "table_name": "orders"},
-            {"table_id": "t", "environment_name": "dev", "metadata_level": "column", "column_id": "id", "column_name": "id", "data_type": "bigint"},
+            {"table_id": "t", "workspace_id": "dev", "metadata_level": "table", "table_name": "orders"},
+            {"table_id": "t", "workspace_id": "dev", "metadata_level": "column", "column_id": "id", "column_name": "id", "data_type": "bigint"},
         ],
         "enrichment": [],
-        "guardrails": [{**_rule([]), "contract_id": "c", "contract_version": 1, "environment_name": "dev"}],
+        "guardrails": [{**_rule([]), "contract_id": "c", "contract_version": 1, "workspace_id": "dev"}],
     }
     with pytest.raises(ValueError, match="Enforced Grain requires"):
-        contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev")
-    preview, _ = contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev", allow_incomplete_grain=True)
+        contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev")
+    preview, _ = contracts.assemble_contract_payload(draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev", allow_incomplete_grain=True)
     assert preview["guardrails"][0]["rule_parameters"]["columns"] == []
     with pytest.raises(ValueError, match="Enforced Grain requires"):
-        contracts.save_contract_draft(draft=draft, payload=preview, config=object(), env="dev", spark_session=object())
+        contracts.save_contract_draft(draft=draft, payload=preview, config=object(), active_workspace_id="dev", spark_session=object())
     with pytest.raises(ValueError, match="Enforced Grain requires"):
         contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(preview)}, audit={})
     with pytest.raises(ValueError, match="Enforced Grain requires"):
-        contract_guardrail_rows({"contract_payload": preview}, environment_name="dev", table_id="t")
+        contract_guardrail_rows({**preview["contract"], "contract_payload": preview}, workspace_id="dev", table_id="t")
 
 
 @pytest.mark.parametrize("mode,action", [("testing", "Block"), ("live", "Block"), ("live", "Warn")])

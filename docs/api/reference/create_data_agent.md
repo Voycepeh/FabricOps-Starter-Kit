@@ -106,10 +106,10 @@ FabricDataAgentError
 
 <div class="reference-docstring-notes" markdown="1">
 
-This Preview API requires a supported Fabric capacity, access to the Production
+This Preview API requires a supported Fabric capacity, access to the selected source workspace
 Lakehouse or Warehouse, and permission to create and configure Data Agents in
-the target workspace. It builds governed consumer context from the active
-Production Data Contract, renders deterministic instructions, creates a staging
+the target workspace. It builds governed consumer context from the workspace-approved
+Data Contract, renders deterministic instructions, creates a staging
 datasource, selects one table, and applies the datasource and agent instructions.
 It does not publish the agent.
 

@@ -77,7 +77,7 @@ class FakeFabricCredentials:
 
 @dataclass
 class FakeFabricEnv:
-    """Configurable notebookutils.mssparkutils.env test double."""
+    """Configurable notebookutils.mssparkutils.active_workspace_id test double."""
 
     values: dict[str, str] = field(default_factory=dict)
 
@@ -121,7 +121,7 @@ def fake_notebookutils(monkeypatch: pytest.MonkeyPatch, fake_fabric_runtime_cont
     """Inject configurable notebookutils and mssparkutils modules through sys.modules."""
     fs = FakeFabricFs()
     credentials = FakeFabricCredentials()
-    env = FakeFabricEnv()
+    active_workspace_id = FakeFabricEnv()
     runtime_module = types.ModuleType("notebookutils.runtime")
     runtime_module.context = fake_fabric_runtime_context
 
@@ -129,20 +129,20 @@ def fake_notebookutils(monkeypatch: pytest.MonkeyPatch, fake_fabric_runtime_cont
     mssparkutils_module.fs = fs
     mssparkutils_module.credentials = credentials
     mssparkutils_module.runtime = runtime_module
-    mssparkutils_module.env = env
+    mssparkutils_module.active_workspace_id = active_workspace_id
 
     notebookutils_module = types.ModuleType("notebookutils")
     notebookutils_module.fs = fs
     notebookutils_module.credentials = credentials
     notebookutils_module.runtime = runtime_module
     notebookutils_module.mssparkutils = mssparkutils_module
-    notebookutils_module.env = env
+    notebookutils_module.active_workspace_id = active_workspace_id
 
     bare_mssparkutils_module = types.ModuleType("mssparkutils")
     bare_mssparkutils_module.fs = fs
     bare_mssparkutils_module.credentials = credentials
     bare_mssparkutils_module.runtime = runtime_module
-    bare_mssparkutils_module.env = env
+    bare_mssparkutils_module.active_workspace_id = active_workspace_id
 
     monkeypatch.setitem(sys.modules, "notebookutils", notebookutils_module)
     monkeypatch.setitem(sys.modules, "notebookutils.runtime", runtime_module)
@@ -156,7 +156,7 @@ def fake_notebookutils(monkeypatch: pytest.MonkeyPatch, fake_fabric_runtime_cont
         credentials=credentials,
         runtime=runtime_module,
         context=fake_fabric_runtime_context,
-        env=env,
+        active_workspace_id=active_workspace_id,
     )
 
 
@@ -165,7 +165,7 @@ def spark_session():
     """Return a local Spark session or skip when Spark prerequisites are unavailable."""
     try:
         from pyspark.sql import SparkSession
-    except Exception as exc:  # pragma: no cover - environment dependent
+    except Exception as exc:  # pragma: no cover - workspace_id dependent
         pytest.skip(f"PySpark is unavailable: {exc}")
 
     try:
@@ -177,7 +177,7 @@ def spark_session():
             .config("spark.driver.bindAddress", "127.0.0.1")
             .getOrCreate()
         )
-    except Exception as exc:  # pragma: no cover - environment dependent
+    except Exception as exc:  # pragma: no cover - workspace_id dependent
         pytest.skip(f"Local Spark prerequisites are unavailable: {exc}")
 
     spark.sparkContext.setLogLevel("ERROR")

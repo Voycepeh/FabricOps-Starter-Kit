@@ -194,7 +194,7 @@ def pipeline_read(
         - ``table_id``: the canonical identity of the governed physical source.
         - ``is_query``: whether ``dataframe`` is a custom Warehouse query
           result rather than the complete physical table.
-        - ``has_contract``: whether an environment-selected immutable Data
+        - ``has_contract``: whether an workspace_id-selected immutable Data
           Contract applies. The contract record itself is not exposed.
         - ``read_mode``: the explicit source read mode.
         - ``has_data`` and ``should_process``: whether this read contributes
@@ -331,14 +331,14 @@ def pipeline_read(
     if not table_id and (store is None or table_name is None):
         raise ValueError("Provide table_id or both store and table_name.")
 
-    config, env, context = resolve_fabric_context() if context is None else (context["config"], context["env"], context)
+    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
     spark_session = get_spark_session(context=context)
     context = {**context, "_pipeline_spark": spark_session}
     if table_id:
-        identity = resolve_catalogue_table_identity(config, env, table_id, context=context)
+        identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=context)
     else:
         identity = resolve_physical_table_identity(
-            config, env, store=store, schema=schema, table_name=table_name
+            config, active_workspace_id, store=store, schema=schema, table_name=table_name
         )
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     identity["store_type"] = store_kind
@@ -355,7 +355,7 @@ def pipeline_read(
     canonical_target_id = str(target_table_id).strip() if target_table_id is not None else None
 
     contract = resolve_pipeline_data_contract(
-        config, env, str(identity["table_id"]), context=context
+        config, active_workspace_id, str(identity["table_id"]), context=context
     )
     has_contract = contract is not None
     incremental_columns = (

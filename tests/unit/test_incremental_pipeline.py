@@ -36,7 +36,7 @@ def _row(*, target: str, maximum: str, committed_at: int = 1):
         "observation_id": f"observation-{target}-{maximum}",
         "source_table_id": "source-orders",
         "target_table_id": target,
-        "environment_name": "dev",
+        "workspace_id": "dev",
         "partition_value": maximum,
         "row_count": 1,
         "min_change_value": maximum,
@@ -53,7 +53,7 @@ def _receipt(target):
     return {"record_id": f"publication-{target}", "record_type": "publication_receipt", "status": "staged",
             "publication_id": f"publication-{target}", "publication_batch_id": "batch-a",
             "publication_activity_id": "run-a", "publication_at": datetime(2026, 1, 1, tzinfo=UTC),
-            "publication_input_rows": 1, "publication_strategy": "append", "environment_name": "dev",
+            "publication_input_rows": 1, "publication_strategy": "append", "workspace_id": "dev",
             "target_table_id": target}
 
 
@@ -518,7 +518,7 @@ def test_multiple_incremental_sources_are_staged_independently(monkeypatch):
     )
     assert set(
         shared.incremental_publication_scopes(
-            environment_name="dev",
+            workspace_id="dev",
             activity_id="run-1",
             target_table_id="target-a",
             source_table_ids=["source-orders", "source-payments", "source-products"],

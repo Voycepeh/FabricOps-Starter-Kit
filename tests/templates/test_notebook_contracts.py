@@ -166,8 +166,11 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "**Table**, **Columns**, and **Review**" in source
     assert "Freezing creates an immutable candidate for Engineering validation" in source
     assert "Governance authoring and Engineering validation intentionally loop" in source
-    assert "Activation freezes the approved manifest" in source
-    assert "does **not** promote or deploy `02_pipeline`" in source
+    assert "Activation records exact Test, Contract and Agreement references" in source
+    assert "METADATA_PIPELINE_REGISTRY" in source
+    assert "Observe locally → Govern globally → Test locally → Activate locally" in source
+    assert "complete Test in each target workspace before local activation" in source
+    assert "METADATA_ACTIVATION_STATE" not in source
     for demoted_widget in (
         "widget_enrich_table_metadata",
         "widget_author_guardrails",
@@ -219,8 +222,8 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "deploy the tested notebook" in normalized["step_5"]
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
-    assert "same tested workflow in the production environment" in normalized["step_6"]
-    assert "approved environment activated pipeline manifest" in normalized["step_6"]
+    assert "same tested workflow in the production workspace" in normalized["step_6"]
+    assert "approved workspace activated pipeline manifest" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
@@ -271,10 +274,10 @@ def test_demo_notebooks_are_valid_and_use_public_fabricops_apis(notebook_path: P
 
 
 def test_02_pipeline_is_a_small_reusable_scaffold():
-    """The living template keeps one clear Environment -> Contract -> Read -> Transform -> Write path."""
+    """The living template keeps one clear Workspace -> Contract -> Read -> Transform -> Write path."""
     source = _notebook_source("02_pipeline.ipynb")
     headings = (
-        "# 0. Environment",
+        "# 0. Workspace",
         "# 1. Setup Pipeline",
         "# 2. Read",
         "# 3. Transform",
@@ -527,3 +530,64 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
         notebook = json.loads(path.read_text())
         for cell in notebook["cells"]:
             assert not re.search(r"\b(?:spark|spark_session)\s*=\s*spark\b", "".join(cell["source"])), path
+
+
+@pytest.mark.parametrize("notebook_path", [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS], ids=lambda path: path.name)
+def test_first_run_authoring_observation_resolves_every_participant(monkeypatch, notebook_path):
+    """Explicit observation covers fresh inputs/targets after read-only Test finalization."""
+    import fabricops_kit as kit
+    from fabricops_kit.config.shared import FabricStore, FrameworkConfig, PathConfig
+    from fabricops_kit.pipeline.shared import resolve_physical_table_identity
+
+    config = FrameworkConfig(path_config=PathConfig(paths={"engineering": {
+        "Bronze": FabricStore(workspace_id="engineering", item_id="bronze", kind="lakehouse", schema_enabled=True, schema="dbo"),
+        "Silver": FabricStore(workspace_id="engineering", item_id="silver", kind="lakehouse", schema_enabled=True, schema="dbo"),
+        "Gold": FabricStore(workspace_id="engineering", item_id="gold", kind="warehouse"),
+    }}))
+    notebook = _load_notebook(notebook_path)
+    cell = next(cell for cell in notebook.cells if cell.get("id") == "finalize-run")
+    events = []
+    profiles = []
+    reads = []
+    frame = object()
+
+    def read(**coordinates):
+        reads.append(coordinates)
+        return frame
+
+    def profile(**arguments):
+        assert events == ["finalized"]
+        assert arguments["dataframe"] is frame
+        coordinates = {key: arguments[key] for key in ("store", "schema", "table_name")}
+        identity = resolve_physical_table_identity(config, "engineering", **coordinates)
+        profiles.append((coordinates, identity["table_id"]))
+        return {"profile": "observed"}
+
+    monkeypatch.setattr(kit, "read_lakehouse_table", read)
+    monkeypatch.setattr(kit, "read_warehouse_table", read)
+    monkeypatch.setattr(kit, "profile_table", profile)
+    writes = {key: {"dataframe": frame} for key in [
+        "target", "curated_orders_lakehouse", "customer_summary_warehouse",
+        "inventory_movements_incremental", "product_master_scd1", "product_master_scd2",
+    ]}
+    namespace = {"pipeline": object(), "PIPELINE_MODE": "Test", "writes": writes,
+                 "finalize_pipeline": lambda _pipeline: events.append("finalized") or {}}
+    # Routine finalization must not persist observations implicitly.
+    exec(cell.source, namespace)
+    assert not reads and not profiles
+    events.clear()
+    exec(cell.source.replace("OBSERVE_FOR_GOVERNANCE = False", "OBSERVE_FOR_GOVERNANCE = True"), namespace)
+    expected = []
+    source_count = 0
+    for _, source in _code_cells(notebook_path):
+        tree = _parse_code_cell(notebook_path, 0, source)
+        if tree is None:
+            continue
+        for call in ast.walk(tree):
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id in {"orchestrate_read", "orchestrate_write"}:
+                source_count += call.func.id == "orchestrate_read"
+                expected.append({keyword.arg: ast.literal_eval(keyword.value) for keyword in call.keywords
+                                 if keyword.arg in {"store", "schema", "table_name"}})
+    assert [coordinates for coordinates, _ in profiles] == expected
+    assert len({identity for _, identity in profiles}) == len(expected)
+    assert len(reads) == source_count

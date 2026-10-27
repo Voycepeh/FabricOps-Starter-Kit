@@ -792,7 +792,7 @@ def get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     Parameters
     ----------
     config : FrameworkConfig or dict
-        Environment configuration containing widget settings.
+        Workspace configuration containing widget settings.
     kind : {"data_steward_widget", "data_agreement_widget"}
         Widget configuration section to inspect.
 
@@ -889,11 +889,11 @@ def active_steward(row: dict[str, Any], config: Any = None) -> bool:
     return is_active in (None, "") or to_bool(is_active)
 
 
-def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_data_stewards(config: Any, active_workspace_id: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest append-only steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, context={"config": config, "env": env, "_spark_session": spark_session})
+        rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session})
     except Exception as exc:
         if missing_ok and _is_table_not_found_error(exc):
             return []
@@ -901,7 +901,7 @@ def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, acti
     latest = _latest_by_key(rows, "steward_id")
     return [row for row in latest if active_steward(row, config)] if active_only else latest
 
-def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
+def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: str, table: str, row: dict[str, Any]) -> None:
     """Append one widget metadata row to the configured metadata target."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     canonical_table = {
@@ -910,7 +910,7 @@ def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, 
     }.get(table, table)
     canonical_schema = metadata_table_schema_registry().get(canonical_table)
     typed_row = coerce_metadata_row_types(canonical_table, row)
-    write_lakehouse_table(spark.createDataFrame([typed_row], schema=canonical_schema), table, store="Metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "env": env}, mode="append")
+    write_lakehouse_table(spark.createDataFrame([typed_row], schema=canonical_schema), table, store="Metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "scope_workspace_id": active_workspace_id}, mode="append")
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""
@@ -951,20 +951,20 @@ def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
             latest[key] = row
     return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
-def list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_all_data_agreement_rows(config: Any, active_workspace_id: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List all append-only agreement rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
-        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), store="Metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "env": env, "_spark_session": spark_session})
+        rows = read_lakehouse_table(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), store="Metadata", schema=metadata_table_physical_schema(config, DATA_AGREEMENT_TABLE), context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session})
     except Exception as exc:
         if missing_ok and _is_table_not_found_error(exc):
             return []
         raise
     return _coerce_row_dicts(rows)
 
-def list_data_agreements(config: Any, env: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_data_agreements(config: Any, active_workspace_id: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest versioned agreements from the configured metadata lakehouse."""
-    rows = list_all_data_agreement_rows(config, env, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
+    rows = list_all_data_agreement_rows(config, active_workspace_id, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
     agreements = latest_agreement_versions(rows)
     if not active_only:
         return agreements
@@ -1137,11 +1137,11 @@ def build_rule_record(
     table_id = str(state.get("table_id") or "").strip()
     contract_id = str(state.get("contract_id") or "").strip()
     contract_version = int(state.get("contract_version") or 0)
-    environment_name = str(state.get("environment_name") or "").strip()
+    workspace_id = str(state.get("workspace_id") or "").strip()
     if not table_id:
         raise ValueError("A selected profiled table with a canonical table_id is required.")
-    if not environment_name:
-        raise ValueError("The selected profiled table must have an environment_name.")
+    if not workspace_id:
+        raise ValueError("The selected profiled table must have an workspace_id.")
     if not contract_id or contract_version < 1:
         raise ValueError("A selected Data Contract version is required for Guardrail authoring.")
     column_id = _column_id_for_name(state, column_name) if column_name else ""
@@ -1162,7 +1162,7 @@ def build_rule_record(
         "contract_id": contract_id,
         "contract_version": contract_version,
         "column_id": column_id,
-        "environment_name": environment_name,
+        "workspace_id": workspace_id,
         "guardrail_type": str(guardrail_type),
         "rule_id": str(rule_id),
         "rule_type": str(rule_type),

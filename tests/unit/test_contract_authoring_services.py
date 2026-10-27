@@ -10,21 +10,21 @@ from fabricops_kit.data_contract import shared as service
 
 
 def test_exact_contract_version_is_global():
-    """Rows are selected by global version; duplicate legacy environment definitions stay visible."""
+    """Rows are selected by global version; duplicate legacy workspace_id definitions stay visible."""
     rows = [
-        {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "one"},
-        {"contract_id": "c", "contract_version": 2, "environment_name": "dev", "value": "two"},
-        {"contract_id": "c", "contract_version": 2, "environment_name": "prod", "value": "prod"},
+        {"contract_id": "c", "contract_version": 1, "workspace_id": "dev", "value": "one"},
+        {"contract_id": "c", "contract_version": 2, "workspace_id": "dev", "value": "two"},
+        {"contract_id": "c", "contract_version": 2, "workspace_id": "prod", "value": "prod"},
     ]
     assert service.contract_version_records(
-        rows, contract_id="c", contract_version=2, environment_name="dev"
+        rows, contract_id="c", contract_version=2, workspace_id="dev"
     ) == [rows[1], rows[2]]
 
 
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{
-        "table_id": "orders", "environment_name": "dev",
+        "table_id": "orders", "workspace_id": "dev",
         "metadata_level": "table", "is_active": True,
     }]
     contracts: list[dict] = []
@@ -41,11 +41,11 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
 
     first = service.create_contract_draft(
-        table_id="orders", config=object(), env="dev", spark_session=spark,
+        table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     contracts.append(first)
     second = service.create_contract_draft(
-        table_id="orders", config=object(), env="dev", spark_session=spark,
+        table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
 
     payload = json.loads(first["contract_payload_json"])
@@ -76,11 +76,11 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     }
     frozen = {
         "contract_id": lifecycle_id, "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev", "status": "frozen", "is_active": True,
+        "workspace_id": "dev", "status": "frozen", "is_active": True,
         "contract_payload_json": json.dumps(previous_payload),
     }
     catalogue = [{
-        "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
+        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
         "load_strategy": None, "load_strategy_parameters_json": {}, "is_active": True,
     }]
     rows = [frozen]
@@ -97,7 +97,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     spark = type("Spark", (), {"createDataFrame": lambda self, values, schema=None: values})()
 
     inherited = service.create_contract_draft(
-        table_id="orders", config=object(), env="dev", spark_session=spark,
+        table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     inherited_payload = json.loads(inherited["contract_payload_json"])
     assert inherited_payload["profiling"] == previous_payload["profiling"]
@@ -111,7 +111,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     rows[:] = [frozen]
     catalogue[0]["load_strategy"] = "append"
     scanned = service.create_contract_draft(
-        table_id="orders", config=object(), env="dev", spark_session=spark,
+        table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     scanned_payload = json.loads(scanned["contract_payload_json"])
     assert scanned_payload["table"]["processing"] == {"load_strategy": "append"}
@@ -134,25 +134,25 @@ def test_enrichment_build_preserves_exact_owner_and_column(monkeypatch):
     }])
     rows = service.build_enrichment_records([{
         "contract_id": "contract-orders", "contract_version": 3,
-        "environment_name": "dev", "enrichment_level": "column",
+        "workspace_id": "dev", "enrichment_level": "column",
         "column_id": "col-id", "enrichment_type": "Description", "value": "Identifier",
-    }], env="dev")
+    }], active_workspace_id="dev")
     assert rows[0]["contract_id"] == "contract-orders"
     assert rows[0]["contract_version"] == 3
     assert rows[0]["column_id"] == "col-id"
     assert rows[0]["table_id"] == "orders-id"
     assert rows[0]["table_name"] == "orders"
     assert rows[0]["column_name"] == "order_id"
-    with pytest.raises(ValueError, match="environment"):
-        service.build_enrichment_records([{**rows[0], "environment_name": "prod"}], env="dev")
+    with pytest.raises(ValueError, match="workspace_id"):
+        service.build_enrichment_records([{**rows[0], "workspace_id": "prod"}], active_workspace_id="dev")
 
 
 def test_authoring_state_resolves_contract_identity_in_requested_environment(monkeypatch):
-    """The same contract identity in another environment cannot leak into state."""
+    """The same contract identity in another workspace_id cannot leak into state."""
     contracts = [
         {
             "contract_id": "c", "contract_version": 2, "agreement_id": None,
-            "agreement_version": None, "table_id": "dev-t", "environment_name": "dev",
+            "agreement_version": None, "table_id": "dev-t", "workspace_id": "dev",
             "status": "draft", "contract_payload_json": json.dumps({
                 "contract": {"contract_id": "c", "contract_version": 2, "status": "draft"},
                 "table": {"table_id": "dev-t", "processing": {"load_strategy": "overwrite"}},
@@ -161,7 +161,7 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
         },
         {
             "contract_id": "c", "contract_version": 2, "agreement_id": None,
-            "agreement_version": None, "table_id": "prod-t", "environment_name": "prod",
+            "agreement_version": None, "table_id": "prod-t", "workspace_id": "prod",
             "status": "draft", "contract_payload_json": json.dumps({
                 "contract": {"contract_id": "c", "contract_version": 2, "status": "draft"},
                 "table": {"table_id": "prod-t", "processing": {"load_strategy": "overwrite"}},
@@ -172,8 +172,8 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     tables = {
         service.DATA_CONTRACT_TABLE: contracts,
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "dev-t", "environment_name": "dev", "metadata_level": "table"},
-            {"table_id": "prod-t", "environment_name": "prod", "metadata_level": "table"},
+            {"table_id": "dev-t", "workspace_id": "dev", "metadata_level": "table"},
+            {"table_id": "prod-t", "workspace_id": "prod", "metadata_level": "table"},
         ],
         "enrichment": [],
         "guardrails": [],
@@ -182,10 +182,10 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     monkeypatch.setattr(service, "read_lakehouse_table", lambda table, **_kwargs: tables[table])
 
     with pytest.raises(ValueError, match="duplicated"):
-        service.get_contract_authoring_state(config=object(), env="dev", spark_session=object(), contract_id="c", contract_version=2)
-    contracts.pop()  # Reconcile the conflicting old environment-specific definition.
+        service.get_contract_authoring_state(config=object(), active_workspace_id="dev", spark_session=object(), contract_id="c", contract_version=2)
+    contracts.pop()  # Reconcile the conflicting old workspace_id-specific definition.
     state = service.get_contract_authoring_state(
-        config=object(), env="dev", spark_session=object(),
+        config=object(), active_workspace_id="dev", spark_session=object(),
         contract_id="c", contract_version=2,
     )
 
@@ -200,7 +200,7 @@ def test_table_grain_is_canonical_enrichment():
             "enrichment_id": "grain-1",
             "contract_id": "contract-orders",
             "contract_version": 1,
-            "environment_name": "dev",
+            "workspace_id": "dev",
             "enrichment_level": "table",
             "column_id": "",
             "enrichment_type": "Grain",
@@ -223,7 +223,7 @@ def test_freeze_record_locks_saved_payload_without_version_churn():
     }
     frozen = service.freeze_contract_record(
         draft={
-            "contract_id": "c", "contract_version": 1, "environment_name": "dev",
+            "contract_id": "c", "contract_version": 1, "workspace_id": "dev",
             "status": "draft", "contract_payload_json": json.dumps(draft_payload),
         },
         audit={"_activity_id": "freeze"},
@@ -244,17 +244,17 @@ def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
         "contract_id": "c", "contract_version": 1,
         "contract_payload_json": json.dumps({"table": {"table_id": "t", "table_name": "orders", "columns": [{"column_id": "col", "column_name": "order_id"}]}}),
     }])
-    common = {"contract_id": "c", "contract_version": 1, "environment_name": "dev", "value": "value"}
+    common = {"contract_id": "c", "contract_version": 1, "workspace_id": "dev", "value": "value"}
     records = service.build_enrichment_records([
         {**common, "enrichment_level": "table", "enrichment_type": "Description"},
         {**common, "enrichment_level": "table", "enrichment_type": "Classification"},
         {**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Classification"},
-    ], env="dev")
+    ], active_workspace_id="dev")
     assert [row["enrichment_type"] for row in records] == ["Description", "Classification", "Classification"]
     with pytest.raises(ValueError, match="descriptive metadata only"):
-        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Personal_identifier"}], env="dev")
+        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Personal_identifier"}], active_workspace_id="dev")
     with pytest.raises(ValueError, match="Column enrichment_type"):
-        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Sensitivity"}], env="dev")
+        service.build_enrichment_records([{**common, "enrichment_level": "column", "column_id": "col", "enrichment_type": "Sensitivity"}], active_workspace_id="dev")
 
 
 def test_canonical_enrichment_state_removes_non_descriptive_rows():
@@ -284,7 +284,7 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
             "guardrail_rule_id": "rule",
             "contract_id": "contract",
             "contract_version": 2,
-            "environment_name": "dev",
+            "workspace_id": "dev",
             "guardrail_type": guardrail_type,
             "rule_id": "rule",
             "rule_type": "specific_rule",
@@ -292,7 +292,7 @@ def test_guardrail_service_normalizes_all_supported_types_and_actions(
             "action": action,
         },
         config=None,
-        env="dev",
+        active_workspace_id="dev",
     )
 
     assert row["guardrail_type"] == guardrail_type
@@ -324,7 +324,7 @@ def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
             "contract_id": "contract",
             "contract_version": 2,
             "column_id": "email-id",
-            "environment_name": "dev",
+            "workspace_id": "dev",
             "guardrail_type": "sensitive_data",
             "rule_id": "sensitive_data",
             "rule_type": treatment,
@@ -334,7 +334,7 @@ def test_sensitive_data_guardrail_requires_column_scope_and_exact_contract(
             "action": action,
         },
         config=None,
-        env="dev",
+        active_workspace_id="dev",
     )
     assert (row["contract_id"], row["contract_version"]) == ("contract", 2)
     assert row["column_id"] == "email-id"
@@ -356,10 +356,10 @@ def test_sensitive_data_guardrail_rejects_invalid_scope_or_treatment(monkeypatch
         service.canonical_guardrail_rule_record(
             {
                 "guardrail_rule_id": "sensitive-email", "contract_id": "contract",
-                "contract_version": 2, "column_id": "email-id", "environment_name": "dev",
+                "contract_version": 2, "column_id": "email-id", "workspace_id": "dev",
                 "guardrail_type": "sensitive_data", "rule_id": "sensitive_data",
                 "rule_type": "tokenize", "rule_parameters_json": parameters, "action": "Block",
-            }, config=None, env="dev",
+            }, config=None, active_workspace_id="dev",
         )
 
 
@@ -367,7 +367,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     """Operational schedule metadata sits beside processing without raw Fabric fields."""
     draft = {
         "contract_id": "contract-orders", "contract_version": 1,
-        "table_id": "orders", "environment_name": "dev", "status": "draft",
+        "table_id": "orders", "workspace_id": "dev", "status": "draft",
         "contract_payload_json": json.dumps({
             "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": "draft"},
             "table": {
@@ -381,7 +381,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     }
     tables = {
         "METADATA_DATA_CATALOGUE": [{
-            "table_id": "orders", "environment_name": "dev", "metadata_level": "table",
+            "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
             "schema_name": "sales", "table_name": "orders", "load_strategy": "append",
             "load_strategy_parameters_json": {}, "is_active": True,
         }],
@@ -397,7 +397,7 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
     }
 
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], environment_name="dev",
+        draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev",
         scheduled_refresh=schedule,
     )
 
@@ -409,7 +409,7 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     """Hydrate top values from the canonical profiled-frequency schema."""
     profiled = [{
         "profile_id": "profile-1", "profile_snapshot_id": "snapshot-1",
-        "table_id": "orders", "column_id": "amount", "environment_name": "dev",
+        "table_id": "orders", "column_id": "amount", "workspace_id": "dev",
         "data_type": "double", "row_count": 120, "non_null_count": 120,
         "null_count": 0, "null_percent": 0.0, "distinct_count": 3,
         "distinct_percent": 2.5, "mean_value": 109.95, "stddev_value": 3.1,
@@ -439,7 +439,7 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
     context = service.get_column_profile_context(
-        config=object(), env="dev", spark_session=object(),
+        config=object(), active_workspace_id="dev", spark_session=object(),
         table_id="orders", column_id="amount",
     )
 
@@ -452,17 +452,17 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     ]
 
 def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_lineage(monkeypatch):
-    """Summarize one logical table across environments without duplicating deployed pipelines."""
+    """Summarize one logical table across workspaces without duplicating deployed pipelines."""
     profiled = [
         {
             "profile_id": "profile-dev", "profile_snapshot_id": "snapshot-dev",
-            "table_id": "orders", "column_id": "amount", "environment_name": "DEV",
+            "table_id": "orders", "column_id": "amount", "workspace_id": "DEV",
             "_notebook_name": "02_pipeline", "_committed_by": "dev@example.com",
             "_committed_at": "2026-09-26T01:00:00", "_activity_id": "dev-profile",
         },
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "amount", "environment_name": "PROD",
+            "table_id": "orders", "column_id": "amount", "workspace_id": "PROD",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
             "min_value": "29.9", "max_value": "438.6", "example_value": "109.95",
@@ -471,7 +471,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
         {
             "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "customer_id", "environment_name": "PROD",
+            "table_id": "orders", "column_id": "customer_id", "workspace_id": "PROD",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
@@ -480,22 +480,22 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     ]
     lineage = [
         {
-            "lineage_id": "dev-writer-old", "table_id": "orders", "environment_name": "DEV",
+            "lineage_id": "dev-writer-old", "table_id": "orders", "workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-25T10:00:00", "_activity_id": "1",
         },
         {
-            "lineage_id": "dev-writer-new", "table_id": "orders", "environment_name": "DEV",
+            "lineage_id": "dev-writer-new", "table_id": "orders", "workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T03:00:00", "_activity_id": "2",
         },
         {
-            "lineage_id": "prod-writer", "table_id": "orders", "environment_name": "PROD",
+            "lineage_id": "prod-writer", "table_id": "orders", "workspace_id": "PROD",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T02:00:00", "_activity_id": "3",
         },
         {
-            "lineage_id": "prod-reader", "table_id": "orders", "environment_name": "PROD",
+            "lineage_id": "prod-reader", "table_id": "orders", "workspace_id": "PROD",
             "pipeline_role": "source", "_notebook_name": "04_reporting",
             "_committed_at": "2026-09-26T02:30:00", "_activity_id": "4",
         },
@@ -503,11 +503,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
 
     frequency = [
         {
-            "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
             "value": "109.95", "frequency_count": 50, "frequency_rank": 1,
         },
         {
-            "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
             "value": "C001", "frequency_count": 1, "frequency_rank": 1,
         },
     ]
@@ -525,12 +525,12 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
     context = service.get_table_runtime_context(
-        config=object(), env="dev", spark_session=object(), table_id="orders"
+        config=object(), active_workspace_id="PROD", spark_session=object(), table_id="orders"
     )
 
     assert context["latest_profile"] == {
         "profile_snapshot_id": "snapshot-prod",
-        "environment_name": "PROD",
+        "workspace_id": "PROD",
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
@@ -552,7 +552,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     assert context["reader_count"] == 1
     assert len(context["lineage"]) == 3
     assert {
-        (row["environment_name"], row["relationship"], row["pipeline_name"], row["last_seen"])
+        (row["workspace_id"], row["relationship"], row["pipeline_name"], row["last_seen"])
         for row in context["lineage"]
     } == {
         ("DEV", "Writer", "02_pipeline", "2026-09-26T03:00:00"),
@@ -566,18 +566,18 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
     """Inherited Warn rows cannot reintroduce optional mandatory protections on save."""
     draft = {
         "contract_id": "contract", "contract_version": 1, "table_id": "orders",
-        "environment_name": "dev", "status": "draft",
+        "workspace_id": "dev", "status": "draft",
         "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}}),
     }
     rule = {
         "guardrail_rule_id": "rule", "guardrail_version": 1,
-        "contract_id": "contract", "contract_version": 1, "environment_name": "dev",
+        "contract_id": "contract", "contract_version": 1, "workspace_id": "dev",
         "guardrail_type": guardrail_type, "rule_type": "required_columns" if guardrail_type == "schema" else "tokenize",
         "rule_parameters_json": json.dumps({"required_columns": []} if guardrail_type == "schema" else {"scope": "column", "treatment": "tokenize"}),
         "action": "Warn", "is_active": True,
     }
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, environment_name="dev", catalogue_rows=[{"table_id": "orders", "metadata_level": "table", "environment_name": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
+        draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "orders", "metadata_level": "table", "workspace_id": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"
@@ -597,7 +597,7 @@ def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
     assert saved['profiling'] == policy and saved['guardrails'] == []
     assert draft['status'] == 'draft' and json.loads(draft['contract_payload_json']) == payload
     with pytest.raises(ValueError, match='Only a draft'):
-        service.save_contract_draft(draft=frozen, payload=payload, config={}, env='dev', spark_session=None)
+        service.save_contract_draft(draft=frozen, payload=payload, config={}, active_workspace_id='dev', spark_session=None)
     with pytest.raises(ValueError, match='Only a draft'):
         service.freeze_contract_record(draft=frozen, audit={})
     payload['profiling']['standard']['days'] = 0

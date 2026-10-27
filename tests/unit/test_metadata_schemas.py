@@ -57,7 +57,7 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
         "contract_id", "contract_version",
-        "table_id", "table_name", "environment_name", "contract_payload_json", "status", *audit_names,
+        "table_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
     ]
     assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
@@ -65,20 +65,20 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:7]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
         ("table_id", "StringType", False), ("table_name", "StringType", True),
-        ("environment_name", "StringType", False),
+        ("evidence_workspace_id", "StringType", False),
         ("contract_payload_json", "StringType", True),
         ("status", "StringType", False),
     ]
 
 
 def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
-    """Catalogue owns the physical table/column identity for one environment."""
+    """Catalogue owns the physical table/column identity for one workspace_id."""
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
         "metadata_level",
         "table_id",
         "column_id",
-        "environment_name",
+        "workspace_id",
         "store_type",
         "layer",
         "schema_name",
@@ -108,7 +108,7 @@ def test_stage2_profile_schema_is_normalized():
         "profile_snapshot_id",
         "table_id",
         "column_id",
-        "environment_name",
+        "workspace_id",
         "data_type",
         "table_name",
         "column_name",
@@ -154,7 +154,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "table_name",
         "column_name",
         "data_type",
-        "environment_name",
+        "workspace_id",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -173,7 +173,7 @@ def test_stage2_lineage_schema_uses_pipeline_language():
         "lineage_id",
         "table_id",
         "table_name",
-        "environment_name",
+        "workspace_id",
         "pipeline_role",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
@@ -195,7 +195,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "source_table_name",
         "target_table_id",
         "target_table_name",
-        "environment_name",
+        "workspace_id",
         "observed_at",
         "accepted_at",
         "partition_column",
@@ -236,7 +236,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "user_principal",
         "table_id",
         "table_name",
-        "environment_name",
+        "workspace_id",
         "access_level",
         "access_value",
         "access_state",
@@ -257,7 +257,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "access_id",
             "user_principal",
             "table_id",
-            "environment_name",
+            "workspace_id",
             "access_level",
             "access_value",
             "access_state",
@@ -331,7 +331,7 @@ def test_pipeline_run_old_schema_requires_offline_conversion():
 
 
 def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
-    """Nested type descriptions stay deterministic in docs-only environments."""
+    """Nested type descriptions stay deterministic in docs-only workspaces."""
     import builtins
     from pathlib import Path
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_rows
@@ -339,7 +339,7 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
     real_import = builtins.__import__
     def without_spark(name, *args, **kwargs):
         if name.startswith('pyspark'):
-            raise ImportError('docs-only environment')
+            raise ImportError('docs-only workspace_id')
         return real_import(name, *args, **kwargs)
     namespace = {'__builtins__': {**vars(builtins), '__import__': without_spark}}
     source = Path('src/fabricops_kit/config/metadata_schemas.py').read_text()

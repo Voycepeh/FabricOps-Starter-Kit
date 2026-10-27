@@ -224,6 +224,7 @@ def test_resolve_physical_table_identity_preserves_configured_store_case(monkeyp
     calls = []
 
     class Store:
+        workspace_id = "dev"
         kind = "lakehouse"
         schema_enabled = True
         schema = "demo"
@@ -334,7 +335,7 @@ def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch
 
     assert write_module._target_has_rows(
         identity=identity,
-        context={"environment_name": "Development"},
+        context={"workspace_id": "Development"},
         spark_session="spark",
     ) is True
     assert calls == [(
@@ -344,7 +345,7 @@ def test_lakehouse_incremental_bootstrap_probe_uses_quiet_io_context(monkeypatch
             "schema": "demo",
             "context": {
                 "_spark_session": "spark",
-                "environment_name": "Development",
+                "workspace_id": "Development",
                 "_fabricops_suppress_io_log": True,
             },
         },
@@ -643,7 +644,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         scheduled_refresh={"status": "not_configured", "schedules": []},
         audit=_audit(),
         config={},
-        env="dev",
+        active_workspace_id="dev",
         dataframe=DataFrame(),
         context={"workspace_name": "Workspace"},
     )

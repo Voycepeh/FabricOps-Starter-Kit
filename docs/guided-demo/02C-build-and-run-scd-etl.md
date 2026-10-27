@@ -11,6 +11,11 @@
 
 ![File upload](../assets/2c/File%20Upload.png)
 
+!!! note "First run: Observe for Governance"
+    Complete the initial No Contract Test, then set `OBSERVE_FOR_GOVERNANCE = True` in the final cell and run that cell once. This is an explicit standalone observation step after Test finalization: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+
+    Return the flag to `False`, author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Keep the flag `False` during ordinary Testing and Live. In Governance, set the two target Contract Processing strategies to **SCD1** and **SCD2**, with `product_id` as the key. For SCD2 use `modified_datetime` as the effective column and track `product_category` and `list_price`, matching the notebook Write parameters.
+
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
@@ -58,7 +63,7 @@ PIPELINE_ID = pipeline.pipeline_id
 
 
 
-After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test never publishes or commits metadata. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test operations never publish business data or operational observations; finalization commits the Test outcome. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require approved Live publication. Advance the demo day only after publication succeeds.
 

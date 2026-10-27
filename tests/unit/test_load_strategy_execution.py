@@ -89,9 +89,9 @@ def test_target_audit_resolution_reuses_canonical_audit_builder(monkeypatch):
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: calls.append(kwargs) or {
         **AUDIT, "_workspace_name": "Workspace", "_metadata_lakehouse_name": "Metadata",
     })
-    context = {"config": "config", "env": "dev", "activity_id": "activity-1"}
+    context = {"config": "config", "scope_workspace_id": "dev", "activity_id": "activity-1"}
     assert shared.resolve_target_audit_fields(context) == AUDIT
-    assert calls == [{"config": "config", "env": "dev", "runtime_context": context, "require_notebook_identity": True}]
+    assert calls == [{"config": "config", "active_workspace_id": "dev", "runtime_context": context, "require_notebook_identity": True}]
 
 
 def _install_delta(monkeypatch, delta_table):
