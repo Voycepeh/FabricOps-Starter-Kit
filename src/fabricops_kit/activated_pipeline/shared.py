@@ -24,7 +24,8 @@ def metadata_records(table, *, context, spark_session=None, run_id=None, all_wor
     """Read domain metadata through its configured owner schema."""
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
-                                context={**(context or {}), "_spark_session": spark_session})
+                                context={**(context or {}), "_spark_session": spark_session,
+                                         **({"_fabricops_suppress_io_log": True} if table == PIPELINE_AUTHORITY_TABLE else {})})
     if table == "METADATA_PIPELINE_RUN":
         from pyspark.sql import functions as F
         if not all_workspaces:
@@ -239,9 +240,11 @@ def validate_authority_collections(row):
             raise ValueError("Incomplete renewable profiling claim.")
 
 
-def read_pipeline_authority(*, context, spark_session=None):
-    """Decode native facts from one atomic Registry snapshot and validate every reference."""
-    row = authority_records(context=context, spark_session=spark_session)
+def read_pipeline_authority(*, context, spark_session=None, registry_snapshot=None):
+    """Decode and validate native facts, optionally reusing an authority_records snapshot."""
+    row = registry_snapshot if registry_snapshot is not None else authority_records(context=context, spark_session=spark_session)
+    from copy import deepcopy
+    row = deepcopy(row)
     state = {"workspaces": {}, "registrations": row["registrations"], "profiling_claims": {}}
     validate_authority_collections(row)
     for revision in row["revisions"]:
@@ -293,18 +296,24 @@ def pipeline_authority_row(state, *, context, spark_session=None):
     return row
 
 
-def commit_pipeline_authority(state, *, expected_token, context, spark_session=None):
+def commit_pipeline_authority(state, *, expected_token, context, spark_session=None, registry_snapshot=None):
     """CAS the sole Registry row, confirming exact content after a lost acknowledgement.
 
     One matched-only MERGE updates all collections and the token together. There
     are no child inserts, deletes, or per-update DDL. A stale token raises within
     the transaction. Missing authority cannot be recreated by a runtime writer.
+    Registration may supply its original authority_records snapshot for the same
+    expected token; immutable history checks still run against that snapshot.
     """
     from delta.tables import DeltaTable
     from uuid import uuid4
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     table = PIPELINE_AUTHORITY_TABLE
-    previous = authority_records(context=context, spark_session=spark_session)
+    # Registration can reuse the unmodified snapshot already decoded for this token.
+    # The matched-only MERGE still checks the token against the current Delta row.
+    previous = registry_snapshot if registry_snapshot is not None else authority_records(context=context, spark_session=spark_session)
+    if registry_snapshot is not None and previous["token"] != expected_token:
+        raise ValueError("Stale Pipeline Registry; rerun setup.")
     row = pipeline_authority_row(state, context=context, spark_session=spark_session)
     # History is append-only even for unrelated registration/profiling mutations.
     old = {item["approval_id"]: item for item in previous["approvals"]}

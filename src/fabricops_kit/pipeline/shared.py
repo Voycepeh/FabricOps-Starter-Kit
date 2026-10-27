@@ -6236,10 +6236,11 @@ def read_pipeline_registry(*, context, spark_session=None):
 
 def commit_pipeline_registration(row, *, expected_token, context, spark_session=None):
     """Publish a binding through the same authority CAS as admission and approval."""
-    from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority, workspace_activation
-    token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-    if token != expected_token:
+    from fabricops_kit.activated_pipeline.shared import authority_records, read_pipeline_authority, commit_pipeline_authority, workspace_activation
+    snapshot = authority_records(context=context, spark_session=spark_session)
+    if snapshot["token"] != expected_token:
         raise ValueError("Stale Pipeline Registry; rerun setup.")
+    token, state = read_pipeline_authority(context=context, spark_session=spark_session, registry_snapshot=snapshot)
     bindings = state["registrations"]
     key = (row["pipeline_id"], row["workspace_id"])
     existing = next((item for item in bindings if (item["pipeline_id"], item["workspace_id"]) == key), None)
@@ -6253,7 +6254,7 @@ def commit_pipeline_registration(row, *, expected_token, context, spark_session=
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
     row = {**row, **build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime)}
     state["registrations"] = [item for item in bindings if (item["pipeline_id"], item["workspace_id"]) != key] + [row]
-    commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
+    commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session, registry_snapshot=snapshot)
 
 
 def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=None, new_pipeline=False, previous_binding=None, allow_new_identity=True):
@@ -6330,7 +6331,7 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
     startup = None
     if shell is not None:
         from fabricops_kit.widgets.shared import WidgetStartup
-        startup = WidgetStartup("Pipeline execution", tone="engineering")
+        startup = WidgetStartup("Pipeline execution", tone="engineering", reserved_height="360px")
     from types import MappingProxyType
     from fabricops_kit.config.shared import resolve_runtime_context
     close_current_pipeline_session()
@@ -6359,40 +6360,40 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
     session.registration = registration
     try:
         if shell is not None:
-            from fabricops_kit.widgets.shared import require_ipywidgets, form_page
-            widgets = require_ipywidgets()
-            session.report = widgets.HTML()
-            children = [session.report]
-            if pipeline_mode == "Test":
-                with startup.phase("metadata_loading", "Loading frozen Data Contracts…"):
+            with startup.phase("form_loading", "Loading frozen Data Contracts…" if pipeline_mode == "Test" else "Preparing pipeline controls…"):
+                from fabricops_kit.widgets.shared import require_ipywidgets, form_page
+                widgets = require_ipywidgets()
+                session.report = widgets.HTML()
+                children = [session.report]
+                if pipeline_mode == "Test":
                     rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
                         schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
                         context={**(runtime or {}), "_spark_session": spark}).collect()
                     session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
-                for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
-                    versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
-                    options = [("No Contract", "")] + [(f"{row.get('contract_name') or row['contract_id']} · v{row['contract_version']}",
-                        f"{row['contract_id']}\n{row['contract_version']}") for row in versions]
-                    control = widgets.Dropdown(options=options, description=str(table_id), layout=widgets.Layout(width="100%"))
-                    detail = widgets.HTML("<p>No Contract selected.</p>")
-                    def change(event, table_id=table_id, detail=detail, versions=versions):
-                        value = event["new"]
-                        if not value:
-                            session.select_contract(table_id, no_contract=True)
-                            session.reviews.pop(table_id, None)
-                            detail.value = "<p>No Contract selected.</p>"
-                        else:
-                            contract_id, version = value.split("\n")
-                            session.select_contract(table_id, contract_id, int(version))
-                            row = next(row for row in versions if row["contract_id"] == contract_id and row["contract_version"] == int(version))
-                            session.reviews[table_id] = (detail, row)
-                            detail.value = inspector(row, ("source", "target"), session.plan.results) if inspector else ""
-                    control.observe(change, names="value")
-                    session.controls.append(control)
-                    children.extend([control, detail])
-            root = form_page(widgets, title="Pipeline execution", description="", children=children)
-            root.layout.height = "auto"
-            startup.display(root)
+                    for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
+                        versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
+                        options = [("No Contract", "")] + [(f"{row.get('contract_name') or row['contract_id']} · v{row['contract_version']}",
+                            f"{row['contract_id']}\n{row['contract_version']}") for row in versions]
+                        control = widgets.Dropdown(options=options, description=str(table_id), layout=widgets.Layout(width="100%"))
+                        detail = widgets.HTML("<p>No Contract selected.</p>")
+                        def change(event, table_id=table_id, detail=detail, versions=versions):
+                            value = event["new"]
+                            if not value:
+                                session.select_contract(table_id, no_contract=True)
+                                session.reviews.pop(table_id, None)
+                                detail.value = "<p>No Contract selected.</p>"
+                            else:
+                                contract_id, version = value.split("\n")
+                                session.select_contract(table_id, contract_id, int(version))
+                                row = next(row for row in versions if row["contract_id"] == contract_id and row["contract_version"] == int(version))
+                                session.reviews[table_id] = (detail, row)
+                                detail.value = inspector(row, ("source", "target"), session.plan.results) if inspector else ""
+                        control.observe(change, names="value")
+                        session.controls.append(control)
+                        children.extend([control, detail])
+                root = form_page(widgets, title="Pipeline execution", description="", children=children)
+                session.refresh()
+                startup.display(root)
             session.shell = shell
             shell.events.register("post_run_cell", session.cell_completed)
         _ACTIVE_PIPELINE.set(session)

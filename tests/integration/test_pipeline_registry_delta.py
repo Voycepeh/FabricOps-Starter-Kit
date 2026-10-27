@@ -72,3 +72,65 @@ def test_concurrent_new_notebook_registration_keeps_one_identity(registry_delta,
     monkeypatch.setattr(shared, 'read_pipeline_registry', read)
     recovered = shared.resolve_pipeline_registration(context=runtime.context, spark_session=runtime.spark)
     assert recovered['pipeline_id'] == bindings[0]['pipeline_id']
+
+
+def test_registration_reads_reuse_snapshot_but_confirm_every_write(registry_delta, monkeypatch):
+    """Count actual authority scans across allocation, recovery, rename and rebind."""
+    from fabricops_kit.activated_pipeline import shared as authority
+    r = registry_delta
+    original = authority.authority_records
+    reads = []
+
+    def read(**kwargs):
+        result = original(**kwargs)
+        reads.append(result["token"])
+        return result
+
+    monkeypatch.setattr(authority, "authority_records", read)
+    first = shared.resolve_pipeline_registration(context=r.context, spark_session=r.spark)
+    assert len(reads) == 3 and reads[0] == reads[1] and reads[2] != reads[1]
+    for supplied in (None, first["pipeline_id"]):
+        reads.clear()
+        recovered = shared.resolve_pipeline_registration(supplied, context=r.context, spark_session=r.spark)
+        assert recovered["pipeline_id"] == first["pipeline_id"] and len(reads) == 1
+    for context, kwargs in [
+        ({**r.context, "notebook_name": "Renamed"}, {}),
+        ({**r.context, "notebook_id": "reuploaded"}, {"previous_binding": (r.context["workspace_id"], r.context["notebook_id"])}),
+        ({**r.context, "scope_workspace_id": "PROD", "workspace_id": "PROD", "notebook_id": "promoted"}, {}),
+    ]:
+        reads.clear()
+        shared.resolve_pipeline_registration(first["pipeline_id"], context=context, spark_session=r.spark, **kwargs)
+        assert len(reads) == 3 and reads[0] == reads[1] and reads[2] != reads[1]
+
+
+def test_concurrent_change_after_registration_snapshot_fails_transactionally(registry_delta, monkeypatch):
+    """Reusing an old pre-write snapshot cannot overwrite a newer authority token."""
+    from fabricops_kit.activated_pipeline import shared as authority
+    r = registry_delta
+    original = authority.commit_pipeline_authority
+
+    def race(state, **kwargs):
+        snapshot = kwargs["registry_snapshot"]
+        token, competing = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
+        authority.workspace_activation(competing, "DEV")["revision"] = "competing-write"
+        original(competing, expected_token=token, context=r.context, spark_session=r.spark)
+        assert snapshot["token"] == token
+        return original(state, **kwargs)
+
+    monkeypatch.setattr(authority, "commit_pipeline_authority", race)
+    with pytest.raises(Exception, match="Stale Pipeline Registry"):
+        shared.resolve_pipeline_registration(context=r.context, spark_session=r.spark)
+    _token, observed = authority.read_pipeline_authority(context=r.context, spark_session=r.spark)
+    assert observed["registrations"] == []
+    assert authority.workspace_activation(observed, "DEV")["revision"] == "competing-write"
+
+
+def test_registration_requires_exact_write_confirmation(registry_delta, monkeypatch):
+    """A successful MERGE acknowledgement alone cannot confirm a registration."""
+    from delta.tables import DeltaTable
+    r = registry_delta
+    monkeypatch.setattr(DeltaTable, "merge", lambda *args, **kwargs: SimpleNamespace(
+        whenMatchedUpdate=lambda **kw: SimpleNamespace(execute=lambda: None)))
+    with pytest.raises(RuntimeError, match="publication was not confirmed"):
+        shared.resolve_pipeline_registration(context=r.context, spark_session=r.spark)
+    assert shared.read_pipeline_registry(context=r.context, spark_session=r.spark)[1] == []

@@ -68,6 +68,15 @@ state.close()
                              if kind == "stream" and "metadata-end" in value["text"])
         assert first_html < read_started < read_finished
         assert events[read_finished][2] - events[first_html][2] >= 0.5
+        if workflow == "engineering":
+            displays = [value for kind, value, _ in events if kind == "display_data" and "text/html" in value["data"]]
+            assert len(displays) == 1
+            display_id = displays[0]["transient"]["display_id"]
+            updates = [value for kind, value, _ in events if kind == "update_display_data"]
+            assert all(value["transient"]["display_id"] == display_id for value in updates)
+            assert all("height:360px" in value["data"]["text/html"]
+                       for value in [*displays, *updates] if "text/html" in value["data"])
+            assert not any(kind == "clear_output" for kind, _value, _ in events)
         # Ordinary HTML is available before Spark; no widget comm round trip is needed.
         assert "application/vnd.jupyter.widget-view+json" not in events[first_html][1]["data"]
         assert any(kind == "update_display_data" and "application/vnd.jupyter.widget-view+json" in value["data"]
