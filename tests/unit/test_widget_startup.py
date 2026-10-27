@@ -149,3 +149,69 @@ def test_notebook_setup_summary_uses_escaped_styled_html(monkeypatch, outputs):
     assert "&lt;notebook&gt;" in html and "&lt;workspace&gt;" in html
     assert "Readiness: ready" in html and "Metadata schemas:" in html
     assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit"' in html
+
+
+def test_pipeline_reserved_startup_keeps_one_output_and_actionable_errors(outputs):
+    """Loading and actionable errors share a bounded output region."""
+    startup = WidgetStartup("Pipeline execution", tone="engineering", reserved_height="360px")
+    with pytest.raises(PermissionError, match="denied"):
+        with startup.phase("metadata_loading", "Loading registry…"):
+            raise PermissionError("denied <private>")
+    assert len([event for event in outputs if event[0] == "display"]) == 1
+    assert {event[2]["display_id"] for event in outputs} == {startup.display_id}
+    for _kind, value, _options in outputs:
+        assert "height:360px" in value.data and "overflow:auto" in value.data
+        assert "Pipeline execution" in value.data
+    assert 'role="alert"' in outputs[-1][1].data
+    assert "rerun this cell" in outputs[-1][1].data and "private" not in outputs[-1][1].data
+
+
+def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, outputs):
+    """Real controls stay interactive and cell events refresh the bounded report."""
+    import IPython
+    from fabricops_kit.pipeline import shared
+    from tests.unit.test_setup_pipeline import _row
+
+    shell = SimpleNamespace(events=Mock())
+    config = framework_config()
+    monkeypatch.setattr(IPython, "get_ipython", lambda: shell)
+    monkeypatch.setattr(shared, "get_default_fabric_context", lambda **kw: {"config": config, "scope_workspace_id": "dev"})
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
+    monkeypatch.setattr(shared, "get_spark_session", lambda: object())
+    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda *a, **kw: {
+        "pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
+    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=lambda: [_row()]))
+    original_update = ip.update_display
+    displayed_reports = []
+
+    def update(value, **kwargs):
+        if isinstance(value, widgets.VBox):
+            displayed_reports.append(value.children[1].value)
+        original_update(value, **kwargs)
+
+    monkeypatch.setattr(ip, "update_display", update)
+    token = shared._ACTIVE_PIPELINE.set(None)
+    session = None
+    try:
+        session = shared.start_pipeline_session(None, "Test", inspector=lambda *args: "<p>Saved contract</p>")
+        root = outputs[-1][1]
+        assert root.layout.height == "360px" and root.layout.overflow == "auto"
+        assert root.children[0].layout.display != "none"
+        assert len([event for event in outputs if event[0] == "display"]) == 1
+        assert displayed_reports and "incomplete" in displayed_reports[0]
+        session.controls[0].value = "contract-source\n1"
+        assert session.choices["source"] == {"contract_id": "contract-source", "contract_version": 1}
+        assert root.children[-1].value == "<p>Saved contract</p>"
+        session.controls[0].value = ""
+        assert session.choices["source"] == {"no_contract": True}
+        session.plan.evidence["operations"]["source:orders"] = {"status": "passed"}
+        session.cell_completed(SimpleNamespace(error_in_exec=None, error_before_exec=None))
+        assert "source:orders: passed" in session.report.value
+        assert session.controls[0].disabled
+        shell.events.register.assert_called_once_with("post_run_cell", session.cell_completed)
+        root._view_count = 1
+        assert "interactive_ready" in session.startup_timings
+    finally:
+        if session:
+            session.close()
+        shared._ACTIVE_PIPELINE.reset(token)

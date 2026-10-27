@@ -230,12 +230,13 @@ class WidgetStartup:
     Spark always remains on the calling notebook thread.
     """
 
-    def __init__(self, title: str, *, tone: str = "governance"):
+    def __init__(self, title: str, *, tone: str = "governance", reserved_height: str | None = None):
         """Submit the themed banner and initial loading state as ordinary HTML."""
         from IPython import display as ip
 
         self.ip = ip
         self.title = title
+        self.reserved_height = reserved_height
         self.started = perf_counter()
         self.timings: dict[str, float] = {}
         self.phase_elapsed = 0.0
@@ -249,10 +250,21 @@ class WidgetStartup:
             f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div></div>'
         )
         if self.html_available:
-            ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
-            ip.display(ip.HTML('<p role="status" aria-live="polite">Initializing FabricOps…</p>'),
-                       display_id=self.display_id)
+            loading = '<p role="status" aria-live="polite">Initializing FabricOps…</p>'
+            if reserved_height:
+                ip.display(ip.HTML(self._reserved_html(loading)), display_id=self.display_id)
+            else:
+                ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
+                ip.display(ip.HTML(loading), display_id=self.display_id)
         self.mark("first_display_submitted")
+
+    def _reserved_html(self, content: str) -> str:
+        """Keep Pipeline loading and errors inside the final widget's viewport."""
+        banner = self.banner.replace('font-size:21px;', 'font-size:21px;line-height:1.3;')
+        return (f'<div style="height:{_html_escape(self.reserved_height)};box-sizing:border-box;overflow:auto;'
+                'font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;background:#f6f8fb;'
+                'border:1px solid #dce4ed;border-radius:10px;padding:20px;scrollbar-gutter:stable">'
+                + banner + content + '</div>')
 
     def mark(self, name: str) -> None:
         """Record an elapsed kernel milestone without claiming frontend paint."""
@@ -264,16 +276,18 @@ class WidgetStartup:
         """Time one synchronous stage and retain actionable failure output."""
         began = perf_counter()
         if self.html_available:
-            self.ip.update_display(self.ip.HTML(f'<p role="status">{_html_escape(message)}</p>'),
+            content = f'<p role="status">{_html_escape(message)}</p>'
+            self.ip.update_display(self.ip.HTML(self._reserved_html(content) if self.reserved_height else content),
                                    display_id=self.display_id)
         try:
             yield
         except BaseException:
             if self.html_available:
-                self.ip.update_display(self.ip.HTML(
-                    '<p role="alert">Unable to load ' + _html_escape(self.title)
+                content = ('<p role="alert">Unable to load ' + _html_escape(self.title)
                     + '. Check the active FabricOps configuration, Metadata store access and Spark session, '
-                    'then rerun this cell. The original error is reported below.</p>'), display_id=self.display_id)
+                    'then rerun this cell. The original error is reported below.</p>')
+                self.ip.update_display(self.ip.HTML(self._reserved_html(content) if self.reserved_height else content),
+                                       display_id=self.display_id)
             self.mark("failed")
             raise
         finally:
@@ -288,26 +302,29 @@ class WidgetStartup:
             - self.phase_elapsed - self.timings["first_display_submitted"])
         self.mark("controls_constructed")
         if self.html_available:
-            # Keep the title and description together in the static banner while
-            # hiding the duplicate header embedded in the returned widget tree.
-            title = getattr(root, "fabricops_page_title", self.title)
-            tone = getattr(root, "fabricops_page_tone", "governance")
-            description = getattr(root, "fabricops_page_description", "")
-            accent, tint = (("#6750a4", "#f1edf8") if tone == "governance"
-                            else ("#0f6cbd", "#eaf3fb"))
-            subtitle = (
-                f'<div style="color:#526477;margin-top:5px;max-width:80ch">'
-                f'{_html_escape(description)}</div>'
-                if description else ""
-            )
-            self.banner = (
-                '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
-                f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
-                f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div>'
-                f'{subtitle}</div>'
-            )
-            self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
-            root.children[0].layout.display = "none"
+            if self.reserved_height:
+                root.layout.height = self.reserved_height
+            else:
+                # Keep the title and description together in the static banner while
+                # hiding the duplicate header embedded in the returned widget tree.
+                title = getattr(root, "fabricops_page_title", self.title)
+                tone = getattr(root, "fabricops_page_tone", "governance")
+                description = getattr(root, "fabricops_page_description", "")
+                accent, tint = (("#6750a4", "#f1edf8") if tone == "governance"
+                                else ("#0f6cbd", "#eaf3fb"))
+                subtitle = (
+                    f'<div style="color:#526477;margin-top:5px;max-width:80ch">'
+                    f'{_html_escape(description)}</div>'
+                    if description else ""
+                )
+                self.banner = (
+                    '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+                    f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
+                    f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div>'
+                    f'{subtitle}</div>'
+                )
+                self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
+                root.children[0].layout.display = "none"
             if hasattr(root, "_view_count"):
                 root._view_count = 0
 

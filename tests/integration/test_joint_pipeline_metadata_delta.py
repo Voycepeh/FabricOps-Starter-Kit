@@ -112,7 +112,7 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
                 governance_confirmed=True, context=r.context, spark_session=r.spark)
         if competitor == "rebind":
             return pipeline.resolve_pipeline_registration(test.pipeline_id,
-                context={**r.context, "notebook_id": "replacement"}, previous_binding=("workspace", "notebook"), spark_session=r.spark)
+                context={**r.context, "notebook_id": "replacement"}, previous_binding=(r.context["workspace_id"], r.context["notebook_id"]), spark_session=r.spark)
         claim = pipeline.claim_table_profile("table0", "standard", "read", context={**r.context,
             "execution_plan": SimpleNamespace(plan_id="profile-owner", permits_persistence=True)}, spark_session=r.spark)
         return None if claim.get("status") == "skipped" else claim
@@ -187,7 +187,7 @@ def test_rebound_notebook_requires_a_new_finalized_test_and_decision(runs_delta,
     test, _request, _approved = approved_runtime(r, monkeypatch)
     replacement = {**r.context, "notebook_id": "replacement"}
     pipeline.resolve_pipeline_registration(test.pipeline_id, context=replacement,
-        previous_binding=("workspace", "notebook"), spark_session=r.spark)
+        previous_binding=(r.context["workspace_id"], r.context["notebook_id"]), spark_session=r.spark)
     with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
         authority.build_live_pipeline_plan(pipeline_id=test.pipeline_id, context=replacement, spark_session=r.spark)
     native = authority.authority_records(context=replacement, spark_session=r.spark)

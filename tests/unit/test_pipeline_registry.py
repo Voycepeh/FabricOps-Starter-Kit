@@ -183,3 +183,46 @@ def test_explicit_promotion_preserves_registration_semantics_without_new_identit
     promoted = shared.resolve_pipeline_registration(identity, context=prod, allow_new_identity=False)
     assert promoted['pipeline_id'] == identity and promoted['resolution'] == 'Registered'
     assert len(rows) == 2 and {row['pipeline_id'] for row in rows} == {identity}
+
+
+@pytest.mark.parametrize("table", ["METADATA_PIPELINE_REGISTRY", "METADATA_DATA_AGREEMENT"])
+def test_internal_registry_logging_is_scoped_and_public_reads_stay_visible(monkeypatch, capsys, table):
+    """Quiet only internal Registry reads; retain public completion text and failures."""
+    from importlib import import_module
+    from types import SimpleNamespace
+    from fabricops_kit.activated_pipeline import shared as authority
+    reader = import_module("fabricops_kit.io.read_lakehouse_table")
+    context = {"config": {}, "scope_workspace_id": "dev"}
+    monkeypatch.setattr(authority, "resolve_fabric_context", lambda **kw: ({}, "dev", context))
+    monkeypatch.setattr(authority, "metadata_table_physical_schema", lambda *args: "engineering")
+    monkeypatch.setattr(reader, "get_spark_session", lambda **kw: object())
+    monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", lambda store, name, schema, **kw: (store, name, schema, "private-path"))
+    monkeypatch.setattr(reader, "read_delta_path", lambda *args, **kw: SimpleNamespace(collect=lambda: []))
+    assert authority.metadata_records(table, context=context) == []
+    output = capsys.readouterr().out
+    assert ("Read from →" in output) == (table != "METADATA_PIPELINE_REGISTRY")
+    assert "_fabricops_suppress_io_log" not in context
+    reader.read_lakehouse_table(table, store="Metadata", schema="engineering", context=context)
+    assert f"Table: {table}" in capsys.readouterr().out
+    monkeypatch.setattr(reader, "read_delta_path", Mock(side_effect=PermissionError("denied")))
+    with pytest.raises(PermissionError, match="denied"):
+        authority.metadata_records(table, context=context)
+
+
+def test_reused_authority_snapshot_is_independent_of_decoded_state(monkeypatch):
+    """Mutating the decoded proposal cannot alter the immutable-history baseline."""
+    import sys
+    from types import SimpleNamespace
+    from fabricops_kit.activated_pipeline import shared as authority
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=Mock(side_effect=AssertionError("unexpected Delta write"))))
+    snapshot = authority.empty_pipeline_authority()
+    snapshot["registrations"] = [{"pipeline_id": str(uuid4()), "workspace_id": "dev", "notebook_id": "n", "registration_status": "Active"}]
+    token, state = authority.read_pipeline_authority(context={}, registry_snapshot=snapshot)
+    state["registrations"][0]["notebook_id"] = "changed"
+    assert snapshot["registrations"][0]["notebook_id"] == "n"
+    monkeypatch.setattr(authority, "resolve_fabric_context", lambda **kw: ({}, "dev", {}))
+    snapshot["approvals"] = [{"approval_id": "retained-history"}]
+    with pytest.raises(ValueError, match="immutable and retained"):
+        authority.commit_pipeline_authority(state, expected_token=token, context={}, registry_snapshot=snapshot)
+    with pytest.raises(ValueError, match="Stale Pipeline Registry"):
+        authority.commit_pipeline_authority(state, expected_token="older", context={}, registry_snapshot=snapshot)
