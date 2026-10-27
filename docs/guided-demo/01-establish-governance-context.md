@@ -4,7 +4,7 @@
 
 Complete [Step 0C](00C-prepare-demo-data-with-fabricops-io.md) and open `01_governance`.
 
-### Load the shared 00_env_config notebook that is in the same workspace via our helper function
+### Load the shared 00_env_config notebook that is in the same workspace via our helper function 
 
 ![Load the shared 00_env_config notebook](../assets/01/SetupNotebook.png)
 
