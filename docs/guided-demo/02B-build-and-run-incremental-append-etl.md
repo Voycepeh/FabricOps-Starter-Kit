@@ -11,9 +11,9 @@
 ![File upload](../assets/2b/File%20Upload.png)
 
 !!! note "First run: Observe for Governance"
-    Complete the initial No Contract Test, then set `OBSERVE_FOR_GOVERNANCE = True` in the final cell and run that cell once. This is an explicit standalone observation step after Test finalization: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+    Run the complete initial No Contract Test, including the final cell. After finalization, the notebook automatically supplies Governance observations using `profile_table()`: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
 
-    Return the flag to `False`, author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Keep the flag `False` during ordinary Testing and Live. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
+    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">

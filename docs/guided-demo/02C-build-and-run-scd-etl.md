@@ -12,9 +12,9 @@
 ![File upload](../assets/2c/File%20Upload.png)
 
 !!! note "First run: Observe for Governance"
-    Complete the initial No Contract Test, then set `OBSERVE_FOR_GOVERNANCE = True` in the final cell and run that cell once. This is an explicit standalone observation step after Test finalization: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+    Run the complete initial No Contract Test, including the final cell. After finalization, the notebook automatically supplies Governance observations using `profile_table()`: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
 
-    Return the flag to `False`, author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Keep the flag `False` during ordinary Testing and Live. In Governance, set the two target Contract Processing strategies to **SCD1** and **SCD2**, with `product_id` as the key. For SCD2 use `modified_datetime` as the effective column and track `product_category` and `list_price`, matching the notebook Write parameters.
+    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step. In Governance, set the two target Contract Processing strategies to **SCD1** and **SCD2**, with `product_id` as the key. For SCD2 use `modified_datetime` as the effective column and track `product_category` and `list_price`, matching the notebook Write parameters.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
