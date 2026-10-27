@@ -110,7 +110,7 @@ def test_generic_template_contains_no_deployment_identifiers_or_saved_outputs():
     assert "ODI" not in path.read_text()
     assert all(not cell.get("outputs") for cell in notebook["cells"])
     assert 'caller_workspace_id = ""' in _env_config_source()
-    assert 'INITIALIZE_METADATA = False' in _env_config_source()
+    assert 'INITIALIZE_METADATA = True' in _env_config_source()
     assert "GOVERNANCE_ENVIRONMENT" not in _env_config_source()
     assert "ENGINEERING_WORKSPACES" in _env_config_source()
     assert "METADATA_ITEM_ID" not in _env_config_source()
