@@ -5811,6 +5811,30 @@ def publish_pipeline_testing_results(plan, *, spark_session=None):
         return plan.run_result
     if plan.evidence.get("persistence_failed"):
         raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
+    observation_error = None
+    observations = plan.evidence.pop("profile_observations", [])
+    if plan.run_result["status"] in {"succeeded", "ungoverned_completed"}:
+        try:
+            for observation in observations:
+                context = {**plan.runtime_context, "scope_workspace_id": plan.workspace_id,
+                    "activity_id": plan.plan_id, "_profile_snapshot_id": observation["profile_snapshot_id"]}
+                saved = _persist_profile_observation(observation, context=context,
+                    spark_session=get_spark_session(spark_session, context=context), emit=lambda *args: None)
+                profile = saved.get("profile")
+                if profile is not None:
+                    profile.unpersist()
+                for event in plan.evidence.get("profiling", []):
+                    if (event["table_id"], event["trigger"]) == (observation["identity"]["table_id"], observation["trigger"]) and event["activity"] in observation["activities"]:
+                        empty_frequency = event["activity"] == "frequency" and (
+                            observation["frequency_profile"] is None or observation["frequency_profile"].isEmpty())
+                        event.update(results_persisted=True,
+                            profile_snapshot_id=observation["profile_snapshot_id"] if event["activity"] != "grain" and not empty_frequency else None,
+                            empty_result=empty_frequency, row_count=observation["row_count"],
+                            completed_at=datetime.now(UTC).isoformat(), reason="test_observation")
+        except Exception as exc:
+            observation_error = exc
+            plan.evidence["failures"].append({"code": "test_profile_publication_failed", "exception_type": type(exc).__name__})
+            plan.evidence["final_result"] = {**plan.run_result, "status": "failed"}
     audit = build_runtime_audit_fields(config=plan.runtime_context["config"], active_workspace_id=plan.workspace_id,
         runtime_context=plan.runtime_context)
     rows = plan.evidence.get("guardrail_history", [])
@@ -5829,6 +5853,8 @@ def publish_pipeline_testing_results(plan, *, spark_session=None):
     row = persist_pipeline_run(plan, spark_session=spark_session, status=final["status"],
         completed_at=final["completed_at"], persist_testing=True)
     plan.evidence.update(testing_results_published=True, final_result=row)
+    if observation_error is not None:
+        raise RuntimeError("Test profiling observations could not be published; the execution was finalized as failed.") from observation_error
     return row
 
 
@@ -6164,6 +6190,8 @@ class PipelineSession:
             import atexit
             atexit.unregister(self.close)
             self.closed = True
+            if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed"}:
+                self.plan.evidence.pop("profile_observations", None)
             self.sources.clear()
             for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
                           _PENDING_SOURCE_OBSERVATIONS, _PENDING_SOURCE_DRIFT_OBSERVATIONS,
@@ -6498,6 +6526,7 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
             schema=metadata_table_physical_schema(config, table),
             context={**(context or {}), "_spark_session": spark_session}).filter(F.col("workspace_id") == active_workspace_id)
     events = (frame("METADATA_PIPELINE_RUN")
+        .filter(F.col("execution_mode") == "live")
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
         .filter((F.col("context_key") == key) & (F.col("status") == "passed")
@@ -6613,8 +6642,8 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
     return {"status": "skipped", "reason": reason, "activities": activities}
 
 
-def schedule_table_profiling(table_id, operation, *, context, spark_session=None):
-    """Run independently due persisted-table activities after a successful operation."""
+def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None):
+    """Profile due Test inputs once or independently claim persisted-table Live work."""
     from threading import Event, Thread
     outcomes = {}
     if not persistence_permitted(context):
@@ -6622,10 +6651,18 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
         policy = contract_profiling_policy(table_id, context=context)
         history = profiling_completion_history(table_id, context=context, spark_session=spark_session)
         key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
+        due = {activity for activity in PROFILING_ACTIVITIES
+               if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
+        profile = (execute_table_profile(table_id=table_id, dataframe=dataframe,
+            context={**context, "_profile_trigger": operation}, spark_session=spark_session,
+            verbose=False, activities=due) if due else {})
         for activity in PROFILING_ACTIVITIES:
-            if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC)):
-                outcomes[activity] = execute_table_profile(table_id=table_id, context=context,
-                    spark_session=spark_session, verbose=False, activities={activity})
+            if activity in due:
+                outcomes[activity] = dict(profile)
+                if activity != "frequency" and "frequency_profile" in profile:
+                    outcomes[activity]["frequency_profile"] = None
+                if activity != "grain" and "grain_candidates" in profile:
+                    outcomes[activity]["grain_candidates"] = []
                 diagnostic = {"status": "passed", "results_persisted": False, "reason": "read_only_diagnostic"}
             else:
                 outcomes[activity] = {"status": "skipped", "reason": "Not due for this operation"}
@@ -6633,9 +6670,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             record_profiling_outcome({**descriptor, **diagnostic, "context_key": key, "activity": activity,
                 "trigger": operation, "pipeline_run_id": context["execution_plan"].plan_id,
                 "executed_at": datetime.now(UTC).isoformat()}, context=context, spark_session=spark_session)
-        counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
-        return {"status": "passed", "activities": outcomes, "persistence_status": "disabled",
-                "row_count": counts[0] if counts else None}
+        return {**profile, "status": "passed", "activities": outcomes, "persistence_status": "disabled",
+                "row_count": profile.get("row_count")}
     key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
     for activity in PROFILING_ACTIVITIES:
         base = {**descriptor, "context_key": key, "activity": activity, "trigger": operation,
@@ -7846,7 +7882,6 @@ def execute_table_profile(
         raise ValueError("Select standard, grain or frequency profiling activities.")
     grain_discovery_enabled = "grain" in selected_activities
     frequency_enabled = "frequency" in selected_activities
-    validate_claim = (context or {}).get("_profile_claim_validate", lambda: None)
     selected_frequency_columns = [] if not frequency_enabled else (None if frequency_columns is None else list(frequency_columns))
     if frequency_top_n is not None and frequency_top_n <= 0:
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
@@ -7895,6 +7930,9 @@ def execute_table_profile(
         emit("1. Identity → DataFrame only; no governed table_id")
         emit("2. Profiling backend → PySpark")
 
+    plan = (context or {}).get("execution_plan")
+    trigger = (context or {}).get("_profile_trigger")
+    retain_observation = getattr(plan, "execution_mode", None) == "testing" and trigger in {"read", "write"}
     profile_metrics = {"row_count": None}
     profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:
@@ -7916,6 +7954,12 @@ def execute_table_profile(
             )
     else:
         statistical_profile = build_profile_dataframe(dataframe)
+        if retain_observation:
+            # Eligibility, Grain and final publication reuse this compact aggregate;
+            # none of them needs to repeat the source statistical scan.
+            rows = statistical_profile.collect()
+            statistical_profile = spark_session.createDataFrame(rows, statistical_profile.schema)
+            profile_metrics["row_count"] = int(rows[0]["ROW_COUNT"]) if rows else 0
         selected_columns = _selected_frequency_columns(
             dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
         )
@@ -7941,13 +7985,50 @@ def execute_table_profile(
         emit("5. Metadata persistence → disabled by Testing policy" if identity is not None else
               "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
-        return {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+        result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+        if identity is not None and retain_observation:
+            # Detach the compact aggregates from mutable source/transform lineage.
+            # Finalization publishes these rows; it never profiles the data again.
+            if frequency_profile is not None:
+                result["frequency_profile"] = spark_session.createDataFrame(frequency_profile.collect(), frequency_profile.schema)
+            snapshot_id = str(uuid5(NAMESPACE_URL, f"fabricops-test-profile|{plan.plan_id}|{table_id}|{trigger}"))
+            plan.evidence.setdefault("profile_observations", []).append({
+                **result, "identity": dict(identity), "activities": selected_activities, "trigger": trigger,
+                "profile_snapshot_id": snapshot_id, "replace_frequency": frequency_enabled,
+                "grain_discovery_max_columns": grain_discovery_max_columns,
+                "grain_candidates": profile_key_candidates,
+                "source_fields": warehouse_fields or [(field.name, field.dataType.simpleString()) for field in dataframe.schema.fields],
+            })
+        return result
 
+    observation = {
+        "identity": identity, "profile": statistical_profile, "frequency_profile": frequency_profile,
+        "grain_candidates": profile_key_candidates, "row_count": profile_metrics["row_count"],
+        "activities": selected_activities, "grain_discovery_max_columns": grain_discovery_max_columns,
+        "replace_frequency": frequency_enabled or activities is None,
+        "source_fields": warehouse_fields, "source_df": dataframe,
+    }
+    return _persist_profile_observation(observation,
+        context={**context, "config": config, "scope_workspace_id": active_workspace_id},
+        spark_session=spark_session, emit=emit)
+
+
+def _persist_profile_observation(observation, *, context, spark_session, emit):
+    """Publish already calculated aggregates through the existing metadata boundaries."""
+    config, active_workspace_id = context["config"], context["scope_workspace_id"]
+    identity = observation["identity"]
+    statistical_profile, frequency_profile = observation["profile"], observation["frequency_profile"]
+    profile_key_candidates = observation["grain_candidates"]
+    profile_metrics = {"row_count": observation["row_count"]}
+    selected_activities = observation["activities"]
+    grain_discovery_enabled = "grain" in selected_activities
+    grain_discovery_max_columns = observation["grain_discovery_max_columns"]
+    validate_claim = context.get("_profile_claim_validate", lambda: None)
     if selected_activities == {"grain"}:
         validate_claim()
         _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
             config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
-        return {**({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+        return {"grain_candidates": profile_key_candidates, **profile_metrics}
 
     profile_snapshot_id = _profile_snapshot_id(
         config=config, active_workspace_id=active_workspace_id, context=context, table_id=identity["table_id"]
@@ -7976,7 +8057,11 @@ def execute_table_profile(
                 active_workspace_id=active_workspace_id,
                 runtime_context=context,
             )
-        if selected_activities == {"frequency"}:
+        if "standard" not in selected_activities:
+            if "grain" in selected_activities:
+                validate_claim()
+                _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
+                    config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
             from pyspark.sql import functions as F
             # Independent Frequency snapshots have no statistical-profile foreign key.
             # Table ID, Column ID and the activity snapshot retain complete identity.
@@ -8004,7 +8089,7 @@ def execute_table_profile(
             summary_persisted = True
             profile_action = "refreshed existing activity snapshot" if same_activity_retry else "created new activity snapshot"
             emit(f"5. Profile snapshot → {profile_action}")
-            if frequency_enabled or activities is None:
+            if observation["replace_frequency"]:
                 _replace_frequency_rows(
                     frequency_df=frequency_metadata_df, profiled_df=profiled_df,
                     config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
@@ -8021,7 +8106,7 @@ def execute_table_profile(
                 frequency_action = "skipped; no frequency profile generated"
             emit(f"6. Frequency profile metadata → {frequency_action}")
             catalogue_df = _catalogue_dataframe_from_profiled(
-                profiled_df, source_df=dataframe, store_type=identity["store_kind"],
+                profiled_df, source_df=observation.get("source_df"), store_type=identity["store_kind"],
                 layer=identity["store"], schema_name=identity["schema"],
                 table_name=identity["table_name"], load_strategy=None,
                 load_strategy_parameters_json=None,
@@ -8032,7 +8117,7 @@ def execute_table_profile(
                 profile_key_candidates_json=_key_candidate_evidence(
                     profile_key_candidates, max_columns=grain_discovery_max_columns
                 ) if grain_discovery_enabled else None,
-                source_fields=warehouse_fields,
+                source_fields=observation["source_fields"],
             )
             validate_claim()
             _upsert_catalogue_identities(

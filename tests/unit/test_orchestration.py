@@ -188,14 +188,16 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
         patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", effect("drift", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.check_dq", effect("dq", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write", side_effect=effect("write", {"table_id":"target-id"})),
-        patch("fabricops_kit.pipeline.orchestrate_write.schedule_table_profiling", effect("profile", {"profile":object()})),
+        patch("fabricops_kit.pipeline.orchestrate_write.schedule_table_profiling", side_effect=effect("profile", {"profile":object()})),
     ]
-    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6]:
+    with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6] as profile:
         actual = run_pipeline_operation(orchestrate_write, dataframe, plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
     assert calls == ["schema", "sensitive", "drift", "dq", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
+    assert profile.call_args.args[:2] == ("target-id", "write")
+    assert "dataframe" not in profile.call_args.kwargs
     assert {stage["name"] for stage in actual["orchestration_stages"]} == {"physical_target"}
     output = capsys.readouterr().out
     assert "FabricOps WRITE · physical_target" in output

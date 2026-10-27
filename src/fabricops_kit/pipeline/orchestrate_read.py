@@ -31,9 +31,12 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
-    Profiling scans the complete persisted table using the frozen contract's
-    policies and shared table completion history. Guardrail checks run regardless
-    of profiling eligibility.
+    Profiling uses the complete source with frozen contract policies and shared
+    Live completion history. Test reuses an unfiltered full Read DataFrame; query
+    and incremental Reads still profile the complete physical source. Successful
+    Test finalization saves the calculated observations for Data Contract authoring
+    without repeating the profiling scan or consuming Live schedules. Guardrail
+    checks run regardless of profiling eligibility.
 
     Parameters
     ----------
@@ -126,7 +129,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session))
+        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session,
+            **({"dataframe": dataframe} if not execution_plan.permits_persistence and read_mode == "full" and query is None and not source.get("is_query") else {})))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
             metrics["rows_read"] = profile.get("row_count")

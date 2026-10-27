@@ -345,8 +345,13 @@ def test_finalized_governed_test_can_be_reviewed_directly(runtime, monkeypatch):
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
+    save_profile = Mock(return_value={})
+    monkeypatch.setattr(shared, '_persist_profile_observation', save_profile)
+    session.plan.evidence['profile_observations'] = [{'profile_snapshot_id': 'governed-observation',
+        'identity': {'table_id': 'orders'}, 'trigger': 'read', 'activities': set()}]
     result = finalize_pipeline(session)
     assert result['status'] == 'succeeded' and len(committed) == 1
+    save_profile.assert_called_once()
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1.0.0',
                  'start_date': date.today().isoformat(), 'expiry_date': (date.today() + timedelta(days=30)).isoformat()}
     records = {'METADATA_PIPELINE_RUN': committed, 'METADATA_DATA_CONTRACT': [row],

@@ -936,7 +936,7 @@ PUBLIC_SYMBOL_DOCS = [
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
  'parameters': 'Source coordinates, read strategy and query options; execution context is internal.',
  'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Test retains diagnostics in memory until finalize_pipeline commits Test run and Guardrail results; business publication remains disabled. Live commits Guardrail Results and full-read '
+ 'side_effects': 'Test retains diagnostics and calculated source profiles in memory until successful finalize_pipeline commits the run, Guardrail results and Governance observations; business publication remains disabled. Live commits Guardrail Results and full-read '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',
@@ -953,7 +953,7 @@ PUBLIC_SYMBOL_DOCS = [
  'parameters': 'Transformed DataFrame, target coordinates '
                'and strategy.',
  'returns': 'Prepared input, Guardrail outcomes, execution mode and actual publication/persistence status.',
- 'side_effects': 'Test retains diagnostics in memory, until explicit finalize_pipeline commits the run and Guardrail results. Live publishes and commits metadata at existing '
+ 'side_effects': 'Test profiles prepared input in memory; successful finalize_pipeline saves the observations with the run and Guardrail results. Test publishes no business data or processing checkpoints. Live profiles the persisted target and commits metadata at existing '
                  'lifecycle boundaries.',
  'preferred_example': 'result = orchestrate_write(transformed_df, '
                       'store="Silver", schema="demo", table_name="orders", write_mode="overwrite")',
