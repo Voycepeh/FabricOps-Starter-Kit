@@ -307,7 +307,7 @@ class WidgetStartup:
                 f'{subtitle}</div>'
             )
             self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
-            root.add_class("fabricops-started")
+            root.children[0].layout.display = "none"
             if hasattr(root, "_view_count"):
                 root._view_count = 0
 
