@@ -68,7 +68,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
     assert banner_updates
     assert root.fabricops_page_title in banner_updates[-1]
     assert root.fabricops_page_description in banner_updates[-1]
-    assert ".fabricops-form.fabricops-started .fabricops-page-header { display:none; }" in root.children[0].value
+    assert root.children[0].layout.display == "none"
     assert root.startup_timings["metadata_loading"] >= 0
     assert "interactive_ready" not in root.startup_timings
     root._view_count = 1
