@@ -533,8 +533,15 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
 
 
 @pytest.mark.parametrize("notebook_path", [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS], ids=lambda path: path.name)
-def test_first_run_authoring_observation_resolves_every_participant(monkeypatch, notebook_path):
-    """Explicit observation covers fresh inputs/targets after read-only Test finalization."""
+@pytest.mark.parametrize("mode,status,observes", [
+    ("testing", "ungoverned_completed", True),
+    ("testing", "succeeded", False),
+    ("testing", "failed", False),
+    ("testing", "incomplete", False),
+    ("live", "ungoverned_completed", False),
+])
+def test_first_run_authoring_observation_resolves_every_participant(monkeypatch, notebook_path, mode, status, observes):
+    """Only a complete ungoverned Test automatically supplies authoring observations."""
     import fabricops_kit as kit
     from fabricops_kit.config.shared import FabricStore, FrameworkConfig, PathConfig
     from fabricops_kit.pipeline.shared import resolve_physical_table_identity
@@ -571,12 +578,12 @@ def test_first_run_authoring_observation_resolves_every_participant(monkeypatch,
         "inventory_movements_incremental", "product_master_scd1", "product_master_scd2",
     ]}
     namespace = {"pipeline": object(), "PIPELINE_MODE": "Test", "writes": writes,
-                 "finalize_pipeline": lambda _pipeline: events.append("finalized") or {}}
-    # Routine finalization must not persist observations implicitly.
+                 "finalize_pipeline": lambda _pipeline: events.append("finalized") or {"execution_mode": mode, "status": status}}
+    assert "OBSERVE_FOR_GOVERNANCE" not in cell.source
     exec(cell.source, namespace)
-    assert not reads and not profiles
-    events.clear()
-    exec(cell.source.replace("OBSERVE_FOR_GOVERNANCE = False", "OBSERVE_FOR_GOVERNANCE = True"), namespace)
+    if not observes:
+        assert not reads and not profiles
+        return
     expected = []
     source_count = 0
     for _, source in _code_cells(notebook_path):

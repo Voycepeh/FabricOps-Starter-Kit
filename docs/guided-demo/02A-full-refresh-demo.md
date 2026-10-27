@@ -15,9 +15,9 @@
 | Order History | Gold Warehouse · `demo.order_history` |
 
 !!! note "First run: Observe for Governance"
-    Complete the initial No Contract Test, then set `OBSERVE_FOR_GOVERNANCE = True` in the final cell and run that cell once. This is an explicit standalone observation step after Test finalization: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+    Run the complete initial No Contract Test, including the final cell. After finalization, the notebook automatically supplies Governance observations using `profile_table()`: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
 
-    Return the flag to `False`, author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Keep the flag `False` during ordinary Testing and Live.
+    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -140,7 +140,7 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-A governed **Live** run publishes each target. **Test** returns `published=False`; inspect `validation_passed`, finalize the run, and use the explicit authoring observation step above on first setup. Rerun Testing with frozen contracts before activation.
+A governed **Live** run publishes each target. **Test** returns `published=False`; inspect `validation_passed`, finalize the run, and let the final cell record the initial Governance observations automatically. Rerun Testing with frozen contracts before activation.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
