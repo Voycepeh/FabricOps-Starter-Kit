@@ -76,11 +76,11 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 
 Commit the regenerated JSON only when the architecture contract is intentionally affected.
 
-## Proposed activation execution requirements after PR #1693
+## Execution modes and activation boundary
 
-**Proposal only: activation should require a committed, successful whole-pipeline run in the intended Fabric workspace.** This section records the follow-up to [PR #1693](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1693); it does not describe an implemented guarantee.
+Pipeline execution now has three public modes: Dry Run, Ungoverned and Governed. The four public lifecycle functions remain `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`.
 
-PR #1693 introduces permanent pipeline UUID registration. Its Test mode evaluates reads, transformations and Guardrails, simulates target publication, and returns an in-memory result from `finalize_pipeline()`. Governance supplies a Fabric run reference and attests verification before activation. The backend checks that supplied result but does not retrieve an authoritative Testing execution from `METADATA_PIPELINE_RUN` or verify Fabric run history. A successful Test therefore does not establish that target writes can complete in that workspace.
+Dry Run evaluates reads, transformations, profiling and applicable selected-contract rules, simulates target publication, and returns an in-memory result from `finalize_pipeline()`. It never writes business data, operational state or a pipeline-run record. Ungoverned performs real writes without contract-dependent checks, but it cannot write a target already governed in the current workspace. Governed requires and revalidates an activated contract manifest.
 
 ### Required activation boundary
 
@@ -93,15 +93,15 @@ The follow-up must make these requirements concrete before it is ready to merge:
 5. Warning Guardrails may allow continuation and remain visible in the committed results and approval review. A blocking Guardrail stops the run and prevents activation. Read, transformation, Write, profiling, checkpoint or required metadata failures prevent a successful activation result, including when the business write already committed.
 6. Activation review and approval both load the exact completed run and its rule-level `METADATA_GUARDRAIL_RESULTS` from configured metadata storage. A supplied run reference selects a committed record; an editable dictionary or human attestation cannot substitute for that record. Missing or duplicate run identities fail closed.
 7. The successful run record is committed only after its required diagnostics and completion references are durable. Interrupted publication must leave no activatable success with missing dependencies. An uncertain commit acknowledgement requires exact durable read-back; retries must preserve run and diagnostic identities and must not replay business writes blindly.
-8. `METADATA_PIPELINE_REGISTRY` continues to own atomic approval history, table mappings, writer ownership and execution reservations. Real validation writes must reserve their physical destinations and coordinate with Live executions and activation; this change must not create a route around existing ownership or concurrency controls.
+8. `METADATA_PIPELINE_REGISTRY` continues to own atomic approval history, table mappings, writer ownership and execution reservations. Governed writes reserve their physical destinations and coordinate with activation; Ungoverned runtime checks must not create a route around existing ownership or governance controls.
 
-These records establish what the selected run completed at that time. They do not guarantee that later Live runs will succeed after permissions, input data or infrastructure change.
+These records establish what the selected run completed at that time. They do not guarantee that later Governed runs will succeed after permissions, input data or infrastructure change.
 
 ### Write-mode decision
 
-The implementation must explicitly choose whether Test performs real writes or a separate validation run performs them while Test remains read-only. This is a public behavior decision, not an internal persistence detail. Until it is resolved, keep this follow-up in draft. Do not silently turn existing Test calls into business writes or approve simulated publication as end-to-end verification.
+The public behavior is explicit: Dry Run never writes, while Ungoverned and Governed perform real writes. A Dry Run cannot be treated as end-to-end publication evidence.
 
-Real validation writes require documented destination selection, execution reservations, failed-write recovery and treatment of already Live-owned targets. Approval itself must continue to write governance metadata only. Update the affected Preview API docstrings, notebook instructions, glossary and generated references with the chosen behavior; preserve frozen release snapshots.
+Governed writes require documented destination selection, execution reservations and failed-write recovery. Ungoverned writes recheck central authority before every target operation and reject governed targets. Approval itself continues to write governance metadata only; frozen release snapshots remain preserved.
 
 ### Acceptance checks
 
@@ -115,7 +115,7 @@ Real validation writes require documented destination selection, execution reser
 | Fabricated result dictionary, unknown run ID or reviewer attestation without a committed run | Activation rejects it. |
 | Correct environment name but different workspace, notebook binding, physical target or operation mode | Activation rejects it and requires a new run. |
 | Diagnostics or final run commit fails; commit acknowledgement is lost | No unconfirmed success is accepted. Verify exact durable state before retrying. |
-| Review becomes stale, affected Live execution is running, or destinations are reserved | Existing atomic approval and execution reservation checks continue to block conflicting actions. |
+| Review becomes stale, affected Governed execution is running, or destinations are reserved | Existing atomic approval and execution reservation checks continue to block conflicting actions. |
 
 Use targeted unit tests for finalization and backend rejection, persisted Delta integration tests for commit ordering and retry behavior, and actual Microsoft Fabric execution for the workspace and publication claims. Local mocks and passing repository CI are not Fabric execution evidence. Record actual Fabric validation separately with version, date, tester, notebook and outcome; no such execution is claimed by this proposal.
 

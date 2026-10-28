@@ -37,7 +37,7 @@ This walkthrough validates frozen contracts for every participating table in the
 | Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
 | Target | `customer_summary` | Schema |
 
-The selected Data Contract determines which Guardrails run; empty or intentionally disabled optional checks impose no additional requirement. Live requires configured checks to execute successfully or return a Warn decision before publication.
+The selected Data Contract determines which Guardrails run; empty or intentionally disabled optional checks impose no additional requirement. Governed execution requires configured checks to execute successfully or return a Warn decision before publication.
 
 Open `01_governance`, run the setup cells, select each table above, then run [`widget_data_contract()`](../api/reference/widget_data_contract.md):
 
@@ -207,4 +207,4 @@ The frozen version is an immutable data contract and becomes the exact candidate
 !!! warning "Breaking workspace architecture"
     This Unreleased architecture uses workspace-scoped metadata and intentionally breaks earlier layouts. Start with fresh Metadata for this design; no compatibility layer or in-place migration is supplied. Frozen release documentation retains the earlier contracts.
 
-**Next:** [Step 4. Test the frozen Data Contract](04-validate-frozen-data-contract.md).
+**Next:** [Step 4. Preview and enforce the frozen Data Contract](04-validate-frozen-data-contract.md).

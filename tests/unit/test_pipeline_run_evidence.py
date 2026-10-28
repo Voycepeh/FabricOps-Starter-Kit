@@ -201,7 +201,7 @@ def test_live_rejects_changed_material_settings_before_operation(runtime, parame
     """A changed mode, SQL read or incremental target cannot enter a Live operation."""
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",))
-    with pytest.raises(ValueError, match="approved Test"):
+    with pytest.raises(ValueError, match="activated authority"):
         operation(plan, 0, **{parameter: value})
 
 

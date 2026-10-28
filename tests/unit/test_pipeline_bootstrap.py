@@ -1,4 +1,4 @@
-"""Contract-free Testing replaces the removed Bootstrap execution mode."""
+"""Dry Run and Ungoverned replace the removed Bootstrap execution mode."""
 # ruff: noqa: D103, F811
 import json
 from dataclasses import replace
@@ -14,17 +14,17 @@ SOURCE = {"store": "Bronze", "schema": "demo", "table_name": "source"}
 TARGET = {"store": "Silver", "schema": "demo", "table_name": "target"}
 
 
-def test_headless_exploration_uses_testing_and_never_activates(plan_runtime):
+def test_headless_exploration_uses_dry_run_and_never_activates(plan_runtime):
     _, context, _, _ = plan_runtime
-    plan = build_pipeline_execution_plan(execution_mode="testing", sources=[SOURCE], targets=[TARGET], pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", context=context)
-    assert plan.execution_mode == "testing" and not plan.permits_persistence
+    plan = build_pipeline_execution_plan(execution_mode="dry_run", sources=[SOURCE], targets=[TARGET], pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", context=context)
+    assert plan.execution_mode == "dry_run" and not plan.permits_persistence
     assert json.loads(plan.contracts_json) == {"source": None, "target": None}
 
 
 def test_contract_free_completed_run_is_explicitly_ungoverned(runtime):
     make, operation, saved, _, _ = runtime
     original = make(roles=("source",))
-    plan = replace(original, contracts_json=json.dumps({"table0": None}), evidence={})
+    plan = replace(original, execution_mode="ungoverned", contracts_json=json.dumps({"table0": None}), evidence={})
     with plan:
         operation(plan, 0)
     assert saved[plan.plan_id]["status"] == "ungoverned_completed"
@@ -69,7 +69,7 @@ def test_read_only_boundary_success_and_abandoned_incomplete(runtime):
 
 def test_old_mode_and_missing_stable_identity_are_rejected(plan_runtime):
     _, context, _, _ = plan_runtime
-    with pytest.raises(ValueError, match="testing or live"):
+    with pytest.raises(ValueError, match="dry_run, ungoverned or governed"):
         build_pipeline_execution_plan(sources=[SOURCE], targets=[], pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", execution_mode="bootstrap", context=context)
     with pytest.raises(ValueError, match="UUIDv4"):
-        build_pipeline_execution_plan(execution_mode="testing", sources=[SOURCE], targets=[], context=context)
+        build_pipeline_execution_plan(execution_mode="dry_run", sources=[SOURCE], targets=[], context=context)

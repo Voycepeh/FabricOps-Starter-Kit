@@ -42,17 +42,22 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-execution-plan">
 <summary><strong>pipeline execution plan</strong> — The validated execution decisions shared by every Read and Write in one pipeline run.</summary>
-<p>Internal run authority fixes exact table contracts, stable pipeline identity and workspace destinations. Test discovers participants from operations; Live pins an approved manifest and revision. Public Read and Write calls use the execution session automatically.</p>
+<p>Internal run authority fixes the execution mode, stable pipeline identity and workspace destinations. Dry Run and Ungoverned discover participants from operations; Governed pins activated contracts and a workspace revision. Public Read and Write calls use the execution session automatically.</p>
 </details>
 
-<details id="testing">
-<summary><strong>Testing</strong> — Pipeline execution against all frozen contracts, or explicit contract-free exploration.</summary>
-<p>Test evaluates real reads, transformations and selected frozen Data Contract Guardrails without business or operational metadata commits during Read and Write. finalize_pipeline publishes the completed run and Guardrail results for activation review; approval still requires complete frozen-contract coverage and all existing checks.</p>
+<details id="dry-run">
+<summary><strong>Dry Run</strong> — A real-data preview that never persists target or operational state.</summary>
+<p>Dry Run performs real source reads, transformations, profiling and applicable validation. A frozen Data Contract may be selected for validation, but target data, processing state, lineage, profiles and execution metadata are not persisted.</p>
 </details>
 
-<details id="live">
-<summary><strong>Live</strong> — The deliberate pipeline-wide mode that permits governed publication and operational metadata commits.</summary>
-<p>Live automatically resolves an approved workspace configuration from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contracts, writer ownership, transformation settings and physical destinations are enforced. Affected running executions drain before coordinated activation.</p>
+<details id="ungoverned">
+<summary><strong>Ungoverned</strong> — Pipeline execution with real writes and no Data Contract requirement.</summary>
+<p>Ungoverned performs real reads and writes while retaining profiling, lineage and operational metadata. Contract-dependent checks are skipped. Writes to a table already governed in the current environment are blocked so activated protections cannot be bypassed.</p>
+</details>
+
+<details id="governed">
+<summary><strong>Governed</strong> — Pipeline execution with real writes and activated Data Contracts enforced.</summary>
+<p>Governed resolves activated workspace authority from METADATA_PIPELINE_REGISTRY and pins its revision. Exact contract versions, writer ownership, operation settings and physical destinations are revalidated during execution.</p>
 </details>
 
 <details id="enrichment">

@@ -22,6 +22,7 @@ from fabricops_kit.pipeline.shared import (
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
+    PIPELINE_MODE_NAMES,
 )
 
 
@@ -30,18 +31,18 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
 
     Define the dataframe, destination, write_mode and processing parameters.
     All reads registered in this execution are associated with this target as
-    pipeline participants, not proven transformation dependencies. Test evaluates
-    processing and Guardrails without publishing or committing metadata. Live
-    requires approved contracts, ownership, destinations and a pinned revision.
+    pipeline participants, not proven transformation dependencies. Dry Run evaluates
+    processing and applicable Guardrails without publishing or committing metadata.
+    Ungoverned writes without contract checks but cannot target an already governed
+    table. Governed requires activated contracts, ownership and a pinned revision.
     Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
     available. The result includes publication metrics and Guardrail diagnostics.
     A successful Write does not imply successful completion of the notebook.
 
-    Test profiles the prepared DataFrame in memory without publishing the target.
-    Successful explicit finalization saves the calculated observations for Governance
-    and Data Contract authoring. Live profiles the complete persisted target after
-    successful publication. Frozen profiling policies and limits apply in both modes;
-    Test observations do not consume Live schedules. Guardrail checks run regardless
+    Dry Run profiles the prepared DataFrame in memory without publishing the target.
+    Persistent modes profile the complete target after successful publication.
+    Frozen profiling policies apply when a contract is selected; Dry Run observations
+    do not consume persisted schedules. Guardrail checks run regardless
     of profiling eligibility.
 
     Parameters
@@ -61,11 +62,11 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     existing_mapping : object, optional
         Caller-managed Sensitive Data mapping; incompatible with a configured vault.
         Existing assignments are reused. The returned sensitive_result.support_mapping
-        remains caller-owned; persist it only in Live workflows, then unpersist() its
+        remains caller-owned; persist it only in persistent workflows, then unpersist() its
         cache after consumption. A configured restricted mapping store is read-only
-        during evaluation-only Testing and reused/updated during Live writes. Failures release the cache.
+        during Dry Run and reused/updated during persistent writes. Failures release the cache.
     repartition_by : int, optional
-        Physical write partition count for Live.
+        Physical write partition count for persistent modes.
     verbose : bool
         Print concise stages and outcome when True; the execution widget reports automatically by default.
     dq_diagnostics : {"sample", "none", "full"}
@@ -74,9 +75,12 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     Returns
     -------
     dict
-        Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. profile_result retains the due statistical profile and frequency_profile in Test, with per-activity outcomes. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+        Prepared dataframe, selected contract, execution identity, validation results,
+        write metrics, publication state and profiling outcome. Dry Run returns
+        processing diagnostics without publication; persistent modes return the
+        actual publication outcome.
 
-    Raises RuntimeError when no pipeline is active or a Live stage fails, and
+    Raises RuntimeError when no pipeline is active or a persistent stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
 
     Examples
@@ -130,7 +134,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             names.extend(["Write", "Profile"])
         stages = []
         if verbose:
-            print(f"FabricOps WRITE · {table_name} · {execution_plan.execution_mode.title()}")
+            print(f"FabricOps WRITE · {table_name} · {PIPELINE_MODE_NAMES[execution_plan.execution_mode]}")
         print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Processing"}], verbose=verbose)
         def run(stage, function):
             result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
@@ -179,7 +183,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])
-                duration = summary.finish([("Mode", "Testing"), ("Target", target),
+                duration = summary.finish([("Mode", "Dry Run"), ("Target", target),
                                            ("Checks passed", passed), ("Published", "No"), ("Persistence", "Disabled")])
                 operation.complete(stages)
                 return {**common_results, **dry_run, "dataframe": prepared, "published": False,

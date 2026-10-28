@@ -70,8 +70,8 @@ Required describes the Python signature. An optional parameter may still be need
 | `table_name` | `str` | Yes | `—` | Physical target table name. |
 | `write_mode` | `str` | Yes | `—` | Proposed strategy; must match the selected contract processing definition. |
 | `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
-| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for Live. |
-| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in Live workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during evaluation-only Testing and reused/updated during Live writes. Failures release the cache. |
+| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. |
+| `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in persistent workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Dry Run and reused/updated during persistent writes. Failures release the cache. |
 | `verbose` | `bool` | No | `False` | Print concise stages and outcome when True; the execution widget reports automatically by default. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 
@@ -91,9 +91,12 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 ## Returns
 
 dict
-    Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. profile_result retains the due statistical profile and frequency_profile in Test, with per-activity outcomes. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+    Prepared dataframe, selected contract, execution identity, validation results,
+    write metrics, publication state and profiling outcome. Dry Run returns
+    processing diagnostics without publication; persistent modes return the
+    actual publication outcome.
 
-Raises RuntimeError when no pipeline is active or a Live stage fails, and
+Raises RuntimeError when no pipeline is active or a persistent stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
@@ -106,18 +109,18 @@ Not documented yet
 
 Define the dataframe, destination, write_mode and processing parameters.
 All reads registered in this execution are associated with this target as
-pipeline participants, not proven transformation dependencies. Test evaluates
-processing and Guardrails without publishing or committing metadata. Live
-requires approved contracts, ownership, destinations and a pinned revision.
+pipeline participants, not proven transformation dependencies. Dry Run evaluates
+processing and applicable Guardrails without publishing or committing metadata.
+Ungoverned writes without contract checks but cannot target an already governed
+table. Governed requires activated contracts, ownership and a pinned revision.
 Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
 available. The result includes publication metrics and Guardrail diagnostics.
 A successful Write does not imply successful completion of the notebook.
 
-Test profiles the prepared DataFrame in memory without publishing the target.
-Successful explicit finalization saves the calculated observations for Governance
-and Data Contract authoring. Live profiles the complete persisted target after
-successful publication. Frozen profiling policies and limits apply in both modes;
-Test observations do not consume Live schedules. Guardrail checks run regardless
+Dry Run profiles the prepared DataFrame in memory without publishing the target.
+Persistent modes profile the complete target after successful publication.
+Frozen profiling policies apply when a contract is selected; Dry Run observations
+do not consume persisted schedules. Guardrail checks run regardless
 of profiling eligibility.
 
 </div>
@@ -129,9 +132,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:28`
+`fabricops_kit/pipeline/orchestrate_write.py:29`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L28-L228">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L232">View on GitHub</a>
 </div>
 
 

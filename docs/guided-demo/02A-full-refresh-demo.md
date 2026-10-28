@@ -15,9 +15,9 @@
 | Order History | Gold Warehouse · `demo.order_history` |
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial No Contract Test, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate the due profiles automatically; successful Test finalization saves the source and prepared target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Test does not publish business targets, advance checkpoints or grant approval. Target observations describe prepared input. Live continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
-    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step.
+    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -34,7 +34,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | --- | --- |
 | Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
 | Setup Pipeline | Reuse notebook configuration, register or recover the Pipeline ID and start execution tracking. |
-| Data Contract Configuration | Choose an exact frozen version or No Contract independently for each table in Testing. |
+| Data Contract Configuration | Optional in Dry Run, omitted in Ungoverned, and resolved from activation in Governed. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
 | Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
@@ -49,8 +49,8 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
-PIPELINE_MODE = "Test"  # Test or Live
+PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
+PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
     pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
@@ -60,9 +60,9 @@ PIPELINE_ID = pipeline.pipeline_id
 
 
 
-After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test operations never publish business data or operational observations; finalization commits the Test outcome. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+After Governance freezes contracts, use Dry Run to select exact frozen versions for preview validation. Dry Run never publishes business data or operational observations, and finalization returns only a session summary. Governed activations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
-Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require approved Live publication. Advance the demo day only after publication succeeds.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require persistent publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -140,7 +140,7 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
 
-A governed **Live** run publishes each target. **Test** returns `published=False`; inspect `validation_passed`, finalize the run, and let the final cell record the initial Governance observations automatically. Rerun Testing with frozen contracts before activation.
+A **Governed** run publishes each target with contract enforcement. **Dry Run** returns `published=False`; inspect `validation_passed` and finalize to receive a session-only summary. **Ungoverned** publishes without contracts and records the initial Governance observations automatically.
 
 ![Curated Orders Write output](../assets/02/Write_Block_Output.png)
 
@@ -177,7 +177,7 @@ The notebook now displays each Read and Write DataFrame in the same code cell as
 
 ### Expected result
 
-Evaluation-only Testing completes all three Reads and both prepared Writes without publication. After a run with approved Live publication, both Overwrite targets publish and the saved tables and metadata reflect that run.
+Dry Run completes all three Reads and both prepared Writes without publication. After a run with persistent publication, both Overwrite targets publish and the saved tables and metadata reflect that run.
 
 ### Data saved by the demo
 
@@ -221,4 +221,4 @@ All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
-Run `pipeline_result = finalize_pipeline(CONTRACTS)` after the last Write to record completion. Test commits its run and Guardrail results at this step for activation review.
+Run `pipeline_result = finalize_pipeline(pipeline)` after the last Write. Dry Run returns a session-only summary; Ungoverned and Governed record the actual execution outcome.

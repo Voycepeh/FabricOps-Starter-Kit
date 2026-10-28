@@ -15,6 +15,15 @@ from dataclasses import dataclass, field as dataclass_field
 from uuid import uuid4
 from typing import Any, Mapping
 
+PIPELINE_MODE_NAMES = {
+    "dry_run": "Dry Run",
+    "ungoverned": "Ungoverned",
+    "governed": "Governed",
+    # Read-only compatibility for plans and metadata created before the mode rename.
+    "testing": "Test (historical)",
+    "live": "Governed (historical)",
+}
+
 @dataclass(frozen=True)
 class PipelineExecutionPlan:
     """Immutable run authority with an isolated in-memory diagnostic journal."""
@@ -43,13 +52,13 @@ class PipelineExecutionPlan:
                           {"status": "not_started", "stages": []}
                           for identity in json.loads(self.participants_json).values() for role in identity["roles"]}
             self.evidence.update(started_at=datetime.now(UTC), operations=operations, failures=[], sealed=False, persistence_failed=False)
-        if self.execution_mode not in {"testing", "live"}:
-            raise ValueError("Execution mode must be testing or live.")
+        if self.execution_mode not in PIPELINE_MODE_NAMES:
+            raise ValueError("Execution mode must be dry_run, ungoverned or governed.")
 
     @property
     def permits_persistence(self):
         """Whether this run permits durable mutations."""
-        return self.execution_mode == "live"
+        return self.execution_mode in {"ungoverned", "governed", "live"}
 
     @property
     def run_result(self):
@@ -453,7 +462,7 @@ def persist_lineage_participation(
 ) -> str:
     """Upsert one canonical source or target participant for an activity."""
     if not persistence_permitted(context):
-        raise RuntimeError("Testing cannot commit Lineage.")
+        raise RuntimeError("Dry Run cannot commit Lineage.")
     config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=resolved_context)
     effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
@@ -2180,7 +2189,7 @@ def write_guardrail_result_row(
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id,
                                        runtime_context=plan.runtime_context if plan is not None else context)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
-    resolved_execution_type = plan.execution_mode if plan is not None else "live"
+    resolved_execution_type = plan.execution_mode if plan is not None else "governed"
     if plan is not None:
         resolved_run_id = plan.plan_id
     payload = {
@@ -2740,11 +2749,11 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
     context = {**runtime, "config": config, "scope_workspace_id": active_workspace_id, "execution_plan": plan,
                "_pipeline_contracts": json.loads(plan.contracts_json),
                "_pipeline_rules": {}, "_pipeline_identities": identities}
-    # Isolate transient Testing caches without replacing persisted Fabric audit identity.
-    if plan.execution_mode == "testing":
+    # Isolate transient Dry Run caches without replacing persisted Fabric audit identity.
+    if plan.execution_mode in {"dry_run", "testing"}:
         context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
-    if plan.execution_mode == "live":
+    if plan.execution_mode in {"governed", "live"}:
         from fabricops_kit.activated_pipeline.shared import verify_live_plan
         verify_live_plan(plan, spark_session=spark_session)
     for table_id in identities:
@@ -2844,11 +2853,11 @@ def resolve_pipeline_data_contract(
     spark_session=None,
     context: Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    """Resolve only an explicit plan snapshot; Live snapshots come from approved manifests."""
+    """Resolve only an explicit plan snapshot; Governed snapshots come from activation."""
     cache = (context or {}).get("_pipeline_contracts")
     if cache is not None and table_id in cache:
         return cache[table_id]
-    raise ValueError("Data Contract resolution requires an explicit execution plan; Live authority is an Activated Pipeline manifest.")
+    raise ValueError("Data Contract resolution requires an explicit execution plan; Governed authority is activated metadata.")
 
 
 def resolve_catalogue_table_id(
@@ -4521,7 +4530,7 @@ def check_dq_runtime(
     are dropped. Unrelated source columns are excluded from sampled examples.
     """
     plan = (context or {}).get("execution_plan")
-    execution_mode = plan.execution_mode if plan is not None else "live"
+    execution_mode = plan.execution_mode if plan is not None else "governed"
     if diagnostics not in {"none", "sample", "full"}:
         raise ValueError("diagnostics must be 'none', 'sample', or 'full'.")
     spark_session = getattr(dataframe, "sparkSession", None)
@@ -5553,13 +5562,13 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
 
 
 def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None):
-    """Freeze Test participants and exact contracts under a permanent UUIDv4."""
-    if execution_mode == "live":
-        raise ValueError("Live requires an Activated Pipeline; use setup_pipeline to resolve approved workspace_id authority.")
+    """Freeze dynamic Dry Run or Ungoverned participants under one execution."""
+    if execution_mode in {"governed", "live"}:
+        raise ValueError("Governed requires Activated Pipeline authority; use setup_pipeline to resolve it.")
     from types import MappingProxyType
 
-    if execution_mode != "testing":
-        raise ValueError("execution_mode must be testing or live.")
+    if execution_mode not in {"dry_run", "ungoverned", "testing"}:
+        raise ValueError("execution_mode must be dry_run, ungoverned or governed.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
 
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
@@ -5579,6 +5588,8 @@ def build_pipeline_execution_plan(*, execution_mode, sources, targets, selection
         if choice == {"no_contract": True}:
             contracts[table_id] = None
             continue
+        if execution_mode == "ungoverned":
+            raise ValueError("Ungoverned does not select or enforce Data Contracts.")
         if set(choice) != {"contract_id", "contract_version"}:
             raise ValueError("Select exact contract_id/contract_version or explicit no_contract=True.")
         selected = resolve_data_contract_version(
@@ -5681,7 +5692,7 @@ def validate_pipeline_run(row):
 
 
 def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
-    """Capture actual table/contract participation and only settings enforced by Live."""
+    """Capture actual table/contract participation and governed settings."""
     identities, contracts = json.loads(plan.participants_json), json.loads(plan.contracts_json)
     operations = []
     for table_id, identity in identities.items():
@@ -5899,7 +5910,7 @@ class PipelineOperation:
             self.record = {"status": "incomplete", "stages": [],
                            "started_at": datetime.now(UTC).isoformat()}
             plan.evidence["operations"][key] = self.record
-            # These are the only notebook settings retained and compared in Live.
+            # These are the notebook settings retained and compared in Governed mode.
             # Processing parameters and profiling policy belong to the table contract.
             self.record.update(read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
@@ -5908,12 +5919,12 @@ class PipelineOperation:
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
                 self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
-            if plan.execution_mode == "live":
+            if plan.execution_mode in {"governed", "live"}:
                 approved = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.approved_operations_json)}
                 tested = approved.get((table_id, self.role))
                 enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
                 if not plan.approval_id or tested is None or any(self.record.get(name) != tested.get(name) for name in enforced):
-                    raise ValueError("Live table or execution mode differs from the approved Test run.")
+                    raise ValueError("Governed table or execution mode differs from activated authority.")
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
         except BaseException as exc:
@@ -5992,7 +6003,11 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         complete = bool(expected) and set(operations) == expected and all(operation["status"] == "succeeded" for operation in operations.values())
         complete = complete and bool(plan.evidence.get("boundary_completed"))
         status = "failed" if blocked else "succeeded" if complete else "incomplete"
-        if status == "succeeded" and not any(json.loads(plan.contracts_json).values()):
+        if status == "succeeded" and plan.execution_mode == "dry_run":
+            status = "dry_run_completed"
+        elif status == "succeeded" and plan.execution_mode == "ungoverned":
+            status = "ungoverned_completed"
+        elif status == "succeeded" and plan.execution_mode == "testing" and not any(json.loads(plan.contracts_json).values()):
             status = "ungoverned_completed"
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
         if plan.execution_mode == "testing":
@@ -6071,8 +6086,8 @@ class PipelineSession:
 
     def select_contract(self, table_id, contract_id=None, contract_version=None, *, no_contract=False):
         """Freeze explicit exact contract choices before data operations start."""
-        if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode == "live":
-            raise RuntimeError("Contract choices are locked; start a new Test execution.")
+        if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode not in {"dry_run", "testing"}:
+            raise RuntimeError("Contract choices are locked; they are available only before a Dry Run starts.")
         if no_contract:
             if contract_id is not None or contract_version is not None:
                 raise ValueError("No Contract cannot include a contract identity.")
@@ -6091,12 +6106,12 @@ class PipelineSession:
         self.refresh()
 
     def operation_plan(self, role, arguments):
-        """Discover Test participants from actual operations; Live stays manifest-bound."""
+        """Discover dynamic participants; Governed stays activation-bound."""
         from dataclasses import replace
         if self.closed:
             raise RuntimeError("Pipeline execution is closed; run Setup Pipeline again.")
         with self.plan.lock:
-            if self.plan.execution_mode == "testing":
+            if self.plan.execution_mode in {"dry_run", "ungoverned", "testing"}:
                 identities = json.loads(self.plan.participants_json)
                 requested = [(role, resolve_physical_table_identity(
                     self.plan.runtime_context["config"], self.plan.workspace_id,
@@ -6109,11 +6124,21 @@ class PipelineSession:
                 contracts = json.loads(self.plan.contracts_json)
                 for participant_role, identity in requested:
                     table_id = identity["table_id"]
+                    if (self.plan.execution_mode == "ungoverned" and participant_role == "target"
+                            and table_id in self.plan.runtime_context.get("_governed_table_ids", ())):
+                        raise ValueError(f"Ungoverned cannot write governed table {table_id!r}; use Governed mode with its activated Data Contract.")
+                    if self.plan.execution_mode == "ungoverned" and participant_role == "target":
+                        from fabricops_kit.activated_pipeline.shared import authority_records
+                        authority = authority_records(context=self.plan.runtime_context, spark_session=self.spark)
+                        if any(row.get("workspace_id") == self.plan.workspace_id and row.get("table_id") == table_id
+                               for row in authority.get("table_ownership", [])):
+                            raise ValueError(f"Ungoverned cannot write governed table {table_id!r}; use Governed mode with its activated Data Contract.")
                     roles = list(identities.get(table_id, {}).get("roles", []))
                     if participant_role not in roles:
                         logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
                         identities[table_id] = {**identity, "logical_id": logical, "roles": [*roles, participant_role]}
-                        choice = self.choices.get(table_id, {"no_contract": True})
+                        choice = (self.choices.get(table_id, {"no_contract": True})
+                                  if self.plan.execution_mode in {"dry_run", "testing"} else {"no_contract": True})
                         selections[table_id] = choice
                         if choice == {"no_contract": True}:
                             contracts[table_id] = None
@@ -6152,8 +6177,8 @@ class PipelineSession:
         if self.report is None:
             return
         import html
-        mode = "Live" if self.plan.execution_mode == "live" else "Test"
-        color = "#107c10" if mode == "Live" else "#a4262c"
+        mode = PIPELINE_MODE_NAMES[self.plan.execution_mode]
+        color = {"Dry Run": "#986f0b", "Ungoverned": "#0078d4", "Governed": "#107c10"}[mode]
         result = self.plan.evidence.get("final_result", {})
         status = result.get("status") or ("failed" if self.plan.evidence["failures"] else "incomplete")
         operations = "".join(f"<li>{html.escape(key)}: {html.escape(item['status'])}</li>"
@@ -6190,7 +6215,7 @@ class PipelineSession:
             import atexit
             atexit.unregister(self.close)
             self.closed = True
-            if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed"}:
+            if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
             self.sources.clear()
             for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
@@ -6253,10 +6278,10 @@ def validate_pipeline_registrations(bindings):
             notebooks.add(notebook)
 
 
-def read_pipeline_registry(*, context, spark_session=None):
+def read_pipeline_registry(*, context, spark_session=None, registry_snapshot=None):
     """Read Engineering registrations from the shared Registry serialization domain."""
     from fabricops_kit.activated_pipeline.shared import authority_records
-    authority = authority_records(context=context, spark_session=spark_session)
+    authority = registry_snapshot or authority_records(context=context, spark_session=spark_session)
     bindings = authority["registrations"]
     validate_pipeline_registrations(bindings)
     return authority["token"], bindings
@@ -6285,7 +6310,9 @@ def commit_pipeline_registration(row, *, expected_token, context, spark_session=
     commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session, registry_snapshot=snapshot)
 
 
-def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=None, new_pipeline=False, previous_binding=None, allow_new_identity=True):
+def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=None, new_pipeline=False,
+                                  previous_binding=None, allow_new_identity=True, persist=True,
+                                  registry_snapshot=None):
     """Resolve, recover or explicitly rebind one portable pipeline UUID in a workspace."""
     from datetime import datetime, timezone
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
@@ -6299,7 +6326,8 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
         raise ValueError("New pipeline registration requires an omitted pipeline_id.")
     if supplied:
         pipeline_id = validate_pipeline_id(pipeline_id)
-    token, rows = read_pipeline_registry(context=context, spark_session=spark_session)
+    token, rows = read_pipeline_registry(context=context, spark_session=spark_session,
+                                         registry_snapshot=registry_snapshot)
     exact = next((row for row in rows if row["registration_status"] == "Active"
                   and (row["workspace_id"], row["notebook_id"]) == (workspace, notebook)), None)
     if exact and (new_pipeline or (pipeline_id and pipeline_id != exact["pipeline_id"])):
@@ -6307,7 +6335,7 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
     if exact and exact["workspace_id"] != active_workspace_id:
         raise ValueError("This notebook is registered to another workspace_id; review workspace configuration and registry bindings.")
     if not allow_new_identity and pipeline_id is None and exact is None:
-        raise ValueError("Live requires an existing registered Pipeline ID and approved configuration. Run setup_pipeline(pipeline_mode='Test') first, or supply the approved pipeline_id for promotion.")
+        raise ValueError("Governed requires an existing registered Pipeline ID and activated configuration. Run Ungoverned first to register this notebook, or supply its activated pipeline_id.")
     if pipeline_id is None:
         pipeline_id = exact["pipeline_id"] if exact else str(uuid4())
         if exact is None:
@@ -6338,9 +6366,9 @@ def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=No
            "registered_at": existing["registered_at"] if existing else now,
            "registered_by": existing["registered_by"] if existing else audit["_committed_by"],
            "registration_status": "Active"}
-    if not existing or any(row.get(key) != existing.get(key) for key in ("workspace_id", "notebook_id", "notebook_name")):
+    if persist and (not existing or any(row.get(key) != existing.get(key) for key in ("workspace_id", "notebook_id", "notebook_name"))):
         commit_pipeline_registration(row, expected_token=token, context=context, spark_session=spark_session)
-    return {**row, "resolution": status}
+    return {**row, "resolution": status if persist or existing else "Session only"}
 
 
 def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
@@ -6371,29 +6399,37 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
     with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
         spark = get_spark_session()
     with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
+        from fabricops_kit.activated_pipeline.shared import authority_records
+        registry_snapshot = authority_records(context=runtime, spark_session=spark)
         registration = resolve_pipeline_registration(pipeline_id, context=runtime, spark_session=spark,
-            new_pipeline=new_pipeline, previous_binding=previous_binding, allow_new_identity=pipeline_mode == "Test")
+            new_pipeline=new_pipeline, previous_binding=previous_binding,
+            allow_new_identity=pipeline_mode != "Governed", persist=pipeline_mode != "Dry Run",
+            registry_snapshot=registry_snapshot)
         pipeline_id = registration["pipeline_id"]
         print(f'FabricOps Pipeline\nPipeline ID: {pipeline_id}\nRegistration: {registration["resolution"]}\nMode: {pipeline_mode}')
         print("Retain this UUID in source only for cross-workspace promotion; this notebook recovers it automatically.")
-        if pipeline_mode == "Live":
+        if pipeline_mode == "Governed":
             from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
             plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
         else:
-            plan = PipelineExecutionPlan("testing", active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()),
-                "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
+            execution_mode = "dry_run" if pipeline_mode == "Dry Run" else "ungoverned"
+            governed_table_ids = {row["table_id"] for row in registry_snapshot.get("table_ownership", [])
+                                  if row.get("workspace_id") == active_workspace_id}
+            plan = PipelineExecutionPlan(execution_mode, active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()),
+                "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark,
+                "_pipeline_bindings": {}, "_governed_table_ids": frozenset(governed_table_ids)}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     session.registration = registration
     try:
         if shell is not None:
-            with startup.phase("form_loading", "Loading frozen Data Contracts…" if pipeline_mode == "Test" else "Preparing pipeline controls…"):
+            with startup.phase("form_loading", "Loading optional frozen Data Contracts…" if pipeline_mode == "Dry Run" else "Preparing pipeline controls…"):
                 from fabricops_kit.widgets.shared import require_ipywidgets, form_page
                 widgets = require_ipywidgets()
                 session.report = widgets.HTML()
                 children = [session.report]
-                if pipeline_mode == "Test":
+                if pipeline_mode == "Dry Run":
                     rows = read_lakehouse_table("METADATA_DATA_CONTRACT", store="Metadata",
                         schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
                         context={**(runtime or {}), "_spark_session": spark}).collect()
@@ -6437,7 +6473,7 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
 
 
 def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtime_context=None):
-    """Allow absent notebook audit fields only for nonpersisting Test diagnostics."""
+    """Allow absent notebook audit fields only for nonpersisting Dry Run diagnostics."""
     return build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context,
         require_notebook_identity=persistence_permitted(runtime_context))
 
@@ -6526,7 +6562,7 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
             schema=metadata_table_physical_schema(config, table),
             context={**(context or {}), "_spark_session": spark_session}).filter(F.col("workspace_id") == active_workspace_id)
     events = (frame("METADATA_PIPELINE_RUN")
-        .filter(F.col("execution_mode") == "live")
+        .filter(F.col("execution_mode").isin("ungoverned", "governed", "live"))
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
         .filter((F.col("context_key") == key) & (F.col("status") == "passed")
@@ -6565,7 +6601,7 @@ def claim_table_profile(table_id, activity, operation, *, context, spark_session
     if activity not in PROFILING_ACTIVITIES:
         raise ValueError("Unknown profiling activity.")
     if not persistence_permitted(context):
-        raise RuntimeError("Test cannot claim profiling work.")
+        raise RuntimeError("Dry Run cannot claim profiling work.")
     checked_at = now or datetime.now(UTC)
     from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
@@ -6643,11 +6679,11 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
 
 
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None):
-    """Profile due Test inputs once or independently claim persisted-table Live work."""
+    """Profile Dry Run inputs or claim due work for persistent executions."""
     from threading import Event, Thread
     outcomes = {}
     if not persistence_permitted(context):
-        # Test can inspect due work, but never consumes intervals or obtains claims.
+        # Dry Run can inspect due work, but never consumes intervals or obtains claims.
         policy = contract_profiling_policy(table_id, context=context)
         history = profiling_completion_history(table_id, context=context, spark_session=spark_session)
         key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
@@ -7932,7 +7968,7 @@ def execute_table_profile(
 
     plan = (context or {}).get("execution_plan")
     trigger = (context or {}).get("_profile_trigger")
-    retain_observation = getattr(plan, "execution_mode", None) == "testing" and trigger in {"read", "write"}
+    retain_observation = False
     profile_metrics = {"row_count": None}
     profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:
@@ -7982,7 +8018,7 @@ def execute_table_profile(
 
 
     if identity is None or not persistence_permitted(context):
-        emit("5. Metadata persistence → disabled by Testing policy" if identity is not None else
+        emit("5. Metadata persistence → disabled by Dry Run policy" if identity is not None else
               "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}

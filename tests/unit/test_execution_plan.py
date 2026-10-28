@@ -123,7 +123,7 @@ def test_live_builder_rejects_individual_contract_authority(plan_runtime):
 def test_removed_bootstrap_mode_is_rejected(plan_runtime):
     """Contract-free exploration uses Testing with explicit write authorization."""
     _, _, make, _ = plan_runtime
-    with pytest.raises(ValueError, match="testing or live"):
+    with pytest.raises(ValueError, match="dry_run, ungoverned or governed"):
         make("bootstrap")
 
 

@@ -33,7 +33,7 @@ For advanced cross-workspace use, deploy a shared `00_env_config` in Central Eng
 CONFIG_WORKSPACE_ID = "<configuration-workspace-id>"
 context = setup_notebook(config_workspace_id=CONFIG_WORKSPACE_ID)
 # Then, in an Engineering pipeline:
-pipeline = setup_pipeline(pipeline_mode="Test")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 PIPELINE_ID = pipeline.pipeline_id
 ```
 
@@ -49,13 +49,13 @@ context = setup_notebook()
 # 02 Pipeline
 from fabricops_kit import setup_notebook, setup_pipeline, finalize_pipeline
 context = setup_notebook()
-pipeline = setup_pipeline()  # Register or recover the notebook binding; default Test.
+pipeline = setup_pipeline()  # Register or recover the notebook binding; default Ungoverned.
 PIPELINE_ID = pipeline.pipeline_id
 # Read → Transform → Write
 finalize_pipeline()
 ```
 
-Omit `pipeline_id` on first execution to register or recover a permanent UUIDv4. The notebook automatically assigns `PIPELINE_ID = pipeline.pipeline_id`; retain that UUID in source only for cross-workspace promotion; `pipeline_mode="Live"` retains the existing approved-manifest behavior. Neither requires a workspace argument. Explicit `setup_notebook(CONFIG, workspace_id=...)` remains supported for local validation and advanced callers.
+Omit `pipeline_id` on the first Ungoverned execution to register or recover a permanent UUIDv4. Dry Run never writes registration state and may use a session-only UUID. The notebook automatically assigns `PIPELINE_ID = pipeline.pipeline_id`; retain that UUID in source only for cross-workspace promotion. Neither setup function requires a workspace argument.
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
@@ -79,17 +79,17 @@ See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn
 
 ## Governance configuration
 
-**Observe locally → Govern globally → Test locally → Activate locally.**
+**Run simply → Govern deliberately → Enforce consistently.**
 
 `00_env_config` uses `ENGINEERING_WORKSPACES` and compiles `WORKSPACE_PATHS`, keyed by stable workspace ID. Store names such as Bronze, Silver and Gold are configurable aliases. Business stores belong to their Engineering workspace; Metadata always points to the same central Governance Lakehouse.
 
 Governance has only the Metadata target. Its runtime workspace remains its audit identity. In the Data Contract widget, deliberately select a Table and Workspace to create a draft from that workspace's current observation. Contract history is global for the selected table. Workspace appears at the far right and filters bidirectionally with Table. No arbitrary workspace or table is selected.
 
-On first setup, run the complete No Contract Test, including `pipeline_result = finalize_pipeline(pipeline)`. Read and Write automatically calculate the due profiles, and successful Test finalization saves them to the configured Catalogue and profiling metadata for Data Contract authoring. Target profiles describe the prepared DataFrame, without publishing target data or advancing checkpoints. Failed and incomplete runs do not publish these observations. Frozen-contract profiling policies still apply; Test observations do not consume Live profiling schedules. Live profiles the persisted target after publication. No manual `profile_table()` calls or duplicated observation coordinates are needed.
+On first setup, run the complete notebook in Ungoverned mode, including `pipeline_result = finalize_pipeline(pipeline)`. Read and Write automatically calculate due profiles and persist operational metadata around the real publication. Dry Run is available when you need a non-persistent preview. No manual `profile_table()` calls or duplicated observation coordinates are needed.
 
-New drafts capture every current observed column once. Columns default to required presence; optional presence is distinct from nullability. Missing required columns, uncontracted extra columns and normalized datatype differences block Testing and Live. New profiles never mutate contracts. Unprofiled columns remain governable and display “Not yet profiled”.
+New drafts capture every current observed column once. Columns default to required presence; optional presence is distinct from nullability. Missing required columns, uncontracted extra columns and normalized datatype differences block Governed execution. New profiles never mutate contracts. Unprofiled columns remain governable and display “Not yet profiled”.
 
-In Pipeline Activation, select the Engineering workspace, pipeline and an exact successful finalized Test. The workspace independently activates the selected release and frozen contracts. Other workspaces can use other versions. Deployment belongs to Fabric/CI tooling; no promotion sequence is enforced.
+In Pipeline Activation, select the Engineering workspace, pipeline and reviewed activation evidence. The workspace independently activates the selected release and frozen contracts. Other workspaces can use other versions. Deployment belongs to Fabric/CI tooling; no promotion sequence is enforced.
 
 `01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline()` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
 
@@ -99,7 +99,7 @@ The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform 
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
@@ -107,23 +107,31 @@ result = orchestrate_write(transformed, store="Gold", schema="demo",
 pipeline_result = finalize_pipeline(pipeline)
 ```
 
-`pipeline_mode` accepts exactly `Test` or `Live`. Test runs real reads, transformations and selected Guardrails without business or operational metadata commits during Read and Write. The explicit Finalize step commits the complete Test run and Guardrail results for activation review. In a notebook, choose exact frozen contracts or No Contract in the setup interface before the first operation. Headless Test starts with No Contract; its returned session supports explicit `select_contract(table_id, contract_id, contract_version)` for automated diagnostics. Choices lock when operations start. The displayed report updates automatically, with red Test and green Live mode treatment and textual operation/Guardrail status.
+`pipeline_mode` accepts exactly three values:
 
-Live resolves participants, frozen contracts, project configuration and physical bindings exclusively from the approved workspace manifest. Every operation retains destination, strategy, contract and activation-revision validation. Spark and supported Fabric notebook context are resolved internally. Missing notebook audit identity is represented as absent, never fabricated or substituted for approval identity.
+| Mode | What it does | Data Contract |
+| --- | --- | --- |
+| `"Dry Run"` | Reads and transforms real data, profiles and validates where applicable, but never writes target data or operational state. | Optional |
+| `"Ungoverned"` | Runs real reads and writes with profiling, lineage and operational metadata, without contract-dependent checks. | Not required |
+| `"Governed"` | Runs real reads and writes while enforcing the exact activated contracts and workspace authority. | Activated contract required |
+
+Dry Run contract choices lock when operations start. Ungoverned does not offer contract selection and fails if a target is already governed, so an activated Sensitive Data rule or other protection cannot be bypassed. Governed revalidates activation, contract versions, ownership, destinations and operation settings at setup and again during execution.
+
+`METADATA_PIPELINE_RUN.execution_mode` remains a string, so no metadata schema migration is required. New runs store `dry_run`, `ungoverned` or `governed` (Dry Run summaries are session-only and therefore are not normally present). Historical `testing` and `live` rows remain readable for retained approvals and profiling history; new setup calls do not accept the old display names.
 
 ### Source participation and execution boundaries
 
 Every successful Read registers with the current execution instance. Every subsequent Write receives that execution's registered sources. These associations describe pipeline participation, not proven DataFrame transformation lineage. Context-local state and unique run IDs isolate executions; failure, repeated setup and shutdown clear source references.
 
-Run `finalize_pipeline(pipeline)` after all Reads, transformations and Writes, including read-only pipelines. It records the complete outcome and releases Live reservations. Pass `failed=True` for a caught project exception. Test finalization commits the complete run and Guardrail results. Open `widget_activate_pipeline()` for explicit approval. Live outcome publication requires complete runtime audit identity. Repeating finalization with the same session is idempotent.
+Run `finalize_pipeline(pipeline)` after all Reads, transformations and Writes, including read-only pipelines. It returns the complete outcome and releases Governed reservations. Pass `failed=True` for a caught project exception. Dry Run returns a session-only summary; Ungoverned and Governed persist their real execution mode and outcome. Repeating finalization with the same session is idempotent.
 
-A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Live record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
+A successful Write or Fabric cell does not prove whole-notebook completion. Observed errors seal failure; repeated setup and shutdown seal unfinalized runs as **incomplete**. A killed process may retain an incomplete Governed record and reservation. Operators must confirm execution stopped before repairing a reservation. Headless code must call Finalize after its full transformation workflow, or use `failed=True` when it catches a project failure.
 
-Activation still requires a complete successful Testing record, exact frozen contracts for every participant, all required operation and Guardrail results, an effective Data Agreement and explicit Governance approval. Failed, incomplete, mixed-contract and No Contract runs cannot activate. Finalization never activates or deploys a pipeline.
+Activation still requires exact frozen contracts for every participant, complete accepted validation evidence, an effective Data Agreement and explicit Governance approval. Failed, incomplete, mixed-contract and No Contract evidence cannot activate. Finalization never activates or deploys a pipeline.
 
 ## Activate, deploy and run unattended
 
-Open `widget_activate_pipeline()` in Governance after Engineering explicitly finalizes the Test run. The widget loads committed Test outcomes in the current workspace. Select the immutable pipeline version and exact Agreement. Every source and target must have its exact frozen contract; warnings may permit completion, while blocking results, failures and incomplete operations prevent activation. Include compatible successful Test candidates for affected dependent pipelines.
+Open `widget_activate_pipeline()` in Governance to review the retained activation evidence for the current workspace. Select the immutable pipeline version and exact Agreement. Every source and target must have its exact frozen contract; warnings may permit completion, while blocking results, failures and incomplete operations prevent activation. Include compatible accepted candidates for affected dependent pipelines.
 
 Review the complete release and explicitly approve it once. The backend independently rechecks every selected candidate, complete operation/rule results, processing configuration, contract payloads and Agreement. It checks the current authority token again at commit. Failed validation, missing tests, competing writers, inconsistent contracts, stale review or a failed commit expose no partial release. Refresh and review again after a conflict.
 
@@ -131,23 +139,23 @@ Review the complete release and explicitly approve it once. The backend independ
 
 Within each workspace, distinct table identities cannot alias the same physical destination. Reservations also protect physical destinations when a proposed activation uses another table identity in the same workspace. Every Read and Write checks its actual resolved physical destination against the plan's frozen binding, including case variants of configured store keys. One contract version and at most one writer own a table; multiple readers may share its exact contract. One approved configuration exists per pipeline. DEV and PROD reference the same global contract history and can approve different versions. `METADATA_DATA_CONTRACT.workspace_id` records authoring provenance, not version identity. All Metadata targets must resolve to the same central Lakehouse.
 
-### Live cutover and deployment
+### Governed cutover and deployment
 
-Live setup automatically resolves the approved workspace configuration and reserves the run in the same authority transaction. It pins one activation revision for its lifetime. Approval affecting a running pipeline or reserved destination is blocked until that execution completes. New runs cannot mix revisions during cutover. Runs for unrelated pipelines may continue. No lease expires automatically: after a notebook crash, operators must confirm the execution is stopped before removing its run reservation from the authority through a reviewed metadata repair. Never clear a reservation merely because it is old.
+Governed setup automatically resolves the activated workspace configuration and reserves the run in the same authority transaction. It pins one activation revision for its lifetime. Activation changes affecting a running pipeline or reserved destination are blocked until that execution completes. New runs cannot mix revisions during cutover. Runs for unrelated pipelines may continue. No lease expires automatically: after a notebook crash, operators must confirm the execution is stopped before removing its run reservation through a reviewed metadata repair.
 
-Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Approval never deploys a notebook or writes business data. No FabricOps packaging or deployment verification call is required. Live validates exact global tables, workspace destinations, Data Contract versions, ownership and transformation settings against central approval.
+Deploy notebooks through Engineering source control, CI/CD and Microsoft Fabric tooling. Activation never deploys a notebook or writes business data. Governed validates exact global tables, workspace destinations, Data Contract versions, ownership and transformation settings against central authority.
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Live")
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Governed")
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
-Profiling options, diagnostic detail and repartitioning may differ from the tested operation; Live emits warnings and records tested and actual values. Contract mappings, table identities, roles, destinations, source relationships, SQL settings, read/write strategies and transformation settings require approval. Retest changed Data Contract or processing configuration before coordinated approval. Prior approvals containing executable/dependency identity require fresh complete Testing and activation; frozen Data Contracts remain unchanged.
+Profiling options, diagnostic detail and repartitioning may differ from the approved operation; Governed execution emits warnings and records approved and actual values. Contract mappings, table identities, roles, destinations, source relationships, SQL settings, read/write strategies and transformation settings require approval. Revalidate a changed Data Contract or processing configuration before coordinated approval. Prior approvals containing executable/dependency identity require fresh complete validation and activation; frozen Data Contracts remain unchanged.
 
 ## Shared table profiling
 
-Profiling policies belong to `METADATA_DATA_CONTRACT.contract_payload_json.profiling`. The **Profiling** section in Data Contract Authoring edits the selected draft through the normal Save action. Freeze, complete Testing and activate the new version before Live uses it. Frozen payloads and existing activation snapshots are immutable. A profiling change changes the contract fingerprint and requires the existing approval workflow. Profiling policies remain separate from `guardrails` and never enable, disable or change enforcement.
+Profiling policies belong to `METADATA_DATA_CONTRACT.contract_payload_json.profiling`. The **Profiling** section in Data Contract Authoring edits the selected draft through the normal Save action. Freeze, validate and activate the new version before Governed execution uses it. Frozen payloads and existing activation snapshots are immutable. A profiling change changes the contract fingerprint and requires the existing approval workflow. Profiling policies remain separate from `guardrails` and never enable, disable or change enforcement.
 
 | Activity | Default frequency | Trigger |
 | --- | --- | --- |
@@ -163,7 +171,7 @@ Each activity independently supports `every`, `first` or `interval` (a positive 
 
 Explicit No Contract execution uses these fixed defaults without creating a contract. Existing frozen versions without a profiling section use the same defaults; they are never rewritten. New drafts and newly frozen versions contain explicit policies. Activation continues to require frozen contracts for all participants.
 
-Read-triggered profiling scans the complete persisted table, including when the Read uses a query, filter or incremental scope. Write-triggered profiling follows successful publication. Failed, blocked and empty nonpublishing Writes do not consume intervals. Read-only Testing computes eligible diagnostics without claims or metadata writes; it cannot consume a schedule or profile an unpublished target as published data.
+Read-triggered profiling scans the complete persisted table, including when the Read uses a query, filter or incremental scope. Write-triggered profiling follows successful publication. Failed, blocked and empty nonpublishing Writes do not consume intervals. Dry Run computes eligible diagnostics without claims or metadata writes; it cannot consume a schedule or profile an unpublished target as published data.
 
 `METADATA_PIPELINE_RUN.profiling` records independent activity events with Table ID, workspace, physical workspace/item/schema/table bindings, context key, activity, trigger, Pipeline Run ID, timestamp, status, safe failure/skip reason and result snapshot ID. Running events distinguish attempts from completion. Skips distinguish trigger mismatch, first-only completion, an unelapsed interval and claim contention. Pipeline completion remains a separate field; a skipped activity permits pipeline success. Multiple tables retain independent activity events in the same logical run row.
 
@@ -177,15 +185,15 @@ After upgrading, run `setup_metadata_tables()` under controlled administration. 
 
 ### Upgrade boundary and limitations
 
-Run `setup_metadata_tables()` once under controlled metadata administration to create the singleton authority. Existing per-pipeline approvals are not imported or trusted. Existing workspace-specific contract histories need deliberate reconciliation into one global lifecycle per table, followed by complete Testing and activation; no compatibility shim or automatic migration is provided. Old tables are not deleted automatically.
+Run `setup_metadata_tables()` once under controlled metadata administration to create the singleton authority. Existing per-pipeline approvals are not imported or trusted. Existing workspace-specific contract histories need deliberate reconciliation into one global lifecycle per table, followed by complete validation and activation; no compatibility shim or automatic migration is provided. Old tables are not deleted automatically.
 
 The authority uses a single JSON snapshot to guarantee metadata atomicity, trading scalability for a conservative first implementation. Large estates may need a transactional metadata service later. Actual Fabric/Delta runtime validation remains required before deployment. Managed token-vault and caller-owned mapping dependencies without verifiable immutable identities remain ineligible for activation. Notebook deployments, business-table transactions, guardrail diagnostics and run evidence retain separate failure boundaries.
 
 
 ### Permanent pipeline identity
 
-`setup_pipeline(pipeline_mode="Test")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Registration is the only administrative Test write. Assign `PIPELINE_ID = pipeline.pipeline_id` immediately after setup, as the templates do. Read, Write and Finalize use the active session immediately. Subsequent execution of the same notebook recovers its UUID without source edits. Retain the UUID in source only when promoting across workspaces, and pass it explicitly to preserve the same logical identity across workspaces. An unregistered Live deployment must first register and test the intended identity; Live never allocates a fresh UUID. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
+`setup_pipeline(pipeline_mode="Ungoverned")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Assign `PIPELINE_ID = pipeline.pipeline_id` immediately after setup, as the templates do. Dry Run does not persist a new registration. Governed requires an existing registered and activated identity. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
 
-Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing workspace binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Test", new_pipeline=True)`; the returned session exposes its newly generated UUID. Neither action changes approved releases. Promotion adds a workspace binding and requires fresh workspace Testing and explicit activation before Live.
+Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing workspace binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)`. Neither action changes activated authority.
 
-`pipeline_result = finalize_pipeline(pipeline)` commits the Test run and its Guardrail results to Engineering metadata. Governance reads those records directly; no dictionary handoff or manual run attestation is required. Approval validates the current workspace/notebook registration, complete operation outcomes, exact contracts per table, configuration and Agreement, then freezes the approved manifest in `engineering.METADATA_PIPELINE_REGISTRY`. Test does not commit business tables; actual publication permissions and target transaction success are exercised in Live.
+`pipeline_result = finalize_pipeline(pipeline)` records the accurate completion status for persisting modes and returns a session-only summary for Dry Run. Governance validates the current workspace/notebook registration, complete accepted evidence, exact contracts per table, configuration and Agreement, then freezes the approved manifest in `engineering.METADATA_PIPELINE_REGISTRY`. Dry Run does not commit business tables; Governed execution exercises the activated publication permissions and target transaction.

@@ -28,7 +28,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         writes.append((kwargs['table_name'], kwargs['write_mode']))
         return {'dataframe': dataframe, 'published': False}
     namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
-                 'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'testing', 'status': 'succeeded'}),
+                 'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
                  'resolve_table_id': Mock(return_value='incremental-target'), 'display': Mock()}
     notebook = nbformat.read(path, as_version=4)
     for cell in notebook.cells:
@@ -39,7 +39,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         exec(compile(tree, f'{path.name}:{cell.id}', 'exec'), namespace)
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
     notebook_setup.assert_called_once_with()
-    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Test')
+    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Ungoverned')
     assert namespace['PIPELINE_ID'] == setup.return_value.pipeline_id
     expected = {
         '02_pipeline': (1, ['overwrite']),

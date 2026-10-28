@@ -231,10 +231,10 @@ def validate_authority_collections(row):
         if not approval or any(approval[key] != item[key] for key in ("pipeline_id", "workspace_id")):
             raise ValueError("Incomplete Registry selection; exact approval is missing.")
     for item in row["reservations"]:
-        if item["mode"] not in {"live", "rebind"} or not item.get("pipeline_id"):
+        if item["mode"] not in {"governed", "live", "rebind"} or not item.get("pipeline_id"):
             raise ValueError("Invalid Registry execution reservation.")
-        if item["mode"] == "live" and not item.get("revision"):
-            raise ValueError("Live reservation requires its pinned revision.")
+        if item["mode"] in {"governed", "live"} and not item.get("revision"):
+            raise ValueError("Governed reservation requires its pinned revision.")
     for item in row["profiling_claims"]:
         if not item.get("token") or not item.get("execution_id") or not item.get("expires_at"):
             raise ValueError("Incomplete renewable profiling claim.")
@@ -531,7 +531,7 @@ def activation_version(approval_id, *, context, spark_session=None, require_acti
 
 
 def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
-    """Pin approval and reserve a Live run atomically against coordinated cutover."""
+    """Pin activated authority and reserve a Governed run atomically."""
     from types import MappingProxyType
     from uuid import uuid4
     from fabricops_kit.pipeline.shared import persist_pipeline_run, pipeline_physical_bindings
@@ -543,14 +543,14 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     if registration["registration_status"] != "Active" or any(
         registration[key] != runtime.get(key) for key in ("workspace_id", "notebook_id")
     ):
-        raise ValueError("Live caller does not own the Active Engineering notebook binding.")
+        raise ValueError("Governed caller does not own the Active Engineering notebook binding.")
     token, state = read_pipeline_authority(context=context, spark_session=spark_session)
     if token != _registration_token:
-        raise ValueError("Pipeline binding changed during Live admission; retry setup.")
+        raise ValueError("Pipeline binding changed during Governed admission; retry setup.")
     current = workspace_activation(state, active_workspace_id)
     if any(run["pipeline_id"] == pipeline_id and run.get("mode") == "rebind"
            for run in current["runs"].values()):
-        raise ValueError("Pipeline notebook rebinding is in progress; retry Live setup afterward.")
+        raise ValueError("Pipeline notebook rebinding is in progress; retry Governed setup afterward.")
     approved = current["pipelines"].get(pipeline_id)
     if not approved:
         raise ValueError("No approved pipeline configuration for this workspace_id and pipeline_id.")
@@ -559,7 +559,7 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
         raise ValueError("Pipeline Registry has inconsistent table mappings or ownership.")
     tested_run = approved["testing_run"]
     if any(tested_run.get("_" + key) != registration[key] for key in ("workspace_id", "notebook_id")):
-        raise ValueError("Registered notebook changed since the approved Test; rerun Test and approve the new binding before Live.")
+        raise ValueError("Registered notebook changed since activation; refresh the reviewed activation before Governed execution.")
     agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session),
         agreement_id=approved["agreement_id"], agreement_version=approved["agreement_version"])
     validate_agreement(agreement)
@@ -573,13 +573,13 @@ def build_live_pipeline_plan(*, pipeline_id, context=None, spark_session=None):
     physical = pipeline_physical_bindings(identities, config=config, workspace_id=active_workspace_id)
     if physical != {key: item["destination"] for key, item in mappings.items()} or {
             key: sorted(item["roles"]) for key, item in identities.items()} != {key: sorted(item["roles"]) for key, item in mappings.items()}:
-        raise ValueError("Live tables or physical destinations differ from the approved Test run.")
-    plan = PipelineExecutionPlan("live", active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()), canonical_pipeline_json(identities),
+        raise ValueError("Governed tables or physical destinations differ from activated authority.")
+    plan = PipelineExecutionPlan("governed", active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()), canonical_pipeline_json(identities),
         "{}", canonical_pipeline_json(contracts), MappingProxyType({**runtime, "config": config, "scope_workspace_id": active_workspace_id,
             "_pipeline_spark": spark_session, "_pipeline_bindings": physical}), pipeline_id=pipeline_id,
         approval_id=approved["approval_id"], approved_operations_json=json.dumps(approved["operations"], default=str),
         activation_revision=current["revision"])
-    current["runs"][plan.plan_id] = {"pipeline_id": pipeline_id, "tables": sorted(identities), "destinations": list(physical.values()), "revision": current["revision"], "mode": "live"}
+    current["runs"][plan.plan_id] = {"pipeline_id": pipeline_id, "tables": sorted(identities), "destinations": list(physical.values()), "revision": current["revision"], "mode": "governed"}
     commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
     plan.evidence["lease_token"] = plan.plan_id
     try:
@@ -597,7 +597,7 @@ def verify_live_plan(plan, *, spark_session=None):
     current = workspace_activation(state, plan.workspace_id)
     lease = current["runs"].get(plan.plan_id)
     if not lease or lease.get("revision") != plan.activation_revision or lease.get("pipeline_id") != plan.pipeline_id:
-        raise ValueError("Live run has no valid pinned activation reservation.")
+        raise ValueError("Governed run has no valid pinned activation reservation.")
     approved = current["history"].get(plan.approval_id)
     active = current["pipelines"].get(plan.pipeline_id)
     if not approved or not active or active["approval_id"] != plan.approval_id:
@@ -605,11 +605,11 @@ def verify_live_plan(plan, *, spark_session=None):
     from fabricops_kit.pipeline.shared import pipeline_physical_bindings
     physical = pipeline_physical_bindings(json.loads(plan.participants_json), config=plan.runtime_context["config"], workspace_id=plan.workspace_id)
     if physical != {key: item["destination"] for key, item in pipeline_table_mappings(approved).items()}:
-        raise ValueError("Live destinations changed during execution.")
+        raise ValueError("Governed destinations changed during execution.")
     pinned = json.loads(plan.contracts_json)
     if any(any(pinned[table_id][key] != contract[key] for key in ("contract_id", "contract_version", "contract_payload_json"))
            for table_id, contract in approved["contracts"].items()):
-        raise ValueError("Live table contracts differ from approval.")
+        raise ValueError("Governed table contracts differ from activation.")
     agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=plan.runtime_context, spark_session=spark_session),
         agreement_id=approved["agreement_id"], agreement_version=approved["agreement_version"])
     validate_agreement(agreement)
