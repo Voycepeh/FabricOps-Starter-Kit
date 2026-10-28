@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 
 import pytest
 
@@ -241,6 +242,46 @@ def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monk
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
+
+
+def test_fabric_ai_suppresses_only_synapseml_protobuf_service_warning(monkeypatch):
+    """Ignore SynapseML's legacy protobuf warning without hiding other warnings."""
+    response = type("Response", (), {"iloc": ["generated response"]})()
+    frame = type(
+        "Frame", (),
+        {"ai": type("AI", (), {"generate_response": lambda *_args, **_kwargs: response})()},
+    )()
+    pandas = type("Pandas", (), {"DataFrame": staticmethod(lambda _rows: frame)})()
+
+    def fake_import(name):
+        if name == "synapse.ml.aifunc":
+            warnings.warn("google.protobuf.service module is deprecated", UserWarning)
+            warnings.warn("another SynapseML dependency warning", UserWarning)
+            return object()
+        if name == "pandas":
+            return pandas
+        raise AssertionError(name)
+
+    monkeypatch.setattr(module.importlib, "import_module", fake_import)
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        assert module._invoke_fabric_ai("prompt") == "generated response"
+
+    assert [str(item.message) for item in captured] == [
+        "another SynapseML dependency warning"
+    ]
+
+
+def test_fabric_ai_keeps_synapseml_import_failures_visible(monkeypatch):
+    """A missing or broken Fabric AI dependency remains a genuine failure."""
+    def fail_import(name):
+        if name == "synapse.ml.aifunc":
+            raise ImportError("SynapseML failed to load")
+        raise AssertionError(name)
+
+    monkeypatch.setattr(module.importlib, "import_module", fail_import)
+    with pytest.raises(ImportError, match="SynapseML failed to load"):
+        module._invoke_fabric_ai("prompt")
 
 
 def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):

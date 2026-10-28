@@ -12457,9 +12457,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._ai_dq_tolerance",
-      "source_end_line": 456,
+      "source_end_line": 467,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 445,
+      "source_start_line": 456,
       "usage": "public_flow_reachable"
     },
     {
@@ -12473,9 +12473,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._enrichment_values",
-      "source_end_line": 843,
+      "source_end_line": 854,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 829,
+      "source_start_line": 840,
       "usage": "detached"
     },
     {
@@ -12493,9 +12493,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._invoke_fabric_ai",
-      "source_end_line": 87,
+      "source_end_line": 98,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 73,
+      "source_start_line": 74,
       "usage": "detached"
     },
     {
@@ -12509,9 +12509,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_column_reference",
-      "source_end_line": 190,
+      "source_end_line": 201,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 158,
+      "source_start_line": 169,
       "usage": "public_flow_reachable"
     },
     {
@@ -12526,9 +12526,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_dq_parameters",
-      "source_end_line": 442,
+      "source_end_line": 453,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 431,
+      "source_start_line": 442,
       "usage": "public_flow_reachable"
     },
     {
@@ -12545,9 +12545,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._rows",
-      "source_end_line": 771,
+      "source_end_line": 782,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 768,
+      "source_start_line": 779,
       "usage": "public_flow_reachable"
     },
     {
@@ -12562,9 +12562,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
-      "source_end_line": 477,
+      "source_end_line": 488,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 459,
+      "source_start_line": 470,
       "usage": "public_flow_reachable"
     },
     {
@@ -12579,9 +12579,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_business_rule_context",
-      "source_end_line": 533,
+      "source_end_line": 544,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 480,
+      "source_start_line": 491,
       "usage": "public_flow_reachable"
     },
     {
@@ -12596,9 +12596,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_dq_context",
-      "source_end_line": 318,
+      "source_end_line": 329,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 293,
+      "source_start_line": 304,
       "usage": "unused"
     },
     {
@@ -12613,9 +12613,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_enrichment_context",
-      "source_end_line": 70,
+      "source_end_line": 71,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 39,
+      "source_start_line": 40,
       "usage": "public_flow_reachable"
     },
     {
@@ -12631,9 +12631,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_sensitive_data_context",
-      "source_end_line": 155,
+      "source_end_line": 166,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 115,
+      "source_start_line": 126,
       "usage": "public_flow_reachable"
     },
     {
@@ -12648,9 +12648,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_browser_state",
-      "source_end_line": 915,
+      "source_end_line": 926,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 846,
+      "source_start_line": 857,
       "usage": "unused"
     },
     {
@@ -12665,9 +12665,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.catalogue_table_options",
-      "source_end_line": 799,
+      "source_end_line": 810,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 774,
+      "source_start_line": 785,
       "usage": "unused"
     },
     {
@@ -12682,9 +12682,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.latest_enrichment_values",
-      "source_end_line": 826,
+      "source_end_line": 837,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 802,
+      "source_start_line": 813,
       "usage": "unused"
     },
     {
@@ -12699,9 +12699,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule",
-      "source_end_line": 766,
+      "source_end_line": 777,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 536,
+      "source_start_line": 547,
       "usage": "public_flow_reachable"
     },
     {
@@ -12716,9 +12716,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules",
-      "source_end_line": 428,
+      "source_end_line": 439,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 379,
+      "source_start_line": 390,
       "usage": "unused"
     },
     {
@@ -12733,9 +12733,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_enrichment",
-      "source_end_line": 112,
+      "source_end_line": 123,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 90,
+      "source_start_line": 101,
       "usage": "public_flow_reachable"
     },
     {
@@ -12750,9 +12750,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_grain_key",
-      "source_end_line": 377,
+      "source_end_line": 388,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 321,
+      "source_start_line": 332,
       "usage": "public_flow_reachable"
     },
     {
@@ -12767,9 +12767,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_sensitive_data",
-      "source_end_line": 290,
+      "source_end_line": 301,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 193,
+      "source_start_line": 204,
       "usage": "public_flow_reachable"
     },
     {
@@ -13501,19 +13501,20 @@
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "cleanup": {
+        "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
+        "suggested_action": "review_for_deletion_or_dynamic_entrypoint"
+      },
+      "contract_classification": "internal_function",
       "function_name": "preview_region",
       "function_type": "shared_function",
-      "inbound_source_references": [
-        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
-      ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.preview_region",
       "source_end_line": 427,
       "source_path": "src/fabricops_kit/widgets/shared.py",
       "source_start_line": 422,
-      "usage": "public_flow_reachable"
+      "usage": "unused"
     },
     {
       "architecture_classification": "internal",
@@ -13899,9 +13900,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
-      "source_end_line": 226,
+      "source_end_line": 241,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 212,
+      "source_start_line": 227,
       "usage": "public_flow_reachable"
     },
     {
@@ -13915,9 +13916,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_widget_exception",
-      "source_end_line": 209,
+      "source_end_line": 224,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 196,
+      "source_start_line": 211,
       "usage": "public_flow_reachable"
     },
     {
@@ -13931,9 +13932,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
-      "source_end_line": 258,
+      "source_end_line": 273,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 240,
+      "source_start_line": 255,
       "usage": "public_flow_reachable"
     },
     {
@@ -13948,9 +13949,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
-      "source_end_line": 537,
+      "source_end_line": 552,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 531,
+      "source_start_line": 546,
       "usage": "unused"
     },
     {
@@ -13965,9 +13966,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
-      "source_end_line": 529,
+      "source_end_line": 544,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 261,
+      "source_start_line": 276,
       "usage": "public_flow_reachable"
     },
     {
@@ -13982,9 +13983,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
-      "source_end_line": 237,
+      "source_end_line": 252,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 229,
+      "source_start_line": 244,
       "usage": "public_flow_reachable"
     },
     {
@@ -13998,9 +13999,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
-      "source_end_line": 617,
+      "source_end_line": 632,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 540,
+      "source_start_line": 555,
       "usage": "public_flow_reachable"
     },
     {
@@ -14031,9 +14032,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._scheduled_refresh_html",
-      "source_end_line": 644,
+      "source_end_line": 659,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 619,
+      "source_start_line": 634,
       "usage": "unused"
     },
     {
@@ -14108,9 +14109,9 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 5978,
+      "source_end_line": 6110,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 647,
+      "source_start_line": 662,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
       "usage": "public_flow_reachable",
       "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Scheduled Refresh is discovered read-only from Microsoft\nFabric and remains independent of the authored Freshness expectation. Immutable\nversions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData, Freshness, and Source Drift do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nIf the notebook runtime cannot provide AI suggestions, AI actions are disabled\nfor the widget session while manual authoring remains available. Technical\nfailure details are retained in the returned state rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions receive governed metadata,\nprofile summaries including min/max, and the three most frequent values.\nTreatment failures always block."
@@ -16009,8 +16010,8 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 111,
-        "width": 43
+        "scope": 110,
+        "width": 42
       },
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "refactor_signals": [
@@ -16018,7 +16019,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 43
+              "width": 42
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -21993,10 +21994,6 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.widgets.shared.form_section",
-      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.widgets.shared.preview_region",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
     },
     {
