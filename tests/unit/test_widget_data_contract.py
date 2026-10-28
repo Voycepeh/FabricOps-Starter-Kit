@@ -2329,7 +2329,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "Customer identifier" in review
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
-    assert "Partial mask; preserve start: 1; preserve end: 1" in review
+    assert "Partial mask; mask character: &#x27;*&#x27;; preserve start: 1; preserve end: 1" in review
     assert "Required" in review and ">Yes<" in review
     assert "required columns: customer_id" in review
     assert "required columns: col-1" not in review
@@ -3480,12 +3480,14 @@ def test_sensitive_treatment_guidance_explains_all_effective_behaviors():
 
     assert "S1234567A" in mask and "S*******A" in mask
     assert "Full mask" in mask and "partial mask" in mask
-    assert "opaque UUID" in tokenize and "persistent mapping" in tokenize
+    assert "opaque UUID" in tokenize and "persistent token mapping" in tokenize
+    assert "same token within one run" in tokenize and "across runs" in tokenize
     assert "pseudonymisation" in tokenize and "not guaranteed anonymisation" in tokenize
     assert "Original-to-token mappings are never shown here" in tokenize
     assert "550e8400-e29b-41d4-a716-446655440000" in tokenize
     assert "18-29" in bucket and "without aggregating or removing rows" in bucket
-    assert "lower boundaries are included" in bucket.lower()
+    assert "first label also covers values below the first configured bound" in bucket
+    assert "final label is open-ended" in bucket
     assert "Column removed" in remove and "before downstream checks and publication" in remove
 
 
@@ -3527,17 +3529,19 @@ def test_sensitive_guidance_updates_with_working_parameters(widget_runtime):
     assert "S*******A" in controls['treatment_help'].value
 
     controls['sensitive_treatment'].value = 'tokenize'
-    assert "persistent mapping" in controls['treatment_help'].value
+    assert "persistent token mapping" in controls['treatment_help'].value
 
 
 @pytest.mark.parametrize(
     "parameters,expected",
     [
-        ({"treatment": "mask", "preserve_start": 1, "preserve_end": 2},
-         "Partial mask; preserve start: 1; preserve end: 2"),
-        ({"treatment": "tokenize"}, "persistent mapping required for consistent reuse"),
+        ({"treatment": "mask", "preserve_start": 1, "preserve_end": 2,
+          "mask_character": "#"},
+         "Partial mask; mask character: '#'; preserve start: 1; preserve end: 2"),
+        ({"treatment": "tokenize"},
+         "persistent mapping required for consistent reuse across runs"),
         ({"treatment": "bucket", "bins": [0, 18], "labels": ["Under 18", "18+"]},
-         "Approved ranges; lower bounds: 0, 18; labels: Under 18, 18+"),
+         "first and last ranges open-ended"),
         ({"treatment": "remove"}, "Column absent from the published dataset"),
     ],
 )

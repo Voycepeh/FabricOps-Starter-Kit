@@ -330,10 +330,17 @@ def _sensitive_treatment_review(parameters: Mapping[str, Any]) -> str:
     if treatment == "mask":
         start = int(parameters.get("preserve_start") or 0)
         end = int(parameters.get("preserve_end") or 0)
+        character = str(parameters.get("mask_character") or "*")
         style = "Partial mask" if start or end else "Full mask"
-        return f"{style}; preserve start: {start}; preserve end: {end}"
+        return (
+            f"{style}; mask character: {character!r}; "
+            f"preserve start: {start}; preserve end: {end}"
+        )
     if treatment == "tokenize":
-        return "UUID tokens; persistent mapping required for consistent reuse"
+        return (
+            "UUID tokens; repeated values share a token within one run; "
+            "persistent mapping required for consistent reuse across runs"
+        )
     if treatment == "bucket":
         if "bin_width" in parameters:
             return (
@@ -345,7 +352,8 @@ def _sensitive_treatment_review(parameters: Mapping[str, Any]) -> str:
         labels = ", ".join(str(value) for value in parameters.get("labels", []))
         return (
             f"Approved ranges; lower bounds: {bins or 'not configured'}; "
-            f"labels: {labels or 'not configured'}; lower boundary included"
+            f"labels: {labels or 'not configured'}; first and last ranges open-ended; "
+            "each boundary from the second onward starts the next label"
         )
     if treatment == "remove":
         return "Column absent from the published dataset"
@@ -363,22 +371,29 @@ def _sensitive_treatment_guidance(parameters: Mapping[str, Any]) -> str:
             "or end. Short values that cannot be safely preserved are fully masked."
         ),
         "tokenize": (
-            "Replaces original values with opaque UUID identifiers. Repeated values retain the "
-            "same token only when the token mapping is reused, and a persistent mapping is "
-            "required for consistency across runs. Tokenization is pseudonymisation, not "
+            "Replaces original values with opaque UUID identifiers. Repeated values receive the "
+            "same token within one run. Consistent reuse across runs requires a persistent token "
+            "mapping. Tokenization is pseudonymisation, not "
             "guaranteed anonymisation. Original-to-token mappings are never shown here."
         ),
         "bucket": (
             "Replaces exact numeric values with configured category ranges without aggregating "
-            "or removing rows. Approved ranges use their supplied labels; fixed-width intervals "
-            "use stable equal widths. Lower boundaries are included and upper boundaries are "
-            "excluded."
+            "or removing rows."
         ),
         "remove": "Removes the entire column before downstream checks and publication.",
     }
     description = descriptions.get(treatment)
     if not description:
         return ""
+    if treatment == "bucket":
+        description += (
+            " Fixed-width intervals use stable equal widths, include their lower boundary, and "
+            "exclude their upper boundary."
+            if "bin_width" in parameters else
+            " Approved ranges use their supplied labels. The first label also covers values below "
+            "the first configured bound; each boundary from the second onward starts the next "
+            "label, and the final label is open-ended."
+        )
     example: tuple[str, str] | None = None
     if treatment == "mask":
         example = _mask_treatment_example(
