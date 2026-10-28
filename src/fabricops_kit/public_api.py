@@ -16,6 +16,7 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
     "fabricops_kit.pipeline.profile_table.profile_table",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
     "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
@@ -34,7 +35,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
     "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
     "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
-    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
 )
 
 RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API
