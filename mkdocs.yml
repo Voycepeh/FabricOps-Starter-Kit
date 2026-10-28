@@ -27,7 +27,6 @@ nav:
       - Governed Pipelines from Development to Production: solutions/dependency-aware-pipeline-activation.md
       - Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions: solutions/ai-assisted-data-contract-authoring.md
       - Data Quality Rules from Natural Language: solutions/business-rules-to-data-quality.md
-      - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
   - Guided Demo:
       - Overview: guided-demo.md
       - "0A - Prepare Fabric Artifacts": guided-demo/00A-prepare-fabric-artifacts.md
@@ -56,6 +55,7 @@ nav:
       - PySpark Transformation: reference/pyspark-transformation.md
       - Glossary: glossary.md      
   - Maintainer:
+      - Function Call Graph & Architecture Explorer: function-call-graph.md
       - Work in Progress:
           - Production Table to Data Agent: solutions/production-table-to-data-agent.md
           - Scan Effective Data Access: solutions/effective-data-access.md
