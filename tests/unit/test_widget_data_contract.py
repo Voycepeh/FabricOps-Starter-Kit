@@ -1782,6 +1782,10 @@ def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkey
     controls["rerun_column_description"].click()
     assert "Recovered suggestion" in controls["column_description_ai"].value
     assert controls["accept_column_description"].disabled is False
+    assert state["message"] == "Column AI suggestion generated after retry."
+    assert state["_ai_failure"] == ""
+    assert state["_ai_failure_category"] == ""
+    assert state["_ai_failure_diagnostic"] == {}
 
 
 def test_provider_failure_shows_actionable_retry_and_retains_detail(widget_runtime, monkeypatch):

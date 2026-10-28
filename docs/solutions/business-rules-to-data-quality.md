@@ -61,13 +61,18 @@ AI helps author the rules. **FabricOps enforces them.**
 
     ![FabricOps AI assisted DQ rule authoring implementation](../assets/business-rule-dq-implementation.svg){ .fabricops-solution-diagram }
 
-    FabricOps places the complete instruction into a single row temporary pandas DataFrame with a column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
+    FabricOps places the complete instruction into a single-row temporary PySpark DataFrame with a column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
     ```python
-    frame.ai.generate_response("{fabricops_prompt}")
+    frame.ai.generate_response(
+        prompt="{fabricops_prompt}",
+        is_prompt_template=True,
+        output_col="fabricops_response",
+        error_col="fabricops_ai_error",
+    )
     ```
 
-    The DataFrame is only the interface used to invoke Fabric AI Functions. FabricOps is not processing the business table row by row with AI.
+    The PySpark path runs safely from synchronous notebook widget callbacks even when the notebook event loop is active. The DataFrame is only the interface used to invoke Fabric AI Functions. FabricOps is not processing the business table row by row with AI.
 
     The response must be structured JSON containing atomic rule proposals. Before a proposal can be added to the draft, FabricOps validates the rule type, referenced columns, parameter shape, selected column constraints, and executable content.
 

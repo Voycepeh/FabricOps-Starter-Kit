@@ -14111,7 +14111,7 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 6005,
+      "source_end_line": 6061,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
       "source_start_line": 635,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
