@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
 <title id="title">FabricOps AI-assisted sensitive data authoring implementation</title>
-<desc id="desc">FabricOps assembles governed metadata and profile evidence, sends one prompt through Microsoft Fabric AI Functions, validates structured sensitivity and treatment suggestions, keeps the final decisions with a human, records them in the Data Contract, and applies approved treatments deterministically in the pipeline.</desc>
+<desc id="desc">FabricOps assembles governed metadata with optional profile evidence, sends one prompt through Microsoft Fabric AI Functions, validates structured sensitivity and treatment suggestions, keeps the final decisions with a human, records them in the Data Contract, and applies approved treatments deterministically in the pipeline.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#667085"/></marker></defs>
 <rect width="1200" height="620" fill="#ffffff"/>
 <style>
@@ -14,18 +14,18 @@
 <text x="68" y="198" class="b">Table identity + description</text>
 <text x="68" y="222" class="b">Column metadata + descriptions</text>
 <text x="68" y="246" class="b">Current classification</text>
-<text x="68" y="270" class="b">Profile statistics</text>
-<text x="68" y="294" class="b">Limited frequency evidence</text>
+<text x="68" y="270" class="b">Profile statistics (optional)</text>
+<text x="68" y="294" class="b">Frequency evidence (optional)</text>
 <text x="68" y="326" class="m">No raw business-table rows</text>
 <path d="M308 245 H360" class="line"/>
 <text x="372" y="118" class="ey">FABRIC AI FUNCTIONS</text>
 <rect x="360" y="138" width="300" height="214" rx="7" class="focus"/>
-<text x="380" y="168" class="h">One-row temporary pandas DataFrame</text>
+<text x="380" y="168" class="h">One-row temporary PySpark DataFrame</text>
 <text x="380" y="201" class="m">fabricops_prompt = full instruction</text>
 <text x="380" y="229" class="b">Context is serialized into one prompt</text>
 <text x="380" y="251" class="b">cell, not sent as business-data rows.</text>
 <text x="380" y="285" class="m">frame.ai.generate_response(</text>
-<text x="380" y="306" class="m">  "{fabricops_prompt}")</text>
+<text x="380" y="306" class="m">  prompt="{fabricops_prompt}", template=True)</text>
 <text x="380" y="334" class="b">Returns structured JSON suggestions</text>
 <path d="M660 245 H712" class="line"/>
 <text x="724" y="118" class="ey">FABRICOPS + HUMAN REVIEW</text>

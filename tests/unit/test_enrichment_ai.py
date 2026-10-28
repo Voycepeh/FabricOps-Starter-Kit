@@ -31,5 +31,5 @@ def test_suggest_enrichment_is_description_only() -> None:
 
 def test_suggest_enrichment_requires_only_description_prompt() -> None:
     """A missing Description prompt fails clearly without Classification coupling."""
-    with pytest.raises(ValueError, match="description prompt"):
+    with pytest.raises(RuntimeError, match="description prompt"):
         suggest_enrichment({}, description_prompt="", invoke=lambda _prompt: "unused")

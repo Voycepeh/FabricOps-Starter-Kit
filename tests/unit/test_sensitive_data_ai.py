@@ -203,42 +203,57 @@ def test_configured_prompt_and_metadata_only_context_are_sent():
     assert "Do not include raw values" in prompts[0]
 
 
-def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monkeypatch, capsys):
-    """Register Fabric AI Functions and suppress its notebook console chatter."""
-    calls = []
-    response = type("Response", (), {"iloc": [" generated response "]})()
+def _spark_ai_runtime(calls, *, response=" generated response ", error=None):
+    """Return a small Spark AI Functions boundary for invocation tests."""
+    row = {"fabricops_response": response, "fabricops_ai_error": error}
+
+    class Result:
+        def select(self, *columns):
+            calls.append(("select", columns))
+            return self
+
+        def first(self):
+            calls.append(("first",))
+            return row
 
     class AI:
-        def generate_response(self, *args, **kwargs):
+        def generate_response(self, **kwargs):
             print("Calling getAccessToken from PyTridentTokenLibrary")
             print("ai.generate_response: 100%", file=__import__("sys").stderr)
-            calls.append(("generate_response", args, kwargs))
-            return response
+            calls.append(("generate_response", kwargs))
+            return Result()
 
     class Frame:
         ai = AI()
 
-    class Pandas:
-        @staticmethod
-        def DataFrame(rows):
-            calls.append(("DataFrame", rows))
+    class Spark:
+        def createDataFrame(self, rows):
+            calls.append(("createDataFrame", rows))
             return Frame()
+
+    return Spark()
+
+
+def test_fabric_ai_invocation_uses_spark_accessor_and_returns_response(monkeypatch, capsys):
+    """Use Spark AI Functions and suppress its notebook console chatter."""
+    calls = []
 
     def fake_import(name):
         calls.append(("import", name))
-        if name == "synapse.ml.aifunc":
+        if name == "synapse.ml.spark.aifunc":
             return object()
-        if name == "pandas":
-            return Pandas()
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
+    monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
 
     assert module._invoke_fabric_ai("prompt text") == "generated response"
-    assert calls[0] == ("import", "synapse.ml.aifunc")
-    assert calls[1] == ("import", "pandas")
-    assert calls[2] == ("DataFrame", [{"fabricops_prompt": "prompt text"}])
-    assert calls[3] == ("generate_response", ("{fabricops_prompt}",), {})
+    assert calls[0] == ("import", "synapse.ml.spark.aifunc")
+    assert calls[1] == ("createDataFrame", [{"fabricops_prompt": "prompt text"}])
+    assert calls[2] == ("generate_response", {
+        "prompt": "{fabricops_prompt}", "is_prompt_template": True,
+        "output_col": "fabricops_response", "error_col": "fabricops_ai_error",
+    })
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
@@ -246,23 +261,17 @@ def test_fabric_ai_invocation_registers_accessor_and_returns_first_response(monk
 
 def test_fabric_ai_suppresses_only_synapseml_protobuf_service_warning(monkeypatch):
     """Ignore SynapseML's legacy protobuf warning without hiding other warnings."""
-    response = type("Response", (), {"iloc": ["generated response"]})()
-    frame = type(
-        "Frame", (),
-        {"ai": type("AI", (), {"generate_response": lambda *_args, **_kwargs: response})()},
-    )()
-    pandas = type("Pandas", (), {"DataFrame": staticmethod(lambda _rows: frame)})()
+    calls = []
 
     def fake_import(name):
-        if name == "synapse.ml.aifunc":
+        if name == "synapse.ml.spark.aifunc":
             warnings.warn("google.protobuf.service module is deprecated", UserWarning)
             warnings.warn("another SynapseML dependency warning", UserWarning)
             return object()
-        if name == "pandas":
-            return pandas
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
+    monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
         assert module._invoke_fabric_ai("prompt") == "generated response"
@@ -275,12 +284,12 @@ def test_fabric_ai_suppresses_only_synapseml_protobuf_service_warning(monkeypatc
 def test_fabric_ai_keeps_synapseml_import_failures_visible(monkeypatch):
     """A missing or broken Fabric AI dependency remains a genuine failure."""
     def fail_import(name):
-        if name == "synapse.ml.aifunc":
+        if name == "synapse.ml.spark.aifunc":
             raise ImportError("SynapseML failed to load")
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fail_import)
-    with pytest.raises(ImportError, match="SynapseML failed to load"):
+    with pytest.raises(module.AIConfigurationError, match="PySpark AI Functions"):
         module._invoke_fabric_ai("prompt")
 
 
@@ -289,21 +298,47 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     class Frame:
         ai = None
 
-    class Pandas:
-        @staticmethod
-        def DataFrame(*_args, **_kwargs):
-            return Frame()
-
     def fake_import(name):
-        if name == "synapse.ml.aifunc":
+        if name == "synapse.ml.spark.aifunc":
             return object()
-        if name == "pandas":
-            return Pandas()
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
+    spark = type("Spark", (), {"createDataFrame": lambda *_args: Frame()})()
+    monkeypatch.setattr(module, "get_spark_session", lambda: spark)
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
         module._invoke_fabric_ai("prompt")
+
+
+def test_fabric_ai_invocation_works_while_notebook_event_loop_is_running(monkeypatch):
+    """A synchronous widget invocation must not nest the active notebook event loop."""
+    import asyncio
+
+    calls = []
+    monkeypatch.setattr(module.importlib, "import_module", lambda _name: object())
+    monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
+
+    async def invoke_from_notebook_loop():
+        assert asyncio.get_running_loop().is_running()
+        return module._invoke_fabric_ai("prompt")
+
+    assert asyncio.run(invoke_from_notebook_loop()) == "generated response"
+
+
+def test_fabric_ai_provider_error_retains_diagnostic(monkeypatch):
+    """Provider failures remain debuggable while the user receives safe guidance."""
+    calls = []
+    monkeypatch.setattr(module.importlib, "import_module", lambda _name: object())
+    monkeypatch.setattr(
+        module, "get_spark_session",
+        lambda: _spark_ai_runtime(calls, response=None, error="capacity unavailable"),
+    )
+    with pytest.raises(module.AIProviderError, match="capacity unavailable") as failure:
+        module._invoke_fabric_ai("prompt")
+    diagnostic = module.ai_failure_diagnostic(failure.value)
+    assert diagnostic["category"] == "provider"
+    assert diagnostic["recoverable"] is True
+    assert "capacity unavailable" in diagnostic["detail"]
 
 
 def test_sensitive_context_and_prompt_include_approved_profile_samples():

@@ -38,7 +38,7 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 | Responsibility | What happens |
 | --- | --- |
 | **Human configures and decides** | Review or change the sensitivity and treatment for each governed column, then record the final post-treatment classification. |
-| **AI supports** | Uses governed metadata and profile evidence to suggest **Direct PII**, **Indirect PII**, or **Not PII** and, for sensitive columns, a supported treatment and parameters. |
+| **AI supports** | Uses governed schema and contract metadata, enriched with profile evidence when available, to suggest **Direct PII**, **Indirect PII**, or **Not PII** and, for sensitive columns, a supported treatment and parameters. |
 | **FabricOps handles deterministically** | Validates supported values and treatment parameters, records the reviewed decisions in the Data Contract, and applies the approved **Mask, Bucket, Tokenize, or Remove** treatment when the pipeline writes the governed output. |
 
 ## Under the hood
@@ -52,7 +52,7 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 
     ### What FabricOps gives the AI
 
-    FabricOps does not send the whole source table. It builds a compact context from governed metadata and profiling evidence, including the table identity and description plus each column's name, data type, description, current classification, profile statistics, and limited frequency evidence.
+    FabricOps does not send the whole source table. It builds a compact context from governed metadata, including the table identity and description plus each column's name, data type, description, and current classification. Profiling is optional; when it exists, FabricOps adds profile statistics and limited frequency evidence.
 
     Raw business-table rows are not included in this context.
 
@@ -60,13 +60,18 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 
     ![FabricOps AI-assisted sensitive data authoring implementation](../assets/sensitive-data-ai-implementation.svg){ .fabricops-solution-diagram }
 
-    FabricOps places the complete instruction into a single-row temporary pandas DataFrame with one column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
+    FabricOps places the complete instruction into a single-row temporary PySpark DataFrame with one column named `fabricops_prompt`, then invokes Microsoft Fabric AI Functions through:
 
     ```python
-    frame.ai.generate_response("{fabricops_prompt}")
+    frame.ai.generate_response(
+        prompt="{fabricops_prompt}",
+        is_prompt_template=True,
+        output_col="fabricops_response",
+        error_col="fabricops_ai_error",
+    )
     ```
 
-    This is a one-row AI request. The DataFrame is only the interface used to invoke Fabric AI Functions; FabricOps is not asking the model to process the business table row by row.
+    This is a one-row AI request. The PySpark path runs safely from synchronous notebook widget callbacks even when the notebook event loop is active. The DataFrame is only the interface used to invoke Fabric AI Functions; FabricOps is not asking the model to process the business table row by row.
 
     The response is expected as structured JSON covering the supplied columns, including the suggested PII type, reason, treatment, action, and treatment parameters. Before a suggestion is shown, FabricOps validates the returned columns and values against the supported sensitive-data model.
 
@@ -84,7 +89,7 @@ FabricOps separates the parts that need human judgement from the parts AI can ac
 
     Suppose profiling and metadata show a customer column that contains sensitive identifying information.
 
-    1. **AI supports the first pass.** FabricOps provides the governed metadata and profile evidence to Fabric AI Functions, which can suggest that the column is **Direct PII** and propose one of the supported treatments.
+    1. **AI supports the first pass.** FabricOps provides governed schema and contract metadata to Fabric AI Functions, adding profile evidence when available. The AI can suggest that the column is **Direct PII** and propose one of the supported treatments.
     2. **A human makes the final decision.** The reviewer can accept or change the sensitivity and treatment, configure any required treatment parameters, and record the appropriate post-treatment classification.
     3. **The Data Contract records the decision.** The reviewed configuration becomes part of the governed contract rather than remaining an AI response.
     4. **FabricOps applies it consistently.** After the contract is activated, the pipeline applies the approved treatment before publishing the governed output.

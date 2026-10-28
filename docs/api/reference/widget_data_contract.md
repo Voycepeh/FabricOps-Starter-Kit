@@ -108,9 +108,10 @@ null values ignored by value checks are not counted as passing rows.
 Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
 Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
 Actual violation counts remain visible even when within the authored limit.
-If the notebook runtime cannot provide AI suggestions, AI actions are disabled
-for the widget session while manual authoring remains available. Technical
-failure details are retained in the returned state rather than shown in the editor.
+Missing AI configuration disables AI actions for the widget session while
+manual authoring remains available. Execution and provider failures show a
+retryable message. Technical failure details are retained in the returned
+state rather than shown in the editor.
 When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
 Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
 Not PII from governed metadata and profile evidence. Editable draft state remains
@@ -122,8 +123,9 @@ columns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex
 types offer Remove. Text defaults to full masking; partial preservation is optional.
 Numeric buckets use approved fixed ranges or an anchored interval width.
 Text grouping and distribution-derived boundaries belong in Engineering
-exploration and transformations. AI suggestions receive governed metadata,
-profile summaries including min/max, and the three most frequent values.
+exploration and transformations. AI suggestions always receive governed
+schema and contract metadata. When profiling exists, they also receive profile
+summaries including min/max and the three most frequent values.
 Treatment failures always block.
 
 </div>
@@ -145,9 +147,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:634`
+`fabricops_kit/widgets/widget_data_contract.py:635`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L634-L6001">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L635-L6005">View on GitHub</a>
 </div>
 
 

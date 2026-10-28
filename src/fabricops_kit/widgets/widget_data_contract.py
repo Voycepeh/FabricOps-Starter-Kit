@@ -16,6 +16,7 @@ from fabricops_kit.pipeline.shared import dq_tolerance_parameter
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.enrichment_shared import (
     PII_LABELS,
+    ai_failure_diagnostic,
     build_ai_business_rule_context,
     build_ai_enrichment_context,
     build_ai_sensitive_data_context,
@@ -684,9 +685,10 @@ def widget_data_contract(
     Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
     Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
     Actual violation counts remain visible even when within the authored limit.
-    If the notebook runtime cannot provide AI suggestions, AI actions are disabled
-    for the widget session while manual authoring remains available. Technical
-    failure details are retained in the returned state rather than shown in the editor.
+    Missing AI configuration disables AI actions for the widget session while
+    manual authoring remains available. Execution and provider failures show a
+    retryable message. Technical failure details are retained in the returned
+    state rather than shown in the editor.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
     Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
     Not PII from governed metadata and profile evidence. Editable draft state remains
@@ -698,8 +700,9 @@ def widget_data_contract(
     types offer Remove. Text defaults to full masking; partial preservation is optional.
     Numeric buckets use approved fixed ranges or an anchored interval width.
     Text grouping and distribution-derived boundaries belong in Engineering
-    exploration and transformations. AI suggestions receive governed metadata,
-    profile summaries including min/max, and the three most frequent values.
+    exploration and transformations. AI suggestions always receive governed
+    schema and contract metadata. When profiling exists, they also receive profile
+    summaries including min/max and the three most frequent values.
     Treatment failures always block.
 
     Examples
@@ -740,7 +743,8 @@ def widget_data_contract(
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
-        "_ai_unavailable": "", "_ai_failure": "", "_ai_buttons": [],
+        "_ai_unavailable": "", "_ai_failure": "", "_ai_failure_category": "",
+        "_ai_failure_diagnostic": {}, "_ai_buttons": [],
     }
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
@@ -1085,19 +1089,19 @@ def widget_data_contract(
         return bool(ai_enrichment.get("enabled")) and not state["_ai_unavailable"]
 
     def ai_failure_message(exc: Exception) -> str:
-        """Disable unavailable AI for this widget session and retain its diagnostic."""
-        if isinstance(exc, (RuntimeError, ImportError)):
-            state["_ai_failure"] = str(exc)
+        """Show an actionable AI error and retain its diagnostic for debugging."""
+        diagnostic = ai_failure_diagnostic(exc)
+        state["_ai_failure"] = diagnostic["detail"]
+        state["_ai_failure_category"] = diagnostic["category"]
+        state["_ai_failure_diagnostic"] = diagnostic
+        if not diagnostic["recoverable"]:
             state["_validation_errors"].pop("business_rule_ai", None)
-            state["_ai_unavailable"] = (
-                "AI suggestions unavailable in this notebook session. Continue editing manually."
-            )
+            state["_ai_unavailable"] = diagnostic["message"]
             for button in state["_ai_buttons"]:
                 button.disabled = True
             open_with_ai_button.disabled = True
             ai_availability.value = f"<p>{state['_ai_unavailable']}</p>"
-            return state["_ai_unavailable"]
-        return str(exc)
+        return str(diagnostic["message"])
 
     def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
         return shared.render_searchable_selector(
