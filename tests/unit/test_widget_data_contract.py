@@ -1450,6 +1450,32 @@ def test_missing_profiled_key_candidate_shows_no_suggestion_without_profile_fall
     assert widget_runtime["calls"]["profiles"] == []
 
 
+def test_ai_suggestions_use_schema_context_when_table_has_never_been_profiled(
+    widget_runtime, monkeypatch,
+):
+    """AI authoring remains available with schema and metadata context alone."""
+    monkeypatch.setattr(
+        module.contracts, "get_column_profile_context",
+        lambda **_kwargs: {"kind": "unavailable", "message": "Not yet profiled."},
+    )
+
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    assert captures["grain"]
+    assert captures["grain"][0]["table_name"] == "orders"
+    assert [row["column_name"] for row in captures["grain"][0]["columns"]] == [
+        "column_0", "column_1",
+    ]
+    assert all("row_count" not in row for row in captures["grain"][0]["columns"])
+    assert captures["enrichment"][0]["column_name"] == "column_0"
+    assert captures["enrichment"][0]["data_type"] == "long"
+    assert captures["enrichment"][0]["profile_evidence"] == []
+    assert captures["sensitive"][0]["columns"][0]["profile_evidence"] == {}
+    assert "Suggested column description" in controls["column_description_ai"].value
+    assert controls["column_description"].disabled is False
+
+
 def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_runtime, monkeypatch):
     """Consume Engineering key evidence without asking AI to choose the key."""
     widget_runtime["catalogue"][0]["profile_key_candidates_json"] = {
@@ -1729,22 +1755,60 @@ def test_table_context_change_marks_loaded_sensitive_ai_stale(widget_runtime, mo
 
 
 def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
-    """A failed Description re-run must surface the error instead of an old suggestion."""
+    """A recoverable Description failure replaces stale output and supports retry."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
+    responses = iter([
+        RuntimeError("temporary provider timeout"),
+        {"Description": "Recovered suggestion"},
+    ])
 
+    def suggest(*_args, **_kwargs):
+        response = next(responses)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    monkeypatch.setattr(module, "suggest_enrichment", suggest)
+
+    controls["rerun_column_description"].click()
+
+    assert "could not be generated" in controls["column_description_ai"].value
+    assert "temporary provider timeout" in state["_ai_failure"]
+    assert state["_ai_failure_category"] == "execution"
+    assert controls["accept_column_description"].disabled is True
+    assert controls["rerun_column_description"].disabled is False
+
+    controls["rerun_column_description"].click()
+    assert "Recovered suggestion" in controls["column_description_ai"].value
+    assert controls["accept_column_description"].disabled is False
+    assert state["message"] == "Column AI suggestion generated after retry."
+    assert state["_ai_failure"] == ""
+    assert state["_ai_failure_category"] == ""
+    assert state["_ai_failure_diagnostic"] == {}
+
+
+def test_provider_failure_shows_actionable_retry_and_retains_detail(widget_runtime, monkeypatch):
+    """Provider errors remain retryable and expose their detail only in diagnostic state."""
+    from fabricops_kit.widgets.enrichment_shared import AIProviderError
+
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
     monkeypatch.setattr(
-        module,
-        "suggest_enrichment",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("AI Functions unavailable")),
+        module, "suggest_enrichment",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AIProviderError("capacity limit for provider deployment")
+        ),
     )
 
     controls["rerun_column_description"].click()
 
-    assert "AI suggestions unavailable" in controls["column_description_ai"].value
-    assert state["_ai_failure"] == "AI Functions unavailable"
-    assert controls["accept_column_description"].disabled is True
-    assert controls["rerun_column_description"].disabled is True
+    assert "provider access or capacity" in controls["column_description_ai"].value
+    assert "capacity limit" not in controls["column_description_ai"].value
+    assert "capacity limit" in state["_ai_failure"]
+    assert state["_ai_failure_category"] == "provider"
+    assert controls["rerun_column_description"].disabled is False
+    assert controls["column_description"].disabled is False
 
 
 @pytest.mark.parametrize("button, service, pane", [
@@ -1754,17 +1818,14 @@ def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkey
     ("suggest_grain", "suggest_grain_key", "grain_ai"),
     ("resolve_business_rule", "suggest_business_rule", "business_proposal"),
 ])
-@pytest.mark.parametrize("failure", [
-    RuntimeError("This event loop is already running"),
-    ModuleNotFoundError("No module named 'synapse.ml.aifunc'"),
-])
-def test_unavailable_ai_disables_actions_and_keeps_manual_authoring(
-    widget_runtime, monkeypatch, button, service, pane, failure
+def test_configuration_failure_disables_ai_and_keeps_manual_authoring(
+    widget_runtime, monkeypatch, button, service, pane
 ):
-    """Runtime failures disable AI throughout the session without showing internals."""
+    """Configuration failures disable AI while preserving diagnostics and manual editing."""
     state, captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     attempts = []
+    failure = ModuleNotFoundError("No module named 'synapse.ml.spark.aifunc'")
 
     def unavailable(*_args, **_kwargs):
         attempts.append(service)
@@ -1774,8 +1835,9 @@ def test_unavailable_ai_disables_actions_and_keeps_manual_authoring(
     controls[button].click()
 
     assert attempts == [service]
-    assert state["_ai_failure"] == str(failure)
-    assert "AI suggestions unavailable" in controls[pane].value
+    assert str(failure) in state["_ai_failure"]
+    assert state["_ai_failure_category"] == "configuration"
+    assert "not configured" in controls[pane].value
     assert str(failure) not in controls[pane].value
     for name in (
         "open_with_ai", "rerun_table_description", "rerun_column_description",
@@ -1794,7 +1856,7 @@ def test_unavailable_ai_disables_actions_and_keeps_manual_authoring(
     assert {name: len(values) for name, values in captures.items()} == successful_calls
     assert controls["rerun_column_description"].disabled
     assert controls["rerun_sensitive"].disabled
-    assert "AI suggestions unavailable" in controls["column_description_ai"].value
+    assert "not configured" in controls["column_description_ai"].value
 
 
 @pytest.mark.parametrize("failure_action", ["resolve_business_rule", "rerun_column_description"])
@@ -1804,7 +1866,7 @@ def test_unavailable_ai_clears_previous_business_generation_validation(
     """An earlier AI response error must not block manual saves after AI becomes unavailable."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    failures = iter([ValueError("Invalid AI response"), RuntimeError("This event loop is already running")])
+    failures = iter([ValueError("Invalid AI response"), ModuleNotFoundError("AI runtime missing")])
 
     def unavailable(*_args, **_kwargs):
         raise next(failures)
@@ -1827,13 +1889,13 @@ def test_unavailable_ai_clears_previous_business_generation_validation(
 
 
 def test_unavailable_ai_during_open_stops_further_calls(widget_runtime, monkeypatch):
-    """The first runtime failure disables automatic AI work and the Open with AI action."""
+    """A configuration failure stops automatic AI work and preserves manual authoring."""
     captures = _enable_ai(widget_runtime, monkeypatch)
     attempts = []
 
     def unavailable(*_args, **_kwargs):
         attempts.append("grain")
-        raise RuntimeError("This event loop is already running")
+        raise ModuleNotFoundError("No module named 'synapse.ml.spark.aifunc'")
 
     monkeypatch.setattr(module, "suggest_grain_key", unavailable)
     state = widget_runtime["start"]()
@@ -1843,8 +1905,8 @@ def test_unavailable_ai_during_open_stops_further_calls(widget_runtime, monkeypa
     assert attempts == ["grain"]
     assert captures == {"enrichment": [], "sensitive": [], "grain": []}
     assert state["current"] is not None
-    assert "AI suggestions unavailable" in state["message"]
-    assert "event loop" not in state["message"]
+    assert "not configured" in state["message"]
+    assert "synapse" not in state["message"]
     assert controls["open_with_ai"].disabled
     assert controls["rerun_table_description"].disabled
     assert controls["rerun_column_description"].disabled
@@ -3553,7 +3615,8 @@ def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_
     assert controls["resolve_business_rule"].description == "Generate DQ Rules"
     assert not controls["resolve_business_rule"].disabled
     assert controls["apply_business_rule"].disabled
-    assert "Example generation failure" in controls["business_proposal"].value
+    assert "could not be generated" in controls["business_proposal"].value
+    assert "Example generation failure" in state["_ai_failure"]
     assert widget_runtime["calls"]["draft"] == []
 
 

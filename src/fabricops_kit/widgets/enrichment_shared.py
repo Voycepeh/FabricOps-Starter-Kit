@@ -18,6 +18,7 @@ from fabricops_kit.data_contract.shared import (
     validate_sensitive_data_parameters,
     sensitive_data_treatments_for_type,
 )
+from fabricops_kit.io.shared import get_spark_session
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 _PROFILE_CONTEXT_FIELDS = (
@@ -71,31 +72,104 @@ def build_ai_enrichment_context(
     }
 
 
+class AIConfigurationError(RuntimeError):
+    """Report an unavailable or incomplete Fabric AI Functions configuration."""
+
+
+class AIProviderError(RuntimeError):
+    """Report a response failure returned by the configured AI provider."""
+
+
+class AIExecutionError(RuntimeError):
+    """Report a local failure while executing a configured AI request."""
+
+
+def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
+    """Return a user-safe AI diagnostic while retaining the original exception detail."""
+    details = []
+    current: BaseException | None = exc
+    while current is not None and len(details) < 4:
+        detail = f"{type(current).__name__}: {current}"
+        if detail not in details:
+            details.append(detail)
+        current = current.__cause__
+    if isinstance(exc, (AIConfigurationError, ImportError, ModuleNotFoundError)):
+        return {
+            "category": "configuration",
+            "message": (
+                "AI suggestions are not configured for this notebook. Verify that Fabric AI "
+                "Functions and the required runtime are enabled. Manual editing remains available."
+            ),
+            "recoverable": False,
+            "exception_type": type(exc).__name__,
+            "detail": " <- ".join(details),
+        }
+    if isinstance(exc, AIProviderError):
+        return {
+            "category": "provider",
+            "message": "The AI provider could not return a suggestion. Review the provider access or capacity, then retry.",
+            "recoverable": True,
+            "exception_type": type(exc).__name__,
+            "detail": " <- ".join(details),
+        }
+    return {
+        "category": "execution",
+        "message": "The AI suggestion could not be generated. Retry, or continue editing manually.",
+        "recoverable": True,
+        "exception_type": type(exc).__name__,
+        "detail": " <- ".join(details),
+    }
+
+
 def _invoke_fabric_ai(prompt: str) -> str:
-    """Invoke the Microsoft Fabric AI Functions pandas extension."""
+    """Invoke Microsoft Fabric PySpark AI Functions without nesting notebook event loops."""
     # SynapseML imports legacy generated protobuf services while registering the
-    # pandas AI accessor. The accessor is required; the deprecated service API is
-    # not used by FabricOps. Keep this suppression local to that import so other
-    # dependency warnings and import failures remain visible.
+    # Spark AI accessor. Keep this suppression local so other dependency warnings
+    # and import failures remain visible.
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
             message=r"google\.protobuf\.service module is deprecated.*",
             category=UserWarning,
         )
-        importlib.import_module("synapse.ml.aifunc")
-    pandas = importlib.import_module("pandas")
-    frame = pandas.DataFrame([{"fabricops_prompt": prompt}])
+        try:
+            importlib.import_module("synapse.ml.spark.aifunc")
+        except (ImportError, ModuleNotFoundError) as exc:
+            raise AIConfigurationError(
+                "Microsoft Fabric PySpark AI Functions are unavailable in this runtime."
+            ) from exc
+    try:
+        spark = get_spark_session()
+        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
+    except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
+        raise AIConfigurationError(
+            "A running Microsoft Fabric Spark session is required for AI suggestions."
+        ) from exc
     ai = getattr(frame, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
-        raise RuntimeError(
-            "Microsoft Fabric AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
+        raise AIConfigurationError(
+            "Microsoft Fabric PySpark AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
         )
     stdout = StringIO()
     stderr = StringIO()
-    with redirect_stdout(stdout), redirect_stderr(stderr):
-        result = ai.generate_response("{fabricops_prompt}")
-    return str(result.iloc[0]).strip()
+    try:
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            result = ai.generate_response(
+                prompt="{fabricops_prompt}", is_prompt_template=True,
+                output_col="fabricops_response", error_col="fabricops_ai_error",
+            )
+            row = result.select("fabricops_response", "fabricops_ai_error").first()
+    except Exception as exc:
+        raise AIExecutionError("Fabric AI Functions execution failed.") from exc
+    if row is None:
+        raise AIProviderError("Fabric AI Functions returned no result row.")
+    error = row["fabricops_ai_error"]
+    if error:
+        raise AIProviderError(str(error))
+    response = str(row["fabricops_response"] or "").strip()
+    if not response:
+        raise AIProviderError("Fabric AI Functions returned an empty response.")
+    return response
 
 
 def suggest_enrichment(
@@ -106,7 +180,7 @@ def suggest_enrichment(
 ) -> dict[str, str]:
     """Return one transient AI Description suggestion."""
     if not str(description_prompt).strip():
-        raise ValueError("An AI Enrichment description prompt is required.")
+        raise AIConfigurationError("An AI Enrichment description prompt is required.")
     call = invoke or _invoke_fabric_ai
     context_json = json.dumps(context, sort_keys=True, default=str)
     guidance = ""
@@ -206,7 +280,7 @@ def suggest_sensitive_data(
 ) -> list[dict[str, Any]]:
     """Return validated transient Sensitive Data rule suggestions."""
     if not str(prompt).strip():
-        raise ValueError("An AI Sensitive Data prompt is required.")
+        raise AIConfigurationError("An AI Sensitive Data prompt is required.")
     allowed_columns = {
         str(row.get("column_name") or ""): str(row.get("column_id") or "")
         for row in context.get("columns", [])
@@ -332,7 +406,7 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
 def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> dict[str, Any]:
     """Return one transient grain wording suggestion grounded by profiled key evidence."""
     if not str(prompt).strip():
-        raise ValueError("An AI Grain prompt is required.")
+        raise AIConfigurationError("An AI Grain prompt is required.")
     allowed_columns = {
         str(row.get("column_name") or "") for row in context.get("columns", [])
         if str(row.get("column_name") or "")
@@ -390,7 +464,7 @@ Context:
 def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> list[dict[str, Any]]:
     """Return validated, transient suggestions for the four column-level DQ families."""
     if not str(prompt).strip():
-        raise ValueError("An AI Data Quality prompt is required.")
+        raise AIConfigurationError("An AI Data Quality prompt is required.")
     allowed_columns = {
         str(row.get("column_name") or "") for row in context.get("columns", [])
         if str(row.get("column_name") or "")
@@ -557,7 +631,7 @@ def suggest_business_rule(
     if not business_requirement:
         raise ValueError("Describe what must be true before generating DQ Rules.")
     if not str(prompt).strip():
-        raise ValueError("An AI Business Rule prompt is required.")
+        raise AIConfigurationError("An AI Business Rule prompt is required.")
 
     allowed_columns = {
         str(row.get("column_name") or "").strip()
@@ -927,7 +1001,11 @@ def catalogue_table_browser_state(
 
 
 __all__ = [
+    "AIConfigurationError",
+    "AIExecutionError",
+    "AIProviderError",
     "CATALOGUE_TABLE",
+    "ai_failure_diagnostic",
     "catalogue_table_browser_state",
     "catalogue_table_options",
     "build_ai_enrichment_context",

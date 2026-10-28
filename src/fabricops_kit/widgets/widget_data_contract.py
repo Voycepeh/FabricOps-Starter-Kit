@@ -16,6 +16,7 @@ from fabricops_kit.pipeline.shared import dq_tolerance_parameter
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.enrichment_shared import (
     PII_LABELS,
+    ai_failure_diagnostic,
     build_ai_business_rule_context,
     build_ai_enrichment_context,
     build_ai_sensitive_data_context,
@@ -684,9 +685,10 @@ def widget_data_contract(
     Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
     Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
     Actual violation counts remain visible even when within the authored limit.
-    If the notebook runtime cannot provide AI suggestions, AI actions are disabled
-    for the widget session while manual authoring remains available. Technical
-    failure details are retained in the returned state rather than shown in the editor.
+    Missing AI configuration disables AI actions for the widget session while
+    manual authoring remains available. Execution and provider failures show a
+    retryable message. Technical failure details are retained in the returned
+    state rather than shown in the editor.
     When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
     Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
     Not PII from governed metadata and profile evidence. Editable draft state remains
@@ -698,8 +700,9 @@ def widget_data_contract(
     types offer Remove. Text defaults to full masking; partial preservation is optional.
     Numeric buckets use approved fixed ranges or an anchored interval width.
     Text grouping and distribution-derived boundaries belong in Engineering
-    exploration and transformations. AI suggestions receive governed metadata,
-    profile summaries including min/max, and the three most frequent values.
+    exploration and transformations. AI suggestions always receive governed
+    schema and contract metadata. When profiling exists, they also receive profile
+    summaries including min/max and the three most frequent values.
     Treatment failures always block.
 
     Examples
@@ -740,7 +743,8 @@ def widget_data_contract(
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
-        "_ai_unavailable": "", "_ai_failure": "", "_ai_buttons": [],
+        "_ai_unavailable": "", "_ai_failure": "", "_ai_failure_category": "",
+        "_ai_failure_diagnostic": {}, "_ai_buttons": [],
     }
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
@@ -1085,19 +1089,32 @@ def widget_data_contract(
         return bool(ai_enrichment.get("enabled")) and not state["_ai_unavailable"]
 
     def ai_failure_message(exc: Exception) -> str:
-        """Disable unavailable AI for this widget session and retain its diagnostic."""
-        if isinstance(exc, (RuntimeError, ImportError)):
-            state["_ai_failure"] = str(exc)
+        """Show an actionable AI error and retain its diagnostic for debugging."""
+        diagnostic = ai_failure_diagnostic(exc)
+        state["_ai_failure"] = diagnostic["detail"]
+        state["_ai_failure_category"] = diagnostic["category"]
+        state["_ai_failure_diagnostic"] = diagnostic
+        if not diagnostic["recoverable"]:
             state["_validation_errors"].pop("business_rule_ai", None)
-            state["_ai_unavailable"] = (
-                "AI suggestions unavailable in this notebook session. Continue editing manually."
-            )
+            state["_ai_unavailable"] = diagnostic["message"]
             for button in state["_ai_buttons"]:
                 button.disabled = True
             open_with_ai_button.disabled = True
             ai_availability.value = f"<p>{state['_ai_unavailable']}</p>"
-            return state["_ai_unavailable"]
-        return str(exc)
+        return str(diagnostic["message"])
+
+    def ai_recovered(message: str, *, remaining_errors: bool = False) -> None:
+        """Clear the current recoverable failure after its operation succeeds."""
+        state["_ai_failure"] = ""
+        state["_ai_failure_category"] = ""
+        state["_ai_failure_diagnostic"] = {}
+        if remaining_errors:
+            set_status(
+                "Another AI suggestion still needs attention. Review the highlighted AI panels.",
+                warning=True,
+            )
+        else:
+            set_status(message)
 
     def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
         return shared.render_searchable_selector(
@@ -1440,6 +1457,7 @@ def widget_data_contract(
         def run_grain_ai(*_args: Any) -> None:
             if suggest_grain.disabled or not ai_available():
                 return
+            retrying = "grain_key" in ai_errors
             try:
                 render_grain_profile_evidence()
                 profile_rows = []
@@ -1474,6 +1492,14 @@ def widget_data_contract(
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
                 )
                 ai_state["table"]["grain_key"] = suggestion
+                ai_errors.pop("grain_key", None)
+                if retrying:
+                    ai_recovered(
+                        "Grain AI suggestion generated after retry.",
+                        remaining_errors=bool(
+                            ai_errors or state["_validation_errors"].get("business_rule_ai")
+                        ),
+                    )
                 key_text = (
                     ", ".join(profiled_key_columns)
                     if profiled_key_columns else "No row key suggestion available"
@@ -1492,7 +1518,9 @@ def widget_data_contract(
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 ai_state["table"].pop("grain_key", None)
                 accept_grain.disabled = True
-                grain_ai.value = f"<p>{html.escape(ai_failure_message(exc))}</p>"
+                message = ai_failure_message(exc)
+                ai_errors["grain_key"] = message
+                grain_ai.value = f"<p>{html.escape(message)}</p>"
 
         def accept_grain_ai(_button: Any) -> None:
             suggestion = ai_state["table"].get("grain_key") or {}
@@ -1622,6 +1650,7 @@ def widget_data_contract(
             if not force and ai_state["table"].get("description"):
                 render_table_ai()
                 return
+            retrying = "table_enrichment" in ai_errors
             try:
                 if state.get("_opening_with_ai"):
                     set_open_progress("Generating table description…", 50)
@@ -1646,6 +1675,13 @@ def widget_data_contract(
                 if previous_value and new_value != previous_value:
                     mark_all_sensitive_stale()
                 ai_errors.pop("table_enrichment", None)
+                if retrying:
+                    ai_recovered(
+                        "Table AI suggestion generated after retry.",
+                        remaining_errors=bool(
+                            ai_errors or state["_validation_errors"].get("business_rule_ai")
+                        ),
+                    )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 message = ai_failure_message(exc)
                 ai_state["table"]["description"] = {"error": message, "stale": False}
@@ -3570,6 +3606,8 @@ def widget_data_contract(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
             description, _ = _column_editable_values(column_id)
+            error_key = (column_id, "enrichment")
+            retrying = error_key in ai_errors
             try:
                 if state.get("_opening_with_ai"):
                     set_open_progress("Loading first-column profile…", 65)
@@ -3590,11 +3628,18 @@ def widget_data_contract(
                 suggestions["description"] = {"value": new_value, "stale": False}
                 if previous_value and new_value != previous_value:
                     mark_sensitive_stale(column_id)
-                ai_errors.pop((column_id, "enrichment"), None)
+                ai_errors.pop(error_key, None)
+                if retrying:
+                    ai_recovered(
+                        "Column AI suggestion generated after retry.",
+                        remaining_errors=bool(
+                            ai_errors or state["_validation_errors"].get("business_rule_ai")
+                        ),
+                    )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 message = ai_failure_message(exc)
                 suggestions["description"] = {"error": message, "stale": False}
-                ai_errors[(column_id, "enrichment")] = message
+                ai_errors[error_key] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
@@ -3614,6 +3659,8 @@ def widget_data_contract(
             description, classification = _column_editable_values(column_id)
             if use_description_suggestion:
                 description = _effective_ai_description(column_id)
+            error_key = (column_id, "sensitive_data")
+            retrying = error_key in ai_errors
             try:
                 if state.get("_opening_with_ai"):
                     set_open_progress("Assessing first column for sensitive data…", 88)
@@ -3655,11 +3702,18 @@ def widget_data_contract(
                         f"No Sensitive Data assessment matched {selected_name!r}."
                     )
                 suggestions["sensitive_data"] = {**result[0], "stale": False}
-                ai_errors.pop((column_id, "sensitive_data"), None)
+                ai_errors.pop(error_key, None)
+                if retrying:
+                    ai_recovered(
+                        "Sensitive Data AI suggestion generated after retry.",
+                        remaining_errors=bool(
+                            ai_errors or state["_validation_errors"].get("business_rule_ai")
+                        ),
+                    )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 message = ai_failure_message(exc)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
-                ai_errors[(column_id, "sensitive_data")] = message
+                ai_errors[error_key] = message
                 selected_name = str(selected.get("column_name") or column_id)
                 set_status(
                     f"Sensitive Data AI suggestion skipped for {selected_name}: {message}",
@@ -4850,6 +4904,7 @@ def widget_data_contract(
             business_active_saved["rule_id"] = ""
             business_review_source.value = "Generated proposals"
             render_business_proposal()
+            retrying = "business_rule_ai" in state["_validation_errors"]
             business_proposal.value = "<p role='status'>Generating proposals for review…</p>"
             try:
                 profiles = dict(runtime_context.get("column_profiles") or {})
@@ -4895,6 +4950,11 @@ def widget_data_contract(
                 refresh_resolved_options()
                 hydrate_resolved_business()
                 set_validation_error("business_rule_ai")
+                if retrying:
+                    ai_recovered(
+                        "DQ Rule suggestions generated after retry.",
+                        remaining_errors=bool(ai_errors),
+                    )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 business_resolved.clear()
                 refresh_resolved_options()
