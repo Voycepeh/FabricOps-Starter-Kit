@@ -1,4 +1,4 @@
-"""Joint Run, approval, admission, rebind and profiling publication proofs."""
+"""Joint Run, approval, admission and rebind publication proofs."""
 # ruff: noqa: D103, F811
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -86,14 +86,10 @@ def test_missing_duplicate_or_altered_references_block_live(runs_delta, monkeypa
 
 
 
-@pytest.mark.parametrize("competitor", ["approval", "rebind", "profiling"])
+@pytest.mark.parametrize("competitor", ["approval", "rebind"])
 def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, competitor):
     r = runs_delta
     test, request, _approved = approved_runtime(r, monkeypatch)
-    from types import SimpleNamespace
-    physical = test.runtime_context["_pipeline_bindings"]["table0"]
-    monkeypatch.setattr(pipeline, "profiling_context_key", lambda *a, **kw: ("profile-key", {"table_id": "table0", "workspace_id": "DEV", "physical": physical}))
-    monkeypatch.setattr(pipeline, "profiling_completion_history", lambda *a, **kw: {})
     commit = authority.commit_pipeline_authority
     barrier, thread = Barrier(2), local()
     def guarded(state, **kwargs):
@@ -113,9 +109,6 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
         if competitor == "rebind":
             return pipeline.resolve_pipeline_registration(test.pipeline_id,
                 context={**r.context, "notebook_id": "replacement"}, previous_binding=(r.context["workspace_id"], r.context["notebook_id"]), spark_session=r.spark)
-        claim = pipeline.claim_table_profile("table0", "standard", "read", context={**r.context,
-            "execution_plan": SimpleNamespace(plan_id="profile-owner", permits_persistence=True)}, spark_session=r.spark)
-        return None if claim.get("status") == "skipped" else claim
     def attempt(function):
         try:
             return function()
@@ -133,8 +126,6 @@ def test_live_admission_races_share_the_registry_cas(runs_delta, monkeypatch, co
         authority.release_pipeline_lease(outcomes[0], spark_session=r.spark)
     else:
         assert not current["runs"]
-        if competitor == "profiling":
-            assert state["profiling_claims"]["profile-key:standard"]["execution_id"] == "profile-owner"
 
 
 def test_exact_content_readback_after_lost_authority_acknowledgement(authority_delta, monkeypatch):
@@ -154,33 +145,6 @@ def test_exact_content_readback_after_lost_authority_acknowledgement(authority_d
     monkeypatch.setattr(DeltaTable, "merge", lambda self, *a, **kw: LostAck(original(self, *a, **kw)))
     committed = authority.commit_pipeline_authority(state, expected_token=token, context=r.context, spark_session=r.spark)
     assert authority.read_pipeline_authority(context=r.context, spark_session=r.spark) == (committed, state)
-
-
-
-
-def test_persisted_profile_renewal_completion_and_owner_fencing(authority_delta, monkeypatch):
-    from types import SimpleNamespace
-    from datetime import timedelta
-    r = authority_delta
-    physical = {"workspace_id": "workspace", "item_id": "lakehouse", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
-    descriptor = {"table_id": "orders", "workspace_id": "DEV", "physical": physical}
-    monkeypatch.setattr(pipeline, "profiling_context_key", lambda *a, **kw: ("profile-key", descriptor))
-    monkeypatch.setattr(pipeline, "profiling_completion_history", lambda *a, **kw: {})
-    now = datetime.now(UTC)
-    context = {**r.context, "execution_plan": SimpleNamespace(plan_id="profile-owner", permits_persistence=True)}
-    claim = pipeline.claim_table_profile("orders", "standard", "read", context=context, spark_session=r.spark, now=now)
-    pipeline.maintain_table_profile_claim(claim, context=context, spark_session=r.spark, now=now + timedelta(seconds=20))
-    with pytest.raises(pipeline.ProfilingConflict):
-        pipeline.maintain_table_profile_claim({**claim, "token": "foreign"}, context=context, spark_session=r.spark, now=now)
-    completed = pipeline.maintain_table_profile_claim(claim, context=context, spark_session=r.spark, complete=True, now=now + timedelta(seconds=30))
-    native = authority.authority_records(context=r.context, spark_session=r.spark)
-    assert native["profiling_claims"][0]["completed_at"] == completed
-    # An unrelated Engineering registration preserves the owned completion claim.
-    pipeline.resolve_pipeline_registration(context=r.context, spark_session=r.spark)
-    assert authority.authority_records(context=r.context, spark_session=r.spark)["profiling_claims"] == native["profiling_claims"]
-    pipeline.maintain_table_profile_claim(claim, context=context, spark_session=r.spark, complete=False, now=now + timedelta(seconds=31))
-    assert not authority.authority_records(context=r.context, spark_session=r.spark)["profiling_claims"]
-
 
 def test_rebound_notebook_requires_a_new_finalized_test_and_decision(runs_delta, monkeypatch):
     r = runs_delta

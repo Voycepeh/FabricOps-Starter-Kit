@@ -15741,7 +15741,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "8361b73d88d236d909033c410af3eee9f23a80c1",
+      "revision": "a36a5020a55b5a41286261f1094f819bfc735e64",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -17318,7 +17318,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:ec258e7ee1d0017e74e118255061d313b66cbcdce75c1939349bf47a8e34df13",
+      "source_digest": "sha256:a0f4a25f7124a8ee7af306577debd7b73a499956ede0c13100441c02560f6edf",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

@@ -2122,7 +2122,6 @@ METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
     "registrations": ["fabricops_kit.pipeline.shared.commit_pipeline_registration"],
     "approvals": ["fabricops_kit.activated_pipeline.shared.approve_pipeline_release"],
     "reservations": ["fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
-    "profiling_claims": ["fabricops_kit.pipeline.shared.claim_table_profile", "fabricops_kit.pipeline.shared.maintain_table_profile_claim"],
 }
 
 # Column responsibility for the generated schema view. The Registry is stored

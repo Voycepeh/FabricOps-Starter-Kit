@@ -28,7 +28,7 @@ def authority(runtime, monkeypatch, tmp_path):
     contracts, diagnostics, registrations = [], [], []
     monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (central["token"], copy.deepcopy(registrations)))
     agreement = {"agreement_id": "agreement", "agreement_version": "1", "start_date": "2020-01-01", "expiry_date": "2099-01-01"}
-    central = {"token": "initial", "state": {"workspaces": {}, "registrations": [], "profiling_claims": {}}, "fail": False}
+    central = {"token": "initial", "state": {"workspaces": {}, "registrations": []}, "fail": False}
     lock = Lock()
     def records(table, **kwargs):
         return {"METADATA_PIPELINE_RUN": list(saved.values()), "METADATA_DATA_CONTRACT": contracts,

@@ -138,11 +138,6 @@ RESERVATION_FIELDS = [("workspace_id", "string", False), ("reservation_id", "str
                       ("pipeline_id", "string", False), ("mode", "string", False),
                       ("tables", "strings", False), ("revision", "string"),
                       ("destinations", [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"])]
-CLAIM_FIELDS = [("claim_key", "string", False), ("token", "string", False), ("key", "string", False),
-                ("table_id", "string", False), ("workspace_id", "string", False),
-                ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
-                ("activity", "string", False), ("trigger", "string", False),
-                ("expires_at", "string", False), ("execution_id", "string", False), ("completed_at", "string")]
 PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
                         ("status", "string", False), ("results_persisted", "boolean"),
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
@@ -417,8 +412,7 @@ def metadata_table_schema_registry() -> dict[str, Any]:
              ("selections", [("workspace_id", "string", False), ("pipeline_id", "string", False),
                              ("approval_id", "string", False)], False),
              ("table_ownership", OWNERSHIP_FIELDS, False),
-             ("reservations", RESERVATION_FIELDS, False),
-             ("profiling_claims", CLAIM_FIELDS, False), *audit],
+             ("reservations", RESERVATION_FIELDS, False), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",
