@@ -206,4 +206,4 @@ For implementation details:
 - [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the whole pipeline and promote the pipeline to Production.
 - [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) — lifecycle stages and per-call profiling controls.
 - [`profile_table()`](../api/reference/profile_table.md) — statistical profiling, frequency distributions, and Grain discovery limits.
-- [Function Reference](../reference/index.md) — lower-level FabricOps APIs and orchestrators.
+- [Function Reference](../reference/index.md) — browse the FabricOps public functions, including pipeline setup, Read/Write orchestration, profiling, and finalization.
