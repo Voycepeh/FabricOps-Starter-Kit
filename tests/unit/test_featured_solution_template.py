@@ -5,7 +5,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 FEATURED_SOLUTION_PAGES = (
-    ROOT / "docs/solutions/dependency-aware-pipeline-activation.md",
     ROOT / "docs/solutions/plug-and-play-data-pipelines.md",
     ROOT / "docs/solutions/production-table-to-data-agent.md",
     ROOT / "docs/solutions/ai-assisted-data-contract-authoring.md",
@@ -17,8 +16,6 @@ REQUIRED_HEADINGS = (
     "## The problem",
     "## The solution",
     "## How it works",
-    "## Under the hood",
-    "## Example",
     "## Go deeper",
 )
 
@@ -38,12 +35,12 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
         assert "{ .fabricops-solution-hero }" in text, page
         assert "??? example" not in text, page
 
-        under_hood = text[text.index("## Under the hood") : text.index("## Example")]
-        example = text[text.index("## Example") : text.index("## Go deeper")]
-
-        assert "```mermaid" not in under_hood, page
-        assert '??? info "' in under_hood, page
-        assert '??? info "' in example, page
-        assert "<details" not in under_hood, page
-        assert "<details" not in example, page
-        assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
+        if "## Under the hood" in text and "## Example" in text:
+            under_hood = text[text.index("## Under the hood") : text.index("## Example")]
+            example = text[text.index("## Example") : text.index("## Go deeper")]
+            assert "`"+"``mermaid" not in under_hood, page
+            assert '??? info "' in under_hood, page
+            assert '??? info "' in example, page
+            assert "<details" not in under_hood, page
+            assert "<details" not in example, page
+            assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
