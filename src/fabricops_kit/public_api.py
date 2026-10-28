@@ -15,6 +15,8 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
     "fabricops_kit.pipeline.profile_table.profile_table",
+    "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+    "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
     "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
     "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
@@ -27,8 +29,6 @@ SUPPORTED_PUBLIC_API = (
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
-    "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-    "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
     "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
     "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
