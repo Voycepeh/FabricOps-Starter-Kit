@@ -128,35 +128,36 @@ def _inspector(row, roles, results=()):
 
 
 def setup_pipeline(
-    *, pipeline_id: str | None = None, pipeline_mode: str = "Test",
+    *, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned",
     new_pipeline: bool = False, previous_workspace_id: str | None = None,
     previous_notebook_id: str | None = None,
 ):
-    """Start an isolated pipeline using exactly Test or Live.
+    """Start an isolated pipeline in Dry Run, Ungoverned or Governed mode.
 
-    Test evaluates reads, transformations and Guardrails without business or
-    metadata commits during operations. Explicit finalize_pipeline commits the
-    Test run and Guardrail results for activation review. Engineering registration
-    may also write during setup. Select frozen contracts in the returned interface before
-    the first operation; headless Test explicitly uses No Contract. Live resolves
-    only the approved workspace_id manifest and retains revision/ownership checks.
+    Dry Run evaluates real reads, transformations, profiling and optionally
+    selected contract Guardrails without persisting target data or operational
+    state. Ungoverned executes without Data Contracts while retaining operational
+    checks and blocks writes to tables already governed in the workspace.
+    Governed resolves only activated workspace authority and enforces its exact
+    contract versions, destinations and ownership throughout the run.
     Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
     Parameters
     ----------
     pipeline_id : str | None, optional
         Permanent UUIDv4. Omit to recover the exact notebook binding or register
-        a new UUID in Test. The session exposes pipeline.pipeline_id; retain it in
-        source only for cross-workspace promotion. Live never allocates a new UUID.
+        a new UUID in Ungoverned mode. Dry Run may use a session-only UUID and
+        never registers it. Governed never allocates a new UUID.
         A changed same-workspace_id binding requires both previous notebook IDs.
-    pipeline_mode : {"Test", "Live"}, default="Test"
-        Evaluation-only operations or execution under an approved manifest.
+    pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
+        Preview without writing, execute without contracts, or execute with
+        activated contracts enforced.
     new_pipeline : bool, default=False
         Explicitly create a new identity for an independent notebook copy. Omit
         pipeline_id when set. An already registered notebook is rejected.
     previous_workspace_id, previous_notebook_id : str | None, optional
         Supply both old binding IDs to explicitly rebind a reuploaded notebook.
-        Rebinding requires Test mode and no active Live runs.
+        Rebinding requires Ungoverned mode and no active Governed runs.
 
     Returns
     -------
@@ -178,14 +179,14 @@ def setup_pipeline(
 
     Fabric cell events identify failures, not successful notebook completion.
     Call finalize_pipeline after all Reads, transformations and Writes.
-    Neither a successful Write nor interpreter shutdown proves completion. Test
-    results are committed only by explicit finalization.
+    Neither a successful Write nor interpreter shutdown proves completion. Dry
+    Run finalization returns only a session summary and does not persist it.
 
     Raises
     ------
     ValueError
         For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
-        missing Live approval.
+        missing Governed activation.
     RuntimeError
         If setup_notebook() has not completed successfully for the current
         execution, or a Spark session is unavailable.
@@ -193,10 +194,10 @@ def setup_pipeline(
     Examples
     --------
     >>> context = setup_notebook()
-    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-    >>> independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
-    >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
+    >>> independent_copy = setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)
+    >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned",
     ...     previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
 
     """
@@ -205,14 +206,14 @@ def setup_pipeline(
     if pipeline_id is not None:
         from fabricops_kit.pipeline.shared import validate_pipeline_id
         pipeline_id = validate_pipeline_id(pipeline_id)
-    if pipeline_mode not in {"Test", "Live"}:
-        raise ValueError("pipeline_mode must be exactly Test or Live.")
+    if pipeline_mode not in {"Dry Run", "Ungoverned", "Governed"}:
+        raise ValueError("pipeline_mode must be exactly Dry Run, Ungoverned or Governed.")
     if not isinstance(new_pipeline, bool) or (new_pipeline and pipeline_id is not None):
         raise ValueError("new_pipeline=True requires an omitted pipeline_id.")
     if (previous_workspace_id is None) != (previous_notebook_id is None):
         raise ValueError("Supply both previous_workspace_id and previous_notebook_id for rebinding.")
-    if previous_workspace_id is not None and (pipeline_id is None or new_pipeline or pipeline_mode != "Test"):
-        raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Test'.")
+    if previous_workspace_id is not None and (pipeline_id is None or new_pipeline or pipeline_mode != "Ungoverned"):
+        raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Ungoverned'.")
     return start_pipeline_session(
         pipeline_id, pipeline_mode,
         inspector=_inspector,

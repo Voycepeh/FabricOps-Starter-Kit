@@ -347,7 +347,7 @@ def test_live_ignores_diagnostics_and_rejects_changed_write_mode(authority, monk
     summary = live.run_result
     assert json.loads(summary["warnings_json"]) == []
     live = service.build_live_pipeline_plan(pipeline_id="4c7ae400-85ab-4023-9427-e8fde20bd596", context=state.context)
-    with pytest.raises(ValueError, match="approved Test"):
+    with pytest.raises(ValueError, match="activated authority"):
         with live:
             state.operation(live, 0, write_mode="append")
     assert live.run_result["status"] == "failed"
@@ -514,7 +514,7 @@ def test_rebound_notebook_cannot_run_an_old_test_approval(authority, monkeypatch
     state.approve(run)
     monkeypatch.setattr(pipeline, "read_pipeline_registry", lambda **kw: (state.central["token"], [{
         "pipeline_id": plan.pipeline_id, "workspace_id": "canary", "registration_status": "Active", "notebook_id": "replacement"}]))
-    with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
+    with pytest.raises(ValueError, match="refresh the reviewed activation"):
         service.build_live_pipeline_plan(pipeline_id=plan.pipeline_id, context={**state.context, "notebook_id": "replacement"})
     assert not state.current()["runs"]
 

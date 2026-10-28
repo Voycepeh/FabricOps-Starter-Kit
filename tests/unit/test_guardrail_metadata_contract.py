@@ -265,7 +265,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
     assert row["guardrail_rule_id"] == "rule-1"
     assert row["guardrail_version"] == 3
     assert row["run_id"] == "run-1"
-    assert row["execution_type"] == "live"
+    assert row["execution_type"] == "governed"
     assert row["table_id"] == "table-a"
     assert row["table_name"] == "orders"
     assert row["guardrail_type"] == "schema"

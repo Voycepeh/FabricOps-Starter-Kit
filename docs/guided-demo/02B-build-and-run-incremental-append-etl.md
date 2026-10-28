@@ -11,9 +11,9 @@
 ![File upload](../assets/2b/File%20Upload.png)
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial No Contract Test, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate the due profiles automatically; successful Test finalization saves the source and prepared target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Test does not publish business targets, advance checkpoints or grant approval. Target observations describe prepared input. Live continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
-    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
+    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -50,8 +50,8 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
-PIPELINE_MODE = "Test"  # Test or Live
+PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
+PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
     pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
@@ -61,15 +61,15 @@ PIPELINE_ID = pipeline.pipeline_id
 
 
 
-After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test operations never publish business data or operational observations; finalization commits the Test outcome. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+After Governance freezes contracts, use Dry Run to select exact frozen versions for preview validation. Dry Run never publishes business data or operational observations, and finalization returns only a session summary. Governed activations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
-Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require approved Live publication. Advance the demo day only after publication succeeds.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require persistent publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 in Fabric with approved Live publication
+## Run Day 1 in Fabric with persistent publication
 
 For Day 1 , we load 8 rows of data from 
 Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
@@ -122,9 +122,9 @@ Each Read and Write block displays its actual DataFrame directly after orchestra
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Restart the session and repeat Day 1 with a fresh Testing plan
+## Restart the session and repeat Day 1 with a fresh Dry Run
 
-Run through setup again with approved Live publication, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
+Run through setup again with persistent publication, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
 
 </div>
 </div>
@@ -197,7 +197,7 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
+The following records are committed by successful runs with persistent publication and routed to the Metadata Lakehouse configured by `00_env_config`. Dry Run retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
@@ -215,7 +215,7 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
 
 1. Upgrade through the explicit [Processing State cutover](../maintainer/metadata-v2-target-model.md#processing-state-upgrade), preserving the existing accepted progress and reconciling old publications. Run `setup_metadata_tables()` to validate `METADATA_PROCESSING_STATE`; the old table is not additively evolved or aliased. Restart the owning notebook's Fabric session so it loads the corrected package.
 2. Read Bronze and Silver explicitly with `read_lakehouse_table()`. Verify Bronze contains exactly M001–M012, Silver has unique, non-null movement keys, and every existing Silver business row equals the corresponding transformed Bronze row. Use the notebook's Transform expression, including `movement_date`, `quantity_in` and `quantity_out`. Compare all business columns, excluding FabricOps audit columns. **Stop if any existing key has conflicting values, unexpected rows, or duplicates.** This repair applies to this immutable Append demo; it is not a general repair for mutable source history.
-3. Build a fresh **Live** plan in the same owning notebook, with the approved active source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Evaluation-only Testing can validate the repair input. Publication to a Live-owned destination requires the approved Live configuration; if the repair changes Read strategy, complete Testing and coordinated approval of that repair configuration first.
+3. Build a fresh **Governed** plan in the same owning notebook, with the activated source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Dry Run can validate the repair input. Publication to a Governed destination requires the approved Governed configuration; if the repair changes Read strategy, complete validation and coordinated approval of that repair configuration first.
 4. Construct and inspect only the missing keys before choosing to publish:
 
     ```python
@@ -239,14 +239,14 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     display(missing)
     ```
 
-    For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append"`, and the fresh Live plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
+    For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append"`, and the fresh Governed plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
 6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
 
 `METADATA_PROCESSING_STATE` records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while typed publication receipts allow recovery across run IDs. Exact Write retries recover the original persisted source members even when pending in-memory snapshots were lost. The Preview rename and schema replacement require the explicit [Processing State cutover](../maintainer/metadata-v2-target-model.md#processing-state-upgrade); setup rejects the legacy table rather than silently starting empty progress.
 
 New writes stage an exact batch receipt before publication. Recovery verifies its Delta commit and target marker; legacy activity-only staged observations are not automatically promoted. A fresh target with a populated Silver table and no accepted baseline still fails safely. If the subset checks above do not hold, reconcile the exact source-to-target relationship with its owner rather than resetting production metadata.
 
-The Write result distinguishes `published`, `already_applied`, and `empty_incremental_scope`; Testing reports no publication. `already_applied` means the exact batch was verified. SCD row metrics remain `Not available` when the runtime cannot measure business changes reliably.
+The Write result distinguishes `published`, `already_applied`, and `empty_incremental_scope`; Dry Run reports no publication. `already_applied` means the exact batch was verified. SCD row metrics remain `Not available` when the runtime cannot measure business changes reliably.
 
 ### Reset the disposable demo environment
 
@@ -259,7 +259,7 @@ An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silv
 3. Remove only the `METADATA_PROCESSING_STATE` checkpoints and baselines for the `inventory_movements` → `inventory_movements_incremental` relationship and current environment. Remove their linked publication receipts only when no retained members reference them. Do not clear state for other pipelines.
 4. Set `DEMO_DAY = 1`.
 5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
-6. Run the notebook with an existing approved Live configuration, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
+6. Run the notebook with an existing Governed activation, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
 
 !!! warning "Keep incremental state aligned"
 

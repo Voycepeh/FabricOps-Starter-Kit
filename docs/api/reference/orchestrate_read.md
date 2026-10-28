@@ -90,7 +90,7 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 dict
     Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
 
-Raises RuntimeError when no pipeline is active or a Live stage fails, and
+Raises RuntimeError when no pipeline is active or a persistent stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
 
 ## Raises / Errors
@@ -105,15 +105,15 @@ Define store, schema, table_name and any full/incremental/query options.
 Spark, execution authority and reporting come from setup_pipeline. The result
 retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
 register pipeline-level participation for subsequent Writes; this is not
-exact DataFrame lineage. Live blocks failed checks; Test never commits.
+exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
 target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
 Profiling uses the complete source with frozen contract policies and shared
-Live completion history. Test reuses an unfiltered full Read DataFrame; query
+persisted completion history. Dry Run reuses an unfiltered full Read DataFrame; query
 and incremental Reads still profile the complete physical source. Successful
-Test finalization saves the calculated observations for Data Contract authoring
-without repeating the profiling scan or consuming Live schedules. Guardrail
+Dry Run retains calculated observations only in the session without consuming
+persisted schedules. Guardrail
 checks run regardless of profiling eligibility.
 
 </div>
@@ -125,9 +125,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:23`
+`fabricops_kit/pipeline/orchestrate_read.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L142">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L143">View on GitHub</a>
 </div>
 
 

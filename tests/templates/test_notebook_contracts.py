@@ -166,10 +166,10 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "**Table**, **Columns**, and **Review**" in source
     assert "Freezing creates an immutable candidate for Engineering validation" in source
     assert "Governance authoring and Engineering validation intentionally loop" in source
-    assert "Activation records exact Test, Contract and Agreement references" in source
+    assert "Activation records exact validation, Contract and Agreement references" in source
     assert "METADATA_PIPELINE_REGISTRY" in source
-    assert "Observe locally → Govern globally → Test locally → Activate locally" in source
-    assert "complete Test in each target workspace before local activation" in source
+    assert "Observe locally → Govern globally → Preview locally → Activate locally" in source
+    assert "complete validation evidence in each target workspace before local activation" in source
     assert "METADATA_ACTIVATION_STATE" not in source
     for demoted_widget in (
         "widget_enrich_table_metadata",
@@ -209,27 +209,29 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "freezing does not activate" in normalized["step_3"]
     assert "immutable data contract" in normalized["step_3"]
 
-    assert "# step 4. evaluate frozen data contracts" in normalized["step_4"]
-    assert "no contract" in normalized["step_4"]
-    assert "test does not publish business data or commit any operational metadata" in normalized["step_4"]
-    assert "finalize_pipeline(contracts)" in normalized["step_4"]
+    assert "# step 4. preview and enforce frozen data contracts" in normalized["step_4"]
+    assert "dry run" in normalized["step_4"]
+    assert "does not register a new pipeline" in normalized["step_4"]
+    assert "finalize_pipeline(pipeline)" in normalized["step_4"]
+    assert "refuses to write any table that is already governed" in normalized["step_4"]
     assert "incomplete" in normalized["step_4"]
 
-    assert "# step 5. activate the tested pipeline and promote to production" in normalized["step_5"]
+    assert "# step 5. activate data contracts and deploy" in normalized["step_5"]
     assert "exact effective data agreement" in normalized["step_5"]
     assert "review the affected release" in normalized["step_5"]
     assert "fabric or ci tooling" in normalized["step_5"]
-    assert "deploy the tested notebook" in normalized["step_5"]
+    assert "deploy the reviewed notebook" in normalized["step_5"]
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
-    assert "same tested workflow in the production workspace" in normalized["step_6"]
-    assert "approved workspace activated pipeline manifest" in normalized["step_6"]
+    assert "same pipeline workflow in the production workspace" in normalized["step_6"]
+    assert "activated workspace authority" in normalized["step_6"]
+    assert "do not pass an execution-plan argument" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (
         "author and freeze the data contract",
-        "validate the frozen data contract",
-        "activate the tested pipeline and promote",
+        "preview and enforce the frozen data contract",
+        "activate data contracts and deploy",
         "run the pipeline in production",
     )
     lifecycle_positions = [normalized["overview"].index(step) for step in lifecycle_steps]
@@ -478,15 +480,16 @@ def test_guided_demo_pages_match_the_notebook_split():
     assert "02A-full-refresh-demo.md" in step_3
 
 
-def test_guided_demo_explains_explicit_testing_writes_and_contract_selection():
-    """The executable 02A walkthrough keeps the initial unselected run and later target validation."""
+def test_guided_demo_explains_three_execution_modes():
+    """The executable walkthrough defaults to Ungoverned and explains Dry Run governance."""
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
 
-    assert 'PIPELINE_MODE = "Test"' in step_2a
+    assert 'PIPELINE_MODE = "Ungoverned"' in step_2a
     assert "PIPELINE_TESTING_WRITES" not in step_2a
-    assert "finalize_pipeline(CONTRACTS)" in step_2a
-    assert "Guardrail" in step_4 and "commits the complete test run and guardrail results" in step_4.casefold()
+    assert "finalize_pipeline(pipeline)" in step_2a
+    assert "Dry Run" in step_4 and "does not register a new pipeline" in step_4
+    assert "refuses to write any table that is already governed" in step_4
 
 
 

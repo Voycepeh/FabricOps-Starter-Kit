@@ -219,7 +219,7 @@ def test_read_only_testing_does_not_consume_schedule(metadata):
     assert metadata.store == before and not metadata.rows['METADATA_PIPELINE_RUN']
     metadata.profiler.assert_called_once()
     assert metadata.profiler.call_args.kwargs['activities'] == {'standard', 'grain', 'frequency'}
-    with pytest.raises(RuntimeError, match='Test cannot claim'):
+    with pytest.raises(RuntimeError, match='Dry Run cannot claim'):
         shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context)
 
 

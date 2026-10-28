@@ -126,7 +126,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     ### Setup Pipeline
 
-    **Call `setup_pipeline()` once after Environment Configuration.** It resolves the current environment and central Governance authority, selects the applicable Data Contracts and initializes `METADATA_PIPELINE_RUN`. Interactive Testing offers exact frozen versions or No Contract for all participants; Live resolves the approved environment revision.
+    **Call `setup_pipeline()` once after Environment Configuration.** It resolves the current environment and central Governance authority. Dry Run offers optional exact frozen versions, Ungoverned runs without contracts, and Governed resolves the activated environment revision. Persisting modes initialize `METADATA_PIPELINE_RUN`; Dry Run keeps its summary in the session.
 
     ### Read side
 
@@ -144,19 +144,19 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
     2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
-    3. In Live mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
+    3. In Ungoverned or Governed mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
 
-    Evaluation-only Testing runs checks and profiles prepared input without business publication; run records and Guardrail diagnostics remain in memory. Only permanent UUID registration writes to the Engineering registry. Explicit `finalize_pipeline()` records complete-run status after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
+    Dry Run evaluates checks and profiles prepared input without business publication; run records and Guardrail diagnostics remain in memory. Explicit `finalize_pipeline()` records complete-run status for persisting modes and returns a session-only Dry Run summary after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
 
     ### Finalize Pipeline
 
-    **Call `finalize_pipeline(plan)` once after every declared operation and project transformation.** It consolidates recorded outcomes and exact contract versions, persists the final `METADATA_PIPELINE_RUN` snapshot and releases existing execution reservations. It does not count business DataFrames. Stopped runs remain incomplete; use `failed=True` for a caught project error. Repeated finalization returns the same result. Optional Read/Write inspection stays available afterwards.
+    **Call `finalize_pipeline(pipeline)` once after every declared operation and project transformation.** It consolidates recorded outcomes and exact contract versions, persists the final `METADATA_PIPELINE_RUN` snapshot for Ungoverned and Governed execution, and releases existing reservations. Dry Run remains session-only. Stopped runs remain incomplete; use `failed=True` for a caught project error. Repeated finalization returns the same result. Optional Read/Write inspection stays available afterwards.
 
     Engineering and Microsoft Fabric own executable integrity, source control, CI/CD and deployment. FabricOps requires no packaging or deployment verification call.
 
     ### Both sides
 
-    - **Contract enforcement:** Both Live and Testing persist `METADATA_GUARDRAIL_RESULTS` and retain diagnostics for inspection. Discovering possible keys is separate from enforcing the contract's selected Grain key.
+    - **Contract enforcement:** Governed enforces and persists activated-contract results. Dry Run can evaluate an optional selected contract without persistence. Ungoverned skips contract-dependent rules and blocks writes to governed targets. Discovering possible keys is separate from enforcing the contract's selected Grain key.
     - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
     - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
 
@@ -192,7 +192,6 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 
     ```python
     source = orchestrate_read(
-        execution_plan=plan,
         store="Bronze", schema="demo", table_name="orders",
         grain_discovery_enabled=True,
         grain_discovery_max_columns=3,
@@ -206,7 +205,7 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     - **Routine runs:** set `grain_discovery_enabled=False` to skip discovery and preserve saved candidates. Independently set `frequency_enabled=False` to skip frequency calculations.
     - **After the Data Contract is defined:** discovery can stay off until you choose to revisit the key. Configured Grain checks still validate the contract's key on each applicable Read or Write call.
 
-    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read skips Profile. Testing Write profiles its prepared input without persistence. Scheduling belongs to the caller.
+    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read skips Profile. Dry Run Write profiles its prepared input without persistence. Scheduling belongs to the caller.
 
     See [`profile_table()`](../api/reference/profile_table.md) for exact parameters, direct column selection, and persistence behavior.
 

@@ -91,7 +91,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
         return {"config": config, "scope_workspace_id": "dev"}
 
     def collect():
-        assert "Loading frozen" in outputs[-1][1].data
+        assert "Loading optional frozen" in outputs[-1][1].data
         calls.append("collect")
         return []
 
@@ -100,10 +100,13 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=collect))
+    from fabricops_kit.activated_pipeline import shared as authority
+    monkeypatch.setattr(authority, "authority_records", lambda **kw: {
+        "token": "token", "registrations": [], "table_ownership": []})
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = shared.start_pipeline_session("generic", "Test")
+        session = shared.start_pipeline_session("generic", "Dry Run")
         assert calls == ["reuse", "collect"]
         assert "spark_loading" in session.startup_timings
         assert session.controls == []
@@ -181,6 +184,9 @@ def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, 
     monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda *a, **kw: {
         "pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=lambda: [_row()]))
+    from fabricops_kit.activated_pipeline import shared as authority
+    monkeypatch.setattr(authority, "authority_records", lambda **kw: {
+        "token": "token", "registrations": [], "table_ownership": []})
     original_update = ip.update_display
     displayed_reports = []
 
@@ -193,7 +199,7 @@ def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, 
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = shared.start_pipeline_session(None, "Test", inspector=lambda *args: "<p>Saved contract</p>")
+        session = shared.start_pipeline_session(None, "Dry Run", inspector=lambda *args: "<p>Saved contract</p>")
         root = outputs[-1][1]
         assert root.layout.height == "360px" and root.layout.overflow == "auto"
         assert root.children[0].layout.display != "none"

@@ -12,9 +12,9 @@
 ![File upload](../assets/2c/File%20Upload.png)
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial No Contract Test, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate the due profiles automatically; successful Test finalization saves the source and prepared target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Test does not publish business targets, advance checkpoints or grant approval. Target observations describe prepared input. Live continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
-    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step. In Governance, set the two target Contract Processing strategies to **SCD1** and **SCD2**, with `product_id` as the key. For SCD2 use `modified_datetime` as the effective column and track `product_category` and `list_price`, matching the notebook Write parameters.
+    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed. In Governance, set the two target Contract Processing strategies to **SCD1** and **SCD2**, with `product_id` as the key. For SCD2 use `modified_datetime` as the effective column and track `product_category` and `list_price`, matching the notebook Write parameters.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -52,8 +52,8 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
-PIPELINE_MODE = "Test"  # Test or Live
+PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
+PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
     pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
@@ -63,15 +63,15 @@ PIPELINE_ID = pipeline.pipeline_id
 
 
 
-After Governance freezes contracts, select exact frozen versions in Test setup before Read. Test operations never publish business data or operational observations; finalization commits the Test outcome. Existing approved Live configurations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+After Governance freezes contracts, use Dry Run to select exact frozen versions for preview validation. Dry Run never publishes business data or operational observations, and finalization returns only a session summary. Governed activations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
-Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require approved Live publication. Advance the demo day only after publication succeeds.
+Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require persistent publication. Advance the demo day only after publication succeeds.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Run Day 1 with approved Live publication
+## Run Day 1 with persistent publication
 Reads 8 rows of data from Bronze `demo.product_master_updates` then set 'product_id' as key column for SCD1 and write to silver.demo.product_master_scd1, likewise set 'product_id' as key column , set `product_category` and `list_price` as tracking columns with `modified_datetime` as the effective column for SCD2 and write to silver.demo.product_master_scd2
 
 
@@ -159,7 +159,7 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with approved **Live** publication and routed to the Metadata Lakehouse configured by `00_env_config`. Test retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
+The following records are committed by successful runs with persistent publication and routed to the Metadata Lakehouse configured by `00_env_config`. Dry Run retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
 
 | Metadata table | What this demo records |
 | --- | --- |
@@ -181,7 +181,7 @@ Run the `DEMO_DAY` cell and the **Prepare the Bronze snapshot** cell before Read
 | 2 | 44.90 | Accessories | 8 | 9 |
 | 3 | 44.90 | Travel Accessories | 8 | 10 |
 
-Use a fresh permitted **Live** plan for governed publication. Evaluation-only Testing keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. DEV publication also requires an existing approved Live configuration. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
+Use a fresh permitted **Governed** plan for governed publication. Dry Run keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. DEV publication also requires an existing Governed activation. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
 
 The Read and Write blocks display their DataFrames inline, without a separate Inspect selector. These previews are not the persisted SCD history. Inspect the physical Silver tables after publication. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing checkpoint divergence, follow the [scoped reconciliation guidance](02B-build-and-run-incremental-append-etl.md#if-silver-has-eight-rows-but-the-checkpoint-already-covers-day-2); immutable Append repairs must not be applied to SCD history.
 
@@ -195,7 +195,7 @@ Do not restart at Day 1 while either SCD target still contains later-day state. 
     - `demo.product_master_scd2`
 3. Set `DEMO_DAY = 1`.
 4. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze snapshot. Day 1 of this notebook does not load its own CSV.
-5. Run the notebook with an existing approved Live configuration, then continue through both Writes.
+5. Run the notebook with an existing Governed activation, then continue through both Writes.
 6. Continue with Day 2 and Day 3 in order, building a fresh plan each day.
 
 Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.

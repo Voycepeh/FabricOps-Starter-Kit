@@ -284,7 +284,7 @@ def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session
     selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
     selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
     if mode == "live":
-        with pytest.raises(ValueError, match="Live"):
+        with pytest.raises(ValueError, match="Governed"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
         assert_testing_mutations_are_diagnostics_only(spies)
@@ -374,7 +374,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
     selections = {SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
                   TARGET_ID: {"no_contract": True}}
     if mode == "live":
-        with pytest.raises(ValueError, match="Live"):
+        with pytest.raises(ValueError, match="Governed"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
         assert_testing_mutations_are_diagnostics_only(spies)

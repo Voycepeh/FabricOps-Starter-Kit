@@ -9,9 +9,9 @@
 The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial No Contract Test, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate the due profiles automatically; successful Test finalization saves the source and prepared target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Test does not publish business targets, advance checkpoints or grant approval. Target observations describe prepared input. Live continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
-    Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step.
+    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -38,7 +38,7 @@ The notebook follows one visible lifecycle:
 | --- | --- |
 | Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
 | Setup Pipeline | Reuses notebook configuration, registers or recovers the Pipeline ID and resolves pipeline authority. |
-| Data Contract Configuration | Defaults to interactive **Testing**; choose a frozen version or No Contract independently for each participant. |
+| Data Contract Configuration | Optional in **Dry Run**, omitted in **Ungoverned**, and resolved from activation in **Governed**. |
 | Governed Read | Reads each configured source and runs the applicable source checks. |
 | PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
 | Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
@@ -60,8 +60,8 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-PIPELINE_ID = None  # Test registers or recovers this notebook automatically.
-PIPELINE_MODE = "Test"  # Test or Live
+PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
+PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
     pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
@@ -70,7 +70,7 @@ PIPELINE_ID = pipeline.pipeline_id
 ```
 
 
-The returned session is ready for Read and Write immediately. Retain its UUID in source only for cross-workspace promotion. In Test, Read and Write do not publish business or operational metadata; finalize publishes the Test review outcome. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Explicit real Testing writes require reviewed safe destinations; they can produce real data and ordinary metadata side effects. Headless Testing sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+The returned session is ready for Read and Write immediately. Retain its UUID in source only for cross-workspace promotion. Dry Run does not publish business or operational metadata and finalizes to a session-only summary. Ungoverned performs real writes without contract-dependent checks, while Governed resolves and enforces activated contracts. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Headless Dry Run sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -246,9 +246,9 @@ display(writes["target"]["dataframe"].limit(10))
     4. **Grain** on the prepared target input
     5. **Data Quality**
 
-    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Live stops on configured blocking failures and required checks that cannot execute.
+    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Governed execution stops on configured blocking failures and required checks that cannot execute.
 
-    With **Testing**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Live**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
+    With **Dry Run**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Governed**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
 
     A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. `METADATA_PROCESSING_STATE` records source observations at Read and accepts incremental checkpoints and Source Drift baselines only after verified target publication, together with the typed publication receipt.
 
@@ -268,7 +268,7 @@ print(writes["target"]["total_duration_seconds"])
 
     Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, an exhausted metadata-probe budget, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` in writer options or Spark session configuration is preserved and disables this attribution. The lookup uses checkpoint metadata and at most 32 exact log-file probes; it never enumerates the Delta log directory.
 
-    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Testing runs report `Published → No` and zero committed rows.
+    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Dry Run reports `Published → No` and zero committed rows.
 
 ??? tip "A summary is missing in Microsoft Fabric"
 

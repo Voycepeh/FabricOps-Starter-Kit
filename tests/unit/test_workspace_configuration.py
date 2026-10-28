@@ -155,18 +155,21 @@ def test_invalid_response_reuses_validation(configuration_runtime, change, messa
         setup_notebook()
 
 
-@pytest.mark.parametrize('mode', ['Test', 'Live'])
+@pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned', 'Governed'])
 @pytest.mark.parametrize('config_workspace', [None, 'central-ws'])
 def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeypatch, capsys, mode, config_workspace):
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     monkeypatch.setattr(shared, 'resolve_pipeline_registration', lambda identity, **kwargs: {'pipeline_id': '8f32a471-6c91-4b7e-9d13-2f0c947eab52', 'resolution': 'Recovered'})
     monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
-    if mode == 'Live':
+    authority = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    monkeypatch.setattr(authority, 'authority_records', lambda **kwargs: {
+        'token': 'token', 'registrations': [], 'table_ownership': []})
+    if mode == 'Governed':
         live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         def approved(**kwargs):
             config, active_workspace_id, runtime = resolve_fabric_context()
-            return shared.PipelineExecutionPlan('live', active_workspace_id, 'caller-notebook', 'approved-run',
+            return shared.PipelineExecutionPlan('governed', active_workspace_id, 'caller-notebook', 'approved-run',
                                                '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
         monkeypatch.setattr(live, 'build_live_pipeline_plan', approved)
     import IPython
@@ -183,7 +186,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
-        if mode == 'Test':
+        if mode == 'Dry Run':
             first = session
             session = setup_pipeline(pipeline_mode=mode)
             assert first.closed

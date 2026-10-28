@@ -20,10 +20,10 @@ Call after setup_notebook() and before Read, Transform and Write. Test registers
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Test")
+pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
 orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-independent_copy = setup_pipeline(pipeline_mode="Test", new_pipeline=True)
-reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
+independent_copy = setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)
+reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned",
     previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
 ```
 
@@ -40,7 +40,7 @@ reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Test",
 def setup_pipeline(
     *,
     pipeline_id: str | None=None,
-    pipeline_mode: str='Test',
+    pipeline_mode: str='Ungoverned',
     new_pipeline: bool=False,
     previous_workspace_id: str | None=None,
     previous_notebook_id: str | None=None,
@@ -59,10 +59,10 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID in Test. The session exposes pipeline.pipeline_id; retain it in source only for cross-workspace promotion. Live never allocates a new UUID. A changed same-workspace_id binding requires both previous notebook IDs. |
-| `pipeline_mode` | `str` | No | `'Test'` | Evaluation-only operations or execution under an approved manifest. |
+| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID in Ungoverned mode. Dry Run may use a session-only UUID and never registers it. Governed never allocates a new UUID. A changed same-workspace_id binding requires both previous notebook IDs. |
+| `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview without writing, execute without contracts, or execute with activated contracts enforced. |
 | `new_pipeline` | `bool` | No | `False` | Explicitly create a new identity for an independent notebook copy. Omit pipeline_id when set. An already registered notebook is rejected. |
-| `previous_workspace_id` | `str \| None` | No | `None` | Supply both old binding IDs to explicitly rebind a reuploaded notebook. Rebinding requires Test mode and no active Live runs. |
+| `previous_workspace_id` | `str \| None` | No | `None` | Supply both old binding IDs to explicitly rebind a reuploaded notebook. Rebinding requires Ungoverned mode and no active Governed runs. |
 | `previous_notebook_id` | `str \| None` | No | `None` | Not documented yet |
 
 </div>
@@ -82,7 +82,7 @@ Returns a context-local execution session exposing pipeline_id, contract selecti
 
 ValueError
     For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
-    missing Live approval.
+    missing Governed activation.
 RuntimeError
     If setup_notebook() has not completed successfully for the current
     execution, or a Spark session is unavailable.
@@ -108,8 +108,8 @@ notebook setup.
 
 Fabric cell events identify failures, not successful notebook completion.
 Call finalize_pipeline after all Reads, transformations and Writes.
-Neither a successful Write nor interpreter shutdown proves completion. Test
-results are committed only by explicit finalization.
+Neither a successful Write nor interpreter shutdown proves completion. Dry
+Run finalization returns only a session summary and does not persist it.
 
 </div>
 
@@ -117,12 +117,12 @@ results are committed only by explicit finalization.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Test evaluates reads, transformations and Guardrails without business or
-metadata commits during operations. Explicit finalize_pipeline commits the
-Test run and Guardrail results for activation review. Engineering registration
-may also write during setup. Select frozen contracts in the returned interface before
-the first operation; headless Test explicitly uses No Contract. Live resolves
-only the approved workspace_id manifest and retains revision/ownership checks.
+Dry Run evaluates real reads, transformations, profiling and optionally
+selected contract Guardrails without persisting target data or operational
+state. Ungoverned executes without Data Contracts while retaining operational
+checks and blocks writes to tables already governed in the workspace.
+Governed resolves only activated workspace authority and enforces its exact
+contract versions, destinations and ownership throughout the run.
 Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
 
 </div>
@@ -136,7 +136,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L221">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L222">View on GitHub</a>
 </div>
 
 

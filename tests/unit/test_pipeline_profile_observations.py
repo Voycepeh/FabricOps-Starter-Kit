@@ -28,7 +28,7 @@ def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(r
     monkeypatch.setattr(shared, 'execute_table_profile', calculate)
     published = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kw: published.append(row))
-    session = setup_pipeline()
+    session = setup_pipeline(pipeline_mode="Dry Run")
     read = orchestrate_read(store='Bronze', schema='demo', table_name='source')
     write = orchestrate_write(source, store='Silver', schema='demo', table_name='target', write_mode='overwrite')
     assert not write['published'] and write['dataframe'] is prepared
@@ -47,26 +47,22 @@ def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(r
     assert stats['id'].MIN_VALUE == '10' and stats['id'].MAX_VALUE == '20'
     assert stats['secret'].MIN_VALUE == 'masked'
     assert {row.VALUE for row in write['profile_result']['frequency_profile'].collect()} == {'masked'}
-    observations = session.plan.evidence['profile_observations']
-    assert [(item['identity']['table_id'], item['trigger']) for item in observations] == [('source', 'read'), ('target', 'write')]
-    assert len({item['profile_snapshot_id'] for item in observations}) == 2
-    assert all('dataframe' not in item for item in observations)
+    assert 'profile_observations' not in session.plan.evidence
     save = Mock(return_value={})
     monkeypatch.setattr(shared, '_persist_profile_observation', save)
     result = finalize_pipeline(session)
-    assert result['status'] == 'ungoverned_completed'
-    assert save.call_count == 2 and calculate.call_count == 2 and len(published) == 1
-    assert all('execution_plan' not in call.kwargs['context'] for call in save.call_args_list)
-    assert all(event['results_persisted'] and event['pipeline_run_id'] == session.plan.plan_id for event in result['profiling'])
+    assert result['status'] == 'dry_run_completed'
+    assert save.call_count == 0 and calculate.call_count == 2 and not published
+    assert all(not event['results_persisted'] for event in result['profiling'])
     assert 'profile_observations' not in session.plan.evidence
     finalize_pipeline(session)
-    assert save.call_count == 2 and calculate.call_count == 2 and len(published) == 1
+    assert save.call_count == 0 and calculate.call_count == 2 and not published
 
 
 @pytest.mark.parametrize('failed', [False, True])
 def test_failed_or_incomplete_close_discards_pending_observations(runtime, monkeypatch, failed):
     """An interrupted run cannot retain or publish pending value-bearing aggregates."""
-    session = setup_pipeline()
+    session = setup_pipeline(pipeline_mode="Dry Run")
     session.plan.evidence['profile_observations'] = [object()]
     save = Mock(side_effect=AssertionError('must not publish unsuccessful observations'))
     monkeypatch.setattr(shared, '_persist_profile_observation', save)
@@ -78,9 +74,9 @@ def test_failed_or_incomplete_close_discards_pending_observations(runtime, monke
     save.assert_not_called()
 
 
-def test_observation_publication_failure_commits_failed_outcome(runtime, monkeypatch):
-    """Metadata failure cannot leave an authoritative successful Test completion."""
-    session = setup_pipeline()
+def test_dry_run_finalization_never_publishes_profile_observations(runtime, monkeypatch):
+    """Dry Run profile observations remain session-only."""
+    session = setup_pipeline(pipeline_mode="Dry Run")
     orchestrate_read(store='Bronze', schema='demo', table_name='source')
     session.plan.evidence['profile_observations'] = [{'profile_snapshot_id': 'stable-profile-id'}]
     save = Mock(side_effect=PermissionError('metadata unavailable'))
@@ -89,19 +85,18 @@ def test_observation_publication_failure_commits_failed_outcome(runtime, monkeyp
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kw: rows.append(row))
     from types import SimpleNamespace
     session.report = SimpleNamespace(value='')
-    with pytest.raises(RuntimeError, match='finalized as failed'):
-        finalize_pipeline(session)
-    assert session.plan.run_result['status'] == 'failed' and rows[-1]['status'] == 'failed'
-    assert 'failed' in session.report.value
-    assert any(item['code'] == 'test_profile_publication_failed' for item in rows[-1]['failures'])
-    assert finalize_pipeline(session)['status'] == 'failed'
-    save.assert_called_once()
+    result = finalize_pipeline(session)
+    assert result['status'] == 'dry_run_completed'
+    assert not rows
+    assert 'dry_run_completed' in session.report.value
+    assert finalize_pipeline(session) == result
+    save.assert_not_called()
 
 
 @pytest.mark.parametrize('query', [None, 'SELECT id FROM demo.source'])
 def test_test_read_reuses_only_the_unfiltered_source(runtime, monkeypatch, query):
     """A projected query must still profile the complete physical table."""
-    setup_pipeline()
+    setup_pipeline(pipeline_mode="Dry Run")
     profile = Mock(return_value={'row_count': 2})
     monkeypatch.setattr(runtime.read, 'schedule_table_profiling', profile)
     result = orchestrate_read(store='Bronze', schema='demo', table_name='source', query=query)

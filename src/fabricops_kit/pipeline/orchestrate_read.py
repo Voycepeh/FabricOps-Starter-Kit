@@ -16,6 +16,7 @@ from fabricops_kit.pipeline.shared import (
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
+    PIPELINE_MODE_NAMES,
 )
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
@@ -27,15 +28,15 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Spark, execution authority and reporting come from setup_pipeline. The result
     retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
     register pipeline-level participation for subsequent Writes; this is not
-    exact DataFrame lineage. Live blocks failed checks; Test never commits.
+    exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
     Profiling uses the complete source with frozen contract policies and shared
-    Live completion history. Test reuses an unfiltered full Read DataFrame; query
+    persisted completion history. Dry Run reuses an unfiltered full Read DataFrame; query
     and incremental Reads still profile the complete physical source. Successful
-    Test finalization saves the calculated observations for Data Contract authoring
-    without repeating the profiling scan or consuming Live schedules. Guardrail
+    Dry Run retains calculated observations only in the session without consuming
+    persisted schedules. Guardrail
     checks run regardless of profiling eligibility.
 
     Parameters
@@ -64,7 +65,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     dict
         Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
 
-    Raises RuntimeError when no pipeline is active or a Live stage fails, and
+    Raises RuntimeError when no pipeline is active or a persistent stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
 
     Examples
@@ -106,7 +107,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         names.append("Profile")
         stages = []
         if verbose:
-            print(f"FabricOps READ · {table_name} · {execution_plan.execution_mode.title()}")
+            print(f"FabricOps READ · {table_name} · {PIPELINE_MODE_NAMES[execution_plan.execution_mode]}")
         print_pipeline_contract(context, table_id, operation="Read", guardrails=[label for kind, label in labels if kind in active], verbose=verbose)
         def run(stage, function):
             result, record = _run_orchestration_stage(operation="READ", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)

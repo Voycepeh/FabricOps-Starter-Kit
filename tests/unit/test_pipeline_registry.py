@@ -154,11 +154,11 @@ def test_duplicate_bindings_fail_closed(monkeypatch, conflict):
         shared.read_pipeline_registry(context={})
 
 
-def test_live_cannot_allocate_an_unbound_identity(registry, monkeypatch):
+def test_governed_cannot_allocate_an_unbound_identity(registry, monkeypatch):
     context, rows, *_ = registry
-    create_uuid = Mock(side_effect=AssertionError('Live must not generate a UUID'))
+    create_uuid = Mock(side_effect=AssertionError('Governed must not generate a UUID'))
     monkeypatch.setattr(shared, 'uuid4', create_uuid)
-    with pytest.raises(ValueError, match='Live requires an existing'):
+    with pytest.raises(ValueError, match='Governed requires an existing'):
         shared.resolve_pipeline_registration(context=context, allow_new_identity=False)
     assert rows == []
     create_uuid.assert_not_called()
