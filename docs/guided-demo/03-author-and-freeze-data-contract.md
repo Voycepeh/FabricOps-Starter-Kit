@@ -11,10 +11,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
     Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
 
-!!! note "Scheduled Refresh not showing?"
-    FabricOps reads the current notebook schedule from Microsoft Fabric using the notebook or pipeline execution identity. In the normal Guided Demo setup, the person developing the pipeline should already have **Contributor, Member, or Admin** access to the Engineering workspace. If Scheduled Refresh shows `Unavailable`, confirm that the execution identity can access the notebook and can read its schedule through the Fabric API. `Unavailable` means FabricOps could not observe the schedule; it does not mean that no schedule exists.
-
-    See Microsoft's [workspace roles](https://learn.microsoft.com/en-us/fabric/fundamentals/roles-workspaces) and [List Item Schedules API](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/list-item-schedules) for the underlying access requirements.
+Scheduled Refresh is operational metadata in `METADATA_DATA_CATALOGUE`, captured by the writer pipeline. If discovery is unavailable, the writer records `unavailable` and continues. Data Contract authoring and freezing do not depend on it. Freshness Guardrails retain their independently authored source-data arrival expectations.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">

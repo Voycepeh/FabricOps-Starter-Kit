@@ -29,27 +29,28 @@ CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
 def _writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
-    """Return the current writer notebook schedule or fail metadata finalization."""
+    """Return the writer schedule, recording unavailable discovery without blocking writes."""
     from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
 
-    discovered = discover_scheduled_refresh(
-        context={
-            "workspace_id": audit.get("_workspace_id"),
-            "notebook_id": audit.get("_notebook_id"),
-        },
-        workspace_id=str(audit.get("_workspace_id") or "") or None,
-        item_id=str(audit.get("_notebook_id") or "") or None,
-    )
-    status = str(discovered.get("status") or "").strip().lower()
-    if status not in {"configured", "not_configured"}:
-        raise RuntimeError(
-            "Scheduled Refresh metadata could not be captured for the writer notebook. "
-            "Retry the pipeline after Fabric schedule discovery is available."
+    try:
+        discovered = discover_scheduled_refresh(
+            context={
+                "workspace_id": audit.get("_workspace_id"),
+                "notebook_id": audit.get("_notebook_id"),
+            },
+            workspace_id=str(audit.get("_workspace_id") or "") or None,
+            item_id=str(audit.get("_notebook_id") or "") or None,
         )
-    return {
-        "status": status,
-        "schedules": list(discovered.get("schedules") or []),
-    }
+        status = str(discovered.get("status") or "").strip().lower()
+        if status in {"configured", "not_configured"}:
+            return {
+                "status": status,
+                "schedules": list(discovered.get("schedules") or []),
+            }
+    except Exception:
+        # Schedule discovery is optional operational metadata, including runtime/auth failures.
+        pass
+    return {"status": "unavailable", "schedules": []}
 
 
 def _persist_target_processing(

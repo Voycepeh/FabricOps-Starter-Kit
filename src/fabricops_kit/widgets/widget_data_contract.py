@@ -631,34 +631,6 @@ def _profile_html(context: dict[str, Any]) -> str:
 
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
 
-def _scheduled_refresh_html(discovery: Mapping[str, Any]) -> str:
-    """Render normalized writer Scheduled Refresh metadata from Catalogue."""
-    status = str(discovery.get("status") or "unavailable")
-    schedules = discovery.get("schedules") or []
-    if status == "not_configured":
-        detail = "<span>No schedule configured</span>"
-    elif status != "configured" or not schedules:
-        detail = "<span>Schedule discovery unavailable</span>"
-    else:
-        rows = []
-        for schedule in schedules:
-            frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
-            times = ", ".join(str(value) for value in schedule.get("times") or []) or "Time not provided"
-            timezone = str(schedule.get("timezone") or "Timezone not provided")
-            enabled = (" · Enabled state unknown" if schedule.get("enabled") is None
-                       else "" if schedule["enabled"] else " · Disabled")
-            rows.append(
-                "<li>{} · {} · {}{}</li>".format(
-                    html.escape(frequency), html.escape(times), html.escape(timezone), enabled,
-                )
-            )
-        detail = "<ul style=\"margin:4px 0 0 18px;\">" + "".join(rows) + "</ul>"
-    return (
-        "<div><b>Scheduled refresh</b><br>"
-        f"{detail}<br><span style=\"color:#666;font-size:12px;\">Captured by writer pipeline · read-only</span></div>"
-    )
-
-
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
     context: Any = None,
@@ -698,9 +670,7 @@ def widget_data_contract(
     then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
     or manually saved processing remains editable until the draft is frozen.
     Profile context remains read-only and is never added
-    to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
-    Fabric and remains independent of the authored Freshness expectation. Immutable
-    versions are review-only. Grain description, selected key combination, and
+    to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
     optional enforcement are independent. Enabling Grain defaults to Block.
     The sidebar shows the shared configured rules for Read and Write; it does
     not execute validation. Rule buttons open the existing authoring controls.
@@ -772,34 +742,6 @@ def widget_data_contract(
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
         "_ai_unavailable": "", "_ai_failure": "", "_ai_buttons": [],
     }
-    scheduled_refresh: dict[str, Any] = {"status": "uncaptured", "schedules": []}
-    state["scheduled_refresh"] = scheduled_refresh
-    contract_schedule = {"status": "unavailable", "schedules": []}
-
-    def refresh_scheduled_refresh(selected_table: str) -> None:
-        table_row = next(
-            (item for item in table_rows if str(item.get("table_id") or "") == selected_table), {}
-        )
-        captured = table_row.get("scheduled_refresh_json") or {"status": "uncaptured", "schedules": []}
-        if not isinstance(captured, Mapping):
-            raise ValueError("Catalogue scheduled_refresh_json must contain an object.")
-        status_value = str(captured.get("status") or "").strip().lower()
-        if status_value not in {"configured", "not_configured", "uncaptured"}:
-            raise ValueError(
-                "Catalogue Scheduled Refresh status must be configured, not_configured, or uncaptured."
-            )
-        normalized = {
-            "status": status_value,
-            "schedules": list(captured.get("schedules") or []),
-        }
-        scheduled_refresh.clear()
-        scheduled_refresh.update(normalized)
-        contract_schedule.clear()
-        contract_schedule.update(
-            normalized if status_value != "uncaptured"
-            else {"status": "unavailable", "schedules": []}
-        )
-
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
     top_nav = widgets.ToggleButtons(
@@ -886,7 +828,6 @@ def widget_data_contract(
                 enrichment_rows=current.get("enrichment", []),
                 guardrail_rows=current.get("guardrails", []),
                 workspace_id=active_workspace_id,
-                scheduled_refresh=contract_schedule,
                 allow_incomplete_grain=True,
             )
             state["manifest_warnings"] = warnings
@@ -939,7 +880,6 @@ def widget_data_contract(
             or state["_pending_guardrails"].get(scope)
             or state["_column_drafts"].get(scope)
         )
-        refresh_scheduled_refresh(str(state["table_id"] or ""))
         refresh_manifest()
         return state["current"]
 
@@ -1118,18 +1058,13 @@ def widget_data_contract(
 
     def freeze() -> dict[str, Any]:
         current = state.get("current")
-        if str(scheduled_refresh.get("status") or "") == "uncaptured":
-            raise ValueError(
-                "Scheduled Refresh has not been captured by the writer pipeline. "
-                "Run the writer pipeline before freezing this Data Contract."
-            )
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
         if state.get("dirty"):
             raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
             draft=current["contract"], config=config, active_workspace_id=active_workspace_id,
-            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id}, scheduled_refresh=contract_schedule,
+            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id},
         )
         latest = contracts.list_contract_governance_state(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
@@ -2202,28 +2137,6 @@ def widget_data_contract(
                     lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
                 )
 
-        schedule_status = str(scheduled_refresh.get("status") or "unavailable")
-        if schedule_status == "configured" and scheduled_refresh.get("schedules"):
-            refresh_lines = []
-            for schedule in scheduled_refresh["schedules"]:
-                frequency = str(schedule.get("frequency") or "Scheduled").replace("_", " ").title()
-                times = ", ".join(str(value) for value in schedule.get("times") or [])
-                timezone = str(schedule.get("timezone") or "Timezone not provided")
-                schedule_state = (" · Enabled state unknown" if schedule.get("enabled") is None
-                                  else "" if schedule["enabled"] else " · Disabled")
-                parts = [frequency]
-                if times:
-                    parts.append(times)
-                parts.append(timezone)
-                refresh_lines.append(" · ".join(parts) + schedule_state)
-            refresh_frequency = "<br>".join(html.escape(line) for line in refresh_lines)
-        elif schedule_status == "not_configured":
-            refresh_frequency = "Not configured"
-        elif schedule_status == "uncaptured":
-            refresh_frequency = "Not captured"
-        else:
-            refresh_frequency = "Unavailable"
-
         runtime_context = contracts.get_table_runtime_context(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             table_id=str(state.get("table_id") or ""),
@@ -2518,9 +2431,6 @@ def widget_data_contract(
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Load strategy</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
-                "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Scheduled refresh</div>"
-                f"<div style='font-weight:600;line-height:1.5;'>{refresh_frequency}</div></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
                 f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
