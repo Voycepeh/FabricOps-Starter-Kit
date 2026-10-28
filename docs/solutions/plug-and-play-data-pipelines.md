@@ -204,6 +204,4 @@ For implementation details:
 - [Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md) — build and run the canonical pipeline.
 - [Guided Demo Step 4](../guided-demo/04-validate-frozen-data-contract.md) — validate the frozen Data Contract against the pipeline.
 - [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the whole pipeline and promote the pipeline to Production.
-- [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) — lifecycle stages and per-call profiling controls.
-- [`profile_table()`](../api/reference/profile_table.md) — statistical profiling, frequency distributions, and Grain discovery limits.
 - [Function Reference](../reference/index.md) — browse the FabricOps public functions, including pipeline setup, Read/Write orchestration, profiling, and finalization.
