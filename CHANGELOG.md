@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.0] - Pending release
+
+### Breaking changes
+
+- Establish workspace-ID-based configuration and routing as the new architectural baseline. Earlier package versions (v0.2.5 and before) are superseded and must not be combined with v0.3.0 notebook templates.
+- Existing legacy environment-keyed metadata layouts are not automatically migrated. Use a fresh workspace-model metadata installation; preserve existing Live metadata until an explicit migration is approved.
+
+### Pipeline execution
+
+- Introduce Dry Run, Ungoverned, and Governed execution paths, with explicit setup and finalization and workspace-scoped governance behaviour.
+- Freeze matching `00_env_config` and `02_pipeline` notebook templates for this release.
+
+### Upgrade instructions
+
+- Upgrade the package and both notebook templates together. Do not mix v0.3.0 notebooks with v0.2.5 or earlier packages.
+- Validate full refresh, incremental append, and SCD demo workflows in Microsoft Fabric before publishing.
+
+
+
 ### Removed
 
 - Removed the Preview Data Catalogue Viewer widget and the optional exploration notebook template. Query the centralized metadata tables directly through PySpark or SQL, and use native Fabric interfaces or project-specific notebooks for consumption. Metadata schemas, population, profiling, lineage, and orchestration are unchanged.
