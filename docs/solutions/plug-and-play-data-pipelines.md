@@ -92,12 +92,7 @@ flowchart LR
     DEV ==>|"Promote 1:1"| PROD
 ```
 
-The picture has four important parts working together:
-
-1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
-2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Setup → Read → project-owned PySpark → Write → Finalize**. The engineer changes the project logic, not the surrounding operating pattern.
-3. **Three execution modes.** Dry Run previews checks without publishing or persisting observations. Ungoverned publishes without requiring Data Contracts. Governed requires activated Data Contracts and enforces their rules at the Read and Write boundaries.
-4. **Operational evidence.** Persisting runs record relevant metadata, profiling, processing state and lineage. Dry Run keeps its results in the session.
+The same pipeline definition can move between Development and Production: each workspace resolves its own Fabric Stores, while Governed execution enforces the activated Data Contracts.
 
 ### Choose an execution mode
 
@@ -111,11 +106,6 @@ The picture has four important parts working together:
 
 **Ungoverned** runs without Data Contracts. **Dry Run** previews without writing. **Governed** enforces activated Data Contracts. Pipeline source participation and reporting are automatic.
 
-
-Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Each workspace resolves its own environment configuration and Fabric Stores, so the same engineering definition can run without hardcoded environment-specific locations. Governed execution additionally requires the appropriate activation.
-
-This is the core FabricOps pipeline model: **the engineer owns the transformation; Governance owns the governed definition; FabricOps makes the surrounding lifecycle repeatable and executable across environments.**
-
 ## How it works
 
 | Responsibility | What happens |
@@ -124,84 +114,10 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
 | **AI can support** | Microsoft Fabric Copilot or another coding agent can help write or refactor project-specific PySpark. AI is optional and is not part of pipeline execution or enforcement. |
 | **FabricOps handles deterministically** | Resolves environment-specific Fabric locations, runs Read and Write orchestration, enforces activated Data Contracts in Governed mode, and records the applicable metadata, profiling, lineage, processing state and run outcome for persisting modes. |
 
-## Under the hood
+## Get started
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="Coding mascot" loading="lazy">
-  <div><p>Trace setup, governed Read and Write boundaries around your PySpark transformation, and finalization of the complete run.</p></div>
-</div>
-
-??? info "What happens in a standard FabricOps Pipeline"
-
-    [![Setup, governed Read and Write around project PySpark, then finalization](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }](../assets/pipeline-boundaries-implementation.svg)
-
-    Open the SVG at full size to follow the implementation links.
-
-    ### Setup Pipeline
-
-    **Call `setup_pipeline()` once after Environment Configuration.** It resolves the current environment and central Governance authority. Dry Run offers optional exact frozen versions, Ungoverned runs without contracts, and Governed resolves the activated environment revision. Persisting modes initialize `METADATA_PIPELINE_RUN`; Dry Run keeps its summary in the session.
-
-    ### Read side
-
-    **`orchestrate_read()` checks the source before returning its DataFrame to your PySpark transformation.**
-
-    1. Resolve the table and its Data Contract, then read the requested rows.
-    2. Run the configured Freshness, Schema, Grain, and Data Quality checks.
-    3. On a Full read, profile the returned dataset. Incremental batches skip Profile.
-
-    The Grain check covers the returned rows: the full read result or the incremental batch. It does not compare an incremental batch with historical rows.
-
-    ### Write side
-
-    **`orchestrate_write()` checks the prepared input before publishing the target.**
-
-    1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
-    2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
-    3. In Ungoverned or Governed mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
-
-    Dry Run evaluates checks and profiles prepared input without business publication; run records and Guardrail diagnostics remain in memory. Explicit `finalize_pipeline()` records complete-run status for persisting modes and returns a session-only Dry Run summary after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
-
-    ### Finalize Pipeline
-
-    **Call `finalize_pipeline(pipeline)` once after every declared operation and project transformation.** It consolidates recorded outcomes and exact contract versions, persists the final `METADATA_PIPELINE_RUN` snapshot for Ungoverned and Governed execution, and releases existing reservations. Dry Run remains session-only. Stopped runs remain incomplete; use `failed=True` for a caught project error. Repeated finalization returns the same result. Optional Read/Write inspection stays available afterwards.
-
-    Engineering and Microsoft Fabric own executable integrity, source control, CI/CD and deployment. FabricOps requires no packaging or deployment verification call.
-
-    ### Both sides
-
-    - **Contract enforcement:** Governed enforces and persists activated-contract results. Dry Run can evaluate an optional selected contract without persistence. Ungoverned skips contract-dependent rules and blocks writes to governed targets. Discovering possible keys is separate from enforcing the contract's selected Grain key.
-    - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and optional frequency distributions. For identified physical tables, profiling can also discover candidate Grain keys for Governance to review; this is not the same as contract Grain enforcement.
-    - **Caller controls:** Read and Write expose profiling options. Candidate Grain discovery applies to identified tables, not DataFrame-only profiling; the caller controls when to enable it.
-
-??? info "How profiling supports the Data Contract"
-
-    FabricOps profiles data to provide statistics and optional frequency distributions. Profiling an identified physical table can also discover candidate Grain keys for Governance to review. DataFrame-only profiling does not discover candidates. These observations do not define the approved Grain key.
-
-    **Governance defines the intended Grain key and Data Quality expectations in the Data Contract.** During Governed pipeline execution, FabricOps validates the applicable contract rules at the Read and Write boundaries.
-
-    Profiling can also run in Dry Run and Ungoverned modes without an activated contract. The pipeline produces the evidence; the Data Contract defines the approved expectations.
-
-    For profiling parameters, discovery limits, and persistence behavior, see [`profile_table()`](../api/reference/profile_table.md).
-
-## Example
-
-??? info "Orders + Products → Curated Orders"
-
-    A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
-
-    The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
-
-    See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
+See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for an Orders + Products → Curated Orders example using the standard pipeline template.
 
 ## Go deeper
 
-Use [How FabricOps Works](../how-fabricops-works.md) for the wider Governance and Engineering lifecycle.
-
-For implementation details:
-
-- [Read & Write Modes](../reference/read-and-load-strategies.md) — Full and Incremental reads, Overwrite, Append, SCD1, SCD2, and processing semantics.
-- [PySpark Transformation](../reference/pyspark-transformation.md) — project-owned transformation patterns and performance guidance.
-- [Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md) — build and run the canonical pipeline.
-- [Guided Demo Step 4](../guided-demo/04-validate-frozen-data-contract.md) — validate the frozen Data Contract against the pipeline.
-- [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the whole pipeline and promote the pipeline to Production.
-- [Function Reference](../reference/index.md) — browse the FabricOps public functions, including pipeline setup, Read/Write orchestration, profiling, and finalization.
+For the wider lifecycle, see [How FabricOps Works](../how-fabricops-works.md). For implementation details, use [Read & Write Modes](../reference/read-and-load-strategies.md), [PySpark Transformation](../reference/pyspark-transformation.md), and the [Function Reference](../reference/index.md).
