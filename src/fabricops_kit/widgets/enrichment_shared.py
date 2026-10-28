@@ -8,6 +8,7 @@ from io import StringIO
 import importlib
 import json
 from typing import Any
+import warnings
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
@@ -72,7 +73,17 @@ def build_ai_enrichment_context(
 
 def _invoke_fabric_ai(prompt: str) -> str:
     """Invoke the Microsoft Fabric AI Functions pandas extension."""
-    importlib.import_module("synapse.ml.aifunc")
+    # SynapseML imports legacy generated protobuf services while registering the
+    # pandas AI accessor. The accessor is required; the deprecated service API is
+    # not used by FabricOps. Keep this suppression local to that import so other
+    # dependency warnings and import failures remain visible.
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=r"google\.protobuf\.service module is deprecated.*",
+            category=UserWarning,
+        )
+        importlib.import_module("synapse.ml.aifunc")
     pandas = importlib.import_module("pandas")
     frame = pandas.DataFrame([{"fabricops_prompt": prompt}])
     ai = getattr(frame, "ai", None)

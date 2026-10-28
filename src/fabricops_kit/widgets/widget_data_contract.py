@@ -107,7 +107,11 @@ def _set_selection_value(
         ) from exc
 _TABS = ("Table", "Column", "Business Rules", "Review")
 _CONTRACT_STYLE = """<style>
-.fabricops-data-contract { --contract-accent:var(--form-accent); --contract-border:var(--form-border); }
+.fabricops-data-contract {
+    --contract-accent:var(--form-accent); --contract-border:var(--form-border);
+    height:auto !important; max-height:none !important; overflow:visible !important;
+    scrollbar-gutter:auto;
+}
 .fabricops-data-contract .fabricops-contract-nav { width:100%; margin:0; }
 .fabricops-data-contract .fabricops-contract-nav > div {
     display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
@@ -122,7 +126,9 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-contract-selector {
     background:#fff; border:1px solid var(--form-border); border-radius:8px; padding:20px; gap:16px;
 }
-.fabricops-data-contract .fabricops-contract-sidebar { max-height:520px; overflow:auto; scrollbar-gutter:stable; }
+.fabricops-data-contract .fabricops-contract-sidebar {
+    max-height:none; overflow:visible; scrollbar-gutter:auto;
+}
 .fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:8px; }
 .fabricops-data-contract .fabricops-contract-workspace { gap:20px; }
 .fabricops-data-contract .fabricops-contract-detail { border:0 !important; padding:0 !important; gap:16px; }
@@ -156,29 +162,38 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-guardrail-detail { font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
 .fabricops-data-contract .fabricops-business-rules-workspace > .widget-vbox {
-    height:500px; max-height:500px !important; min-height:0; overflow:hidden;
-    padding:0 !important; border:0 !important; background:transparent; scrollbar-gutter:auto;
+    align-self:start; height:auto; max-height:none !important; min-height:0; overflow:visible;
+    padding:0 !important; border:0 !important; background:transparent;
 }
 .fabricops-data-contract .fabricops-business-rules-workspace > .widget-vbox > .fabricops-section {
-    height:100% !important; min-height:0; overflow:hidden !important;
+    height:auto !important; max-height:none !important; min-height:0; overflow:visible !important;
 }
 .fabricops-data-contract .fabricops-business-body {
-    flex:1 1 0%; min-height:0; overflow:auto; scrollbar-gutter:stable;
+    flex:0 1 auto; min-height:0; overflow:visible; scrollbar-gutter:auto;
 }
 .fabricops-data-contract .fabricops-business-footer {
     border-top:1px solid var(--form-border); padding-top:12px;
 }
+.fabricops-data-contract .fabricops-authoring-footer {
+    width:100%; height:auto; max-height:none; overflow:visible;
+}
 .fabricops-data-contract .fabricops-business-source > div { gap:4px; }
 .fabricops-data-contract .fabricops-business-source button { flex:1; min-width:0; }
 .fabricops-data-contract .fabricops-business-chooser select { height:36px; }
+.fabricops-data-contract .fabricops-contract-list { overflow:visible !important; }
+.fabricops-data-contract .fabricops-contract-list select {
+    width:100%; min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto;
+}
+.fabricops-data-contract .fabricops-contract-list option {
+    max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
 @container (max-width:800px) {
     .fabricops-data-contract .fabricops-contract-workspace,
     .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox,
     .fabricops-data-contract .fabricops-contract-assistant-grid { grid-template-columns:minmax(0,1fr) !important; }
     .fabricops-data-contract .fabricops-contract-nav > div { width:100%; }
     .fabricops-data-contract .fabricops-contract-nav button { flex:1 1 0; min-width:0; width:auto; }
-    .fabricops-data-contract .fabricops-contract-columns { height:130px !important; }
-    .fabricops-data-contract .fabricops-contract-sidebar { max-height:320px; }
+    .fabricops-data-contract .fabricops-contract-columns { height:180px !important; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -818,6 +833,12 @@ def widget_data_contract(
         ),
     )
     workspace.add_class("fabricops-contract-workspace")
+    authoring_footer = widgets.VBox(
+        layout=widgets.Layout(
+            width="100%", height="auto", overflow="visible", display="none",
+        )
+    )
+    authoring_footer.add_class("fabricops-authoring-footer")
     view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
 
     def apply_view(*_args: Any) -> None:
@@ -1256,6 +1277,8 @@ def widget_data_contract(
 
     def render() -> None:
         current = state.get("current")
+        authoring_footer.children = ()
+        authoring_footer.layout.display = "none"
         state.pop("_refresh_guardrail_sidebar", None)
         dispose_sidebar = state.pop("_dispose_guardrail_sidebar", None)
         if callable(dispose_sidebar):
@@ -1423,7 +1446,12 @@ def widget_data_contract(
             rows=min(4, max(2, len(column_names))), disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
-        row_key_columns.layout = widgets.Layout(width="100%", max_width="560px", min_width="0", height=f"{min(4, max(2, len(column_names))) * 18 + 8}px")
+        row_key_columns.layout = widgets.Layout(
+            width="100%", max_width="560px", min_width="0",
+            height=f"{min(8, max(4, len(column_names))) * 30 + 12}px",
+            max_height="252px",
+        )
+        row_key_columns.add_class("fabricops-contract-list")
         grain_enabled = widgets.Checkbox(
             value=bool(existing_row_key and existing_row_key.get("is_active", True)),
             description="Enforce Grain", disabled=not editable,
@@ -1573,6 +1601,9 @@ def widget_data_contract(
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Key columns"),
         )
+        key_columns_control.layout.height = "132px"
+        key_columns_control.layout.max_height = "220px"
+        key_columns_control.add_class("fabricops-contract-list")
         effective_column_control = widgets.Dropdown(
             options=["", *column_names],
             value=_valid_dropdown_value(["", *column_names], processing.get("effective_column"), fallback=""),
@@ -1585,6 +1616,9 @@ def widget_data_contract(
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Tracked columns"),
         )
+        tracked_columns_control.layout.height = "132px"
+        tracked_columns_control.layout.max_height = "220px"
+        tracked_columns_control.add_class("fabricops-contract-list")
         processing_parameter_controls = (
             watermark_column_control, key_columns_control, effective_column_control,
             tracked_columns_control,
@@ -2833,10 +2867,23 @@ def widget_data_contract(
         column_options: list[tuple[str, str]] = []
         column_option_style = widgets.HTML()
         column_search = widgets.Text(placeholder="Search columns", layout=widgets.Layout(width="100%", min_width="0", max_width="100%"))
-        column_select = widgets.Select(options=(), rows=8, layout=widgets.Layout(width="100%", min_width="0", max_width="100%", height="250px"))
+        column_select = widgets.Select(
+            options=(), rows=8,
+            layout=widgets.Layout(
+                width="100%", min_width="0", max_width="100%",
+                height="220px", max_height="280px",
+            ),
+        )
         column_select.add_class("fabricops-contract-columns")
+        column_select.add_class("fabricops-contract-list")
         column_context = widgets.HTML()
-        profile_context = shared.preview_region(widgets, widgets.HTML("<p>No column selected.</p>"), height="160px")
+        profile_context = widgets.HTML(
+            "<p>No column selected.</p>",
+            layout=widgets.Layout(
+                width="100%", min_width="0", max_width="100%",
+                height="auto", overflow="visible",
+            ),
+        )
         column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=classification_options, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description.description = ""
@@ -4483,6 +4530,7 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Limit to columns (optional)"),
         )
         business_columns.description = ""
+        business_columns.add_class("fabricops-contract-list")
         business_enabled = widgets.Checkbox(
             value=True, description="Enabled", disabled=not editable
         )
@@ -4593,16 +4641,15 @@ def widget_data_contract(
 
         business_saved.layout.width = "100%"
         business_saved.layout.min_width = "0"
-        business_saved.layout.height = "190px"
         business_requirement.layout.width = "100%"
         business_requirement.layout.min_width = "0"
         business_requirement.layout.height = "170px"
         business_columns.layout.width = "100%"
         business_columns.layout.min_width = "0"
-        business_columns.layout.height = "115px"
+        business_columns.layout.height = "132px"
+        business_columns.layout.max_height = "220px"
         business_proposal_select.layout.width = "100%"
         business_proposal_select.layout.min_width = "0"
-        business_proposal_select.layout.height = "120px"
         engineering_review_note.layout.height = "80px"
 
         def rule_column_names(rule: Mapping[str, Any]) -> list[str]:
@@ -5415,7 +5462,11 @@ def widget_data_contract(
         exact_json_content = widgets.HTML(
             f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
         )
-        exact_json = shared.preview_region(widgets, exact_json_content, height="240px")
+        exact_json = exact_json_content
+        exact_json.layout = widgets.Layout(
+            width="100%", min_width="0", max_width="100%",
+            height="auto", overflow="visible",
+        )
         refresh_review_base = refresh_review
 
         def refresh_review() -> None:
@@ -5427,9 +5478,12 @@ def widget_data_contract(
             )
 
         state["_refresh_review"] = refresh_review
-        actions: list[Any] = []
+        review_actions: list[Any] = []
         save_contract_button = None
         discard_contract_button = None
+        discard_contract_confirm = None
+        confirm_discard_contract = None
+        cancel_discard_contract = None
         if editable:
             save_contract_button = widgets.Button(
                 description="Save and clear",
@@ -5438,6 +5492,28 @@ def widget_data_contract(
             discard_contract_button = widgets.Button(
                 description="Discard and clear",
                 button_style="danger",
+            )
+            confirm_discard_contract = widgets.Button(
+                description="Discard unsaved changes",
+                button_style="danger",
+            )
+            confirm_discard_contract.add_class("fabricops-confirm-danger")
+            cancel_discard_contract = widgets.Button(description="Cancel")
+            discard_contract_confirm = widgets.VBox(
+                [
+                    widgets.HTML(
+                        "<div><b>Discard unsaved Data Contract changes?</b><br>"
+                        "The previously saved draft will remain unchanged.</div>"
+                    ),
+                    shared.action_row(
+                        widgets,
+                        [cancel_discard_contract, confirm_discard_contract],
+                    ),
+                ],
+                layout=widgets.Layout(
+                    width="100%", height="auto", overflow="visible",
+                    display="none", gap="8px",
+                ),
             )
             pending_engineering_review = any(
                 str(rule.get("rule_type") or "") == "custom_expression"
@@ -5542,31 +5618,80 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def discard_contract_clicked(_button: Any) -> None:
+                if state.get("dirty"):
+                    discard_contract_confirm.layout.display = ""
+                    return
                 try:
                     discard_data_contract_session()
                     return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
+            def confirm_discard_contract_clicked(_button: Any) -> None:
+                try:
+                    discard_data_contract_session()
+                    return_to_selector(
+                        "Unsaved changes discarded. Select a governed table and contract."
+                    )
+                except (ValueError, RuntimeError) as exc:
+                    set_status(str(exc), error=True)
+
+            def cancel_discard_contract_clicked(_button: Any) -> None:
+                discard_contract_confirm.layout.display = "none"
+                set_status("Discard cancelled. Unsaved changes retained.", warning=True)
+
             save_contract_button.on_click(save_contract_clicked)
             discard_contract_button.on_click(discard_contract_clicked)
+            confirm_discard_contract.on_click(confirm_discard_contract_clicked)
+            cancel_discard_contract.on_click(cancel_discard_contract_clicked)
             freeze_button.on_click(freeze_clicked)
             freeze_cancel.on_click(freeze_cancel_clicked)
             freeze_confirm_button.on_click(freeze_confirm_clicked)
-            actions.extend([
-                widgets.HBox(
-                    [save_contract_button, discard_contract_button, freeze_button],
-                    layout=widgets.Layout(gap="8px", align_items="center"),
+            authoring_footer.children = (
+                shared.form_section(
+                    widgets,
+                    title="Draft actions",
+                    children=[
+                        widgets.HTML(
+                            "<div style='color:#667085;font-size:12px;'>"
+                            "Save all staged changes or leave the persisted draft unchanged."
+                            "</div>"
+                        ),
+                        shared.action_row(
+                            widgets,
+                            [discard_contract_button, save_contract_button],
+                        ),
+                        discard_contract_confirm,
+                    ],
                 ),
-                freeze_confirm,
-            ])
+            )
+            authoring_footer.layout.display = ""
+            review_actions.append(
+                shared.form_section(
+                    widgets,
+                    title="Review & Freeze",
+                    children=[
+                        widgets.HBox(
+                            [freeze_button],
+                            layout=widgets.Layout(gap="8px", align_items="center"),
+                        ),
+                        freeze_confirm,
+                    ],
+                )
+            )
         else:
-            actions.append(widgets.HTML(
-                "<div style='color:#667085;font-size:12px;'>"
-                "Frozen contracts are review-only here. Complete exact-version validation, "
-                "Data Agreement selection, and Production activation in the Activation widget."
-                "</div>"
-            ))
+            review_actions.append(
+                shared.form_section(
+                    widgets,
+                    title="Review & Freeze",
+                    children=[widgets.HTML(
+                        "<div style='color:#667085;font-size:12px;'>"
+                        "Frozen contracts are review-only here. Complete exact-version validation, "
+                        "Data Agreement selection, and Production activation in the Activation widget."
+                        "</div>"
+                    )],
+                )
+            )
         review_left = table_left
 
         review_right = (
@@ -5579,7 +5704,7 @@ def widget_data_contract(
                 title="Exact JSON",
                 children=[exact_json],
             ),
-            *actions,
+            *review_actions,
         )
         view_content["Review"] = (review_left, review_right)
         apply_view()
@@ -5663,8 +5788,12 @@ def widget_data_contract(
             "engineering_review_note": engineering_review_note,
             "approve_engineering_review": approve_engineering_review,
             "manifest_preview": manifest_preview,
+            "authoring_footer": authoring_footer,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
+            "discard_data_contract_confirm": discard_contract_confirm,
+            "confirm_discard_data_contract": confirm_discard_contract,
+            "cancel_discard_data_contract": cancel_discard_contract,
             "freeze": freeze_button if editable else None,
             "freeze_confirm": freeze_confirm_button if editable else None,
         })
@@ -5753,6 +5882,7 @@ def widget_data_contract(
                 ),
             ),
             workspace,
+            authoring_footer,
         ],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
     )
@@ -5959,6 +6089,8 @@ def widget_data_contract(
         description="Select, author, review, and freeze one governed table contract.",
         children=[selector_panel, editor_shell, status],
     )
+    page.layout.height = "auto"
+    page.layout.overflow = "visible"
     page.add_class("fabricops-data-contract")
     page.children[0].value += _CONTRACT_STYLE
     state["_controls"].update({

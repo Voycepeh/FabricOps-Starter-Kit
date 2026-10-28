@@ -988,7 +988,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 
 
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):
-    """Large schemas remain bounded and column selection rehydrates a single editor."""
+    """Large schemas scroll inside the list only and rehydrate a single editor."""
     widget_runtime["catalogue"][:] = _catalogue_rows(250)
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
@@ -1004,6 +1004,9 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert controls["left_pane"].children[-1] is controls["column_select"]
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
+    assert controls["column_select"].layout.height == "220px"
+    assert controls["column_select"].layout.max_height == "280px"
+    assert "fabricops-contract-list" in controls["column_select"]._dom_classes
 
 
 def test_column_without_dq_rule_resets_editor_instead_of_leaking_prior_rule(widget_runtime):
@@ -1127,7 +1130,7 @@ def test_table_and_column_edits_stage_without_intermediate_actions(widget_runtim
 
 
 def test_discard_changes_restores_canonical_state_without_writes(widget_runtime):
-    """Discard clears staged session changes and reloads canonical state without persistence."""
+    """Discard confirmation can be cancelled before clearing staged changes."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -1136,12 +1139,99 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
     assert widget_runtime["calls"]["enrichment"] == []
 
     controls["discard_data_contract"].click()
+    assert controls["discard_data_contract_confirm"].layout.display == ""
+    assert state["dirty"] is True
 
+    controls["cancel_discard_data_contract"].click()
+    assert controls["discard_data_contract_confirm"].layout.display == "none"
+    assert state["dirty"] is True
+    assert controls["table_description"].value == "Unsaved table change"
+    assert "Discard cancelled" in state["message"]
+
+    controls["discard_data_contract"].click()
+    controls["confirm_discard_data_contract"].click()
     assert state["dirty"] is False
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
-    assert state["_controls"]["table_description"].value == "Orders table"
+    assert state["current"] is None
+    assert controls["selector_panel"].layout.display == ""
+    assert controls["editor_shell"].layout.display == "none"
     assert "discarded" in state["message"]
+
+
+@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+def test_shared_footer_saves_and_clears_from_every_tab(
+    widget_runtime, monkeypatch, tab
+):
+    """One footer persists the complete staged draft from every authoring tab."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = tab
+    controls["table_description"].value = f"Saved from {tab}"
+
+    assert controls["editor_shell"].children[-1] is controls["authoring_footer"]
+    assert controls["authoring_footer"].layout.display == ""
+    controls["save_data_contract"].click()
+
+    saved_description = next(
+        item for item in widget_runtime["calls"]["draft"][-1]["enrichment"]["table"]
+        if item["enrichment_type"] == "Description"
+    )
+    assert saved_description["value"] == f"Saved from {tab}"
+    assert state["current"] is None
+    assert controls["selector_panel"].layout.display == ""
+    assert controls["editor_shell"].layout.display == "none"
+
+
+@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+def test_shared_footer_preserves_state_when_save_fails(
+    widget_runtime, monkeypatch, tab
+):
+    """A failed save remains in the editor with all staged changes intact."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = tab
+    controls["table_description"].value = f"Unsaved from {tab}"
+
+    def fail_save(**_kwargs):
+        raise RuntimeError("Metadata store unavailable; retry the save.")
+
+    monkeypatch.setattr(module.contracts, "save_contract_draft", fail_save)
+    controls["save_data_contract"].click()
+
+    assert state["current"] is not None
+    assert state["dirty"] is True
+    assert controls["table_description"].value == f"Unsaved from {tab}"
+    assert controls["selector_panel"].layout.display == "none"
+    assert controls["editor_shell"].layout.display == ""
+    assert "Metadata store unavailable; retry the save." in state["message"]
+
+
+@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+def test_shared_footer_discards_and_clears_from_every_tab(
+    widget_runtime, monkeypatch, tab
+):
+    """Confirmed discard clears only staged state from every authoring tab."""
+    persisted = widget_runtime["contract"]["contract_payload_json"]
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = tab
+    controls["table_description"].value = f"Discarded from {tab}"
+
+    controls["discard_data_contract"].click()
+    assert controls["discard_data_contract_confirm"].layout.display == ""
+    controls["cancel_discard_data_contract"].click()
+    assert state["dirty"] is True
+    assert controls["table_description"].value == f"Discarded from {tab}"
+
+    controls["discard_data_contract"].click()
+    controls["confirm_discard_data_contract"].click()
+
+    assert widget_runtime["contract"]["contract_payload_json"] == persisted
+    assert widget_runtime["calls"]["draft"] == []
+    assert state["current"] is None
+    assert controls["selector_panel"].layout.display == ""
+    assert controls["editor_shell"].layout.display == "none"
 
 
 def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
@@ -1277,6 +1367,78 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
         assert len(controls["right_pane"].children) > 0
     assert widget_runtime["calls"]["enrichment"] == []
     assert widget_runtime["calls"]["guardrails"] == []
+
+
+def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
+    widget_runtime, monkeypatch
+):
+    """Main tab panels expand naturally while genuine lists retain bounded scrolling."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    style = controls["page"].children[0].value
+
+    assert controls["page"].layout.height == "auto"
+    assert controls["page"].layout.overflow == "visible"
+    assert "height:500px" not in style
+    assert "max-height:500px" not in style
+    assert ".fabricops-business-body {\n    flex:0 1 auto" in style
+    assert "max-height:none; overflow:visible" in style
+    assert "overflow-x:hidden; overflow-y:auto" in style
+
+    controls["top_nav"].value = "Business Rules"
+    author_panel = controls["left_pane"].children[0]
+    review_panel = controls["right_pane"].children[0]
+    assert author_panel.layout.height == "auto"
+    assert author_panel.layout.overflow == "visible"
+    assert review_panel.layout.height == "auto"
+    assert review_panel.layout.overflow == "visible"
+    assert getattr(controls["business_saved"].layout, "height", None) is None
+    assert getattr(controls["business_proposal_select"].layout, "height", None) is None
+    assert controls["resolve_business_rule"] in author_panel.children[-1].children
+    assert controls["apply_business_rule"] in review_panel.children[-1].children[1].children
+
+    for control_name in (
+        "row_key_columns", "key_columns", "tracked_columns",
+        "column_select", "business_columns",
+    ):
+        assert "fabricops-contract-list" in controls[control_name]._dom_classes
+    assert controls["row_key_columns"].layout.max_height == "252px"
+    assert controls["key_columns"].layout.max_height == "220px"
+    assert controls["tracked_columns"].layout.max_height == "220px"
+    assert controls["business_columns"].layout.max_height == "220px"
+    assert controls["profile_context"].layout.height == "auto"
+    assert controls["profile_context"].layout.overflow == "visible"
+
+    controls["top_nav"].value = "Review"
+    exact_json = controls["right_pane"].children[1].children[1]
+    assert exact_json.layout.height == "auto"
+    assert exact_json.layout.overflow == "visible"
+
+
+def test_shared_draft_footer_stays_outside_tabs_and_freeze_stays_on_review(
+    widget_runtime, monkeypatch
+):
+    """Draft actions remain global while the lifecycle freeze action remains review-only."""
+    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+
+    def contains(root, target):
+        return root is target or any(
+            contains(child, target) for child in getattr(root, "children", ())
+        )
+
+    for tab in ("Table", "Column", "Business Rules"):
+        controls["top_nav"].value = tab
+        assert not contains(controls["workspace"], controls["save_data_contract"])
+        assert not contains(controls["workspace"], controls["discard_data_contract"])
+        assert not contains(controls["workspace"], controls["freeze"])
+
+    controls["top_nav"].value = "Review"
+    assert contains(controls["right_pane"], controls["freeze"])
+    assert not contains(controls["workspace"], controls["save_data_contract"])
+    assert not contains(controls["workspace"], controls["discard_data_contract"])
+    assert contains(controls["authoring_footer"], controls["save_data_contract"])
+    assert contains(controls["authoring_footer"], controls["discard_data_contract"])
 
 
 
