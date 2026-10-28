@@ -18,7 +18,8 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append",
         "load_strategy_parameters_json": {}, "is_active": True,
-        "_workspace_id": "workspace-id", "_notebook_id": "writer-notebook-id",
+        "_workspace_id": "workspace-id", "_workspace_name": "Development",
+        "_notebook_id": "writer-notebook-id",
     }]
     for index in range(count):
         rows.append({
@@ -298,10 +299,10 @@ def widget_runtime(monkeypatch):
     config = types.SimpleNamespace(
         path_config=types.SimpleNamespace(paths={
             "dev": {
-                "Bronze": types.SimpleNamespace(kind="lakehouse"),
-                "Silver": types.SimpleNamespace(kind="lakehouse"),
-                "Gold": types.SimpleNamespace(kind="warehouse"),
-                "Metadata": types.SimpleNamespace(kind="lakehouse"),
+                "Bronze": types.SimpleNamespace(kind="lakehouse", name="Raw Lakehouse"),
+                "Silver": types.SimpleNamespace(kind="lakehouse", name="Curated Lakehouse"),
+                "Gold": types.SimpleNamespace(kind="warehouse", name="Serving Warehouse"),
+                "Metadata": types.SimpleNamespace(kind="lakehouse", name="Metadata Lakehouse"),
             }
         }),
         governance_config=types.SimpleNamespace(
@@ -435,13 +436,16 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
-    assert controls["table_search"].options == ["Select governed table", "orders"]
-    assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New draft"]
+    assert controls["table_search"].options == [
+        "Select governed table",
+        "Development · Lakehouse: Curated Lakehouse · Schema: sales · Table: orders",
+    ]
+    assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New Draft"]
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
+        "<b>Workspace</b>",
         "<b>Table</b>",
         "<b>Contract</b>",
-        "<b>Workspace</b>",
     ]
     assert all(field.children[1].layout.width == "100%" for field in selector.children)
     assert controls["selector_panel"].layout.display != "none"
@@ -482,7 +486,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 def test_contract_selector_defaults_to_latest_version_or_new_draft(
     widget_runtime, monkeypatch, versions, expected
 ):
-    """Global history remains available without automatically choosing a version."""
+    """Tables without versions start a draft; versioned tables default to the latest."""
     monkeypatch.setattr(
         module.contracts,
         "list_contract_governance_state",
@@ -496,14 +500,17 @@ def test_contract_selector_defaults_to_latest_version_or_new_draft(
     )
     state = module.widget_data_contract()
     controls = state["_controls"]
-    controls["table_search"].value = "orders"
+    table_option = next(
+        option for option in controls["table_search"].options if "Table: orders" in option
+    )
+    controls["table_search"].value = table_option
 
-    assert controls["contract"].value == ""
-    assert state["pending_contract_version"] is None
+    assert controls["contract"].value == expected
+    assert state["pending_contract_version"] == (None if expected == "new" else int(expected))
     assert [value for _label, value in controls["contract"].options] == [
         "", *map(str, versions), "new"
     ]
-    assert controls["contract_search"].options[-1] == "New draft"
+    assert controls["contract_search"].options[-1] == "New Draft"
 
 
 def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime):
@@ -515,10 +522,13 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == ""
     assert controls["table_search"].value == ""
-    assert "orders" in controls["table_search"].options
+    assert any("Table: orders" in option for option in controls["table_search"].options)
     assert state["pending_table_id"] is None
 
-    controls["table_search"].value = "orders"
+    table_option = next(
+        option for option in controls["table_search"].options if "Table: orders" in option
+    )
+    controls["table_search"].value = table_option
     assert controls["table"].value == "orders"
     assert state["pending_table_id"] == "orders"
 
@@ -536,12 +546,49 @@ def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtim
     assert [value for label, value in controls["table"].options] == ["", "orders"]
     controls["table"].value = "orders"
     assert [value for label, value in controls["workspace_select"].options] == ["", "dev", "other"]
+    assert controls["contract"].value == "1"
     controls["workspace_select"].value = "other"
     assert controls["table"].value == "orders"
     controls["table"].value = "inventory"
     assert [value for label, value in controls["workspace_select"].options] == ["", "other"]
     assert state["_selector_refreshing"] is False
-    assert controls["contract"].value == ""
+    assert controls["contract"].value == "new"
+    assert state["pending_contract_version"] is None
+    controls["table"].value = "orders"
+    assert controls["contract"].value == "1"
+    assert state["pending_contract_version"] == 1
+
+
+def test_table_identity_labels_distinguish_same_named_tables(widget_runtime, monkeypatch):
+    """Search results expose physical identity while selection keeps the central Table ID."""
+    rows = [
+        dict(widget_runtime["catalogue"][0]),
+        {
+            **widget_runtime["catalogue"][0],
+            "table_id": "audit-orders",
+            "store_type": "Warehouse",
+            "layer": "Gold",
+            "schema_name": "audit",
+        },
+    ]
+    monkeypatch.setattr(
+        module.contracts,
+        "list_contract_governance_state",
+        lambda **_kwargs: {"tables": rows, "contracts": [widget_runtime["contract"]]},
+    )
+
+    state = module.widget_data_contract()
+    controls = state["_controls"]
+    labels_by_value = {value: label for label, value in controls["table"].options}
+
+    assert labels_by_value["orders"] == (
+        "Development · Lakehouse: Curated Lakehouse · Schema: sales · Table: orders"
+    )
+    assert labels_by_value["audit-orders"] == (
+        "Development · Warehouse: Serving Warehouse · Schema: audit · Table: orders"
+    )
+    controls["table"].value = "audit-orders"
+    assert state["pending_table_id"] == "audit-orders"
 
 
 def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
