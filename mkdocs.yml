@@ -59,7 +59,7 @@ nav:
       - Work in Progress:
           - Production Table to Data Agent: solutions/production-table-to-data-agent.md
           - Scan Effective Data Access: solutions/effective-data-access.md
-      - Product Definition: maintainer/product-definition.md
+      - Initial Specs: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
       - Explore How FabricOps Functions Work Under the Hood: function-call-graph.md
