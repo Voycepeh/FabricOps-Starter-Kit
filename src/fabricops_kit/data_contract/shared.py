@@ -24,7 +24,6 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
-from fabricops_kit.data_contract.scheduled_refresh import canonical_scheduled_refresh
 from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -1256,6 +1255,7 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    payload.get("table", {}).pop("scheduled_refresh", None)
     payload.setdefault("profiling", default_profiling_policy())
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
@@ -1280,7 +1280,6 @@ def assemble_contract_payload(
     enrichment_rows: Any,
     guardrail_rows: Any,
     workspace_id: str,
-    scheduled_refresh: Mapping[str, Any] | None = None,
     allow_incomplete_grain: bool = False,
 ) -> tuple[dict[str, Any], list[str]]:
     """Assemble one exact Data Contract draft, validating Grain by default.
@@ -1393,7 +1392,6 @@ def assemble_contract_payload(
             "columns": column_docs,
             "processing": processing,
             "processing_source": contract_processing_source(draft),
-            **({"scheduled_refresh": canonical_scheduled_refresh(scheduled_refresh)} if scheduled_refresh is not None else {}),
             "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
@@ -1406,6 +1404,7 @@ def assemble_contract_payload(
         "guardrails": guardrail_docs,
         "profiling": validate_profiling_policy(draft_payload.get("profiling", default_profiling_policy())),
     }
+    payload["table"].pop("scheduled_refresh", None)
     if not allow_incomplete_grain:
         validate_grain_contract(payload)
     warnings = []
@@ -1428,7 +1427,6 @@ def freeze_contract(
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
     schema: str | None = None,
-    scheduled_refresh: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Freeze one already-saved draft; its governed JSON becomes immutable."""
     from delta.tables import DeltaTable

@@ -3,6 +3,8 @@
 from urllib.error import HTTPError
 import json
 
+import pytest
+
 from fabricops_kit.data_contract import scheduled_refresh
 
 
@@ -130,3 +132,33 @@ def test_missing_context_and_api_failure_are_non_fatal(monkeypatch):
     unavailable = scheduled_refresh.discover_scheduled_refresh()
     assert unavailable["status"] == "unavailable"
     assert unavailable["schedules"] == []
+
+
+@pytest.mark.parametrize("status", ["configured", "not_configured", "unavailable", "unexpected"])
+def test_writer_preserves_discovery_status_without_blocking(monkeypatch, status):
+    """Catalogue capture keeps valid schedules and records unavailable discovery safely."""
+    from importlib import import_module
+
+    writer = import_module("fabricops_kit.pipeline.pipeline_write")
+    schedules = [{"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "UTC"}]
+    monkeypatch.setattr(scheduled_refresh, "discover_scheduled_refresh", lambda **kwargs: {
+        "status": status, "schedules": schedules if status == "configured" else [],
+    })
+    captured = writer._writer_scheduled_refresh(audit={})
+    assert captured == {
+        "status": status if status in {"configured", "not_configured"} else "unavailable",
+        "schedules": schedules if status == "configured" else [],
+    }
+
+
+@pytest.mark.parametrize("error", [RuntimeError("runtime unavailable"), PermissionError("access denied")])
+def test_writer_records_unavailable_when_discovery_raises(monkeypatch, error):
+    """Runtime and authentication failures do not interrupt target metadata finalization."""
+    from importlib import import_module
+
+    def fail(**kwargs):
+        raise error
+
+    writer = import_module("fabricops_kit.pipeline.pipeline_write")
+    monkeypatch.setattr(scheduled_refresh, "discover_scheduled_refresh", fail)
+    assert writer._writer_scheduled_refresh(audit={}) == {"status": "unavailable", "schedules": []}

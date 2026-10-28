@@ -94,9 +94,7 @@ Processing prefers the current Engineering Catalogue scan, otherwise the previou
 then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
 or manually saved processing remains editable until the draft is frozen.
 Profile context remains read-only and is never added
-to the canonical payload. Scheduled Refresh is discovered read-only from Microsoft
-Fabric and remains independent of the authored Freshness expectation. Immutable
-versions are review-only. Grain description, selected key combination, and
+to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
 The sidebar shows the shared configured rules for Read and Write; it does
 not execute validation. Rule buttons open the existing authoring controls.
@@ -147,9 +145,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:662`
+`fabricops_kit/widgets/widget_data_contract.py:634`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L662-L6110">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L634-L6001">View on GitHub</a>
 </div>
 
 

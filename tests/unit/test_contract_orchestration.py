@@ -249,11 +249,19 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
 
 
 @pytest.mark.parametrize("mode", ["live"])
-def test_initial_publication_publishes_and_commits_lineage(runtime, spark_session, monkeypatch, mode):
+@pytest.mark.parametrize("schedule_available", [True, False])
+def test_initial_publication_publishes_and_commits_lineage(runtime, spark_session, monkeypatch, mode, schedule_available):
     """Initial publication uses its explicit policy without requiring historical Lineage."""
     make, _, spies, _ = runtime
     plan = make(mode, contracted=mode == "live")
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
+
+    def discover(**kwargs):
+        if not schedule_available:
+            raise PermissionError("Schedule access unavailable")
+        return {"status": "not_configured", "schedules": []}
+
+    monkeypatch.setattr(schedule, "discover_scheduled_refresh", discover)
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     source = read(plan, spark_session)
@@ -262,6 +270,8 @@ def test_initial_publication_publishes_and_commits_lineage(runtime, spark_sessio
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
     assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
     assert spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_count == 1
+    capture = spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_args.kwargs["scheduled_refresh"]
+    assert capture == {"status": "not_configured" if schedule_available else "unavailable", "schedules": []}
 
 
 @pytest.mark.parametrize("mode", ["testing", "live"])

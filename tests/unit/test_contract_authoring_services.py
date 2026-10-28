@@ -68,6 +68,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
             "table_id": "orders",
             "processing": {"load_strategy": "scd1", "key_columns": ["id"]},
             "processing_source": "manual",
+            "scheduled_refresh": {"status": "configured", "schedules": []},
             "columns": [],
         },
         "enrichment": {"table": [], "columns": []},
@@ -100,6 +101,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
         table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     inherited_payload = json.loads(inherited["contract_payload_json"])
+    assert "scheduled_refresh" not in inherited_payload["table"]
     assert inherited_payload["profiling"] == previous_payload["profiling"]
     assert json.loads(frozen["contract_payload_json"]) == previous_payload
     assert inherited["contract_version"] == 2
@@ -363,8 +365,8 @@ def test_sensitive_data_guardrail_rejects_invalid_scope_or_treatment(monkeypatch
         )
 
 
-def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
-    """Operational schedule metadata sits beside processing without raw Fabric fields."""
+def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
+    """Assembly and freezing discard obsolete draft fields without changing saved inputs."""
     draft = {
         "contract_id": "contract-orders", "contract_version": 1,
         "table_id": "orders", "workspace_id": "dev", "status": "draft",
@@ -396,13 +398,24 @@ def test_contract_payload_captures_normalized_scheduled_refresh_snapshot():
         }],
     }
 
+    original = json.loads(draft["contract_payload_json"])
+    original["table"]["scheduled_refresh"] = schedule
+    draft["contract_payload_json"] = json.dumps(original)
+    tables["METADATA_DATA_CATALOGUE"][0]["scheduled_refresh_json"] = schedule
+
     payload, _warnings = service.assemble_contract_payload(
         draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev",
-        scheduled_refresh=schedule,
     )
 
     assert payload["table"]["processing"]["load_strategy"] == "append"
-    assert payload["table"]["scheduled_refresh"] == schedule
+    assert "scheduled_refresh" not in payload["table"]
+    frozen = service.freeze_contract_record(draft=draft, audit={})
+    assert "scheduled_refresh" not in json.loads(frozen["contract_payload_json"])["table"]
+    assert json.loads(draft["contract_payload_json"]) == original
+    assert tables["METADATA_DATA_CATALOGUE"][0]["scheduled_refresh_json"] == schedule
+    with pytest.raises(ValueError, match="draft"):
+        service.freeze_contract_record(draft={**draft, "status": "frozen"}, audit={})
+    assert json.loads(draft["contract_payload_json"]) == original
 
 
 def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):

@@ -211,12 +211,6 @@ def widget_runtime(monkeypatch):
             "workspace_id": "dev",
         })
     calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
-    class ScheduleState(dict):
-        def update(self, *args, **kwargs):
-            super().update(*args, **kwargs)
-            catalogue[0]["scheduled_refresh_json"] = dict(self)
-
-    schedule = ScheduleState(catalogue[0]["scheduled_refresh_json"])
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -367,7 +361,7 @@ def widget_runtime(monkeypatch):
     return {
         "start": start, "open": open_widget, "models": models,
         "calls": calls, "contract": contract, "catalogue": catalogue,
-        "enrichment": enrichment, "guardrails": guardrails, "schedule": schedule,
+        "enrichment": enrichment, "guardrails": guardrails,
         "ai_enrichment": ai_enrichment,
     }
 
@@ -698,8 +692,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "On failure"
     table_summary = controls["left_pane"].children[0].value
-    assert "Scheduled refresh" in table_summary
-    assert "Daily · 08:00 · Asia/Singapore" in table_summary
+    assert "Scheduled refresh" not in table_summary
 
 
 def test_existing_grain_hydrates_row_key(widget_runtime):
@@ -883,13 +876,12 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Grain" in table_summary
     assert "Row Key" in table_summary
     assert "Load strategy" in table_summary
-    assert "Scheduled refresh" in table_summary
+    assert "Scheduled refresh" not in table_summary
     assert "Guardrails" in table_summary
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
     assert table_summary.index("Row Key") < table_summary.index("Load strategy")
-    assert table_summary.index("Load strategy") < table_summary.index("Scheduled refresh")
-    assert table_summary.index("Scheduled refresh") < table_summary.index("Guardrails")
+    assert table_summary.index("Load strategy") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
     assert [section.children[0].value for section in table_sections[:6]] == [
@@ -930,40 +922,42 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "<b>DQ Rules</b>" in controls["manifest_preview"].value
 
 
-def test_scheduled_refresh_renders_captured_frequency_in_table_summary(widget_runtime):
-    """Operational context shows the writer-captured schedule in the table summary."""
-    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = {
-        "status": "configured",
-        "schedules": [
-            {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "Asia/Singapore"},
-            {"enabled": False, "frequency": "weekly", "times": ["09:30"], "timezone": "UTC"},
-        ],
-    }
+@pytest.mark.parametrize("schedule", [
+    None, {"status": "uncaptured", "schedules": []},
+    {"status": "unavailable", "schedules": []},
+    {"status": "not_configured", "schedules": []},
+    {"status": "configured", "schedules": [{"frequency": "daily", "times": ["08:00"]}]},
+    "invalid schedule metadata",
+])
+def test_schedule_does_not_affect_authoring_save_or_freeze(widget_runtime, monkeypatch, schedule):
+    """Governance ignores operational schedule metadata while retaining Freshness."""
+    from fabricops_kit.data_contract import scheduled_refresh
 
+    def fail_discovery(**kwargs):
+        raise AssertionError("Contract authoring must not discover schedules")
+
+    monkeypatch.setattr(scheduled_refresh, "discover_scheduled_refresh", fail_discovery)
+    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = schedule
     state = widget_runtime["open"]()
-    rendered = state["_controls"]["left_pane"].children[0].value
-
-    assert "Scheduled refresh" in rendered
-    assert "Daily · 08:00 · Asia/Singapore" in rendered
-    assert "Weekly · 09:30 · UTC · Disabled" in rendered
-    assert rendered.index("Daily · 08:00 · Asia/Singapore") < rendered.index("Weekly · 09:30 · UTC · Disabled")
-    assert "pipeline_refresh" not in state["_controls"]
-
-
-def test_no_scheduled_refresh_is_calm_and_does_not_affect_persistence(widget_runtime):
-    """No Fabric schedule remains non-fatal and canonical save records stay unchanged."""
-    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = {"status": "not_configured", "schedules": []}
-    state = widget_runtime["open"]()
-    rendered = state["_controls"]["left_pane"].children[0].value
-    assert "Scheduled refresh" in rendered
-    assert "Not configured" in rendered
-
-    state["_controls"]["table_description"].value = "Still governed"
-    assert widget_runtime["calls"]["enrichment"] == []
-
-    state["_controls"]["save_data_contract"].click()
-    saved = widget_runtime["calls"]["enrichment"][-1]
-    assert all("scheduled_refresh" not in record for record in saved)
+    controls = state["_controls"]
+    summary = controls["left_pane"].children[0].value
+    assert "Scheduled refresh" not in summary
+    assert "scheduled_refresh" not in state
+    assert controls["table_guardrails"]["freshness"]["enabled"].value is True
+    before = next(rule for rule in state["manifest"]["guardrails"] if rule["guardrail_type"] == "freshness")
+    controls["table_description"].value = "Still governed"
+    controls["save_data_contract"].click()
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert "scheduled_refresh" not in saved["table"]
+    after = next(rule for rule in saved["guardrails"] if rule["guardrail_type"] == "freshness")
+    assert after == before
+    state["select"]("orders", 1)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Review"
+    controls["freeze"].click()
+    controls["freeze_confirm"].click()
+    assert widget_runtime["calls"]["freeze"] == 1, state["message"]
+    assert widget_runtime["catalogue"][0]["scheduled_refresh_json"] == schedule
 
 
 def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime):
@@ -2729,35 +2723,6 @@ def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, m
     assert module._parameters(pattern)["maximum_failure_percent"] == 3
 
 
-def test_schedule_is_read_from_catalogue_without_cross_workspace_discovery(widget_runtime):
-    """Governance consumes writer-captured Scheduled Refresh from Catalogue."""
-    state = widget_runtime["open"]()
-
-    assert state["scheduled_refresh"] == {
-        "status": "configured",
-        "schedules": [{
-            "enabled": True, "frequency": "daily", "times": ["08:00"],
-            "timezone": "Asia/Singapore",
-        }],
-    }
-    summary = state["_controls"]["left_pane"].children[0].value
-    assert "Scheduled refresh" in summary
-    assert "Daily · 08:00 · Asia/Singapore" in summary
-
-
-def test_uncaptured_schedule_is_not_misreported_and_blocks_freeze(widget_runtime):
-    """A profiled-only Catalogue row is not equivalent to no configured schedule."""
-    widget_runtime["catalogue"][0]["scheduled_refresh_json"] = None
-    state = widget_runtime["open"]()
-
-    assert state["scheduled_refresh"] == {"status": "uncaptured", "schedules": []}
-    assert "Not captured" in state["_controls"]["left_pane"].children[0].value
-    state["_controls"]["freeze"].click()
-    state["_controls"]["freeze_confirm"].click()
-    assert widget_runtime["calls"]["freeze"] == 0
-    assert "Run the writer pipeline before freezing" in state["message"]
-
-
 def test_freeze_refreshes_manifest_and_keeps_activation_out_of_authoring(widget_runtime):
     """Freeze reloads lifecycle state while immutable authoring stays review-only."""
     state = widget_runtime["open"]()
@@ -3634,21 +3599,6 @@ def test_native_candidate_metrics_do_not_invent_missing_or_zero_values(widget_ru
     assert 'Missing-key count not recorded' in evidence
     assert 'no missing key values' not in evidence
     assert tuple(state['_controls']['row_key_columns'].value) == ('column_0',)
-
-
-def test_native_schedule_unknown_fields_remain_unknown_in_both_views(widget_runtime):
-    """Missing historical flags/timezone must not become disabled or UTC."""
-    captured = {'status': 'configured', 'schedules': [
-        {'enabled': None, 'frequency': 'daily', 'times': [], 'timezone': None},
-    ]}
-    widget_runtime['catalogue'][0]['scheduled_refresh_json'] = captured
-    state = widget_runtime['open']()
-    for rendered in (state['_controls']['left_pane'].children[0].value,
-                     module._scheduled_refresh_html(captured)):
-        assert 'Enabled state unknown' in rendered
-        assert 'Timezone not provided' in rendered
-        assert 'Disabled' not in rendered and 'UTC' not in rendered
-    assert state['scheduled_refresh'] == captured
 
 
 @pytest.mark.parametrize(('null_count', 'expected'), [(0, 'no missing key values'), (2, '2 missing key values')])
