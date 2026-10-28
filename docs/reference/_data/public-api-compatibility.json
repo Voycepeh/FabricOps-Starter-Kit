@@ -1162,7 +1162,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1174,7 +1174,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1186,7 +1186,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -1197,27 +1197,31 @@
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "reasons": [
             "Lifecycle changed: Preview to Live.",
+            "Parameter removed: env.",
             "Parameter removed: metadata_schema.",
             "Parameter removed: spark.",
             "Optional parameter added: raise_on_failure.",
-            "Optional parameter added: verbose."
+            "Optional parameter added: verbose.",
+            "Required parameter added: workspace_id."
           ],
-          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
             "Lifecycle changed: Preview to Live.",
+            "Parameter removed: env.",
             "Optional parameter added: config_workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -1486,7 +1490,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -1664,9 +1668,9 @@
         "added": 15,
         "modified": 12,
         "nonbreaking": 15,
-        "potentially_breaking": 11,
+        "potentially_breaking": 12,
         "removed": 14,
-        "review_required": 15,
+        "review_required": 14,
         "total": 41
       },
       "target": "main"
@@ -2023,7 +2027,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -2956,7 +2960,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2968,7 +2972,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2980,7 +2984,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -2990,23 +2994,27 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "reasons": [
-            "Parameter removed: spark."
+            "Parameter removed: env.",
+            "Parameter removed: spark.",
+            "Required parameter added: workspace_id."
           ],
-          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Parameter removed: env.",
             "Optional parameter added: config_workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -3279,7 +3287,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -3383,9 +3391,9 @@
         "added": 11,
         "modified": 14,
         "nonbreaking": 12,
-        "potentially_breaking": 13,
+        "potentially_breaking": 14,
         "removed": 12,
-        "review_required": 12,
+        "review_required": 11,
         "total": 37
       },
       "target": "main"
@@ -3753,7 +3761,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -4656,12 +4664,40 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Parameter removed: environment_name.",
+            "Optional parameter added: workspace_id."
+          ],
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "reasons": [
-            "Parameter removed: spark_session."
+            "Parameter removed: environment_name.",
+            "Parameter removed: spark_session.",
+            "Optional parameter added: workspace_id."
           ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Parameter removed: environment_name.",
+            "Optional parameter added: workspace_id."
+          ],
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -4670,23 +4706,27 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "reasons": [
-            "Parameter removed: spark."
+            "Parameter removed: env.",
+            "Parameter removed: spark.",
+            "Required parameter added: workspace_id."
           ],
-          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "signature_before": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
+            "Parameter removed: env.",
             "Optional parameter added: config_workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: workspace_id.",
             "Parameter became optional: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] to FrameworkConfig | dict[str, Any] | None."
           ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
@@ -4967,7 +5007,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -5057,12 +5097,12 @@
       ],
       "summary": {
         "added": 3,
-        "modified": 19,
+        "modified": 21,
         "nonbreaking": 4,
-        "potentially_breaking": 18,
+        "potentially_breaking": 21,
         "removed": 10,
-        "review_required": 10,
-        "total": 32
+        "review_required": 9,
+        "total": 34
       },
       "target": "main"
     },
@@ -5417,7 +5457,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "signature_before": null
         },
         {
@@ -5541,7 +5581,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -5553,7 +5593,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -5565,7 +5605,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -5577,11 +5617,13 @@
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: raise_on_failure.",
             "Parameter removed: verbose.",
+            "Parameter removed: workspace_id.",
+            "Required parameter added: env.",
             "Optional parameter added: metadata_schema.",
             "Required parameter added: spark."
           ],
           "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -5592,11 +5634,13 @@
           "reasons": [
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: config_workspace_id.",
+            "Parameter removed: workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: env.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "removed",
@@ -5865,7 +5909,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6086,7 +6130,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6098,7 +6142,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -6110,7 +6154,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6119,10 +6163,12 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "reasons": [
+            "Parameter removed: workspace_id.",
+            "Required parameter added: env.",
             "Required parameter added: spark."
           ],
           "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6132,11 +6178,13 @@
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
             "Parameter removed: config_workspace_id.",
+            "Parameter removed: workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: env.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "removed",
@@ -6409,7 +6457,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6524,15 +6572,43 @@
       "changes": [
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
+          "reasons": [
+            "Parameter removed: workspace_id.",
+            "Optional parameter added: environment_name."
+          ],
+          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "reasons": [
+            "Parameter removed: workspace_id.",
+            "Optional parameter added: environment_name.",
             "Optional parameter added: spark_session."
           ],
           "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, spark_session = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
+          "reasons": [
+            "Parameter removed: workspace_id.",
+            "Optional parameter added: environment_name."
+          ],
+          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6541,10 +6617,12 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "reasons": [
+            "Parameter removed: workspace_id.",
+            "Required parameter added: env.",
             "Required parameter added: spark."
           ],
           "signature_after": "setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
+          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -6554,11 +6632,13 @@
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "reasons": [
             "Parameter removed: config_workspace_id.",
+            "Parameter removed: workspace_id.",
+            "Optional positional parameter inserted before an existing parameter: env.",
             "Parameter became required: config.",
             "Annotation changed for config: FrameworkConfig | dict[str, Any] | None to FrameworkConfig | dict[str, Any]."
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
         },
         {
           "change_type": "modified",
@@ -6839,7 +6919,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -6928,92 +7008,26 @@
       ],
       "summary": {
         "added": 10,
-        "modified": 19,
-        "nonbreaking": 13,
-        "potentially_breaking": 16,
+        "modified": 21,
+        "nonbreaking": 12,
+        "potentially_breaking": 19,
         "removed": 3,
         "review_required": 3,
-        "total": 32
+        "total": 34
       },
       "target": "v0.2.5"
     },
     {
       "baseline": "main",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
-          "reasons": [
-            "Parameter removed: environment_name.",
-            "Optional parameter added: workspace_id."
-          ],
-          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
-          "reasons": [
-            "Parameter removed: environment_name.",
-            "Optional parameter added: workspace_id."
-          ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
-          "reasons": [
-            "Parameter removed: environment_name.",
-            "Optional parameter added: workspace_id."
-          ],
-          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-          "reasons": [
-            "Parameter removed: env.",
-            "Required parameter added: workspace_id."
-          ],
-          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
-          "reasons": [
-            "Parameter removed: env.",
-            "Optional positional parameter inserted before an existing parameter: workspace_id."
-          ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
-        }
-      ],
+      "changes": [],
       "summary": {
         "added": 0,
-        "modified": 5,
+        "modified": 0,
         "nonbreaking": 0,
-        "potentially_breaking": 5,
+        "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 5
+        "total": 0
       },
       "target": "working-tree"
     },
@@ -7370,7 +7384,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -7918,7 +7932,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -8380,7 +8394,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
           "change_type": "added",
@@ -8480,81 +8494,15 @@
     },
     {
       "baseline": "working-tree",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
-          "reasons": [
-            "Parameter removed: workspace_id.",
-            "Optional parameter added: environment_name."
-          ],
-          "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
-          "reasons": [
-            "Parameter removed: workspace_id.",
-            "Optional parameter added: environment_name."
-          ],
-          "signature_after": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
-          "reasons": [
-            "Parameter removed: workspace_id.",
-            "Optional parameter added: environment_name."
-          ],
-          "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-          "reasons": [
-            "Parameter removed: workspace_id.",
-            "Required parameter added: env."
-          ],
-          "signature_after": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
-          "signature_before": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
-          "reasons": [
-            "Parameter removed: workspace_id.",
-            "Optional positional parameter inserted before an existing parameter: env."
-          ],
-          "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
-          "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
-        }
-      ],
+      "changes": [],
       "summary": {
         "added": 0,
-        "modified": 5,
+        "modified": 0,
         "nonbreaking": 0,
-        "potentially_breaking": 5,
+        "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 5
+        "total": 0
       },
       "target": "main"
     }
@@ -14279,7 +14227,7 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "environment_name",
+              "name": "workspace_id",
               "required": false
             },
             {
@@ -14317,7 +14265,7 @@
           ],
           "qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
           "return_annotation": "dict[str, Any]",
-          "signature": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/access_scanner/scan_onelake_access.py",
           "source_qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access"
         },
@@ -14347,7 +14295,7 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "environment_name",
+              "name": "workspace_id",
               "required": false
             },
             {
@@ -14377,7 +14325,7 @@
           ],
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "return_annotation": "dict[str, Any]",
-          "signature": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', environment_name: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "scan_sql_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...] = 'warehouse', workspace_id: str | None = None, access_snapshot_id: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/access_scanner/scan_sql_access.py",
           "source_qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access"
         },
@@ -14407,7 +14355,7 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "environment_name",
+              "name": "workspace_id",
               "required": false
             },
             {
@@ -14445,7 +14393,7 @@
           ],
           "qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
           "return_annotation": "dict[str, Any]",
-          "signature": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/access_scanner/scan_workspace_access.py",
           "source_qualified_name": "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access"
         },
@@ -14467,7 +14415,7 @@
               "default": null,
               "has_default": false,
               "kind": "keyword_only",
-              "name": "env",
+              "name": "workspace_id",
               "required": true
             },
             {
@@ -14497,7 +14445,7 @@
           ],
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "return_annotation": "dict[str, Any]",
-          "signature": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], env: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
+          "signature": "setup_metadata_tables(*, config: FrameworkConfig | dict[str, Any], workspace_id: str, require_active_steward: bool = False, verbose: bool = True, raise_on_failure: bool = False) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
           "source_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
         },
@@ -14515,11 +14463,11 @@
               "required": false
             },
             {
-              "annotation": "str",
-              "default": "'Sandbox'",
+              "annotation": "str | None",
+              "default": "None",
               "has_default": true,
               "kind": "positional_or_keyword",
-              "name": "env",
+              "name": "workspace_id",
               "required": false
             },
             {
@@ -14565,7 +14513,7 @@
           ],
           "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
           "return_annotation": "NotebookSetupContext",
-          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
+          "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
           "source_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
         },
@@ -15648,7 +15596,7 @@
             },
             {
               "annotation": "str",
-              "default": "'Test'",
+              "default": "'Ungoverned'",
               "has_default": true,
               "kind": "keyword_only",
               "name": "pipeline_mode",
@@ -15681,7 +15629,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -15793,7 +15741,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "3c8864f74b944f4b79606d07de00f87aaee3bea0",
+      "revision": "8361b73d88d236d909033c410af3eee9f23a80c1",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -17222,7 +17170,7 @@
             },
             {
               "annotation": "str",
-              "default": "'Test'",
+              "default": "'Ungoverned'",
               "has_default": true,
               "kind": "keyword_only",
               "name": "pipeline_mode",
@@ -17255,7 +17203,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Test', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -17370,7 +17318,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:429db1ae2e3b48725175426aa3a623487c66df96870cfa98f16fb38ae6199bb3",
+      "source_digest": "sha256:ec258e7ee1d0017e74e118255061d313b66cbcdce75c1939349bf47a8e34df13",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

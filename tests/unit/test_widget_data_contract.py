@@ -2282,7 +2282,11 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
             {
                 "guardrail_type": "sensitive_data", "rule_type": "mask", "column_id": "col-1",
                 "action": "Block",
-                "rule_parameters": {"pii_type": "direct", "treatment": "mask"},
+                "rule_parameters": {
+                    "pii_type": "direct", "treatment": "mask",
+                    "preserve_start": 1, "preserve_end": 1,
+                    "mask_character": "*",
+                },
             },
             {
                 "guardrail_type": "data_quality", "rule_type": "pattern", "column_id": "col-1",
@@ -2325,6 +2329,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "Customer identifier" in review
     assert "Confidential" in review
     assert "Direct PII · Mask" in review
+    assert "Partial mask; mask character: &#x27;*&#x27;; preserve start: 1; preserve end: 1" in review
     assert "Required" in review and ">Yes<" in review
     assert "required columns: customer_id" in review
     assert "required columns: col-1" not in review
@@ -3458,6 +3463,91 @@ def test_sensitive_ui_defaults_to_full_mask_and_hides_technical_settings(widget_
     controls['mask_mode'].value = 'full'
     assert controls['mask_start'].value == '0'
     assert not state['_validation_errors']
+
+
+def test_sensitive_treatment_guidance_explains_all_effective_behaviors():
+    """Governance can understand each treatment without seeing implementation details."""
+    mask = module._sensitive_treatment_guidance({
+        "treatment": "mask", "preserve_start": 1, "preserve_end": 1,
+        "mask_character": "*",
+    })
+    tokenize = module._sensitive_treatment_guidance({"treatment": "tokenize"})
+    bucket = module._sensitive_treatment_guidance({
+        "treatment": "bucket", "bins": [0, 18, 30],
+        "labels": ["Under 18", "18-29", "30+"],
+    })
+    remove = module._sensitive_treatment_guidance({"treatment": "remove"})
+
+    assert "S1234567A" in mask and "S*******A" in mask
+    assert "Full mask" in mask and "partial mask" in mask
+    assert "opaque UUID" in tokenize and "persistent token mapping" in tokenize
+    assert "same token within one run" in tokenize and "across runs" in tokenize
+    assert "pseudonymisation" in tokenize and "not guaranteed anonymisation" in tokenize
+    assert "Original-to-token mappings are never shown here" in tokenize
+    assert "550e8400-e29b-41d4-a716-446655440000" in tokenize
+    assert "18-29" in bucket and "without aggregating or removing rows" in bucket
+    assert "first label also covers values below the first configured bound" in bucket
+    assert "final label is open-ended" in bucket
+    assert "Column removed" in remove and "before downstream checks and publication" in remove
+
+
+@pytest.mark.parametrize(
+    "start,end,expected",
+    [(0, 0, "*********"), (1, 1, "S*******A"), (4, 4, "*********")],
+)
+def test_sensitive_mask_examples_follow_runtime_short_value_safety(start, end, expected):
+    """The preview never implies that an unsafe short value remains visible."""
+    assert module._mask_treatment_example(
+        preserve_start=start, preserve_end=end, mask_character="*"
+    ) == ("S1234567A", expected)
+
+
+def test_sensitive_bucket_examples_use_configured_boundaries_and_widths():
+    """Bucket previews use the selected lower-inclusive configuration."""
+    assert module._bucket_treatment_example({
+        "bins": [0, 18, 30], "labels": ["Under 18", "18-29", "30+"],
+    }) == ("18", "18-29")
+    assert module._bucket_treatment_example({
+        "bin_width": "10", "bin_origin": "5",
+    }) == ("5", "[5, 15)")
+    assert module._bucket_treatment_example({
+        "bins": [0, 18], "labels": ["Under 18"],
+    }) is None
+
+
+def test_sensitive_guidance_updates_with_working_parameters(widget_runtime):
+    """Changing treatment parameters immediately updates the before/after example."""
+    _use_text_identifier(widget_runtime)
+    controls = widget_runtime["open"]()['_controls']
+    controls['column_select'].value = 'col-0'
+    controls['pii_type'].value = 'direct'
+    controls['pii_reason'].value = 'Identifies the customer'
+    controls['sensitive_enabled'].value = True
+    controls['mask_mode'].value = 'partial'
+    controls['mask_start'].value = '1'
+    controls['mask_end'].value = '1'
+    assert "S*******A" in controls['treatment_help'].value
+
+    controls['sensitive_treatment'].value = 'tokenize'
+    assert "persistent token mapping" in controls['treatment_help'].value
+
+
+@pytest.mark.parametrize(
+    "parameters,expected",
+    [
+        ({"treatment": "mask", "preserve_start": 1, "preserve_end": 2,
+          "mask_character": "#"},
+         "Partial mask; mask character: '#'; preserve start: 1; preserve end: 2"),
+        ({"treatment": "tokenize"},
+         "persistent mapping required for consistent reuse across runs"),
+        ({"treatment": "bucket", "bins": [0, 18], "labels": ["Under 18", "18+"]},
+         "first and last ranges open-ended"),
+        ({"treatment": "remove"}, "Column absent from the published dataset"),
+    ],
+)
+def test_sensitive_review_describes_effective_settings(parameters, expected):
+    """The contract review wording exposes the frozen treatment configuration."""
+    assert expected in module._sensitive_treatment_review(parameters)
 
 
 def test_sensitive_fixed_width_policy_survives_save_and_reopen(widget_runtime):

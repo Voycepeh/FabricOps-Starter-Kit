@@ -168,8 +168,8 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "Governance authoring and Engineering validation intentionally loop" in source
     assert "Activation records exact validation, Contract and Agreement references" in source
     assert "METADATA_PIPELINE_REGISTRY" in source
-    assert "Observe locally → Govern globally → Preview locally → Activate locally" in source
-    assert "complete validation evidence in each target workspace before local activation" in source
+    assert "committed Pipeline Run and Guardrail Results for the explicitly selected workspace" in source
+    assert "Registration and activation in another workspace are independent" in source
     assert "METADATA_ACTIVATION_STATE" not in source
     for demoted_widget in (
         "widget_enrich_table_metadata",

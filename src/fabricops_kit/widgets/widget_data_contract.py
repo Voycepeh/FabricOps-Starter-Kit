@@ -6,6 +6,7 @@ import html
 import traceback
 import json
 import uuid
+from decimal import Decimal, InvalidOperation
 from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
@@ -148,6 +149,19 @@ _CONTRACT_STYLE = """<style>
     width:100%; flex-wrap:wrap; padding:8px 10px; background:#f6f8fb;
     border:1px solid var(--form-border); border-radius:5px;
 }
+.fabricops-data-contract .fabricops-treatment-guide {
+    background:#f8f6fc; border:1px solid #ded7ef; border-left:3px solid #6750a4;
+    border-radius:5px; color:#243449; padding:10px 12px; font-size:12px; line-height:1.5;
+}
+.fabricops-data-contract .fabricops-treatment-guide p { margin:0 0 6px; }
+.fabricops-data-contract .fabricops-treatment-example {
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:7px;
+    color:#344054;
+}
+.fabricops-data-contract .fabricops-treatment-example code {
+    background:#fff; border:1px solid #dce4ed; border-radius:4px; padding:2px 6px;
+    color:#243449; overflow-wrap:anywhere;
+}
 .fabricops-data-contract .fabricops-guardrail-disclosure { border:1px solid var(--form-border); border-radius:6px; overflow:hidden; }
 .fabricops-data-contract .fabricops-guardrail-disclosure > .widget-vbox { padding:10px; background:#fff; }
 .fabricops-data-contract .fabricops-guardrail-sidebar .fabricops-guardrail-toggle {
@@ -251,6 +265,159 @@ def _parameters(row: Mapping[str, Any]) -> dict[str, Any]:
         except json.JSONDecodeError:
             return {}
     return dict(value) if isinstance(value, Mapping) else {}
+
+
+def _format_decimal(value: Decimal) -> str:
+    """Format a finite Decimal without insignificant trailing zeroes."""
+    rendered = format(value, "f")
+    if "." in rendered:
+        rendered = rendered.rstrip("0").rstrip(".")
+    return rendered or "0"
+
+
+def _mask_treatment_example(
+    *, preserve_start: Any, preserve_end: Any, mask_character: Any = "*"
+) -> tuple[str, str] | None:
+    """Return an illustrative mask using the runtime's short-value safety rule."""
+    source = "S1234567A"
+    try:
+        start = int(preserve_start)
+        end = int(preserve_end)
+    except (TypeError, ValueError):
+        return None
+    character = str(mask_character or "")
+    if start < 0 or end < 0 or not character:
+        return None
+    if len(source) <= start + end + 1:
+        return source, character * len(source)
+    suffix = source[-end:] if end else ""
+    return source, source[:start] + character * (len(source) - start - end) + suffix
+
+
+def _bucket_treatment_example(parameters: Mapping[str, Any]) -> tuple[str, str] | None:
+    """Return an example derived from approved ranges or fixed-width parameters."""
+    if "bin_width" in parameters:
+        try:
+            width = Decimal(str(parameters.get("bin_width")))
+            origin = Decimal(str(parameters.get("bin_origin", 0)))
+        except (InvalidOperation, TypeError, ValueError):
+            return None
+        if not width.is_finite() or not origin.is_finite() or width <= 0:
+            return None
+        return _format_decimal(origin), (
+            f"[{_format_decimal(origin)}, {_format_decimal(origin + width)})"
+        )
+    try:
+        bins = [Decimal(str(value)) for value in parameters.get("bins", [])]
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+    labels = [str(value).strip() for value in parameters.get("labels", [])]
+    if (
+        not bins
+        or len(bins) != len(labels)
+        or any(not value.is_finite() for value in bins)
+        or any(left >= right for left, right in zip(bins, bins[1:]))
+        or any(not label for label in labels)
+    ):
+        return None
+    index = 1 if len(bins) > 1 else 0
+    return _format_decimal(bins[index]), labels[index]
+
+
+def _sensitive_treatment_review(parameters: Mapping[str, Any]) -> str:
+    """Describe the effective persisted treatment for contract review."""
+    treatment = str(parameters.get("treatment") or "").lower()
+    if treatment == "mask":
+        start = int(parameters.get("preserve_start") or 0)
+        end = int(parameters.get("preserve_end") or 0)
+        character = str(parameters.get("mask_character") or "*")
+        style = "Partial mask" if start or end else "Full mask"
+        return (
+            f"{style}; mask character: {character!r}; "
+            f"preserve start: {start}; preserve end: {end}"
+        )
+    if treatment == "tokenize":
+        return (
+            "UUID tokens; repeated values share a token within one run; "
+            "persistent mapping required for consistent reuse across runs"
+        )
+    if treatment == "bucket":
+        if "bin_width" in parameters:
+            return (
+                "Fixed width; interval width: "
+                f"{parameters.get('bin_width')}; starting point: {parameters.get('bin_origin', 0)}; "
+                "lower boundary included"
+            )
+        bins = ", ".join(str(value) for value in parameters.get("bins", []))
+        labels = ", ".join(str(value) for value in parameters.get("labels", []))
+        return (
+            f"Approved ranges; lower bounds: {bins or 'not configured'}; "
+            f"labels: {labels or 'not configured'}; first and last ranges open-ended; "
+            "each boundary from the second onward starts the next label"
+        )
+    if treatment == "remove":
+        return "Column absent from the published dataset"
+    return ""
+
+
+def _sensitive_treatment_guidance(parameters: Mapping[str, Any]) -> str:
+    """Render concise treatment behavior and a public-safe illustrative example."""
+    treatment = str(parameters.get("treatment") or "").lower()
+    mask_character = html.escape(str(parameters.get("mask_character") or "*"))
+    descriptions = {
+        "mask": (
+            f"Replaces sensitive characters with <code>{mask_character}</code>. Full mask hides every "
+            "character; partial mask preserves only the approved characters at the beginning "
+            "or end. Short values that cannot be safely preserved are fully masked."
+        ),
+        "tokenize": (
+            "Replaces original values with opaque UUID identifiers. Repeated values receive the "
+            "same token within one run. Consistent reuse across runs requires a persistent token "
+            "mapping. Tokenization is pseudonymisation, not "
+            "guaranteed anonymisation. Original-to-token mappings are never shown here."
+        ),
+        "bucket": (
+            "Replaces exact numeric values with configured category ranges without aggregating "
+            "or removing rows."
+        ),
+        "remove": "Removes the entire column before downstream checks and publication.",
+    }
+    description = descriptions.get(treatment)
+    if not description:
+        return ""
+    if treatment == "bucket":
+        description += (
+            " Fixed-width intervals use stable equal widths, include their lower boundary, and "
+            "exclude their upper boundary."
+            if "bin_width" in parameters else
+            " Approved ranges use their supplied labels. The first label also covers values below "
+            "the first configured bound; each boundary from the second onward starts the next "
+            "label, and the final label is open-ended."
+        )
+    example: tuple[str, str] | None = None
+    if treatment == "mask":
+        example = _mask_treatment_example(
+            preserve_start=parameters.get("preserve_start", 0),
+            preserve_end=parameters.get("preserve_end", 0),
+            mask_character=parameters.get("mask_character", "*"),
+        )
+    elif treatment == "bucket":
+        example = _bucket_treatment_example(parameters)
+    elif treatment == "tokenize":
+        example = ("C001", "550e8400-e29b-41d4-a716-446655440000")
+    elif treatment == "remove":
+        example = ("NRIC", "Column removed")
+    example_html = (
+        "<div class='fabricops-treatment-example'><b>Example</b>"
+        f"<code>{html.escape(example[0])}</code><span aria-hidden='true'>&rarr;</span>"
+        f"<code>{html.escape(example[1])}</code></div>"
+        if example else
+        "<div class='fabricops-treatment-example'>Complete valid parameters to preview the result.</div>"
+    )
+    return (
+        "<div class='fabricops-treatment-guide'>"
+        f"<p><b>What happens</b><br>{description}</p>{example_html}</div>"
+    )
 
 
 def _latest(rows: list[dict[str, Any]], *identity: str) -> list[dict[str, Any]]:
@@ -441,10 +608,23 @@ def _manifest_sections(
         parameters = _parameters(rule)
         pii_type = str(parameters.get("pii_type") or "direct").lower()
         label = PII_LABELS.get(pii_type, pii_type.replace("_", " ").title())
-        treatment = str(parameters.get("treatment") or rule.get("rule_type") or "").replace("_", " ").title()
+        treatment_value = str(parameters.get("treatment") or rule.get("rule_type") or "")
+        treatment = treatment_value.replace("_", " ").title()
         action = str(rule.get("action") or "Warn")
         detail = f"{label} · {treatment}" if treatment else label
-        return f"{html.escape(detail)}<br><span style='color:#667085;'>{html.escape(action)}</span>"
+        configuration = _sensitive_treatment_review(
+            {**parameters, "treatment": treatment_value}
+        )
+        configuration_html = (
+            "<br><span style='color:#667085;'>"
+            + html.escape(configuration)
+            + "</span>"
+            if configuration else ""
+        )
+        return (
+            f"{html.escape(detail)}<br><span style='color:#667085;'>"
+            f"{html.escape(action)}</span>{configuration_html}"
+        )
 
     def column_rule_list() -> str:
         if not rules_by_column and not sensitive_by_column:
@@ -3276,6 +3456,36 @@ def widget_data_contract(
         )
         removal_state = {"pending": False, "previous_treatment": "tokenize", "previous_enabled": False}
 
+        def current_sensitive_parameters() -> dict[str, Any]:
+            """Return the working treatment settings for contextual guidance."""
+            treatment = str(sensitive_treatment.value or "")
+            parameters: dict[str, Any] = {"treatment": treatment}
+            if treatment == "mask":
+                parameters.update({
+                    "preserve_start": mask_start.value,
+                    "preserve_end": mask_end.value,
+                    "mask_character": mask_character.value,
+                })
+            elif treatment == "bucket" and bucket_mode.value == "width":
+                parameters.update({
+                    "bin_width": bucket_width.value,
+                    "bin_origin": bucket_origin.value,
+                })
+            elif treatment == "bucket":
+                parameters.update({
+                    "bins": [
+                        value.strip()
+                        for value in str(bucket_bins.value or "").split(",")
+                        if value.strip()
+                    ],
+                    "labels": [
+                        value.strip()
+                        for value in str(bucket_labels.value or "").split(",")
+                        if value.strip()
+                    ],
+                })
+            return parameters
+
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
             enabled = bool(sensitive_enabled.value) and str(pii_type.value or "none") != "none"
@@ -3288,12 +3498,10 @@ def widget_data_contract(
                 control.layout.display = "" if enabled and treatment == "bucket" and bucket_mode.value == "ranges" else "none"
             for control in (bucket_width, bucket_origin):
                 control.layout.display = "" if enabled and treatment == "bucket" and bucket_mode.value == "width" else "none"
-            treatment_help.value = {
-                "mask": "Hide the value. Partial masks expose only approved characters; short values are fully masked.",
-                "tokenize": "Replace values with stable opaque identifiers. Token mappings are managed by the pipeline, not authored here.",
-                "bucket": "Replace numbers with fixed bands; rows are preserved. Design bands during data exploration. For approved ranges, comma-separate lower bounds and labels. The first and last bands are open-ended.",
-                "remove": "Exclude this column from the written output.",
-            }.get(treatment, "") if enabled else ""
+            treatment_help.value = (
+                _sensitive_treatment_guidance(current_sensitive_parameters())
+                if enabled else ""
+            )
             removing = bool(sensitive_enabled.value) and treatment == "remove"
             if removing and required.value and editable and not hydrating["active"] and not removal_state["pending"]:
                 removal_state["pending"] = True
@@ -3330,8 +3538,12 @@ def widget_data_contract(
         ) -> None:
             pii_value = str(pii_type.value or "none")
             if not sensitive_enabled.value or pii_value == "none":
+                treatment_help.value = ""
                 sensitive_rule_preview.value = ""
                 return
+            treatment_help.value = _sensitive_treatment_guidance(
+                current_sensitive_parameters()
+            )
             pii_label = PII_LABELS.get(pii_value, pii_value)
             treatment = str(sensitive_treatment.value or "")
             action = "Treatment failure stops the write."
