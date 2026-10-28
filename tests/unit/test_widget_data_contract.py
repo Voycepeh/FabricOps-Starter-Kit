@@ -3166,8 +3166,6 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     controls["sidebar_rule_buttons"]["grain"][0].click()
     assert controls["top_nav"].value == "Table"
     assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
-    controls["configure_guardrails"].click()
-    assert len(controls["right_pane"].children) == 6
     controls["sidebar_rule_buttons"]["schema"][0].click()
     assert controls["top_nav"].value == "Column"
     assert controls["column_select"].value == "col-0"
@@ -3265,22 +3263,13 @@ def test_sidebar_expand_controls_preserve_state_during_live_updates(widget_runti
     assert schema.children[0].tooltip.startswith("Collapse Schema")
 
 
-def test_configure_route_exposes_existing_unconfigured_editors(widget_runtime):
-    """Quiet configuration navigation includes inactive options without inventing rules."""
-    widget_runtime["guardrails"][:] = []
-    state = widget_runtime["open"]()
-    controls = state["_controls"]
-    assert controls["configure_options"].layout.display == "none"
-    controls["configure_guardrails"].click()
-    assert controls["configure_options"].layout.display == ""
-    assert set(controls["configure_guardrail_buttons"]) == {"schema", "grain", "data_quality", "sensitive_data", "freshness", "source_drift"}
-    controls["configure_guardrail_buttons"]["sensitive_data"].click()
-    assert controls["top_nav"].value == "Column"
-    assert controls["column_select"].value == "col-0"
-    controls["configure_guardrail_buttons"]["grain"].click()
-    assert controls["top_nav"].value == "Table"
-    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
-    assert not state["current"]["guardrails"]
+def test_sidebar_has_no_duplicate_configuration_buttons(widget_runtime):
+    """Configured guardrails retain navigation without the redundant configuration menu."""
+    controls = widget_runtime["open"]()["_controls"]
+    assert "configure_guardrails" not in controls
+    assert "configure_options" not in controls
+    assert "configure_guardrail_buttons" not in controls
+    assert len(controls["guardrail_sidebar"].children) == 2
 
 
 def test_sidebar_static_freshness_describes_expectation_without_claiming_execution(widget_runtime):
@@ -3326,10 +3315,6 @@ def test_sidebar_releases_replaced_models_and_preserves_configuration_controls(w
         controls["table_grain"].value = "A" * (index + 1)
         assert len(widget_runtime["models"]) == before
     assert all(group.closed and group.layout.closed for group in original_groups)
-    assert not controls["configure_guardrails"].closed
-    controls["configure_guardrails"].click()
-    controls["configure_guardrail_buttons"]["grain"].click()
-    assert controls["top_nav"].value == "Table"
     assert not controls["sidebar_groups"]["read"].closed
 
 

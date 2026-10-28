@@ -2338,27 +2338,10 @@ def widget_data_contract(
                 right.children = (section,)
             state["_guardrail_editor_target"] = kind
 
-        configure_guardrails = widgets.Button(
-            description="Configure guardrails", tooltip="Open existing Guardrail editors",
-            layout=widgets.Layout(width="100%", min_width="0"),
-        )
-        configure_guardrail_buttons = {}
-        for kind, title in (("schema", "Schema"), ("grain", "Grain"), ("data_quality", "Data Quality"), ("sensitive_data", "Sensitive Data"), ("freshness", "Freshness"), ("source_drift", "Source Drift")):
-            option = widgets.Button(description=title, tooltip="Configure " + title, layout=widgets.Layout(width="100%", min_width="0"))
-            option.on_click(lambda _button, k=kind: navigate_guardrail(k))
-            configure_guardrail_buttons[kind] = option
-        configure_options = widgets.VBox(list(configure_guardrail_buttons.values()), layout=widgets.Layout(width="100%", min_width="0", display="none", gap="4px"))
-        def configure_guardrails_clicked(_button):
-            configure_options.layout.display = "" if configure_options.layout.display == "none" else "none"
-            top_nav.value = "Table"
-            apply_view()
-        configure_guardrails.on_click(configure_guardrails_clicked)
-
-        def close_sidebar_widgets(nodes, *, keep_configuration=False):
-            retained = (configure_guardrails, configure_options) if keep_configuration else ()
+        def close_sidebar_widgets(nodes):
             seen = set()
             def close_owned(widget):
-                if widget is None or id(widget) in seen or any(widget is item for item in retained):
+                if widget is None or id(widget) in seen:
                     return
                 seen.add(id(widget))
                 for child in getattr(widget, "children", ()):
@@ -2484,10 +2467,9 @@ def widget_data_contract(
             guardrail_sidebar.children = (
                 group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "grain", "data_quality")),
                 group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "source_drift", "grain", "data_quality")),
-                configure_guardrails, configure_options,
             )
             sidebar_snapshot["signature"] = signature
-            close_sidebar_widgets(previous, keep_configuration=True)
+            close_sidebar_widgets(previous)
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
@@ -5719,8 +5701,7 @@ def widget_data_contract(
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "guardrail_sidebar": guardrail_sidebar, "sidebar_groups": sidebar_groups,
-            "sidebar_rule_buttons": sidebar_rule_buttons, "configure_guardrails": configure_guardrails,
-            "configure_options": configure_options, "configure_guardrail_buttons": configure_guardrail_buttons,
+            "sidebar_rule_buttons": sidebar_rule_buttons,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
