@@ -2,7 +2,7 @@
 
 ## Where this appears in the Data Contract UI
 
-**Columns → Column data quality → Value Rules**
+**Data Quality → Add Rule Manually → Range**
 
 This is a directly authored column rule. The UI exposes lower and upper bounds plus independent inclusive-bound controls. It is persisted as `rule_type: range`.
 

@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**DQ Rules → Business Rules → Resolved DQ Rules**
+**Data Quality → Add Rule Manually or Generate Rules with AI → Custom expression**
 
-Custom Expression is the fallback when none of the structured DQ rules can preserve the business requirement. FabricOps resolves the requirement to `rule_type: custom_expression` with a constrained PySpark boolean expression. The UI requires Engineering review before a Custom Expression can be frozen into the Data Contract.
+Custom Expression is the fallback when none of the structured DQ rules can preserve the business requirement. Governance can enter a constrained PySpark boolean expression directly or review one proposed from business language. The UI requires Engineering review before a Custom Expression can be frozen into the Data Contract.
 
 ## What this rule does
 

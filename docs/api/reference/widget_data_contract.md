@@ -98,6 +98,11 @@ to the canonical payload. Immutable versions are review-only. Grain description,
 optional enforcement are independent. Enabling Grain defaults to Block.
 The sidebar shows the shared configured rules for Read and Write; it does
 not execute validation. Rule buttons open the existing authoring controls.
+The Data Quality tab is the single DQ authoring surface. Governance can add
+any supported deterministic rule manually, or generate transient proposals
+from business language when AI is enabled. Proposals require explicit review
+and addition. Both paths create the same editable Guardrail records; the
+Column tab contains column metadata and non-DQ settings only.
 DQ authoring uses Warn/Block and accepted failure rate percent.
 Completeness counts missing rows; Uniqueness counts all duplicate-group rows.
 Legacy distinct-key limits retain their runtime meaning and require an explicit
@@ -147,9 +152,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:815`
+`fabricops_kit/widgets/widget_data_contract.py:819`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L815-L6273">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L819-L6623">View on GitHub</a>
 </div>
 
 

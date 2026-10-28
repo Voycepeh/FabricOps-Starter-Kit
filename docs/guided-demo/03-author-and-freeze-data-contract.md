@@ -4,8 +4,8 @@
 
 Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
 
-!!! warning "Enable Fabric AI Functions for the full DQ integration exercise"
-    The four direct Column data quality families can be authored without AI. The remaining Business Rules are resolved from business language, so the full nine-rule integration exercise requires AI-assisted authoring.
+!!! warning "Enable Fabric AI Functions for the AI-assisted DQ exercise"
+    All nine deterministic Data Quality rule types can be authored manually. This walkthrough also exercises natural-language generation, so enable AI to follow that assisted path; AI is not required for ordinary rule creation or enforcement.
 
     Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
@@ -97,7 +97,7 @@ A composite key is unique as a combination. Any SQL null in any key component fa
 
 The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Source Drift, Grain, Data Quality). Source Drift belongs to the source → consuming target relationship and runs during that target's Write orchestration. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
 
-Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. Use **Table**, **Column**, and **Business Rules** to author or edit settings, including unconfigured Guardrails. Disabled Grain remains visible with its disabled state; its description and key selection remain editable in **Grain & Row Key**. Summaries update as edits are staged, before Save.
+Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. Use **Table**, **Column**, and **Data Quality** to author or edit settings, including unconfigured Guardrails. Disabled Grain remains visible with its disabled state; its description and key selection remain editable in **Grain & Row Key**. Summaries update as edits are staged, before Save.
 
 **Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records actual Grain evaluations with `guardrail_type=grain`, the exact contract version, continuation decision, counts, and validation scope. Configured Grain checks validate Read rows and prepared Write input independently; their authored Warn or Block action determines continuation. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
 
@@ -106,9 +106,9 @@ Expand a Guardrail to inspect its columns, rules, parameters, and policy, then c
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Columns — author the direct DQ rules
+## Data Quality — add rules manually
 
-Open **Columns** and configure these rules for the integration exercise:
+Open **Data Quality**, use **Add Rule Manually**, and configure these rules for the integration exercise:
 
 </div>
 </div>
@@ -118,22 +118,22 @@ Open **Columns** and configure these rules for the integration exercise:
 | UI | Column | Configuration | Runtime rule |
 | --- | --- | --- | --- |
 | **Completeness** | `customer_id` | Maximum missing = **0%**; treat blank as missing | [`completeness`](../reference/dq-rules/completeness.md) |
-| **Uniqueness** | `order_id` | Minimum unique = **100%** | [`uniqueness`](../reference/dq-rules/uniqueness.md) |
-| **Value Lists → Whitelist** | `order_status` | `NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED` | [`value_set`](../reference/dq-rules/value-set.md) / `allow` |
-| **Value Lists → Blacklist** | `shipping_country` | `UNKNOWN` | [`value_set`](../reference/dq-rules/value-set.md) / `block` |
-| **Value Rules** | `quantity` | Lower bound **1**, upper bound **4**, include both bounds | [`range`](../reference/dq-rules/range.md) |
+| **Uniqueness** | `order_id` | Accepted failure rate = **0%** | [`uniqueness`](../reference/dq-rules/uniqueness.md) |
+| **Value set → Allow listed values** | `order_status` | `NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED` | [`value_set`](../reference/dq-rules/value-set.md) / `allow` |
+| **Value set → Block listed values** | `shipping_country` | `UNKNOWN` | [`value_set`](../reference/dq-rules/value-set.md) / `block` |
+| **Range** | `quantity` | Lower bound **1**, upper bound **4**, include both bounds | [`range`](../reference/dq-rules/range.md) |
 
 Keep **Block on failure** off for each rule.
 
-Whitelist and Blacklist are separate rules even though both persist using the `value_set` runtime type. The [DQ rule reference](../reference/dq-rules/index.md) maps every authoring control to its persisted rule.
+Allowed and blocked value sets are separate rules even though both persist using the `value_set` runtime type. The [DQ rule reference](../reference/dq-rules/index.md) maps every authoring control to its persisted rule.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## DQ Rules — exercise every Business Rule path
+## Data Quality — generate rules with AI
 
-Open **DQ Rules** and resolve each requirement below. Review the proposed rule before choosing **Add DQ Rule**.
+In **Generate Rules with AI**, resolve each requirement below. Review and edit the proposal before choosing **Add DQ Rule**. Generated proposals do not become draft rules until you add them.
 
 </div>
 </div>
@@ -194,7 +194,7 @@ Freeze the three source contracts and both target contracts (`curated_orders` an
 
 ### Manifest & Freeze
 
-Open **Manifest & Freeze** and review the complete contract, including the DQ rules above.
+Open **Review** and inspect the complete contract, including the DQ rules above, before freezing it.
 
 A saved draft keeps the schema captured when it was created. A new draft excludes columns removed from the latest workspace observation. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
 

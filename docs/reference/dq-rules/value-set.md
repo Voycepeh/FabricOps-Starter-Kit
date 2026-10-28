@@ -2,12 +2,12 @@
 
 ## Where this appears in the Data Contract UI
 
-**Columns → Column data quality → Value Lists**
+**Data Quality → Add Rule Manually → Value set**
 
-The UI exposes two separate inputs:
+The UI exposes two value behaviors:
 
-- **Whitelist** → persisted as `rule_type: value_set` with `mode: allow`
-- **Blacklist** → persisted as `rule_type: value_set` with `mode: block`
+- **Allow listed values** → persisted as `rule_type: value_set` with `mode: allow`
+- **Block listed values** → persisted as `rule_type: value_set` with `mode: block`
 
 If both lists are configured, FabricOps stores them as two independent deterministic rules so each can fail and report independently.
 

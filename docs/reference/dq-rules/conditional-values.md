@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**DQ Rules → Business Rules → Resolved DQ Rules**
+**Data Quality → Add Rule Manually or Generate Rules with AI → Conditional values**
 
-Governance describes the conditional value requirement in business language, such as “When country is SG, currency must be SGD.” FabricOps resolves it to `rule_type: conditional_values` when a governed whitelist or blacklist applies only under a condition.
+Governance can configure the condition and value set directly, or describe the requirement for an AI-assisted proposal. Both paths create `rule_type: conditional_values`.
 
 ## What this rule does
 

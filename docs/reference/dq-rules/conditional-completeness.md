@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**DQ Rules → Business Rules → Resolved DQ Rules**
+**Data Quality → Add Rule Manually or Generate Rules with AI → Conditional completeness**
 
-Governance describes the conditional requirement in business language, such as “Approved records require an approved date.” FabricOps resolves it to `rule_type: conditional_completeness` when the requirement is conditional requiredness.
+Governance can configure the condition and required target directly, or describe the requirement for an AI-assisted proposal. Both paths create `rule_type: conditional_completeness`.
 
 ## What this rule does
 
