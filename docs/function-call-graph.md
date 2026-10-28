@@ -1,4 +1,4 @@
-# Explore How FabricOps Functions Work Under the Hood
+# FabricOps Function Call Graph & Architecture Explorer
 
 <span class="fabricops-release-status fabricops-release-status--live">Live</span> <span class="fabricops-release-status fabricops-release-status--maintainer">Maintainer</span>
 
