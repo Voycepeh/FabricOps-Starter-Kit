@@ -103,14 +103,13 @@ The picture has four important parts working together:
 
 | Capability | Dry Run | Ungoverned | Governed |
 | --- | --- | --- | --- |
-| Execute transformations | Yes | Yes | Yes |
 | Automatic profiling | Yes | Yes | Yes |
 | Publish data | No | Yes | Yes |
 | Persist observations | No | Yes | Yes |
 | Activated Data Contract required | No | No | Yes |
-| Enforce Data Contract Guardrails | Preview only, when a contract is selected | No | Yes |
+| Enforce contract guardrails | Yes | No | Yes |
 
-**Dry Run** previews pipeline behavior without publishing or persisting results. **Ungoverned** publishes without Data Contracts. **Governed** requires activation and enforces the approved contract.
+**Ungoverned** runs without Data Contracts. **Dry Run** previews without writing. **Governed** enforces activated Data Contracts. Pipeline source participation and reporting are automatic.
 
 
 Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Each workspace resolves its own environment configuration and Fabric Stores, so the same engineering definition can run without hardcoded environment-specific locations. Governed execution additionally requires the appropriate activation.
