@@ -173,54 +173,15 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
     - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
 
-??? info "How frequency profiling and Grain discovery work"
+??? info "How profiling supports the Data Contract"
 
-    ### Frequency distributions
+    FabricOps profiles data to provide statistics, frequency distributions, and candidate Grain keys. These are observations that help Governance understand a table; a candidate key is not automatically an approved business key.
 
-    **Frequency answers “which values occur most often in this column?”** FabricOps groups values, counts occurrences, and ranks them. Null can appear as a frequency value.
+    **Governance defines the intended Grain key and Data Quality expectations in the Data Contract.** During Governed pipeline execution, FabricOps validates the applicable contract rules at the Read and Write boundaries.
 
-    Automatic selection uses eligible scalar columns and skips columns whose distinct-per-non-null percentage exceeds 80% by default. `frequency_top_n=5` retains the five highest-ranked values per selected column; `None` retains all. Top N limits retained output, but exact frequencies still require grouped counts across the input data.
+    Profiling can also run in Dry Run and Ungoverned modes without an activated contract. The pipeline produces the evidence; the Data Contract defines the approved expectations.
 
-    Statistics are saved in `METADATA_DATA_PROFILED`; frequency rows are saved in `METADATA_DATA_PROFILED_FREQUENCY` and linked to the profile snapshot. Turning frequency off skips its calculations for that call. Existing snapshots from earlier activities remain available.
-
-    ### Grain key discovery
-
-    **Discovery answers “which column or combination uniquely identifies every row in this dataset?”** It uses exact data checks, without AI or column-name guesses.
-
-    1. Check eligible scalar columns for nulls and exact distinct counts. If single-column keys exist, return those candidates.
-    2. Otherwise test combinations of null-free columns, starting with pairs and widening up to `grain_discovery_max_columns`.
-    3. Stop at the smallest width with valid keys, retaining up to `grain_discovery_max_candidates` suggestions.
-
-    Candidates are stored in the table row's `METADATA_DATA_CATALOGUE.profile_key_candidates_json` for contract authoring. Governance reviews and chooses the intended Grain key. A unique combination in today's data is a candidate for that decision, not a guarantee about future data.
-
-    ### Where the compute runs
-
-    **The orchestrators invoke profiling; the data engine performs the calculations.** Supplied DataFrames and physical Lakehouse tables use PySpark. Complete physical Warehouse tables use SQL pushdown, including frequency and key-discovery queries.
-
-    Each composite-key test performs an exact distinct-count operation. With 20 eligible null-free columns and no single-column key, a search through triples can require 190 pair checks and 1,140 triple checks. Large inputs can add scans and shuffles; deterministic discovery can still be expensive. The candidate limit helps when keys are found but does not cap the search when none qualify.
-
-    ### Choose when to run each calculation
-
-    Both orchestrators and `profile_table()` accept these controls:
-
-    ```python
-    source = orchestrate_read(
-        store="Bronze", schema="demo", table_name="orders",
-        grain_discovery_enabled=True,
-        grain_discovery_max_columns=3,
-        grain_discovery_max_candidates=8,
-        frequency_enabled=True,
-        frequency_top_n=5,
-    )
-    ```
-
-    - **First run or meaningful data changes:** enable discovery to refresh candidate keys. A maximum of `1` checks singles only; `2` also checks pairs.
-    - **Routine runs:** set `grain_discovery_enabled=False` to skip discovery and preserve saved candidates. Independently set `frequency_enabled=False` to skip frequency calculations.
-    - **After the Data Contract is defined:** discovery can stay off until you choose to revisit the key. Configured Grain checks still validate the contract's key on each applicable Read or Write call.
-
-    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read skips Profile. Dry Run Write profiles its prepared input without persistence. Scheduling belongs to the caller.
-
-    See [`profile_table()`](../api/reference/profile_table.md) for exact parameters, direct column selection, and persistence behavior.
+    For profiling parameters, discovery limits, and persistence behavior, see [`profile_table()`](../api/reference/profile_table.md).
 
 ## Example
 
