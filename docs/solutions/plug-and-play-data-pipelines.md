@@ -170,12 +170,12 @@ This is the core FabricOps pipeline model: **the engineer owns the transformatio
     ### Both sides
 
     - **Contract enforcement:** Governed enforces and persists activated-contract results. Dry Run can evaluate an optional selected contract without persistence. Ungoverned skips contract-dependent rules and blocks writes to governed targets. Discovering possible keys is separate from enforcing the contract's selected Grain key.
-    - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
-    - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
+    - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and optional frequency distributions. For identified physical tables, profiling can also discover candidate Grain keys for Governance to review; this is not the same as contract Grain enforcement.
+    - **Caller controls:** Read and Write expose profiling options. Candidate Grain discovery applies to identified tables, not DataFrame-only profiling; the caller controls when to enable it.
 
 ??? info "How profiling supports the Data Contract"
 
-    FabricOps profiles data to provide statistics, frequency distributions, and candidate Grain keys. These are observations that help Governance understand a table; a candidate key is not automatically an approved business key.
+    FabricOps profiles data to provide statistics and optional frequency distributions. Profiling an identified physical table can also discover candidate Grain keys for Governance to review. DataFrame-only profiling does not discover candidates. These observations do not define the approved Grain key.
 
     **Governance defines the intended Grain key and Data Quality expectations in the Data Contract.** During Governed pipeline execution, FabricOps validates the applicable contract rules at the Read and Write boundaries.
 
