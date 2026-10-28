@@ -15,7 +15,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Metadata lifecycle
 
-- Promote `METADATA_PIPELINE_REGISTRY`, `METADATA_PIPELINE_RUN`, and `METADATA_PROCESSING_STATE` to Live in v0.3.0. These workspace-model tables form the supported registration, execution, and processing-state persistence contracts.
+- Promote `METADATA_DATA_CONTRACT`, `METADATA_GUARDRAIL_RESULTS`, `METADATA_PIPELINE_REGISTRY`, `METADATA_PIPELINE_RUN`, and `METADATA_PROCESSING_STATE` to Live in v0.3.0. These form supported governance, guardrail-result, registration, execution, and processing-state persistence contracts. `METADATA_DATA_ACCESS` remains Preview. Live schemas may evolve additively; breaking structural changes require an explicit migration.
 
 ### Pipeline execution
 
