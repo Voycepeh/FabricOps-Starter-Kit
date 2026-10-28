@@ -13,6 +13,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Establish workspace-ID-based configuration and routing as the new architectural baseline. Earlier package versions (v0.2.5 and before) are superseded and must not be combined with v0.3.0 notebook templates.
 - Existing legacy environment-keyed metadata layouts are not automatically migrated. Use a fresh workspace-model metadata installation; preserve existing Live metadata until an explicit migration is approved.
 
+### Metadata lifecycle
+
+- Promote `METADATA_PIPELINE_REGISTRY`, `METADATA_PIPELINE_RUN`, and `METADATA_PROCESSING_STATE` to Live in v0.3.0. These workspace-model tables form the supported registration, execution, and processing-state persistence contracts.
+
 ### Pipeline execution
 
 - Introduce Dry Run, Ungoverned, and Governed execution paths, with explicit setup and finalization and workspace-scoped governance behaviour.
