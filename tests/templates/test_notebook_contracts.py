@@ -533,68 +533,16 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
 
 
 @pytest.mark.parametrize("notebook_path", [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS], ids=lambda path: path.name)
-@pytest.mark.parametrize("mode,status,observes", [
-    ("testing", "ungoverned_completed", True),
-    ("testing", "succeeded", False),
-    ("testing", "failed", False),
-    ("testing", "incomplete", False),
-    ("live", "ungoverned_completed", False),
-])
-def test_first_run_authoring_observation_resolves_every_participant(monkeypatch, notebook_path, mode, status, observes):
-    """Only a complete ungoverned Test automatically supplies authoring observations."""
-    import fabricops_kit as kit
-    from fabricops_kit.config.shared import FabricStore, FrameworkConfig, PathConfig
-    from fabricops_kit.pipeline.shared import resolve_physical_table_identity
-
-    config = FrameworkConfig(path_config=PathConfig(paths={"engineering": {
-        "Bronze": FabricStore(workspace_id="engineering", item_id="bronze", kind="lakehouse", schema_enabled=True, schema="dbo"),
-        "Silver": FabricStore(workspace_id="engineering", item_id="silver", kind="lakehouse", schema_enabled=True, schema="dbo"),
-        "Gold": FabricStore(workspace_id="engineering", item_id="gold", kind="warehouse"),
-    }}))
+def test_finalization_is_one_call_without_manual_observation_profiling(notebook_path):
+    """Every maintained 02 variant delegates observation publication to finalization."""
     notebook = _load_notebook(notebook_path)
     cell = next(cell for cell in notebook.cells if cell.get("id") == "finalize-run")
-    events = []
-    profiles = []
-    reads = []
-    frame = object()
-
-    def read(**coordinates):
-        reads.append(coordinates)
-        return frame
-
-    def profile(**arguments):
-        assert events == ["finalized"]
-        assert arguments["dataframe"] is frame
-        coordinates = {key: arguments[key] for key in ("store", "schema", "table_name")}
-        identity = resolve_physical_table_identity(config, "engineering", **coordinates)
-        profiles.append((coordinates, identity["table_id"]))
-        return {"profile": "observed"}
-
-    monkeypatch.setattr(kit, "read_lakehouse_table", read)
-    monkeypatch.setattr(kit, "read_warehouse_table", read)
-    monkeypatch.setattr(kit, "profile_table", profile)
-    writes = {key: {"dataframe": frame} for key in [
-        "target", "curated_orders_lakehouse", "customer_summary_warehouse",
-        "inventory_movements_incremental", "product_master_scd1", "product_master_scd2",
-    ]}
-    namespace = {"pipeline": object(), "PIPELINE_MODE": "Test", "writes": writes,
-                 "finalize_pipeline": lambda _pipeline: events.append("finalized") or {"execution_mode": mode, "status": status}}
-    assert "OBSERVE_FOR_GOVERNANCE" not in cell.source
+    pipeline, result = object(), {"status": "ungoverned_completed"}
+    calls = []
+    namespace = {"pipeline": pipeline, "finalize_pipeline": lambda value: calls.append(value) or result}
     exec(cell.source, namespace)
-    if not observes:
-        assert not reads and not profiles
-        return
-    expected = []
-    source_count = 0
-    for _, source in _code_cells(notebook_path):
-        tree = _parse_code_cell(notebook_path, 0, source)
-        if tree is None:
-            continue
-        for call in ast.walk(tree):
-            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id in {"orchestrate_read", "orchestrate_write"}:
-                source_count += call.func.id == "orchestrate_read"
-                expected.append({keyword.arg: ast.literal_eval(keyword.value) for keyword in call.keywords
-                                 if keyword.arg in {"store", "schema", "table_name"}})
-    assert [coordinates for coordinates, _ in profiles] == expected
-    assert len({identity for _, identity in profiles}) == len(expected)
-    assert len(reads) == source_count
+    assert calls == [pipeline] and namespace["pipeline_result"] is result
+    tree = ast.parse(cell.source)
+    assert [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call)] == ["finalize_pipeline"]
+    source = "\n".join("".join(cell.source) for cell in notebook.cells)
+    assert "observation_profiles" not in source and "profile_table(" not in source

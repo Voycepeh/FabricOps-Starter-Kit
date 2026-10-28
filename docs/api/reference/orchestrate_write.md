@@ -91,7 +91,7 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 ## Returns
 
 dict
-    Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+    Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. profile_result retains the due statistical profile and frequency_profile in Test, with per-activity outcomes. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
 
 Raises RuntimeError when no pipeline is active or a Live stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
@@ -113,8 +113,11 @@ Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
 available. The result includes publication metrics and Guardrail diagnostics.
 A successful Write does not imply successful completion of the notebook.
 
-Profiling scans the complete persisted table using the frozen contract's
-policies and shared table completion history. Guardrail checks run regardless
+Test profiles the prepared DataFrame in memory without publishing the target.
+Successful explicit finalization saves the calculated observations for Governance
+and Data Contract authoring. Live profiles the complete persisted target after
+successful publication. Frozen profiling policies and limits apply in both modes;
+Test observations do not consume Live schedules. Guardrail checks run regardless
 of profiling eligibility.
 
 </div>
@@ -128,7 +131,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L28-L225">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L28-L228">View on GitHub</a>
 </div>
 
 
@@ -144,7 +147,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 245 |
+| Live-critical dependencies | 246 |
 
 ### Release history
 
@@ -293,6 +296,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>

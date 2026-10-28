@@ -37,8 +37,11 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     available. The result includes publication metrics and Guardrail diagnostics.
     A successful Write does not imply successful completion of the notebook.
 
-    Profiling scans the complete persisted table using the frozen contract's
-    policies and shared table completion history. Guardrail checks run regardless
+    Test profiles the prepared DataFrame in memory without publishing the target.
+    Successful explicit finalization saves the calculated observations for Governance
+    and Data Contract authoring. Live profiles the complete persisted target after
+    successful publication. Frozen profiling policies and limits apply in both modes;
+    Test observations do not consume Live schedules. Guardrail checks run regardless
     of profiling eligibility.
 
     Parameters
@@ -71,7 +74,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     Returns
     -------
     dict
-        Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
+        Prepared dataframe, selected contract, execution identity, schema_result, sensitive_result, source_drift_results, grain_result, dq_result, source_guardrail_results, write_metrics, published and persistence_status. sensitive_result.support_mapping remains caller-owned; release its cache after use. profile_result retains the due statistical profile and frequency_profile in Test, with per-activity outcomes. Test returns processing diagnostics without business publication. Live returns its actual publication outcome.
 
     Raises RuntimeError when no pipeline is active or a Live stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
@@ -122,7 +125,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         if "data_quality" in active:
             names.append("Data Quality")
         if not execution_plan.permits_persistence:
-            names.append("Processing")
+            names.extend(["Processing", "Profile"])
         else:
             names.extend(["Write", "Profile"])
         stages = []
@@ -172,7 +175,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                                 "dry_run": {"status": "blocked", "reason": str(exc), "fully_evaluated": [],
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
-                profile = skip_table_profiling(target_id, "write", "Test did not publish a persisted target", context=context, spark_session=spark_session)
+                profile = run("Profile", lambda: schedule_table_profiling(target_id, "write", dataframe=prepared, context=context, spark_session=spark_session))
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])

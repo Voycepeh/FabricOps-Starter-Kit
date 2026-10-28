@@ -11,7 +11,7 @@
 ![File upload](../assets/2b/File%20Upload.png)
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial No Contract Test, including the final cell. After finalization, the notebook automatically supplies Governance observations using `profile_table()`: it profiles the complete persisted sources and the prepared target DataFrames into workspace-scoped Catalogue/profile metadata. It does not publish target business data or approve the Test. Target profiles describe prepared input, not a published target. Match its coordinates when adapting the Read/Write blocks.
+    Run the complete initial No Contract Test, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate the due profiles automatically; successful Test finalization saves the source and prepared target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Test does not publish business targets, advance checkpoints or grant approval. Target observations describe prepared input. Live continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
     Author and freeze global Contracts in `01_governance`, then rerun Test with exact frozen versions and activate that workspace. An initial No Contract run cannot activate. Failed or incomplete runs, Testing with selected Contracts, and Live do not run this bootstrap observation step. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
 

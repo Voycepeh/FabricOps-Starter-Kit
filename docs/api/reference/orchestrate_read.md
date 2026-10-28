@@ -109,9 +109,12 @@ exact DataFrame lineage. Live blocks failed checks; Test never commits.
 target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
-Profiling scans the complete persisted table using the frozen contract's
-policies and shared table completion history. Guardrail checks run regardless
-of profiling eligibility.
+Profiling uses the complete source with frozen contract policies and shared
+Live completion history. Test reuses an unfiltered full Read DataFrame; query
+and incremental Reads still profile the complete physical source. Successful
+Test finalization saves the calculated observations for Data Contract authoring
+without repeating the profiling scan or consuming Live schedules. Guardrail
+checks run regardless of profiling eligibility.
 
 </div>
 
@@ -124,7 +127,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:23`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L138">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L23-L142">View on GitHub</a>
 </div>
 
 
@@ -140,7 +143,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 216 |
+| Live-critical dependencies | 217 |
 
 ### Release history
 
@@ -273,6 +276,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>

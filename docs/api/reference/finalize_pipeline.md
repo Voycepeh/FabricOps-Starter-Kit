@@ -66,8 +66,9 @@ ValueError
     If pipeline is not a setup_pipeline session or audit identity is missing.
 RuntimeError
     If notebook setup is invalid, runtime identity has changed, another task
-    owns the execution, or metadata publication fails. Retry
-    with the same session after a publication failure; result IDs are stable.
+    owns the execution, or metadata publication fails. Run and Guardrail IDs
+    remain stable for supported publication retries. A Test profile-publication
+    failure records a failed outcome and requires a new Test execution.
 
 ## Behavior and scope
 
@@ -83,7 +84,12 @@ closed sessions retain their recorded outcome for repeat finalization.
 
 Test Read/Write operations do not commit business or operational metadata.
 Explicit finalization commits the complete Test run and Guardrail results
-for Governance review. The activation widget reads these committed records. Complete governed Testing can then be approved. Failed, partial and No Contract
+for Governance review. Successful Test finalization also saves the already
+calculated observations to METADATA_DATA_CATALOGUE, METADATA_DATA_PROFILED
+and METADATA_DATA_PROFILED_FREQUENCY for Data Contract authoring, without
+repeating the profiling scans or publishing business data.
+Failed and incomplete runs do not publish profiling observations. The activation
+widget reads the committed run and Guardrail records. Complete governed Testing can then be approved. Failed, partial and No Contract
 runs cannot authorize activation. Live finalization releases its reservation
 after recording the final outcome. Interrupted runs remain incomplete.
 
@@ -98,7 +104,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L70">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L79">View on GitHub</a>
 </div>
 
 

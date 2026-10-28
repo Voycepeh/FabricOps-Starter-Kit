@@ -238,7 +238,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 80 |
+| Live-critical dependencies | 81 |
 
 ### Release history
 
@@ -302,6 +302,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
+<li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>

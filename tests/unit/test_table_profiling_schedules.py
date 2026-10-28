@@ -74,7 +74,7 @@ def metadata(monkeypatch):
     def persist(plan, **kwargs):
         if plan.permits_persistence:
             rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-                'run_id': plan.plan_id, 'workspace_id': next((outcome['workspace_id'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
+                'run_id': plan.plan_id, 'execution_mode': 'live', 'workspace_id': next((outcome['workspace_id'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     def execute(*, table_id, context, activities, **kwargs):
         activity = next(iter(activities))
@@ -217,6 +217,8 @@ def test_read_only_testing_does_not_consume_schedule(metadata):
     result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert result['persistence_status'] == 'disabled' and result['row_count'] == 100
     assert metadata.store == before and not metadata.rows['METADATA_PIPELINE_RUN']
+    metadata.profiler.assert_called_once()
+    assert metadata.profiler.call_args.kwargs['activities'] == {'standard', 'grain', 'frequency'}
     with pytest.raises(RuntimeError, match='Test cannot claim'):
         shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context)
 
@@ -260,7 +262,7 @@ def test_draft_controls_follow_contract_save_and_frozen_is_read_only():
     assert all(control.disabled for values in frozen.profiling_controls.values() for control in values.values())
 
 
-@pytest.mark.parametrize('activity', ['standard','grain','frequency'])
+@pytest.mark.parametrize('activity', ['standard','grain','frequency','grain_frequency'])
 def test_real_profiler_activities_publish_independent_metadata(activity,spark_session,monkeypatch):
     """Calculate real Spark profiles while observing each physical mutation boundary."""
     module=importlib.import_module('fabricops_kit.pipeline.shared')
@@ -279,13 +281,13 @@ def test_real_profiler_activities_publish_independent_metadata(activity,spark_se
         spies[name]=Mock(return_value=False)
         monkeypatch.setattr(module,name,spies[name])
     result=module.execute_table_profile(table_id='orders',context={'config':{},'scope_workspace_id':'dev'},
-        spark_session=spark_session,activities={activity},verbose=False)
+        spark_session=spark_session,activities={'grain', 'frequency'} if activity == 'grain_frequency' else {activity},verbose=False)
     assert reader.call_args.kwargs['table_id']=='orders' and result['row_count']==3
     assert spies['_replace_snapshot_rows'].called is (activity=='standard')
     assert spies['_upsert_catalogue_identities'].called is (activity=='standard')
-    assert spies['_persist_grain_candidates'].called is (activity=='grain')
-    assert spies['_replace_frequency_rows'].called is (activity=='frequency')
-    if activity=='frequency':
+    assert spies['_persist_grain_candidates'].called is (activity in {'grain', 'grain_frequency'})
+    assert spies['_replace_frequency_rows'].called is (activity in {'frequency', 'grain_frequency'})
+    if activity in {'frequency', 'grain_frequency'}:
         rows=spies['_replace_frequency_rows'].call_args.kwargs['frequency_df'].collect()
         assert rows and all(row.profile_id is None for row in rows)
     if result.get('profile') is not None:
@@ -407,16 +409,20 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     completed = shared.profiling_completion_history('orders', context=metadata.context)
     metadata.rows['METADATA_PIPELINE_RUN']['unrelated'] = {
-        'run_id': 'unrelated', 'workspace_id': 'dev', 'profiling': [
+        'run_id': 'unrelated', 'execution_mode': 'live', 'workspace_id': 'dev', 'profiling': [
             {'context_key': 'other-destination', 'activity': 'standard', 'status': 'passed',
              'results_persisted': True, 'profile_snapshot_id': 'other-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'},
             {'context_key': shared.profiling_context_key('orders', context=metadata.context)[0],
              'activity': 'standard', 'status': 'passed', 'results_persisted': True,
              'profile_snapshot_id': 'missing-snapshot', 'completed_at': '2099-01-01T00:00:00+00:00'}]}
+    metadata.rows['METADATA_PIPELINE_RUN']['test-observation'] = {
+        'run_id': 'test-observation', 'execution_mode': 'testing', 'workspace_id': 'dev', 'profiling': [
+            {**event, 'completed_at': '2099-01-01T00:00:00+00:00'}
+            for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling'] if event['status'] == 'passed']}
     metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
         list(rows.values()) if isinstance(rows, dict) else rows,
-        'run_id string, workspace_id string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
+        'run_id string, execution_mode string, workspace_id string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
         else 'table_id string, workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []
@@ -428,3 +434,16 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
     actual = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session, activity=activity)
     assert actual == ({activity: completed[activity]} if activity is not None else completed)
     assert len(reads) == (3 if activity is None else 1 if activity == 'grain' else 2)
+
+
+def test_test_activity_selection_and_supplied_frame_do_not_override_policy(metadata):
+    """Combined Test work honors each frozen trigger and uses the prepared input."""
+    metadata.context['execution_plan'].permits_persistence = False
+    policy(metadata.context, 'standard', {'frequency': 'every', 'trigger': 'read'})
+    frame = object()
+    result = shared.schedule_table_profiling('orders', 'write', dataframe=frame, context=metadata.context)
+    metadata.profiler.assert_called_once()
+    assert metadata.profiler.call_args.kwargs['dataframe'] is frame
+    assert metadata.profiler.call_args.kwargs['activities'] == {'grain', 'frequency'}
+    assert result['activities']['standard']['status'] == 'skipped'
+    assert metadata.store['commits'] == 0
