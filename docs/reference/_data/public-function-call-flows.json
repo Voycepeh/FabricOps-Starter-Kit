@@ -13910,6 +13910,22 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
+      "function_name": "_bucket_treatment_example",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example",
+      "source_end_line": 324,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 297,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
       "function_name": "_expose_manifest",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -13919,9 +13935,25 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
-      "source_end_line": 242,
+      "source_end_line": 256,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 228,
+      "source_start_line": 242,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_format_decimal",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_decimal",
+      "source_end_line": 275,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 270,
       "usage": "public_flow_reachable"
     },
     {
@@ -13935,9 +13967,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_widget_exception",
-      "source_end_line": 225,
+      "source_end_line": 239,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 212,
+      "source_start_line": 226,
       "usage": "public_flow_reachable"
     },
     {
@@ -13951,9 +13983,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
-      "source_end_line": 274,
+      "source_end_line": 426,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 256,
+      "source_start_line": 408,
       "usage": "public_flow_reachable"
     },
     {
@@ -13968,9 +14000,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
-      "source_end_line": 553,
+      "source_end_line": 718,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 547,
+      "source_start_line": 712,
       "usage": "unused"
     },
     {
@@ -13985,9 +14017,25 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
-      "source_end_line": 545,
+      "source_end_line": 710,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 277,
+      "source_start_line": 429,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_mask_treatment_example",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._mask_treatment_example",
+      "source_end_line": 294,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 278,
       "usage": "public_flow_reachable"
     },
     {
@@ -14002,9 +14050,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
-      "source_end_line": 253,
+      "source_end_line": 267,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 245,
+      "source_start_line": 259,
       "usage": "public_flow_reachable"
     },
     {
@@ -14018,9 +14066,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
-      "source_end_line": 633,
+      "source_end_line": 798,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 556,
+      "source_start_line": 721,
       "usage": "public_flow_reachable"
     },
     {
@@ -14034,9 +14082,41 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profiling_section",
-      "source_end_line": 75,
+      "source_end_line": 76,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 35,
+      "source_start_line": 36,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_sensitive_treatment_guidance",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance",
+      "source_end_line": 405,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 355,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_sensitive_treatment_review",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.widgets.widget_data_contract._manifest_sections"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_review",
+      "source_end_line": 352,
+      "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
+      "source_start_line": 327,
       "usage": "public_flow_reachable"
     },
     {
@@ -14050,9 +14130,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._set_selection_value",
-      "source_end_line": 108,
+      "source_end_line": 109,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 84,
+      "source_start_line": 85,
       "usage": "public_flow_reachable"
     },
     {
@@ -14066,9 +14146,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._valid_dropdown_value",
-      "source_end_line": 81,
+      "source_end_line": 82,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 78,
+      "source_start_line": 79,
       "usage": "public_flow_reachable"
     },
     {
@@ -14111,9 +14191,9 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 6061,
+      "source_end_line": 6258,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 635,
+      "source_start_line": 800,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
       "usage": "public_flow_reachable",
       "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData, Freshness, and Source Drift do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nMissing AI configuration disables AI actions for the widget session while\nmanual authoring remains available. Execution and provider failures show a\nretryable message. Technical failure details are retained in the returned\nstate rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions always receive governed\nschema and contract metadata. When profiling exists, they also receive profile\nsummaries including min/max and the three most frequent values.\nTreatment failures always block."
@@ -16011,8 +16091,8 @@
       ],
       "metrics": {
         "depth": 7,
-        "scope": 110,
-        "width": 43
+        "scope": 115,
+        "width": 44
       },
       "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
       "refactor_signals": [
@@ -16020,7 +16100,7 @@
           "evidence": [
             {
               "depth": 7,
-              "width": 43
+              "width": 44
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -21854,6 +21934,10 @@
       "caller_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
     },
     {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._format_decimal",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.config.shared.metadata_timestamp_sort_key",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._latest"
     },
@@ -21867,6 +21951,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_review",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections"
     },
     {
@@ -21884,6 +21972,14 @@
     {
       "callee_qualified_name": "fabricops_kit.widgets.shared.form_section",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._profiling_section"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._mask_treatment_example",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance"
     },
     {
       "callee_qualified_name": "fabricops_kit.config.shared.metadata_timestamp_sort_key",
@@ -22047,6 +22143,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._profiling_section",
+      "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance",
       "caller_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
     },
     {
