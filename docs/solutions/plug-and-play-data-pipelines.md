@@ -99,6 +99,20 @@ The picture has four important parts working together:
 3. **Three execution modes.** Dry Run previews checks without publishing or persisting observations. Ungoverned publishes without requiring Data Contracts. Governed requires activated Data Contracts and enforces their rules at the Read and Write boundaries.
 4. **Operational evidence.** Persisting runs record relevant metadata, profiling, processing state and lineage. Dry Run keeps its results in the session.
 
+### Choose an execution mode
+
+| Capability | Dry Run | Ungoverned | Governed |
+| --- | --- | --- | --- |
+| Execute transformations | Yes | Yes | Yes |
+| Automatic profiling | Yes | Yes | Yes |
+| Publish data | No | Yes | Yes |
+| Persist observations | No | Yes | Yes |
+| Activated Data Contract required | No | No | Yes |
+| Enforce Data Contract Guardrails | Preview only, when a contract is selected | No | Yes |
+
+**Dry Run** previews pipeline behavior without publishing or persisting results. **Ungoverned** publishes without Data Contracts. **Governed** requires activation and enforces the approved contract.
+
+
 Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Each workspace resolves its own environment configuration and Fabric Stores, so the same engineering definition can run without hardcoded environment-specific locations. Governed execution additionally requires the appropriate activation.
 
 This is the core FabricOps pipeline model: **the engineer owns the transformation; Governance owns the governed definition; FabricOps makes the surrounding lifecycle repeatable and executable across environments.**
