@@ -27,6 +27,18 @@ FabricOps keeps that work behind a readable notebook flow: **Setup → Read → 
 
 The result is a pipeline pattern that engineers can clone and adapt without rebuilding the governance and engineering plumbing each time.
 
+Inside `02_pipeline.ipynb`, four functions frame the engineer's own transformation:
+
+| Pipeline function | Purpose |
+| --- | --- |
+| `setup_pipeline()` | Establish the pipeline run and selected execution mode. |
+| `orchestrate_read()` | Read each source using its chosen Read Mode. |
+| `orchestrate_write()` | Publish each prepared target using its chosen Write Mode (or preview in Dry Run). |
+| `finalize_pipeline()` | Complete run tracking after the project work finishes. |
+
+**Between Read and Write, the PySpark logic belongs to the project.** Engineers can join, filter, enrich, or aggregate DataFrames as needed; FabricOps does not prescribe the transformation. The same pipeline can read multiple sources and write multiple targets.
+
+
 ### The big picture
 
 ```mermaid
@@ -106,6 +118,21 @@ The same pipeline definition can move between Development and Production: each w
 
 **Ungoverned** runs without Data Contracts. **Dry Run** previews without writing. **Governed** enforces activated Data Contracts. Pipeline source participation and reporting are automatic.
 
+## Read & Write Modes
+
+Read Mode controls **which source rows to process**. Write Mode controls **how the prepared rows update the target**. They are selected independently for each Read and Write operation.
+
+| Side | Mode | What it does |
+| --- | --- | --- |
+| Read | **Full** | Read the complete source. |
+| Read | **Incremental** | Read unprocessed source changes for the target. |
+| Write | **Overwrite** | Replace the target with the prepared result. |
+| Write | **Append** | Add prepared rows to the target. |
+| Write | **SCD1** | Update the latest state by business key. |
+| Write | **SCD2** | Preserve historical versions of changes by business key. |
+
+A common pattern is **Full → Overwrite** for rebuilding a target or **Incremental → Append** for adding new records. SCD1 and SCD2 support changing records. See [Read & Write Modes](../reference/read-and-load-strategies.md) for detailed behavior and examples.
+
 ## How it works
 
 | Responsibility | What happens |
@@ -120,4 +147,4 @@ See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-
 
 ## Go deeper
 
-For the wider lifecycle, see [How FabricOps Works](../how-fabricops-works.md). For implementation details, use [Read & Write Modes](../reference/read-and-load-strategies.md), [PySpark Transformation](../reference/pyspark-transformation.md), and the [Function Reference](../reference/index.md).
+For the wider lifecycle, see [How FabricOps Works](../how-fabricops-works.md). For implementation details, use [PySpark Transformation](../reference/pyspark-transformation.md) and the [Function Reference](../reference/index.md).
