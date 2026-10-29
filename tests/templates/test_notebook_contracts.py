@@ -535,6 +535,35 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
             assert not re.search(r"\b(?:spark|spark_session)\s*=\s*spark\b", "".join(cell["source"])), path
 
 
+def test_02_templates_and_demo_variants_enable_orchestration_progress():
+    """Living 02 notebooks explicitly show Read/Write stage progress by default."""
+    import json
+    import ast
+    from pathlib import Path
+
+    paths = [Path("templates/notebooks/02_pipeline.ipynb"), *Path("templates/DemoData").glob("02*.ipynb")]
+    for path in paths:
+        notebook = json.loads(path.read_text(encoding="utf-8"))
+        calls = []
+        for cell in notebook["cells"]:
+            if cell["cell_type"] != "code":
+                continue
+            source = "".join(cell["source"])
+            if "orchestrate_read(" not in source and "orchestrate_write(" not in source:
+                continue
+            tree = ast.parse(source)
+            calls.extend(
+                node for node in ast.walk(tree)
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in {"orchestrate_read", "orchestrate_write"}
+            )
+        assert calls, f"No Read/Write orchestration calls found in {path}"
+        for call in calls:
+            assert any(keyword.arg == "verbose" and isinstance(keyword.value, ast.Constant) and keyword.value.value is True
+                       for keyword in call.keywords), f"{path} must set verbose=True for every orchestrator call"
+
+
 @pytest.mark.parametrize("notebook_path", [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS], ids=lambda path: path.name)
 def test_finalization_is_one_call_without_manual_observation_profiling(notebook_path):
     """Every maintained 02 variant delegates observation publication to finalization."""
