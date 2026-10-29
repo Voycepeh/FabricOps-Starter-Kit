@@ -251,20 +251,20 @@ class WidgetStartup:
         )
         if self.html_available:
             loading = '<p role="status" aria-live="polite">Initializing FabricOps…</p>'
-            if reserved_height:
-                ip.display(ip.HTML(self._reserved_html(loading)), display_id=self.display_id)
-            else:
-                ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
-                ip.display(ip.HTML(loading), display_id=self.display_id)
+            # Keep the banner in its own stable output. Replacing a plain HTML
+            # loading view with a widget view in the same output can flicker in
+            # notebook frontends, especially when the placeholder also owns the banner.
+            ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
+            ip.display(ip.HTML(self._reserved_html(loading) if reserved_height else loading),
+                       display_id=self.display_id)
         self.mark("first_display_submitted")
 
     def _reserved_html(self, content: str) -> str:
-        """Keep Pipeline loading and errors inside the final widget's viewport."""
-        banner = self.banner.replace('font-size:21px;', 'font-size:21px;line-height:1.3;')
+        """Reserve a bounded loading/error region beneath the persistent banner."""
         return (f'<div style="height:{_html_escape(self.reserved_height)};box-sizing:border-box;overflow:auto;'
                 'font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;background:#f6f8fb;'
                 'border:1px solid #dce4ed;border-radius:10px;padding:20px;scrollbar-gutter:stable">'
-                + banner + content + '</div>')
+                + content + '</div>')
 
     def mark(self, name: str) -> None:
         """Record an elapsed kernel milestone without claiming frontend paint."""
@@ -304,6 +304,26 @@ class WidgetStartup:
         if self.html_available:
             if self.reserved_height:
                 root.layout.height = self.reserved_height
+                # Preserve the page description in the persistent banner while
+                # hiding the duplicate header in the replaceable widget body.
+                title = getattr(root, "fabricops_page_title", self.title)
+                tone = getattr(root, "fabricops_page_tone", "governance")
+                description = getattr(root, "fabricops_page_description", "")
+                accent, tint = (( "#6750a4", "#f1edf8") if tone == "governance"
+                                else ("#0f6cbd", "#eaf3fb"))
+                subtitle = (
+                    f'<div style="color:#526477;margin-top:5px;max-width:80ch">'
+                    f'{_html_escape(description)}</div>'
+                    if description else ""
+                )
+                self.banner = (
+                    '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+                    f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
+                    f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div>'
+                    f'{subtitle}</div>'
+                )
+                self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
+                root.children[0].layout.display = "none"
             else:
                 # Keep the title and description together in the static banner while
                 # hiding the duplicate header embedded in the returned widget tree.

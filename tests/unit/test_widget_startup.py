@@ -154,17 +154,23 @@ def test_notebook_setup_summary_uses_escaped_styled_html(monkeypatch, outputs):
     assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit"' in html
 
 
-def test_pipeline_reserved_startup_keeps_one_output_and_actionable_errors(outputs):
-    """Loading and actionable errors share a bounded output region."""
+def test_pipeline_reserved_startup_keeps_banner_separate_and_actionable_errors(outputs):
+    """The persistent banner stays separate from the bounded loading/error region."""
     startup = WidgetStartup("Pipeline execution", tone="engineering", reserved_height="360px")
     with pytest.raises(PermissionError, match="denied"):
         with startup.phase("metadata_loading", "Loading registry…"):
             raise PermissionError("denied <private>")
-    assert len([event for event in outputs if event[0] == "display"]) == 1
-    assert {event[2]["display_id"] for event in outputs} == {startup.display_id}
-    for _kind, value, _options in outputs:
-        assert "height:360px" in value.data and "overflow:auto" in value.data
-        assert "Pipeline execution" in value.data
+    assert len([event for event in outputs if event[0] == "display"]) == 2
+    assert {event[2]["display_id"] for event in outputs} == {
+        startup.display_id, startup.display_id + "-banner"
+    }
+    banner = next(value.data for kind, value, options in outputs
+                  if kind == "display" and options["display_id"] == startup.display_id + "-banner")
+    assert "Pipeline execution" in banner
+    for _kind, value, options in outputs:
+        if options["display_id"] == startup.display_id:
+            assert "height:360px" in value.data and "overflow:auto" in value.data
+            assert "Pipeline execution" not in value.data
     assert 'role="alert"' in outputs[-1][1].data
     assert "rerun this cell" in outputs[-1][1].data and "private" not in outputs[-1][1].data
 
@@ -202,8 +208,8 @@ def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, 
         session = shared.start_pipeline_session(None, "Dry Run", inspector=lambda *args: "<p>Saved contract</p>")
         root = outputs[-1][1]
         assert root.layout.height == "360px" and root.layout.overflow == "auto"
-        assert root.children[0].layout.display != "none"
-        assert len([event for event in outputs if event[0] == "display"]) == 1
+        assert root.children[0].layout.display == "none"
+        assert len([event for event in outputs if event[0] == "display"]) == 2
         assert displayed_reports and "incomplete" in displayed_reports[0]
         session.controls[0].value = "contract-source\n1"
         assert session.choices["source"] == {"contract_id": "contract-source", "contract_version": 1}
