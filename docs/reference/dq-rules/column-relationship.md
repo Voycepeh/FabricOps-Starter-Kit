@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**DQ Rules → Business Rules → Resolved DQ Rules**
+**Data Quality → Add Rule Manually or Generate Rules with AI → Column relationship**
 
-Governance describes the relationship in business language, such as “End date must be after start date.” FabricOps resolves the requirement to `rule_type: column_relationship` when a direct two-column comparison can preserve the requirement.
+Governance can select two columns and their comparison directly, or describe the relationship in business language for an AI-assisted proposal. Both paths create `rule_type: column_relationship`.
 
 ## What this rule does
 

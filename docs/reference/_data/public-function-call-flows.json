@@ -13848,9 +13848,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example",
-      "source_end_line": 324,
+      "source_end_line": 355,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 297,
+      "source_start_line": 328,
       "usage": "public_flow_reachable"
     },
     {
@@ -13865,9 +13865,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
-      "source_end_line": 256,
+      "source_end_line": 287,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 242,
+      "source_start_line": 273,
       "usage": "public_flow_reachable"
     },
     {
@@ -13881,9 +13881,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_decimal",
-      "source_end_line": 275,
+      "source_end_line": 306,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 270,
+      "source_start_line": 301,
       "usage": "public_flow_reachable"
     },
     {
@@ -13897,9 +13897,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_widget_exception",
-      "source_end_line": 239,
+      "source_end_line": 270,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 226,
+      "source_start_line": 257,
       "usage": "public_flow_reachable"
     },
     {
@@ -13913,9 +13913,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
-      "source_end_line": 441,
+      "source_end_line": 472,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 423,
+      "source_start_line": 454,
       "usage": "public_flow_reachable"
     },
     {
@@ -13930,9 +13930,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
-      "source_end_line": 733,
+      "source_end_line": 764,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 727,
+      "source_start_line": 758,
       "usage": "unused"
     },
     {
@@ -13947,9 +13947,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
-      "source_end_line": 725,
+      "source_end_line": 756,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 444,
+      "source_start_line": 475,
       "usage": "public_flow_reachable"
     },
     {
@@ -13963,9 +13963,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._mask_treatment_example",
-      "source_end_line": 294,
+      "source_end_line": 325,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 278,
+      "source_start_line": 309,
       "usage": "public_flow_reachable"
     },
     {
@@ -13980,9 +13980,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
-      "source_end_line": 267,
+      "source_end_line": 298,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 259,
+      "source_start_line": 290,
       "usage": "public_flow_reachable"
     },
     {
@@ -13996,9 +13996,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
-      "source_end_line": 813,
+      "source_end_line": 844,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 736,
+      "source_start_line": 767,
       "usage": "public_flow_reachable"
     },
     {
@@ -14028,9 +14028,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance",
-      "source_end_line": 420,
+      "source_end_line": 451,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 363,
+      "source_start_line": 394,
       "usage": "public_flow_reachable"
     },
     {
@@ -14044,9 +14044,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_review",
-      "source_end_line": 360,
+      "source_end_line": 391,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 327,
+      "source_start_line": 358,
       "usage": "public_flow_reachable"
     },
     {
@@ -14121,12 +14121,12 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, context: Any=None) -> dict[str, Any]",
-      "source_end_line": 6273,
+      "source_end_line": 7199,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 815,
+      "source_start_line": 846,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData, Freshness, and Source Drift do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nMissing AI configuration disables AI actions for the widget session while\nmanual authoring remains available. Execution and provider failures show a\nretryable message. Technical failure details are retained in the returned\nstate rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions always receive governed\nschema and contract metadata. When profiling exists, they also receive profile\nsummaries including min/max and the three most frequent values.\nTreatment failures always block."
+      "usage_notes": "Save overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nProcessing prefers the current Engineering Catalogue scan, otherwise the previous contract,\nthen defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,\nor manually saved processing remains editable until the draft is frozen.\nProfile context remains read-only and is never added\nto the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nThe sidebar shows the shared configured rules for Read and Write; it does\nnot execute validation. Rule buttons open the existing authoring controls.\nThe Data Quality tab is the single DQ authoring surface. Governance can add\nany supported deterministic rule manually, or generate transient proposals\nfrom business language when AI is enabled. Proposals require explicit review\nand addition. Both paths create the same editable Guardrail records; the\nColumn tab contains column metadata and non-DQ settings only.\nManual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can\nstage the same configuration as one independent rule per selected column.\nUniqueness can instead treat selected columns as one composite key.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData, Freshness, and Source Drift do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nMissing AI configuration disables AI actions for the widget session while\nmanual authoring remains available. Execution and provider failures show a\nretryable message. Technical failure details are retained in the returned\nstate rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions always receive governed\nschema and contract metadata. When profiling exists, they also receive profile\nsummaries including min/max and the three most frequent values.\nTreatment failures always block."
     },
     {
       "architecture_classification": "internal",

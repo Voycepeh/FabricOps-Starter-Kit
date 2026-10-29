@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**Columns → Column data quality → Uniqueness**
+**Data Quality → Add Rule Manually → Uniqueness**
 
-This is a directly authored column rule. The UI lets Governance set the minimum unique percentage; use 100% for strict uniqueness. Table-level composite DQ rules can also use this rule type. It is persisted as `guardrail_type: data_quality`, `rule_type: uniqueness`. Declared table Grain is a separate optional Guardrail; see [Grain enforcement](../../guided-demo/03-author-and-freeze-data-contract.md#grain-enforcement-and-the-orchestration-sidebar).
+The UI lets Governance set an accepted duplicate-row failure percentage; use 0% for strict uniqueness. A rule may cover one column or an ordered composite key. It is persisted as `guardrail_type: data_quality`, `rule_type: uniqueness`. Declared table Grain is a separate optional Guardrail; see [Grain enforcement](../../guided-demo/03-author-and-freeze-data-contract.md#grain-enforcement-and-the-orchestration-sidebar).
 
 ## What this rule does
 
