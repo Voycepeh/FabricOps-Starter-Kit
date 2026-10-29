@@ -112,6 +112,8 @@ Open **Data Quality**, use **Add Rule Manually**, and configure these rules for 
 
 The rule inventory at the top shows status, type, columns, Warn/Block policy, and the accepted failure limit. Choose a rule in **Review and Edit** to use the same guided controls for existing or AI-generated rules. Relationship and conditional rules use explicit column roles such as **Left column**, **Right column**, **Condition column**, and **Target column**; advanced JSON is available only as a collapsed inspection option.
 
+For Completeness, Uniqueness, Value set, Range, and Pattern, select several columns to add the same configuration as independent rules in one action. Uniqueness also offers **Columns together** when the selected columns form one composite key. The preview lists every rule that will be added before confirmation.
+
 </div>
 </div>
 

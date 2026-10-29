@@ -891,6 +891,9 @@ def widget_data_contract(
     from business language when AI is enabled. Proposals require explicit review
     and addition. Both paths create the same editable Guardrail records; the
     Column tab contains column metadata and non-DQ settings only.
+    Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
+    stage the same configuration as one independent rule per selected column.
+    Uniqueness can instead treat selected columns as one composite key.
     DQ authoring uses Warn/Block and accepted failure rate percent.
     Completeness counts missing rows; Uniqueness counts all duplicate-group rows.
     Legacy distinct-key limits retain their runtime meaning and require an explicit
@@ -4970,10 +4973,22 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Rule type"),
         )
-        manual_column = widgets.Dropdown(
-            options=dq_column_options_with_blank,
+        manual_apply_mode = widgets.ToggleButtons(
+            options=(
+                ("Each selected column", "each"),
+                ("Columns together", "together"),
+            ),
+            value="each", description="Apply to", disabled=not editable,
+            layout=widgets.Layout(width="100%"),
+        )
+        manual_batch_columns = widgets.SelectMultiple(
+            options=dq_column_options,
             disabled=not editable,
-            **shared.widget_common(widgets, "Column"),
+            **shared.widget_common(widgets, "Columns"),
+        )
+        manual_batch_columns.add_class("fabricops-contract-list")
+        manual_batch_columns.layout = widgets.Layout(
+            width="100%", min_width="0", height="112px", max_height="180px"
         )
         manual_key_columns = widgets.SelectMultiple(
             options=dq_column_options,
@@ -5072,13 +5087,23 @@ def widget_data_contract(
             layout=widgets.Layout(width="100%", min_width="0")
         )
         manual_parameter_box.add_class("fabricops-dq-parameter-box")
+        manual_batch_rule_types = {
+            "completeness", "uniqueness", "value_set", "range", "pattern",
+        }
 
         def refresh_manual_rule_fields(
             _change: dict[str, Any] | None = None,
         ) -> None:
             rule_type = str(manual_rule_type.value or "")
             columns_by_type: dict[str, list[Any]] = {
-                "uniqueness": [manual_key_columns],
+                **{
+                    batch_type: (
+                        [manual_apply_mode, manual_batch_columns]
+                        if batch_type == "uniqueness"
+                        else [manual_batch_columns]
+                    )
+                    for batch_type in manual_batch_rule_types
+                },
                 "column_relationship": [manual_left_column, manual_right_column],
                 "conditional_completeness": [
                     manual_condition_column, manual_target_column,
@@ -5088,7 +5113,7 @@ def widget_data_contract(
                 ],
                 "custom_expression": [manual_key_columns],
             }
-            common = columns_by_type.get(rule_type, [manual_column])
+            common = columns_by_type.get(rule_type, [])
             fields: dict[str, list[Any]] = {
                 "completeness": [manual_blank_missing, manual_tolerance],
                 "uniqueness": [manual_tolerance],
@@ -5111,12 +5136,15 @@ def widget_data_contract(
             }
             manual_parameter_box.children = tuple(common + fields.get(rule_type, []))
             column_guidance = {
-                "uniqueness": "Select one or more columns that form the uniqueness key.",
+                "uniqueness": "Create one rule per selected column, or treat the selection as one composite key.",
                 "column_relationship": "Choose explicit left and right columns for the comparison.",
                 "conditional_completeness": "Choose the condition column and the required target column.",
                 "conditional_values": "Choose the condition column and the constrained target column.",
                 "custom_expression": "Optionally select the columns used by the expression; FabricOps validates the expression before enforcement.",
-            }.get(rule_type, "Choose the column this rule applies to.")
+            }.get(
+                rule_type,
+                "Select one or more columns. FabricOps creates one independent rule per column.",
+            )
             manual_rule_hint.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
                 + html.escape(column_guidance)
@@ -5130,38 +5158,71 @@ def widget_data_contract(
         ) -> None:
             selected_type = str(manual_rule_type.value or "")
             rule_type = selected_type.replace("_", " ").title()
-            if selected_type in {"uniqueness", "custom_expression"}:
+            if selected_type in manual_batch_rule_types:
+                selected_names = [
+                    str(value) for value in manual_batch_columns.value
+                ]
+                together = (
+                    selected_type == "uniqueness"
+                    and manual_apply_mode.value == "together"
+                )
+                groups = [selected_names] if together and selected_names else [
+                    [name] for name in selected_names
+                ]
+            elif selected_type == "custom_expression":
                 names = [str(value) for value in manual_key_columns.value]
+                groups = [names]
             elif selected_type == "column_relationship":
                 names = [
                     str(manual_left_column.value or ""),
                     str(manual_right_column.value or ""),
                 ]
+                groups = [[name for name in names if name]]
             elif selected_type.startswith("conditional_"):
                 names = [
                     str(manual_condition_column.value or ""),
                     str(manual_target_column.value or ""),
                 ]
+                groups = [[name for name in names if name]]
             else:
-                names = [str(manual_column.value or "")]
-            names = [name for name in names if name]
+                groups = []
+            groups = [group for group in groups if group]
+            names = [name for group in groups for name in group]
+            rule_count = len(groups)
             policy = "Block" if manual_block.value else "Warn"
             tolerance = (
                 f"; accept up to {html.escape(str(manual_tolerance.value or '0'))}% failures"
                 if manual_tolerance.layout.display != "none" else ""
             )
+            batch_items = (
+                "<ul style='margin:6px 0 0 18px;padding:0;'>"
+                + "".join(
+                    f"<li>{html.escape(rule_type)} · "
+                    f"{html.escape(', '.join(group))}</li>"
+                    for group in groups
+                )
+                + "</ul>"
+                if rule_count > 1 else ""
+            )
             manual_preview.value = (
                 "<div style='background:#f8f6fc;border-left:3px solid #6750a4;"
                 "padding:9px 11px;font-size:12px;line-height:1.5;'>"
-                f"<b>Rule preview:</b> {html.escape(rule_type)} on "
+                f"<b>{'Rule' if rule_count == 1 else f'{rule_count} rules'} preview:</b> "
+                f"{html.escape(rule_type)} on "
                 f"{html.escape(', '.join(names) or 'a selected column')}; "
-                f"{policy} on failure{tolerance}.</div>"
+                f"{policy} on failure{tolerance}."
+                + batch_items + "</div>"
+            )
+            add_manual_rule.description = (
+                f"Add {rule_count} DQ Rules"
+                if rule_count > 1 else "Add DQ Rule"
             )
 
         manual_rule_type.observe(refresh_manual_rule_fields, names="value")
         manual_mode.observe(refresh_manual_rule_fields, names="value")
         for preview_control in (
-            manual_rule_type, manual_column, manual_key_columns,
+            manual_rule_type, manual_apply_mode, manual_batch_columns,
+            manual_key_columns, manual_mode,
             manual_left_column, manual_right_column, manual_condition_column,
             manual_target_column, manual_block, manual_tolerance,
         ):
@@ -5760,15 +5821,30 @@ def widget_data_contract(
         def add_manual_rule_clicked(_button: Any) -> None:
             try:
                 rule_type = str(manual_rule_type.value or "")
-                if rule_type in {"uniqueness", "custom_expression"}:
+                if rule_type in manual_batch_rule_types:
+                    selected_names = [
+                        str(value) for value in manual_batch_columns.value
+                    ]
+                    together = (
+                        rule_type == "uniqueness"
+                        and manual_apply_mode.value == "together"
+                    )
+                    column_groups = (
+                        [selected_names] if together else [
+                            [name] for name in selected_names
+                        ]
+                    )
+                elif rule_type == "custom_expression":
                     selected_names = [
                         str(value) for value in manual_key_columns.value
                     ]
+                    column_groups = [selected_names]
                 elif rule_type == "column_relationship":
                     selected_names = [
                         str(manual_left_column.value or ""),
                         str(manual_right_column.value or ""),
                     ]
+                    column_groups = [selected_names]
                 elif rule_type in {
                     "conditional_completeness", "conditional_values",
                 }:
@@ -5776,15 +5852,23 @@ def widget_data_contract(
                         str(manual_condition_column.value or ""),
                         str(manual_target_column.value or ""),
                     ]
+                    column_groups = [selected_names]
                 else:
-                    selected_names = [str(manual_column.value or "")]
+                    selected_names = []
+                    column_groups = []
                 selected_names = [name for name in selected_names if name]
+                column_groups = [
+                    [name for name in group if name] for group in column_groups
+                ]
+                column_groups = [group for group in column_groups if group]
+                if rule_type == "custom_expression" and not column_groups:
+                    column_groups = [[]]
                 expected = {
-                    "completeness": (1, 1),
+                    "completeness": (1, None),
                     "uniqueness": (1, None),
-                    "value_set": (1, 1),
-                    "range": (1, 1),
-                    "pattern": (1, 1),
+                    "value_set": (1, None),
+                    "range": (1, None),
+                    "pattern": (1, None),
                     "column_relationship": (2, 2),
                     "conditional_completeness": (2, 2),
                     "conditional_values": (2, 2),
@@ -5863,32 +5947,37 @@ def widget_data_contract(
                         "engineering_review_status": "pending",
                     })
 
-                column_id = ""
-                if len(selected_names) == 1 and rule_type in {
-                    "completeness", "uniqueness", "value_set", "range", "pattern"
-                }:
-                    column_id = next((
-                        str(column.get("column_id") or "")
-                        for column in columns
-                        if str(column.get("column_name") or "") == selected_names[0]
-                    ), "")
-                record = guardrail_record(
-                    "data_quality", rule_type, params,
-                    column_id=column_id,
-                    action="Block" if manual_block.value else "Warn",
-                    active=bool(manual_enabled.value),
+                records: list[dict[str, Any]] = []
+                for group in column_groups:
+                    record_params = {**params, "columns": group}
+                    column_id = ""
+                    if len(group) == 1 and rule_type in manual_batch_rule_types:
+                        column_id = next((
+                            str(column.get("column_id") or "")
+                            for column in columns
+                            if str(column.get("column_name") or "") == group[0]
+                        ), "")
+                    records.append(guardrail_record(
+                        "data_quality", rule_type, record_params,
+                        column_id=column_id,
+                        action="Block" if manual_block.value else "Warn",
+                        active=bool(manual_enabled.value),
+                    ))
+                stage_guardrails(records)
+                for record in records:
+                    sync_column_rule(record)
+                refresh_business_saved_options(
+                    str(records[-1]["guardrail_rule_id"])
                 )
-                stage_guardrails([record])
-                sync_column_rule(record)
-                refresh_business_saved_options(str(record["guardrail_rule_id"]))
                 business_review_source.value = "Current draft rules"
                 render_table_summary()
                 set_validation_error("manual_dq_rule")
                 manual_validation.value = ""
                 set_status(
-                    "DQ Rule added to the current draft. Save Data Contract to persist."
+                    f"{len(records)} DQ Rule{'s' if len(records) != 1 else ''} added "
+                    "to the current draft. Save Data Contract to persist."
                 )
-                manual_column.value = ""
+                manual_batch_columns.value = ()
                 manual_key_columns.value = ()
                 manual_left_column.value = ""
                 manual_right_column.value = ""
@@ -6756,7 +6845,8 @@ def widget_data_contract(
             "manual_dq_rule_section": manual_rule_section,
             "ai_dq_rule_section": ai_rule_section,
             "manual_rule_type": manual_rule_type,
-            "manual_column": manual_column,
+            "manual_apply_mode": manual_apply_mode,
+            "manual_batch_columns": manual_batch_columns,
             "manual_key_columns": manual_key_columns,
             "manual_left_column": manual_left_column,
             "manual_right_column": manual_right_column,

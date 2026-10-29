@@ -103,6 +103,9 @@ any supported deterministic rule manually, or generate transient proposals
 from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
 Column tab contains column metadata and non-DQ settings only.
+Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
+stage the same configuration as one independent rule per selected column.
+Uniqueness can instead treat selected columns as one composite key.
 DQ authoring uses Warn/Block and accepted failure rate percent.
 Completeness counts missing rows; Uniqueness counts all duplicate-group rows.
 Legacy distinct-key limits retain their runtime meaning and require an explicit
@@ -154,7 +157,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:846`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L846-L7109">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L846-L7199">View on GitHub</a>
 </div>
 
 

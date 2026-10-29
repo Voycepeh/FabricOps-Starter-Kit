@@ -1397,7 +1397,8 @@ def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
 
     for control_name in (
         "row_key_columns", "key_columns", "tracked_columns",
-        "column_select", "business_columns", "manual_key_columns",
+        "column_select", "business_columns", "manual_batch_columns",
+        "manual_key_columns",
     ):
         assert "fabricops-contract-list" in controls[control_name]._dom_classes
     assert controls["row_key_columns"].layout.max_height == "252px"
@@ -2361,14 +2362,75 @@ def test_manually_authored_dq_rule_appears_in_current_rules(widget_runtime):
 
     controls["top_nav"].value = "Data Quality"
     controls["manual_rule_type"].value = "completeness"
-    controls["manual_column"].value = "column_0"
+    controls["manual_batch_columns"].value = ("column_0",)
     controls["add_manual_rule"].click()
     labels = [label for label, _value in controls["business_saved"].options]
 
     assert any("Completeness" in label and "column_0" in label for label in labels)
     assert "fabricops-dq-rule-table" in controls["current_rules_table"].value
     assert "Completeness" in controls["current_rules_table"].value
-    assert controls["manual_column"].value == ""
+    assert controls["manual_batch_columns"].value == ()
+
+
+def test_manual_batch_creation_stages_one_rule_per_selected_column(widget_runtime):
+    """Supported single-column rules can be created across several columns at once."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "completeness"
+    controls["manual_batch_columns"].value = ("column_0", "column_1")
+    controls["manual_tolerance"].value = "1.5"
+    controls["manual_block"].value = True
+
+    assert controls["add_manual_rule"].description == "Add 2 DQ Rules"
+    assert "<b>2 rules preview:</b>" in controls["manual_preview"].value
+    controls["add_manual_rule"].click()
+
+    staged = [
+        record
+        for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "completeness"
+    ]
+    assert len(staged) == 2
+    assert {record["column_id"] for record in staged} == {"col-0", "col-1"}
+    assert {
+        tuple(module._parameters(record)["columns"]) for record in staged
+    } == {("column_0",), ("column_1",)}
+    assert all(record["action"] == "Block" for record in staged)
+    assert all(
+        module._parameters(record)["maximum_missing_percent"] == 1.5
+        for record in staged
+    )
+    assert "2 DQ Rules added" in state["message"]
+
+
+def test_manual_uniqueness_can_apply_to_columns_together(widget_runtime):
+    """Composite uniqueness remains a single rule with all selected columns."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "uniqueness"
+
+    assert controls["manual_parameter_box"].children[:2] == (
+        controls["manual_apply_mode"], controls["manual_batch_columns"],
+    )
+    controls["manual_apply_mode"].value = "together"
+    controls["manual_batch_columns"].value = ("column_0", "column_1")
+    assert controls["add_manual_rule"].description == "Add DQ Rule"
+    controls["add_manual_rule"].click()
+
+    staged = [
+        record
+        for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "uniqueness"
+    ]
+    assert len(staged) == 1
+    assert staged[0]["column_id"] == ""
+    assert module._parameters(staged[0])["columns"] == [
+        "column_0", "column_1",
+    ]
 
 
 def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
