@@ -1354,10 +1354,11 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["business_requirement"].description == ""
     assert controls["business_columns"].description == ""
     assert controls["business_rule_controls"].layout.display == "none"
-    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr) minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
     assert "Current Data Quality Rules" in controls["left_pane"].children[0].children[0].value
-    assert "Add Rule Manually" in controls["right_pane"].children[0].children[0].value
-    assert "Generate Rules with AI" in controls["right_pane"].children[1].children[0].value
+    authoring_grid = controls["right_pane"].children[0]
+    assert "Add Rule Manually" in authoring_grid.children[0].children[0].value
+    assert "Generate Rules with AI" in authoring_grid.children[1].children[0].value
     for label in ("Table", "Column", "Data Quality", "Review"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
@@ -1384,18 +1385,19 @@ def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
 
     controls["top_nav"].value = "Data Quality"
     current_panel = controls["left_pane"].children[0]
-    manual_panel, ai_panel = controls["right_pane"].children
+    manual_panel, ai_panel = controls["right_pane"].children[0].children
     for panel in (current_panel, manual_panel, ai_panel):
         assert panel.layout.height == "auto"
         assert panel.layout.overflow == "visible"
     assert getattr(controls["business_saved"].layout, "height", None) is None
     assert getattr(controls["business_proposal_select"].layout, "height", None) is None
     assert controls["resolve_business_rule"] in ai_panel.children[-1].children
-    assert controls["apply_business_rule"] in current_panel.children[-1].children[1].children
+    reviewer_panel = controls["left_pane"].children[1]
+    assert controls["apply_business_rule"] in reviewer_panel.children[-1].children[1].children
 
     for control_name in (
         "row_key_columns", "key_columns", "tracked_columns",
-        "column_select", "business_columns", "manual_columns",
+        "column_select", "business_columns", "manual_key_columns",
     ):
         assert "fabricops-contract-list" in controls[control_name]._dom_classes
     assert controls["row_key_columns"].layout.max_height == "252px"
@@ -2359,11 +2361,14 @@ def test_manually_authored_dq_rule_appears_in_current_rules(widget_runtime):
 
     controls["top_nav"].value = "Data Quality"
     controls["manual_rule_type"].value = "completeness"
-    controls["manual_columns"].value = ("column_0",)
+    controls["manual_column"].value = "column_0"
     controls["add_manual_rule"].click()
     labels = [label for label, _value in controls["business_saved"].options]
 
     assert any("Completeness" in label and "column_0" in label for label in labels)
+    assert "fabricops-dq-rule-table" in controls["current_rules_table"].value
+    assert "Completeness" in controls["current_rules_table"].value
+    assert controls["manual_column"].value == ""
 
 
 def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
@@ -2379,8 +2384,9 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
 
     controls["top_nav"].value = "Data Quality"
     assert controls["current_dq_rules_section"] in controls["left_pane"].children
-    assert controls["manual_dq_rule_section"] in controls["right_pane"].children
-    assert controls["ai_dq_rule_section"] in controls["right_pane"].children
+    authoring_sections = controls["right_pane"].children[0].children
+    assert controls["manual_dq_rule_section"] in authoring_sections
+    assert controls["ai_dq_rule_section"] in authoring_sections
     assert "AI generation is unavailable" in controls["ai_dq_rule_section"].children[1].value
     assert controls["add_manual_rule"].disabled is False
 
@@ -2391,7 +2397,12 @@ def test_manual_relationship_rule_uses_canonical_guardrail_model(widget_runtime)
     controls = state["_controls"]
     controls["top_nav"].value = "Data Quality"
     controls["manual_rule_type"].value = "column_relationship"
-    controls["manual_columns"].value = ("column_1", "column_0")
+    assert controls["manual_parameter_box"].children[:2] == (
+        controls["manual_left_column"], controls["manual_right_column"],
+    )
+    controls["manual_left_column"].value = "column_1"
+    controls["manual_right_column"].value = "column_0"
+    assert "column_1, column_0" in controls["manual_preview"].value
     controls["manual_operator"].value = ">="
     controls["manual_tolerance"].value = "2.5"
     controls["manual_block"].value = True
@@ -2423,10 +2434,12 @@ def test_current_dq_rule_parameters_policy_and_state_are_editable(widget_runtime
     controls = state["_controls"]
     controls["top_nav"].value = "Data Quality"
     controls["business_saved"].value = "advanced"
-    parameters = json.loads(controls["business_parameters"].value)
-    parameters["operator"] = "<="
-    parameters["maximum_failure_percent"] = 4
-    controls["business_parameters"].value = json.dumps(parameters)
+    assert controls["review_parameter_box"].children == (
+        controls["review_left_column"],
+        controls["review_operator"],
+        controls["review_right_column"],
+    )
+    controls["review_operator"].value = "<="
     controls["business_tolerance"].value = "4"
     controls["business_block"].value = True
     controls["business_enabled"].value = False

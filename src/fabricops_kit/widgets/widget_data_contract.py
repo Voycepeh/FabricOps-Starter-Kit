@@ -190,6 +190,32 @@ _CONTRACT_STYLE = """<style>
     border-top:1px solid var(--form-border); padding-top:12px;
 }
 .fabricops-data-contract .fabricops-dq-parameter-box { gap:8px; }
+.fabricops-data-contract .fabricops-dq-rule-table {
+    width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;
+    color:var(--form-text);
+}
+.fabricops-data-contract .fabricops-dq-rule-table th {
+    padding:8px 10px; text-align:left; font-weight:600; background:#f1edf8;
+    border-bottom:1px solid #d8cfea;
+}
+.fabricops-data-contract .fabricops-dq-rule-table td {
+    padding:9px 10px; vertical-align:top; border-bottom:1px solid var(--form-border);
+    overflow-wrap:anywhere;
+}
+.fabricops-data-contract .fabricops-dq-rule-table tr:last-child td { border-bottom:0; }
+.fabricops-data-contract .fabricops-dq-rule-table-wrap {
+    width:100%; overflow-x:auto; border:1px solid var(--form-border); border-radius:6px;
+}
+.fabricops-data-contract .fabricops-dq-status {
+    display:inline-block; padding:2px 7px; border-radius:10px; white-space:nowrap;
+    background:#eaf6ec; color:#107c10; font-weight:600;
+}
+.fabricops-data-contract .fabricops-dq-status.is-disabled { background:#eef1f4; color:#667085; }
+.fabricops-data-contract .fabricops-dq-editor-heading {
+    margin-top:4px; padding-top:12px; border-top:1px solid var(--form-border);
+    color:var(--form-text); font-size:14px; font-weight:600;
+}
+.fabricops-data-contract .fabricops-dq-authoring-grid > .widget-vbox { min-width:0; }
 .fabricops-data-contract .fabricops-delete-request {
     color:#a4262c; background:#fff; border:1px solid #a4262c;
 }
@@ -213,6 +239,7 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-contract-nav > div { width:100%; }
     .fabricops-data-contract .fabricops-contract-nav button { flex:1 1 0; min-width:0; width:auto; }
     .fabricops-data-contract .fabricops-contract-columns { height:180px !important; }
+    .fabricops-data-contract .fabricops-dq-authoring-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -983,7 +1010,7 @@ def widget_data_contract(
         else:
             workspace.remove_class("fabricops-data-quality-workspace")
         workspace.layout.grid_template_columns = (
-            "minmax(0, 1fr) minmax(0, 1fr)"
+            "minmax(0, 1fr)"
             if selected_view == "Data Quality"
             else "minmax(250px, 27fr) minmax(0, 73fr)"
         )
@@ -4673,7 +4700,11 @@ def widget_data_contract(
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
         business_saved = widgets.Dropdown(
-            **shared.widget_common(widgets, "Current DQ Rules")
+            **shared.widget_common(widgets, "Select rule to edit")
+        )
+        current_rules_table = widgets.HTML()
+        business_editor_heading = widgets.HTML(
+            "<div class='fabricops-dq-editor-heading'>Rule editor</div>"
         )
         business_requirement = widgets.Textarea(
             disabled=not editable,
@@ -4694,6 +4725,11 @@ def widget_data_contract(
         )
         business_columns.description = ""
         business_columns.add_class("fabricops-contract-list")
+        dq_column_options = [
+            (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
+            for column in columns
+        ]
+        dq_column_options_with_blank = [("Select a column", ""), *dq_column_options]
         business_enabled = widgets.Checkbox(
             value=True, description="Enabled", disabled=not editable
         )
@@ -4711,11 +4747,102 @@ def widget_data_contract(
         business_parameters.layout = widgets.Layout(
             width="100%", min_width="0", height="150px"
         )
+        review_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Column"),
+        )
+        review_key_columns = widgets.SelectMultiple(
+            options=dq_column_options,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Key columns"),
+        )
+        review_key_columns.add_class("fabricops-contract-list")
+        review_key_columns.layout = widgets.Layout(width="100%", height="96px")
+        review_left_column = widgets.Dropdown(
+            options=dq_column_options_with_blank, disabled=not editable,
+            **shared.widget_common(widgets, "Left column"),
+        )
+        review_right_column = widgets.Dropdown(
+            options=dq_column_options_with_blank, disabled=not editable,
+            **shared.widget_common(widgets, "Right column"),
+        )
+        review_condition_column = widgets.Dropdown(
+            options=dq_column_options_with_blank, disabled=not editable,
+            **shared.widget_common(widgets, "Condition column"),
+        )
+        review_target_column = widgets.Dropdown(
+            options=dq_column_options_with_blank, disabled=not editable,
+            **shared.widget_common(widgets, "Target column"),
+        )
+        review_mode = widgets.Dropdown(
+            options=(("Allow listed values", "allow"), ("Block listed values", "block")),
+            disabled=not editable,
+            **shared.widget_common(widgets, "Value behavior"),
+        )
+        review_values = widgets.Text(
+            disabled=not editable, placeholder="Comma-separated values",
+            **shared.widget_common(widgets, "Values"),
+        )
+        review_minimum = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Lower bound")
+        )
+        review_maximum = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Upper bound")
+        )
+        review_minimum_inclusive = dq_checkbox("Include lower bound")
+        review_maximum_inclusive = dq_checkbox("Include upper bound")
+        review_pattern = widgets.Text(
+            disabled=not editable,
+            **shared.widget_common(widgets, "Regular expression"),
+        )
+        review_operator = widgets.Dropdown(
+            options=("=", "!=", ">", ">=", "<", "<="), disabled=not editable,
+            **shared.widget_common(widgets, "Comparison"),
+        )
+        review_condition_operator = widgets.Dropdown(
+            options=("=", "!="), disabled=not editable,
+            **shared.widget_common(widgets, "Condition"),
+        )
+        review_condition_value = widgets.Text(
+            disabled=not editable, **shared.widget_common(widgets, "Condition value")
+        )
+        review_blank_missing = dq_checkbox("Count blank text as missing")
+        review_expression = widgets.Textarea(
+            disabled=not editable,
+            **shared.widget_common(widgets, "PySpark boolean expression", textarea=True),
+        )
+        review_expression.layout = widgets.Layout(width="100%", height="110px")
+        review_parameter_box = widgets.VBox(
+            layout=widgets.Layout(width="100%", min_width="0")
+        )
+        review_parameter_box.add_class("fabricops-dq-parameter-box")
+        business_parameters.layout.display = "none"
+        business_advanced_toggle = widgets.ToggleButton(
+            value=False, description="Show advanced parameters",
+            disabled=False, layout=widgets.Layout(width="210px"),
+        )
+
+        def toggle_business_advanced(change: dict[str, Any]) -> None:
+            expanded = bool(change["new"])
+            business_parameters.layout.display = "" if expanded else "none"
+            business_advanced_toggle.description = (
+                "Hide advanced parameters"
+                if expanded else "Show advanced parameters"
+            )
+
+        business_advanced_toggle.observe(toggle_business_advanced, names="value")
+        business_advanced = widgets.VBox(
+            [business_advanced_toggle, business_parameters],
+            layout=widgets.Layout(width="100%"),
+        )
+        business_advanced.add_class("fabricops-dq-parameter-box")
         business_rule_controls = widgets.VBox([
+            review_parameter_box,
             widgets.HBox([business_enabled, business_block], layout=checkbox_row_layout),
-            business_parameters,
-            business_tolerance, business_tolerance_hint,
+            business_tolerance, business_tolerance_hint, business_advanced,
         ])
+        business_validation = widgets.HTML()
         business_rule_controls.layout.display = "none"
         business_examples = widgets.HTML(
             "<div style='color:#667085;font-size:12px;line-height:1.6;'>"
@@ -4731,7 +4858,11 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Resolved DQ Rules"),
         )
         business_review_source = widgets.ToggleButtons(
-            options=["Current draft rules", "Generated proposals"], value="Current draft rules",
+            options=(
+                ["Current draft rules", "Generated proposals"]
+                if ai_visible else ["Current draft rules"]
+            ),
+            value="Current draft rules",
             layout=widgets.Layout(width="100%"),
         )
         business_review_source.add_class("fabricops-business-source")
@@ -4839,17 +4970,39 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Rule type"),
         )
-        manual_columns = widgets.SelectMultiple(
-            options=[
-                (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
-                for column in columns
-            ],
+        manual_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
             disabled=not editable,
-            **shared.widget_common(widgets, "Applicable columns"),
+            **shared.widget_common(widgets, "Column"),
         )
-        manual_columns.add_class("fabricops-contract-list")
-        manual_columns.layout = widgets.Layout(
-            width="100%", min_width="0", height="120px", max_height="180px"
+        manual_key_columns = widgets.SelectMultiple(
+            options=dq_column_options,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Key columns"),
+        )
+        manual_key_columns.add_class("fabricops-contract-list")
+        manual_key_columns.layout = widgets.Layout(
+            width="100%", min_width="0", height="96px", max_height="150px"
+        )
+        manual_left_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Left column"),
+        )
+        manual_right_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Right column"),
+        )
+        manual_condition_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Condition column"),
+        )
+        manual_target_column = widgets.Dropdown(
+            options=dq_column_options_with_blank,
+            disabled=not editable,
+            **shared.widget_common(widgets, "Target column"),
         )
         manual_mode = widgets.Dropdown(
             options=(("Allow listed values", "allow"), ("Block listed values", "block")),
@@ -4913,6 +5066,8 @@ def widget_data_contract(
             description="Add DQ Rule", disabled=not editable, button_style="primary"
         )
         manual_rule_hint = widgets.HTML()
+        manual_preview = widgets.HTML()
+        manual_validation = widgets.HTML()
         manual_parameter_box = widgets.VBox(
             layout=widgets.Layout(width="100%", min_width="0")
         )
@@ -4922,7 +5077,18 @@ def widget_data_contract(
             _change: dict[str, Any] | None = None,
         ) -> None:
             rule_type = str(manual_rule_type.value or "")
-            common = [manual_columns]
+            columns_by_type: dict[str, list[Any]] = {
+                "uniqueness": [manual_key_columns],
+                "column_relationship": [manual_left_column, manual_right_column],
+                "conditional_completeness": [
+                    manual_condition_column, manual_target_column,
+                ],
+                "conditional_values": [
+                    manual_condition_column, manual_target_column,
+                ],
+                "custom_expression": [manual_key_columns],
+            }
+            common = columns_by_type.get(rule_type, [manual_column])
             fields: dict[str, list[Any]] = {
                 "completeness": [manual_blank_missing, manual_tolerance],
                 "uniqueness": [manual_tolerance],
@@ -4945,12 +5111,12 @@ def widget_data_contract(
             }
             manual_parameter_box.children = tuple(common + fields.get(rule_type, []))
             column_guidance = {
-                "uniqueness": "Select one or more columns in key order.",
-                "column_relationship": "Select the left column, then the right column.",
-                "conditional_completeness": "Select the condition column, then the required column.",
-                "conditional_values": "Select the condition column, then the constrained column.",
-                "custom_expression": "Select the columns used by the expression; FabricOps validates the expression before enforcement.",
-            }.get(rule_type, "Select exactly one column.")
+                "uniqueness": "Select one or more columns that form the uniqueness key.",
+                "column_relationship": "Choose explicit left and right columns for the comparison.",
+                "conditional_completeness": "Choose the condition column and the required target column.",
+                "conditional_values": "Choose the condition column and the constrained target column.",
+                "custom_expression": "Optionally select the columns used by the expression; FabricOps validates the expression before enforcement.",
+            }.get(rule_type, "Choose the column this rule applies to.")
             manual_rule_hint.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
                 + html.escape(column_guidance)
@@ -4959,9 +5125,197 @@ def widget_data_contract(
             tolerance = dq_tolerance_parameter(rule_type, str(manual_mode.value or ""))
             manual_tolerance.layout.display = "" if tolerance else "none"
 
+        def refresh_manual_preview(
+            _change: dict[str, Any] | None = None,
+        ) -> None:
+            selected_type = str(manual_rule_type.value or "")
+            rule_type = selected_type.replace("_", " ").title()
+            if selected_type in {"uniqueness", "custom_expression"}:
+                names = [str(value) for value in manual_key_columns.value]
+            elif selected_type == "column_relationship":
+                names = [
+                    str(manual_left_column.value or ""),
+                    str(manual_right_column.value or ""),
+                ]
+            elif selected_type.startswith("conditional_"):
+                names = [
+                    str(manual_condition_column.value or ""),
+                    str(manual_target_column.value or ""),
+                ]
+            else:
+                names = [str(manual_column.value or "")]
+            names = [name for name in names if name]
+            policy = "Block" if manual_block.value else "Warn"
+            tolerance = (
+                f"; accept up to {html.escape(str(manual_tolerance.value or '0'))}% failures"
+                if manual_tolerance.layout.display != "none" else ""
+            )
+            manual_preview.value = (
+                "<div style='background:#f8f6fc;border-left:3px solid #6750a4;"
+                "padding:9px 11px;font-size:12px;line-height:1.5;'>"
+                f"<b>Rule preview:</b> {html.escape(rule_type)} on "
+                f"{html.escape(', '.join(names) or 'a selected column')}; "
+                f"{policy} on failure{tolerance}.</div>"
+            )
+
         manual_rule_type.observe(refresh_manual_rule_fields, names="value")
         manual_mode.observe(refresh_manual_rule_fields, names="value")
+        for preview_control in (
+            manual_rule_type, manual_column, manual_key_columns,
+            manual_left_column, manual_right_column, manual_condition_column,
+            manual_target_column, manual_block, manual_tolerance,
+        ):
+            preview_control.observe(refresh_manual_preview, names="value")
         refresh_manual_rule_fields()
+        refresh_manual_preview()
+
+        review_editor_state: dict[str, Any] = {
+            "rule_type": "", "base": {}, "hydrating": False,
+        }
+
+        def hydrate_review_editor(
+            rule_type: str, params: Mapping[str, Any],
+        ) -> None:
+            review_editor_state.update({
+                "rule_type": rule_type, "base": dict(params), "hydrating": True,
+            })
+            names = [str(value) for value in params.get("columns", [])]
+            try:
+                review_column.value = names[0] if len(names) == 1 else ""
+                review_key_columns.value = tuple(
+                    name for name in names
+                    if name in {str(value) for _label, value in dq_column_options}
+                )
+                review_left_column.value = names[0] if len(names) > 0 else ""
+                review_right_column.value = names[1] if len(names) > 1 else ""
+                review_condition_column.value = names[0] if len(names) > 0 else ""
+                review_target_column.value = names[1] if len(names) > 1 else ""
+                review_mode.value = (
+                    str(params.get("mode"))
+                    if str(params.get("mode")) in {"allow", "block"}
+                    else "allow"
+                )
+                review_values.value = ", ".join(
+                    str(value) for value in params.get("values", [])
+                )
+                review_minimum.value = str(params.get("minimum") or "")
+                review_maximum.value = str(params.get("maximum") or "")
+                review_minimum_inclusive.value = bool(
+                    params.get("minimum_inclusive", True)
+                )
+                review_maximum_inclusive.value = bool(
+                    params.get("maximum_inclusive", True)
+                )
+                review_pattern.value = str(params.get("pattern") or "")
+                review_operator.value = (
+                    str(params.get("operator"))
+                    if str(params.get("operator")) in {"=", "!=", ">", ">=", "<", "<="}
+                    else "="
+                )
+                review_condition_operator.value = (
+                    str(params.get("condition_operator"))
+                    if str(params.get("condition_operator")) in {"=", "!="}
+                    else "="
+                )
+                review_condition_value.value = str(
+                    params.get("condition_value") or ""
+                )
+                review_blank_missing.value = bool(
+                    params.get("treat_blank_as_missing", False)
+                )
+                review_expression.value = str(params.get("expression") or "")
+                columns_by_type: dict[str, list[Any]] = {
+                    "uniqueness": [review_key_columns],
+                    "column_relationship": [
+                        review_left_column, review_operator, review_right_column,
+                    ],
+                    "conditional_completeness": [
+                        review_condition_column, review_condition_operator,
+                        review_condition_value, review_target_column,
+                        review_blank_missing,
+                    ],
+                    "conditional_values": [
+                        review_condition_column, review_condition_operator,
+                        review_condition_value, review_target_column,
+                        review_mode, review_values,
+                    ],
+                    "custom_expression": [review_key_columns, review_expression],
+                    "value_set": [review_column, review_mode, review_values],
+                    "range": [
+                        review_column, review_minimum, review_minimum_inclusive,
+                        review_maximum, review_maximum_inclusive,
+                    ],
+                    "pattern": [review_column, review_pattern],
+                    "completeness": [review_column, review_blank_missing],
+                }
+                review_parameter_box.children = tuple(
+                    columns_by_type.get(rule_type, [review_column])
+                )
+            finally:
+                review_editor_state["hydrating"] = False
+
+        def sync_review_editor(
+            _change: dict[str, Any] | None = None,
+        ) -> None:
+            if review_editor_state["hydrating"] or business_hydrating["active"]:
+                return
+            rule_type = str(review_editor_state["rule_type"] or "")
+            if not rule_type:
+                return
+            params = dict(review_editor_state["base"])
+            if rule_type in {"uniqueness", "custom_expression"}:
+                names = [str(value) for value in review_key_columns.value]
+            elif rule_type == "column_relationship":
+                names = [
+                    str(review_left_column.value or ""),
+                    str(review_right_column.value or ""),
+                ]
+            elif rule_type.startswith("conditional_"):
+                names = [
+                    str(review_condition_column.value or ""),
+                    str(review_target_column.value or ""),
+                ]
+            else:
+                names = [str(review_column.value or "")]
+            params["columns"] = [name for name in names if name]
+            if rule_type in {"value_set", "conditional_values"}:
+                params["mode"] = str(review_mode.value)
+                params["values"] = [
+                    value.strip() for value in str(review_values.value).split(",")
+                    if value.strip()
+                ]
+            if rule_type == "range":
+                params.update({
+                    "minimum": str(review_minimum.value or "").strip() or None,
+                    "minimum_inclusive": bool(review_minimum_inclusive.value),
+                    "maximum": str(review_maximum.value or "").strip() or None,
+                    "maximum_inclusive": bool(review_maximum_inclusive.value),
+                })
+            elif rule_type == "pattern":
+                params["pattern"] = str(review_pattern.value or "").strip()
+            elif rule_type == "column_relationship":
+                params["operator"] = str(review_operator.value)
+            elif rule_type.startswith("conditional_"):
+                params["condition_operator"] = str(review_condition_operator.value)
+                params["condition_value"] = str(review_condition_value.value)
+            if rule_type in {"completeness", "conditional_completeness"}:
+                params["treat_blank_as_missing"] = bool(review_blank_missing.value)
+            if rule_type == "custom_expression":
+                params["expression"] = str(review_expression.value or "").strip()
+                params["expression_language"] = "pyspark"
+            business_parameters.value = json.dumps(
+                params, indent=2, sort_keys=True, ensure_ascii=False
+            )
+
+        for review_control in (
+            review_column, review_key_columns, review_left_column,
+            review_right_column, review_condition_column, review_target_column,
+            review_mode, review_values, review_minimum, review_maximum,
+            review_minimum_inclusive, review_maximum_inclusive, review_pattern,
+            review_operator, review_condition_operator, review_condition_value,
+            review_blank_missing, review_expression,
+        ):
+            review_control.observe(sync_review_editor, names="value")
 
         def rule_column_names(rule: Mapping[str, Any]) -> list[str]:
             params = _parameters(rule)
@@ -4990,6 +5344,48 @@ def widget_data_contract(
                 kind = rule_type.replace("_", " ").title()
             names = rule_column_names(rule)
             return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
+
+        def render_current_rules_table() -> None:
+            rows: list[str] = []
+            for rule in business_lookup.values():
+                active = bool(rule.get("is_active", True))
+                status_class = "" if active else " is-disabled"
+                status = "Enabled" if active else "Disabled"
+                rule_type = str(rule.get("rule_type") or "").replace("_", " ").title()
+                names = ", ".join(rule_column_names(rule)) or "—"
+                action = str(rule.get("action") or "Warn")
+                params = _parameters(rule)
+                tolerance_field = dq_tolerance_parameter(
+                    str(rule.get("rule_type") or ""), str(params.get("mode") or "")
+                )
+                tolerance = (
+                    f"{params.get(tolerance_field, 0):g}%"
+                    if tolerance_field and isinstance(params.get(tolerance_field, 0), (int, float))
+                    else "Strict"
+                )
+                rows.append(
+                    "<tr>"
+                    f"<td><span class='fabricops-dq-status{status_class}'>{status}</span></td>"
+                    f"<td><b>{html.escape(rule_type)}</b></td>"
+                    f"<td>{html.escape(names)}</td>"
+                    f"<td>{html.escape(action)}</td>"
+                    f"<td>{html.escape(tolerance)}</td>"
+                    "</tr>"
+                )
+            if not rows:
+                current_rules_table.value = (
+                    "<div style='padding:16px;border:1px solid #dce4ed;border-radius:6px;"
+                    "color:#667085;'>No Data Quality rules yet. Create one manually or "
+                    "generate proposals with AI.</div>"
+                )
+                return
+            current_rules_table.value = (
+                "<div class='fabricops-dq-rule-table-wrap'><table class='fabricops-dq-rule-table'>"
+                "<thead><tr><th style='width:14%'>Status</th><th style='width:22%'>Rule</th>"
+                "<th>Column(s)</th><th style='width:12%'>Action</th>"
+                "<th style='width:16%'>Failure limit</th></tr></thead><tbody>"
+                + "".join(rows) + "</tbody></table></div>"
+            )
 
         def proposal_label(proposal: Mapping[str, Any]) -> str:
             kind = str(proposal.get("rule_type") or "").replace("_", " ").title()
@@ -5023,6 +5419,7 @@ def widget_data_contract(
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
             business_saved.value = selected if selected in option_values else ""
+            render_current_rules_table()
 
         def refresh_resolved_options(selected: int = 0) -> None:
             if not business_resolved:
@@ -5087,8 +5484,11 @@ def widget_data_contract(
             *,
             saved: bool = False,
         ) -> None:
+            business_validation.value = ""
             if not proposal:
                 business_rule_controls.layout.display = "none"
+                review_parameter_box.children = ()
+                review_editor_state.update({"rule_type": "", "base": {}})
                 business_proposal.value = (
                     "<p style='color:#667085;'>No DQ Rule selected.</p>"
                 )
@@ -5113,6 +5513,7 @@ def widget_data_contract(
                 params, indent=2, sort_keys=True, ensure_ascii=False
             )
             rule_type = str(proposal.get("rule_type") or "")
+            hydrate_review_editor(rule_type, params)
             tolerance_field = dq_tolerance_parameter(rule_type, str(params.get("mode") or ""))
             business_tolerance.layout.display = "" if tolerance_field else "none"
             if tolerance_field:
@@ -5359,7 +5760,25 @@ def widget_data_contract(
         def add_manual_rule_clicked(_button: Any) -> None:
             try:
                 rule_type = str(manual_rule_type.value or "")
-                selected_names = [str(value) for value in manual_columns.value]
+                if rule_type in {"uniqueness", "custom_expression"}:
+                    selected_names = [
+                        str(value) for value in manual_key_columns.value
+                    ]
+                elif rule_type == "column_relationship":
+                    selected_names = [
+                        str(manual_left_column.value or ""),
+                        str(manual_right_column.value or ""),
+                    ]
+                elif rule_type in {
+                    "conditional_completeness", "conditional_values",
+                }:
+                    selected_names = [
+                        str(manual_condition_column.value or ""),
+                        str(manual_target_column.value or ""),
+                    ]
+                else:
+                    selected_names = [str(manual_column.value or "")]
+                selected_names = [name for name in selected_names if name]
                 expected = {
                     "completeness": (1, 1),
                     "uniqueness": (1, None),
@@ -5465,11 +5884,29 @@ def widget_data_contract(
                 business_review_source.value = "Current draft rules"
                 render_table_summary()
                 set_validation_error("manual_dq_rule")
+                manual_validation.value = ""
                 set_status(
                     "DQ Rule added to the current draft. Save Data Contract to persist."
                 )
+                manual_column.value = ""
+                manual_key_columns.value = ()
+                manual_left_column.value = ""
+                manual_right_column.value = ""
+                manual_condition_column.value = ""
+                manual_target_column.value = ""
+                manual_values.value = ""
+                manual_minimum.value = ""
+                manual_maximum.value = ""
+                manual_pattern.value = ""
+                manual_condition_value.value = ""
+                manual_expression.value = ""
+                manual_tolerance.value = "0"
             except (KeyError, TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("manual_dq_rule", exc)
+                manual_validation.value = (
+                    "<div role='alert' style='color:#a4262c;font-size:12px;font-weight:600;'>"
+                    + html.escape(str(exc)) + "</div>"
+                )
                 set_status(str(exc), error=True)
 
         add_manual_rule.on_click(add_manual_rule_clicked)
@@ -5517,6 +5954,8 @@ def widget_data_contract(
                         str(record["guardrail_rule_id"])
                     )
                     render_table_summary()
+                    business_validation.value = ""
+                    set_validation_error("business_rule")
                     set_status(
                         "DQ Rule updated in the current draft. "
                         "Save Data Contract to persist."
@@ -5600,12 +6039,17 @@ def widget_data_contract(
                     record["guardrail_rule_id"]
                 )
                 set_validation_error("business_rule")
+                business_validation.value = ""
                 set_status(
                     "DQ Rule added to the current draft. "
                     "Save Data Contract to persist."
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error("business_rule", exc)
+                business_validation.value = (
+                    "<div role='alert' style='color:#a4262c;font-size:12px;font-weight:600;'>"
+                    + html.escape(str(exc)) + "</div>"
+                )
                 set_status(str(exc), error=True)
 
         def request_delete_business_rule_clicked(_button: Any) -> None:
@@ -5710,6 +6154,11 @@ def widget_data_contract(
 
         def switch_business_review_source(change: dict[str, Any]) -> None:
             generated = change["new"] == "Generated proposals"
+            business_editor_heading.value = (
+                "<div class='fabricops-dq-editor-heading'>Review generated proposal</div>"
+                if generated
+                else "<div class='fabricops-dq-editor-heading'>Edit current rule</div>"
+            )
             business_proposal_select.layout.display = "" if generated else "none"
             business_saved.layout.display = "none" if generated else ""
             delete_business_rule.layout.display = "none" if generated else ""
@@ -5790,7 +6239,8 @@ def widget_data_contract(
         business_generate_actions = shared.action_row(widgets, [resolve_business_rule])
         business_generate_actions.add_class("fabricops-business-footer")
         business_primary = widgets.VBox(
-            [business_proposal, business_rule_controls, engineering_review_panel],
+            [business_proposal, business_rule_controls, business_validation,
+             engineering_review_panel],
             layout=widgets.Layout(width="100%", min_width="0"),
         )
         business_primary.add_class("fabricops-business-body")
@@ -5808,8 +6258,20 @@ def widget_data_contract(
                     "Inspect every rule in the current contract, edit its parameters, "
                     "change Warn or Block behavior, disable it, or delete it.</div>"
                 ),
-                business_review_source, business_proposal_select, business_saved,
-                business_primary, business_review_actions,
+                current_rules_table,
+            ],
+        )
+        rule_reviewer_section = shared.form_section(
+            widgets,
+            title="Review and Edit",
+            children=[
+                widgets.HTML(
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "Select a current rule or generated proposal. Both use the same "
+                    "guided editor and deterministic rule model.</div>"
+                ),
+                business_review_source, business_saved, business_proposal_select,
+                business_editor_heading, business_primary, business_review_actions,
             ],
         )
         manual_rule_section = shared.form_section(
@@ -5823,6 +6285,8 @@ def widget_data_contract(
                 manual_rule_type,
                 manual_rule_hint,
                 manual_parameter_box,
+                manual_preview,
+                manual_validation,
                 widgets.HBox(
                     [manual_enabled, manual_block],
                     layout=checkbox_row_layout,
@@ -5843,11 +6307,17 @@ def widget_data_contract(
                 )]
             ),
         )
-        business_left = (current_rules_section,)
-        business_right = (
-            manual_rule_section,
-            ai_rule_section,
+        dq_authoring_grid = widgets.GridBox(
+            [manual_rule_section, ai_rule_section],
+            layout=widgets.Layout(
+                width="100%", min_width="0",
+                grid_template_columns="minmax(0, 1fr) minmax(0, 1fr)",
+                grid_gap="12px", align_items="start",
+            ),
         )
+        dq_authoring_grid.add_class("fabricops-dq-authoring-grid")
+        business_left = (current_rules_section, rule_reviewer_section)
+        business_right = (dq_authoring_grid,)
         view_content["Data Quality"] = (business_left, business_right)
 
 
@@ -6262,6 +6732,8 @@ def widget_data_contract(
             "business_ai_panel": business_ai_panel,
             "business_primary": business_primary,
             "business_review_source": business_review_source,
+            "current_rules_table": current_rules_table,
+            "rule_reviewer_section": rule_reviewer_section,
             "business_enabled": business_enabled,
             "business_parameters": business_parameters,
             "business_tolerance": business_tolerance, "business_tolerance_hint": business_tolerance_hint,
@@ -6284,8 +6756,14 @@ def widget_data_contract(
             "manual_dq_rule_section": manual_rule_section,
             "ai_dq_rule_section": ai_rule_section,
             "manual_rule_type": manual_rule_type,
-            "manual_columns": manual_columns,
+            "manual_column": manual_column,
+            "manual_key_columns": manual_key_columns,
+            "manual_left_column": manual_left_column,
+            "manual_right_column": manual_right_column,
+            "manual_condition_column": manual_condition_column,
+            "manual_target_column": manual_target_column,
             "manual_parameter_box": manual_parameter_box,
+            "manual_preview": manual_preview,
             "manual_mode": manual_mode,
             "manual_values": manual_values,
             "manual_minimum": manual_minimum,
@@ -6300,6 +6778,14 @@ def widget_data_contract(
             "manual_enabled": manual_enabled,
             "manual_block": manual_block,
             "add_manual_rule": add_manual_rule,
+            "review_parameter_box": review_parameter_box,
+            "review_column": review_column,
+            "review_key_columns": review_key_columns,
+            "review_left_column": review_left_column,
+            "review_right_column": review_right_column,
+            "review_condition_column": review_condition_column,
+            "review_target_column": review_target_column,
+            "review_operator": review_operator,
             "manifest_preview": manifest_preview,
             "authoring_footer": authoring_footer,
             "save_data_contract": save_contract_button,

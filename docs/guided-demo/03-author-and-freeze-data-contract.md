@@ -110,6 +110,8 @@ Expand a Guardrail to inspect its columns, rules, parameters, and policy, then c
 
 Open **Data Quality**, use **Add Rule Manually**, and configure these rules for the integration exercise:
 
+The rule inventory at the top shows status, type, columns, Warn/Block policy, and the accepted failure limit. Choose a rule in **Review and Edit** to use the same guided controls for existing or AI-generated rules. Relationship and conditional rules use explicit column roles such as **Left column**, **Right column**, **Condition column**, and **Target column**; advanced JSON is available only as a collapsed inspection option.
+
 </div>
 </div>
 
