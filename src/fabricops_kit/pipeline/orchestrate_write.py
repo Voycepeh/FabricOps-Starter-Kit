@@ -110,6 +110,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         source_ids = [source["table_id"] for source in sources]
         target_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([target_id, *source_ids], execution_plan=execution_plan, spark_session=spark_session)
+        context = {**context, "_fabricops_suppress_io_log": True}
         if any("source" not in context["_pipeline_identities"][source_id]["roles"] for source_id in source_ids):
             raise ValueError("Every contributing source must have an explicit source role in the plan.")
         if "target" not in context["_pipeline_identities"][target_id]["roles"]:

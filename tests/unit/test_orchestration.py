@@ -139,7 +139,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
     }
     with patch(
         "fabricops_kit.pipeline.orchestrate_read.pipeline_read", return_value=source
-    ), patch(
+    ) as read, patch(
         "fabricops_kit.pipeline.orchestrate_read.check_freshness",
         return_value={"status": "passed"},
     ), patch(
@@ -151,7 +151,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
     ), patch(
         "fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling",
         return_value={"status": "passed"},
-    ):
+    ) as profile:
         actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN,
             store="Product",
             schema="demo",
@@ -159,6 +159,8 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
         )
 
     assert "_reader_name" not in actual
+    assert read.call_args.kwargs["context"]["_fabricops_suppress_io_log"] is True
+    assert profile.call_args.kwargs["context"]["_fabricops_suppress_io_log"] is True
     assert "Physical reader → read_warehouse_table" in capsys.readouterr().out
 
 
@@ -196,6 +198,8 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
+    assert write.call_args.kwargs["context"]["_fabricops_suppress_io_log"] is True
+    assert profile.call_args.kwargs["context"]["_fabricops_suppress_io_log"] is True
     assert profile.call_args.args[:2] == ("target-id", "write")
     assert "dataframe" not in profile.call_args.kwargs
     assert {stage["name"] for stage in actual["orchestration_stages"]} == {"physical_target"}

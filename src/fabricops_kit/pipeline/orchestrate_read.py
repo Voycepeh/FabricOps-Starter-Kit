@@ -90,6 +90,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         summary = ExecutionSummary("READ", verbose=verbose)
         table_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([table_id], execution_plan=execution_plan, spark_session=spark_session)
+        context = {**context, "_fabricops_suppress_io_log": True}
         if "source" not in context["_pipeline_identities"][table_id]["roles"]:
             raise ValueError("Read requires an explicit source participant.")
         if target_table_id is not None and (
