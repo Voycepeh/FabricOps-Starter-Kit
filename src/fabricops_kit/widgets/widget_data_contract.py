@@ -236,6 +236,9 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-contract-workspace,
     .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox,
     .fabricops-data-contract .fabricops-contract-assistant-grid { grid-template-columns:minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox {
+        grid-template-areas:"table" "workspace" "contract" !important;
+    }
     .fabricops-data-contract .fabricops-contract-nav > div { width:100%; }
     .fabricops-data-contract .fabricops-contract-nav button { flex:1 1 0; min-width:0; width:auto; }
     .fabricops-data-contract .fabricops-contract-columns { height:180px !important; }
@@ -1367,19 +1370,50 @@ def widget_data_contract(
             ),
         )
 
+    workspace_selector_field = selector_field("Workspace", workspace_selector["container"])
+    table_selector_field = selector_field("Table", table_selector["container"])
+    contract_selector_field = selector_field("Contract", contract_selector["container"])
+    workspace_selector_field.layout.grid_area = "workspace"
+    table_selector_field.layout.grid_area = "table"
+    contract_selector_field.layout.grid_area = "contract"
+
     selector = widgets.GridBox(
         [
-            selector_field("Workspace", workspace_selector["container"]),
-            selector_field("Table", table_selector["container"]),
-            selector_field("Contract", contract_selector["container"]),
+            table_selector_field,
+            workspace_selector_field,
+            contract_selector_field,
         ],
         layout=widgets.Layout(
             width="100%",
-            grid_template_columns="minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr)",
+            grid_template_columns="repeat(2, minmax(0, 1fr))",
+            grid_template_areas='"table table" "workspace contract"',
             grid_gap="16px 24px",
             overflow="visible",
         ),
     )
+
+    def configured_item_name(row: Mapping[str, Any]) -> str:
+        workspace_id = str(row.get("workspace_id") or "")
+        store_key = str(row.get("layer") or "")
+        paths = getattr(getattr(config, "path_config", None), "paths", {}) or {}
+        configured = paths.get(workspace_id, {}).get(store_key)
+        if isinstance(configured, Mapping):
+            return str(configured.get("name") or configured.get("item_id") or store_key)
+        return str(
+            getattr(configured, "name", None)
+            or getattr(configured, "item_id", "")
+            or store_key
+        )
+
+    def qualified_table_name(row: Mapping[str, Any]) -> str:
+        schema_name = str(row.get("schema_name") or "").strip()
+        table_name = str(row.get("table_name") or row.get("table_id") or "").strip()
+        return f"{schema_name}.{table_name}" if schema_name else table_name
+
+    def table_selector_label(row: Mapping[str, Any]) -> str:
+        table_name = qualified_table_name(row)
+        item_name = configured_item_name(row)
+        return f"{item_name} · {table_name}" if item_name else table_name
 
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         current = state["current"]
@@ -2470,6 +2504,26 @@ def widget_data_contract(
                 + "</div>"
             )
 
+        def table_identity_html() -> str:
+            workspace_name = str(
+                table.get("_workspace_name")
+                or table.get("workspace_id")
+                or state.get("workspace_id")
+                or "Unknown"
+            )
+            item_name = configured_item_name(table) or "Unknown"
+            full_table_name = qualified_table_name(table) or "Unknown"
+            return (
+                "<div style='margin-top:14px;'>"
+                "<div style='color:#667085;font-size:11px;'>Workspace</div>"
+                f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)}</div>"
+                "<div style='color:#667085;font-size:11px;margin-top:10px;'>Fabric object</div>"
+                f"<div style='font-weight:600;margin-top:3px;'>{html.escape(item_name)}</div>"
+                "<div style='color:#667085;font-size:11px;margin-top:10px;'>Full table name</div>"
+                f"<div style='font-weight:600;margin-top:3px;overflow-wrap:anywhere;'>"
+                f"{html.escape(full_table_name)}</div></div>"
+            )
+
         table_summary = widgets.HTML()
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
@@ -2669,6 +2723,7 @@ def widget_data_contract(
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
                 + "<details style='margin-top:10px;'><summary style='cursor:pointer;'>Table context</summary>"
+                + table_identity_html()
                 + runtime_context_html()
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
@@ -6992,32 +7047,12 @@ def widget_data_contract(
         for row in eligible:
             rows_by_table_id.setdefault(str(row["table_id"]), row)
 
-        def configured_item_name(row: Mapping[str, Any]) -> str:
-            workspace_id = str(row.get("workspace_id") or "")
-            store_key = str(row.get("layer") or "")
-            paths = getattr(getattr(config, "path_config", None), "paths", {}) or {}
-            configured = paths.get(workspace_id, {}).get(store_key)
-            if isinstance(configured, Mapping):
-                return str(configured.get("name") or store_key or configured.get("item_id") or "")
-            return str(getattr(configured, "name", None) or store_key or getattr(configured, "item_id", ""))
-
-        def table_identity_label(row: Mapping[str, Any]) -> str:
-            workspace_label = str(row.get("_workspace_name") or row.get("workspace_id") or "Unknown workspace")
-            store_type = str(row.get("store_type") or "Fabric item").title()
-            item_name = configured_item_name(row) or "Unknown item"
-            schema_name = str(row.get("schema_name") or "")
-            table_name = str(row.get("table_name") or row.get("table_id") or "")
-            return (
-                f"{workspace_label} · {store_type}: {item_name} · "
-                f"Schema: {schema_name or '—'} · Table: {table_name}"
-            )
-
         selected = str(state.get("pending_table_id") or "")
         state["_selector_refreshing"] = True
         try:
             table_control.refresh_rows(
                 [
-                    {"label": table_identity_label(rows_by_table_id[value]), "value": value}
+                    {"label": table_selector_label(rows_by_table_id[value]), "value": value}
                     for value in options["tables"] if value in rows_by_table_id
                 ],
                 selected if selected in options["tables"] else "",
