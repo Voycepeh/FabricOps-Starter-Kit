@@ -251,20 +251,20 @@ class WidgetStartup:
         )
         if self.html_available:
             loading = '<p role="status" aria-live="polite">Initializing FabricOps…</p>'
-            if reserved_height:
-                ip.display(ip.HTML(self._reserved_html(loading)), display_id=self.display_id)
-            else:
-                ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
-                ip.display(ip.HTML(loading), display_id=self.display_id)
+            # Keep the banner in its own stable output. Replacing a plain HTML
+            # loading view with a widget view in the same output can flicker in
+            # notebook frontends, especially when the placeholder also owns the banner.
+            ip.display(ip.HTML(self.banner), display_id=self.display_id + "-banner")
+            ip.display(ip.HTML(self._reserved_html(loading) if reserved_height else loading),
+                       display_id=self.display_id)
         self.mark("first_display_submitted")
 
     def _reserved_html(self, content: str) -> str:
-        """Keep Pipeline loading and errors inside the final widget's viewport."""
-        banner = self.banner.replace('font-size:21px;', 'font-size:21px;line-height:1.3;')
+        """Reserve a bounded loading/error region beneath the persistent banner."""
         return (f'<div style="height:{_html_escape(self.reserved_height)};box-sizing:border-box;overflow:auto;'
                 'font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;background:#f6f8fb;'
                 'border:1px solid #dce4ed;border-radius:10px;padding:20px;scrollbar-gutter:stable">'
-                + banner + content + '</div>')
+                + content + '</div>')
 
     def mark(self, name: str) -> None:
         """Record an elapsed kernel milestone without claiming frontend paint."""
@@ -304,6 +304,9 @@ class WidgetStartup:
         if self.html_available:
             if self.reserved_height:
                 root.layout.height = self.reserved_height
+                # The static banner remains visible while only the body output
+                # transitions from HTML to the completed widget view.
+                root.children[0].layout.display = "none"
             else:
                 # Keep the title and description together in the static banner while
                 # hiding the duplicate header embedded in the returned widget tree.
