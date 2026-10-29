@@ -369,11 +369,22 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                             and node.value.func.id == "display"]
                 assert len(displays) == 1, (path.name, cell.id)
                 preview = ast.unparse(displays[0])
-                assert "['dataframe'].limit(10)" in preview
+                if path.name == "02C_scd_demo.ipynb" and orchestrator == "orchestrate_write":
+                    assert "display(write_output_df)" in preview
+                    assert "read_lakehouse_table(" in cell.source
+                    assert '.get("published")' in cell.source
+                    assert '["dataframe"].limit(10)' in cell.source
+                    if cell.id == "write-1":
+                        assert '.orderBy("product_id")' in cell.source
+                    else:
+                        assert '.orderBy("product_id", "_effective_from")' in cell.source
+                else:
+                    assert "['dataframe'].limit(10)" in preview
                 assert cell.source.index(f"{orchestrator}(") < cell.source.index("display(")
                 if orchestrator == "orchestrate_write":
                     assert all(key in cell.source for key in ("dq_result", "sensitive_result", "support_mapping"))
-                    assert "# from fabricops_kit import read_" in cell.source
+                    if path.name != "02C_scd_demo.ipynb":
+                        assert "# from fabricops_kit import read_" in cell.source
                     assert "pipeline_read" not in cell.source
 
 
@@ -453,7 +464,12 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert '"effective_column": "modified_datetime"' in source
     assert '"tracked_columns": ["product_category", "list_price"]' in source
     for cell_id, target in (("write-1", "product_master_scd1"), ("write-2", "product_master_scd2")):
-        assert f'display(writes["{target}"]["dataframe"].limit(10))' in _demo_cell("02C_scd_demo.ipynb", cell_id).source
+        write = _demo_cell("02C_scd_demo.ipynb", cell_id).source
+        assert f'if writes["{target}"].get("published"):' in write
+        assert "read_lakehouse_table(" in write
+        assert f'writes["{target}"]["dataframe"].limit(10)' in write
+        assert "display(write_output_df)" in write
+        assert write.count("display(write_output_df)") == 1
     assert "| 1 | 8 | 8 |" in source
     assert "| 2 | 8 | 9 |" in source
     assert "| 3 | 8 | 10 |" in source
