@@ -2,9 +2,9 @@
 
 ## Where this appears in the Data Contract UI
 
-**DQ Rules → Business Rules → Resolved DQ Rules**
+**Data Quality → Add Rule Manually or Generate Rules with AI → Pattern**
 
-Pattern is not a manual regex field in the column editor. Governance describes the business requirement, and FabricOps can resolve a text-format requirement to `rule_type: pattern`; the regular expression is an implementation detail shown for review.
+Governance can enter the regular expression directly or describe a text-format requirement for FabricOps to resolve as `rule_type: pattern`. AI-generated expressions remain proposals until Governance reviews and adds them.
 
 ## What this rule does
 

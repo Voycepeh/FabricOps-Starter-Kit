@@ -671,7 +671,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
-    assert tuple(controls["top_nav"].options) == ("Table", "Column", "Review")
+    assert tuple(controls["top_nav"].options) == (
+        "Table", "Column", "Data Quality", "Review"
+    )
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
@@ -900,7 +902,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
 
     controls["top_nav"].value = "Column"
     assert controls["column_search"] in controls["left_pane"].children
-    assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
+    assert controls["dq_panel"] not in controls["right_pane"].children
     assert list(controls["dq_family_controls"]) == [
         "completeness", "uniqueness", "value_set", "range",
     ]
@@ -912,7 +914,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "save_column" not in controls
     assert "save_dq" not in controls
 
-    assert "Business Rules" not in tuple(controls["top_nav"].options)
+    assert "Data Quality" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Review"
     assert controls["left_pane"].children[0] is table_context
     assert "Column definitions" in controls["manifest_preview"].value
@@ -1153,7 +1155,7 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
     assert "discarded" in state["message"]
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
 def test_shared_footer_saves_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
 ):
@@ -1177,7 +1179,7 @@ def test_shared_footer_saves_and_clears_from_every_tab(
     assert controls["editor_shell"].layout.display == "none"
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
 def test_shared_footer_preserves_state_when_save_fails(
     widget_runtime, monkeypatch, tab
 ):
@@ -1201,7 +1203,7 @@ def test_shared_footer_preserves_state_when_save_fails(
     assert "Metadata store unavailable; retry the save." in state["message"]
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Business Rules", "Review"])
+@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
 def test_shared_footer_discards_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
 ):
@@ -1344,18 +1346,20 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     grain_primary = grain_section.children[3].children[0]
     assert controls["grain_profile_evidence"] in grain_primary.children
     controls["top_nav"].value = "Column"
-    assert controls["dq_panel"].children[1].children[2] is controls["dq_primary"]
+    assert controls["dq_panel"] not in controls["right_pane"].children
     assert "dq_ai_panel" not in controls
-    assert "Business Rules" in tuple(controls["top_nav"].options)
-    controls["top_nav"].value = "Business Rules"
+    assert "Data Quality" in tuple(controls["top_nav"].options)
+    controls["top_nav"].value = "Data Quality"
     assert controls["business_requirement"] in controls["business_ai_panel"].children
     assert controls["business_requirement"].description == ""
     assert controls["business_columns"].description == ""
     assert controls["business_rule_controls"].layout.display == "none"
-    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr) minmax(0, 1fr)"
-    assert "Author DQ Rules" in controls["left_pane"].children[0].children[0].value
-    assert "Review &amp; Add DQ Rules" in controls["right_pane"].children[0].children[0].value
-    for label in ("Table", "Column", "Business Rules", "Review"):
+    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
+    assert "Current Data Quality Rules" in controls["left_pane"].children[0].children[0].value
+    authoring_grid = controls["right_pane"].children[0]
+    assert "Add Rule Manually" in authoring_grid.children[0].children[0].value
+    assert "Generate Rules with AI" in authoring_grid.children[1].children[0].value
+    for label in ("Table", "Column", "Data Quality", "Review"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -1379,21 +1383,22 @@ def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
     assert "max-height:none; overflow:visible" in style
     assert "overflow-x:hidden; overflow-y:auto" in style
 
-    controls["top_nav"].value = "Business Rules"
-    author_panel = controls["left_pane"].children[0]
-    review_panel = controls["right_pane"].children[0]
-    assert author_panel.layout.height == "auto"
-    assert author_panel.layout.overflow == "visible"
-    assert review_panel.layout.height == "auto"
-    assert review_panel.layout.overflow == "visible"
+    controls["top_nav"].value = "Data Quality"
+    current_panel = controls["left_pane"].children[0]
+    manual_panel, ai_panel = controls["right_pane"].children[0].children
+    for panel in (current_panel, manual_panel, ai_panel):
+        assert panel.layout.height == "auto"
+        assert panel.layout.overflow == "visible"
     assert getattr(controls["business_saved"].layout, "height", None) is None
     assert getattr(controls["business_proposal_select"].layout, "height", None) is None
-    assert controls["resolve_business_rule"] in author_panel.children[-1].children
-    assert controls["apply_business_rule"] in review_panel.children[-1].children[1].children
+    assert controls["resolve_business_rule"] in ai_panel.children[-1].children
+    reviewer_panel = controls["left_pane"].children[1]
+    assert controls["apply_business_rule"] in reviewer_panel.children[-1].children[1].children
 
     for control_name in (
         "row_key_columns", "key_columns", "tracked_columns",
-        "column_select", "business_columns",
+        "column_select", "business_columns", "manual_batch_columns",
+        "manual_key_columns",
     ):
         assert "fabricops-contract-list" in controls[control_name]._dom_classes
     assert controls["row_key_columns"].layout.max_height == "252px"
@@ -1421,7 +1426,7 @@ def test_shared_draft_footer_stays_outside_tabs_and_freeze_stays_on_review(
             contains(child, target) for child in getattr(root, "children", ())
         )
 
-    for tab in ("Table", "Column", "Business Rules"):
+    for tab in ("Table", "Column", "Data Quality"):
         controls["top_nav"].value = tab
         assert not contains(controls["workspace"], controls["save_data_contract"])
         assert not contains(controls["workspace"], controls["discard_data_contract"])
@@ -1530,7 +1535,7 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
 
 
 def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_runtime, monkeypatch):
-    """Hydrate left-side Table values changed from Processing and Business Rules editors."""
+    """Hydrate left-side Table values changed from Processing and Data Quality editors."""
     widget_runtime["guardrails"][:] = [
         rule for rule in widget_runtime["guardrails"]
         if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}
@@ -1558,7 +1563,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
             "rationale": "Deterministic relationship.",
         }],
     )
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     controls["business_requirement"].value = "Columns must match."
     controls["business_columns"].value = ("column_0", "column_1")
     controls["resolve_business_rule"].click()
@@ -1575,7 +1580,7 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
     """Delete removes only the selected draft Business Rule after explicit confirmation."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
 
     controls["business_saved"].value = "advanced"
     assert controls["delete_business_rule"].disabled is False
@@ -2049,7 +2054,13 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
         module, "suggest_sensitive_data", lambda *_args, **_kwargs: pytest.fail("AI must not run")
     )
     state = widget_runtime["open"]()
-    assert state["_controls"]["rerun_sensitive"].disabled is True
+    controls = state["_controls"]
+    assert controls["rerun_sensitive"].disabled is True
+    controls["top_nav"].value = "Data Quality"
+    assert controls["business_parameters"].disabled is True
+    assert controls["add_manual_rule"].disabled is True
+    assert controls["apply_business_rule"].disabled is True
+    assert controls["delete_business_rule"].disabled is True
 
 
 def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_runtime):
@@ -2249,7 +2260,7 @@ def test_pattern_is_owned_by_dq_rules_not_columns(widget_runtime):
 
 
 def test_review_sections_render_column_contract_table_with_profile_and_governance():
-    """Render table guardrails, rich column rows, then Business Rules."""
+    """Render table guardrails, rich column rows, then Data Quality."""
     payload = {
         "table": {
             "table_name": "orders", "schema_name": "sales",
@@ -2344,20 +2355,168 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert "CUS-001<br>CUS-120" in fallback
 
 
-def test_column_authored_dq_rule_appears_in_shared_dq_rules_list(
-    widget_runtime, monkeypatch
-):
-    """Column DQ edits hydrate the Business Rules page from the same staged draft state."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+def test_manually_authored_dq_rule_appears_in_current_rules(widget_runtime):
+    """Manual creation refreshes the shared current-rule list."""
+    state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    controls["top_nav"].value = "Column"
-    controls["dq_family_controls"]["completeness"]["enabled"].value = True
-
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "completeness"
+    controls["manual_batch_columns"].value = ("column_0",)
+    controls["add_manual_rule"].click()
     labels = [label for label, _value in controls["business_saved"].options]
 
     assert any("Completeness" in label and "column_0" in label for label in labels)
+    assert "fabricops-dq-rule-table" in controls["current_rules_table"].value
+    assert "Completeness" in controls["current_rules_table"].value
+    assert controls["manual_batch_columns"].value == ()
+
+
+def test_manual_batch_creation_stages_one_rule_per_selected_column(widget_runtime):
+    """Supported single-column rules can be created across several columns at once."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "completeness"
+    controls["manual_batch_columns"].value = ("column_0", "column_1")
+    controls["manual_tolerance"].value = "1.5"
+    controls["manual_block"].value = True
+
+    assert controls["add_manual_rule"].description == "Add 2 DQ Rules"
+    assert "<b>2 rules preview:</b>" in controls["manual_preview"].value
+    controls["add_manual_rule"].click()
+
+    staged = [
+        record
+        for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "completeness"
+    ]
+    assert len(staged) == 2
+    assert {record["column_id"] for record in staged} == {"col-0", "col-1"}
+    assert {
+        tuple(module._parameters(record)["columns"]) for record in staged
+    } == {("column_0",), ("column_1",)}
+    assert all(record["action"] == "Block" for record in staged)
+    assert all(
+        module._parameters(record)["maximum_missing_percent"] == 1.5
+        for record in staged
+    )
+    assert "2 DQ Rules added" in state["message"]
+
+
+def test_manual_uniqueness_can_apply_to_columns_together(widget_runtime):
+    """Composite uniqueness remains a single rule with all selected columns."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "uniqueness"
+
+    assert controls["manual_parameter_box"].children[:2] == (
+        controls["manual_apply_mode"], controls["manual_batch_columns"],
+    )
+    controls["manual_apply_mode"].value = "together"
+    controls["manual_batch_columns"].value = ("column_0", "column_1")
+    assert controls["add_manual_rule"].description == "Add DQ Rule"
+    controls["add_manual_rule"].click()
+
+    staged = [
+        record
+        for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "uniqueness"
+    ]
+    assert len(staged) == 1
+    assert staged[0]["column_id"] == ""
+    assert module._parameters(staged[0])["columns"] == [
+        "column_0", "column_1",
+    ]
+
+
+def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
+    """Manual DQ stays discoverable while AI is unavailable."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert tuple(controls["top_nav"].options) == (
+        "Table", "Column", "Data Quality", "Review"
+    )
+    controls["top_nav"].value = "Column"
+    assert controls["dq_panel"] not in controls["right_pane"].children
+
+    controls["top_nav"].value = "Data Quality"
+    assert controls["current_dq_rules_section"] in controls["left_pane"].children
+    authoring_sections = controls["right_pane"].children[0].children
+    assert controls["manual_dq_rule_section"] in authoring_sections
+    assert controls["ai_dq_rule_section"] in authoring_sections
+    assert "AI generation is unavailable" in controls["ai_dq_rule_section"].children[1].value
+    assert controls["add_manual_rule"].disabled is False
+
+
+def test_manual_relationship_rule_uses_canonical_guardrail_model(widget_runtime):
+    """Manual advanced rules stage the same deterministic record used by AI."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["manual_rule_type"].value = "column_relationship"
+    assert controls["manual_parameter_box"].children[:2] == (
+        controls["manual_left_column"], controls["manual_right_column"],
+    )
+    controls["manual_left_column"].value = "column_1"
+    controls["manual_right_column"].value = "column_0"
+    assert "column_1, column_0" in controls["manual_preview"].value
+    controls["manual_operator"].value = ">="
+    controls["manual_tolerance"].value = "2.5"
+    controls["manual_block"].value = True
+
+    controls["add_manual_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("rule_type") == "column_relationship"
+        and record.get("guardrail_rule_id") != "advanced"
+    )
+    assert staged["guardrail_type"] == "data_quality"
+    assert staged["column_id"] == ""
+    assert staged["action"] == "Block"
+    assert staged["is_active"] is True
+    assert module._parameters(staged) == {
+        "columns": ["column_1", "column_0"],
+        "maximum_failure_percent": 2.5,
+        "operator": ">=",
+    }
+    assert widget_runtime["calls"]["guardrails"] == []
+    assert "Save Data Contract to persist" in state["message"]
+
+
+def test_current_dq_rule_parameters_policy_and_state_are_editable(widget_runtime):
+    """Loaded rules can be edited regardless of their authoring origin."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    controls["business_saved"].value = "advanced"
+    assert controls["review_parameter_box"].children == (
+        controls["review_left_column"],
+        controls["review_operator"],
+        controls["review_right_column"],
+    )
+    controls["review_operator"].value = "<="
+    controls["business_tolerance"].value = "4"
+    controls["business_block"].value = True
+    controls["business_enabled"].value = False
+
+    controls["apply_business_rule"].click()
+
+    staged = next(
+        record for records in state["_pending_guardrails"].values()
+        for record in records.values()
+        if record.get("guardrail_rule_id") == "advanced"
+    )
+    assert staged["action"] == "Block"
+    assert staged["is_active"] is False
+    assert module._parameters(staged)["operator"] == "<="
+    assert module._parameters(staged)["maximum_failure_percent"] == 4
 
 
 def test_business_rule_resolve_apply_stages_existing_guardrail_model(
@@ -2384,7 +2543,7 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     controls["business_saved"].value = ""
     controls["business_requirement"].value = "End date must be on or after start date."
     controls["business_columns"].value = ("column_0", "column_1")
@@ -2432,7 +2591,7 @@ def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch)
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     for requirement in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2477,7 +2636,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     for requirement, columns in requirements:
         controls["business_saved"].value = ""
         controls["business_requirement"].value = requirement
@@ -2499,7 +2658,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
 
 
 def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch):
-    """Create Pattern through the Business Rules workflow without a column regex editor."""
+    """Create Pattern through the Data Quality workflow without a column regex editor."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     requirement = "Order ID must start with ORD- followed by digits."
@@ -2518,7 +2677,7 @@ def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch)
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     controls["business_requirement"].value = requirement
     controls["business_columns"].value = ("column_0",)
     controls["resolve_business_rule"].click()
@@ -2557,7 +2716,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     controls["business_requirement"].value = "Order identifier is always required."
     controls["business_columns"].value = ("column_0",)
     controls["resolve_business_rule"].click()
@@ -2602,7 +2761,7 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
         }]
 
     monkeypatch.setattr(module, "suggest_business_rule", resolve)
-    controls["top_nav"].value = "Business Rules"
+    controls["top_nav"].value = "Data Quality"
     controls["business_requirement"].value = "Approved rows require an approved date."
     controls["resolve_business_rule"].click()
     controls["apply_business_rule"].click()
@@ -2766,7 +2925,7 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
 
 
 def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, monkeypatch):
-    """Business Rules expose the applicable percentage and keep prohibited values strict."""
+    """Data Quality exposes the applicable percentage and keeps prohibited values strict."""
     state, _ = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     monkeypatch.setattr(module, "suggest_business_rule", lambda *_args, **_kwargs: [
@@ -2779,6 +2938,9 @@ def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, m
     controls["resolve_business_rule"].click()
     assert controls["business_tolerance"].layout.display == ""
     assert float(controls["business_tolerance"].value) == 2
+    edited = json.loads(controls["business_parameters"].value)
+    edited["pattern"] = "^[A-Z][0-9]+$"
+    controls["business_parameters"].value = json.dumps(edited)
     controls["business_tolerance"].value = "3"
     controls["business_proposal_select"].value = 1
     assert controls["business_tolerance"].layout.display == "none"
@@ -2788,6 +2950,7 @@ def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, m
     staged = [row for records in state["_pending_guardrails"].values() for row in records.values()]
     pattern = next(row for row in staged if row.get("rule_type") == "pattern")
     assert module._parameters(pattern)["maximum_failure_percent"] == 3
+    assert module._parameters(pattern)["pattern"] == "^[A-Z][0-9]+$"
 
 
 def test_freeze_refreshes_manifest_and_keeps_activation_out_of_authoring(widget_runtime):
@@ -3203,7 +3366,7 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     assert controls["column_select"].value == "col-0"
     table_rule = next(button for button in controls["sidebar_rule_buttons"]["data_quality"] if "column relationship" in button.description)
     table_rule.click()
-    assert controls["top_nav"].value == "Business Rules"
+    assert controls["top_nav"].value == "Data Quality"
     assert controls["business_saved"].value == "advanced"
     assert widget_runtime["calls"]["draft"] == []
 
