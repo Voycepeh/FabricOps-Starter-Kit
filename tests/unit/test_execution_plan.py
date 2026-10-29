@@ -2,6 +2,8 @@
 
 import importlib
 import json
+from datetime import UTC, date, datetime, timedelta, timezone
+from types import MappingProxyType
 
 import pytest
 
@@ -10,6 +12,76 @@ from tests.unit.test_contract_orchestration import frozen
 from tests.unit.test_data_contract_resolution import RecordingFrame
 
 module = importlib.import_module("fabricops_kit.pipeline.shared")
+
+
+def test_canonical_pipeline_json_serializes_supported_temporal_values_recursively():
+    """Supported temporal values retain ISO meaning inside nested metadata."""
+    value = {
+        "nested": [{"timestamp": datetime(2026, 10, 29, 12, 34, 56)}],
+        "aware": datetime(2026, 10, 29, 12, 34, 56, tzinfo=timezone(timedelta(hours=5, minutes=30))),
+        "date": date(2026, 10, 29),
+        "compatible": {"string": "value", "number": 3, "boolean": True, "null": None, "items": [1, "two"]},
+    }
+
+    assert json.loads(shared.canonical_pipeline_json(value)) == {
+        "aware": "2026-10-29T12:34:56+05:30",
+        "compatible": {"boolean": True, "items": [1, "two"], "null": None, "number": 3, "string": "value"},
+        "date": "2026-10-29",
+        "nested": [{"timestamp": "2026-10-29T12:34:56"}],
+    }
+
+
+def test_canonical_pipeline_json_rejects_unsupported_objects():
+    """Strict serialization does not stringify arbitrary unsupported values."""
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        shared.canonical_pipeline_json({"unsupported": object()})
+
+
+def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatch):
+    """Day 2 reuses the registered target row that Day 1 did not have yet."""
+    runtime = {
+        "config": object(),
+        "scope_workspace_id": "workspace",
+        "notebook_id": "notebook",
+        "_pipeline_bindings": {},
+    }
+    monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda _config, _workspace, **values: {
+        **values, "table_id": "source-id", "store_type": "lakehouse",
+    })
+    monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **_kwargs: {
+        table_id: {"workspace_id": "workspace", "item_id": identity["store"], "kind": "lakehouse",
+                   "schema": identity.get("schema"), "table_name": identity["table_name"]}
+        for table_id, identity in identities.items()
+    })
+    arguments = {
+        "store": "Bronze", "schema": "demo", "table_name": "inventory_movements",
+        "target_table_id": "target-id",
+    }
+
+    def session(run_id):
+        plan = shared.PipelineExecutionPlan(
+            "dry_run", "workspace", "notebook", run_id, "{}", "{}", "{}",
+            MappingProxyType(runtime), pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
+        )
+        return shared.PipelineSession(plan, spark=None)
+
+    def missing_target(*_args, **_kwargs):
+        raise ValueError("No active registered Catalogue table exists for table_id 'target-id'")
+
+    monkeypatch.setattr(shared, "resolve_catalogue_table_identity", missing_target)
+    day_1 = session("day-1").operation_plan("source", arguments)
+    assert set(json.loads(day_1.participants_json)) == {"source-id"}
+
+    monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
+        "table_id": "target-id", "store_type": "lakehouse", "store": "Silver", "layer": "Silver",
+        "schema": "demo", "schema_name": "demo", "table_name": "inventory_movements_incremental",
+        "roles": ["target"], "_committed_at": datetime(2026, 10, 29, 12, 0, tzinfo=UTC),
+        "profiled_on": date(2026, 10, 29),
+    })
+    day_2 = session("day-2").operation_plan("source", arguments)
+    restored = json.loads(day_2.participants_json)["target-id"]
+    assert restored["_committed_at"] == "2026-10-29T12:00:00+00:00"
+    assert restored["profiled_on"] == "2026-10-29"
 
 
 @pytest.fixture
