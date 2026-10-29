@@ -6688,7 +6688,7 @@
       "raises_documentation": "ValueError\n    If pipeline is not a setup_pipeline session or audit identity is missing.\nRuntimeError\n    If notebook setup is invalid, runtime identity has changed, another task\n    owns the execution, or metadata publication fails. Run and Guardrail IDs\n    remain stable for supported publication retries.",
       "returns_documentation": "dict\n    Final execution summary. For persistent modes this is the\n    METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.",
       "signature": "def finalize_pipeline(pipeline=None, *, failed=False)",
-      "source_end_line": 72,
+      "source_end_line": 79,
       "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
       "source_start_line": 10,
       "summary": "Finalize a Dry Run, Ungoverned or Governed execution accurately.",
@@ -12732,9 +12732,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._audit_date",
-      "source_end_line": 901,
+      "source_end_line": 921,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 899,
+      "source_start_line": 919,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12752,9 +12752,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared._build_guardrail_rule_id",
-      "source_end_line": 1127,
+      "source_end_line": 1147,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1109,
+      "source_start_line": 1129,
       "usage": "detached"
     },
     {
@@ -12770,9 +12770,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._coerce_row_dicts",
-      "source_end_line": 871,
+      "source_end_line": 891,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 866,
+      "source_start_line": 886,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -12792,9 +12792,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared._coerce_rows",
-      "source_end_line": 1002,
+      "source_end_line": 1022,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 997,
+      "source_start_line": 1017,
       "usage": "unused"
     },
     {
@@ -12810,9 +12810,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared._column_id_for_name",
-      "source_end_line": 1107,
+      "source_end_line": 1127,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1098,
+      "source_start_line": 1118,
       "usage": "detached"
     },
     {
@@ -12827,9 +12827,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared._guardrail_stable_json",
-      "source_end_line": 1064,
+      "source_end_line": 1084,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1062,
+      "source_start_line": 1082,
       "usage": "detached"
     },
     {
@@ -12848,9 +12848,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._html_escape",
-      "source_end_line": 506,
+      "source_end_line": 526,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 502,
+      "source_start_line": 522,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -12870,9 +12870,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._is_table_not_found_error",
-      "source_end_line": 1025,
+      "source_end_line": 1045,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1005,
+      "source_start_line": 1025,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -12891,9 +12891,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._latest_by_key",
-      "source_end_line": 879,
+      "source_end_line": 899,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 873,
+      "source_start_line": 893,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -12912,9 +12912,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared._next_guardrail_version",
-      "source_end_line": 1138,
+      "source_end_line": 1158,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1129,
+      "source_start_line": 1149,
       "usage": "detached"
     },
     {
@@ -12928,9 +12928,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared._parse_agreement_version",
-      "source_end_line": 950,
+      "source_end_line": 970,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 944,
+      "source_start_line": 964,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -12957,9 +12957,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.action_row",
-      "source_end_line": 499,
+      "source_end_line": 519,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 481,
+      "source_start_line": 501,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -12976,9 +12976,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.active_steward",
-      "source_end_line": 906,
+      "source_end_line": 926,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 903,
+      "source_start_line": 923,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -12997,9 +12997,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.authoring_pane",
-      "source_end_line": 388,
+      "source_end_line": 408,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 376,
+      "source_start_line": 396,
       "usage": "detached"
     },
     {
@@ -13014,9 +13014,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.authoring_workspace",
-      "source_end_line": 419,
+      "source_end_line": 439,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 391,
+      "source_start_line": 411,
       "usage": "unused"
     },
     {
@@ -13030,9 +13030,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.bounded_region",
-      "source_end_line": 373,
+      "source_end_line": 393,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 361,
+      "source_start_line": 381,
       "usage": "detached"
     },
     {
@@ -13047,9 +13047,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.build_rule_record",
-      "source_end_line": 1189,
+      "source_end_line": 1209,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1140,
+      "source_start_line": 1160,
       "usage": "detached"
     },
     {
@@ -13067,9 +13067,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.checkbox_group",
-      "source_end_line": 478,
+      "source_end_line": 498,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 463,
+      "source_start_line": 483,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13091,9 +13091,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.collect_custom_fields",
-      "source_end_line": 864,
+      "source_end_line": 884,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 831,
+      "source_start_line": 851,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13121,9 +13121,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.config_value",
-      "source_end_line": 804,
+      "source_end_line": 824,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 799,
+      "source_start_line": 819,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13146,9 +13146,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.deserialize_custom_fields",
-      "source_end_line": 797,
+      "source_end_line": 817,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 768,
+      "source_start_line": 788,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13164,9 +13164,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.dq_records_from_selection",
-      "source_end_line": 1237,
+      "source_end_line": 1257,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1191,
+      "source_start_line": 1211,
       "usage": "unused"
     },
     {
@@ -13181,9 +13181,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.enrichment_control_options",
-      "source_end_line": 1036,
+      "source_end_line": 1056,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1028,
+      "source_start_line": 1048,
       "usage": "unused"
     },
     {
@@ -13205,9 +13205,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.form_grid",
-      "source_end_line": 460,
+      "source_end_line": 480,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 449,
+      "source_start_line": 469,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13259,9 +13259,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.form_section",
-      "source_end_line": 446,
+      "source_end_line": 466,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 430,
+      "source_start_line": 450,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13283,9 +13283,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.get_widget_visible_fields",
-      "source_end_line": 829,
+      "source_end_line": 849,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 806,
+      "source_start_line": 826,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13300,9 +13300,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.latest_agreement_versions",
-      "source_end_line": 969,
+      "source_end_line": 989,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 953,
+      "source_start_line": 973,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13321,9 +13321,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.latest_rule",
-      "source_end_line": 1088,
+      "source_end_line": 1108,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1066,
+      "source_start_line": 1086,
       "usage": "unused"
     },
     {
@@ -13339,9 +13339,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.list_all_data_agreement_rows",
-      "source_end_line": 980,
+      "source_end_line": 1000,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 971,
+      "source_start_line": 991,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13363,9 +13363,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.list_data_agreements",
-      "source_end_line": 989,
+      "source_end_line": 1009,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 982,
+      "source_start_line": 1002,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13388,9 +13388,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.list_data_stewards",
-      "source_end_line": 919,
+      "source_end_line": 939,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 909,
+      "source_start_line": 929,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13422,9 +13422,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.parse_iso_date",
-      "source_end_line": 942,
+      "source_end_line": 962,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 932,
+      "source_start_line": 952,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
@@ -13443,9 +13443,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.pipeline_active_context",
-      "source_end_line": 746,
+      "source_end_line": 766,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 744,
+      "source_start_line": 764,
       "usage": "unused"
     },
     {
@@ -13460,9 +13460,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.preview_region",
-      "source_end_line": 427,
+      "source_end_line": 447,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 422,
+      "source_start_line": 442,
       "usage": "unused"
     },
     {
@@ -13483,9 +13483,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.render_custom_fields",
-      "source_end_line": 678,
+      "source_end_line": 698,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 645,
+      "source_start_line": 665,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13508,9 +13508,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.render_searchable_selector",
-      "source_end_line": 643,
+      "source_end_line": 663,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 509,
+      "source_start_line": 529,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13554,9 +13554,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.rule_parameters",
-      "source_end_line": 1096,
+      "source_end_line": 1116,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1090,
+      "source_start_line": 1110,
       "usage": "unused"
     },
     {
@@ -13571,9 +13571,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.shared.sensitive_data_record_from_selection",
-      "source_end_line": 1265,
+      "source_end_line": 1285,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 1239,
+      "source_start_line": 1259,
       "usage": "unused"
     },
     {
@@ -13591,9 +13591,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.serialize_custom_fields",
-      "source_end_line": 766,
+      "source_end_line": 786,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 752,
+      "source_start_line": 772,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
@@ -13619,9 +13619,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.standard_widget",
-      "source_end_line": 698,
+      "source_end_line": 718,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 681,
+      "source_start_line": 701,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13645,9 +13645,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.status_message",
-      "source_end_line": 358,
+      "source_end_line": 378,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 344,
+      "source_start_line": 364,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13671,9 +13671,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.to_bool",
-      "source_end_line": 897,
+      "source_end_line": 917,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 881,
+      "source_start_line": 901,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -13694,9 +13694,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.to_iso_date",
-      "source_end_line": 995,
+      "source_end_line": 1015,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 991,
+      "source_start_line": 1011,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
@@ -13745,9 +13745,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.widgets.shared.write_widget_metadata_row",
-      "source_end_line": 930,
+      "source_end_line": 950,
       "source_path": "src/fabricops_kit/widgets/shared.py",
-      "source_start_line": 921,
+      "source_start_line": 941,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
