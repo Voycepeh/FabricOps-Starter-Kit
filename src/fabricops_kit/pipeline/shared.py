@@ -6117,9 +6117,18 @@ class PipelineSession:
                     self.plan.runtime_context["config"], self.plan.workspace_id,
                     **{key: arguments[key] for key in ("store", "schema", "table_name")}))]
                 if arguments.get("target_table_id"):
-                    requested.append(("target", resolve_catalogue_table_identity(
-                        self.plan.runtime_context["config"], self.plan.workspace_id, arguments["target_table_id"],
-                        context=self.plan.runtime_context, spark_session=self.spark)))
+                    try:
+                        target_identity = resolve_catalogue_table_identity(
+                            self.plan.runtime_context["config"], self.plan.workspace_id, arguments["target_table_id"],
+                            context=self.plan.runtime_context, spark_session=self.spark)
+                    except ValueError as exc:
+                        # Incremental reads may bootstrap a new target. Its physical
+                        # coordinates are supplied by the later Write, which registers
+                        # the target participant before publication.
+                        if not str(exc).startswith("No active registered Catalogue table exists for table_id"):
+                            raise
+                    else:
+                        requested.append(("target", target_identity))
                 selections = json.loads(self.plan.selections_json)
                 contracts = json.loads(self.plan.contracts_json)
                 for participant_role, identity in requested:

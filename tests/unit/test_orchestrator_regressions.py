@@ -61,6 +61,29 @@ def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtim
     assert profile.call_args.args[:2] == ("source", "read")
 
 
+def test_incremental_read_allows_unregistered_target_on_first_run(read_runtime, monkeypatch):
+    """A fresh incremental target is registered by its first successful Write."""
+    reader, _grain, profile = read_runtime
+    context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "grain"}]})
+    monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
+
+    result = run_pipeline_operation(
+        read.orchestrate_read,
+        plan=PLAN,
+        store="Bronze",
+        schema="demo",
+        table_name="orders",
+        read_mode="incremental",
+        read_parameters={"watermark_column": "modified_at"},
+        target_table_id="new-target",
+        verbose=False,
+    )
+
+    assert result["table_id"] == "source"
+    assert reader.call_args.kwargs["target_table_id"] == "new-target"
+    profile.assert_called_once()
+
+
 @pytest.mark.parametrize("mode", [None, "", " ", "delta", 7])
 def test_invalid_read_mode_rejected_before_metadata_or_physical_read(read_runtime, mode):
     """Invalid modes cannot resolve contracts, read data, or run stages."""
@@ -79,7 +102,7 @@ def test_internal_reader_normalizes_before_incremental_parameter_checks(monkeypa
     with pytest.raises(RuntimeError, match="reached identity resolution"):
         module.pipeline_read(store="Bronze", table_name="orders", read_mode=" INCREMENTAL ",
                              read_parameters={"watermark_column": "modified_at"}, target_table_id="target",
-                             context={"config": object(), "scope_workspace_id": "dev"})
+                             context={"config": object(), "scope_workspace_id": "dev", "_spark_session": object()})
     resolve.assert_called_once()
 
 
