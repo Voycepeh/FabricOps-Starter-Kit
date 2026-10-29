@@ -304,8 +304,25 @@ class WidgetStartup:
         if self.html_available:
             if self.reserved_height:
                 root.layout.height = self.reserved_height
-                # The static banner remains visible while only the body output
-                # transitions from HTML to the completed widget view.
+                # Preserve the page description in the persistent banner while
+                # hiding the duplicate header in the replaceable widget body.
+                title = getattr(root, "fabricops_page_title", self.title)
+                tone = getattr(root, "fabricops_page_tone", "governance")
+                description = getattr(root, "fabricops_page_description", "")
+                accent, tint = (( "#6750a4", "#f1edf8") if tone == "governance"
+                                else ("#0f6cbd", "#eaf3fb"))
+                subtitle = (
+                    f'<div style="color:#526477;margin-top:5px;max-width:80ch">'
+                    f'{_html_escape(description)}</div>'
+                    if description else ""
+                )
+                self.banner = (
+                    '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
+                    f'background:{tint};border-left:4px solid {accent};padding:16px 20px;border-radius:6px">'
+                    f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div>'
+                    f'{subtitle}</div>'
+                )
+                self.ip.update_display(self.ip.HTML(self.banner), display_id=self.display_id + "-banner")
                 root.children[0].layout.display = "none"
             else:
                 # Keep the title and description together in the static banner while
