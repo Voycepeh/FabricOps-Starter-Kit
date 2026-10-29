@@ -20,7 +20,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     notebook_setup = Mock()
     setup = Mock(return_value=SimpleNamespace(pipeline_id="registered-uuid"))
     def read(**kwargs):
-        assert not {'execution_plan', 'spark_session', 'verbose'}.intersection(kwargs)
+        assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
+        assert kwargs.get('verbose') is True
         reads.append(kwargs['table_name'])
         return {'dataframe': frame, 'table_name': kwargs['table_name']}
     def write(dataframe, **kwargs):
