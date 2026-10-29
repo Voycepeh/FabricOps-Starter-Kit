@@ -3,15 +3,15 @@
 ### Before you begin
 
 1. Complete [Step 00B. Configure the Environment and load assets](00B-configure-environment-and-load-assets.md).
-2. Download [`02_pipeline.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/notebooks/02_pipeline.ipynb) and import it into the Engineering Development workspace.
-3. Import `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
+2. Download [`02_pipeline.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/notebooks/02_pipeline.ipynb) and import it into your Engineering Development workspace.
+3. Keep `00_env_config.ipynb` beside the pipeline notebook and attach the same Fabric Environment used in Step 00B.
 
-The template deliberately contains placeholder table names. Read this walkthrough first, then replace them before running the Read or Write cells.
+The template intentionally uses placeholder source and target names. Replace them with tables available in your workspace before running the Read or Write cells.
 
-!!! note "First run: Observe for Governance"
-    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+!!! note "Recommended first run: Ungoverned"
+    Run the complete notebook once in **Ungoverned** mode, including `finalize_pipeline(pipeline)`. This publishes data and records observations that Governance can use when authoring Data Contracts. It does **not** approve or activate a contract.
 
-    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed.
+    In Governance, author and freeze the required Contracts, use **Dry Run** to validate them where useful, and activate the exact versions for the target workspace. Then rerun the pipeline in **Governed** mode. Ungoverned execution cannot bypass an already-governed destination.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -19,49 +19,42 @@ The template deliberately contains placeholder table names. Read this walkthroug
 
 ## The big picture
 
-Start by understanding the shape of the notebook before changing its code.
+Learn the reusable notebook lifecycle, then replace the example source, transformation, and target with your own pipeline logic.
 
 </div>
 </div>
-
-**Learn the reusable `02_pipeline` notebook from top to bottom, then adapt it to your own governed pipeline.**
 
 ![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
 
-The same pattern supports Full and Incremental reads and the Overwrite, Append, SCD1, and SCD2 load strategies. The later demos apply it to each processing style.
+The notebook follows this sequence:
 
-### Get familiar with the notebook
-
-The notebook follows one visible lifecycle:
-
-| Notebook section | What happens |
+| Section | Responsibility |
 | --- | --- |
-| Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
-| Setup Pipeline | Reuses notebook configuration, registers or recovers the Pipeline ID and resolves pipeline authority. |
-| Data Contract Configuration | Optional in **Dry Run**, omitted in **Ungoverned**, and resolved from activation in **Governed**. |
-| Governed Read | Reads each configured source and runs the applicable source checks. |
-| PySpark Transform | Contains the joins, filters, derived columns, aggregations, or selections owned by your project. |
-| Governed Write | Checks and, when allowed, publishes each target using its configured load strategy. |
-| Finalize Pipeline | Consolidates Data Contract outcomes and finishes execution tracking. |
-| execution report | Displays actual rows immediately after each governed Read and Write call. |
+| Environment | `setup_notebook()` loads configuration and resolves the caller's workspace environment. |
+| Setup Pipeline | `setup_pipeline()` registers or recovers the pipeline identity and starts the selected execution mode. |
+| Read | `orchestrate_read()` reads a source and runs applicable checks and profiling. |
+| Transform | Your project-owned PySpark logic joins, filters, derives, aggregates, or selects data. |
+| Write | `orchestrate_write()` checks and publishes the prepared DataFrame using the selected load strategy. |
+| Finalize | `finalize_pipeline(pipeline)` records the outcome and releases Governed execution reservations. |
 
-The template starts with one Read, one transformation, and one Write. Add more Read or Write blocks only when your pipeline needs them.
+A successful Read or Write is not proof that the entire notebook completed. Always run Finalize after the pipeline work; use `finalize_pipeline(pipeline, failed=True)` when catching a project exception.
 
-### Import required pipeline functions
+## 1. Set up the notebook and pipeline
 
-Run the Environment / Setup Notebook cell first. It calls `setup_notebook()` to load `00_env_config` and display readiness. Setup Pipeline then reuses that configuration. For shared deployments, pass `config_workspace_id` only to `setup_notebook()`; the import list can vary by demo.
-
-![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
-
-### Run the Data Contract block
+Run the Environment cell first. For a shared configuration workspace, pass its ID to `setup_notebook()`:
 
 ```python
 context = setup_notebook(
-    # Optional shared config: config_workspace_id="<configuration-workspace-id>",
+    # config_workspace_id="<configuration-workspace-id>",
 )
+```
 
-PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
-PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
+Then run Setup Pipeline. The default `PIPELINE_ID = None` lets FabricOps register or recover this notebook's permanent pipeline UUID automatically. Retain an explicit UUID in source only when you need to promote the same pipeline identity across workspaces.
+
+```python
+PIPELINE_ID = None
+PIPELINE_MODE = "Ungoverned"  # "Dry Run", "Ungoverned", or "Governed"
+
 pipeline = setup_pipeline(
     pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
@@ -69,105 +62,75 @@ pipeline = setup_pipeline(
 PIPELINE_ID = pipeline.pipeline_id
 ```
 
+![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
 
-The returned session is ready for Read and Write immediately. Retain its UUID in source only for cross-workspace promotion. Dry Run does not publish business or operational metadata and finalizes to a session-only summary. Ungoverned performs real writes without contract-dependent checks, while Governed resolves and enforces activated contracts. FabricOps governs Data Contracts; Engineering and Microsoft Fabric own code integrity and deployment. Headless Dry Run sets `interactive=False` and may supply saved exact selections. See the [whole-run lifecycle](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+| Mode | Publishes target data? | Data Contract behavior |
+| --- | --- | --- |
+| `"Dry Run"` | No | Validates the selected frozen contract configuration where applicable; operational changes are not published. |
+| `"Ungoverned"` | Yes | Runs without contract-dependent checks and records observations for Governance. It cannot write to a destination that is already governed. |
+| `"Governed"` | Yes, when required checks pass | Resolves and enforces the activated contracts for the current workspace. |
+
+Profiling is controlled by the active Data Contract profiling policy and execution triggers. Standard pipeline calls do not need manual profiling calls or a manually constructed execution plan.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Configure the Governed Read
+## 2. Configure the Read
 
-Select governed sources and run Read checks before transforming the data.
+Read each source through `orchestrate_read()`. Keep the complete result in `sources` so later cells can use its DataFrame and retain the result details.
 
 </div>
 </div>
 
-First, run the source results dictionary cell:
+Initialize the source dictionary:
 
 ```python
 sources = {}
 ```
 
-This creates an empty dictionary for the governed Read results. Each Read is stored by name so the Transform can use its DataFrame and the Write can reuse its governed source identity for lineage and source-aware checks.
-
-Then run the configured Read cell:
+Configure the example Read:
 
 ```python
 source = orchestrate_read(
-
     store="Bronze",
     schema="demo",
-    table_name="source_table",  # Replace with the governed source table.
+    table_name="source_table",  # Replace with your source table.
     read_mode="full",
     query=None,
-
-    grain_discovery_max_columns=3,
-    grain_discovery_max_candidates=8,
-
-
-
-
-
+    dq_diagnostics="sample",
 )
 sources["source"] = source
 
-# Inspect the rows returned by this Read.
 display(sources["source"]["dataframe"].limit(10))
 ```
 
-| Parameter | What you normally change |
-| --- | --- |
-| `sources` dictionary key | A short notebook-facing name for this source; this is not an `orchestrate_read()` parameter. |
-| `store` | The configured source store, such as `Bronze`. |
-| `schema` | The physical source schema. |
-| `table_name` | The physical source table. Replace `source_table`. |
-| `read_mode` | Use `"full"` or `"incremental"`. |
-| `query` | Optionally provide a read-only Warehouse query; otherwise leave it as `None`. |
-| `read_parameters` | Add mode-specific options such as the watermark column for an Incremental read. |
-| `target_table_id` | Add the governed target identity required by an Incremental read. |
-| `grain_discovery_enabled`, `grain_discovery_max_columns`, `grain_discovery_max_candidates` | Enable candidate Grain discovery and bound its key width and stored candidates. Disabling discovery does not disable the Data Contract Grain Guardrail. |
-| `frequency_enabled`, `frequency_top_n` | Enable Frequency profiling and choose how many values to retain. |
-| `dq_diagnostics` | Choose `"sample"` (default), `"none"` for metrics only, or `"full"` for a lazy DataFrame of all failures. |
-| `verbose` | Print orchestration stages and summary; set `False` for quieter runs. |
+Change `store`, `schema`, and `table_name` to match the source. Use `read_mode="full"` for a complete read or `read_mode="incremental"` when implementing a watermark-based flow; the Incremental demo shows the required source-to-target configuration.
 
-The result is a dictionary, not only a DataFrame. Use its DataFrame for transformation while retaining the complete result for checks and lineage:
+The result is a dictionary rather than just a DataFrame. Use the contained DataFrame in the transform:
 
 ```python
 source_df = sources["source"]["dataframe"]
 ```
 
-If a transformation needs another governed source, duplicate the complete **READ 1 — Example source** block, give the Read and its dictionary key a unique name, and configure the second table. Remove a Read block when it does not contribute to the pipeline. Every source that contributes to a target should later appear in that target's `sources` list.
+For another input, add a second Read block, save it under a distinct key such as `sources["products"]`, and use that DataFrame in your transformation. Only add sources that contribute to the target.
 
-For Incremental reads, add `read_parameters` and `target_table_id` rather than implementing watermark filtering in the transformation. Incremental batches skip full-source Profile, so enabling Grain candidate discovery and Frequency profiling does not profile that incremental batch. See [Read and Load Strategies](../reference/read-and-load-strategies.md) and the [Step 2B demo](02B-build-and-run-incremental-append-etl.md).
+`dq_diagnostics` controls Data Quality failure detail: `"sample"` returns a sample, `"none"` keeps metrics only, and `"full"` returns all failed rows as a lazy DataFrame. Other strategy-specific settings are demonstrated in the relevant examples.
 
-??? info "Under the hood"
-
-    [`orchestrate_read()`](../api/reference/orchestrate_read.md) runs the standard lifecycle:
-
-    1. **Read** the configured source.
-    2. Evaluate the **Freshness** Guardrail when one applies.
-    3. Check the **Schema** when a governed expectation applies.
-    4. Evaluate **Grain** when enforcement is enabled.
-    5. Evaluate **Data Quality** Guardrails when defined.
-    6. **Profile** the full source and store the snapshot in `METADATA_DATA_PROFILED` and, where applicable, `METADATA_DATA_PROFILED_FREQUENCY`.
-
-    Only configured Guardrails execute and appear in stage output. Without a selected Data Contract, Development prints one message and continues with Read. Absent checks retain skipped fields in the returned result for inspection. Incremental batches are not profiled; FabricOps instead returns the eligible scope and uses accepted checkpoints in `METADATA_PROCESSING_STATE` plus verified target publication markers to manage incremental execution.
+See the [Read and Load Strategies](../reference/read-and-load-strategies.md) reference and [Step 2B: Incremental Append](02B-build-and-run-incremental-append-etl.md).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Write your PySpark Transform
+## 3. Write your PySpark transformation
 
-Implement project-specific PySpark transformations between governed boundaries.
+Keep project-owned transformation logic between the governed Read and Write boundaries.
 
 </div>
 </div>
 
-**Replace this entire cell with the business transformation your project needs.**
-
-The template begins with a valid identity transformation:
+The template starts with an identity transformation:
 
 ```python
 transformed_df = sources["source"]["dataframe"].select("*")
@@ -176,145 +139,77 @@ transformed_df = sources["source"]["dataframe"].select("*")
 # display(transformed_df)
 ```
 
-Leaving the identity selection in place is fine when the source already has the target shape. Otherwise, this is where normal PySpark belongs: join DataFrames from multiple `sources` entries, filter rows, derive columns, aggregate records, or select the final schema.
-
-FabricOps does not prescribe the transformation style. Keep project-owned PySpark in this section and keep the governed orchestration calls in their Read and Write sections.
+Replace this with your business logic: join DataFrames from multiple source entries, filter rows, derive columns, aggregate records, or select the target schema. FabricOps does not prescribe the transformation style.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Configure the Governed Write
+## 4. Configure the Write
 
-Publish the transformed data through the governed Write orchestrator.
+Publish the prepared DataFrame through `orchestrate_write()`.
 
 </div>
 </div>
 
-First, run the write results dictionary cell:
+Initialize the Write results dictionary:
 
 ```python
 writes = {}
 ```
 
-This creates an empty dictionary for the governed Write results. Each Write is stored by target name so its publication status, orchestration stages, Guardrail results, and, when published, target profile remain available for inspection.
-
-Then run the configured Write cell:
+Configure the example target:
 
 ```python
 writes["target"] = orchestrate_write(
     transformed_df,
-
     store="Silver",
     schema="demo",
-    table_name="target_table",  # Replace with the governed target table.
+    table_name="target_table",  # Replace with your target table.
     write_mode="overwrite",
-
     repartition_by=None,
-
-
+    dq_diagnostics="sample",
 )
 
-# Inspect the DataFrame submitted to this Write.
 display(writes["target"]["dataframe"].limit(10))
 ```
 
-| Parameter | What you normally change |
-| --- | --- |
-| `transformed_df` | The DataFrame produced by your transformation section. |
-| `writes` dictionary key | A notebook-facing label for the target, not an `orchestrate_write()` parameter. |
-| `sources` | Every complete Read result that contributed to this target. |
-| `store`, `schema`, `table_name` | The configured target store and physical target identity. Replace `target_table`. |
-| `write_mode` | The load strategy: `"overwrite"`, `"append"`, `"scd1"`, or `"scd2"`. |
-| `write_parameters` | Add parameters required by the selected strategy, such as SCD keys and tracked columns. |
-| `execution_plan` | Pass the same `EXECUTION_PLAN` used by every Read. |
-| `repartition_by` | Optionally control the Spark partition count before writing; otherwise leave it as `None`. |
-| `grain_discovery_enabled`, `grain_discovery_max_columns`, `grain_discovery_max_candidates` | Control candidate Grain profiling of the published target; contract Grain Guardrails are independent. |
-| `frequency_enabled`, `frequency_top_n` | Control target Frequency profiling after publication. |
-| `dq_diagnostics` | Choose `"sample"`, `"none"`, or `"full"` for Data Quality failure detail. |
-| `existing_mapping` | Supply a previously saved Sensitive Data token mapping only when handling mappings yourself; do not supply it with a managed mapping store. |
-| `verbose` | Print orchestration stages and summary; set `False` for quieter runs. |
+Choose the target store, schema, and table. The supported load strategies are `"overwrite"`, `"append"`, `"scd1"`, and `"scd2"`. Strategy-specific parameters such as SCD keys belong in `write_parameters`; see [Step 2C: SCD1 and SCD2](02C-build-and-run-scd-etl.md).
 
+Read and Write previews show the DataFrames returned or submitted by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains publication status, stage results, and available metrics.
 
-??? info "Under the hood"
+With managed Sensitive Data token mappings, FabricOps uses the configured Governance store. Supply `existing_mapping` only when you manage a previously saved mapping yourself.
 
-    [`orchestrate_write()`](../api/reference/orchestrate_write.md) runs the configured pre-publication checks in this order:
+??? info "What happens inside Read and Write?"
 
-    1. **Schema**
-    2. **Sensitive Data**
-    3. **Source Drift** on participating sources
-    4. **Grain** on the prepared target input
-    5. **Data Quality**
+    Read evaluates applicable Freshness, Schema, Grain, and Data Quality checks, then profiles eligible full-source data according to policy.
 
-    Absent Guardrails do not produce individual skipped-stage messages. A pipeline using explicit No Contract prints one message and proceeds to Write. Governed execution stops on configured blocking failures and required checks that cannot execute.
+    Before publication, Write evaluates the configured Schema, Sensitive Data, Source Drift, Grain, and Data Quality checks. Only configured checks run. Governed execution stops when required checks fail or cannot execute.
 
-    With **Dry Run**, FabricOps evaluates the prepared input and supported strategy checks, returning `published=False`. No stage writes business data, Catalogue, Profile, frequency rows, Guardrail Results, Lineage, Source Observation, mappings or staging. With **Governed**, passing required checks permits publication and metadata commits at their existing lifecycle boundaries. These independent Fabric operations are not one atomic transaction.
-
-    A successful Write also records the source and target pipeline participation in `METADATA_DATA_LINEAGE`. `METADATA_PROCESSING_STATE` records source observations at Read and accepts incremental checkpoints and Source Drift baselines only after verified target publication, together with the typed publication receipt.
-
-Read and Write previews appear directly in their respective orchestration code cells. The printed stage summaries already provide governance outcomes; the previews show the actual records. To inspect persisted target tables, read them separately after publication.
-
-With `verbose=True` (the default), every successful Read and Write ends with a summary. `total_duration_seconds` includes the complete lifecycle, including Guardrails and profiling. Inspect the same measurements programmatically:
-
-```python
-print(sources["source"]["read_metrics"])
-print(writes["target"]["write_metrics"])
-print(writes["target"]["total_duration_seconds"])
-```
-
-`rows_committed` measures this physical publication; `total_target_rows` describes the profiled persisted target. `input_rows` is a separate measure. Unmeasured values are `None` in results and `Not available` in notebook output. Reporting adds no Spark counts or target scans.
-
-??? info "Availability and retries"
-
-    Lakehouse Append and Overwrite use the exact tagged Delta commit's output-row metric, including zero-row commits. Reporting uses bounded metadata-file reads, with no extra Spark jobs. Inaccessible metadata, a concurrent later commit, an exhausted metadata-probe budget, or missing operation metrics produce `Not available`. Caller-supplied Delta `userMetadata` in writer options or Spark session configuration is preserved and disables this attribution. The lookup uses checkpoint metadata and at most 32 exact log-file probes; it never enumerates the Delta log directory.
-
-    Warehouse connector writes do not return attributable row counts. Existing SCD merges include technical audit updates, so business inserts, updates, unchanged rows, and expired versions remain unavailable unless independently measurable. A new Lakehouse SCD target uses a measured bootstrap write when supported; its inserted rows or versions are reported separately. An already-applied Append or Overwrite retry reports zero newly committed rows. Dry Run reports `Published → No` and zero committed rows.
+    Dry Run prepares and validates the operation without publishing target data or persistent operational state. Successful persistent Writes publish the target and record the associated metadata at the relevant lifecycle boundaries. These separate Fabric operations are not one atomic transaction.
 
 ??? tip "A summary is missing in Microsoft Fabric"
 
-    Confirm the call uses `orchestrate_read()` or `orchestrate_write()` with `verbose=True`; Read, Write and Guardrail stages are internal to those public orchestrators. Summaries print to driver stdout after successful execution. A failed stage does not print a successful final summary.
+    Confirm the call uses `orchestrate_read()` or `orchestrate_write()` and has not disabled verbose output. Fabric notebooks run the package installed in the attached Environment, which may differ from repository `main`. Check the installed package version and restart the notebook session after updating the Environment package.
 
-    Fabric runs the package installed in the notebook's Environment, which can differ from repository `main`. Check the imported package and function source in the running session:
+## 5. Finalize and verify
 
-    ```python
-    import inspect
-    import fabricops_kit
-    from fabricops_kit import orchestrate_write
+After every Read, transformation, and Write has completed, run:
 
-    print(fabricops_kit.__version__)
-    print(fabricops_kit.__file__)
-    print(inspect.getsource(orchestrate_write))
-    ```
+```python
+pipeline_result = finalize_pipeline(pipeline)
+```
 
-    Publish the updated wheel in the correct Fabric Environment and start a fresh notebook session before importing again. A previously imported function can remain bound to old code. Check the notebook cell or activity's stdout output. The orchestrator intentionally quiets physical writer logs; this does not suppress its own summary, and changing Write mode does not restore missing summary code.
+Review the returned outcome and verify the persisted target when using Ungoverned or Governed mode. Dry Run returns a session-only summary. If your code catches an exception, finalize the run with `failed=True` so it is not recorded as a successful completion.
 
+## Expected result
 
-??? info "Optional troubleshooting results"
+You can now identify the reusable notebook sections and know which values to customize. Keep project-owned PySpark in Transform and use the Read and Write orchestrators for the governed boundaries.
 
-    For troubleshooting, display these existing result fields next to the relevant orchestration call:
-
-    ```python
-    # Incremental Read scope.
-    # display(sources["source"]["scope"])
-
-    # Write-side Schema, Source Drift, and Grain results.
-    # display(writes["target"]["schema_result"])
-    # display(writes["target"]["source_drift_results"])
-    # display(sources["source"]["grain_result"])
-    # display(writes["target"]["grain_result"])
-    ```
-
-    The complete result contracts are documented on the [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) reference pages.
-
-
-### Expected result
-
-You can now identify every section of `02_pipeline`, know which cells to customize, and understand what FabricOps handles at the governed Read and Write boundaries. You are ready to apply the same scaffold in a working example.
-
-**Next:** Start with Full Refresh, then use the other demos to explore stateful processing patterns.
+**Next:** Start with Full Refresh, then explore the stateful processing examples.
 
 | Demo | What you will learn |
 | --- | --- |
-| [Step 2A. Full Refresh](02A-full-refresh-demo.md) | The recommended starting point. Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
-| [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) | Use a watermark and governed source-to-target identity to process only newly eligible inventory movements. Its three runs show the initial load, new source data, and a no-change run. |
-| [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Send three complete Product Master snapshots through Full reads. Compare SCD1, which replaces changed values in the current record, with SCD2, which preserves prior versions as history. |
+| [Step 2A. Full Refresh](02A-full-refresh-demo.md) | Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
+| [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) | Use a watermark to process newly eligible inventory movements across three runs. |
+| [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Compare SCD1 current-state updates with SCD2 historical versioning. |
