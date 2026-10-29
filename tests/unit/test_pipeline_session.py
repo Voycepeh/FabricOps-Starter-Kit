@@ -617,7 +617,7 @@ def test_finalize_emits_compact_summary_even_when_report_widget_exists(runtime, 
     from fabricops_kit import finalize_pipeline
 
     session = setup_pipeline(pipeline_mode="Ungoverned")
-    session.report = object()
+    session.report = SimpleNamespace(value='')
 
     result = finalize_pipeline(session)
     output = capsys.readouterr().out
