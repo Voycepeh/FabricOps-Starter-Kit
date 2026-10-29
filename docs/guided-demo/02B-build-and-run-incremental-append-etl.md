@@ -197,17 +197,20 @@ Complete Read → Transform → Write for each pending batch before reading a ne
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with persistent publication and routed to the Metadata Lakehouse configured by `00_env_config`. Dry Run retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
+For **Ungoverned** and **Governed** executions, FabricOps writes applicable operational metadata to the Metadata Lakehouse configured by `00_env_config`. **Dry Run is session-only**: it does not write target data or persist catalogue, profile, processing-state, or pipeline-run records. The rows below describe the records this demo can produce during a persistent execution; the exact rows depend on the stages that complete and the Guardrails that are actually evaluated.
 
 | Metadata table or governed record | What this demo records |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Canonical source and target table and column identities. |
-| `METADATA_DATA_PROFILED` | Profile snapshots of the published Silver target. Incremental Read batches themselves are not profiled. |
+| `METADATA_PIPELINE_REGISTRY` | Persistent pipeline UUID and workspace/notebook binding used to identify and recover this notebook pipeline. Dry Run uses a session-only identity and does not register it. |
+| `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
+| `METADATA_DATA_CATALOGUE` | Canonical source and target table and column identities, plus applicable target processing and profile metadata. |
+| `METADATA_DATA_PROFILED` | Profile snapshots of the published Silver target when profiling completes. Incremental Read batches themselves are not profiled. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Target frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | The Bronze source and Silver target participation for this notebook pipeline. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, accepted incremental checkpoints, Source Drift baselines and target publication receipts. |
-| Governed target publication markers | Physical activity/timestamp markers used to verify the receipt before accepting the exact Bronze-to-Silver checkpoint. |
-| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
+| `METADATA_DATA_LINEAGE` | Bronze source and Silver target participation recorded for this notebook pipeline. |
+| `METADATA_PROCESSING_STATE` | Typed source observations, accepted incremental checkpoints, Source Drift baselines and target publication receipts, when applicable. |
+| Governed target publication markers | Physical activity/timestamp markers used to verify a publication receipt before accepting the exact Bronze-to-Silver checkpoint. These are target-side markers, not a separate canonical metadata table. |
+| `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
+
 
 ### If Silver has eight rows but the checkpoint already covers Day 2
 

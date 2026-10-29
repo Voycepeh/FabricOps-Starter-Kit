@@ -159,16 +159,18 @@ Day 1 creates eight current records in each target, Day 2 creates the first hist
 
 ### Metadata saved by FabricOps
 
-The following records are committed by successful runs with persistent publication and routed to the Metadata Lakehouse configured by `00_env_config`. Dry Run retains diagnostics in memory during Read and Write; `finalize_pipeline(pipeline)` publishes only run and Guardrail results for activation review.
+For **Ungoverned** and **Governed** executions, FabricOps writes applicable operational metadata to the Metadata Lakehouse configured by `00_env_config`. **Dry Run is session-only**: it does not write target data or persist catalogue, profile, processing-state, or pipeline-run records. The rows below describe the records this demo can produce during a persistent execution; the exact rows depend on the stages that complete and the Guardrails that are actually evaluated.
 
 | Metadata table | What this demo records |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the Bronze source and both Silver targets. |
-| `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target. |
-| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to those profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | The source and both target roles for this notebook pipeline. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts. |
-| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
+| `METADATA_PIPELINE_REGISTRY` | Persistent pipeline UUID and workspace/notebook binding used to identify and recover this notebook pipeline. Dry Run uses a session-only identity and does not register it. |
+| `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
+| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the Bronze source and both Silver targets, plus applicable target processing and profile metadata. |
+| `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target when profiling completes. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
+| `METADATA_DATA_LINEAGE` | Source and both target roles recorded for this notebook pipeline. |
+| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
+| `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
 
 ### Diagnose a later day before changing the SCD targets
