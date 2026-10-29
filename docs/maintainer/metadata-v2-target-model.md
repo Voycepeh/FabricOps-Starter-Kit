@@ -92,7 +92,7 @@ are unchanged.
 
 | Owner | Stored facts |
 | --- | --- |
-| `engineering.METADATA_PIPELINE_REGISTRY` | Permanent pipeline/notebook registrations, immutable approvals of finalized Tests, environment selections/revisions, table ownership, Live/rebind reservations and profiling claims |
+| `engineering.METADATA_PIPELINE_REGISTRY` | Permanent pipeline/notebook registrations, immutable approvals of finalized Tests, environment selections/revisions, table ownership and Live/rebind reservations |
 | `engineering.METADATA_PIPELINE_RUN` | One execution with native table operations, exact contract references, locations, read/write modes, statuses, stages, timing, profiling and safe failures |
 | `governance.METADATA_DATA_CONTRACT` | Versioned table-level schema, grain, quality, sensitive-data, processing and profiling policies |
 | `governance.METADATA_DATA_AGREEMENT` | Versioned authored Agreements referenced by approvals |
@@ -137,7 +137,7 @@ Use the configured physical Engineering schema. No Definition/Configuration join
 
 ## Transactions and retained history
 
-Registry has one setup-seeded central row. Registration, approval, admission, rebind and renewable profiling claims use one matched-only Delta MERGE with an expected token. There are no runtime child inserts or per-update DDL. Missing/duplicate authority fails closed. Approved decision history and permanent registrations are retained. A lost acknowledgement is accepted only after exact complete-content read-back.
+Registry has one setup-seeded central row. Registration, approval, admission and rebind use one matched-only Delta MERGE with an expected token. There are no runtime child inserts or per-update DDL. Missing/duplicate authority fails closed. Approved decision history and permanent registrations are retained. A lost acknowledgement is accepted only after exact complete-content read-back.
 
 Run has one native row per `run_id`. First publication uses a stable Delta transaction identity; subsequent updates compare the complete previous row. Terminal outcomes are immutable and failed runs cannot regress to success. Parent, operations/stages, profiling and safe failures publish together. This preserves the existing whole-run concurrency and recovery guarantees without a Definition append or join.
 
@@ -184,7 +184,7 @@ No automatic conversion is supplied because old rows can lack watermark types, c
 
 This is a breaking Preview layout change. The six supported Live schemas and Processing State remain unchanged. Setup refuses incompatible Registry/Run layouts; it never adds columns to reinterpret history, drops tables or automatically resets checkpoints.
 
-1. Stop Test/Live producers and activation; drain reservations and profiling claims. Back up affected tables with their exact Delta versions and package revision.
+1. Stop Test/Live producers and activation; drain execution reservations. Back up affected tables with their exact Delta versions and package revision.
 2. For disposable Preview Registry/Run history, make an explicit reset decision. Create the new Registry and Run tables only after the old layout is backed up. Do not drop or rebuild supported Live tables or Processing State.
 3. For retained approvals/history, reconcile each old run's operation membership, exact contract references, bindings and modes into the new native operation array. Revalidate retained Test diagnostics and Agreement versions; old definition/candidate IDs cannot be relabeled as run IDs. Do not invent missing successful operations or notebook bindings. If required facts cannot be established, rerun Test and approve a new run rather than asserting equivalence.
 4. Old `METADATA_ACTIVATION_STATE` snapshots and the unmerged #1707 Definition layout are not runtime readers or aliases. Preserve any required history before explicit cleanup. The former Run converter applies only with its historical #1700 package/layout and must not run against this schema.
@@ -192,7 +192,7 @@ This is a breaking Preview layout change. The six supported Live schemas and Pro
 
 ## Verification and deployment boundaries
 
-Regression coverage exercises actual operation capture, selective Live rejection, finalized Test approval, shared-table/writer conflicts, rebind and admission races, immutable history, stale transactions, lost acknowledgements, profiling claims and unchanged supported Live schemas. Local Spark/Delta checks do not prove actual Fabric permissions, Lakehouse concurrency/cutover or Warehouse recovery. Validate those in the deployment environment before enabling Live.
+Regression coverage exercises actual operation capture, selective Live rejection, finalized Test approval, shared-table/writer conflicts, rebind and admission races, immutable history, stale transactions, lost acknowledgements, concurrent profiling and unchanged supported Live schemas. Local Spark/Delta checks do not prove actual Fabric permissions, Lakehouse concurrency/cutover or Warehouse recovery. Validate those in the deployment environment before enabling Live.
 
 ## Metadata retirement guidance
 
@@ -202,6 +202,6 @@ Regression coverage exercises actual operation capture, selective Live rejection
 
 Registry remains physically in the configured Engineering schema. Governance owns approval decisions; Engineering executes registration, admission, reservations and profiling coordination against the same atomic row. Its position beside Governance tables in the diagram shows that shared responsibility and does not introduce a third physical schema.
 
-Registry's row key is `authority_id` (the singleton `central`); Run's row key is `run_id`. Registry collection keys are validated separately: registrations and selections use `(environment_name, pipeline_id)`, approvals use `approval_id`, revisions use `environment_name`, ownership uses `(environment_name, table_id)`, reservations use `(environment_name, reservation_id)`, and profiling claims use `claim_key`. A Run operation is unique by both `operation_key` and `(table_id, pipeline_role)` within its Run.
+Registry's row key is `authority_id` (the singleton `central`); Run's row key is `run_id`. Registry collection keys are validated separately: registrations and selections use `(environment_name, pipeline_id)`, approvals use `approval_id`, revisions use `environment_name`, ownership uses `(environment_name, table_id)`, and reservations use `(environment_name, reservation_id)`. A Run operation is unique by both `operation_key` and `(table_id, pipeline_role)` within its Run.
 
 Registry approvals reference `Run.run_id` through `testing_run_id` and Agreement's composite `(agreement_id, agreement_version)`. Run's nullable `approval_id` references a nested Registry approval; Test runs have no approval. Run operations and Registry ownership reference Contract's composite `(contract_id, contract_version)`. Retained hashes verify content as well as identity. These are application-enforced references; Delta does not enforce SQL primary or foreign key constraints. Table IDs refer to logical table identities; Catalogue's physical row key also includes environment and column identity, so `table_id` alone is not a foreign key to its full row key.

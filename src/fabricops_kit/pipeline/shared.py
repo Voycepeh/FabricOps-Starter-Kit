@@ -6480,11 +6480,6 @@ def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtim
 
 
 PROFILING_ACTIVITIES = ("standard", "grain", "frequency")
-PROFILING_LEASE_SECONDS = 300
-
-
-class ProfilingConflict(RuntimeError):
-    """A profiling reservation expired, changed ownership or could not be confirmed."""
 
 
 def default_profiling_policy():
@@ -6596,75 +6591,6 @@ def record_profiling_outcome(outcome, *, context, spark_session=None):
         raise
 
 
-def claim_table_profile(table_id, activity, operation, *, context, spark_session=None, now=None):
-    """Claim due work atomically; expired claims recover without a successful marker."""
-    if activity not in PROFILING_ACTIVITIES:
-        raise ValueError("Unknown profiling activity.")
-    if not persistence_permitted(context):
-        raise RuntimeError("Dry Run cannot claim profiling work.")
-    checked_at = now or datetime.now(UTC)
-    from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority
-    token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-    settings = contract_profiling_policy(table_id, context=context)[activity]
-    if operation not in {"read", "write"}:
-        raise ValueError("Profiling operation must be read or write.")
-    if settings["trigger"] not in {operation, "read_or_write"}:
-        return {"status": "skipped", "reason": "trigger_mismatch"}
-    key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
-    claims = state.setdefault("profiling_claims", {})
-    claim_key = key + ":" + activity
-    owned = claims.get(claim_key)
-    if owned and datetime.fromisoformat(owned["expires_at"]) > checked_at:
-        return {"status": "skipped", "reason": "reserved_or_concurrent_update"}
-    history = profiling_completion_history(table_id, context=context, spark_session=spark_session, activity=activity)
-    checked_at = now or datetime.now(UTC)
-    if not profiling_due(settings, history.get(activity, {}), operation, checked_at):
-        return {"status": "skipped", "reason": "already_completed" if settings["frequency"] == "first" else "interval_not_elapsed"}
-    claim = {"token": str(uuid4()), "key": key, "claim_key": claim_key, "activity": activity,
-             **descriptor, "trigger": operation,
-             "expires_at": (checked_at + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat(),
-             "execution_id": context["execution_plan"].plan_id}
-    # Bound expired reservation growth without storing schedule history here.
-    state["profiling_claims"] = {k: v for k, v in claims.items() if datetime.fromisoformat(v["expires_at"]) > checked_at}
-    state["profiling_claims"][claim_key] = claim
-    try:
-        commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
-    except Exception as exc:
-        observed, _state = read_pipeline_authority(context=context, spark_session=spark_session)
-        if observed != token:
-            return {"status": "skipped", "reason": "reserved_or_concurrent_update"}
-        raise ProfilingConflict("Profiling reservation could not be confirmed.") from exc
-    return claim
-
-
-def maintain_table_profile_claim(claim, *, context, spark_session=None, complete=None, now=None):
-    """Renew, authorize completion or release an owned reservation using bounded CAS."""
-    from fabricops_kit.activated_pipeline.shared import read_pipeline_authority, commit_pipeline_authority
-    for _attempt in range(3):
-        token, state = read_pipeline_authority(context=context, spark_session=spark_session)
-        checked_at = now or datetime.now(UTC)
-        claims = state.get("profiling_claims", {})
-        owned = claims.get(claim["claim_key"])
-        if not owned or owned["token"] != claim["token"] or datetime.fromisoformat(owned["expires_at"]) <= checked_at:
-            raise ProfilingConflict("Profiling claim expired or belongs to another execution.")
-        if complete is False:
-            claims.pop(claim["claim_key"])
-        else:
-            owned["expires_at"] = (checked_at + timedelta(seconds=PROFILING_LEASE_SECONDS)).isoformat()
-            if complete is True:
-                # This CAS is the success decision. Retain the reservation until
-                # Pipeline Run confirms it, so healthy finalizers cannot race.
-                owned.setdefault("completed_at", checked_at.isoformat())
-        try:
-            committed = commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session)
-            return owned["completed_at"] if complete is True else committed
-        except Exception:
-            observed, _state = read_pipeline_authority(context=context, spark_session=spark_session)
-            if observed == token:
-                raise
-    raise ProfilingConflict("Profiling claim update conflicted repeatedly; work remains recoverable.")
-
-
 def skip_table_profiling(table_id, operation, reason, *, context, spark_session=None):
     """Journal all activities when a target has no successful publication."""
     key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
@@ -6679,11 +6605,12 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
 
 
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None):
-    """Profile Dry Run inputs or claim due work for persistent executions."""
-    from threading import Event, Thread
+    """Profile due work using successful completion history as the schedule."""
+    if operation not in {"read", "write"}:
+        raise ValueError("Profiling operation must be read or write.")
     outcomes = {}
     if not persistence_permitted(context):
-        # Dry Run can inspect due work, but never consumes intervals or obtains claims.
+        # Dry Run can inspect due work, but never consumes successful intervals.
         policy = contract_profiling_policy(table_id, context=context)
         history = profiling_completion_history(table_id, context=context, spark_session=spark_session)
         key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
@@ -6709,66 +6636,47 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
         return {**profile, "status": "passed", "activities": outcomes, "persistence_status": "disabled",
                 "row_count": profile.get("row_count")}
     key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
+    policy = contract_profiling_policy(table_id, context=context)
     for activity in PROFILING_ACTIVITIES:
         base = {**descriptor, "context_key": key, "activity": activity, "trigger": operation,
                 "pipeline_run_id": context["execution_plan"].plan_id, "executed_at": datetime.now(UTC).isoformat()}
-        claim = claim_table_profile(table_id, activity, operation, context=context, spark_session=spark_session)
-        if claim.get("status") == "skipped":
-            outcomes[activity] = claim
-            record_profiling_outcome({**base, **claim}, context=context, spark_session=spark_session)
+        settings = policy[activity]
+        if settings["trigger"] not in {operation, "read_or_write"}:
+            skipped = {"status": "skipped", "reason": "trigger_mismatch"}
+            outcomes[activity] = skipped
+            record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
             continue
-        stopped = Event()
-        errors = []
-        def validate_claim():
-            if errors:
-                raise ProfilingConflict("Profiling claim renewal failed.") from errors[0]
-            # Renew before each persistence boundary as well as in the heartbeat.
-            maintain_table_profile_claim(claim, context=context, spark_session=spark_session)
-        def heartbeat():
-            while not stopped.wait(30):
-                try:
-                    validate_claim()
-                except Exception as exc:
-                    errors.append(exc)
-                    return
-        worker = Thread(target=heartbeat, daemon=True)
-        worker.start()
+        history = profiling_completion_history(
+            table_id, context=context, spark_session=spark_session, activity=activity)
+        if not profiling_due(settings, history.get(activity, {}), operation, datetime.now(UTC)):
+            skipped = {"status": "skipped", "reason": (
+                "already_completed" if settings["frequency"] == "first" else "interval_not_elapsed")}
+            outcomes[activity] = skipped
+            record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
+            continue
+        profile_snapshot_id = str(uuid4())
         outcome = None
         completion_recorded = False
         try:
-            record_profiling_outcome({**base, "status": "running", "profile_snapshot_id": claim["token"],
+            record_profiling_outcome({**base, "status": "running", "profile_snapshot_id": profile_snapshot_id,
                 "results_persisted": False}, context=context, spark_session=spark_session)
-            profile_context = {**context, "activity_id": claim["token"],
-                               "_profile_snapshot_id": claim["token"], "_profile_claim_validate": validate_claim}
+            profile_context = {**context, "activity_id": profile_snapshot_id,
+                               "_profile_snapshot_id": profile_snapshot_id}
             outcome = execute_table_profile(table_id=table_id, context=profile_context,
                 spark_session=spark_session, verbose=False, activities={activity})
-            stopped.set()
-            worker.join(timeout=30)
-            if worker.is_alive() or errors:
-                raise ProfilingConflict("Profiling heartbeat did not finish cleanly; completion remains unconfirmed.")
-            completed_at = maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=True)
-            outcomes[activity] = {"status": "passed", "profile_snapshot_id": claim["token"] if activity != "grain" and not outcome.get("empty_result") else None,
+            completed_at = datetime.now(UTC).isoformat()
+            outcomes[activity] = {"status": "passed", "profile_snapshot_id": profile_snapshot_id if activity != "grain" and not outcome.get("empty_result") else None,
                                   "row_count": outcome.get("row_count"), "results_persisted": True,
                                   "empty_result": outcome.get("empty_result", False),
                                   "completed_at": completed_at}
             record_profiling_outcome({**base, **outcomes[activity]}, context=context, spark_session=spark_session)
             completion_recorded = True
-            try:
-                maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=False)
-            except Exception:
-                pass  # Completion is durable; a failed release recovers by expiry.
         except BaseException as exc:
-            stopped.set()
-            worker.join(timeout=30)
             # Retain the attempted/failed activity even when orchestration raises.
             if not completion_recorded and not context["execution_plan"].evidence.get("persistence_failed"):
                 record_profiling_outcome({**base, "status": "failed", "reason": type(exc).__name__,
-                    "profile_snapshot_id": claim["token"] if activity != "grain" else None,
+                    "profile_snapshot_id": profile_snapshot_id if activity != "grain" else None,
                     "results_persisted": True if outcome is not None else None}, context=context, spark_session=spark_session)
-            try:
-                maintain_table_profile_claim(claim, context=context, spark_session=spark_session, complete=False)
-            except Exception:
-                pass  # An uncertain claim stays recoverable through its finite lease.
             raise
         finally:
             profile = outcome.get("profile") if outcome is not None else None
@@ -8059,9 +7967,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
     selected_activities = observation["activities"]
     grain_discovery_enabled = "grain" in selected_activities
     grain_discovery_max_columns = observation["grain_discovery_max_columns"]
-    validate_claim = context.get("_profile_claim_validate", lambda: None)
     if selected_activities == {"grain"}:
-        validate_claim()
         _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
             config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
         return {"grain_candidates": profile_key_candidates, **profile_metrics}
@@ -8095,7 +8001,6 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             )
         if "standard" not in selected_activities:
             if "grain" in selected_activities:
-                validate_claim()
                 _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
                     config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
             from pyspark.sql import functions as F
@@ -8104,7 +8009,6 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             if frequency_metadata_df is not None:
                 frequency_metadata_df = frequency_metadata_df.withColumn("profile_id", F.lit(None).cast("string"))
             try:
-                validate_claim()
                 _replace_frequency_rows(frequency_df=frequency_metadata_df, profiled_df=profiled_df,
                     config=config, active_workspace_id=active_workspace_id, spark_session=spark_session)
                 return {"frequency_profile": frequency_profile, "empty_result": frequency_metadata_df is None or frequency_metadata_df.isEmpty(), **profile_metrics}
@@ -8113,11 +8017,9 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
 
         summary_persisted = False
         try:
-            validate_claim()
             same_activity_retry = _stage_catalogue_profile_retry(
                 profiled_df=profiled_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
             )
-            validate_claim()
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
@@ -8155,7 +8057,6 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
                 ) if grain_discovery_enabled else None,
                 source_fields=observation["source_fields"],
             )
-            validate_claim()
             _upsert_catalogue_identities(
                 catalogue_df=catalogue_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
             )

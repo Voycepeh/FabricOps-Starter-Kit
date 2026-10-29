@@ -1,4 +1,4 @@
-"""Contract policy, shared scheduling, durable completion and claim recovery."""
+"""Contract policy, shared scheduling, durable completion and concurrency."""
 # ruff: noqa: D103
 import copy
 import importlib
@@ -6,14 +6,13 @@ import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
-from threading import Lock
+from threading import Barrier, Lock
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
 
 from fabricops_kit.pipeline import shared
-from fabricops_kit.activated_pipeline import shared as activation
 
 REAL_HISTORY = shared.profiling_completion_history
 
@@ -22,7 +21,6 @@ NOW = datetime(2026, 10, 23, 9, tzinfo=UTC)
 
 @pytest.fixture
 def metadata(monkeypatch):
-    store = {'token': '0', 'state': {"workspaces": {}, "registrations": [], "profiling_claims": {}}, 'commits': 0}
     lock = Lock()
     rows = {'METADATA_PIPELINE_RUN': {}, 'METADATA_DATA_PROFILED': [], 'METADATA_DATA_PROFILED_FREQUENCY': []}
     def context(run_id='A', **overrides):
@@ -35,19 +33,6 @@ def metadata(monkeypatch):
         table_id: {'workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
                    'kind': 'lakehouse', 'schema': identity['schema'], 'table_name': identity['table_name']}
         for table_id, identity in identities.items()})
-    def read(**kwargs):
-        with lock:
-            return store['token'], copy.deepcopy(store['state'])
-    def commit(state, *, expected_token, **kwargs):
-        with lock:
-            if expected_token != store['token']:
-                raise RuntimeError('stale token')
-            store['state'] = copy.deepcopy(state)
-            store['commits'] += 1
-            store['token'] = str(store['commits'])
-            return store['token']
-    monkeypatch.setattr(activation, 'read_pipeline_authority', read)
-    monkeypatch.setattr(activation, 'commit_pipeline_authority', commit)
     history_reads = []
     def history(table_id, *, context, activity=None, **kwargs):
         history_reads.append(activity)
@@ -73,20 +58,22 @@ def metadata(monkeypatch):
     monkeypatch.setattr(shared, 'profiling_completion_history', history)
     def persist(plan, **kwargs):
         if plan.permits_persistence:
-            rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
-                'run_id': plan.plan_id, 'execution_mode': 'live', 'workspace_id': next((outcome['workspace_id'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
+            with lock:
+                rows['METADATA_PIPELINE_RUN'][plan.plan_id] = {
+                    'run_id': plan.plan_id, 'execution_mode': getattr(plan, 'execution_mode', 'live'), 'workspace_id': next((outcome['workspace_id'] for outcome in plan.evidence.get('profiling', [])), 'dev'), 'profiling': copy.deepcopy(plan.evidence.get('profiling', []))}
     monkeypatch.setattr(shared, 'persist_pipeline_run', persist)
     def execute(*, table_id, context, activities, **kwargs):
         activity = next(iter(activities))
         if shared.persistence_permitted(context) and activity != 'grain':
             table = 'METADATA_DATA_PROFILED' if activity == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
-            rows[table].append({'table_id': table_id, 'workspace_id': context['scope_workspace_id'],
-                                'profile_snapshot_id': context['_profile_snapshot_id']})
+            with lock:
+                rows[table].append({'table_id': table_id, 'workspace_id': context['scope_workspace_id'],
+                                    'profile_snapshot_id': context['_profile_snapshot_id']})
         return {'row_count': 100}
     profiler = Mock(side_effect=execute)
     monkeypatch.setattr(shared, 'execute_table_profile', profiler)
-    return SimpleNamespace(store=store, context=context(), make_context=context, rows=rows,
-                           profiler=profiler, execute=execute, commit=commit, history_reads=history_reads)
+    return SimpleNamespace(context=context(), make_context=context, rows=rows,
+                           profiler=profiler, execute=execute, history_reads=history_reads)
 
 
 def policy(context, activity, settings):
@@ -130,9 +117,19 @@ def test_shared_history_survives_a_new_pipeline_and_process(metadata):
     metadata.profiler.assert_not_called()
     assert result['activities']['standard']['reason'] == 'interval_not_elapsed'
     assert result['activities']['grain']['reason'] == 'already_completed'
-    assert not metadata.store['state']['profiling_claims']
-    assert set(metadata.store['state']) == {'registrations', 'workspaces', 'profiling_claims'}
     assert len(metadata.rows['METADATA_PIPELINE_RUN']) == 2
+
+
+def test_profiling_never_reads_or_updates_pipeline_registry(metadata, monkeypatch):
+    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    read = Mock(side_effect=AssertionError('profiling must not read the Registry'))
+    commit = Mock(side_effect=AssertionError('profiling must not update the Registry'))
+    monkeypatch.setattr(activation, 'read_pipeline_authority', read)
+    monkeypatch.setattr(activation, 'commit_pipeline_authority', commit)
+    result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    assert result['status'] == 'passed'
+    read.assert_not_called()
+    commit.assert_not_called()
 
 
 def test_environment_and_physical_destinations_are_independent(metadata):
@@ -144,28 +141,28 @@ def test_environment_and_physical_destinations_are_independent(metadata):
     assert metadata.profiler.call_count == 18
 
 
-def test_concurrent_claims_have_one_owner(metadata):
-    with ThreadPoolExecutor(8) as pool:
-        claims = list(pool.map(lambda _: shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context, now=NOW), range(24)))
-    assert sum('token' in claim for claim in claims) == 1
-
-
-def test_expired_claim_recovers_and_fences_stale_owner(metadata):
-    abandoned = shared.claim_table_profile('orders', 'frequency', 'read', context=metadata.context, now=NOW)
-    assert shared.claim_table_profile('orders', 'frequency', 'read', context=metadata.context, now=NOW + timedelta(seconds=299))['status'] == 'skipped'
-    recovered = shared.claim_table_profile('orders', 'frequency', 'read', context=metadata.context, now=NOW + timedelta(seconds=301))
-    assert recovered['token'] != abandoned['token']
-    with pytest.raises(shared.ProfilingConflict, match='expired or belongs'):
-        shared.maintain_table_profile_claim(abandoned, context=metadata.context, complete=True, now=NOW + timedelta(seconds=302))
-    shared.maintain_table_profile_claim(recovered, context=metadata.context, complete=True, now=NOW + timedelta(seconds=302))
-    shared.maintain_table_profile_claim(recovered, context=metadata.context, complete=False, now=NOW + timedelta(seconds=302))
-    assert 'token' in shared.claim_table_profile('orders', 'frequency', 'read', context=metadata.context, now=NOW + timedelta(seconds=303))
-
-
-def test_renewal_keeps_long_running_activity_reserved(metadata):
-    claim = shared.claim_table_profile('orders', 'grain', 'read', context=metadata.context, now=NOW)
-    shared.maintain_table_profile_claim(claim, context=metadata.context, now=NOW + timedelta(seconds=250))
-    assert shared.claim_table_profile('orders', 'grain', 'read', context=metadata.context, now=NOW + timedelta(seconds=301))['status'] == 'skipped'
+def test_concurrent_due_runs_publish_isolated_consistent_snapshots(metadata):
+    barriers = {activity: Barrier(2) for activity in shared.PROFILING_ACTIVITIES}
+    def execute(**kwargs):
+        activity = next(iter(kwargs['activities']))
+        barriers[activity].wait(timeout=5)
+        return metadata.execute(**kwargs)
+    metadata.profiler.side_effect = execute
+    contexts = [metadata.make_context(f'concurrent-{index}') for index in range(2)]
+    with ThreadPoolExecutor(2) as pool:
+        results = list(pool.map(
+            lambda context: shared.schedule_table_profiling('orders', 'read', context=context), contexts))
+    assert all(result['status'] == 'passed' for result in results)
+    summaries = metadata.rows['METADATA_DATA_PROFILED']
+    frequencies = metadata.rows['METADATA_DATA_PROFILED_FREQUENCY']
+    assert len(summaries) == len(frequencies) == 2
+    assert len({row['profile_snapshot_id'] for row in summaries}) == 2
+    assert len({row['profile_snapshot_id'] for row in frequencies}) == 2
+    for context in contexts:
+        passed = [event for event in context['execution_plan'].evidence['profiling'] if event['status'] == 'passed']
+        assert len(passed) == 3 and all(event['completed_at'] for event in passed)
+    retry = shared.schedule_table_profiling('orders', 'read', context=metadata.make_context('after-concurrency'))
+    assert all(outcome['status'] == 'skipped' for outcome in retry['activities'].values())
 
 
 def test_failure_after_results_persist_does_not_consume_interval(metadata):
@@ -178,7 +175,9 @@ def test_failure_after_results_persist_does_not_consume_interval(metadata):
     assert metadata.rows['METADATA_DATA_PROFILED']
     assert shared.profiling_completion_history('orders', context=metadata.context) == {}
     assert metadata.context['execution_plan'].evidence['profiling'][-1]['status'] == 'failed'
-    assert shared.claim_table_profile('orders', 'standard', 'write', context=metadata.context)
+    metadata.profiler.side_effect = metadata.execute
+    retry = shared.schedule_table_profiling('orders', 'write', context=metadata.make_context('retry'))
+    assert retry['activities']['standard']['status'] == 'passed'
 
 
 def test_later_failure_preserves_earlier_success(metadata):
@@ -213,14 +212,34 @@ def test_empty_frequency_has_durable_marker(metadata):
 
 def test_read_only_testing_does_not_consume_schedule(metadata):
     metadata.context['execution_plan'].permits_persistence = False
-    before = copy.deepcopy(metadata.store)
     result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert result['persistence_status'] == 'disabled' and result['row_count'] == 100
-    assert metadata.store == before and not metadata.rows['METADATA_PIPELINE_RUN']
+    assert not metadata.rows['METADATA_PIPELINE_RUN']
     metadata.profiler.assert_called_once()
     assert metadata.profiler.call_args.kwargs['activities'] == {'standard', 'grain', 'frequency'}
-    with pytest.raises(RuntimeError, match='Dry Run cannot claim'):
-        shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context)
+
+
+@pytest.mark.parametrize(
+    ('mode', 'permits_persistence', 'expected_persisted'),
+    [('dry_run', False, False), ('ungoverned', True, True), ('governed', True, True)],
+)
+def test_profiling_execution_modes_compute_and_persist_as_required(
+    metadata, mode, permits_persistence, expected_persisted
+):
+    context = metadata.make_context(mode)
+    context['execution_plan'].permits_persistence = permits_persistence
+    context['execution_plan'].execution_mode = mode
+    result = shared.schedule_table_profiling('orders', 'read', context=context)
+    assert result['status'] == 'passed'
+    if mode == 'dry_run':
+        metadata.profiler.assert_called_once()
+        assert result['persistence_status'] == 'disabled'
+        assert not metadata.rows['METADATA_PIPELINE_RUN']
+    else:
+        assert metadata.profiler.call_count == 3
+        assert context['execution_plan'].plan_id in metadata.rows['METADATA_PIPELINE_RUN']
+    assert bool(metadata.rows['METADATA_DATA_PROFILED']) is expected_persisted
+    assert bool(metadata.rows['METADATA_DATA_PROFILED_FREQUENCY']) is expected_persisted
 
 
 def test_every_write_and_frozen_policy_are_exact(metadata):
@@ -310,42 +329,22 @@ def test_run_commit_failure_does_not_leave_in_memory_success_as_durable_history(
     assert shared.profiling_completion_history('orders', context=metadata.context) == {}
 
 
-def test_metadata_outage_is_not_reported_as_a_legitimate_skip(metadata, monkeypatch):
-    monkeypatch.setattr(activation, 'commit_pipeline_authority', Mock(side_effect=OSError('unavailable')))
-    with pytest.raises(shared.ProfilingConflict, match='could not be confirmed'):
-        shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context)
-    metadata.profiler.assert_not_called()
-
-
-def test_slow_retry_rechecks_expiry(metadata, monkeypatch):
-    claim = shared.claim_table_profile('orders', 'standard', 'read', context=metadata.context, now=NOW)
-    times = iter([NOW, NOW + timedelta(seconds=301)])
-    class Clock(datetime):
-        @classmethod
-        def now(cls, tz=None): return next(times)
-    monkeypatch.setattr(shared, 'datetime', Clock)
-    def contend(*args, **kwargs):
-        metadata.store['token'] = 'changed'
-        raise RuntimeError('contention')
-    monkeypatch.setattr(activation, 'commit_pipeline_authority', Mock(side_effect=contend))
-    with pytest.raises(shared.ProfilingConflict, match='expired'):
-        shared.maintain_table_profile_claim(claim, context=metadata.context, complete=True)
-    activation.commit_pipeline_authority.assert_called_once()
-
-
-def test_no_publication_records_all_skips_without_claims(metadata):
+def test_no_publication_records_all_skips_without_registry_updates(metadata):
     result = shared.skip_table_profiling('orders', 'write', 'No successful publication', context=metadata.context)
     assert len(result['activities']) == 3
-    assert metadata.store['commits'] == 0
     assert shared.profiling_completion_history('orders', context=metadata.context) == {}
 
 
-def test_profiling_failure_releases_cached_output(metadata, monkeypatch):
+def test_failed_completion_journal_releases_cached_output(metadata, monkeypatch):
     cached = Mock()
     def execute(**kwargs): return {**metadata.execute(**kwargs), 'profile': cached}
     metadata.profiler.side_effect = execute
-    monkeypatch.setattr(shared, 'maintain_table_profile_claim', Mock(side_effect=shared.ProfilingConflict('lost lease')))
-    with pytest.raises(shared.ProfilingConflict, match='lost lease'):
+    def fail_passed(plan, **kwargs):
+        if plan.evidence.get('profiling', [{}])[-1].get('status') == 'passed':
+            plan.evidence['persistence_failed'] = True
+            raise RuntimeError('journal unavailable')
+    monkeypatch.setattr(shared, 'persist_pipeline_run', fail_passed)
+    with pytest.raises(RuntimeError, match='journal unavailable'):
         shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     cached.unpersist.assert_called_once_with()
     assert shared.profiling_completion_history('orders', context=metadata.context) == {}
@@ -368,34 +367,7 @@ def test_failed_journal_write_cannot_leak_into_a_later_snapshot(metadata, monkey
     assert not any(event['status'] == 'passed' for event in metadata.context['execution_plan'].evidence['profiling'])
 
 
-def test_final_completion_cas_rejects_replaced_owner(metadata, monkeypatch):
-    maintain = shared.maintain_table_profile_claim
-    def replace_owner(claim, **kwargs):
-        if kwargs.get('complete') is True:
-            metadata.store['state']['profiling_claims'][claim['claim_key']]['token'] = 'replacement'
-        return maintain(claim, **kwargs)
-    monkeypatch.setattr(shared, 'maintain_table_profile_claim', replace_owner)
-    with pytest.raises(shared.ProfilingConflict, match='belongs to another'):
-        shared.schedule_table_profiling('orders', 'read', context=metadata.context)
-    assert shared.profiling_completion_history('orders', context=metadata.context) == {}
-
-
-def test_completion_keeps_reservation_until_run_commit(metadata, monkeypatch):
-    persist = shared.persist_pipeline_run
-    observed = []
-    def inspect(plan, **kwargs):
-        event = plan.evidence.get('profiling', [{}])[-1]
-        if event.get('status') == 'passed':
-            owned = metadata.store['state']['profiling_claims'][event['context_key'] + ':' + event['activity']]
-            observed.append(owned['completed_at'] == event['completed_at'])
-        return persist(plan, **kwargs)
-    monkeypatch.setattr(shared, 'persist_pipeline_run', inspect)
-    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
-    assert observed == [True, True, True]
-    assert not metadata.store['state']['profiling_claims']
-
-
-def test_claim_checks_history_once_per_activity_and_not_for_mismatched_triggers(metadata):
+def test_scheduler_checks_history_once_per_activity_and_not_for_mismatched_triggers(metadata):
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert metadata.history_reads == ['standard', 'grain', 'frequency']
     metadata.history_reads.clear()
@@ -446,4 +418,3 @@ def test_test_activity_selection_and_supplied_frame_do_not_override_policy(metad
     assert metadata.profiler.call_args.kwargs['dataframe'] is frame
     assert metadata.profiler.call_args.kwargs['activities'] == {'grain', 'frequency'}
     assert result['activities']['standard']['status'] == 'skipped'
-    assert metadata.store['commits'] == 0

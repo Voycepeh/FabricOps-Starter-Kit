@@ -1,4 +1,4 @@
-# Plug-and-Play Data Pipelines with Data Contract Enforcement
+# Plug-and-Play Data Pipelines with Optional Data Contract Enforcement
 
 <span class="fabricops-release-status fabricops-release-status--live">Live</span>
 
@@ -6,11 +6,11 @@
 
 ## The problem
 
-Building a governed data pipeline involves much more than reading a table, transforming a DataFrame, and writing the result. Engineers also need to handle environment resolution, incremental processing, load strategies, metadata, profiling, Data Contracts, Guardrails, validation, lineage, and the differences between Fabric Lakehouses and Warehouses.
+Building a reliable data pipeline involves much more than reading a table, transforming a DataFrame, and writing the result. Engineers also need to handle environment resolution, incremental processing, load strategies, metadata, profiling, Data Contracts, Guardrails, validation, lineage, and the differences between Fabric Lakehouses and Warehouses.
 
 A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
 
-FabricOps abstracts the repeatable plumbing behind a small, readable notebook interface: **set up the pipeline, choose how each source is read, write the project transformation in normal PySpark, choose how each target is written, then finalize the run, and let FabricOps apply the governed lifecycle around it.**
+FabricOps keeps that work behind a readable notebook flow: **Setup → Read → Transform → Write → Finalize**. Engineers own the PySpark transformation; FabricOps handles the repeatable pipeline operations and applies Data Contract enforcement when Governed mode is selected.
 
 ## The solution
 
@@ -23,9 +23,21 @@ FabricOps abstracts the repeatable plumbing behind a small, readable notebook in
 </div>
 
 - [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric Stores to the correct environment-specific Fabric locations.
-- [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps the pipeline definition portable between environments, with governed Read and Write boundaries around ordinary project-owned PySpark.
+- [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) keeps the pipeline definition portable between environments, with FabricOps Read and Write boundaries around ordinary project-owned PySpark.
 
 The result is a pipeline pattern that engineers can clone and adapt without rebuilding the governance and engineering plumbing each time.
+
+Inside `02_pipeline.ipynb`, four functions frame the engineer's own transformation:
+
+| Pipeline function | Purpose |
+| --- | --- |
+| `setup_pipeline()` | Establish the pipeline run and selected execution mode. |
+| `orchestrate_read()` | Read each source using its chosen Read Mode. |
+| `orchestrate_write()` | Publish each prepared target using its chosen Write Mode (or preview in Dry Run). |
+| `finalize_pipeline()` | Complete run tracking after the project work finishes. |
+
+**Between Read and Write, the PySpark logic belongs to the project.** Engineers can join, filter, enrich, or aggregate DataFrames as needed; FabricOps does not prescribe the transformation. The same pipeline can read multiple sources and write multiple targets.
+
 
 ### The big picture
 
@@ -92,144 +104,57 @@ flowchart LR
     DEV ==>|"Promote 1:1"| PROD
 ```
 
-The picture has four important parts working together:
+The same pipeline definition can move between Development and Production: each workspace resolves its own Fabric Stores, while Governed execution enforces the activated Data Contracts.
 
-1. **Environment-aware configuration.** Each environment has its own `00_env_config`, which resolves the logical Fabric Stores to the correct Development or Production locations.
-2. **A portable pipeline.** `02_pipeline` keeps the same governed shape: **Setup → Read → project-owned PySpark → Write → Finalize**. The engineer changes the project logic, not the surrounding operating pattern.
-3. **Executable governance.** Governance defines the Data Contract and Guardrails. Engineering selects and validates that contract in Development; after approval, Production resolves the approved whole-pipeline manifest and enforces it through the same pipeline boundaries.
-4. **A shared evidence layer.** Reads and writes continuously produce the Catalogue, profiles, processing state, Guardrail results, and lineage that connect the physical pipeline back to Governance.
+### Choose an execution mode
 
-Once the Development implementation and Data Contract agree, the validated `02_pipeline` is promoted unchanged. Production uses its own environment configuration and the active contract, so the same engineering definition runs against Production Fabric Stores without embedding environment-specific locations in the pipeline.
+| Capability | Dry Run | Ungoverned | Governed |
+| --- | --- | --- | --- |
+| Automatic profiling | Yes | Yes | Yes |
+| Publish data | No | Yes | Yes |
+| Persist observations | No | Yes | Yes |
+| Activated Data Contract required | No | No | Yes |
+| Enforce contract guardrails | Yes | No | Yes |
 
-This is the core FabricOps pipeline model: **the engineer owns the transformation; Governance owns the governed definition; FabricOps makes the surrounding lifecycle repeatable and executable across environments.**
+**Ungoverned** runs without Data Contracts. **Dry Run** previews without writing. **Governed** enforces activated Data Contracts. Pipeline source participation and reporting are automatic.
+
+## From Dry Run to Governed execution
+
+Start with **Dry Run** to inspect the pipeline's Read, transformation, and Write results without publishing data or persisting observations. An optional frozen Data Contract can be evaluated during this preview; Dry Run does not activate it.
+
+A **Data Contract** defines the agreed schema, Grain, Data Quality rules, and Sensitive Data expectations for a table. Governance authors and freezes a version, and engineers validate the pipeline against that version. When it is ready for use, Governance **activates the Data Contract for the relevant table in the target workspace's environment**. That activation selects the contract version that Governed runs must enforce there.
+
+**Ungoverned** remains available for pipelines without an activated Data Contract, while **Governed** requires the applicable active contracts and enforces their rules at the Read and Write boundaries. Activation is a **table-and-environment decision**, not a separate activation for every pipeline that uses the table. Pipelines sharing a table in the same environment therefore use its same active contract version.
+
+This section describes validation and activation within a workspace; deployment and promotion are outside its scope.
+
+## Read & Write Modes
+
+Read Mode controls **which source rows to process**. Write Mode controls **how the prepared rows update the target**. They are selected independently for each Read and Write operation.
+
+| Side | Mode | What it does |
+| --- | --- | --- |
+| Read | **Full** | Read the complete source. |
+| Read | **Incremental** | Read unprocessed source changes for the target. |
+| Write | **Overwrite** | Replace the target with the prepared result. |
+| Write | **Append** | Add prepared rows to the target. |
+| Write | **SCD1** | Update the latest state by business key. |
+| Write | **SCD2** | Preserve historical versions of changes by business key. |
+
+A common pattern is **Full → Overwrite** for rebuilding a target or **Incremental → Append** for adding new records. SCD1 and SCD2 support changing records. See [Read & Write Modes](../reference/read-and-load-strategies.md) for detailed behavior and examples.
 
 ## How it works
 
 | Responsibility | What happens |
 | --- | --- |
-| **Engineer configures** | Chooses logical sources and targets, Read and Write modes, the project-specific PySpark transformation, and the Data Contract context for governed tables. |
+| **Engineer configures** | Chooses logical sources and targets, Read and Write modes, the project-specific PySpark transformation, and whether to run in Dry Run, Ungoverned or Governed mode. |
 | **AI can support** | Microsoft Fabric Copilot or another coding agent can help write or refactor project-specific PySpark. AI is optional and is not part of pipeline execution or enforcement. |
-| **FabricOps handles deterministically** | Resolves environment-specific Fabric locations, runs governed Read and Write orchestration, applies the selected Data Contract and Guardrails, and records metadata, profiling, lineage, processing state and the complete run outcome. |
+| **FabricOps handles deterministically** | Resolves environment-specific Fabric locations, runs Read and Write orchestration, enforces activated Data Contracts in Governed mode, and records the applicable metadata, profiling, lineage, processing state and run outcome for persisting modes. |
 
-## Under the hood
+## Get started
 
-<div class="fabricops-mascot-callout">
-  <img src="/FabricOps-Starter-Kit/assets/mascots/robot-coding.png" alt="Coding mascot" loading="lazy">
-  <div><p>Trace setup, governed Read and Write boundaries around your PySpark transformation, and finalization of the complete run.</p></div>
-</div>
-
-??? info "What happens in a standard FabricOps Pipeline"
-
-    [![Setup, governed Read and Write around project PySpark, then finalization](../assets/pipeline-boundaries-implementation.svg){ .fabricops-solution-diagram }](../assets/pipeline-boundaries-implementation.svg)
-
-    Open the SVG at full size to follow the implementation links.
-
-    ### Setup Pipeline
-
-    **Call `setup_pipeline()` once after Environment Configuration.** It resolves the current environment and central Governance authority. Dry Run offers optional exact frozen versions, Ungoverned runs without contracts, and Governed resolves the activated environment revision. Persisting modes initialize `METADATA_PIPELINE_RUN`; Dry Run keeps its summary in the session.
-
-    ### Read side
-
-    **`orchestrate_read()` checks the source before returning its DataFrame to your PySpark transformation.**
-
-    1. Resolve the table and its Data Contract, then read the requested rows.
-    2. Run the configured Freshness, Schema, Grain, and Data Quality checks.
-    3. On a Full read, profile the returned dataset. Incremental batches skip Profile.
-
-    The Grain check covers the returned rows: the full read result or the incremental batch. It does not compare an incremental batch with historical rows.
-
-    ### Write side
-
-    **`orchestrate_write()` checks the prepared input before publishing the target.**
-
-    1. Run configured Schema and Sensitive Data checks, then Source Drift checks for participating sources.
-    2. Check Grain and Data Quality after Sensitive Data treatment, enforcing the selected Data Contract policies before publication.
-    3. In Ungoverned or Governed mode, publish through the selected Write strategy, record lineage in `METADATA_DATA_LINEAGE`, and profile the complete persisted target.
-
-    Dry Run evaluates checks and profiles prepared input without business publication; run records and Guardrail diagnostics remain in memory. Explicit `finalize_pipeline()` records complete-run status for persisting modes and returns a session-only Dry Run summary after all declared operations. The Grain check covers prepared input; it does not guarantee resulting-table uniqueness for Append or SCD strategies.
-
-    ### Finalize Pipeline
-
-    **Call `finalize_pipeline(pipeline)` once after every declared operation and project transformation.** It consolidates recorded outcomes and exact contract versions, persists the final `METADATA_PIPELINE_RUN` snapshot for Ungoverned and Governed execution, and releases existing reservations. Dry Run remains session-only. Stopped runs remain incomplete; use `failed=True` for a caught project error. Repeated finalization returns the same result. Optional Read/Write inspection stays available afterwards.
-
-    Engineering and Microsoft Fabric own executable integrity, source control, CI/CD and deployment. FabricOps requires no packaging or deployment verification call.
-
-    ### Both sides
-
-    - **Contract enforcement:** Governed enforces and persists activated-contract results. Dry Run can evaluate an optional selected contract without persistence. Ungoverned skips contract-dependent rules and blocks writes to governed targets. Discovering possible keys is separate from enforcing the contract's selected Grain key.
-    - **Profiling:** when the lifecycle reaches Profile, `profile_table()` calculates statistics and can also calculate frequency distributions and discover candidate Grain keys.
-    - **Caller controls:** Read and Write accept the same profiling switches and discovery limits. Your notebook or external scheduler chooses when to enable them; FabricOps does not apply a discovery schedule.
-
-??? info "How frequency profiling and Grain discovery work"
-
-    ### Frequency distributions
-
-    **Frequency answers “which values occur most often in this column?”** FabricOps groups values, counts occurrences, and ranks them. Null can appear as a frequency value.
-
-    Automatic selection uses eligible scalar columns and skips columns whose distinct-per-non-null percentage exceeds 80% by default. `frequency_top_n=5` retains the five highest-ranked values per selected column; `None` retains all. Top N limits retained output, but exact frequencies still require grouped counts across the input data.
-
-    Statistics are saved in `METADATA_DATA_PROFILED`; frequency rows are saved in `METADATA_DATA_PROFILED_FREQUENCY` and linked to the profile snapshot. Turning frequency off skips its calculations for that call. Existing snapshots from earlier activities remain available.
-
-    ### Grain key discovery
-
-    **Discovery answers “which column or combination uniquely identifies every row in this dataset?”** It uses exact data checks, without AI or column-name guesses.
-
-    1. Check eligible scalar columns for nulls and exact distinct counts. If single-column keys exist, return those candidates.
-    2. Otherwise test combinations of null-free columns, starting with pairs and widening up to `grain_discovery_max_columns`.
-    3. Stop at the smallest width with valid keys, retaining up to `grain_discovery_max_candidates` suggestions.
-
-    Candidates are stored in the table row's `METADATA_DATA_CATALOGUE.profile_key_candidates_json` for contract authoring. Governance reviews and chooses the intended Grain key. A unique combination in today's data is a candidate for that decision, not a guarantee about future data.
-
-    ### Where the compute runs
-
-    **The orchestrators invoke profiling; the data engine performs the calculations.** Supplied DataFrames and physical Lakehouse tables use PySpark. Complete physical Warehouse tables use SQL pushdown, including frequency and key-discovery queries.
-
-    Each composite-key test performs an exact distinct-count operation. With 20 eligible null-free columns and no single-column key, a search through triples can require 190 pair checks and 1,140 triple checks. Large inputs can add scans and shuffles; deterministic discovery can still be expensive. The candidate limit helps when keys are found but does not cap the search when none qualify.
-
-    ### Choose when to run each calculation
-
-    Both orchestrators and `profile_table()` accept these controls:
-
-    ```python
-    source = orchestrate_read(
-        store="Bronze", schema="demo", table_name="orders",
-        grain_discovery_enabled=True,
-        grain_discovery_max_columns=3,
-        grain_discovery_max_candidates=8,
-        frequency_enabled=True,
-        frequency_top_n=5,
-    )
-    ```
-
-    - **First run or meaningful data changes:** enable discovery to refresh candidate keys. A maximum of `1` checks singles only; `2` also checks pairs.
-    - **Routine runs:** set `grain_discovery_enabled=False` to skip discovery and preserve saved candidates. Independently set `frequency_enabled=False` to skip frequency calculations.
-    - **After the Data Contract is defined:** discovery can stay off until you choose to revisit the key. Configured Grain checks still validate the contract's key on each applicable Read or Write call.
-
-    These switches leave statistical profiling enabled whenever the lifecycle runs Profile. Incremental Read skips Profile. Dry Run Write profiles its prepared input without persistence. Scheduling belongs to the caller.
-
-    See [`profile_table()`](../api/reference/profile_table.md) for exact parameters, direct column selection, and persistence behavior.
-
-## Example
-
-??? info "Orders + Products → Curated Orders"
-
-    A project can read an Orders source and a Products reference table through governed Read boundaries, join and transform them using ordinary PySpark, then publish a Curated Orders table through a governed Write boundary.
-
-    The engineer owns the transformation. FabricOps handles the repeatable environment, governance, metadata, and enforcement plumbing around it.
-
-    See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for the working pipeline example.
+See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md) for an Orders + Products → Curated Orders example using the standard pipeline template.
 
 ## Go deeper
 
-Use [How FabricOps Works](../how-fabricops-works.md) for the wider Governance and Engineering lifecycle.
-
-For implementation details:
-
-- [Read & Write Modes](../reference/read-and-load-strategies.md) — Full and Incremental reads, Overwrite, Append, SCD1, SCD2, and processing semantics.
-- [PySpark Transformation](../reference/pyspark-transformation.md) — project-owned transformation patterns and performance guidance.
-- [Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md) — build and run the canonical pipeline.
-- [Guided Demo Step 4](../guided-demo/04-validate-frozen-data-contract.md) — validate the frozen Data Contract against the pipeline.
-- [Guided Demo Step 5](../guided-demo/05-activate-data-contract-and-promote.md) — activate the whole pipeline and promote the pipeline to Production.
-- [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) — lifecycle stages and per-call profiling controls.
-- [`profile_table()`](../api/reference/profile_table.md) — statistical profiling, frequency distributions, and Grain discovery limits.
-- [Function Reference](../reference/index.md) — lower-level FabricOps APIs and orchestrators.
+For the wider lifecycle, see [How FabricOps Works](../how-fabricops-works.md). For implementation details, use [PySpark Transformation](../reference/pyspark-transformation.md) and the [Function Reference](../reference/index.md).

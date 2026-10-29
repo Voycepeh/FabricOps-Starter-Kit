@@ -226,7 +226,6 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "selections": "Current approved decision per pipeline and workspace, published atomically with ownership.",
     "table_ownership": "Native exact contract, physical destination, writer and readers per workspace/table.",
     "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
-    "profiling_claims": "Renewable native claims with exact owner tokens, physical context and expiry.",
     "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",
     "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
     "failures": "Native safe failure codes and exception class names; never raw exception messages.",

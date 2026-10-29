@@ -316,6 +316,15 @@ def test_processing_state_table_has_no_legacy_alias():
     assert "METADATA_SOURCE_OBSERVATION" not in registry
 
 
+def test_pipeline_registry_has_no_profiling_coordination_collection():
+    """The unreleased profiling claim collection is not part of Registry state."""
+    from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
+
+    registry = metadata_table_schema_registry()["METADATA_PIPELINE_REGISTRY"]
+    assert "profiling_claims" not in registry.fieldNames()
+    assert "profiling_claims" not in empty_pipeline_authority()
+
+
 def test_pipeline_run_old_schema_requires_offline_conversion():
     """Old run rows cannot be additive-evolved into falsely complete typed history."""
     import importlib
