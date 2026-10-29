@@ -5538,18 +5538,14 @@ class ExecutionSummary:
         if self.verbose:
             for label, value in fields:
                 print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
+
     def finish(self, fields):
         """Print a concise successful summary; expand it when verbose output is enabled."""
         elapsed = round(max(0.01, time.perf_counter() - self.started), 2)
         if self.verbose:
             print(f"\nFabricOps {self.operation} Summary")
-            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]:
-                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
-        else:
-            print(f"FabricOps {self.operation} Summary · " + " · ".join(
-                f"{label}: {value if value is not None else 'Not available'}"
-                for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]
-            ))
+            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")  # noqa: E701
+        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not available'}" for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]))  # noqa: E701, E501
         return elapsed
 
 
