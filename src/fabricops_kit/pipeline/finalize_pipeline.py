@@ -67,6 +67,13 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         # in-flight upgrades do not require a metadata rewrite.
         if pipeline.plan.execution_mode == "testing":
             publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
-        if pipeline.report is None:
-            print(f"FabricOps Pipeline · {pipeline.plan.run_result['status']}\nPipeline ID: {pipeline.pipeline_id}")
-        return pipeline.plan.run_result
+        result = pipeline.plan.run_result
+        # Assignment to the return value suppresses notebook expression output.
+        # Always emit a compact completion summary, including interactive runs
+        # whose live report widget was rendered during setup.
+        print(
+            f"FabricOps Pipeline finalized · {result['status']}\n"
+            f"Pipeline ID: {pipeline.pipeline_id}\n"
+            f"Run ID: {pipeline.plan.plan_id}"
+        )
+        return result

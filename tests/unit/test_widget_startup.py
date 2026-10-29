@@ -170,7 +170,7 @@ def test_pipeline_reserved_startup_keeps_banner_separate_and_actionable_errors(o
     for _kind, value, options in outputs:
         if options["display_id"] == startup.display_id:
             assert "height:360px" in value.data and "overflow:auto" in value.data
-            assert "Pipeline execution" not in value.data
+            assert "border-left:4px solid #0f6cbd" not in value.data
     assert 'role="alert"' in outputs[-1][1].data
     assert "rerun this cell" in outputs[-1][1].data and "private" not in outputs[-1][1].data
 
