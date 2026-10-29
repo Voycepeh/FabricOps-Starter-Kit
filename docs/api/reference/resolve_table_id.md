@@ -118,6 +118,7 @@ No related guides documented.
 | --- | --- |
 | Live | 0.2.0 |
 | Live | 0.2.5 |
+| Live | 0.3.0 |
 
 ### Live-critical dependencies
 

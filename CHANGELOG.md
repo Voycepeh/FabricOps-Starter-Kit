@@ -6,49 +6,47 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-## [0.3.0] - Pending release
+## [0.3.0] - 2026-10-30
 
 ### Breaking changes
 
 - Establish workspace-ID-based configuration and routing as the new architectural baseline. Earlier package versions (v0.2.5 and before) are superseded and must not be combined with v0.3.0 notebook templates.
 - Existing legacy environment-keyed metadata layouts are not automatically migrated. Use a fresh workspace-model metadata installation; preserve existing Live metadata until an explicit migration is approved.
+- Replace environment-keyed configuration with workspace-keyed paths. `FabricStore.env`, `setup_notebook(env=...)`, `setup_metadata_tables(env=...)`, scanner `environment_name` arguments and returned environment fields are removed/replaced. Ordinary no-argument setup and orchestration calls retain their calling patterns.
+- Replace the Live `pipeline_write()` public entry point with `orchestrate_write()`. The orchestration entry point owns contract selection, Guardrail execution, publication, and final execution evidence.
+- Remove the separate Coverage Gate stage and `coverage_result` return field from `orchestrate_write()`. Both orchestrators use selected Data Contract Guardrails; no minimum active-check count is required.
+- Contract column definitions enforce required presence by default, explicit optional presence, and exact normalized data types. Unexpected columns block, and structural Schema checking is mandatory.
 
 ### Metadata lifecycle
 
 - Promote `METADATA_DATA_CONTRACT`, `METADATA_GUARDRAIL_RESULTS`, `METADATA_PIPELINE_REGISTRY`, `METADATA_PIPELINE_RUN`, and `METADATA_PROCESSING_STATE` to Live in v0.3.0. These form supported governance, guardrail-result, registration, execution, and processing-state persistence contracts. `METADATA_DATA_ACCESS` remains Preview. Live schemas may evolve additively; breaking structural changes require an explicit migration.
+- Discontinue the Preview `METADATA_ENRICHMENT` and `METADATA_GUARDRAIL` contracts in favor of authored Enrichment and executable Guardrails in `METADATA_DATA_CONTRACT.contract_payload_json`.
+- Discontinue the Preview `METADATA_SOURCE_OBSERVATION` contract in favor of typed source observations, accepted progress, Source Drift baselines, and publication receipts in `METADATA_PROCESSING_STATE`.
 
 ### Pipeline execution
 
-- Introduce Dry Run, Ungoverned, and Governed execution paths, with explicit setup and finalization and workspace-scoped governance behaviour.
+- Introduce Dry Run, Ungoverned, and Governed execution paths, with Live `setup_pipeline()` and `finalize_pipeline()` lifecycle entry points and workspace-scoped governance behaviour.
 - Freeze matching `00_env_config` and `02_pipeline` notebook templates for this release.
-
-### Upgrade instructions
-
-- Upgrade the package and both notebook templates together. Do not mix v0.3.0 notebooks with v0.2.5 or earlier packages.
-- Validate full refresh, incremental append, and SCD demo workflows in Microsoft Fabric before publishing.
-
-
 
 ### Removed
 
-- Removed the Preview Data Catalogue Viewer widget and the optional exploration notebook template. Query the centralized metadata tables directly through PySpark or SQL, and use native Fabric interfaces or project-specific notebooks for consumption. Metadata schemas, population, profiling, lineage, and orchestration are unchanged.
-
-### Breaking changes
-
-- **Major breaking architecture change:** FabricOps now uses stable workspace IDs for configuration, physical observations, profiling, Processing State, Testing and activation. Environment is removed as an identity/routing namespace. This work is unreleased; the major version will be selected in a separate release PR.
-- Replace environment-keyed configuration with workspace-keyed paths. `FabricStore.env`, `setup_notebook(env=...)`, `setup_metadata_tables(env=...)`, scanner `environment_name` arguments and returned environment fields are removed/replaced. Ordinary no-argument setup and Read/Write orchestration calls retain their calling patterns. No compatibility aliases or metadata migration are supplied; use a fresh workspace-model metadata installation.
-- Contract column definitions enforce required presence by default, explicit optional presence and exact normalized datatypes. Unexpected columns block. Structural Schema checking is mandatory and cannot be disabled by omitting an authored rule.
-
-- Removed the separate Coverage Gate stage and `coverage_result` return field from the Live public `orchestrate_write()` interface. Both orchestrators use selected Data Contract Guardrails; no minimum active-check count is required. Their shared execution-plan signatures are unchanged. The internal `check_guardrail_coverage()` implementation is removed; it was already excluded from the supported public API. The Preview `widget_select_data_contract()` inspector adds available execution results and a `refresh` callback.
-- Frozen released documentation and notebook snapshots remain unchanged. The new workspace metadata layout starts fresh; a separate release PR will select the major version.
+- Remove the standalone `check_schema()`, `check_freshness()`, `check_source_drift()`, `check_dq()`, `check_sensitive_data()`, and `check_guardrail_coverage()` public surfaces. The applicable checks remain internal execution stages of `orchestrate_read()` and `orchestrate_write()`.
+- Remove the Preview `widget_activate_data_contract()` and `widget_select_data_contract()` surfaces in favor of pipeline setup, Data Contract selection, and pipeline activation workflows.
+- Remove the Preview Data Catalogue Viewer widget and the optional exploration notebook template. Query centralized metadata directly through PySpark or SQL, and use native Fabric interfaces or project-specific notebooks for consumption.
 
 ### Changed
 
 - **Observe locally → Govern globally → Test locally → Activate locally.** Data Contract histories remain global per table ID. Governance selects workspace evidence; different workspaces can independently activate different frozen versions. New profiles never alter contracts.
 - Data Contract and Pipeline Activation selectors filter Table/Pipeline and Workspace in either order. Workspace appears at the far right; optional selections have no arbitrary defaults. New drafts capture current observation columns once and keep profile evidence separate.
-
 - Configured blocking failures and checks that cannot execute prevent Live publication. Warn decisions, intentionally disabled checks, contract integrity, writer ownership, SCD and incremental safeguards remain enforced. Testing retains diagnostics without persistent data or metadata writes.
 - Living Pipeline 02 and 02A–02C demos, contract inspection, glossary and current API guidance reflect contract-driven Guardrails. Frozen release references and notebook snapshots retain historical behavior.
+
+### Upgrade instructions
+
+- Upgrade the package and both notebook templates together. Do not mix v0.3.0 notebooks with v0.2.5 or earlier packages.
+- Use a fresh workspace-model metadata installation; no automatic migration or compatibility aliases are supplied for legacy environment-keyed metadata.
+- Replace direct `pipeline_write()` calls with `orchestrate_write()` and consume the orchestrator's stage and finalization results.
+- Validate full refresh, incremental append, and SCD demo workflows in Microsoft Fabric before publishing.
 
 ## [0.2.5] - 2026-10-17
 
