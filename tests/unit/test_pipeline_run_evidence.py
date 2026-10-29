@@ -93,6 +93,32 @@ def runtime(monkeypatch):
     return make, operation, saved, writes, failure
 
 
+def test_internal_pipeline_run_recovery_read_suppresses_io_log(monkeypatch):
+    """Read-back used to verify pipeline-run persistence is not user-facing IO."""
+    plan = SimpleNamespace(runtime_context={"config": {}}, plan_id="run-123")
+    seen = {}
+
+    class Frame:
+        def filter(self, _expression):
+            return self
+
+        def limit(self, _count):
+            return self
+
+        def collect(self):
+            return []
+
+    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *_args: "engineering")
+
+    def read(*_args, **kwargs):
+        seen.update(kwargs)
+        return Frame()
+
+    monkeypatch.setattr(shared, "read_lakehouse_table", read)
+    assert shared._read_pipeline_run_rows(plan) == []
+    assert seen["context"]["_fabricops_suppress_io_log"] is True
+
+
 def test_read_only_and_multiple_inputs_outputs_finalize_once(runtime):
     """Completion requires all operations and explicit finalization; no last-Write inference."""
     make, operation, saved, writes, _ = runtime
