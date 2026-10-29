@@ -193,16 +193,19 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 
 ![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
 
-All metadata is routed to the Metadata Lakehouse configured by `00_env_config`.
+For **Ungoverned** and **Governed** executions, FabricOps writes applicable operational metadata to the Metadata Lakehouse configured by `00_env_config`. **Dry Run is session-only**: it does not write target data or persist catalogue, profile, processing-state, or pipeline-run records. The rows below describe the records this demo can produce during a persistent execution; the exact rows depend on the stages that complete and the Guardrails that are actually evaluated.
 
 | Metadata table | What this run records |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets. |
-| `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets. |
-| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to those profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Source and target participation for this notebook pipeline. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts. |
-| `METADATA_GUARDRAIL_RESULTS` | Guardrail evaluation results when a selected Data Contract supplies executable Guardrails. |
+| `METADATA_PIPELINE_REGISTRY` | Persistent pipeline UUID and workspace/notebook binding used to identify and recover this notebook pipeline. Dry Run uses a session-only identity and does not register it. |
+| `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
+| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets, plus applicable target processing and profile metadata. |
+| `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets when profiling completes. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
+| `METADATA_DATA_LINEAGE` | Source and target participation recorded for this notebook pipeline. |
+| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
+| `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
+
 
 !!! note "Reset the demo to a clean data state"
 
