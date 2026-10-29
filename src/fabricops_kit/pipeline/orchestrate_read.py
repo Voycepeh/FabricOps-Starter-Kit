@@ -93,9 +93,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         context = {**context, "_fabricops_suppress_io_log": True}
         if "source" not in context["_pipeline_identities"][table_id]["roles"]:
             raise ValueError("Read requires an explicit source participant.")
-        if target_table_id is not None and (
-            target_table_id not in context["_pipeline_identities"]
-            or "target" not in context["_pipeline_identities"][target_table_id]["roles"]
+        if target_table_id is not None and target_table_id in context["_pipeline_identities"] and (
+            "target" not in context["_pipeline_identities"][target_table_id]["roles"]
         ):
             raise ValueError("Incremental target must be an explicit target participant in the plan.")
         active = pipeline_guardrail_types(context, table_id)
