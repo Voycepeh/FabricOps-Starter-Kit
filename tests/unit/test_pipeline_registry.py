@@ -185,9 +185,13 @@ def test_explicit_promotion_preserves_registration_semantics_without_new_identit
     assert len(rows) == 2 and {row['pipeline_id'] for row in rows} == {identity}
 
 
-@pytest.mark.parametrize("table", ["METADATA_PIPELINE_REGISTRY", "METADATA_DATA_AGREEMENT"])
-def test_internal_registry_logging_is_scoped_and_public_reads_stay_visible(monkeypatch, capsys, table):
-    """Quiet only internal Registry reads; retain public completion text and failures."""
+@pytest.mark.parametrize("table", [
+    "METADATA_PIPELINE_REGISTRY",
+    "METADATA_PIPELINE_RUN",
+    "METADATA_DATA_AGREEMENT",
+])
+def test_internal_metadata_reads_are_silent_but_public_reads_stay_visible(monkeypatch, capsys, table):
+    """Internal metadata lookups stay quiet while direct public reads retain their IO message."""
     from importlib import import_module
     from types import SimpleNamespace
     from fabricops_kit.activated_pipeline import shared as authority
@@ -197,10 +201,17 @@ def test_internal_registry_logging_is_scoped_and_public_reads_stay_visible(monke
     monkeypatch.setattr(authority, "metadata_table_physical_schema", lambda *args: "engineering")
     monkeypatch.setattr(reader, "get_spark_session", lambda **kw: object())
     monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", lambda store, name, schema, **kw: (store, name, schema, "private-path"))
-    monkeypatch.setattr(reader, "read_delta_path", lambda *args, **kw: SimpleNamespace(collect=lambda: []))
+
+    class Frame:
+        def filter(self, *_args):
+            return self
+
+        def collect(self):
+            return []
+
+    monkeypatch.setattr(reader, "read_delta_path", lambda *args, **kw: Frame())
     assert authority.metadata_records(table, context=context) == []
-    output = capsys.readouterr().out
-    assert ("Read from →" in output) == (table != "METADATA_PIPELINE_REGISTRY")
+    assert capsys.readouterr().out == ""
     assert "_fabricops_suppress_io_log" not in context
     reader.read_lakehouse_table(table, store="Metadata", schema="engineering", context=context)
     assert f"Table: {table}" in capsys.readouterr().out
