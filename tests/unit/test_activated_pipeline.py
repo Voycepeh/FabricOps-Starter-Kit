@@ -6,6 +6,7 @@ import copy
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import UTC, date, datetime
 from threading import Lock
 from types import SimpleNamespace
 
@@ -251,6 +252,29 @@ def test_live_run_pins_revision_and_drains_before_switch(authority, monkeypatch)
         state.operation(live, 0)
     state.approve(next_run)
     assert live.activation_revision == pinned != state.current()["revision"]
+
+
+def test_live_plan_restores_timestamped_metadata_after_reading_existing_run(authority, monkeypatch):
+    state = authority
+    plan, run = state.candidate()
+    assert isinstance(run["started_at"], datetime)
+    state.approve(run)
+    identities = {
+        table_id: {
+            **identity,
+            "_committed_at": datetime(2026, 10, 29, 12, 0, tzinfo=UTC),
+            "profiled_on": date(2026, 10, 29),
+        }
+        for table_id, identity in json.loads(plan.participants_json).items()
+    }
+    monkeypatch.setattr(service, "resolve_pipeline_participants", lambda *args, **kwargs: identities)
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *args, **kwargs: plan.runtime_context["_pipeline_bindings"])
+
+    live = service.build_live_pipeline_plan(pipeline_id=run["pipeline_id"], context=state.context)
+
+    restored = next(iter(json.loads(live.participants_json).values()))
+    assert restored["_committed_at"] == "2026-10-29T12:00:00+00:00"
+    assert restored["profiled_on"] == "2026-10-29"
 
 
 def test_rebind_reservation_drains_live_and_blocks_new_live(authority, monkeypatch):

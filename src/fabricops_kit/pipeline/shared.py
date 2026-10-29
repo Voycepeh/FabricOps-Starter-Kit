@@ -5642,9 +5642,16 @@ def resolve_pipeline_participants(config, active_workspace_id, *, sources, targe
     return identities
 
 
+def _pipeline_json_default(value):
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 def canonical_pipeline_json(value):
-    """Serialize pipeline metadata strictly: sorted UTF-8 JSON, no NaN or coercion."""
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    """Serialize pipeline metadata strictly, with ISO date and timestamp values."""
+    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+                      allow_nan=False, default=_pipeline_json_default)
 
 
 def _metadata_hash(value):
