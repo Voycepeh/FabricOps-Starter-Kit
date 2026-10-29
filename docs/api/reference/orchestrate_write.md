@@ -150,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 246 |
+| Live-critical dependencies | 240 |
 
 ### Release history
 
@@ -161,16 +161,12 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.approval_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.commit_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.pipeline_authority_row</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.pipeline_table_mappings</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_pipeline_authority</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.run_contracts</code></li>
@@ -349,7 +345,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_sensitive_data_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_source_drift_for_target</code></li>
-<li><code>fabricops_kit.pipeline.shared.claim_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_profiling_policy</code></li>
@@ -366,7 +361,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
-<li><code>fabricops_kit.pipeline.shared.maintain_table_profile_claim</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>

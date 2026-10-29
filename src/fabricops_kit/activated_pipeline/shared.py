@@ -176,7 +176,7 @@ PIPELINE_AUTHORITY_TABLE = "METADATA_PIPELINE_REGISTRY"
 def empty_pipeline_authority():
     """Return the setup-only initial native authority row without runtime audit fields."""
     return {"authority_id": "central", "token": "initial", **{key: [] for key in (
-        "registrations", "revisions", "approvals", "selections", "table_ownership", "reservations", "profiling_claims")}}
+        "registrations", "revisions", "approvals", "selections", "table_ownership", "reservations")}}
 
 
 def authority_records(*, context, spark_session=None):
@@ -212,7 +212,7 @@ def validate_authority_collections(row):
     keys = {
         "revisions": ("workspace_id",), "approvals": ("approval_id",),
         "selections": ("workspace_id", "pipeline_id"), "table_ownership": ("workspace_id", "table_id"),
-        "reservations": ("workspace_id", "reservation_id"), "profiling_claims": ("claim_key",),
+        "reservations": ("workspace_id", "reservation_id"),
     }
     for collection, fields in keys.items():
         values = [tuple(item.get(key) for key in fields) for item in row[collection]]
@@ -235,9 +235,6 @@ def validate_authority_collections(row):
             raise ValueError("Invalid Registry execution reservation.")
         if item["mode"] in {"governed", "live"} and not item.get("revision"):
             raise ValueError("Governed reservation requires its pinned revision.")
-    for item in row["profiling_claims"]:
-        if not item.get("token") or not item.get("execution_id") or not item.get("expires_at"):
-            raise ValueError("Incomplete renewable profiling claim.")
 
 
 def read_pipeline_authority(*, context, spark_session=None, registry_snapshot=None):
@@ -245,7 +242,7 @@ def read_pipeline_authority(*, context, spark_session=None, registry_snapshot=No
     row = registry_snapshot if registry_snapshot is not None else authority_records(context=context, spark_session=spark_session)
     from copy import deepcopy
     row = deepcopy(row)
-    state = {"workspaces": {}, "registrations": row["registrations"], "profiling_claims": {}}
+    state = {"workspaces": {}, "registrations": row["registrations"]}
     validate_authority_collections(row)
     for revision in row["revisions"]:
         workspace_activation(state, revision["workspace_id"])["revision"] = revision["revision"]
@@ -267,8 +264,6 @@ def read_pipeline_authority(*, context, spark_session=None, registry_snapshot=No
     for item in row["reservations"]:
         workspace_activation(state, item["workspace_id"])["runs"][item["reservation_id"]] = {
             key: value for key, value in item.items() if key not in {"workspace_id", "reservation_id"} and value is not None}
-    state["profiling_claims"] = {item["claim_key"]: {key: value for key, value in item.items() if value is not None}
-                                for item in row["profiling_claims"]}
     return row["token"], state
 
 
@@ -282,7 +277,6 @@ def pipeline_authority_row(state, *, context, spark_session=None):
     from fabricops_kit.config.metadata_schemas import APPROVAL_FIELDS
     row = empty_pipeline_authority()
     row["registrations"] = state.get("registrations", [])
-    row["profiling_claims"] = list(state.get("profiling_claims", {}).values())
     for workspace_id, current in sorted(state["workspaces"].items()):
         row["revisions"].append({"workspace_id": workspace_id, "revision": current["revision"]})
         for approval_id, item in sorted(current["history"].items()):

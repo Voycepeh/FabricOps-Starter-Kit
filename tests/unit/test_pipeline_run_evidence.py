@@ -512,8 +512,7 @@ def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, 
     plan = make(roles=('source',))
     context = {'execution_plan': plan}
     monkeypatch.setattr(shared, 'profiling_context_key', lambda *args, **kwargs: ('physical', {'table_id': 'table0'}))
-    monkeypatch.setattr(shared, 'claim_table_profile', lambda *args, **kwargs: {'token': 'snapshot'})
-    monkeypatch.setattr(shared, 'maintain_table_profile_claim', lambda *args, **kwargs: '2026-10-23T09:00:00+00:00')
+    monkeypatch.setattr(shared, 'profiling_completion_history', lambda *args, **kwargs: {})
     monkeypatch.setattr(shared, 'execute_table_profile', lambda **kwargs: {'row_count': 100})
     merge = shared._merge_pipeline_run_row
     failed = []
