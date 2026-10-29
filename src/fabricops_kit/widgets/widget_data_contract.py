@@ -6401,7 +6401,7 @@ def widget_data_contract(
             layout=widgets.Layout(
                 width="100%", min_width="0",
                 grid_template_columns="minmax(0, 1fr) minmax(0, 1fr)",
-                grid_gap="12px", align_items="start",
+                grid_gap="12px", align_items="flex-start",
             ),
         )
         dq_authoring_grid.add_class("fabricops-dq-authoring-grid")
