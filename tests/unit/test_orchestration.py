@@ -65,7 +65,11 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
     assert actual["table_id"] == "source-id"
     assert actual["orchestration_stages"][1]["status"] == "passed"
     assert {stage["name"] for stage in actual["orchestration_stages"]} == {"orders"}
-    assert capsys.readouterr().out == ""
+    output = capsys.readouterr().out
+    assert output.startswith("FabricOps READ Summary · ")
+    assert "Source: Bronze.demo.orders" in output
+    assert "\n" not in output.strip()
+    assert "[1/" not in output
 
 
 def test_orchestrate_read_uses_table_name_for_heading_and_stage_metadata(capsys):
@@ -255,7 +259,12 @@ def test_orchestrate_write_forwards_scd_write_parameters(capsys):
 
     assert write.call_args.kwargs["load_strategy"] == "scd2"
     assert write.call_args.kwargs["load_strategy_parameters"] == scd2
-    assert capsys.readouterr().out == ""
+    output = capsys.readouterr().out
+    assert output.startswith("FabricOps WRITE Summary · ")
+    assert "Target: Silver.demo.product_mapping_scd2" in output
+    assert "Strategy: Scd2" in output
+    assert "\n" not in output.strip()
+    assert "[1/" not in output
 
 
 def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():

@@ -25,7 +25,7 @@ def metadata_records(table, *, context, spark_session=None, run_id=None, all_wor
     config, _env, _runtime = resolve_fabric_context(context=context)
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
                                 context={**(context or {}), "_spark_session": spark_session,
-                                         **({"_fabricops_suppress_io_log": True} if table == PIPELINE_AUTHORITY_TABLE else {})})
+                                         "_fabricops_suppress_io_log": True})
     if table == "METADATA_PIPELINE_RUN":
         from pyspark.sql import functions as F
         if not all_workspaces:

@@ -5540,12 +5540,12 @@ class ExecutionSummary:
                 print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
 
     def finish(self, fields):
-        """Print successful completion and return elapsed wall-clock seconds."""
+        """Print a concise successful summary; expand it when verbose output is enabled."""
         elapsed = round(max(0.01, time.perf_counter() - self.started), 2)
         if self.verbose:
             print(f"\nFabricOps {self.operation} Summary")
-            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]:
-                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
+            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")  # noqa: E701
+        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not available'}" for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]))  # noqa: E701, E501
         return elapsed
 
 
@@ -5725,7 +5725,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
 def _read_pipeline_run_rows(plan, *, spark_session=None):
     frame = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
         schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
-        context={**(plan.runtime_context or {}), "_spark_session": spark_session})
+        context={**(plan.runtime_context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True})
     return [_row_to_dict(row) for row in frame.filter(
         "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()]
 
@@ -6564,7 +6564,7 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     def frame(table):
         return read_lakehouse_table(table, store="Metadata",
             schema=metadata_table_physical_schema(config, table),
-            context={**(context or {}), "_spark_session": spark_session}).filter(F.col("workspace_id") == active_workspace_id)
+            context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True}).filter(F.col("workspace_id") == active_workspace_id)
     events = (frame("METADATA_PIPELINE_RUN")
         .filter(F.col("execution_mode").isin("ungoverned", "governed", "live"))
         .select(F.explode("profiling").alias("event"))
