@@ -432,16 +432,21 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["contract"].value == "1"
     assert controls["table_search"].options == [
         "Select governed table",
-        "Development · Lakehouse: Curated Lakehouse · Schema: sales · Table: orders",
+        "Curated Lakehouse · sales.orders",
     ]
     assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New Draft"]
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
-        "<b>Workspace</b>",
         "<b>Table</b>",
+        "<b>Workspace</b>",
         "<b>Contract</b>",
     ]
     assert all(field.children[1].layout.width == "100%" for field in selector.children)
+    assert selector.layout.grid_template_columns == "repeat(2, minmax(0, 1fr))"
+    assert selector.layout.grid_template_areas == '"table table" "workspace contract"'
+    assert [field.layout.grid_area for field in selector.children] == [
+        "table", "workspace", "contract",
+    ]
     assert controls["selector_panel"].layout.display != "none"
     assert controls["editor_shell"].layout.display == "none"
 
@@ -495,7 +500,7 @@ def test_contract_selector_defaults_to_latest_version_or_new_draft(
     state = module.widget_data_contract()
     controls = state["_controls"]
     table_option = next(
-        option for option in controls["table_search"].options if "Table: orders" in option
+        option for option in controls["table_search"].options if "sales.orders" in option
     )
     controls["table_search"].value = table_option
 
@@ -516,11 +521,11 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == ""
     assert controls["table_search"].value == ""
-    assert any("Table: orders" in option for option in controls["table_search"].options)
+    assert any("demo.orders" in option for option in controls["table_search"].options)
     assert state["pending_table_id"] is None
 
     table_option = next(
-        option for option in controls["table_search"].options if "Table: orders" in option
+        option for option in controls["table_search"].options if "demo.orders" in option
     )
     controls["table_search"].value = table_option
     assert controls["table"].value == "orders"
@@ -553,8 +558,8 @@ def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtim
     assert state["pending_contract_version"] == 1
 
 
-def test_table_identity_labels_distinguish_same_named_tables(widget_runtime, monkeypatch):
-    """Search results expose physical identity while selection keeps the central Table ID."""
+def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypatch):
+    """Table choices show the Fabric object followed by the schema-qualified table name."""
     rows = [
         dict(widget_runtime["catalogue"][0]),
         {
@@ -575,12 +580,11 @@ def test_table_identity_labels_distinguish_same_named_tables(widget_runtime, mon
     controls = state["_controls"]
     labels_by_value = {value: label for label, value in controls["table"].options}
 
-    assert labels_by_value["orders"] == (
-        "Development · Lakehouse: Curated Lakehouse · Schema: sales · Table: orders"
-    )
-    assert labels_by_value["audit-orders"] == (
-        "Development · Warehouse: Serving Warehouse · Schema: audit · Table: orders"
-    )
+    assert labels_by_value["orders"] == "Curated Lakehouse · sales.orders"
+    assert labels_by_value["audit-orders"] == "Serving Warehouse · audit.orders"
+    assert "Development" not in labels_by_value["orders"]
+    assert "Lakehouse:" not in labels_by_value["orders"]
+    assert "Warehouse:" not in labels_by_value["audit-orders"]
     controls["table"].value = "audit-orders"
     assert state["pending_table_id"] == "audit-orders"
 
@@ -863,6 +867,12 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     table_summary = table_context.value
     assert "v1 · DRAFT" in table_summary
     assert "Latest profile" in table_summary
+    assert "Workspace" in table_summary
+    assert "Development" in table_summary
+    assert "Fabric object" in table_summary
+    assert "Curated Lakehouse" in table_summary
+    assert "Full table name" in table_summary
+    assert "sales.orders" in table_summary
     assert "PROD · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
