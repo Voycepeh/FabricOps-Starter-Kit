@@ -1,8 +1,8 @@
-# FabricOps product definition
+# FabricOps Initial Specs
 
-**This is the maintainer-facing source of truth for the FabricOps operating model, product meaning, boundaries, and product decisions.**
+**These are the initial FabricOps product specifications, retained as historical design context. Some workflow and architecture decisions have since evolved; consult current implementation and reference documentation for the active behavior.**
 
-Public-facing documentation may shorten, visualize, or reorganize this content, but it must not introduce a conflicting product story or change the workflow meaning without first updating this page. Canonical term definitions are maintained in `docs/reference/_data/glossary.json` and surfaced through the [FabricOps Glossary](../glossary.md).
+This page is not the authoritative contract for current implementation behavior. Canonical term definitions are maintained in `docs/reference/_data/glossary.json` and surfaced through the [FabricOps Glossary](../glossary.md).
 
 ## What is FabricOps?
 
@@ -126,7 +126,7 @@ Data Agents are the first planned automated destination, not the definition of c
 
 | Page | Owns |
 | --- | --- |
-| Product Definition | Canonical product meaning, operating workflow, boundaries, and product decisions. |
+| Initial Specs | Historical product intent, original workflow, boundaries, and decisions. |
 | Glossary | Canonical user-facing term definitions and the FabricOps / Governance / Engineering concept grouping. |
 | README | Repository orientation. |
 | Documentation home | Product introduction and navigation. |
@@ -137,4 +137,4 @@ Data Agents are the first planned automated destination, not the definition of c
 
 !!! important "Canonical terminology rule"
 
-    Durable term definitions come from `docs/reference/_data/glossary.json`. Public pages may shorten a definition for context, but they must use the canonical term and must not introduce a conflicting meaning. Product workflow and operating decisions remain governed by this Product Definition.
+    Durable term definitions come from `docs/reference/_data/glossary.json`. Public pages may shorten a definition for context, but they must use the canonical term and must not introduce a conflicting meaning. For current workflow and operating decisions, use the latest implementation and maintained technical documentation.
