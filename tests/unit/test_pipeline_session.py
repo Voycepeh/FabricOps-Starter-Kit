@@ -610,3 +610,18 @@ def test_closed_finalization_remains_idempotent_after_setup_is_invalidated(runti
         setup_notebook(_config(), workspace_id='dev', required_targets=['missing'])
     assert finalize_pipeline(pipeline) == result
     assert len(committed) == commit_count
+
+
+def test_finalize_emits_compact_summary_even_when_report_widget_exists(runtime, capsys):
+    """The final outcome is visible when notebook assignment suppresses the return value."""
+    from fabricops_kit import finalize_pipeline
+
+    session = setup_pipeline(pipeline_mode="Ungoverned")
+    session.report = object()
+
+    result = finalize_pipeline(session)
+    output = capsys.readouterr().out
+
+    assert f"FabricOps Pipeline finalized · {result['status']}" in output
+    assert f"Pipeline ID: {session.pipeline_id}" in output
+    assert f"Run ID: {session.plan.plan_id}" in output
