@@ -228,4 +228,18 @@ def test_external_warehouse_resolves_and_binds_physical_workspace_from_execution
     assert bindings[source['table_id']]['item_id'] == 'warehouse-item'
     assert bindings[target['table_id']]['workspace_id'] == 'target-workspace'
     assert bindings[target['table_id']]['item_id'] == 'target-warehouse-item'
-    assert source['table_id'] != target['table_id'] or source['store'] == target['store']
+
+    # Exercise the actual Fabric connector boundary for both remote stores.
+    spark, frame = _Spark(), _Frame()
+    runtime = {'config': config, 'scope_workspace_id': 'execution-workspace'}
+    result = call_with_spark(spark, io.read_warehouse_table, 'dbo', 'orders',
+                             store='ExternalWarehouse', context=runtime)
+    io.write_warehouse_table(frame, 'dbo', 'orders', store='RemoteTarget', context=runtime)
+    assert result == {'synapsesql': 'wh_External.dbo.orders'}
+    assert ('option', 'workspace', 'external-workspace') in spark.read.calls
+    assert ('option', 'item', 'warehouse-item') in spark.read.calls
+    assert ('option', 'database', 'wh_External') in spark.read.calls
+    assert ('option', 'workspace', 'target-workspace') in frame.write.calls
+    assert ('option', 'item', 'target-warehouse-item') in frame.write.calls
+    assert ('synapsesql', 'wh_Target.dbo.orders') in frame.write.calls
+
