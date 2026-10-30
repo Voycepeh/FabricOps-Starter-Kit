@@ -204,7 +204,7 @@ def test_failed_staging_cleans_up_in_physical_database(connector, monkeypatch):
     assert 'DROP TABLE [dbo].[_fabricops_scd_' in cleanup.call_args.args[0]
 
 
-def test_external_warehouse_resolves_and_binds_physical_workspace_from_execution_mapping():
+def test_external_warehouse_resolves_and_binds_physical_workspace_from_execution_mapping(connector):
     """Execution scope selects aliases while each store retains its physical workspace."""
     config = FrameworkConfig(path_config=PathConfig(paths={
         'execution-workspace': {
