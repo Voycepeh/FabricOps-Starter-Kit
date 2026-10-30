@@ -47,11 +47,15 @@ LIVE_V010_CALLABLES = {
     "write_warehouse_table",
 }
 EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
+    "finalize_pipeline",
+    "orchestrate_read",
+    "orchestrate_write",
     "pipeline_read",
     "setup_metadata_tables",
     "profile_table",
     "read_lakehouse_json",
     "resolve_table_id",
+    "setup_pipeline",
     "widget_render_data_agreement",
     "widget_render_data_steward",
 }
@@ -145,8 +149,8 @@ def test_supported_public_api_contract_includes_restored_read_capability():
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 16, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 16
+    assert len(SUPPORTED_PUBLIC_API) == 20, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 20
     assert APPROVED_V1_CALLABLES == EXPECTED_CURRENT_LIVE_CALLABLES
 
 

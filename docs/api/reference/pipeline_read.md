@@ -259,6 +259,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | --- | --- |
 | Live | 0.2.0 |
 | Live | 0.2.5 |
+| Live | 0.3.0 |
 
 ### Live-critical dependencies
 

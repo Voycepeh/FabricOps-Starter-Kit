@@ -15,7 +15,11 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
     "fabricops_kit.pipeline.profile_table.profile_table",
+    "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+    "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+    "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
     "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
@@ -24,17 +28,13 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
-    "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
-    "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-    "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
     "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
     "fabricops_kit.access_scanner.scan_effective_access.scan_effective_access",
     "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
     "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
     "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
-    "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
 )
 
 RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API

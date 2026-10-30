@@ -56,7 +56,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution and return Test results or commit the Live outcome.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Complete execution and return Test results or commit the Live outcome.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span></p>
 </article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_read/"><code>orchestrate_read</code></a></h3>
@@ -71,7 +71,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare Testing or resolve an approved workspace configuration for Live.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare Testing or resolve an approved workspace configuration for Live.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span></p>
 </article>
 </div>
 </details>

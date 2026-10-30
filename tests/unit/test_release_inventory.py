@@ -323,10 +323,10 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Promoted `orchestrate_read()` and `orchestrate_write()` to the Live public API" in notes
-    assert "`frequency_top_n=5`" in notes
-    assert "additively adds missing canonical metadata columns" in notes
-    assert "passed manual Microsoft Fabric validation" in notes
+    assert "Live `setup_pipeline()` and `finalize_pipeline()` lifecycle entry points" in notes
+    assert "`METADATA_DATA_ACCESS` remains Preview" in notes
+    assert "Replace direct `pipeline_write()` calls with `orchestrate_write()`" in notes
+    assert "Validate full refresh, incremental append, and SCD demo workflows" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -338,16 +338,16 @@ def test_missing_release_notes_fail_generation_clearly(tmp_path):
 
 
 def test_release_manifest_lifecycle_counts_include_live_orchestrators():
-    """Verify v0.2.5 Live inventory includes its newly promoted orchestrators."""
+    """Verify v0.3.0 Live inventory includes its pipeline lifecycle entry points."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     live_functions = {item["name"] for item in manifest["functions"] if item["status"] == "live"}
-    assert len(live_functions) == 19
-    assert {"orchestrate_read", "orchestrate_write"} <= live_functions
+    assert len(live_functions) == 20
+    assert {"setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"} <= live_functions
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 6
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 11
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
@@ -467,10 +467,10 @@ def test_metadata_manifest_records_schema_since_and_fingerprint():
     assert manifest is not None
     agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
     assert agreement["status"] == "live"
-    previous = ri._load_manifest(ri.manifest_path("0.2.0"))
+    previous = ri._load_manifest(ri.manifest_path("0.2.5"))
     assert previous is not None
     prior_agreement = next(item for item in previous["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
-    expected_schema_since = version if agreement["schema_fingerprint"] != prior_agreement["schema_fingerprint"] else "0.2.0"
+    expected_schema_since = version if agreement["schema_fingerprint"] != prior_agreement["schema_fingerprint"] else prior_agreement["schema_since"]
     assert agreement["schema_since"] == expected_schema_since
     assert len(agreement["schema_fingerprint"]) == 64
 

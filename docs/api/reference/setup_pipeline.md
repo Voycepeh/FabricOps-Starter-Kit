@@ -1,10 +1,11 @@
 # `setup_pipeline`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.3.0</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Prepare Testing or resolve an approved workspace configuration for Live.
 
@@ -147,12 +148,111 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.3.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 88 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.3.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.approval_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.commit_pipeline_authority</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.pipeline_authority_row</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.pipeline_table_mappings</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_pipeline_authority</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.run_contracts</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.testing_run_evidence</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_authority_collections</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.workspace_activation</code></li>
+<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.validate_catalogue_value</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
+<li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
+<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.close_current_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.commit_pipeline_registration</code></li>
+<li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
+<li><code>fabricops_kit.pipeline.shared.read_pipeline_registry</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_registration</code></li>
+<li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_registrations</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.widgets.shared._html_escape</code></li>
+<li><code>fabricops_kit.widgets.shared.form_page</code></li>
+<li><code>fabricops_kit.widgets.shared.require_ipywidgets</code></li>
+</ul>
 
 
 </details>

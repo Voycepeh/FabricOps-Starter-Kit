@@ -1913,7 +1913,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
@@ -1925,7 +1925,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
@@ -1937,7 +1937,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
@@ -2021,7 +2021,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
@@ -3662,7 +3662,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
@@ -3674,7 +3674,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
@@ -3686,7 +3686,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
@@ -3755,7 +3755,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
@@ -5350,7 +5350,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
@@ -5362,10 +5362,11 @@
         {
           "change_type": "modified",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Lifecycle changed: Preview to Live.",
             "Parameter removed: frequency_enabled.",
             "Parameter removed: frequency_top_n.",
             "Parameter removed: spark_session.",
@@ -5378,10 +5379,11 @@
         {
           "change_type": "modified",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
+            "Lifecycle changed: Preview to Live.",
             "Parameter removed: contracts.",
             "Parameter removed: frequency_enabled.",
             "Parameter removed: frequency_top_n.",
@@ -5451,7 +5453,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
@@ -7019,15 +7021,64 @@
     },
     {
       "baseline": "main",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
+        "modified": 4,
+        "nonbreaking": 4,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -7268,36 +7319,36 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
@@ -7376,12 +7427,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
@@ -7561,9 +7612,9 @@
         "added": 14,
         "modified": 12,
         "nonbreaking": 14,
-        "potentially_breaking": 16,
+        "potentially_breaking": 20,
         "removed": 15,
-        "review_required": 11,
+        "review_required": 7,
         "total": 41
       },
       "target": "v0.1.0"
@@ -7831,36 +7882,36 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
@@ -7924,12 +7975,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
@@ -8035,9 +8086,9 @@
         "added": 12,
         "modified": 14,
         "nonbreaking": 12,
-        "potentially_breaking": 14,
+        "potentially_breaking": 18,
         "removed": 11,
-        "review_required": 11,
+        "review_required": 7,
         "total": 37
       },
       "target": "v0.2.0"
@@ -8285,12 +8336,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
@@ -8299,9 +8350,10 @@
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: frequency_top_n.",
@@ -8315,9 +8367,10 @@
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
+            "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
             "Parameter removed: existing_mapping.",
             "Optional parameter added: contracts.",
@@ -8386,12 +8439,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
@@ -8485,24 +8538,73 @@
         "added": 10,
         "modified": 21,
         "nonbreaking": 12,
-        "potentially_breaking": 19,
+        "potentially_breaking": 21,
         "removed": 3,
-        "review_required": 3,
+        "review_required": 1,
         "total": 34
       },
       "target": "v0.2.5"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
+        "modified": 4,
         "nonbreaking": 0,
-        "potentially_breaking": 0,
+        "potentially_breaking": 4,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 4
       },
       "target": "main"
     }
@@ -15741,7 +15843,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "a36a5020a55b5a41286261f1094f819bfc735e64",
+      "revision": "714adafabf11e39938a4fa9a00a9068c1f56545a",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -16694,7 +16796,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": null,
@@ -16722,7 +16824,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "str",
@@ -16806,7 +16908,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "Any",
@@ -17158,7 +17260,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "str | None",
@@ -17318,7 +17420,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:d4ee533f7a0a21d0daf9bc21214f2fc811a9a88646557f06f325b4802972adc7",
+      "source_digest": "sha256:ce653b6a891c13d3af3be1f7bfe3db351bf6597aef4ab7d111cc58c8ba24c256",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
