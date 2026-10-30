@@ -101,6 +101,54 @@ def test_generic_config_supports_one_custom_environment_and_store():
     assert set(namespace["PATH_CONFIG"].paths["custom_workspace"]) == {"Product", "Metadata"}
 
 
+
+def test_generic_config_routes_external_warehouse_without_changing_execution_scope():
+    """An external physical Warehouse can be addressed from a local Engineering workspace."""
+    from fabricops_kit import FabricStore, PathConfig
+    source = _substituted_config_source()
+    boundary = source.index("def _required_config_value")
+    namespace = {"FabricStore": FabricStore, "PathConfig": PathConfig}
+    exec(source[:boundary], namespace)
+    namespace["ENGINEERING_WORKSPACES"] = {
+        "execution_workspace": {
+            "name": "Engineering",
+            "stores": {
+                "Bronze": {"name": "bronze", "item_id": "bronze_item", "kind": "lakehouse"},
+                "ExternalWarehouse": {
+                    "name": "external_wh", "workspace_id": "EXTERNAL_WORKSPACE",
+                    "item_id": "external_item", "kind": "warehouse",
+                },
+            },
+        }
+    }
+    exec(source[boundary:], namespace)
+    stores = namespace["PATH_CONFIG"].paths["execution_workspace"]
+    assert stores["Bronze"].workspace_id == "execution_workspace"
+    assert stores["ExternalWarehouse"].workspace_id == "external_workspace"
+    assert stores["ExternalWarehouse"].item_id == "external_item"
+    assert stores["ExternalWarehouse"].name == "external_wh"
+    assert stores["Metadata"].workspace_id == "example_governance_workspace_id"
+
+
+def test_generic_config_rejects_unresolved_external_workspace():
+    """Explicit external workspace IDs must not contain placeholders."""
+    from fabricops_kit import FabricStore, PathConfig
+    source = _substituted_config_source()
+    boundary = source.index("def _required_config_value")
+    namespace = {"FabricStore": FabricStore, "PathConfig": PathConfig}
+    exec(source[:boundary], namespace)
+    namespace["ENGINEERING_WORKSPACES"] = {
+        "execution_workspace": {
+            "name": "Engineering",
+            "stores": {"ExternalWarehouse": {
+                "name": "external_wh", "workspace_id": "<EXTERNAL_WORKSPACE_ID>",
+                "item_id": "external_item", "kind": "warehouse",
+            }},
+        }
+    }
+    with pytest.raises(ValueError, match="ExternalWarehouse.workspace_id"):
+        exec(source[boundary:], namespace)
+
 def test_generic_template_contains_no_deployment_identifiers_or_saved_outputs():
     """Published configuration is independent of personal Fabric resources."""
     import re
