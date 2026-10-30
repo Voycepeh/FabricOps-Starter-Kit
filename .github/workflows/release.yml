@@ -83,3 +83,5 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/SHA256SUMS.txt
+            templates/releases/${{ github.ref_name }}/00_env_config.ipynb
+            templates/releases/${{ github.ref_name }}/02_pipeline.ipynb
