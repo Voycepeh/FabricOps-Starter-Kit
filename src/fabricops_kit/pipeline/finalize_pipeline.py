@@ -105,13 +105,18 @@ def _print_pipeline_summary(pipeline, result):
     columns = ["Operation", "Table", "Status", "Duration", "Stages"]
     try:
         operations_frame = pipeline.spark.createDataFrame(rows, schema=columns)
-        display(operations_frame)
-    except NameError:
-        # Keep the function usable outside Fabric notebooks (for example, tests).
-        try:
+        # The Fabric notebook's native display function lives in the active
+        # IPython user namespace, not necessarily in this imported module.
+        display_function = globals().get("display")
+        if not callable(display_function):
+            from IPython import get_ipython
+
+            shell = get_ipython()
+            display_function = shell.user_ns.get("display") if shell else None
+        if callable(display_function):
+            display_function(operations_frame)
+        else:
             operations_frame.show(truncate=False)
-        except Exception:
-            print("Operation details could not be rendered.")
     except Exception:
         # Metadata is already finalized; a presentation failure must not change
         # the execution outcome or make the caller repeat a completed pipeline.
