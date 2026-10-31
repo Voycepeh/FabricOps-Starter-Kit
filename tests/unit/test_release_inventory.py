@@ -323,10 +323,10 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Live `setup_pipeline()` and `finalize_pipeline()` lifecycle entry points" in notes
-    assert "`METADATA_DATA_ACCESS` remains Preview" in notes
-    assert "Replace direct `pipeline_write()` calls with `orchestrate_write()`" in notes
-    assert "Validate full refresh, incremental append, and SCD demo workflows" in notes
+    assert "pipeline Reads and Writes" in notes
+    assert "Fabric workspaces other than the execution workspace" in notes
+    assert "frozen physical binding" in notes
+    assert "accepts an explicit workspace ID" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):

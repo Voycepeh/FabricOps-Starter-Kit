@@ -1,4 +1,4 @@
-<!-- Generated file. Edit docs/releases/manifests/0.3.0.yml or the authoritative source metadata and regenerate. -->
+<!-- Generated file. Edit docs/releases/manifests/0.3.1.yml or the authoritative source metadata and regenerate. -->
 
 # Releases
 
@@ -6,6 +6,7 @@
 
 | Release | Release date | Description |
 | --- | --- | --- |
+| [FabricOps Starter Kit 0.3.1](0.3.1/index.md) | 2026-10-31 | FabricOps 0.3.1 enables configured pipeline Reads and Writes across Fabric workspaces while preserving the governed execution model introduced in v0.3.0. |
 | [FabricOps Starter Kit 0.3.0](0.3.0/index.md) | 2026-10-30 | FabricOps 0.3.0 establishes workspace-scoped governed pipeline execution, promotes the core execution and metadata contracts to Live, and introduces explicit Dry Run, Ungoverned, and Governed workflows. |
 | [FabricOps Starter Kit 0.2.5](0.2.5/index.md) | 2026-10-17 | FabricOps 0.2.5 strengthens governed notebook pipelines with additive metadata evolution, tested full refresh, incremental append, and SCD write flows, and promotes the read and write orchestrators to Live while other Preview capabilities remain under evaluation. |
 | [FabricOps Starter Kit 0.2.0](0.2.0/index.md) | 2026-09-22 | FabricOps 0.2.0 establishes the supported engineering foundation and the tested Steward and Agreement governance entry points, while Data Contracts, Guardrails, access scanning, and related governance capabilities remain Preview. |

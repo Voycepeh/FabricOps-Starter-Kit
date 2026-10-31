@@ -6,6 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-31
+
+### Fixed
+
+- Allow pipeline Reads and Writes to use configured Lakehouse and Warehouse stores in Fabric workspaces other than the execution workspace, while preserving each participant's frozen physical binding for the run.
+
+### Upgrade instructions
+
+- Upgrade the package and use the matching v0.3.1 `00_env_config.ipynb` and `02_pipeline.ipynb` release snapshots. The environment template accepts an explicit workspace ID for each configured store.
+
 ## [0.3.0] - 2026-10-30
 
 ### Breaking changes
