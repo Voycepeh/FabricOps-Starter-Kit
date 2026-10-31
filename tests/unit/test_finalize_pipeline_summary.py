@@ -1,6 +1,7 @@
 """Readable final pipeline summaries assembled from the finalized run snapshot."""
 
 from datetime import UTC, datetime, timedelta
+import json
 from importlib import import_module
 from types import SimpleNamespace
 
@@ -20,9 +21,8 @@ def _result():
         "operations": [
             {
                 "pipeline_role": "source",
-                "store": "wh_Bronze",
+                "operation_key": "source:logical-orders",
                 "read_mode": "full",
-                "rows_read": 25000,
                 "table_id": "source-id",
                 "destination": {"schema": "dbo", "table_name": "orders"},
                 "status": "succeeded",
@@ -32,9 +32,8 @@ def _result():
             },
             {
                 "pipeline_role": "target",
-                "store": "Lakehouse_Silver",
+                "operation_key": "target:logical-orders",
                 "write_mode": "scd2",
-                "rows_written": 24850,
                 "table_id": "target-id",
                 "destination": {"schema": "dbo", "table_name": "orders"},
                 "status": "succeeded",
@@ -48,9 +47,39 @@ def _result():
     }
 
 
+def _pipeline(spark):
+    identities = {
+        "source-id": {
+            "store": "wh_Bronze", "schema": "dbo", "table_name": "orders",
+            "logical_id": "logical-orders",
+        },
+        "target-id": {
+            "store": "Lakehouse_Silver", "schema": "dbo", "table_name": "orders",
+            "logical_id": "logical-orders",
+        },
+    }
+    evidence = {
+        "operations": {
+            "source:logical-orders": {"rows_read": 25000},
+            "target:logical-orders": {"rows_written": 24850},
+        }
+    }
+    return SimpleNamespace(
+        spark=spark,
+        pipeline_id="fallback-pipeline",
+        plan=SimpleNamespace(
+            plan_id="fallback-run",
+            participants_json=json.dumps(identities),
+            evidence=evidence,
+        ),
+    )
+
+
 def test_operation_summary_rows_use_native_operation_metadata():
     """The display rows are projections of the finalized operation records."""
-    rows = finalize_module._operation_summary_rows(_result())
+    rows = finalize_module._operation_summary_rows(
+        _result(), pipeline=_pipeline(spark=None)
+    )
 
     assert rows == [
         ("Read", "wh_Bronze", "dbo", "orders", "full", "—", "25,000", "—",
@@ -77,11 +106,7 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
         lambda value: captured.update(displayed=value),
         raising=False,
     )
-    pipeline = SimpleNamespace(
-        spark=FakeSpark(),
-        pipeline_id="fallback-pipeline",
-        plan=SimpleNamespace(plan_id="fallback-run"),
-    )
+    pipeline = _pipeline(FakeSpark())
 
     finalize_module._print_pipeline_summary(pipeline, _result())
 
@@ -111,7 +136,11 @@ def test_pipeline_summary_shows_failure_codes_and_missing_duration(capsys):
             )
         ),
         pipeline_id="pipeline-456",
-        plan=SimpleNamespace(plan_id="run-123"),
+        plan=SimpleNamespace(
+            plan_id="run-123",
+            participants_json=json.dumps({}),
+            evidence={"operations": {}},
+        ),
     )
 
     finalize_module._print_pipeline_summary(pipeline, result)
