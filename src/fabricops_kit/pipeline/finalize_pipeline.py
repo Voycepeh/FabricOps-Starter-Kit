@@ -74,7 +74,7 @@ def _print_pipeline_summary(pipeline, result):
     mode = str(result.get("execution_mode") or "Unknown").replace("_", " ").title()
     status = str(result.get("status") or "Unknown").replace("_", " ").upper()
 
-    print("\\n" + "=" * 72)
+    print("\n" + "=" * 72)
     print(f"FabricOps Pipeline Summary · {status}")
     print(f"Mode: {mode} | Reads: {reads} | Writes: {writes} | Duration: {duration}")
     print(f"Pipeline ID: {result.get('pipeline_id') or pipeline.pipeline_id}")
