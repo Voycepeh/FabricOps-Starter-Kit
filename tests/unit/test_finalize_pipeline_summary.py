@@ -1,7 +1,7 @@
 """Readable final pipeline summaries assembled from the finalized run snapshot."""
 
-from importlib import import_module
 from datetime import UTC, datetime, timedelta
+from importlib import import_module
 from types import SimpleNamespace
 
 finalize_module = import_module("fabricops_kit.pipeline.finalize_pipeline")
