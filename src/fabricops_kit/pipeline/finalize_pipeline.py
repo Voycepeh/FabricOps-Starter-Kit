@@ -45,32 +45,26 @@ def _operation_summary_rows(result):
     rows = []
     for operation in result.get("operations") or []:
         destination = operation.get("destination") or {}
-        schema = destination.get("schema")
-        table_name = destination.get("table_name")
-        table = (
-            ".".join(str(value) for value in (schema, table_name) if value)
-            or operation.get("table_id", "Unknown")
-        )
         role = str(operation.get("pipeline_role") or "").lower()
-        operation_name = (
-            "Read" if role == "source"
-            else "Write" if role == "target"
-            else role.title() or "Operation"
-        )
-        stages = "; ".join(
-            f"{stage.get('stage', 'Stage')}: {stage.get('status', 'Not captured')}"
-            for stage in operation.get("stages") or []
-        ) or "Not captured"
-        duration = _elapsed_seconds(operation.get("started_at"), operation.get("completed_at"))
+        is_read = role == "source"
+        is_write = role == "target"
         rows.append((
-            operation_name,
-            str(table),
+            "Read" if is_read else "Write" if is_write else role.title() or "Operation",
+            str(operation.get("store") or "Not captured"),
+            str(destination.get("schema") or "Not captured"),
+            str(destination.get("table_name") or operation.get("table_id") or "Unknown"),
+            str(operation.get("read_mode") or "—"),
+            str(operation.get("write_mode") or "—"),
+            f"{operation['rows_read']:,}" if operation.get("rows_read") is not None else ("Not captured" if is_read else "—"),
+            f"{operation['rows_written']:,}" if operation.get("rows_written") is not None else ("Not published" if is_write and result.get("execution_mode") == "dry_run" else "Not captured" if is_write else "—"),
             str(operation.get("status") or "Not captured").replace("_", " ").title(),
-            _format_duration(duration),
-            stages,
+            _format_duration(_elapsed_seconds(operation.get("started_at"), operation.get("completed_at"))),
+            "; ".join(
+                f"{stage.get('stage', 'Stage')}: {stage.get('status', 'Not captured')}"
+                for stage in operation.get("stages") or []
+            ) or "Not captured",
         ))
     return rows
-
 
 def _print_pipeline_summary(pipeline, result):
     """Render the finalized run record as a compact notebook summary."""
@@ -102,7 +96,10 @@ def _print_pipeline_summary(pipeline, result):
         print("=" * 72)
         return
 
-    columns = ["Operation", "Table", "Status", "Duration", "Stages"]
+    columns = [
+        "Operation", "Store", "Schema", "Table", "Read mode", "Write mode",
+        "Rows read", "Rows written", "Status", "Duration", "Stages",
+    ]
     try:
         operations_frame = pipeline.spark.createDataFrame(rows, schema=columns)
         # The Fabric notebook's native display function lives in the active
