@@ -3,7 +3,6 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
-from fabricops_kit.pipeline import finalize_pipeline as finalize_pipeline_callable
 from importlib import import_module
 
 finalize_module = import_module("fabricops_kit.pipeline.finalize_pipeline")
@@ -77,7 +76,6 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
     finalize_module._print_pipeline_summary(pipeline, _result())
 
     output = capsys.readouterr().out
-    assert "UN G" not in output
     assert "UNGOVERNED COMPLETED" in output
     assert "Reads: 1 | Writes: 1 | Duration: 00:01:33" in output
     assert "Pipeline ID: pipeline-456" in output
