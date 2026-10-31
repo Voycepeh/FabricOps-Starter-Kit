@@ -428,7 +428,6 @@ def metadata_table_schema_registry() -> dict[str, Any]:
                  ("destination", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
                  ("source_table_ids", "strings", False), ("incremental_target_table_id", "string"),
-                 ("store", "string"), ("rows_read", "long"), ("rows_written", "long"),
                  ("status", "string", False), ("started_at", "timestamp"), ("completed_at", "timestamp"),
                  ("stages", [("stage", "string", False), ("status", "string", False),
                              ("evaluation_status", "string")], False)], False),
