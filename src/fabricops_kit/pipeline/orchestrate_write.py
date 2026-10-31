@@ -219,11 +219,13 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             if profile.get("row_count") is not None:
                 metrics["total_target_rows"] = profile["row_count"]
             load_status = (
-                "Skipped — no new data"
-                if not published
-                else "Already loaded"
+                "Already loaded"
                 if publication_status in {"already_applied", "metadata_recovered"}
+                else "Skipped — no new data"
+                if publication_status == "empty_incremental_scope"
                 else "Loaded"
+                if published
+                else "Not loaded"
             )
             fields = [
                 ("Target", target),
