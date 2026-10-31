@@ -89,6 +89,20 @@ def test_operation_summary_rows_use_native_operation_metadata():
     ]
 
 
+def test_missing_read_count_and_dry_run_write_are_not_reported_as_zero():
+    """Unknown lazy read counts and non-published Dry Run targets stay explicit."""
+    result = _result()
+    result["execution_mode"] = "dry_run"
+    pipeline = _pipeline(spark=None)
+    pipeline.plan.evidence["operations"]["source:logical-orders"]["rows_read"] = None
+    pipeline.plan.evidence["operations"]["target:logical-orders"].pop("rows_written")
+
+    rows = finalize_module._operation_summary_rows(result, pipeline=pipeline)
+
+    assert rows[0][6] == "Not captured"
+    assert rows[1][7] == "Not published"
+
+
 def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys):
     """Fabric notebook output contains a DataFrame and counts from stored operations."""
     captured = {}
