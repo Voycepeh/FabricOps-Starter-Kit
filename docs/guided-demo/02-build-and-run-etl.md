@@ -192,7 +192,12 @@ This applies to **Overwrite** as well as Append and the SCD strategies. An Overw
 
 The batch check does not make the upstream Read or your PySpark transformation disappear: those steps still run to produce and identify the prepared input. It avoids repeating the physical target write after an exact prior batch is verified. **Rows loaded: 0** for **Already loaded** means zero rows were written by this attempt; it does not mean the target contains zero rows.
 
-This is separate from **Source Drift**. When configured, Source Drift compares source observations with the last accepted source-to-target baseline and can identify new, changed, removed, or reappeared partitions. The batch fingerprint prevents a duplicate load; Source Drift provides upstream change governance. Keep both enabled where the Data Contract requires them.
+These two outcomes are different:
+
+- **Already loaded**: FabricOps received a non-empty prepared batch, matched its exact content and target to a previously successful load, and verified the earlier write. The current attempt skips only the physical Write; it does not mean the incoming DataFrame was empty.
+- **Skipped — no new data**: the current Incremental Read returned no eligible rows for this target, so there is nothing to write. No batch is loaded in this attempt.
+
+In both cases, **Rows loaded: 0** means this Write attempt added no rows. The reason is shown by **Load status**.
 
 With managed Sensitive Data token mappings, FabricOps uses the configured Governance store. Supply `existing_mapping` only when you manage a previously saved mapping yourself.
 
