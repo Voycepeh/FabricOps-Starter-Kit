@@ -47,9 +47,16 @@ def _operation_summary_rows(result):
         destination = operation.get("destination") or {}
         schema = destination.get("schema")
         table_name = destination.get("table_name")
-        table = ".".join(str(value) for value in (schema, table_name) if value) or operation.get("table_id", "Unknown")
+        table = (
+            ".".join(str(value) for value in (schema, table_name) if value)
+            or operation.get("table_id", "Unknown")
+        )
         role = str(operation.get("pipeline_role") or "").lower()
-        operation_name = "Read" if role == "source" else "Write" if role == "target" else role.title() or "Operation"
+        operation_name = (
+            "Read" if role == "source"
+            else "Write" if role == "target"
+            else role.title() or "Operation"
+        )
         stages = "; ".join(
             f"{stage.get('stage', 'Stage')}: {stage.get('status', 'Not captured')}"
             for stage in operation.get("stages") or []
