@@ -183,6 +183,7 @@ def test_write_summary_uses_data_engineering_load_status(
         stack.enter_context(
             patch.object(module, "schedule_table_profiling", return_value={"row_count": 0})
         )
+        stack.enter_context(patch.object(module, "skip_table_profiling", return_value={"status": "skipped"}))
         run_pipeline_operation(
             module.orchestrate_write,
             frame,
