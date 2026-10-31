@@ -162,7 +162,6 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     dict
         Final execution summary. For persistent modes this is the
         METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
-        A compact operation-level Spark DataFrame is displayed from this snapshot.
 
     Raises
     ------
