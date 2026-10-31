@@ -1,13 +1,12 @@
 """Public completion boundary for a pipeline execution."""
 
+from datetime import datetime, timezone
+
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
     publish_pipeline_testing_results,
 )
-
-
-from datetime import datetime, timezone
 
 
 def _elapsed_seconds(started_at, completed_at):
