@@ -139,5 +139,5 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),
             ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"]),
         ])
-        operation.complete(stages)
+        operation.complete(stages, rows_read=metrics.get("rows_read"))
         return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

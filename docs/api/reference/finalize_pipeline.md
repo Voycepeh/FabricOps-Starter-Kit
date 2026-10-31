@@ -97,9 +97,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:10`
+`fabricops_kit/pipeline/finalize_pipeline.py:154`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L10-L79">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L154-L218">View on GitHub</a>
 </div>
 
 
@@ -115,7 +115,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 62 |
+| Live-critical dependencies | 66 |
 
 ### Release history
 
@@ -165,6 +165,10 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.pipeline.finalize_pipeline._elapsed_seconds</code></li>
+<li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
+<li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
+<li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>

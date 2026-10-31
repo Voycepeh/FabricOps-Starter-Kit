@@ -224,7 +224,10 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             elif strategy == "scd2":
                 fields.extend((label, metrics[key]) for label, key in (("Versions inserted", "versions_inserted"), ("Versions expired", "versions_expired"), ("Rows unchanged", "rows_unchanged")))
             duration = summary.finish(fields)
-            operation.complete(stages)
+            operation.complete(
+                stages,
+                rows_written=metrics.get("rows_committed") if published else None,
+            )
             return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": prepared, "published": published, "publication_status": publication_status, "profile_result": profile}
         except Exception:
             mapping = sensitive.get("support_mapping")
