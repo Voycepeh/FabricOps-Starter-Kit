@@ -1,9 +1,8 @@
 """Readable final pipeline summaries assembled from the finalized run snapshot."""
 
+from importlib import import_module
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-
-from importlib import import_module
 
 finalize_module = import_module("fabricops_kit.pipeline.finalize_pipeline")
 
@@ -65,8 +64,12 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
             captured["schema"] = schema
             return frame
 
-    monkeypatch.setattr(finalize_module, "display", lambda value: captured.update(displayed=value),
-                        raising=False)
+    monkeypatch.setattr(
+        finalize_module,
+        "display",
+        lambda value: captured.update(displayed=value),
+        raising=False,
+    )
     pipeline = SimpleNamespace(
         spark=FakeSpark(),
         pipeline_id="fallback-pipeline",
@@ -87,11 +90,16 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
 def test_pipeline_summary_shows_failure_codes_and_missing_duration(capsys):
     """Failure diagnostics stay sanitized and missing timing is labelled honestly."""
     result = _result()
-    result["failures"] = [{"code": "project_execution_failed",
-                           "exception_type": "ValueError"}]
+    result["failures"] = [
+        {"code": "project_execution_failed", "exception_type": "ValueError"}
+    ]
     result["started_at"] = None
     pipeline = SimpleNamespace(
-        spark=SimpleNamespace(createDataFrame=lambda rows, schema: SimpleNamespace(show=lambda **kwargs: None)),
+        spark=SimpleNamespace(
+            createDataFrame=lambda rows, schema: SimpleNamespace(
+                show=lambda **kwargs: None
+            )
+        ),
         pipeline_id="pipeline-456",
         plan=SimpleNamespace(plan_id="run-123"),
     )
