@@ -1,0 +1,288 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "76ad805910d252ac0733",
+  "position": {
+    "x": 188,
+    "y": 420,
+    "z": 37,
+    "height": 270,
+    "width": 650,
+    "tabOrder": 37
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "table_name"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.table_name",
+              "nativeQueryRef": "Table",
+              "displayName": "Table"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "column_name"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.column_name",
+              "nativeQueryRef": "Column",
+              "displayName": "Column"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "row_count"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.row_count",
+              "nativeQueryRef": "Rows",
+              "displayName": "Rows"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "null_percent"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.null_percent",
+              "nativeQueryRef": "Null %",
+              "displayName": "Null %"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "distinct_count"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.distinct_count",
+              "nativeQueryRef": "Distinct",
+              "displayName": "Distinct"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "distinct_percent"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.distinct_percent",
+              "nativeQueryRef": "Distinct %",
+              "displayName": "Distinct %"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "min_value"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.min_value",
+              "nativeQueryRef": "Min",
+              "displayName": "Min"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED"
+                    }
+                  },
+                  "Property": "max_value"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED.max_value",
+              "nativeQueryRef": "Max",
+              "displayName": "Max"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Column profile statistics'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "objects": {
+      "grid": [
+        {
+          "properties": {
+            "gridVertical": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "4D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

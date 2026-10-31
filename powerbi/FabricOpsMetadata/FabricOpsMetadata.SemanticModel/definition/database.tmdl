@@ -1,0 +1,5 @@
+database FabricOpsMetadata
+	id: 60b37504-8962-5a3e-a3bb-16e126b2e434
+	compatibilityLevel: 1702
+	compatibilityMode: powerBI
+	language: 1033

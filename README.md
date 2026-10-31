@@ -35,4 +35,6 @@ FabricOps includes reusable Python functions, notebook templates, metadata schem
 
 **[Download FabricOps](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)** or browse the [notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks).
 
+**[Open the FabricOps Metadata Power BI project](powerbi/FabricOpsMetadata/README.md)** to configure the portable Import-mode operational dashboard.
+
 For bugs, questions, or feature requests, use [GitHub Issues](https://github.com/Voycepeh/FabricOps-Starter-Kit/issues).

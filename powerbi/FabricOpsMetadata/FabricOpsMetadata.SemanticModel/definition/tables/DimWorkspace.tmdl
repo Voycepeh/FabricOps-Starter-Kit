@@ -1,0 +1,19 @@
+table DimWorkspace
+	lineageTag: bd32a78c-152c-550a-b69f-1e6c775437d0
+
+	column workspace_id
+		dataType: string
+		lineageTag: bbaade85-d4f2-5854-a9b5-5634b769d4f7
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+	partition DimWorkspace = m
+		mode: import
+		queryGroup: 'Semantic dimensions'
+		source = ```
+			let
+			    Source = DimTable,
+			    Result = Table.Distinct(Table.SelectColumns(Source, {"workspace_id"}))
+			in
+			    Result
+			```

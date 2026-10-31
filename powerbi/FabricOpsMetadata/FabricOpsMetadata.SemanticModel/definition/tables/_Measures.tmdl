@@ -1,0 +1,243 @@
+table _Measures
+	lineageTag: fcf14c51-bedd-5a75-8425-5777e58e1d02
+
+	measure 'Registered Tables' = ```
+			COUNTROWS(DimTable)
+			```
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: d2f290e6-0951-5aac-90f6-402975e2ee9c
+
+	measure 'Active Tables' = ```
+			CALCULATE(COUNTROWS(DimTable), DimTable[is_active] = TRUE())
+			```
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: 5fc8a722-6d18-5629-ae01-1bed79bf014e
+
+	measure 'Registered Workspaces' = ```
+			DISTINCTCOUNT(DimWorkspace[workspace_id])
+			```
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: 06aa00a8-7842-5a76-994f-6a5935464689
+
+	measure 'Frozen Contracts' = ```
+			CALCULATE(DISTINCTCOUNT(METADATA_DATA_CONTRACT[contract_key]), METADATA_DATA_CONTRACT[status] = "Frozen")
+			```
+		formatString: #,0
+		displayFolder: Governance
+		lineageTag: 85190c16-e03a-5e35-80a3-547989a4fe38
+
+	measure 'Draft Contracts' = ```
+			CALCULATE(DISTINCTCOUNT(METADATA_DATA_CONTRACT[contract_key]), METADATA_DATA_CONTRACT[status] = "Draft")
+			```
+		formatString: #,0
+		displayFolder: Governance
+		lineageTag: ef597745-3c62-5cb4-8b7d-e46facadce84
+
+	measure 'Pipeline Executions' = ```
+			DISTINCTCOUNT(METADATA_PIPELINE_RUN[run_id])
+			```
+		formatString: #,0
+		displayFolder: Pipeline Operations
+		lineageTag: 92cc6634-be9c-5ca7-8037-6c86699c30da
+
+	measure 'Successful Runs' = ```
+			CALCULATE([Pipeline Executions], LOWER(METADATA_PIPELINE_RUN[status]) IN {"succeeded", "success", "completed"})
+			```
+		formatString: #,0
+		displayFolder: Pipeline Operations
+		lineageTag: 5375781d-a572-50b4-964a-8e34b87c52e2
+
+	measure 'Failed Runs' = ```
+			CALCULATE([Pipeline Executions], LOWER(METADATA_PIPELINE_RUN[status]) IN {"failed", "failure", "error"})
+			```
+		formatString: #,0
+		displayFolder: Pipeline Operations
+		lineageTag: b7338984-3c63-584c-bda1-8f733c11e692
+
+	measure 'Pipeline Success Rate' = ```
+			DIVIDE([Successful Runs], [Pipeline Executions])
+			```
+		formatString: 0.0%
+		displayFolder: Pipeline Operations
+		lineageTag: ac5dce42-cff4-55f7-aed1-ec1c5ada668f
+
+	measure 'Average Run Duration Seconds' = ```
+			AVERAGEX(FILTER(METADATA_PIPELINE_RUN, NOT ISBLANK(METADATA_PIPELINE_RUN[completed_at])), DATEDIFF(METADATA_PIPELINE_RUN[started_at], METADATA_PIPELINE_RUN[completed_at], SECOND))
+			```
+		formatString: #,0.0
+		displayFolder: Pipeline Operations
+		lineageTag: 1793d22d-8f16-5d8f-b191-28d2f6e5d4b3
+
+	measure 'Profile Observations' = ```
+			DISTINCTCOUNT(METADATA_DATA_PROFILED[profile_id])
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: f2b01140-0497-5e6a-bc5f-f93450443f7c
+
+	measure 'Profile Snapshots' = ```
+			DISTINCTCOUNT(METADATA_DATA_PROFILED[profile_snapshot_id])
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: a45d0dc6-96b9-50a5-bd4d-068d67e86a0e
+
+	measure 'Weighted Null Percent' = ```
+			DIVIDE(SUM(METADATA_DATA_PROFILED[null_count]), SUM(METADATA_DATA_PROFILED[row_count]))
+			```
+		formatString: 0.00%
+		displayFolder: Data Quality
+		lineageTag: 6d1f70c3-6b27-5899-8361-8aaeb167414e
+
+	measure 'Average Distinct Percent' = ```
+			DIVIDE(AVERAGE(METADATA_DATA_PROFILED[distinct_percent]), 100)
+			```
+		formatString: 0.00%
+		displayFolder: Data Quality
+		lineageTag: 06cf5c53-d2df-5aa2-8551-a1502b4a2ce6
+
+	measure 'Frequent Values' = ```
+			COUNTROWS(METADATA_DATA_PROFILED_FREQUENCY)
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: 3635f6ba-0f0d-5ef9-91f1-7e273170e630
+
+	measure 'Guardrail Results' = ```
+			DISTINCTCOUNT(METADATA_GUARDRAIL_RESULTS[guardrail_result_id])
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: 8609433d-f445-5566-9a14-e044c8cea26d
+
+	measure 'Guardrail Passed' = ```
+			CALCULATE([Guardrail Results], LOWER(METADATA_GUARDRAIL_RESULTS[status]) IN {"passed", "pass", "success", "succeeded", "compliant"})
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: b201ab91-0f99-5c4b-b73a-ed1b3e1f335e
+
+	measure 'Guardrail Failed' = ```
+			CALCULATE([Guardrail Results], LOWER(METADATA_GUARDRAIL_RESULTS[status]) IN {"failed", "fail", "failure", "noncompliant"})
+			```
+		formatString: #,0
+		displayFolder: Data Quality
+		lineageTag: 7c84d947-e54b-5d3b-936f-3366c652a86a
+
+	measure 'Guardrail Pass Rate' = ```
+			DIVIDE([Guardrail Passed], [Guardrail Results])
+			```
+		formatString: 0.0%
+		displayFolder: Data Quality
+		lineageTag: 76cc2612-6a5c-58cb-908a-9ca0414cdea0
+
+	measure 'Data Quality Indicators' = ```
+			[Profile Observations] + [Guardrail Results]
+			```
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: 191af78a-e58a-5bcc-90e6-7ad474bf02c4
+
+	measure 'Active Stewards' = ```
+			CALCULATE(DISTINCTCOUNT(METADATA_DATA_STEWARD[steward_id]), METADATA_DATA_STEWARD[is_active] = TRUE())
+			```
+		formatString: #,0
+		displayFolder: Governance
+		lineageTag: 63b887b9-e7c4-5998-acf4-6673b899c8be
+
+	measure 'Steward Coverage' = ```
+			DIVIDE(DISTINCTCOUNT(METADATA_DATA_AGREEMENT[provider_steward_id]) + DISTINCTCOUNT(METADATA_DATA_AGREEMENT[recipient_steward_id]), 2 * [Active Stewards])
+			```
+		formatString: 0.0%
+		displayFolder: Governance
+		lineageTag: 85fab728-3b53-534c-bade-62e538b7e9ad
+
+	measure Agreements = ```
+			DISTINCTCOUNT(METADATA_DATA_AGREEMENT[agreement_key])
+			```
+		formatString: #,0
+		displayFolder: Governance
+		lineageTag: 08bec982-67d4-5d38-ad66-9cf5f1d68a00
+
+	measure 'Agreements Expiring 30 Days' = ```
+			CALCULATE([Agreements], METADATA_DATA_AGREEMENT[expiry_date] >= TODAY(), METADATA_DATA_AGREEMENT[expiry_date] <= TODAY() + 30)
+			```
+		formatString: #,0
+		displayFolder: Governance
+		lineageTag: 0cc1af2a-1d08-5d82-b504-95b1533633d1
+
+	measure 'Lineage Participations' = ```
+			DISTINCTCOUNT(METADATA_DATA_LINEAGE[lineage_id])
+			```
+		formatString: #,0
+		displayFolder: Lineage & Access
+		lineageTag: 6676d6c7-8701-54b6-8354-6211740c648c
+
+	measure 'Source Participations' = ```
+			CALCULATE([Lineage Participations], LOWER(METADATA_DATA_LINEAGE[pipeline_role]) = "source")
+			```
+		formatString: #,0
+		displayFolder: Lineage & Access
+		lineageTag: f13c0f49-4f63-5107-8967-3f252e716485
+
+	measure 'Target Participations' = ```
+			CALCULATE([Lineage Participations], LOWER(METADATA_DATA_LINEAGE[pipeline_role]) = "target")
+			```
+		formatString: #,0
+		displayFolder: Lineage & Access
+		lineageTag: 68473be0-0482-558d-88d5-f3ac512b83b3
+
+	measure 'Observed Permissions' = ```
+			DISTINCTCOUNT(METADATA_DATA_ACCESS[access_id])
+			```
+		formatString: #,0
+		displayFolder: Lineage & Access
+		lineageTag: 92670e82-5579-5c63-994d-98bb83a0da4a
+
+	measure 'Observed Principals' = ```
+			DISTINCTCOUNT(METADATA_DATA_ACCESS[user_principal])
+			```
+		formatString: #,0
+		displayFolder: Lineage & Access
+		lineageTag: e573060b-e2bf-516f-9c99-0dd5f5679414
+
+	measure 'Committed Processing Records' = ```
+			CALCULATE(DISTINCTCOUNT(METADATA_PROCESSING_STATE[record_id]), LOWER(METADATA_PROCESSING_STATE[status]) = "committed")
+			```
+		formatString: #,0
+		displayFolder: Pipeline Operations
+		lineageTag: 387b0a29-d112-5adf-ae23-91df4a61fc12
+
+	measure 'Publication Receipts' = ```
+			CALCULATE(DISTINCTCOUNT(METADATA_PROCESSING_STATE[record_id]), LOWER(METADATA_PROCESSING_STATE[record_type]) = "publication_receipt")
+			```
+		formatString: #,0
+		displayFolder: Pipeline Operations
+		lineageTag: 0ad5011e-801f-5a27-81a1-bca6f60e74af
+
+	measure 'Latest Profile At' = ```
+			MAX(METADATA_DATA_CATALOGUE[last_profiled_at])
+			```
+		formatString: yyyy-MM-dd HH:mm
+		displayFolder: Data Catalogue
+		lineageTag: f39d47c5-3020-5448-9229-72e2e6e8c4cf
+
+	measure 'Days Since Latest Profile' = ```
+			VAR LastProfile = [Latest Profile At] RETURN IF(NOT ISBLANK(LastProfile), DATEDIFF(LastProfile, TODAY(), DAY))
+			```
+		formatString: #,0
+		displayFolder: Data Catalogue
+		lineageTag: 479e7640-73ff-5b8c-9246-7efd91a7165a
+
+	column Value
+		dataType: int64
+		isHidden
+		lineageTag: 7a8b4df8-0194-565a-a2ef-588aa5c86789
+		summarizeBy: none
+
+	partition _Measures = calculated
+		mode: import
+		source = { 0 }

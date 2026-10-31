@@ -1,0 +1,257 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "de1c86afd6a4c7fbebf6",
+  "position": {
+    "x": 856,
+    "y": 420,
+    "z": 38,
+    "height": 270,
+    "width": 392,
+    "tabOrder": 38
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "table_name"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.table_name",
+              "nativeQueryRef": "Table",
+              "displayName": "Table"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "column_name"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.column_name",
+              "nativeQueryRef": "Column",
+              "displayName": "Column"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "value"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.value",
+              "nativeQueryRef": "value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "frequency_count"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.frequency_count",
+              "nativeQueryRef": "Count",
+              "displayName": "Count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "frequency_percent"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.frequency_percent",
+              "nativeQueryRef": "%",
+              "displayName": "%"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "METADATA_DATA_PROFILED_FREQUENCY"
+                    }
+                  },
+                  "Property": "frequency_rank"
+                }
+              },
+              "queryRef": "METADATA_DATA_PROFILED_FREQUENCY.frequency_rank",
+              "nativeQueryRef": "Rank",
+              "displayName": "Rank"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Frequent values'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "visualHeader": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "objects": {
+      "grid": [
+        {
+          "properties": {
+            "gridVertical": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "rowPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "4D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

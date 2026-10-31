@@ -1,0 +1,144 @@
+table METADATA_DATA_LINEAGE
+	lineageTag: 639fccd9-1f96-57d9-8ec0-332878e8d4c1
+
+	column lineage_id
+		dataType: string
+		lineageTag: 6d67de04-e27e-5d22-9bf3-4b13cbbe762c
+		summarizeBy: none
+		sourceColumn: lineage_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: 98f7bac0-8a21-5801-bcd8-cc238450a130
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: 93832833-0e9d-5075-8e59-a1da47e10351
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 0f4cffea-b9a2-5474-a785-f5302ef1bc92
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column pipeline_role
+		dataType: string
+		lineageTag: f064b75d-1fa0-5d07-bf99-a163b97ea162
+		summarizeBy: none
+		sourceColumn: pipeline_role
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 946ed3ea-f53d-5868-8013-4f409b9f7b84
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 2501fac6-db0a-5ff9-8e7c-ae3536d84e9c
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 9dfc2de8-5873-5c69-a4cc-f52216f84670
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 978c512a-590f-5377-95be-546f4ad72e61
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: 17d61cb0-88d6-5873-a269-1b673c637499
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: d4ef1b4f-91aa-5f82-a36e-ac4319cf3b22
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 7ff86cf1-5d54-5f50-adf6-1946700f845d
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: 3773b27e-3881-5e79-a6f4-ceab25972c66
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_table_key
+		dataType: string
+		lineageTag: 2e04271d-f1af-5b02-85f0-8876e88feab3
+		summarizeBy: none
+		sourceColumn: workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column lineage_observed_date
+		dataType: dateTime
+		lineageTag: 544a9ba0-1568-5881-a8c1-88f0a16e81ea
+		summarizeBy: none
+		sourceColumn: lineage_observed_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_LINEAGE = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_DATA_LINEAGE", {"lineage_id", "table_id", "table_name", "workspace_id", "pipeline_role", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"lineage_id", type text}, {"table_id", type text}, {"table_name", type text}, {"workspace_id", type text}, {"pipeline_role", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithTableKey = Table.AddColumn(Typed, "workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithLineageDate = Table.AddColumn(WithTableKey, "lineage_observed_date", each Date.From([_committed_at]), type date),
+			    Result = WithLineageDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

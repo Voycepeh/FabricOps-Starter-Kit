@@ -1,0 +1,131 @@
+table METADATA_DATA_STEWARD
+	lineageTag: b04c48d5-c16e-5816-bc52-727edf7b3a91
+
+	column steward_id
+		dataType: string
+		lineageTag: e797de0b-f62f-5d12-8563-24f894f17bab
+		summarizeBy: none
+		sourceColumn: steward_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column steward_name
+		dataType: string
+		lineageTag: c8a95194-f5f8-5048-8660-2fea3c9ddfa3
+		summarizeBy: none
+		sourceColumn: steward_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column steward_role
+		dataType: string
+		lineageTag: 5d73b808-40de-5ae6-a156-fd112a716126
+		summarizeBy: none
+		sourceColumn: steward_role
+
+		annotation SummarizationSetBy = Automatic
+
+	column contact
+		dataType: string
+		lineageTag: 709bef4d-cdcc-5ce6-a0f5-ac1d97c21671
+		summarizeBy: none
+		sourceColumn: contact
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_active
+		dataType: boolean
+		lineageTag: 90072829-f404-5f02-85c1-c42b3251d0d2
+		summarizeBy: none
+		sourceColumn: is_active
+
+		annotation SummarizationSetBy = Automatic
+
+	column custom_fields_json
+		dataType: string
+		lineageTag: deaa5ac4-56d1-59cf-8571-f74d4c17d78b
+		summarizeBy: none
+		sourceColumn: custom_fields_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 58f27654-92a0-5676-9961-cce3af383502
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 5fbbdfd7-4885-58ec-b10e-80eae96f3f73
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 8d0dc3ef-fbd2-5a96-bd95-3e0c73e94ace
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 97433f26-5f73-5136-a111-d8804327320a
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: bf23bef5-5aa7-5c40-bc64-f3074e961ce2
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: b6a17433-1a64-51dc-ab4d-02fc80a0260d
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: c08dc6c5-bd7a-59cb-b312-da03dc549ec3
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: ab510adf-5097-519a-82a3-ecba103d5841
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_STEWARD = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pGovernanceSchema, "METADATA_DATA_STEWARD", {"steward_id", "steward_name", "steward_role", "contact", "is_active", "custom_fields_json", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"steward_id", type text}, {"steward_name", type text}, {"steward_role", type text}, {"contact", type text}, {"is_active", type logical}, {"custom_fields_json", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    Result = Typed
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

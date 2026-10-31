@@ -1,0 +1,101 @@
+relationship b73261d2-9e81-56af-a45f-5491f98e7181
+	fromColumn: DimTable.workspace_id
+	toColumn: DimWorkspace.workspace_id
+
+relationship cafd8fa5-aba6-50d2-bab2-893eb995f6e5
+	fromColumn: METADATA_PIPELINE_RUN.workspace_id
+	toColumn: DimWorkspace.workspace_id
+
+relationship 469172dc-43dc-5605-9fcc-761c4c38e9cb
+	fromColumn: METADATA_DATA_CATALOGUE.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship 39291365-eb9a-5efd-9686-bf5baaaa8b04
+	fromColumn: METADATA_DATA_PROFILED.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship bcb71e38-33c1-5437-86f9-28ab24b58499
+	fromColumn: METADATA_DATA_PROFILED_FREQUENCY.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship ce15eedd-0cf9-5d30-b853-c57ce9cc213e
+	fromColumn: METADATA_DATA_LINEAGE.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship 0813fcc4-34d5-5cb3-bcda-96fc7c1e945c
+	fromColumn: METADATA_DATA_ACCESS.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship 07bb6ddf-dde2-5901-8f92-de9fa5bb0671
+	fromColumn: METADATA_GUARDRAIL_RESULTS.workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship 203edd87-0041-54f6-a20d-e200229cc146
+	fromColumn: METADATA_PROCESSING_STATE.source_workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship d45fdb37-6ca5-56ca-a511-595dc8791cc8
+	isActive: false
+	fromColumn: METADATA_PROCESSING_STATE.target_workspace_table_key
+	toColumn: DimTable.workspace_table_key
+
+relationship 71ab48eb-c4d2-5ae9-92f2-d727903a4159
+	fromColumn: METADATA_PIPELINE_RUN.workspace_pipeline_key
+	toColumn: DimPipeline.workspace_pipeline_key
+
+relationship f3a91327-ee89-5616-8663-527b593d40a6
+	fromColumn: METADATA_PROCESSING_STATE.workspace_pipeline_key
+	toColumn: DimPipeline.workspace_pipeline_key
+
+relationship b2e6f869-1262-5dfc-93b1-224d7fdccae2
+	fromColumn: METADATA_GUARDRAIL_RESULTS.contract_key
+	toColumn: METADATA_DATA_CONTRACT.contract_key
+
+relationship f5f7e528-059e-5fae-a821-06283a4b2287
+	fromColumn: METADATA_DATA_AGREEMENT.provider_steward_id
+	toColumn: METADATA_DATA_STEWARD.steward_id
+
+relationship 819e4dd5-d281-5d1d-97c0-c198e3646407
+	isActive: false
+	fromColumn: METADATA_DATA_AGREEMENT.recipient_steward_id
+	toColumn: METADATA_DATA_STEWARD.steward_id
+
+relationship 279d5a70-2adb-52f8-9bfa-c933d9c15130
+	fromColumn: METADATA_PIPELINE_RUN.run_date
+	toColumn: Date.Date
+
+relationship 0f39bd36-7f05-5489-97dd-2efbc935411c
+	fromColumn: METADATA_DATA_PROFILED.profile_date
+	toColumn: Date.Date
+
+relationship 1cb47072-ea2e-5753-a295-d94ecc038aa4
+	fromColumn: METADATA_DATA_PROFILED_FREQUENCY.frequency_profile_date
+	toColumn: Date.Date
+
+relationship 00b48584-d306-593f-b17b-073a728089ad
+	fromColumn: METADATA_GUARDRAIL_RESULTS.guardrail_date
+	toColumn: Date.Date
+
+relationship ba12dba0-96a3-54b0-a0cd-22c204d83f07
+	fromColumn: METADATA_PROCESSING_STATE.observation_date
+	toColumn: Date.Date
+
+relationship c5324e86-07e9-524b-874f-d0b9350fac1c
+	fromColumn: METADATA_DATA_ACCESS.access_observed_date
+	toColumn: Date.Date
+
+relationship 0c1baf34-10e5-5153-b6d9-d75f003b9850
+	fromColumn: METADATA_DATA_LINEAGE.lineage_observed_date
+	toColumn: Date.Date
+
+relationship a9ee5527-381e-5912-a243-79f4484a745a
+	fromColumn: METADATA_DATA_CATALOGUE.catalogue_committed_date
+	toColumn: Date.Date
+
+relationship c947a16f-54de-55b8-9fc1-00bd8f8925dc
+	fromColumn: METADATA_DATA_CONTRACT.contract_committed_date
+	toColumn: Date.Date
+
+relationship 3598c552-8abd-517c-b7fd-451c511b26ee
+	fromColumn: METADATA_DATA_AGREEMENT.start_date
+	toColumn: Date.Date

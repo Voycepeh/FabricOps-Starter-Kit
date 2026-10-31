@@ -1,0 +1,33 @@
+table DimPipeline
+	lineageTag: 67e9b40e-9550-578b-a301-c2e019ea036c
+
+	column workspace_pipeline_key
+		dataType: string
+		isHidden
+		lineageTag: a9d040df-8221-55ae-a121-f223c6f8cdb2
+		summarizeBy: none
+		sourceColumn: workspace_pipeline_key
+
+	column workspace_id
+		dataType: string
+		lineageTag: dcd37dc1-8fcc-5fcf-b8a1-c1e08e8138ab
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+	column pipeline_id
+		dataType: string
+		lineageTag: ed94b9d8-ec44-5191-a3a2-885e7817dce5
+		summarizeBy: none
+		sourceColumn: pipeline_id
+
+	partition DimPipeline = m
+		mode: import
+		queryGroup: 'Semantic dimensions'
+		source = ```
+			let
+			    Source = METADATA_PIPELINE_RUN,
+			    Selected = Table.SelectColumns(Source, {"workspace_pipeline_key", "workspace_id", "pipeline_id"}),
+			    Result = Table.Distinct(Selected, {"workspace_pipeline_key"})
+			in
+			    Result
+			```

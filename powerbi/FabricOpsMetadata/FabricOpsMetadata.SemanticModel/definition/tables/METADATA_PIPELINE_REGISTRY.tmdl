@@ -1,0 +1,99 @@
+table METADATA_PIPELINE_REGISTRY
+	lineageTag: 0d2d425c-ba55-50a4-910f-8d152a2e48ff
+
+	column authority_id
+		dataType: string
+		lineageTag: a4d08e7d-eea3-55a6-a037-7f16a478fbb9
+		summarizeBy: none
+		sourceColumn: authority_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column token
+		dataType: string
+		lineageTag: 97c5e990-501a-55d6-acca-ae762bb329f8
+		summarizeBy: none
+		sourceColumn: token
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 30fbc80e-3527-5078-a3be-b66d6e852e03
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 5390c7f7-3681-5529-bbca-ad9bbd9c2fb3
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 8b4c598e-e977-5abe-a3f8-b6cca769c932
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 9f0c03c2-e893-5dab-9341-2545d413cbb5
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: 8cda626d-a0d0-5728-a2f9-0b5ff771d25e
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: 092a8870-dc70-58d4-9c1b-91086faa16bb
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 8274fb6b-f6b0-53e4-8e11-2f4c61027861
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: fd5d7905-eaf0-51bc-b8b7-5e0d3090750b
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_PIPELINE_REGISTRY = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_PIPELINE_REGISTRY", {"authority_id", "token", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, true),
+			    Typed = Table.TransformColumnTypes(Source, {{"authority_id", type text}, {"token", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    Result = Typed
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

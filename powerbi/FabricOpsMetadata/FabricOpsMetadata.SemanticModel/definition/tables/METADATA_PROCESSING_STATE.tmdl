@@ -1,0 +1,351 @@
+table METADATA_PROCESSING_STATE
+	lineageTag: 7ffa805f-b2e8-5bcc-aa52-8e84a9cdfbd7
+
+	column record_id
+		dataType: string
+		lineageTag: 5d6621d9-0e30-59e5-abe8-0ea8b6efc31e
+		summarizeBy: none
+		sourceColumn: record_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column record_type
+		dataType: string
+		lineageTag: e37fa455-25b8-544f-b419-e2db5edf3c1b
+		summarizeBy: none
+		sourceColumn: record_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 2e643a15-270d-5a69-a5c9-16c3d4aab534
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column observation_id
+		dataType: string
+		lineageTag: 58cebb52-c51d-5557-a63f-a2dce73a90ce
+		summarizeBy: none
+		sourceColumn: observation_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: b0fe3b61-6509-5cf8-a208-080ef9cf66a7
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column pipeline_id
+		dataType: string
+		lineageTag: 5c941b9f-0557-50ce-a2c9-81347f758a28
+		summarizeBy: none
+		sourceColumn: pipeline_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_table_id
+		dataType: string
+		lineageTag: 638b722f-c1b8-5e36-9730-3d4ad3beb073
+		summarizeBy: none
+		sourceColumn: source_table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_table_name
+		dataType: string
+		lineageTag: 823dee86-c280-53be-88a6-36797fbf8a85
+		summarizeBy: none
+		sourceColumn: source_table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_table_id
+		dataType: string
+		lineageTag: e34aef9b-74f2-5502-a333-3e0f8c3d39f6
+		summarizeBy: none
+		sourceColumn: target_table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_table_name
+		dataType: string
+		lineageTag: 9d0e1e68-cb6c-5ab9-afe0-bcf71cd3b9eb
+		summarizeBy: none
+		sourceColumn: target_table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 1e9ea116-7ca2-5073-bd3a-81197328af03
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column observed_at
+		dataType: dateTime
+		lineageTag: abf895dc-037b-543b-928d-2171c867b8dc
+		summarizeBy: none
+		sourceColumn: observed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column accepted_at
+		dataType: dateTime
+		lineageTag: 6921cf95-2cbd-5dca-983b-d18ac60345f8
+		summarizeBy: none
+		sourceColumn: accepted_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column partition_column
+		dataType: string
+		lineageTag: 5ef0d778-ceeb-5aca-95d2-2e585f74ce2a
+		summarizeBy: none
+		sourceColumn: partition_column
+
+		annotation SummarizationSetBy = Automatic
+
+	column change_column
+		dataType: string
+		lineageTag: ba843157-a5e5-5815-969d-ddd93c861fbd
+		summarizeBy: none
+		sourceColumn: change_column
+
+		annotation SummarizationSetBy = Automatic
+
+	column watermark_type
+		dataType: string
+		lineageTag: 17aa69d5-f268-5dcc-8945-c57f6f28ae40
+		summarizeBy: none
+		sourceColumn: watermark_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column partition_value
+		dataType: string
+		lineageTag: 852e4b9d-0d0c-5795-a8e3-bbc2bc19adec
+		summarizeBy: none
+		sourceColumn: partition_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column row_count
+		dataType: int64
+		lineageTag: 7ca81eaf-201d-5c39-8714-565bb4138829
+		summarizeBy: none
+		sourceColumn: row_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column min_change_value
+		dataType: string
+		lineageTag: 3cecd3f2-6dc0-5f96-8cfa-77a836e5dc6f
+		summarizeBy: none
+		sourceColumn: min_change_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_change_value
+		dataType: string
+		lineageTag: 201f61d7-0915-5345-bcd1-fcfe135ae6c1
+		summarizeBy: none
+		sourceColumn: max_change_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column content_fingerprint
+		dataType: string
+		lineageTag: ac5eca4d-df8e-593d-ba2f-bf6f633a7836
+		summarizeBy: none
+		sourceColumn: content_fingerprint
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_present
+		dataType: boolean
+		lineageTag: 9656b1a4-9b28-507f-818f-810cd3eb1e61
+		summarizeBy: none
+		sourceColumn: is_present
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_id
+		dataType: string
+		lineageTag: a12437cc-aa46-528f-b5c3-f5096b310b14
+		summarizeBy: none
+		sourceColumn: publication_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_batch_id
+		dataType: string
+		lineageTag: 558dd273-3a04-5f82-b78a-233965279dbe
+		summarizeBy: none
+		sourceColumn: publication_batch_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_activity_id
+		dataType: string
+		lineageTag: 5b6bd7e2-c91c-51c3-a008-d97117989648
+		summarizeBy: none
+		sourceColumn: publication_activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_at
+		dataType: dateTime
+		lineageTag: 8e58f773-b0b7-5a35-9479-72b4996c4a66
+		summarizeBy: none
+		sourceColumn: publication_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_input_rows
+		dataType: int64
+		lineageTag: abc0c27b-fb12-50bd-8c78-f8fa1e2bd194
+		summarizeBy: none
+		sourceColumn: publication_input_rows
+
+		annotation SummarizationSetBy = Automatic
+
+	column publication_strategy
+		dataType: string
+		lineageTag: 3ebafc9d-3b97-5c94-bd19-9776d657b45e
+		summarizeBy: none
+		sourceColumn: publication_strategy
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 762aaee0-6fe6-57b0-86ce-90f412605b03
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 57a1f5c8-7b79-5aa2-aed2-b475973ab38f
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 88ff3c84-93e6-5b70-a5d5-d43b5d862d98
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 678127f4-10e9-52aa-a9ad-b60a04589836
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: 81fccec7-c415-5701-9f9f-ff30877bd1b0
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: e75b72b5-ceb6-58ea-87be-15db5cb022cc
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 05fe0bec-bcd5-5915-b43b-24adc460d85c
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: a7ccaba3-fce9-5735-9e2c-2bd8de503554
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column source_workspace_table_key
+		dataType: string
+		lineageTag: 39a254cf-7f3d-5271-bfc4-1c888ff562a7
+		summarizeBy: none
+		sourceColumn: source_workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_workspace_table_key
+		dataType: string
+		lineageTag: f200d9fe-0f91-521d-8519-7107bc596d89
+		summarizeBy: none
+		sourceColumn: target_workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_pipeline_key
+		dataType: string
+		lineageTag: bc1946ae-42be-51dd-b5b1-315e8a90ea94
+		summarizeBy: none
+		sourceColumn: workspace_pipeline_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column observation_date
+		dataType: dateTime
+		lineageTag: 13f5016c-5a03-5e4e-9bea-0ebaea1f2082
+		summarizeBy: none
+		sourceColumn: observation_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_PROCESSING_STATE = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_PROCESSING_STATE", {"record_id", "record_type", "status", "observation_id", "run_id", "pipeline_id", "source_table_id", "source_table_name", "target_table_id", "target_table_name", "workspace_id", "observed_at", "accepted_at", "partition_column", "change_column", "watermark_type", "partition_value", "row_count", "min_change_value", "max_change_value", "content_fingerprint", "is_present", "publication_id", "publication_batch_id", "publication_activity_id", "publication_at", "publication_input_rows", "publication_strategy", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"record_id", type text}, {"record_type", type text}, {"status", type text}, {"observation_id", type text}, {"run_id", type text}, {"pipeline_id", type text}, {"source_table_id", type text}, {"source_table_name", type text}, {"target_table_id", type text}, {"target_table_name", type text}, {"workspace_id", type text}, {"observed_at", type datetime}, {"accepted_at", type datetime}, {"partition_column", type text}, {"change_column", type text}, {"watermark_type", type text}, {"partition_value", type text}, {"row_count", Int64.Type}, {"min_change_value", type text}, {"max_change_value", type text}, {"content_fingerprint", type text}, {"is_present", type logical}, {"publication_id", type text}, {"publication_batch_id", type text}, {"publication_activity_id", type text}, {"publication_at", type datetime}, {"publication_input_rows", Int64.Type}, {"publication_strategy", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithSourceTableKey = Table.AddColumn(Typed, "source_workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [source_table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithTargetTableKey = Table.AddColumn(WithSourceTableKey, "target_workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [target_table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithPipelineKey = Table.AddColumn(WithTargetTableKey, "workspace_pipeline_key", each Text.Combine(List.Transform({[workspace_id], [pipeline_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithObservationDate = Table.AddColumn(WithPipelineKey, "observation_date", each Date.From([observed_at]), type date),
+			    Result = WithObservationDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
