@@ -202,3 +202,44 @@ def test_failed_staging_cleans_up_in_physical_database(connector, monkeypatch):
     assert attempted.call_args.args[0].startswith('wh_ODI_Product.dbo._fabricops_scd_')
     assert ('option', 'database', 'wh_ODI_Product') in spark.read.calls
     assert 'DROP TABLE [dbo].[_fabricops_scd_' in cleanup.call_args.args[0]
+
+
+def test_external_warehouse_resolves_and_binds_physical_workspace_from_execution_mapping(connector):
+    """Execution scope selects aliases while each store retains its physical workspace."""
+    config = FrameworkConfig(path_config=PathConfig(paths={
+        'execution-workspace': {
+            'Metadata': FabricStore('governance-workspace', 'metadata-item', 'lakehouse'),
+            'Bronze': FabricStore('execution-workspace', 'bronze-item', 'lakehouse'),
+            'ExternalWarehouse': FabricStore('external-workspace', 'warehouse-item', 'warehouse', name='wh_External'),
+            'RemoteTarget': FabricStore('target-workspace', 'target-warehouse-item', 'warehouse', name='wh_Target'),
+        },
+    }))
+    source = pipeline.resolve_physical_table_identity(
+        config, 'execution-workspace', store='ExternalWarehouse', schema='dbo', table_name='orders'
+    )
+    target = pipeline.resolve_physical_table_identity(
+        config, 'execution-workspace', store='RemoteTarget', schema='dbo', table_name='orders'
+    )
+    bindings = pipeline.pipeline_physical_bindings(
+        {source['table_id']: source, target['table_id']: target},
+        config=config, workspace_id='execution-workspace',
+    )
+    assert bindings[source['table_id']]['workspace_id'] == 'external-workspace'
+    assert bindings[source['table_id']]['item_id'] == 'warehouse-item'
+    assert bindings[target['table_id']]['workspace_id'] == 'target-workspace'
+    assert bindings[target['table_id']]['item_id'] == 'target-warehouse-item'
+
+    # Exercise the actual Fabric connector boundary for both remote stores.
+    spark, frame = _Spark(), _Frame()
+    runtime = {'config': config, 'scope_workspace_id': 'execution-workspace'}
+    result = call_with_spark(spark, io.read_warehouse_table, 'dbo', 'orders',
+                             store='ExternalWarehouse', context=runtime)
+    io.write_warehouse_table(frame, 'dbo', 'orders', store='RemoteTarget', context=runtime)
+    assert result == {'synapsesql': 'wh_External.dbo.orders'}
+    assert ('option', 'workspace', 'external-workspace') in spark.read.calls
+    assert ('option', 'item', 'warehouse-item') in spark.read.calls
+    assert ('option', 'database', 'wh_External') in spark.read.calls
+    assert ('option', 'workspace', 'target-workspace') in frame.write.calls
+    assert ('option', 'item', 'target-warehouse-item') in frame.write.calls
+    assert ('synapsesql', 'wh_Target.dbo.orders') in frame.write.calls
+

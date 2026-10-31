@@ -525,8 +525,8 @@ def resolve_physical_table_identity(
         raise ValueError("table_name must be a non-empty string.")
     store_key = store.strip()
     configured_store = get_store(config, active_workspace_id, store_key)
-    if str(configured_store.workspace_id).strip().lower() != str(active_workspace_id).strip().lower():
-        raise ValueError("Observed business tables must belong to the configured Engineering workspace; Metadata may be central.")
+    # The execution workspace selects the logical store mapping. The configured
+    # FabricStore owns the physical workspace/item location and may be remote.
     store_kind = str(getattr(configured_store, "kind", "")).strip().lower()
     if store_kind == "lakehouse":
         if getattr(configured_store, "schema_enabled", False) and schema is None and not getattr(configured_store, "schema", None):
@@ -5550,12 +5550,10 @@ class ExecutionSummary:
 
 
 def pipeline_physical_bindings(identities, *, config, workspace_id):
-    """Capture execution destinations separately from global logical table identities."""
+    """Capture each participant's configured physical destination independently of execution scope."""
     bindings = {}
     for table_id, item in identities.items():
         store = get_store(config, workspace_id, item["store"])
-        if str(store.workspace_id).strip().lower() != str(workspace_id).strip().lower():
-            raise ValueError("Pipeline business destinations must belong to the calling Engineering workspace.")
         bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
