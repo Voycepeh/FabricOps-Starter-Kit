@@ -122,6 +122,7 @@ No related guides documented.
 | Status | Version |
 | --- | --- |
 | Live | 0.3.0 |
+| Live | 0.3.1 |
 
 ### Live-critical dependencies
 

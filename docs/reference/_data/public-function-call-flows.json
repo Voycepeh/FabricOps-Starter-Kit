@@ -605,6 +605,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``access`` contains consolidated person/table/surface observations,\n    explicit verification status, confirmed effective permissions, and\n    provenance. ``coverage`` contains visibility gaps, unsupported cases,\n    restrictions, contradictions, and errors.",
@@ -759,6 +763,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
@@ -907,6 +915,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``access`` contains rows aligned to ``METADATA_DATA_ACCESS``. By\n    default those rows are appended before return. ``unmatched`` contains observed permissions that could\n    not be linked to an active registered physical table, so observations\n    are never silently discarded.",
@@ -1078,6 +1090,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
@@ -2877,6 +2893,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    A dictionary summarizing the completed metadata lakehouse setup,\n    including the resolved governance and engineering metadata schemas,\n    metadata tables checked,\n    tables created, additively evolved, successfully validated, failed tables,\n    per-table messages, active steward readiness, fully qualified table\n    names, and overall setup status. Key fields are ``status``,\n    ``data_agreement``, ``governance``, ``engineering``, ``tables``,\n    ``table_results``,\n    ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,\n    ``evolved_tables``, ``validated_tables``, ``failed_tables``,\n    ``created_or_checked_tables``,\n    ``warnings``, ``active_metadata_tables``, and\n    ``active_metadata_table_count``.\n\n    ``status`` is ``\"ready\"`` when no table failures occur,\n    ``\"partial_failure\"`` when some tables succeed and some fail, and\n    ``\"failed\"`` when all table operations fail. ``data_agreement``\n    summarizes steward, agreement, and contract readiness. ``governance``\n    summarizes governance-authored tables, and ``engineering`` summarizes\n    engineering-written tables. Active steward readiness depends on\n    whether active steward rows already exist.",
@@ -2961,6 +2981,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "NotebookSetupContext\n    A ``NotebookSetupContext`` containing the selected workspace_id,\n    resolved Fabric stores, runtime and user identity, startup validation\n    results, generated or detected run ID, and overall readiness status.\n    Returned fields are ``run_id`` (generated or detected run identifier),\n    ``notebook_name`` (resolved notebook name), ``workspace_name``\n    (resolved workspace name when available), ``user_name`` (resolved user\n    identity), ``workspace_id`` (selected workspace_id key), ``paths``\n    (requested target names mapped to resolved Fabric store objects),\n    ``validation_results`` (startup check results), ``runtime_metadata``\n    (best-effort runtime metadata), and ``readiness_status`` (overall\n    readiness outcome).",
@@ -3776,6 +3800,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    Created agent and datasource identities, workspace, display name, source\n    ``table_id``, and the final useful configuration status.",
@@ -4875,6 +4903,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the CSV file or compatible CSV\n    files found at the resolved Lakehouse ``Files`` path. Column types\n    follow Spark CSV reader behavior and generally remain strings unless\n    schema inference or other schema handling is explicitly requested.",
@@ -4942,6 +4974,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame converted from the selected Excel worksheet.",
@@ -4999,6 +5035,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame backed by the resolved JSON file or compatible\n    files in the supplied folder path.",
@@ -5066,6 +5106,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame backed by either the original resolved Parquet path\n    or the compatible ``_tsus`` fallback path. Before returning, the\n    function executes a one-row Spark action to verify that the selected\n    data can be decoded.",
@@ -5173,6 +5217,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the governed rows and all columns\n    in the resolved Lakehouse Delta table. The data is evaluated when a\n    downstream Spark action runs.",
@@ -5246,6 +5294,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing exactly the rows and columns returned by\n    the supplied Warehouse SQL query.",
@@ -5316,6 +5368,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing all rows and columns returned from the\n    resolved Warehouse table.",
@@ -6599,6 +6655,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "None\n    The function performs the Spark Delta write before returning.",
@@ -6693,6 +6753,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
@@ -6956,6 +7020,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    Final execution summary. For persistent modes this is the\n    METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.",
@@ -7047,6 +7115,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
@@ -7144,6 +7216,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    Prepared dataframe, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
@@ -7337,6 +7413,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    ``read_metrics`` contains ``rows_read`` (zero for a known empty\n    incremental scope, otherwise None) and ``columns`` from schema metadata.\n    No count is triggered for reporting.\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom Warehouse query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an workspace_id-selected immutable Data\n      Contract applies. The contract record itself is not exposed.\n    - ``read_mode``: the explicit source read mode.\n    - ``has_data`` and ``should_process``: whether this read contributes\n      unconsumed work. Full reads return ``True`` without triggering a count.\n    - ``scope``: a compact summary of the resolved full, bootstrap, or\n      watermark scope; no metadata rows are exposed.",
@@ -7643,6 +7723,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
@@ -7713,6 +7797,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "str\n    Deterministic canonical ``table_id``. The physical table and Catalogue\n    record do not need to exist yet.",
@@ -7857,6 +7945,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "PipelineSession\n    Contract selection, pipeline_id containing the permanent UUID, registration\n    details and the automatically refreshed execution report. Read and\n    Write calls use this execution through a context-local binding.",
@@ -14222,6 +14314,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "Not documented yet",
@@ -14516,6 +14612,10 @@
         {
           "status": "preview",
           "version": "0.3.0"
+        },
+        {
+          "status": "preview",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.",
@@ -14781,6 +14881,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
@@ -14885,6 +14989,10 @@
         {
           "status": "live",
           "version": "0.3.0"
+        },
+        {
+          "status": "live",
+          "version": "0.3.1"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
@@ -22901,6 +23009,7 @@
     "0.1.0",
     "0.2.0",
     "0.2.5",
-    "0.3.0"
+    "0.3.0",
+    "0.3.1"
   ]
 }
