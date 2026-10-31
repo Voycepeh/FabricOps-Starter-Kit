@@ -142,6 +142,63 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
         assert "Versions expired → Not available" in output
 
 
+@pytest.mark.parametrize(
+    "publication_status,published,expected_label",
+    [
+        ("published", True, "Loaded"),
+        ("already_applied", True, "Already loaded"),
+        ("metadata_recovered", True, "Already loaded"),
+        ("empty_incremental_scope", False, "Skipped — no new data"),
+    ],
+)
+def test_write_summary_uses_data_engineering_load_status(
+    publication_status, published, expected_label, capsys, monkeypatch
+):
+    """Report user-facing load outcomes without exposing internal publication terms."""
+    module = import_module("fabricops_kit.pipeline.orchestrate_write")
+    monkeypatch.setattr(
+        module, "prepare_pipeline_execution",
+        lambda *_args, **_kwargs: execution_context_stub({"target": None}),
+    )
+    frame = SimpleNamespace(columns=["id"])
+    write_result = {
+        "table_id": "target",
+        "strategy": "append",
+        "published": published,
+        "publication_status": publication_status,
+        "write_metrics": {"rows_committed": 0},
+    }
+    with ExitStack() as stack:
+        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
+            stack.enter_context(
+                patch.object(
+                    module, name,
+                    return_value="target" if name == "resolve_table_id" else {"status": "passed"},
+                )
+            )
+        stack.enter_context(
+            patch.object(module, "check_sensitive_data", return_value={"dataframe": frame})
+        )
+        stack.enter_context(patch.object(module, "pipeline_write", return_value=write_result))
+        stack.enter_context(
+            patch.object(module, "schedule_table_profiling", return_value={"row_count": 0})
+        )
+        run_pipeline_operation(
+            module.orchestrate_write,
+            frame,
+            plan=PLAN,
+            sources=[],
+            store="Silver",
+            schema="demo",
+            table_name="orders",
+            write_mode="append",
+        )
+    output = capsys.readouterr().out
+    assert f"Load status     → {expected_label}" in output
+    assert "Publication" not in output
+    assert "Published" not in output
+
+
 @pytest.mark.parametrize("incremental,rows", [(False, 8), (True, 0), (True, None)])
 @pytest.mark.parametrize("is_query", [False, True])
 def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, is_query, capsys, monkeypatch):
