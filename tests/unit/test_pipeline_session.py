@@ -622,6 +622,7 @@ def test_finalize_emits_compact_summary_even_when_report_widget_exists(runtime, 
     result = finalize_pipeline(session)
     output = capsys.readouterr().out
 
-    assert f"FabricOps Pipeline finalized · {result['status']}" in output
+    status = result["status"].replace("_", " ").upper()
+    assert f"FabricOps Pipeline Summary · {status}" in output
     assert f"Pipeline ID: {session.pipeline_id}" in output
     assert f"Run ID: {session.plan.plan_id}" in output
