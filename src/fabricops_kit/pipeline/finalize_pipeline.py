@@ -60,15 +60,33 @@ def _operation_summary_rows(result, *, pipeline=None):
         is_write = role == "target"
         rows_read = runtime.get("rows_read")
         rows_written = runtime.get("rows_written")
+        table_name = (
+            identity.get("table_name")
+            or destination.get("table_name")
+            or operation.get("table_id")
+            or "Unknown"
+        )
+        rows_read_display = (
+            f"{rows_read:,}" if rows_read is not None else "Not captured" if is_read else "—"
+        )
+        rows_written_display = (
+            f"{rows_written:,}"
+            if rows_written is not None
+            else "Not published"
+            if is_write and result.get("execution_mode") == "dry_run"
+            else "Not captured"
+            if is_write
+            else "—"
+        )
         rows.append((
             "Read" if is_read else "Write" if is_write else role.title() or "Operation",
             str(identity.get("store") or "Not captured"),
             str(identity.get("schema") or destination.get("schema") or "Not captured"),
-            str(identity.get("table_name") or destination.get("table_name") or operation.get("table_id") or "Unknown"),
+            str(table_name),
             str(operation.get("read_mode") or "—"),
             str(operation.get("write_mode") or "—"),
-            f"{rows_read:,}" if rows_read is not None else ("Not captured" if is_read else "—"),
-            f"{rows_written:,}" if rows_written is not None else ("Not published" if is_write and result.get("execution_mode") == "dry_run" else "Not captured" if is_write else "—"),
+            rows_read_display,
+            rows_written_display,
             str(operation.get("status") or "Not captured").replace("_", " ").title(),
             _format_duration(_elapsed_seconds(operation.get("started_at"), operation.get("completed_at"))),
             "; ".join(
