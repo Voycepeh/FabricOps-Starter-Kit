@@ -1,0 +1,194 @@
+table METADATA_PIPELINE_RUN
+	lineageTag: 994c9fb7-222b-51ee-b598-52402946a4de
+
+	column run_id
+		dataType: string
+		lineageTag: b4ac204e-a4fb-5b23-b71d-3c555fa49670
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column approval_id
+		dataType: string
+		lineageTag: a30125ce-0d2b-564f-a755-9fa006c9dde8
+		summarizeBy: none
+		sourceColumn: approval_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column pipeline_id
+		dataType: string
+		lineageTag: f7443bad-3d7a-5f15-a741-5fdf9e74297c
+		summarizeBy: none
+		sourceColumn: pipeline_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column execution_mode
+		dataType: string
+		lineageTag: 1b174ccd-7a8e-5fed-adb8-d344d6632e5a
+		summarizeBy: none
+		sourceColumn: execution_mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 5d831864-f5a1-519d-8163-1cf5ecbc700a
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column started_at
+		dataType: dateTime
+		lineageTag: 496305a8-2dd2-533c-9911-51d89e8e9408
+		summarizeBy: none
+		sourceColumn: started_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column completed_at
+		dataType: dateTime
+		lineageTag: 397fb881-bafc-5945-9bf0-789690da3538
+		summarizeBy: none
+		sourceColumn: completed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: d5d7182d-00d1-5406-bc46-8eaef5333eef
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column activation_revision
+		dataType: string
+		lineageTag: 8b67dc12-337b-5c92-83c9-f366234d0cb0
+		summarizeBy: none
+		sourceColumn: activation_revision
+
+		annotation SummarizationSetBy = Automatic
+
+	column boundary_completed
+		dataType: boolean
+		lineageTag: 6889e361-d87e-5834-8d1d-10029494e55b
+		summarizeBy: none
+		sourceColumn: boundary_completed
+
+		annotation SummarizationSetBy = Automatic
+
+	column warnings_json
+		dataType: string
+		lineageTag: 128bfe31-0bbf-51e4-82a7-719edb0d856d
+		summarizeBy: none
+		sourceColumn: warnings_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: ca7c5af8-c389-5359-9ba5-3dbaaee40047
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: f3187fd4-85d6-555d-91aa-0828b10ae2e3
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 1a03db6b-f787-53c2-ab61-0141433dbd9c
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: a48f61d9-fe06-5a89-ab8c-d3ce7f2f693b
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: a61df0ea-a7f0-5225-b899-920fd7a6f289
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: 4282c5ce-d8fe-5c9c-9aca-97774e109a54
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: ef48a1ba-0c19-551f-9e51-03c4c4414648
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: ae20f509-e188-5b2b-8ce8-d2f287dd81a2
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_pipeline_key
+		dataType: string
+		lineageTag: 76bfa6c6-be04-5ff4-8ecd-e72459bc520a
+		summarizeBy: none
+		sourceColumn: workspace_pipeline_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_date
+		dataType: dateTime
+		lineageTag: 956a38a0-2216-5a41-b7df-627f44bc69bc
+		summarizeBy: none
+		sourceColumn: run_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_PIPELINE_RUN = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_PIPELINE_RUN", {"run_id", "approval_id", "pipeline_id", "execution_mode", "workspace_id", "started_at", "completed_at", "status", "activation_revision", "boundary_completed", "warnings_json", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, true),
+			    Typed = Table.TransformColumnTypes(Source, {{"run_id", type text}, {"approval_id", type text}, {"pipeline_id", type text}, {"execution_mode", type text}, {"workspace_id", type text}, {"started_at", type datetime}, {"completed_at", type datetime}, {"status", type text}, {"activation_revision", type text}, {"boundary_completed", type logical}, {"warnings_json", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithPipelineKey = Table.AddColumn(Typed, "workspace_pipeline_key", each Text.Combine(List.Transform({[workspace_id], [pipeline_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithRunDate = Table.AddColumn(WithPipelineKey, "run_date", each Date.From([started_at]), type date),
+			    Result = WithRunDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

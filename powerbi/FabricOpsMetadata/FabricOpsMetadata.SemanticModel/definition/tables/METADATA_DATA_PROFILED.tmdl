@@ -1,0 +1,282 @@
+table METADATA_DATA_PROFILED
+	lineageTag: 31952deb-63a2-5874-8fdb-2f0aec53c64c
+
+	column profile_id
+		dataType: string
+		lineageTag: 44722a89-b98f-5e13-a439-ca68aa7a1ad0
+		summarizeBy: none
+		sourceColumn: profile_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column profile_snapshot_id
+		dataType: string
+		lineageTag: a02cf5c5-6472-5bf0-ba84-63160e814122
+		summarizeBy: none
+		sourceColumn: profile_snapshot_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: b18667cb-5430-5045-bfcc-8014efc03391
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column column_id
+		dataType: string
+		lineageTag: 4f57b9f6-5005-5631-bce8-6af95f7b9a9d
+		summarizeBy: none
+		sourceColumn: column_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 4d954323-98b7-5612-8ba1-5b3f8be6acd8
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_type
+		dataType: string
+		lineageTag: 4eaf9d09-5fb7-57d3-a75c-bba16ed165ab
+		summarizeBy: none
+		sourceColumn: data_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: 99c16841-8067-590f-962e-6d084c1e7258
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column column_name
+		dataType: string
+		lineageTag: 557e12e5-3e6e-52fd-b219-45b57bf6eb5d
+		summarizeBy: none
+		sourceColumn: column_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column row_count
+		dataType: int64
+		lineageTag: aa54687b-bee9-531f-8ec1-01488d87b319
+		summarizeBy: none
+		sourceColumn: row_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column non_null_count
+		dataType: int64
+		lineageTag: 7cd1379a-7f28-504d-8bda-d95cb0a9da1c
+		summarizeBy: none
+		sourceColumn: non_null_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column null_count
+		dataType: int64
+		lineageTag: 722a6cab-bfd8-55a6-a5a0-952b95fff539
+		summarizeBy: none
+		sourceColumn: null_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column null_percent
+		dataType: double
+		lineageTag: 85497cd2-d48d-5f3d-be1b-745c06e28358
+		summarizeBy: none
+		sourceColumn: null_percent
+
+		annotation SummarizationSetBy = Automatic
+
+	column distinct_count
+		dataType: int64
+		lineageTag: dc7e2eea-01d2-5f45-8e00-e353ba201cdd
+		summarizeBy: none
+		sourceColumn: distinct_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column distinct_percent
+		dataType: double
+		lineageTag: d994e085-ae81-5763-b1a2-b091d97f6b1b
+		summarizeBy: none
+		sourceColumn: distinct_percent
+
+		annotation SummarizationSetBy = Automatic
+
+	column mean_value
+		dataType: double
+		lineageTag: 60f66b50-7052-5cc5-ba2a-90f3da4d9655
+		summarizeBy: none
+		sourceColumn: mean_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column stddev_value
+		dataType: double
+		lineageTag: 2ab981b0-cba3-52a5-bc3c-ca2607890204
+		summarizeBy: none
+		sourceColumn: stddev_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column min_value
+		dataType: string
+		lineageTag: 1241506a-bfaa-5baa-bc83-987ed948f03f
+		summarizeBy: none
+		sourceColumn: min_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column percentile_25_value
+		dataType: double
+		lineageTag: 7bc04432-b3ac-53ae-b096-3c550377bf1d
+		summarizeBy: none
+		sourceColumn: percentile_25_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column median_value
+		dataType: double
+		lineageTag: f5b441fc-4801-55cc-9cb6-d1f7db83113e
+		summarizeBy: none
+		sourceColumn: median_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column percentile_75_value
+		dataType: double
+		lineageTag: 626ab752-f4e6-5dd0-be14-95d969c03dca
+		summarizeBy: none
+		sourceColumn: percentile_75_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_value
+		dataType: string
+		lineageTag: 89efa91e-db43-5491-a217-e8f605ea9726
+		summarizeBy: none
+		sourceColumn: max_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 90febf36-818a-54eb-9034-9fb0143c7108
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 19bf257e-ae0f-5120-bdf7-9e6d1a798387
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 41371b0b-8b8e-559f-acf2-ef52746bea13
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 4e5d582c-6b51-53e5-919e-14b1c4da3209
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: 4e08f99b-6ec4-53ec-b0e9-6e3d4949674d
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: 63349ef0-fa29-5870-97e3-94236b013c0b
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: e18a11b5-dd25-5265-9629-ff7f2a034d66
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: dd249f78-2add-5233-bfda-64d6bd1b04c6
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_table_key
+		dataType: string
+		lineageTag: 74ed6fe7-c3c1-5a44-af41-5ac4c6868810
+		summarizeBy: none
+		sourceColumn: workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_column_key
+		dataType: string
+		lineageTag: 69666bb7-17cd-55c4-8f22-e8fdadfd86af
+		summarizeBy: none
+		sourceColumn: workspace_column_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column profile_date
+		dataType: dateTime
+		lineageTag: 890a877a-beb8-5066-a06e-a74d80f7b028
+		summarizeBy: none
+		sourceColumn: profile_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_PROFILED = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_DATA_PROFILED", {"profile_id", "profile_snapshot_id", "table_id", "column_id", "workspace_id", "data_type", "table_name", "column_name", "row_count", "non_null_count", "null_count", "null_percent", "distinct_count", "distinct_percent", "mean_value", "stddev_value", "min_value", "percentile_25_value", "median_value", "percentile_75_value", "max_value", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"profile_id", type text}, {"profile_snapshot_id", type text}, {"table_id", type text}, {"column_id", type text}, {"workspace_id", type text}, {"data_type", type text}, {"table_name", type text}, {"column_name", type text}, {"row_count", Int64.Type}, {"non_null_count", Int64.Type}, {"null_count", Int64.Type}, {"null_percent", type number}, {"distinct_count", Int64.Type}, {"distinct_percent", type number}, {"mean_value", type number}, {"stddev_value", type number}, {"min_value", type text}, {"percentile_25_value", type number}, {"median_value", type number}, {"percentile_75_value", type number}, {"max_value", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithTableKey = Table.AddColumn(Typed, "workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithColumnKey = Table.AddColumn(WithTableKey, "workspace_column_key", each Text.Combine(List.Transform({[workspace_id], [table_id], [column_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithProfileDate = Table.AddColumn(WithColumnKey, "profile_date", each Date.From([_committed_at]), type date),
+			    Result = WithProfileDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

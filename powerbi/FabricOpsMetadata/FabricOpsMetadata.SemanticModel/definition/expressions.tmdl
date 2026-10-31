@@ -1,0 +1,55 @@
+expression pSqlEndpoint = "your-endpoint.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: fb4c5ddc-840c-5e1e-b832-8cc969ec4aaf
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression pDatabaseName = "your-metadata-lakehouse" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 84d04414-4303-5cc8-97e2-827aa8114911
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression pGovernanceSchema = "governance" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 87504281-cecd-5467-af98-7669a7115046
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression pEngineeringSchema = "engineering" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 18216012-ab98-5381-b877-52f29deb069b
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression pLoadComplexBearingTables = true meta [IsParameterQuery=true, Type="Logical", IsParameterQueryRequired=true]
+	lineageTag: 0d09dd4d-4ae6-5681-96c2-fc5c5083c535
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Logical
+
+expression FabricOpsSqlTable = ```
+	(SchemaName as text, TableName as text, ScalarColumns as list, HasComplexColumns as logical) as table =>
+	let
+	    EmptyProjection = #table(ScalarColumns, {}),
+	    DatabaseSource = Sql.Database(pSqlEndpoint, pDatabaseName, [CreateNavigationProperties=false, CommandTimeout=#duration(0, 0, 30, 0)]),
+	    QuotedColumns = Text.Combine(List.Transform(ScalarColumns, each "[" & Text.Replace(_, "]", "]]") & "]"), ", "),
+	    SqlText = "SELECT " & QuotedColumns & " FROM [" & Text.Replace(SchemaName, "]", "]]") & "].[" & Text.Replace(TableName, "]", "]]") & "]",
+	    Result = if HasComplexColumns and not pLoadComplexBearingTables then EmptyProjection else Value.NativeQuery(DatabaseSource, SqlText, null, [EnableFolding=true])
+	in
+	    Result
+	```
+	lineageTag: a4913dd7-576e-5950-8a1e-c1a1dfa45515
+	queryGroup: 'Connection helpers'
+
+	annotation PBI_ResultType = Function

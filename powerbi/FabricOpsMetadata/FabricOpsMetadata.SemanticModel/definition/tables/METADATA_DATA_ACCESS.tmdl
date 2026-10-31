@@ -1,0 +1,232 @@
+table METADATA_DATA_ACCESS
+	lineageTag: fbb26a45-8a61-5c67-92ac-9cb88c2fc2d6
+
+	column access_id
+		dataType: string
+		lineageTag: cc626dba-ef29-5958-acd7-0c6336adff39
+		summarizeBy: none
+		sourceColumn: access_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column user_principal
+		dataType: string
+		lineageTag: 6b58feab-837c-5620-88e8-402520780904
+		summarizeBy: none
+		sourceColumn: user_principal
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: 23b7634b-b40d-5063-a0db-00a03963e596
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: b1a8aa13-014f-5e0f-92e6-111f4845edb0
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 2fb0fece-1176-590f-be57-12e867543d5e
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_level
+		dataType: string
+		lineageTag: 56d4b2e8-578a-5641-8bfc-dce57d3c455d
+		summarizeBy: none
+		sourceColumn: access_level
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_value
+		dataType: string
+		lineageTag: 74c4bd3b-bbcf-56b4-a987-df4b9c9f1822
+		summarizeBy: none
+		sourceColumn: access_value
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_state
+		dataType: string
+		lineageTag: ae404f1d-9c5a-5917-8df0-da2785eb2efc
+		summarizeBy: none
+		sourceColumn: access_state
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_snapshot_id
+		dataType: string
+		lineageTag: 0ea9fb56-1f2d-5eb4-99d9-c5d4acfd8b55
+		summarizeBy: none
+		sourceColumn: access_snapshot_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column user_type
+		dataType: string
+		lineageTag: eb975c1b-8127-5d90-9f43-cdca2fa72f41
+		summarizeBy: none
+		sourceColumn: user_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column role_name
+		dataType: string
+		lineageTag: 00313d6e-fa0e-5794-9a80-0d20d2ce1032
+		summarizeBy: none
+		sourceColumn: role_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column permission_source
+		dataType: string
+		lineageTag: 504da1e6-837c-5342-81d7-d57f122a16a3
+		summarizeBy: none
+		sourceColumn: permission_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column database_name
+		dataType: string
+		lineageTag: d93b363b-15dd-50d3-8ea0-9998f5547b54
+		summarizeBy: none
+		sourceColumn: database_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column schema_name
+		dataType: string
+		lineageTag: 3acbb100-54c1-5bf0-a42e-77171cb139c2
+		summarizeBy: none
+		sourceColumn: schema_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column object_name
+		dataType: string
+		lineageTag: ab038aa1-2657-5793-8da3-468ddbc197f5
+		summarizeBy: none
+		sourceColumn: object_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column object_type
+		dataType: string
+		lineageTag: aaae9075-a9dc-5a50-a4a9-edaea8c63504
+		summarizeBy: none
+		sourceColumn: object_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 26ed9ab1-cbd9-508f-9038-7dd4d04306d0
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: 2cb7d884-4b86-5c64-bffb-e0c119e07186
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: e635fb37-915e-5dc6-b595-2296a3f4bacb
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 27015032-4ee9-5580-990d-f7ae13be3c4a
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: fcca3635-eeef-5eb4-b7d6-7e4a915ab327
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: 60d385f7-fe17-5a5e-b34c-003917fa4136
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 2afb3315-302d-5614-9cdd-4ca093a1cf54
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: e388c254-1991-56f3-93a9-73c4073876b1
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_table_key
+		dataType: string
+		lineageTag: f4882d99-1239-5bc0-8f91-41298414aec0
+		summarizeBy: none
+		sourceColumn: workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column access_observed_date
+		dataType: dateTime
+		lineageTag: ff34a089-19f0-5d2d-8806-a217a6b484e4
+		summarizeBy: none
+		sourceColumn: access_observed_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_ACCESS = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_DATA_ACCESS", {"access_id", "user_principal", "table_id", "table_name", "workspace_id", "access_level", "access_value", "access_state", "access_snapshot_id", "user_type", "role_name", "permission_source", "database_name", "schema_name", "object_name", "object_type", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"access_id", type text}, {"user_principal", type text}, {"table_id", type text}, {"table_name", type text}, {"workspace_id", type text}, {"access_level", type text}, {"access_value", type text}, {"access_state", type text}, {"access_snapshot_id", type text}, {"user_type", type text}, {"role_name", type text}, {"permission_source", type text}, {"database_name", type text}, {"schema_name", type text}, {"object_name", type text}, {"object_type", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithTableKey = Table.AddColumn(Typed, "workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithAccessDate = Table.AddColumn(WithTableKey, "access_observed_date", each Date.From([_committed_at]), type date),
+			    Result = WithAccessDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

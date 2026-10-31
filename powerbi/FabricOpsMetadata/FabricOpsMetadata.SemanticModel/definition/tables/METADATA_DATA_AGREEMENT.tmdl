@@ -1,0 +1,207 @@
+table METADATA_DATA_AGREEMENT
+	lineageTag: 19dae46f-1813-526a-982d-fa8c5a1e608d
+
+	column agreement_id
+		dataType: string
+		lineageTag: 39716f0c-c74c-51cd-8d04-3c831949d07e
+		summarizeBy: none
+		sourceColumn: agreement_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column agreement_version
+		dataType: string
+		lineageTag: 09852bfc-b910-5077-9e2e-e1f7f0944ba3
+		summarizeBy: none
+		sourceColumn: agreement_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column agreement_name
+		dataType: string
+		lineageTag: 8fe77742-a33a-5542-9f0a-5ce1f9badc23
+		summarizeBy: none
+		sourceColumn: agreement_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column domain
+		dataType: string
+		lineageTag: af5c4e8e-2eb4-52b2-873a-218835ff67c6
+		summarizeBy: none
+		sourceColumn: domain
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_steward_id
+		dataType: string
+		lineageTag: 7b8f3c1a-758c-503a-9792-8fe3e1345765
+		summarizeBy: none
+		sourceColumn: provider_steward_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column provider_steward_name
+		dataType: string
+		lineageTag: 9b871caa-e577-566a-acb8-363408678dc0
+		summarizeBy: none
+		sourceColumn: provider_steward_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column recipient_steward_id
+		dataType: string
+		lineageTag: 203eed96-0f06-5d22-bbd8-759114ee6c76
+		summarizeBy: none
+		sourceColumn: recipient_steward_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column recipient_steward_name
+		dataType: string
+		lineageTag: a28534f1-c85d-5799-aeb1-5456303e3e00
+		summarizeBy: none
+		sourceColumn: recipient_steward_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column start_date
+		dataType: dateTime
+		lineageTag: 0e20dfdf-6a96-5db3-9f96-b7a4f54aa00f
+		summarizeBy: none
+		sourceColumn: start_date
+		formatString: yyyy-MM-dd
+
+		annotation SummarizationSetBy = Automatic
+
+	column expiry_date
+		dataType: dateTime
+		lineageTag: 8ccf98b5-cfc7-52e9-8574-1f9bb8c90aa0
+		summarizeBy: none
+		sourceColumn: expiry_date
+		formatString: yyyy-MM-dd
+
+		annotation SummarizationSetBy = Automatic
+
+	column business_purpose
+		dataType: string
+		lineageTag: ed9fa9ab-4874-56b4-941d-971fdbeba9ba
+		summarizeBy: none
+		sourceColumn: business_purpose
+
+		annotation SummarizationSetBy = Automatic
+
+	column supporting_documents_json
+		dataType: string
+		lineageTag: d8890f88-bdc7-5a8f-8f81-48be2fce9f7a
+		summarizeBy: none
+		sourceColumn: supporting_documents_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column approved_usage_json
+		dataType: string
+		lineageTag: 101e9938-4fae-5546-a8d6-d1d90258f10a
+		summarizeBy: none
+		sourceColumn: approved_usage_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column custom_fields_json
+		dataType: string
+		lineageTag: 70e24ca7-8f7e-5db5-b9e3-4ab44127ce77
+		summarizeBy: none
+		sourceColumn: custom_fields_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: d27b40e4-e9b3-5475-a4e0-4783fc440188
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: f49b2084-cd36-57c6-9704-4904b1046595
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 356bc9e8-bc5e-5a65-b268-652e50d6514c
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 1db10138-4d67-5047-b8f6-fd736f00c1f9
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: c94926ef-38a1-502a-9698-740333eddee7
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: fec807fb-cf9a-59c5-b01b-f0abc267dcc5
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 19a54d96-3616-5c62-81eb-4eb7178beda6
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: b40b4dcc-c8a9-541b-83ff-3c83021c3def
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column agreement_key
+		dataType: string
+		lineageTag: d9080bb8-8920-5fb9-b795-a1f97b538751
+		summarizeBy: none
+		sourceColumn: agreement_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_AGREEMENT = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pGovernanceSchema, "METADATA_DATA_AGREEMENT", {"agreement_id", "agreement_version", "agreement_name", "domain", "provider_steward_id", "provider_steward_name", "recipient_steward_id", "recipient_steward_name", "start_date", "expiry_date", "business_purpose", "supporting_documents_json", "approved_usage_json", "custom_fields_json", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"agreement_id", type text}, {"agreement_version", type text}, {"agreement_name", type text}, {"domain", type text}, {"provider_steward_id", type text}, {"provider_steward_name", type text}, {"recipient_steward_id", type text}, {"recipient_steward_name", type text}, {"start_date", type date}, {"expiry_date", type date}, {"business_purpose", type text}, {"supporting_documents_json", type text}, {"approved_usage_json", type text}, {"custom_fields_json", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithAgreementKey = Table.AddColumn(Typed, "agreement_key", each Text.Combine(List.Transform({[agreement_id], [agreement_version]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    Result = WithAgreementKey
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

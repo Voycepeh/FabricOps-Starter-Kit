@@ -1,0 +1,160 @@
+table METADATA_DATA_CONTRACT
+	lineageTag: 6a08c46f-b0bf-543e-84cf-5b79e761ecfb
+
+	column contract_id
+		dataType: string
+		lineageTag: c43167e5-b5ce-5fc9-bbcf-32d9f4d7f886
+		summarizeBy: none
+		sourceColumn: contract_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_version
+		dataType: int64
+		lineageTag: 2b1c4809-6d46-53a6-b90f-3d41badd8530
+		summarizeBy: none
+		sourceColumn: contract_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: ce9d5c43-090d-501e-b3a3-d54f6355150b
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: 3d9e189d-4874-5211-8afd-9d73d419799b
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column evidence_workspace_id
+		dataType: string
+		lineageTag: ac5ef7cf-0b3a-5e11-9037-205c10cdb885
+		summarizeBy: none
+		sourceColumn: evidence_workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_payload_json
+		dataType: string
+		lineageTag: e847dae0-6541-51c2-8e01-1825c2184490
+		summarizeBy: none
+		sourceColumn: contract_payload_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 46801dd2-0097-5ecc-b716-3edf809721f1
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: ea30dd8e-e776-5554-950f-d7dacca2d804
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: a3108af0-d36a-59f0-944d-4a0ad5646866
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: 1da9499e-d3a1-5c7e-8156-d5014875332c
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: 7ba6a4e8-8937-5932-90be-fb7267e12a77
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: e1841ef0-cc37-56bf-ace6-4a2d4dfe5b4a
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: df907de0-686b-59d7-8178-afccbaa660a4
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 2b8f96a7-7073-5050-9a0e-5cacd32f8407
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: 5a66ffd8-ba3a-5e89-9c66-e00040e0c645
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_key
+		dataType: string
+		lineageTag: cf767449-8e85-5820-912a-ededa62d742a
+		summarizeBy: none
+		sourceColumn: contract_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_committed_date
+		dataType: dateTime
+		lineageTag: de4a3158-3373-5071-b7f0-a773c3e8c1a9
+		summarizeBy: none
+		sourceColumn: contract_committed_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_DATA_CONTRACT = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pGovernanceSchema, "METADATA_DATA_CONTRACT", {"contract_id", "contract_version", "table_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"contract_id", type text}, {"contract_version", Int64.Type}, {"table_id", type text}, {"table_name", type text}, {"evidence_workspace_id", type text}, {"contract_payload_json", type text}, {"status", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithContractKey = Table.AddColumn(Typed, "contract_key", each Text.Combine(List.Transform({[contract_id], [contract_version]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithContractDate = Table.AddColumn(WithContractKey, "contract_committed_date", each Date.From([_committed_at]), type date),
+			    Result = WithContractDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

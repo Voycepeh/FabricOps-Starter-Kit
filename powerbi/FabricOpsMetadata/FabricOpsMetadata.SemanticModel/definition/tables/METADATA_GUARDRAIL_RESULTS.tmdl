@@ -1,0 +1,266 @@
+table METADATA_GUARDRAIL_RESULTS
+	lineageTag: 7eb2b4dd-8512-54d0-a18a-c70276fb814b
+
+	column guardrail_result_id
+		dataType: string
+		lineageTag: 5aaf9e7a-06c4-54f6-b46b-88a84db828e0
+		summarizeBy: none
+		sourceColumn: guardrail_result_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column guardrail_rule_id
+		dataType: string
+		lineageTag: eb3ae644-da19-5cbe-9148-bbb5f4c8c6dc
+		summarizeBy: none
+		sourceColumn: guardrail_rule_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column guardrail_version
+		dataType: int64
+		lineageTag: 769416f1-0fcc-575c-92b4-5aee43426e95
+		summarizeBy: none
+		sourceColumn: guardrail_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: 0565c712-861d-5741-86ce-572b45e52b2e
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: 8f6f755a-99f8-5a07-8043-afd7291f5664
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_id
+		dataType: string
+		lineageTag: 1d91d452-b8e1-5550-a808-fb1df4ae3dcc
+		summarizeBy: none
+		sourceColumn: contract_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_version
+		dataType: int64
+		lineageTag: 806fe6dd-e1b9-598c-9748-bf5d56725355
+		summarizeBy: none
+		sourceColumn: contract_version
+
+		annotation SummarizationSetBy = Automatic
+
+	column execution_type
+		dataType: string
+		lineageTag: 72f9433a-01a4-5790-abe8-8bb2ad4736ad
+		summarizeBy: none
+		sourceColumn: execution_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: string
+		lineageTag: 1eba16eb-d86f-5f97-a7b1-060894185975
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 3387e2fe-12bb-5686-b6c5-fe962753d31c
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: c1cd2ec5-02ed-55b7-b804-93a614925ae5
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column can_continue
+		dataType: boolean
+		lineageTag: 0f979364-dd14-5e2d-b62d-bc7953d7eee4
+		summarizeBy: none
+		sourceColumn: can_continue
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: 3330de15-3863-5d14-81ff-dbd611bf15b1
+		summarizeBy: none
+		sourceColumn: severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column guardrail_type
+		dataType: string
+		lineageTag: 88548806-d9c4-508d-aa69-cc0d59fce53f
+		summarizeBy: none
+		sourceColumn: guardrail_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column rule_id
+		dataType: string
+		lineageTag: c7ad03bb-630d-5b4b-bc8d-cac49075d139
+		summarizeBy: none
+		sourceColumn: rule_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column rule_type
+		dataType: string
+		lineageTag: 036f32a9-f510-5a93-bb80-3b97c99e1199
+		summarizeBy: none
+		sourceColumn: rule_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column action
+		dataType: string
+		lineageTag: 7929a884-d242-54aa-93c8-80e824ce340d
+		summarizeBy: none
+		sourceColumn: action
+
+		annotation SummarizationSetBy = Automatic
+
+	column reason
+		dataType: string
+		lineageTag: b3f45cc4-0d3b-5049-ab91-ce92399928aa
+		summarizeBy: none
+		sourceColumn: reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column result_payload_json
+		dataType: string
+		lineageTag: d3ded6c4-febe-52be-91cd-84394e2726b9
+		summarizeBy: none
+		sourceColumn: result_payload_json
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_by
+		dataType: string
+		lineageTag: 587b0603-55a2-549a-8f65-e27b41f78231
+		summarizeBy: none
+		sourceColumn: _committed_by
+
+		annotation SummarizationSetBy = Automatic
+
+	column _committed_at
+		dataType: dateTime
+		lineageTag: abc4d66d-2f9c-50a1-b9e6-3b2e36f38903
+		summarizeBy: none
+		sourceColumn: _committed_at
+		formatString: yyyy-MM-dd HH:mm:ss
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_id
+		dataType: string
+		lineageTag: fe9b54d1-80d9-5123-bd46-348985b446a0
+		summarizeBy: none
+		sourceColumn: _workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _workspace_name
+		dataType: string
+		lineageTag: bf240e16-8b42-5e09-b69d-4dba4dd71e22
+		summarizeBy: none
+		sourceColumn: _workspace_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_id
+		dataType: string
+		lineageTag: 15ad7d78-61d0-5c9b-8537-4b55097243b4
+		summarizeBy: none
+		sourceColumn: _notebook_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column _notebook_name
+		dataType: string
+		lineageTag: 8293bd0e-86c3-507a-964c-f48441e18728
+		summarizeBy: none
+		sourceColumn: _notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _metadata_lakehouse_name
+		dataType: string
+		lineageTag: 3cf11235-085b-5ffd-8066-9fa9973ca8ec
+		summarizeBy: none
+		sourceColumn: _metadata_lakehouse_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column _activity_id
+		dataType: string
+		lineageTag: b3014cf0-74c2-5d0a-a6ff-8e3ab0bb03a8
+		summarizeBy: none
+		sourceColumn: _activity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_table_key
+		dataType: string
+		lineageTag: 084b1b64-4502-5136-ab88-8c0d8eba36c4
+		summarizeBy: none
+		sourceColumn: workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column contract_key
+		dataType: string
+		lineageTag: b0272acb-6680-5b81-ae3b-316887615a19
+		summarizeBy: none
+		sourceColumn: contract_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column guardrail_date
+		dataType: dateTime
+		lineageTag: 5b727d53-3fa2-5593-a8b7-8b350c5ccb7e
+		summarizeBy: none
+		sourceColumn: guardrail_date
+		formatString: yyyy-MM-dd
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition METADATA_GUARDRAIL_RESULTS = m
+		mode: import
+		queryGroup: 'Canonical metadata'
+		source = ```
+			let
+			    Source = FabricOpsSqlTable(pEngineeringSchema, "METADATA_GUARDRAIL_RESULTS", {"guardrail_result_id", "guardrail_rule_id", "guardrail_version", "table_id", "table_name", "contract_id", "contract_version", "execution_type", "run_id", "workspace_id", "status", "can_continue", "severity", "guardrail_type", "rule_id", "rule_type", "action", "reason", "result_payload_json", "_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"}, false),
+			    Typed = Table.TransformColumnTypes(Source, {{"guardrail_result_id", type text}, {"guardrail_rule_id", type text}, {"guardrail_version", Int64.Type}, {"table_id", type text}, {"table_name", type text}, {"contract_id", type text}, {"contract_version", Int64.Type}, {"execution_type", type text}, {"run_id", type text}, {"workspace_id", type text}, {"status", type text}, {"can_continue", type logical}, {"severity", type text}, {"guardrail_type", type text}, {"rule_id", type text}, {"rule_type", type text}, {"action", type text}, {"reason", type text}, {"result_payload_json", type text}, {"_committed_by", type text}, {"_committed_at", type datetime}, {"_workspace_id", type text}, {"_workspace_name", type text}, {"_notebook_id", type text}, {"_notebook_name", type text}, {"_metadata_lakehouse_name", type text}, {"_activity_id", type text}}),
+			    WithTableKey = Table.AddColumn(Typed, "workspace_table_key", each Text.Combine(List.Transform({[workspace_id], [table_id]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithContractKey = Table.AddColumn(WithTableKey, "contract_key", each Text.Combine(List.Transform({[contract_id], [contract_version]}, each if _ = null then "" else Text.From(_)), "|"), type text),
+			    WithGuardrailDate = Table.AddColumn(WithContractKey, "guardrail_date", each Date.From([_committed_at]), type date),
+			    Result = WithGuardrailDate
+			in
+			    Result
+			```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

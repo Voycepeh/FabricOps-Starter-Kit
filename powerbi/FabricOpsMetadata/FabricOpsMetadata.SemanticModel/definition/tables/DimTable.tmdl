@@ -1,0 +1,104 @@
+table DimTable
+	lineageTag: 774ad92f-1cea-5765-a759-858dd46e00f1
+
+	column workspace_table_key
+		dataType: string
+		lineageTag: ae2ce09b-5d67-5ad8-9b01-d8fc2308d270
+		summarizeBy: none
+		sourceColumn: workspace_table_key
+		isHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column workspace_id
+		dataType: string
+		lineageTag: 552b3213-2f71-5aaf-b598-50d81ed3bd36
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_id
+		dataType: string
+		lineageTag: 0474906c-23fd-5e32-999c-1ec1f99cb528
+		summarizeBy: none
+		sourceColumn: table_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column table_name
+		dataType: string
+		lineageTag: 81e8ded7-84a9-59e4-9f19-280ec69aa9e8
+		summarizeBy: none
+		sourceColumn: table_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column layer
+		dataType: string
+		lineageTag: 4eb55a45-4a4d-5efd-9367-787dba964e3a
+		summarizeBy: none
+		sourceColumn: layer
+
+		annotation SummarizationSetBy = Automatic
+
+	column store_type
+		dataType: string
+		lineageTag: 0a7b908a-6e71-5cb1-b2a6-ea9390797c1d
+		summarizeBy: none
+		sourceColumn: store_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column schema_name
+		dataType: string
+		lineageTag: b7aeef19-3eef-5c5a-81be-2c0bde106aa9
+		summarizeBy: none
+		sourceColumn: schema_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_active
+		dataType: boolean
+		lineageTag: 74f0847c-7cef-56cb-9952-ec72b9abd0d8
+		summarizeBy: none
+		sourceColumn: is_active
+
+		annotation SummarizationSetBy = Automatic
+
+	column writer_workspace_id
+		dataType: string
+		lineageTag: 56a5b953-7c6c-50d7-8452-2805baf1128d
+		summarizeBy: none
+		sourceColumn: writer_workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column writer_notebook_name
+		dataType: string
+		lineageTag: b503162d-6f8d-59d8-b494-43671aab6e80
+		summarizeBy: none
+		sourceColumn: writer_notebook_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_profiled_at
+		dataType: dateTime
+		lineageTag: 7f0e4343-6280-53dd-87f3-71d02ded951d
+		summarizeBy: none
+		sourceColumn: last_profiled_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimTable = m
+		mode: import
+		queryGroup: 'Semantic dimensions'
+		source = ```
+			let
+			    Source = METADATA_DATA_CATALOGUE,
+			    TableRows = Table.SelectRows(Source, each Text.Lower(Text.From([metadata_level])) = "table"),
+			    Selected = Table.SelectColumns(TableRows, {"workspace_table_key", "workspace_id", "table_id", "table_name", "layer", "store_type", "schema_name", "is_active", "writer_workspace_id", "writer_notebook_name", "last_profiled_at"}),
+			    Result = Table.Distinct(Selected, {"workspace_table_key"})
+			in
+			    Result
+			```

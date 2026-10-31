@@ -25,6 +25,10 @@ htmlcov/
 # Notebooks
 .ipynb_checkpoints/
 
+# Power BI Desktop project local state
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
 # Environment and secrets
 .env
 .env.*
