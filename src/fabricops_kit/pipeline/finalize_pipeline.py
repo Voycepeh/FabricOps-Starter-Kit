@@ -83,8 +83,13 @@ def _operation_summary_rows(result, *, pipeline=None):
             str(identity.get("store") or "Not captured"),
             str(identity.get("schema") or destination.get("schema") or "Not captured"),
             str(table_name),
-            str(operation.get("read_mode") or "—"),
-            str(operation.get("write_mode") or "—"),
+            str(
+                operation.get("read_mode")
+                if is_read
+                else operation.get("write_mode")
+                if is_write
+                else "—"
+            ),
             rows_read_display,
             rows_written_display,
             str(operation.get("status") or "Not captured").replace("_", " ").title(),
@@ -127,7 +132,7 @@ def _print_pipeline_summary(pipeline, result):
         return
 
     columns = [
-        "Operation", "Store", "Schema", "Table", "Read mode", "Write mode",
+        "Operation", "Store", "Schema", "Table", "Mode",
         "Rows read", "Rows written", "Status", "Duration", "Stages",
     ]
     try:

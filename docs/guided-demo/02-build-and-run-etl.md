@@ -176,7 +176,28 @@ display(writes["target"]["dataframe"].limit(10))
 
 Choose the target store, schema, and table. The supported load strategies are `"overwrite"`, `"append"`, `"scd1"`, and `"scd2"`. Strategy-specific parameters such as SCD keys belong in `write_parameters`; see [Step 2C: SCD1 and SCD2](02C-build-and-run-scd-etl.md).
 
-Read and Write previews show the DataFrames returned or submitted by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains publication status, stage results, and available metrics.
+Read and Write previews show the DataFrames returned or submitted by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains the load outcome, stage results, and available metrics.
+
+### How repeated loads behave
+
+FabricOps identifies an exact prepared batch before it writes the target. It materialises the prepared DataFrame, calculates an order-independent content fingerprint over its business columns, and binds that fingerprint to the target, source participants, schema, and processing strategy. It then checks the recorded batch receipt and the physical target evidence.
+
+| Write result | Meaning | What FabricOps does |
+| --- | --- | --- |
+| **Loaded** | This prepared batch has not already been applied. | Runs the selected physical write and records its receipt. |
+| **Already loaded** | The same prepared batch has a verified successful receipt for this target. | Skips the redundant physical write. No new rows are written by this attempt. |
+| **Skipped — no new data** | An Incremental Read produced an empty scope. | Skips the write because there are no eligible rows to load. |
+
+This applies to **Overwrite** as well as Append and the SCD strategies. An Overwrite request does not force a redundant physical overwrite when the exact same prepared batch has already been applied. If the source or transformation produces different business data, the fingerprint changes and FabricOps treats it as a new batch.
+
+The batch check does not make the upstream Read or your PySpark transformation disappear: those steps still run to produce and identify the prepared input. It avoids repeating the physical target write after an exact prior batch is verified. **Rows loaded: 0** for **Already loaded** means zero rows were written by this attempt; it does not mean the target contains zero rows.
+
+These two outcomes are different:
+
+- **Already loaded**: FabricOps received a non-empty prepared batch, matched its exact content and target to a previously successful load, and verified the earlier write. The current attempt skips only the physical Write; it does not mean the incoming DataFrame was empty.
+- **Skipped — no new data**: the current Incremental Read returned no eligible rows for this target, so there is nothing to write. No batch is loaded in this attempt.
+
+In both cases, **Rows loaded: 0** means this Write attempt added no rows. The reason is shown by **Load status**.
 
 With managed Sensitive Data token mappings, FabricOps uses the configured Governance store. Supply `existing_mapping` only when you manage a previously saved mapping yourself.
 

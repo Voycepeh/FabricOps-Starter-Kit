@@ -82,9 +82,9 @@ def test_operation_summary_rows_use_native_operation_metadata():
     )
 
     assert rows == [
-        ("Read", "wh_Bronze", "dbo", "orders", "full", "—", "25,000", "—",
+        ("Read", "wh_Bronze", "dbo", "orders", "full", "25,000", "—",
          "Succeeded", "00:00:12", "Read: passed"),
-        ("Write", "Lakehouse_Silver", "dbo", "orders", "—", "scd2", "—", "24,850",
+        ("Write", "Lakehouse_Silver", "dbo", "orders", "scd2", "—", "24,850",
          "Succeeded", "00:00:45", "Write: passed; Profile: passed"),
     ]
 
@@ -99,8 +99,8 @@ def test_missing_read_count_and_dry_run_write_are_not_reported_as_zero():
 
     rows = finalize_module._operation_summary_rows(result, pipeline=pipeline)
 
-    assert rows[0][6] == "Not captured"
-    assert rows[1][7] == "Not published"
+    assert rows[0][5] == "Not captured"
+    assert rows[1][6] == "Not published"
 
 
 def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys):
@@ -130,7 +130,7 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
     assert "Pipeline ID: pipeline-456" in output
     assert captured["displayed"] is frame
     assert captured["schema"] == [
-        "Operation", "Store", "Schema", "Table", "Read mode", "Write mode",
+        "Operation", "Store", "Schema", "Table", "Mode",
         "Rows read", "Rows written", "Status", "Duration", "Stages",
     ]
     assert len(captured["rows"]) == 2
