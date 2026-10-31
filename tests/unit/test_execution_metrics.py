@@ -135,7 +135,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
     assert result["write_metrics"]["rows_committed"] == (8 if mode in {"append", "overwrite"} else None)
     output = capsys.readouterr().out
     assert "FabricOps WRITE Summary" in output
-    assert "Published       → Yes" in output
+    assert "Load status     → Loaded" in output
     if mode == "scd1":
         assert "Rows updated    → Not available" in output
     if mode == "scd2":
