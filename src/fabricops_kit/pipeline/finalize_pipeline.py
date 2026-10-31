@@ -40,23 +40,35 @@ def _format_duration(seconds):
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 
-def _operation_summary_rows(result):
-    """Project native Pipeline Run operations into display-only table rows."""
+def _operation_summary_rows(result, *, pipeline=None):
+    """Project finalized operations plus same-run metrics into display-only rows."""
     rows = []
+    identities = {}
+    runtime_operations = {}
+    if pipeline is not None:
+        import json
+
+        identities = json.loads(pipeline.plan.participants_json)
+        runtime_operations = pipeline.plan.evidence.get("operations", {})
+
     for operation in result.get("operations") or []:
+        identity = identities.get(operation.get("table_id"), {})
+        runtime = runtime_operations.get(operation.get("operation_key"), {})
         destination = operation.get("destination") or {}
         role = str(operation.get("pipeline_role") or "").lower()
         is_read = role == "source"
         is_write = role == "target"
+        rows_read = runtime.get("rows_read")
+        rows_written = runtime.get("rows_written")
         rows.append((
             "Read" if is_read else "Write" if is_write else role.title() or "Operation",
-            str(operation.get("store") or "Not captured"),
-            str(destination.get("schema") or "Not captured"),
-            str(destination.get("table_name") or operation.get("table_id") or "Unknown"),
+            str(identity.get("store") or "Not captured"),
+            str(identity.get("schema") or destination.get("schema") or "Not captured"),
+            str(identity.get("table_name") or destination.get("table_name") or operation.get("table_id") or "Unknown"),
             str(operation.get("read_mode") or "—"),
             str(operation.get("write_mode") or "—"),
-            f"{operation['rows_read']:,}" if operation.get("rows_read") is not None else ("Not captured" if is_read else "—"),
-            f"{operation['rows_written']:,}" if operation.get("rows_written") is not None else ("Not published" if is_write and result.get("execution_mode") == "dry_run" else "Not captured" if is_write else "—"),
+            f"{rows_read:,}" if rows_read is not None else ("Not captured" if is_read else "—"),
+            f"{rows_written:,}" if rows_written is not None else ("Not published" if is_write and result.get("execution_mode") == "dry_run" else "Not captured" if is_write else "—"),
             str(operation.get("status") or "Not captured").replace("_", " ").title(),
             _format_duration(_elapsed_seconds(operation.get("started_at"), operation.get("completed_at"))),
             "; ".join(
@@ -90,7 +102,7 @@ def _print_pipeline_summary(pipeline, result):
             detail = f" ({exception_type})" if exception_type else ""
             print(f"  - {code}{detail}")
 
-    rows = _operation_summary_rows(result)
+    rows = _operation_summary_rows(result, pipeline=pipeline)
     if not rows:
         print("No Read/Write operations were recorded.")
         print("=" * 72)
