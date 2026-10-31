@@ -5711,7 +5711,8 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
                 **{name: actual.get(name) for name in ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
-                    "started_at", "completed_at")}, "source_table_ids": actual.get("source_table_ids", []),
+                    "started_at", "completed_at", "store", "rows_read", "rows_written")},
+                "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
     row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.approval_id or None,
@@ -5917,10 +5918,16 @@ class PipelineOperation:
             plan.evidence["operations"][key] = self.record
             # These are the notebook settings retained and compared in Governed mode.
             # Processing parameters and profiling policy belong to the table contract.
-            self.record.update(read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
+            self.record.update(
+                store=str(args.get("store") or ""),
+                read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
                 query_sha256=hashlib.sha256(args["query"].encode()).hexdigest() if args.get("query") else None,
-                incremental_target_table_id=args.get("target_table_id"), source_table_ids=[])
+                incremental_target_table_id=args.get("target_table_id"),
+                rows_read=None,
+                rows_written=None,
+                source_table_ids=[],
+            )
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
                 self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
@@ -5947,8 +5954,12 @@ class PipelineOperation:
                     session.close(failed=True)
             raise
 
-    def complete(self, stages):
-        """Keep safe stage outcomes; blocking or unevaluated checks prevent success."""
+    def complete(self, stages, *, rows_read=None, rows_written=None):
+        """Keep safe stage outcomes and actual row metrics; never trigger Spark actions."""
+        if rows_read is not None:
+            self.record["rows_read"] = int(rows_read)
+        if rows_written is not None:
+            self.record["rows_written"] = int(rows_written)
         self.record["completed_at"] = datetime.now(UTC).isoformat()
         self.record["stages"] = [{key: stage[key] for key in ("stage", "status", "evaluation_status") if key in stage}
                                  for stage in stages]
