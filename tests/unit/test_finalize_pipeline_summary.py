@@ -20,8 +20,11 @@ def _result():
         "operations": [
             {
                 "pipeline_role": "source",
+                "store": "wh_Bronze",
+                "read_mode": "full",
+                "rows_read": 25000,
                 "table_id": "source-id",
-                "destination": {"schema": "bronze", "table_name": "orders"},
+                "destination": {"schema": "dbo", "table_name": "orders"},
                 "status": "succeeded",
                 "started_at": started,
                 "completed_at": started + timedelta(seconds=12),
@@ -29,8 +32,11 @@ def _result():
             },
             {
                 "pipeline_role": "target",
+                "store": "Lakehouse_Silver",
+                "write_mode": "scd2",
+                "rows_written": 24850,
                 "table_id": "target-id",
-                "destination": {"schema": "silver", "table_name": "orders"},
+                "destination": {"schema": "dbo", "table_name": "orders"},
                 "status": "succeeded",
                 "started_at": started,
                 "completed_at": started + timedelta(seconds=45),
@@ -47,9 +53,10 @@ def test_operation_summary_rows_use_native_operation_metadata():
     rows = finalize_module._operation_summary_rows(_result())
 
     assert rows == [
-        ("Read", "bronze.orders", "Succeeded", "00:00:12", "Read: passed"),
-        ("Write", "silver.orders", "Succeeded", "00:00:45",
-         "Write: passed; Profile: passed"),
+        ("Read", "wh_Bronze", "dbo", "orders", "full", "—", "25,000", "—",
+         "Succeeded", "00:00:12", "Read: passed"),
+        ("Write", "Lakehouse_Silver", "dbo", "orders", "—", "scd2", "—", "24,850",
+         "Succeeded", "00:00:45", "Write: passed; Profile: passed"),
     ]
 
 
@@ -83,7 +90,10 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
     assert "Reads: 1 | Writes: 1 | Duration: 00:01:33" in output
     assert "Pipeline ID: pipeline-456" in output
     assert captured["displayed"] is frame
-    assert captured["schema"] == ["Operation", "Table", "Status", "Duration", "Stages"]
+    assert captured["schema"] == [
+        "Operation", "Store", "Schema", "Table", "Read mode", "Write mode",
+        "Rows read", "Rows written", "Status", "Duration", "Stages",
+    ]
     assert len(captured["rows"]) == 2
 
 
