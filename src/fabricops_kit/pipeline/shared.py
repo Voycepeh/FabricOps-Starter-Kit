@@ -5919,7 +5919,7 @@ class PipelineOperation:
             # These are the notebook settings retained and compared in Governed mode.
             # Processing parameters and profiling policy belong to the table contract.
             self.record.update(
-                store=str(args.get("store") or ""),
+                store=str(identity["store"]),
                 read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
                 query_sha256=hashlib.sha256(args["query"].encode()).hexdigest() if args.get("query") else None,
@@ -5974,6 +5974,9 @@ class PipelineOperation:
             if exc is not None:
                 self.record["status"] = "failed"
                 self.record["completed_at"] = datetime.now(UTC).isoformat()
+                if self.role == "target" and getattr(exc, "published", False):
+                    write_metrics = getattr(exc, "write_metrics", {}) or {}
+                    self.record["rows_written"] = write_metrics.get("rows_committed")
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
