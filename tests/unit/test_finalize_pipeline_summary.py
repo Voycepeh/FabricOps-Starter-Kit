@@ -1,7 +1,7 @@
 """Readable final pipeline summaries assembled from the finalized run snapshot."""
 
-from datetime import UTC, datetime, timedelta
 import json
+from datetime import UTC, datetime, timedelta
 from importlib import import_module
 from types import SimpleNamespace
 
