@@ -14,6 +14,7 @@ import pytest
 
 from fabricops_kit.activated_pipeline import shared as service
 from fabricops_kit.pipeline import shared as pipeline
+from tests.helpers import framework_config
 from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 
 
@@ -113,6 +114,33 @@ def authority(runtime, monkeypatch, tmp_path):
     return SimpleNamespace(candidate=candidate, approve=approve, request=request, current=current, central=central,
                            context=context, saved=saved, contracts=contracts, diagnostics=diagnostics,
                            operation=operation, commit=commit, read=read)
+
+
+def test_activation_metadata_reads_do_not_require_target_environment_mapping(monkeypatch):
+    """Central Metadata routing is independent from the activation workspace owner."""
+    captured = {}
+
+    class Frame:
+        def collect(self):
+            return [{"agreement_id": "agreement"}]
+
+    def read(_table, **kwargs):
+        captured.update(kwargs)
+        return Frame()
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    rows = service.metadata_records(
+        "METADATA_DATA_AGREEMENT",
+        context={
+            "config": framework_config(),
+            "scope_workspace_id": "engineering-prod",
+            "metadata_workspace_id": "dev",
+        },
+        spark_session=object(),
+    )
+
+    assert rows == [{"agreement_id": "agreement"}]
+    assert captured["context"]["scope_workspace_id"] == "dev"
 
 
 def test_single_pipeline_activation_has_no_business_or_deployment_side_effects(authority, tmp_path):

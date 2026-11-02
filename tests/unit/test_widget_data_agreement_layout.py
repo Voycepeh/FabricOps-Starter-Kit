@@ -75,6 +75,7 @@ def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
     assert 'fabricops-page-header' in css
     assert '--form-tint:#eaf3fb' in css
     assert '--form-tint:#f1edf8' in css
+    assert '.fabricops-form .fabricops-searchable-selector .widget-combobox-container' in css
 
     common = shared.widget_common(_FakeWidgets, "Example")
     assert common["style"]["description_width"] == "150px"
@@ -106,6 +107,9 @@ def test_long_search_results_use_one_compact_combobox_without_scrolling_the_form
     assert selector["search"].placeholder == "Search..."
     assert selector["container"].layout.kwargs["height"] == "auto"
     assert selector["container"].layout.kwargs["overflow"] == "visible"
+    assert selector["container"].layout.kwargs["width"] == "100%"
+    assert selector["container"].layout.kwargs["min_width"] == "0"
+    assert selector["container"].layout.kwargs["max_width"] == "100%"
 
 
 def test_agreement_form_has_meaningful_groups_and_fabric_safe_status(monkeypatch):

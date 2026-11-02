@@ -22,9 +22,13 @@ def manifest_digest(value):
 
 def metadata_records(table, *, context, spark_session=None, run_id=None, all_workspaces=False):
     """Read domain metadata through its configured owner schema."""
-    config, _env, _runtime = resolve_fabric_context(context=context)
+    config, _env, runtime = resolve_fabric_context(context=context)
+    routing_workspace_id = str(runtime.get("metadata_workspace_id") or _env)
+    metadata_context = {
+        **runtime, "config": config, "scope_workspace_id": routing_workspace_id,
+    }
     frame = read_lakehouse_table(table, store="Metadata", schema=metadata_table_physical_schema(config, table),
-                                context={**(context or {}), "_spark_session": spark_session,
+                                context={**metadata_context, "_spark_session": spark_session,
                                          "_fabricops_suppress_io_log": True})
     if table == "METADATA_PIPELINE_RUN":
         from pyspark.sql import functions as F
@@ -143,11 +147,17 @@ def testing_run_evidence(run, *, context, spark_session=None):
 def tested_pipeline_run(*, testing_run_id, pipeline_name, pipeline_version, agreement_id, agreement_version, context, spark_session=None):
     """Review an exact retained Test run; no separate configuration is created."""
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
+    routing_workspace_id = str(runtime.get("metadata_workspace_id") or active_workspace_id)
+    metadata_context = {
+        **runtime, "config": config, "scope_workspace_id": routing_workspace_id,
+    }
     from fabricops_kit.pipeline.shared import read_pipeline_registry, validate_pipeline_id
     run = exact_record(metadata_records("METADATA_PIPELINE_RUN", context=context, spark_session=spark_session,
                                        run_id=testing_run_id), run_id=testing_run_id)
     validate_pipeline_id(run["pipeline_id"])
-    _token, registrations = read_pipeline_registry(context=context, spark_session=spark_session)
+    _token, registrations = read_pipeline_registry(
+        context=metadata_context, spark_session=spark_session,
+    )
     registration = exact_record(registrations, pipeline_id=run["pipeline_id"], workspace_id=active_workspace_id)
     if registration["registration_status"] != "Active" or run["workspace_id"] != active_workspace_id:
         raise ValueError("Testing requires the Active registration in the activation workspace_id.")
@@ -166,7 +176,10 @@ def tested_pipeline_run(*, testing_run_id, pipeline_name, pipeline_version, agre
         "agreement_sha256": manifest_digest(agreement_definition(agreement)),
         "warnings": ["Approval validates table contracts and operation modes, not notebook transformation code."]}
     native["approval_id"] = manifest_digest(native)
-    native.update(**build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime))
+    native.update(**build_runtime_audit_fields(
+        config=config, active_workspace_id=routing_workspace_id,
+        runtime_context=runtime,
+    ))
     return {**native, "operations": run["operations"], "contracts": contracts, "testing_run": run}
 
 
@@ -302,6 +315,10 @@ def commit_pipeline_authority(state, *, expected_token, context, spark_session=N
     from delta.tables import DeltaTable
     from uuid import uuid4
     config, active_workspace_id, runtime = resolve_fabric_context(context=context)
+    routing_workspace_id = str(runtime.get("metadata_workspace_id") or active_workspace_id)
+    metadata_context = {
+        **runtime, "config": config, "scope_workspace_id": routing_workspace_id,
+    }
     table = PIPELINE_AUTHORITY_TABLE
     # Registration can reuse the unmodified snapshot already decoded for this token.
     # The matched-only MERGE still checks the token against the current Delta row.
@@ -330,10 +347,13 @@ def commit_pipeline_authority(state, *, expected_token, context, spark_session=N
             impact = activation_impact(current, {})
             if impact["tables"] != current["tables"] or impact["blocking_conflicts"]:
                 raise ValueError("Registry selections and table ownership are inconsistent.")
-    wanted.update(token=str(uuid4()), **build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime))
+    wanted.update(token=str(uuid4()), **build_runtime_audit_fields(
+        config=config, active_workspace_id=routing_workspace_id,
+        runtime_context=runtime,
+    ))
     spark = get_spark_session(spark_session, context=context)
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
-        metadata_table_physical_schema(config, table), context=context)
+        metadata_table_physical_schema(config, table), context=metadata_context)
     frame = spark.createDataFrame([coerce_metadata_row_types(table, wanted)], metadata_table_schema_registry()[table])
     expected = "'" + expected_token.replace("'", "''") + "'"
     changes = {key: "source.`" + key + "`" for key in wanted if key != "authority_id"}

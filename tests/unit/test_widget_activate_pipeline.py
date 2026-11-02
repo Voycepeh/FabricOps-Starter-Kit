@@ -6,7 +6,6 @@ import pytest
 
 from tests.unit.test_activated_pipeline import authority  # noqa: F401
 from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
-
 module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
 
 
@@ -15,7 +14,19 @@ def render(authority, monkeypatch):
     monkeypatch.setattr(module, "get_spark_session", lambda **kw: object())
     from IPython import display as ip
     monkeypatch.setattr(ip, "display", lambda *_, **__: None)
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "canary", authority.context))
+    config = {
+        "path_config": {
+            "paths": {"metadata-route": {"Metadata": object()}},
+        },
+    }
+    governance_context = {
+        **authority.context, "config": config,
+        "scope_workspace_id": "governance-authoring",
+    }
+    monkeypatch.setattr(
+        module, "resolve_fabric_context",
+        lambda context=None: (config, "governance-authoring", governance_context),
+    )
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_pipeline_authority", authority.read)
     def render_selected(**kw):
@@ -28,6 +39,20 @@ def render(authority, monkeypatch):
             state["run_select"].value = row["run_id"]
         return state
     return render_selected
+
+
+def test_activation_uses_central_metadata_without_target_environment_mapping(
+    authority, render
+):
+    """Governance activates retained evidence without resolving target data stores."""
+    _, run = authority.candidate(active_workspace_id="engineering-prod")
+    widget = render(pipeline_id=run["pipeline_id"])
+
+    assert widget["workspace_select"].value == "engineering-prod"
+    widget["candidate_controls"][run["run_id"]]["version"].value = "1"
+    assert widget["review_release"]()["ready"]
+    widget["confirmed"].value = True
+    assert widget["perform_activation"]()["workspace_id"] == "engineering-prod"
 
 
 def test_single_pipeline_review_and_one_approval(authority, render):
@@ -206,7 +231,18 @@ def test_workspace_pipeline_selectors_have_no_defaults_and_filter_both_ways(auth
     authority.candidate(first_pipeline, active_workspace_id="B")
     authority.candidate(second_pipeline, active_workspace_id="B")
     monkeypatch.setattr(module, "get_spark_session", lambda **kw: object())
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda context=None: ({}, "governance-workspace", authority.context))
+    config = {
+        "path_config": {
+            "paths": {"metadata-route": {"Metadata": object()}},
+        },
+    }
+    monkeypatch.setattr(
+        module, "resolve_fabric_context",
+        lambda context=None: (
+            config, "governance-workspace",
+            {**authority.context, "config": config, "scope_workspace_id": "governance-workspace"},
+        ),
+    )
     monkeypatch.setattr(module, "metadata_records", importlib.import_module("fabricops_kit.activated_pipeline.shared").metadata_records)
     monkeypatch.setattr(module, "read_pipeline_authority", authority.read)
     state = module.widget_activate_pipeline(context=authority.context)

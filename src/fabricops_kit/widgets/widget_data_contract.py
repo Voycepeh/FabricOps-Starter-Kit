@@ -879,6 +879,10 @@ def widget_data_contract(
 
     Notes
     -----
+    Authoring, review, and freezing route through the configured central Governance
+    Metadata Lakehouse even when the notebook workspace is not a pipeline environment.
+    The selected Catalogue observation remains the contract evidence owner. Activation
+    and governed pipeline execution still require a configured environment mapping.
     Save overwrites the complete canonical JSON for the selected draft version, then reloads
     that exact version. A new draft is seeded from the previous frozen version when one exists.
     Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
@@ -940,7 +944,27 @@ def widget_data_contract(
     startup = shared.WidgetStartup("Data Contract")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, active_workspace_id, resolved = resolve_fabric_context(context=context)
-        routing_workspace_id = active_workspace_id
+        authoring_workspace_id = active_workspace_id
+        path_config = (
+            config.get("path_config") if isinstance(config, Mapping)
+            else getattr(config, "path_config", None)
+        )
+        paths = (
+            path_config.get("paths", path_config) if isinstance(path_config, Mapping)
+            else getattr(path_config, "paths", {})
+        )
+        metadata_routes = sorted(
+            str(workspace_id)
+            for workspace_id, targets in paths.items()
+            if isinstance(targets, Mapping) and "Metadata" in targets
+        )
+        if active_workspace_id in metadata_routes:
+            routing_workspace_id = active_workspace_id
+        elif metadata_routes:
+            routing_workspace_id = metadata_routes[0]
+        else:
+            raise ValueError("FabricOps Metadata Lakehouse is not configured for any workspace.")
+        active_workspace_id = routing_workspace_id
     governance_config = getattr(config, "governance_config", None)
     ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
     classification_levels = [
@@ -952,11 +976,15 @@ def widget_data_contract(
     with startup.phase("spark_loading", "Resolving the Spark session…"):
         spark = get_spark_session(context=context)
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        catalogue = contracts.list_contract_governance_state(config=config, active_workspace_id=active_workspace_id, spark_session=spark)
+        catalogue = contracts.list_contract_governance_state(
+            config=config, active_workspace_id=active_workspace_id,
+            spark_session=spark, metadata_workspace_id=routing_workspace_id,
+        )
         table_rows = catalogue["tables"]
         if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
-            raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
+            raise ValueError("table_id has no active table-level Catalogue row in central governance metadata.")
     state: dict[str, Any] = {
+        "authoring_workspace_id": authoring_workspace_id,
         "workspace_id": None, "table_id": None, "contract_version": None,
         "pending_table_id": table_id, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
@@ -1096,6 +1124,7 @@ def widget_data_contract(
         state["current"] = contracts.get_contract_review_state(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
+            metadata_workspace_id=routing_workspace_id,
         )
         state["_saved_payload"] = json.loads(
             str(state["current"]["contract"].get("contract_payload_json") or "{}")
@@ -1114,7 +1143,8 @@ def widget_data_contract(
             raise ValueError("Select a table and workspace before creating a draft.")
         draft = contracts.create_contract_draft(
             table_id=str(state["table_id"]), config=config, active_workspace_id=active_workspace_id,
-            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id},
+            spark_session=spark, context=resolved,
+            metadata_workspace_id=routing_workspace_id,
         )
         state["contracts"] = [draft, *[
             row for row in state["contracts"]
@@ -1233,6 +1263,7 @@ def widget_data_contract(
             active_workspace_id=active_workspace_id,
             spark_session=spark,
             context=resolved,
+            metadata_workspace_id=routing_workspace_id,
         )
         current["contract"] = saved
         state["_pending_enrichment"].pop(scope, None)
@@ -1277,6 +1308,7 @@ def widget_data_contract(
             profile_cache[cache_key] = contracts.get_column_profile_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
                 table_id=selected_table, column_id=selected_column,
+                metadata_workspace_id=routing_workspace_id,
             )
         profile = profile_cache[cache_key]
         state["profile_context"] = profile
@@ -1290,10 +1322,12 @@ def widget_data_contract(
             raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
             draft=current["contract"], config=config, active_workspace_id=active_workspace_id,
-            spark_session=spark, context={**resolved, "scope_workspace_id": active_workspace_id},
+            spark_session=spark, context=resolved,
+            metadata_workspace_id=routing_workspace_id,
         )
         latest = contracts.list_contract_governance_state(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
+            metadata_workspace_id=routing_workspace_id,
         )
         state["contracts"] = latest["contracts"]
         select(str(state["table_id"]), int(state["contract_version"]))
@@ -1384,7 +1418,7 @@ def widget_data_contract(
             contract_selector_field,
         ],
         layout=widgets.Layout(
-            width="100%",
+            width="100%", min_width="0", max_width="100%",
             grid_template_columns="repeat(2, minmax(0, 1fr))",
             grid_template_areas='"table table" "workspace contract"',
             grid_gap="16px 24px",
@@ -2426,6 +2460,7 @@ def widget_data_contract(
         runtime_context = contracts.get_table_runtime_context(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             table_id=str(state.get("table_id") or ""),
+            metadata_workspace_id=routing_workspace_id,
         )
 
         def context_timestamp(value: Any) -> str:
