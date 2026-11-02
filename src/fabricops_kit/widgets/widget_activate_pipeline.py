@@ -5,7 +5,7 @@ from fabricops_kit.io.shared import get_spark_session
 
 import html
 import json
-from typing import Any
+from typing import Any, Mapping
 
 from fabricops_kit.activated_pipeline.shared import (
     metadata_records, manifest_digest, read_pipeline_authority, workspace_activation,
@@ -82,7 +82,10 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
     One explicit approval publishes the entire workspace_id revision atomically.
     Stale review, missing tests, competing writers, contract conflicts or affected
     running executions block approval. Approval never deploys or writes business
-    data. Failed commits cannot expose a partial release. Returns widget state,
+    data and does not resolve the target workspace's physical stores. Central
+    Governance Metadata routing is sufficient for activation; governed execution
+    still requires and revalidates the target environment's configured stores.
+    Failed commits cannot expose a partial release. Returns widget state,
     refresh, review_release and perform_activation. Metadata errors raise or are
     displayed by button actions; opening the widget changes no approval.
     """
@@ -92,8 +95,31 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
     startup = shared.WidgetStartup("Pipeline Activation")
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         _config, active_workspace_id, _runtime = resolve_fabric_context(context=context)
+        path_config = (
+            _config.get("path_config") if isinstance(_config, Mapping)
+            else getattr(_config, "path_config", None)
+        )
+        paths = (
+            path_config.get("paths", path_config) if isinstance(path_config, Mapping)
+            else getattr(path_config, "paths", {})
+        )
+        metadata_routes = sorted(
+            str(workspace_id)
+            for workspace_id, targets in paths.items()
+            if isinstance(targets, Mapping) and "Metadata" in targets
+        )
+        if active_workspace_id in metadata_routes:
+            routing_workspace_id = active_workspace_id
+        elif metadata_routes:
+            routing_workspace_id = metadata_routes[0]
+        else:
+            raise ValueError("FabricOps Metadata Lakehouse is not configured for any workspace.")
+        activation_context = {
+            **_runtime, "config": _config,
+            "metadata_workspace_id": routing_workspace_id,
+        }
     with startup.phase("metadata_loading", "Loading configured metadata…"):
-        all_runs = json.loads(json.dumps(metadata_records("METADATA_PIPELINE_RUN", context=context,
+        all_runs = json.loads(json.dumps(metadata_records("METADATA_PIPELINE_RUN", context=activation_context,
             spark_session=spark_session, all_workspaces=True), default=str))
     runs = [row for row in all_runs if _eligible_candidate(row)]
     excluded = [(row, _missing_contracts(row)) for row in all_runs
@@ -107,7 +133,10 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
             + "".join(missing_rows) + "</ul><p>Select a valid frozen Data Contract for every listed table and rerun complete Testing. "
             "All existing Guardrail, operation and Data Agreement checks must also pass.</p></div>")
     with startup.phase("metadata_loading", "Loading Data Agreements…"):
-        agreements = metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session)
+        agreements = metadata_records(
+            "METADATA_DATA_AGREEMENT", context=activation_context,
+            spark_session=spark_session,
+        )
     pipeline_select = widgets.Dropdown(description="Pipeline", options=[("Select pipeline", ""), *[(value, value) for value in sorted({row["pipeline_id"] for row in runs})]], value=pipeline_id if pipeline_id in {row["pipeline_id"] for row in runs} else "", layout=widgets.Layout(width="100%", min_width="0"))
     workspace_select = widgets.Dropdown(description="Workspace", options=[("Select workspace", ""), *[(value, value) for value in sorted({row["workspace_id"] for row in runs})]], value="", layout=widgets.Layout(width="100%", min_width="0"))
     run_select = widgets.Dropdown(description="Testing run", options=[("Select Testing run", "")], value="", layout=widgets.Layout(width="100%", min_width="0"))
@@ -132,7 +161,10 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
     def selected_context():
         if not workspace_select.value:
             raise ValueError("Select the Engineering workspace to review and activate.")
-        return {**_runtime, "config": _config, "scope_workspace_id": workspace_select.value}
+        return {
+            **activation_context,
+            "scope_workspace_id": workspace_select.value,
+        }
 
     def requests():
         if not run_select.value or not workspace_select.value:
@@ -153,7 +185,9 @@ def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any
             return
         invalidate()
         review_button.disabled = not run_select.value or not workspace_select.value
-        token, snapshot = read_pipeline_authority(context=context, spark_session=spark_session)
+        token, snapshot = read_pipeline_authority(
+            context=activation_context, spark_session=spark_session,
+        )
         current = workspace_activation(snapshot, workspace_select.value or active_workspace_id)
         selected = [r for r in runs if r["run_id"] in {run_select.value, *additions.value}]
         children = []

@@ -73,7 +73,10 @@ contracts, Agreement, locations and operation modes at review and again at appro
 One explicit approval publishes the entire workspace_id revision atomically.
 Stale review, missing tests, competing writers, contract conflicts or affected
 running executions block approval. Approval never deploys or writes business
-data. Failed commits cannot expose a partial release. Returns widget state,
+data and does not resolve the target workspace's physical stores. Central
+Governance Metadata routing is sufficient for activation; governed execution
+still requires and revalidates the target environment's configured stores.
+Failed commits cannot expose a partial release. Returns widget state,
 refresh, review_release and perform_activation. Metadata errors raise or are
 displayed by button actions; opening the widget changes no approval.
 
@@ -88,7 +91,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_pipeline.py:67`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L278">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L312">View on GitHub</a>
 </div>
 
 

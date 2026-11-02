@@ -210,7 +210,11 @@ def widget_runtime(monkeypatch):
             "contract_version": 1,
             "workspace_id": "dev",
         })
-    calls = {"draft": [], "enrichment": [], "guardrails": [], "freeze": 0, "activate": 0, "profiles": []}
+    calls = {
+        "draft": [], "enrichment": [], "guardrails": [], "freeze": 0,
+        "activate": 0, "profiles": [], "list": [], "review": [],
+        "save_kwargs": [], "freeze_kwargs": [],
+    }
     ai_enrichment = {
         "enabled": False,
         "table_description_prompt": "configured table description prompt",
@@ -221,10 +225,13 @@ def widget_runtime(monkeypatch):
     }
 
     def review(**_kwargs):
+        calls["review"].append(dict(_kwargs))
+        catalogue_workspace_id = str(catalogue[0]["workspace_id"])
         if contract["status"] == "draft":
             return {
                 "contract": dict(contract), "contract_id": contract["contract_id"],
-                "contract_version": 1, "table_id": "orders", "workspace_id": "dev",
+                "contract_version": 1, "table_id": "orders",
+                "workspace_id": catalogue_workspace_id,
                 "catalogue_rows": [dict(row) for row in catalogue],
                 "available_columns": json.loads(contract["contract_payload_json"])["table"]["columns"],
                 "enrichment": [dict(row) for row in enrichment],
@@ -232,7 +239,8 @@ def widget_runtime(monkeypatch):
             }
         return {
             "contract": dict(contract), "contract_id": contract["contract_id"],
-            "contract_version": 1, "table_id": "orders", "workspace_id": "dev",
+            "contract_version": 1, "table_id": "orders",
+            "workspace_id": catalogue_workspace_id,
             "catalogue_rows": [], "available_columns": json.loads(contract["contract_payload_json"])["table"]["columns"],
             "enrichment": [dict(row) for row in enrichment], "guardrails": [dict(row) for row in guardrails],
             "payload": manifest(),
@@ -256,6 +264,7 @@ def widget_runtime(monkeypatch):
         }
 
     def save_contract_draft(*, draft, payload, **_kwargs):
+        calls["save_kwargs"].append(dict(_kwargs))
         saved_payload = json.loads(json.dumps(payload))
         calls["draft"].append(saved_payload)
         contract["contract_payload_json"] = json.dumps(
@@ -281,6 +290,7 @@ def widget_runtime(monkeypatch):
         return dict(contract)
 
     def freeze_contract(**_kwargs):
+        calls["freeze_kwargs"].append(dict(_kwargs))
         calls["freeze"] += 1
         contract["status"] = "frozen"
         payload = json.loads(contract["contract_payload_json"])
@@ -307,7 +317,11 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda _session=None, *_args, **_kwargs: object())
     monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: ipywidgets)
-    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kwargs: {"tables": [catalogue[0]], "contracts": [contract]})
+    def list_contract_governance_state(**kwargs):
+        calls["list"].append(dict(kwargs))
+        return {"tables": [catalogue[0]], "contracts": [contract]}
+
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", list_contract_governance_state)
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
@@ -362,7 +376,7 @@ def widget_runtime(monkeypatch):
         "start": start, "open": open_widget, "models": models,
         "calls": calls, "contract": contract, "catalogue": catalogue,
         "enrichment": enrichment, "guardrails": guardrails,
-        "ai_enrichment": ai_enrichment,
+        "ai_enrichment": ai_enrichment, "config": config,
     }
 
 
@@ -530,6 +544,79 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     controls["table_search"].value = table_option
     assert controls["table"].value == "orders"
     assert state["pending_table_id"] == "orders"
+
+
+def test_configured_workspace_routes_authoring_to_its_metadata_mapping(widget_runtime):
+    """A configured authoring workspace keeps its normal central Metadata route."""
+    state = widget_runtime["open"]()
+
+    assert state["authoring_workspace_id"] == "dev"
+    assert state["tables"][0]["table_id"] == "orders"
+    assert widget_runtime["calls"]["list"][0]["active_workspace_id"] == "dev"
+    assert widget_runtime["calls"]["review"][-1]["active_workspace_id"] == "dev"
+
+
+def test_unregistered_workspace_uses_central_metadata_without_taking_ownership(
+    widget_runtime, monkeypatch
+):
+    """Governance can author centrally while the selected Catalogue workspace remains owner."""
+    origin = {
+        "config": widget_runtime["config"],
+        "scope_workspace_id": "governance-authoring",
+        "runtime_metadata": {"workspace_id": "governance-authoring"},
+    }
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda **_kwargs: (widget_runtime["config"], "governance-authoring", origin),
+    )
+    for row in widget_runtime["catalogue"]:
+        row["workspace_id"] = "engineering-prod"
+    widget_runtime["contract"]["workspace_id"] = "engineering-prod"
+    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
+    payload["table"]["workspace_id"] = "engineering-prod"
+    widget_runtime["contract"]["contract_payload_json"] = json.dumps(payload)
+
+    state = module.widget_data_contract(table_id="orders", contract_version=1)
+    controls = state["_controls"]
+    assert state["authoring_workspace_id"] == "governance-authoring"
+    assert state["tables"][0]["table_id"] == "orders"
+    assert state["contracts"][0]["contract_id"] == "contract-orders"
+    assert widget_runtime["calls"]["list"][0]["active_workspace_id"] == "dev"
+
+    controls["workspace_select"].value = "engineering-prod"
+    controls["open"].click()
+    state["save_data_contract"](return_to_selector_after=False)
+    state["freeze"]()
+
+    save = widget_runtime["calls"]["save_kwargs"][-1]
+    freeze = widget_runtime["calls"]["freeze_kwargs"][-1]
+    assert save["active_workspace_id"] == freeze["active_workspace_id"] == "engineering-prod"
+    assert save["metadata_workspace_id"] == freeze["metadata_workspace_id"] == "dev"
+    assert save["context"]["scope_workspace_id"] == "governance-authoring"
+    assert freeze["context"]["scope_workspace_id"] == "governance-authoring"
+    assert save["context"]["runtime_metadata"]["workspace_id"] == "governance-authoring"
+    assert freeze["context"]["runtime_metadata"]["workspace_id"] == "governance-authoring"
+    assert state["current"]["workspace_id"] == "engineering-prod"
+
+
+def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime):
+    """The searchable Table ID control and its container own the full available width."""
+    state = widget_runtime["start"]()
+    controls = state["_controls"]
+    search = controls["table_search"]
+    selector = controls["selector_panel"].children[0]
+    style = controls["page"].children[0].value
+
+    assert search.layout.width == "100%"
+    assert search.layout.min_width == "0"
+    assert search.layout.max_width == "100%"
+    assert "fabricops-searchable-selector" in search._dom_classes
+    assert selector.layout.width == "100%"
+    assert selector.layout.min_width == "0"
+    assert selector.layout.max_width == "100%"
+    assert ".fabricops-searchable-selector .widget-combobox-container" in style
+    assert "grid-template-columns:minmax(0,1fr)" in style
 
 
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):

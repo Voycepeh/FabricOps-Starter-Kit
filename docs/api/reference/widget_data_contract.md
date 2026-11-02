@@ -88,6 +88,10 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
+Authoring, review, and freezing route through the configured central Governance
+Metadata Lakehouse even when the notebook workspace is not a pipeline environment.
+The selected Catalogue observation remains the contract evidence owner. Activation
+and governed pipeline execution still require a configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
 Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
@@ -157,7 +161,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:849`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L849-L7234">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L849-L7269">View on GitHub</a>
 </div>
 
 

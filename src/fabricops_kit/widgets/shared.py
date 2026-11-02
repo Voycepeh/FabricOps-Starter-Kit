@@ -88,6 +88,11 @@ _FORM_STYLE = """<style>
     border-radius:5px; padding:7px 10px; background:#fff; color:var(--form-text);
     font:13px/1.5 'Segoe UI',Arial,sans-serif;
 }
+.fabricops-form .fabricops-searchable-selector,
+.fabricops-form .fabricops-searchable-selector .widget-combobox-container,
+.fabricops-form .fabricops-searchable-selector .widget-combobox-container input {
+    width:100% !important; min-width:0 !important; max-width:100% !important;
+}
 .fabricops-form .widget-textarea textarea { height:110px; min-height:96px; resize:vertical; }
 .fabricops-form .widget-select select { height:130px; padding:5px; }
 .fabricops-form .widget-select-multiple select { height:96px; }
@@ -551,6 +556,9 @@ def render_searchable_selector(
         ensure_option=True,
         **widget_common(widgets, label),
     )
+    add_class = getattr(combobox, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-searchable-selector")
     selector = widgets.Select(options=[])
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
@@ -652,7 +660,10 @@ def render_searchable_selector(
         children.append(context)
     container = widgets.VBox(
         children,
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="6px"),
+        layout=widgets.Layout(
+            width="100%", min_width="0", max_width="100%",
+            height="auto", overflow="visible", gap="6px",
+        ),
     )
     return {
         "container": container,

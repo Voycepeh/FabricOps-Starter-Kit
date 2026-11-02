@@ -75,12 +75,13 @@ def contract_lifecycle_id(table_id: str) -> str:
 def create_contract_draft(
     *, table_id: str, config: Any, active_workspace_id: str, spark_session: Any,
     context: Mapping[str, Any] | None = None, store: str = "Metadata",
-    schema: str | None = None,
+    schema: str | None = None, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Create or reopen the one mutable draft for a governed table."""
     lifecycle_id = contract_lifecycle_id(table_id)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     runtime_context = {
-        "config": config, "scope_workspace_id": active_workspace_id, **dict(context or {}),
+        "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
         "_fabricops_suppress_io_log": True,
     }
     catalogue_rows = row_dicts(read_lakehouse_table(
@@ -211,7 +212,10 @@ def create_contract_draft(
         item["contract_id"] = lifecycle_id
         item["contract_version"] = version
 
-    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(
+        config=config, active_workspace_id=routing_workspace_id,
+        runtime_context=runtime_context,
+    )
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
@@ -483,6 +487,7 @@ def save_contract_draft(
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
     schema: str | None = None,
+    metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Overwrite the canonical JSON for one mutable Data Contract draft."""
     contract_id, contract_version = validate_contract_identity(
@@ -507,11 +512,15 @@ def save_contract_draft(
 
     validate_contract_definitions(canonical)
     validate_grain_contract(canonical)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     runtime_context = {
-        "config": config, "scope_workspace_id": active_workspace_id, **dict(context or {}),
+        "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
         "_fabricops_suppress_io_log": True,
     }
-    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(
+        config=config, active_workspace_id=routing_workspace_id,
+        runtime_context=runtime_context,
+    )
     updated = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         **dict(draft),
         "contract_payload_json": json.dumps(
@@ -765,10 +774,12 @@ def get_contract_authoring_state(
     contract_id: str,
     contract_version: int,
     contract: Mapping[str, Any] | None = None,
+    metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Load one exact Data Contract version for editing or review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
-    context = _metadata_io_context(config, active_workspace_id)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
+    context = _metadata_io_context(config, routing_workspace_id)
     if contract is None:
         contract_frame = read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
@@ -840,9 +851,13 @@ def get_contract_authoring_state(
     state["available_columns"] = [dict(column) for column in payload.get("table", {}).get("columns", [])]
     return state
 
-def list_contract_governance_state(*, config: Any, active_workspace_id: str, spark_session: Any) -> dict[str, list[dict[str, Any]]]:
+def list_contract_governance_state(
+    *, config: Any, active_workspace_id: str, spark_session: Any,
+    metadata_workspace_id: str | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     """Return all current workspace observations and global Contract histories."""
-    context = {**_metadata_io_context(config, active_workspace_id), "_spark_session": spark_session}
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
+    context = {**_metadata_io_context(config, routing_workspace_id), "_spark_session": spark_session}
     observations = current_catalogue_observations(read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", store="Metadata",
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
@@ -854,15 +869,17 @@ def list_contract_governance_state(*, config: Any, active_workspace_id: str, spa
 
 
 def get_contract_review_state(
-    *, config: Any, active_workspace_id: str, spark_session: Any, contract_id: str, contract_version: int
+    *, config: Any, active_workspace_id: str, spark_session: Any, contract_id: str,
+    contract_version: int, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Load an exact draft or immutable Data Contract version for governance review."""
     identity, version = validate_contract_identity(contract_id, contract_version)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     rows = _scoped_rows(
         read_lakehouse_table(
             DATA_CONTRACT_TABLE, store="Metadata",
             schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE),
-            context={**(_metadata_io_context(config, active_workspace_id) or {}), "_spark_session": spark_session},
+            context={**_metadata_io_context(config, routing_workspace_id), "_spark_session": spark_session},
         ),
         f"contract_id = {_sql_literal(identity)}",
         f"contract_version = {version}",
@@ -880,6 +897,7 @@ def get_contract_review_state(
         return get_contract_authoring_state(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
             contract_id=identity, contract_version=version, contract=contract,
+            metadata_workspace_id=routing_workspace_id,
         )
     payload = _json_value(contract.get("contract_payload_json"), field="contract_payload_json", default=None)
     if not isinstance(payload, dict):
@@ -894,13 +912,15 @@ def get_contract_review_state(
 
 
 def get_table_runtime_context(
-    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str
+    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
+    metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Return latest profile provenance and cross-workspace pipeline usage for one table."""
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
-    context = _metadata_io_context(config, active_workspace_id)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
+    context = _metadata_io_context(config, routing_workspace_id)
 
     def table_rows(table_name: str) -> list[dict[str, Any]]:
         try:
@@ -1078,10 +1098,12 @@ def get_table_runtime_context(
 
 
 def get_column_profile_context(
-    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str, column_id: str
+    *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
+    column_id: str, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Return the latest column profile with optional top frequency evidence."""
-    context = _metadata_io_context(config, active_workspace_id)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
+    context = _metadata_io_context(config, routing_workspace_id)
     profiled = _scoped_rows(
         read_lakehouse_table(
             "METADATA_DATA_PROFILED", store="Metadata",
@@ -1427,6 +1449,7 @@ def freeze_contract(
     context: Mapping[str, Any] | None = None,
     store: str = "Metadata",
     schema: str | None = None,
+    metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Freeze one already-saved draft; its governed JSON becomes immutable."""
     from delta.tables import DeltaTable
@@ -1442,8 +1465,14 @@ def freeze_contract(
         raise ValueError("Saved Data Contract payload does not match the draft table_id.")
     validated_processing(dict(table.get("processing") or {}))
 
-    runtime_context = {"config": config, "scope_workspace_id": active_workspace_id, **dict(context or {})}
-    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
+    runtime_context = {
+        "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
+    }
+    audit = build_runtime_audit_fields(
+        config=config, active_workspace_id=routing_workspace_id,
+        runtime_context=runtime_context,
+    )
     frozen = coerce_metadata_row_types(
         DATA_CONTRACT_TABLE,
         {**freeze_contract_record(draft=draft, audit=audit), "table_name": str(table.get("table_name") or "")},
