@@ -139,18 +139,24 @@ def test_missing_ok_never_turns_access_failure_into_empty_metadata(loader, monke
 
 
 def test_notebook_setup_summary_uses_escaped_styled_html(monkeypatch, outputs):
-    """The caller keeps all setup diagnostics in the restored FabricOps banner."""
+    """The banner sequences setup and emphasizes exact store parameter values."""
     import IPython
     from fabricops_kit.config import shared
     monkeypatch.setattr(IPython, "get_ipython", lambda: object())
+    config = framework_config()
     context = SimpleNamespace(runtime_metadata={}, workspace_name="<workspace>", notebook_name="<notebook>",
-                              run_id="generic", workspace_id="dev", paths={}, readiness_status="ready",
+                              run_id="generic", workspace_id="dev", paths=config.path_config.paths["dev"], readiness_status="ready",
                               validation_results=[])
-    shared._print_notebook_setup_summary(context, config=framework_config(), config_workspace_id=None)
+    shared._print_notebook_setup_summary(context, config=config, config_workspace_id=None)
     html = outputs[-1][1].data
     assert "#0f6cbd" in html and "FabricOps v" in html
     assert "&lt;notebook&gt;" in html and "&lt;workspace&gt;" in html
-    assert "Readiness: ready" in html and "Metadata schemas:" in html
+    assert "text-transform:uppercase" in html and ">ready</span>" in html
+    assert "Metadata schemas:" not in html
+    assert "1. Configuration" in html and "2. Runtime" in html and "3. Fabric store parameters" in html
+    assert "<strong>store=&quot;Bronze&quot;</strong>" in html
+    assert "workspace ID: dev" in html and "item ID: dev-lakehouse-item" in html
+    assert "Use the exact bold value" in html
     assert 'href="https://github.com/Voycepeh/FabricOps-Starter-Kit"' in html
 
 

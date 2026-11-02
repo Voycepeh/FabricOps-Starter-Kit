@@ -1060,32 +1060,50 @@ def _print_notebook_setup_summary(
     """Show resolved startup details in the calling notebook output."""
     from fabricops_kit import __version__
 
-    lines = [f"FabricOps v{__version__}"]
-    lines.append("Docs, examples, releases & support:")
-    lines.append("https://github.com/Voycepeh/FabricOps-Starter-Kit")
     caller_workspace = str(context.runtime_metadata.get("workspace_id") or "").strip().lower()
     if config_workspace_id is not None:
         location = "same-workspace" if config_workspace_id == caller_workspace else "cross-workspace"
         workspace = f"{config_workspace_name} ({config_workspace_id})" if config_workspace_name else config_workspace_id
-        lines.append(f"Configuration: 00_env_config ({location}; workspace: {workspace})")
+        configuration = f"00_env_config ({location}; workspace: {workspace})"
     else:
-        lines.append("Configuration: explicit configuration")
-    lines.append(f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})")
-    lines.append(f"Notebook: {context.notebook_name or 'unknown'}")
-    lines.append(f"Run ID: {context.run_id}")
-    lines.append(f"Workspace: {context.workspace_id}")
-    lines.append(f"Audit timezone: {config.audit_timezone}")
-    lines.append(f"Metadata schemas: governance={config.governance_metadata_schema}, engineering={config.engineering_metadata_schema}")
-    lines.append("Targets:")
+        configuration = "explicit configuration"
+
+    configuration_lines = [
+        f"Configuration: {configuration}",
+        f"Caller workspace: {context.workspace_name or 'unknown'} ({caller_workspace or 'unknown'})",
+        f"Resolved workspace: {context.workspace_id}",
+    ]
+    runtime_lines = [
+        f"Notebook: {context.notebook_name or 'unknown'}",
+        f"Run ID: {context.run_id}",
+        f"Audit timezone: {config.audit_timezone}",
+    ]
+    store_lines = []
     for key, store in context.paths.items():
-        schema = store.schema if store.schema_enabled else "disabled"
-        lines.append(f"- {key}: {store.name or key} ({store.kind}; schema: {schema}; workspace: {store.workspace_id})")
+        store_lines.append(
+            f'- store="{key}" → {store.name or key} '
+            f"({store.kind}; workspace ID: {store.workspace_id}; item ID: {store.item_id})"
+        )
     if not context.paths:
-        lines.append("- None requested")
-    lines.append(f"Readiness: {context.readiness_status}")
-    for check in context.validation_results:
-        if check.status != "pass":
-            lines.append(f"- {check.status}: {check.name}: {check.message}")
+        store_lines.append("- None requested")
+    diagnostics = [
+        f"- {check.status}: {check.name}: {check.message}"
+        for check in context.validation_results
+        if check.status != "pass"
+    ]
+    lines = [
+        f"FabricOps v{__version__} · Readiness: {context.readiness_status}",
+        "Docs, examples, releases & support:",
+        "https://github.com/Voycepeh/FabricOps-Starter-Kit",
+        "1. Configuration",
+        *configuration_lines,
+        "2. Runtime",
+        *runtime_lines,
+        '3. Fabric store parameters (use the exact value for store="...")',
+        *store_lines,
+    ]
+    if diagnostics:
+        lines.extend(["4. Attention", *diagnostics])
 
     try:
         from IPython import get_ipython, display as ip
@@ -1098,13 +1116,41 @@ def _print_notebook_setup_summary(
         return
     from html import escape
 
+    readiness_color = "#107c10" if context.readiness_status == "ready" else "#a4262c"
+    store_rows = "".join(
+        '<div style="display:grid;grid-template-columns:minmax(110px,max-content) minmax(0,1fr);'
+        'gap:8px 14px;align-items:baseline;padding:5px 0;border-top:1px solid #d7e3ee">'
+        f'<code style="color:#0f548c;white-space:nowrap"><strong>store=&quot;{escape(key)}&quot;</strong></code>'
+        f'<span>{escape(store.name or key)} · {escape(store.kind)}<br>'
+        f'<span style="color:#4b6075">workspace ID: {escape(str(store.workspace_id))} · '
+        f'item ID: {escape(str(store.item_id))}</span></span></div>'
+        for key, store in context.paths.items()
+    ) or '<div style="padding-top:5px">None requested</div>'
+    diagnostics_html = ""
+    if diagnostics:
+        diagnostics_html = (
+            '<section style="margin-top:14px"><div style="font-weight:650">4. Attention</div>'
+            '<div style="margin-top:5px;white-space:pre-wrap">'
+            + escape("\n".join(diagnostics)) + "</div></section>"
+        )
     ip.display(ip.HTML(
         '<div style="font:13px/1.5 Segoe UI,Arial,sans-serif;color:#243449;'
         'background:#eaf3fb;border-left:4px solid #0f6cbd;border-radius:6px;padding:16px 20px">'
-        f'<div style="font-size:21px;font-weight:650">{escape(lines[0])}</div>'
+        '<div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center">'
+        f'<div style="font-size:21px;font-weight:650">FabricOps v{escape(__version__)}</div>'
+        f'<span style="font-weight:700;color:{readiness_color};text-transform:uppercase">'
+        f'{escape(context.readiness_status)}</span></div>'
         '<a href="https://github.com/Voycepeh/FabricOps-Starter-Kit">Docs, examples, releases &amp; support</a>'
-        '<div style="white-space:pre-wrap;margin-top:8px">'
-        + escape("\n".join(lines[3:])) + '</div></div>'
+        '<section style="margin-top:14px"><div style="font-weight:650">1. Configuration</div>'
+        '<div style="margin-top:5px;white-space:pre-wrap">'
+        + escape("\n".join(configuration_lines)) + '</div></section>'
+        '<section style="margin-top:14px"><div style="font-weight:650">2. Runtime</div>'
+        '<div style="margin-top:5px;white-space:pre-wrap">'
+        + escape("\n".join(runtime_lines)) + '</div></section>'
+        '<section style="margin-top:14px"><div style="font-weight:650">3. Fabric store parameters</div>'
+        '<div style="color:#4b6075;margin:2px 0 6px">Use the exact bold value for the '
+        '<code>store</code> parameter.</div>' + store_rows + '</section>'
+        + diagnostics_html + '</div>'
     ))
 
 
