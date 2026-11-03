@@ -3573,7 +3573,7 @@ def execute_lakehouse_processing(
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         technical_updates = {
-            name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS and name != "_row_hash"
+            name: f"source.`{name}`" for name in persisted_df.columns if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name != "_row_hash"
         }
         merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
         if technical_updates:
@@ -3590,7 +3590,7 @@ def execute_lakehouse_processing(
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     technical_updates = {
         name: f"source.`{name}`" for name in persisted_df.columns
-        if name in _TARGET_TECHNICAL_COLUMNS and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+        if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
     }
     merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
     reserved = sorted(set(merge_keys) & set(persisted_df.columns))
@@ -5892,7 +5892,8 @@ def validate_pipeline_run(row):
             raise ValueError("Duplicate Pipeline Run source association.")
         if item["status"] == "succeeded":
             mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
-            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
+            # Run records retain historical strategy facts; execution validates the five current choices.
+            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "append_all", "append_new_only", "scd1", "scd2"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True

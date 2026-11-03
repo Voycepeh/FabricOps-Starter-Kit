@@ -186,8 +186,8 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
 
     _install_delta(monkeypatch, ExistingDelta)
     incoming = spark_session.createDataFrame(
-        [(1, "active", 200, "old-audit")],
-        ["student_id", "status", "_watermark_value", "_committed_by"],
+        [(1, "active", 200, "old-audit", "passed")],
+        ["student_id", "status", "_watermark_value", "_committed_by", "_dq_check_status"],
     )
     shared.execute_lakehouse_processing(
         incoming, table_name="students", store="Silver", schema="dbo",
@@ -198,6 +198,7 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
         "keys": "target.`student_id` <=> source.`student_id`",
         "change": "NOT (target.`status` <=> source.`status`) OR NOT (target.`_watermark_value` <=> source.`_watermark_value`)",
         "technical_update": {
+            "_dq_check_status": "source.`_dq_check_status`",
             "_committed_at": "source.`_committed_at`",
             "_committed_by": "source.`_committed_by`",
             "_activity_id": "source.`_activity_id`",
