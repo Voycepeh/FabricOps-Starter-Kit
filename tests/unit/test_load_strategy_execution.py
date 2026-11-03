@@ -196,9 +196,8 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
     )
     assert recorded == {
         "keys": "target.`student_id` <=> source.`student_id`",
-        "change": "NOT (target.`status` <=> source.`status`)",
+        "change": "NOT (target.`status` <=> source.`status`) OR NOT (target.`_watermark_value` <=> source.`_watermark_value`)",
         "technical_update": {
-            "_watermark_value": "source.`_watermark_value`",
             "_committed_at": "source.`_committed_at`",
             "_committed_by": "source.`_committed_by`",
             "_activity_id": "source.`_activity_id`",
@@ -219,7 +218,7 @@ def test_scd2_explicit_tracking_rejects_technical_columns():
         )
 
 
-def test_scd2_identical_business_state_updates_watermark_without_new_version(monkeypatch, spark_session):
+def test_scd2_identical_business_state_updates_audit_without_new_version(monkeypatch, spark_session):
     """An unchanged current row takes only the technical SCD2 merge branch."""
     from pyspark.sql import functions as F
 
@@ -268,7 +267,7 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
     )
     incoming = (
         spark_session.createDataFrame(
-            [(1, "active", "2026-08-22", 200)],
+            [(1, "active", "2026-08-22", 100)],
             ["student_id", "status", "effective_at", "_watermark_value"],
         )
         .withColumn("_effective_from", F.col("effective_at"))
@@ -287,9 +286,9 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
     )
 
     expire, technical = recorded["updates"]
-    assert expire[0] == "NOT (target.`status` <=> source.`status`)"
-    assert technical[0] == "NOT (NOT (target.`status` <=> source.`status`))"
-    assert technical[1]["_watermark_value"] == "source.`_watermark_value`"
+    assert expire[0] == "NOT (target.`status` <=> source.`status`) OR NOT (target.`_watermark_value` <=> source.`_watermark_value`)"
+    assert technical[0] == f"NOT ({expire[0]})"
+    assert "_watermark_value" not in technical[1]
     assert recorded["insert_values"]["student_id"] == "source.`student_id`"
     assert recorded["appends"] == 0
 

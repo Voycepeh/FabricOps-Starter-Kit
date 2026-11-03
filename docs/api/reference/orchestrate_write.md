@@ -150,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 229 |
+| Live-critical dependencies | 232 |
 
 ### Release history
 
@@ -298,6 +298,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
+<li><code>fabricops_kit.pipeline.shared._publication_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
@@ -329,6 +330,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
+<li><code>fabricops_kit.pipeline.shared.add_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
@@ -390,6 +392,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_target_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>

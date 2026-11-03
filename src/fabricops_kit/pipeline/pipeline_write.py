@@ -18,6 +18,8 @@ from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric
 from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
+    add_row_hash,
+    validate_target_row_hash,
     catalogue_authored_processing,
     incremental_publication_scopes,
     resolve_catalogue_table_identity,
@@ -393,6 +395,17 @@ def pipeline_write(
 
     Maintainer Notes
     ----------------
+    Every published row carries a lowercase SHA256 ``_row_hash`` of final incoming
+    values after caller transformations and Sensitive Data treatment. Hash contract
+    v1 includes column names and exact logical types, sorts column/nested struct
+    names and map entries, preserves array order, includes explicit nulls, and uses
+    Spark JSON with UTC timestamps at microsecond precision. Null, empty and absent
+    schema fields differ. Source Job IDs and ingestion timestamps are included.
+    Only ``_row_hash``, FabricOps audit and SCD lifecycle fields and reserved
+    ``_fabricops_*``/``_dq_*`` fields are excluded. Supplied hashes are recalculated.
+    Existing targets without valid historical hashes fail before non-overwrite
+    publication; full overwrite replaces the complete target.
+
     The governed orchestration performs these mechanical steps:
 
     1. Resolve the canonical target ``table_id``.
@@ -583,7 +596,7 @@ def pipeline_write(
             source_table_ids=publication_source_ids,
         ),
     }
-    prepared_df = add_target_audit_fields(df, audit)
+    prepared_df = add_target_audit_fields(add_row_hash(df), audit)
     if not persistence_permitted(context):
         if strategy == "append" and bootstrap_sources and _target_has_rows(
             identity=identity, context=context, spark_session=spark_session,
@@ -607,6 +620,8 @@ def pipeline_write(
                 "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
                                  "metadata finalization after publication"]},
         }
+    if strategy != "overwrite":
+        validate_target_row_hash(identity, context=context)
     with PublicationBatch(
         df, identity=identity, processing=_physical_processing_definition(processing),
         source_table_ids=publication_source_ids, audit=audit, context=context,

@@ -682,10 +682,11 @@ ELSE
     else:
         effective = _quoted_warehouse_identifier(str(definition["effective_column"]))
         changed = _warehouse_null_safe_difference(tracked, "target", "source")
-        technical = [
-            column for column in columns
-            if column not in {*keys, *tracked, definition["effective_column"], "_effective_from", "_effective_to", "_is_current"}
-        ]
+        # Untracked business fields retain their stored values, as in Lakehouse
+        # SCD2. Refresh only FabricOps audit data so the retained hash stays true.
+        technical = [column for column in columns if column in {
+            "_committed_at", "_committed_by", "_activity_id", "_workspace_id", "_notebook_id", "_notebook_name"
+        } or column.startswith(("_fabricops_", "_dq_"))]
         technical_updates = ", ".join(
             f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
             for column in technical

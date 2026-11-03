@@ -317,7 +317,7 @@ _TARGET_AUDIT_COLUMNS = (
 )
 _SCD2_LIFECYCLE_COLUMNS = ("_effective_from", "_effective_to", "_is_current")
 _TARGET_TECHNICAL_COLUMNS = {
-    *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
+    "_row_hash",
     *_TARGET_AUDIT_COLUMNS,
     *_SCD2_LIFECYCLE_COLUMNS,
 }
@@ -961,9 +961,67 @@ def _publication_value(column, datatype):
         return F.transform(column, lambda item: _publication_value(item, datatype.elementType))
     if isinstance(datatype, StructType):
         return F.when(column.isNull(), F.lit(None)).otherwise(F.struct(*[
-            _publication_value(column[field.name], field.dataType).alias(field.name) for field in datatype.fields
+            _publication_value(column[field.name], field.dataType).alias(field.name) for field in sorted(datatype.fields, key=lambda item: item.name)
         ]))
     return column
+
+
+def add_row_hash(dataframe):
+    """Hash final incoming values using the versioned, typed Spark JSON contract.
+
+    This internal operation replaces any supplied hash. Only FabricOps-owned audit,
+    SCD lifecycle and reserved DQ/FabricOps fields are excluded; source Job IDs,
+    ingestion timestamps and similarly named business values remain significant.
+    """
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import ArrayType, MapType, StructType
+
+    def descriptor(datatype):
+        if isinstance(datatype, StructType):
+            return {"struct": [(item.name, descriptor(item.dataType))
+                               for item in sorted(datatype.fields, key=lambda item: item.name)]}
+        if isinstance(datatype, ArrayType):
+            return {"array": descriptor(datatype.elementType)}
+        if isinstance(datatype, MapType):
+            return {"map": [descriptor(datatype.keyType), descriptor(datatype.valueType)]}
+        return datatype.simpleString()
+
+    names = sorted(name for name in dataframe.columns
+                   if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+                   and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
+    if not names or len(dataframe.columns) != len(set(dataframe.columns)):
+        raise ValueError("A managed write requires unique named incoming data columns.")
+    schema = json.dumps({"version": 1, "columns": [(name, descriptor(dataframe.schema[name].dataType))
+                                                for name in names]}, separators=(",", ":"), ensure_ascii=True)
+    values = F.struct(*[_publication_value(F.col("`" + name.replace("`", "``") + "`"),
+                                         dataframe.schema[name].dataType).alias(name) for name in names])
+    encoded = F.to_json(values, options={"ignoreNullFields": "false", "timeZone": "UTC",
+                                        "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+                                        "timestampNTZFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"})
+    return dataframe.withColumn("_row_hash", F.sha2(F.concat(F.lit(schema + "\n"), encoded), 256))
+
+
+def validate_target_row_hash(identity, *, context):
+    """Fail explicitly on legacy targets; overwrite is the complete replacement boundary."""
+    from fabricops_kit.io import read_warehouse_table
+
+    try:
+        if identity.get("store_type") == "lakehouse":
+            target = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                                          schema=identity.get("schema"), context=context)
+        else:
+            target = read_warehouse_table(identity["schema"], identity["table_name"],
+                                          store=identity["store"], context=context)
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return
+        raise
+    if "_row_hash" not in target.columns:
+        raise ValueError("Existing target has no _row_hash. Use an explicitly validated full overwrite "
+                         "or migrate and validate historical rows before appending or SCD publication.")
+    from pyspark.sql import functions as F
+    if target.where(F.col("_row_hash").isNull() | ~F.col("_row_hash").rlike("^[0-9a-f]{64}$")).limit(1).count():
+        raise ValueError("Existing target has missing or invalid historical _row_hash values; reconcile before publication.")
 
 
 class PublicationBatch:
@@ -977,7 +1035,7 @@ class PublicationBatch:
 
     def __init__(self, dataframe, *, identity, processing, source_table_ids, audit, context):
         """Retain the publication boundary without evaluating Spark data."""
-        self.dataframe = dataframe
+        self.dataframe = add_row_hash(dataframe)
         self.identity = identity
         self.processing = processing
         self.source_table_ids = source_table_ids
@@ -987,7 +1045,7 @@ class PublicationBatch:
         self.finalization_recovery = False
         self.receipt = {}
         self.publication_snapshot = []
-        self._owns_cache = not dataframe.is_cached
+        self._owns_cache = True
 
     def __enter__(self):
         """Materialize and identify the exact input before staging or writing."""
@@ -1000,9 +1058,7 @@ class PublicationBatch:
             names = sorted(set(self.dataframe.columns) - _TARGET_TECHNICAL_COLUMNS)
             if not names:
                 raise ValueError("A publication batch must contain business columns.")
-            encoded = F.to_json(F.struct(*[_publication_value(F.col(f"`{n}`"), self.dataframe.schema[n].dataType).alias(n) for n in names]),
-                                options={"ignoreNullFields": "false", "timeZone": "UTC"})
-            hashes = self.dataframe.select(F.sha2(encoded, 256).alias("hash"))
+            hashes = self.dataframe.select(F.col("_row_hash").alias("hash"))
             # Bounded, order-independent multiset fingerprint; row multiplicity
             # matters. This action establishes retry identity, never presentation.
             totals = hashes.agg(F.count("*").alias("rows"), *[
@@ -3291,7 +3347,7 @@ def add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
     """Add resolved operational audit literals to incoming target rows."""
     from pyspark.sql import functions as F
 
-    result = df
+    result = df if "_row_hash" in df.columns else add_row_hash(df)
     for name in _TARGET_AUDIT_COLUMNS:
         result = result.withColumn(name, F.lit(audit_fields[name]))
     return result
@@ -3379,7 +3435,7 @@ def execute_lakehouse_processing(
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         technical_updates = {
-            name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS
+            name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS and name != "_row_hash"
         }
         merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
         if technical_updates:
@@ -3396,7 +3452,7 @@ def execute_lakehouse_processing(
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     technical_updates = {
         name: f"source.`{name}`" for name in persisted_df.columns
-        if name in _TARGET_TECHNICAL_COLUMNS and name not in _SCD2_LIFECYCLE_COLUMNS
+        if name in _TARGET_TECHNICAL_COLUMNS and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
     }
     merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
     reserved = sorted(set(merge_keys) & set(persisted_df.columns))
