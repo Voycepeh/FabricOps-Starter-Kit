@@ -157,6 +157,15 @@ A common pattern is **Full → Overwrite** for rebuilding a target or **Incremen
 
 Reliable pipelines need more than a successful write. These engineering decisions explain how FabricOps coordinates Fabric access, processing and safe publication. Expand a title for the implementation, stored evidence and trade-off.
 
+??? info "Test the real pipeline before anything is published"
+    Engineers can run their normal Read, Transform and Write flow, inspect the checks and profiling, and fix problems without changing production tables or advancing incremental progress.
+
+    **How it works:** [`setup_pipeline()`](../api/reference/setup_pipeline.md) establishes `dry_run` as the execution mode. The execution plan sets `permits_persistence=False`; [`orchestrate_read()`](../api/reference/orchestrate_read.md) evaluates source checks and retains observations in the session without committing checkpoints. [`orchestrate_write()`](../api/reference/orchestrate_write.md) prepares the DataFrame, evaluates applicable Schema, Sensitive Data, Grain and Data Quality checks, profiles the prepared rows in memory and previews the chosen processing strategy. Its Dry Run branch returns `published=False` and `publication_status=not_published` rather than calling `pipeline_write()`. An optional selected frozen Data Contract can be evaluated without activating it.
+
+    **Where to look:** `ExecutionPlan.permits_persistence` and `persistence_permitted()` in `src/fabricops_kit/pipeline/shared.py` gate writes to persistent metadata. The Dry Run branches in `src/fabricops_kit/pipeline/orchestrate_read.py` and `orchestrate_write.py` return `orchestration_stages`, `profile_result` and publication status in memory; no target rows or accepted progress are committed.
+
+    **Trade-off:** A successful preview does not prove that a later physical write, Warehouse connector operation or deployment permission will succeed. Dry Run checks the preparation and rules, not the final publication.
+
 ??? info "One function coordinates the checks around each read and write"
     Engineers should focus on their transformation, not repeat the same validation, profiling and publishing steps for every table.
 
