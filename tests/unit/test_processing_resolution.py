@@ -124,9 +124,9 @@ def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, 
         )
 
 
-def test_scd2_default_tracking_includes_source_timestamps_and_excludes_generated_audit():
+def test_scd2_default_tracking_retains_existing_ingestion_and_audit_exclusions():
     tracked = shared.resolve_scd2_tracked_columns(
         ["student_id", "name", "status", "effective_at", "ingested_at_utc", "_fabricops_created_at", "loaded_at"],
         {"key_columns": ["student_id"], "effective_column": "effective_at"},
     )
-    assert tracked == ["name", "status", "ingested_at_utc", "loaded_at"]
+    assert tracked == ["name", "status"]

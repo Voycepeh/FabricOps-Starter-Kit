@@ -604,6 +604,7 @@ def execute_warehouse_processing(
         validate_processing_input,
         resolve_scd1_business_columns,
         resolve_scd2_tracked_columns,
+        row_hash_expression,
     )
 
     definition = validated_processing(dict(processing))
@@ -643,14 +644,43 @@ def execute_warehouse_processing(
     )
     incoming_columns = _warehouse_column_list(columns)
     source_columns = _warehouse_column_list(columns, alias="source")
+    staged_df = df
+    hash_stage_column = "_fabricops_unchanged_row_hash"
+    auxiliary_hash = strategy == "scd2" and "_row_hash" in columns
+    stage_filter = f" AND name <> '{hash_stage_column}'" if auxiliary_hash else ""
+    create_columns = incoming_columns if auxiliary_hash else "*"
+    if auxiliary_hash:
+        from fabricops_kit.config.shared import is_table_not_found_error
+        reserved = {hash_stage_column, "_fabricops_stored_effective", "_fabricops_stored_key"}
+        if reserved & set(columns):
+            raise ValueError("Incoming SCD2 data uses reserved hash preparation columns.")
+        effective_name = str(definition["effective_column"])
+        try:
+            current = read_warehouse_synapsesql(df.sparkSession, configured_store,
+                f"SELECT {_warehouse_column_list([*keys, effective_name])} FROM {qtarget} WHERE [_is_current] = 1",
+                database_name=database_name)
+        except Exception as exc:
+            if not is_table_not_found_error(exc):
+                raise
+            current = None
+        if current is None:
+            staged_df = df.withColumn(hash_stage_column, F.col("_row_hash"))
+        else:
+            stored = current.select(*keys, F.col(effective_name).alias("_fabricops_stored_effective"),
+                                    F.lit(True).alias("_fabricops_stored_key"))
+            joined = df.join(stored, on=keys, how="left")
+            unchanged_hash = row_hash_expression(df, values={effective_name: F.col("_fabricops_stored_effective")})
+            staged_df = joined.withColumn(hash_stage_column,
+                F.when(F.col("_fabricops_stored_key").isNotNull(), unchanged_hash).otherwise(F.col("_row_hash")))
+            staged_df = staged_df.select(*columns, hash_stage_column)
     schema_checks = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NOT NULL
 AND (EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nullable
             FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{table_value}')
             EXCEPT SELECT name, system_type_id, max_length, precision, scale, is_nullable
-            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}')))
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}'){stage_filter})
  OR EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nullable
-            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}')
+            FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{stage_name}'){stage_filter}
             EXCEPT SELECT name, system_type_id, max_length, precision, scale, is_nullable
             FROM sys.columns WHERE object_id = OBJECT_ID(N'{schema_value}.{table_value}')))
     THROW 50001, 'Warehouse SCD target and incoming schemas are incompatible.', 1;
@@ -672,7 +702,7 @@ AND (EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nulla
         matched = f"WHEN MATCHED AND ({' OR '.join(differences)}) THEN UPDATE SET {updates}" if differences else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
-    SELECT * INTO {qtarget} FROM {qstage};
+    SELECT {create_columns} INTO {qtarget} FROM {qstage};
 ELSE
     MERGE {qtarget} AS target
     USING {qstage} AS source ON {join}
@@ -682,15 +712,15 @@ ELSE
     else:
         effective = _quoted_warehouse_identifier(str(definition["effective_column"]))
         changed = _warehouse_null_safe_difference(tracked, "target", "source")
-        # Untracked business fields retain their stored values, as in Lakehouse
-        # SCD2. Refresh only FabricOps audit data so the retained hash stays true.
-        technical = [column for column in columns if column in {
-            "_committed_at", "_committed_by", "_activity_id", "_workspace_id", "_notebook_id", "_notebook_name"
-        } or column.startswith(("_fabricops_", "_dq_"))]
+        technical = [column for column in columns if column not in {
+            *keys, *tracked, definition["effective_column"], "_effective_from", "_effective_to", "_is_current", "_row_hash"
+        }]
         technical_updates = ", ".join(
             f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
             for column in technical
         )
+        if auxiliary_hash:
+            technical_updates += (", " if technical_updates else "") + f"target.[_row_hash] = source.[{hash_stage_column}]"
         unchanged_update = f"""
     UPDATE target SET {technical_updates}
     FROM {qtarget} target JOIN {qstage} source ON {join}
@@ -698,7 +728,7 @@ ELSE
 """ if technical_updates else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
-    SELECT * INTO {qtarget} FROM {qstage};
+    SELECT {create_columns} INTO {qtarget} FROM {qstage};
 ELSE
 BEGIN
     IF EXISTS (SELECT 1 FROM {qtarget} GROUP BY {_warehouse_column_list(keys)}
@@ -736,7 +766,7 @@ IF OBJECT_ID(N'{schema_value}.{stage_name}', N'U') IS NOT NULL DROP TABLE {qstag
 THROW;
 END CATCH;"""
     try:
-        write_warehouse_synapsesql(df, configured_store, stage_object, mode="overwrite", options=options)
+        write_warehouse_synapsesql(staged_df, configured_store, stage_object, mode="overwrite", options=options)
         execute_warehouse_sql(df.sparkSession, configured_store, sql, database_name=database_name, options=options)
     except Exception:
         _drop_warehouse_stage_best_effort(

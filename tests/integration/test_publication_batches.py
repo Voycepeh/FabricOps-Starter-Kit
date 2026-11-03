@@ -960,3 +960,46 @@ def test_changed_full_observation_does_not_block_or_advance_an_exact_retry(publi
     accepted = [row for row in run.history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed']
     assert len(accepted) == int(first_observation)
     assert all(row['content_fingerprint'] != observed['content_fingerprint'] for row in accepted)
+
+
+@pytest.mark.parametrize('strategy', ['scd1', 'scd2'])
+def test_scd_ingestion_refresh_preserves_history_and_stored_hash(publication_runtime, strategy):
+    """Existing timestamp exclusions still control history; hashes follow actual stored values."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    processing = {'load_strategy': strategy, 'key_columns': ['id']}
+    if strategy == 'scd2':
+        processing['effective_column'] = 'modified'
+    run.state.update(mode=strategy, processing=processing)
+    frame = run.spark.createDataFrame([(1, 'A', 1, 10)], 'id long, value string, modified long, ingested_at_utc long')
+    run.publish(frame)
+    original_hash = run.read('target').first()._row_hash
+    next_frame = frame.withColumn('ingested_at_utc', F.lit(20).cast('long'))
+    if strategy == 'scd2':
+        next_frame = next_frame.withColumn('modified', F.lit(2).cast('long'))
+    run.state['activity'] = 'next-ingestion'
+    run.publish(next_frame)
+    stored = run.read('target')
+    assert stored.count() == 1
+    assert stored.first().ingested_at_utc == 20
+    assert stored.first()._row_hash != original_hash
+    expected = shared.add_row_hash(stored.select(*frame.columns)).first()._row_hash
+    assert stored.first()._row_hash == expected
+    if strategy == 'scd2':
+        assert stored.first().modified == 1 and stored.first()._effective_from == 1
+
+
+@pytest.mark.parametrize('legacy_hash', ['missing', 'wrong_type'])
+def test_full_overwrite_replaces_legacy_schema_with_mandatory_hash(publication_runtime, legacy_hash):
+    """An explicit complete overwrite upgrades the target without assuming old hashes exist."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    frame = run.stage(1, incremental=False)
+    old = frame if legacy_hash == 'missing' else frame.withColumn('_row_hash', F.encode(F.lit('a' * 64), 'UTF-8'))
+    old.write.format('delta').mode('overwrite').save(str(run.path / 'target'))
+    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
+    run.publish(frame)
+    target = run.read('target')
+    assert target.count() == frame.count()
+    assert target.schema['_row_hash'].dataType.simpleString() == 'string'
+    assert target.where('_row_hash IS NULL').count() == 0

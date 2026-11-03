@@ -657,6 +657,8 @@ def pipeline_write(
             for captured in success_context["observation_snapshot"].values():
                 captured["full"] = []
         io_context["_fabricops_publication_receipt"] = batch.receipt
+        if store_kind == "lakehouse" and strategy == "overwrite":
+            physical_options["overwriteSchema"] = "true"
         if store_kind == "lakehouse" and strategy in {"append_all", "append_new_only", "overwrite"}:
             physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             if strategy in {"append_all", "append_new_only"}:

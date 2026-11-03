@@ -25,7 +25,7 @@ def _capture_sql(monkeypatch, frame, processing):
     monkeypatch.setattr(
         io_shared,
         "write_warehouse_synapsesql",
-        lambda _df, _store, name, **kwargs: observed["writes"].append((name, kwargs)),
+        lambda _df, _store, name, **kwargs: observed.setdefault("frames", []).append(_df) or observed["writes"].append((name, kwargs)),
     )
     monkeypatch.setattr(
         io_shared,
@@ -35,6 +35,9 @@ def _capture_sql(monkeypatch, frame, processing):
     io_shared.execute_warehouse_processing(
         frame, schema="dbo", table_name="customers", store="warehouse", processing=processing
     )
+    import sqlglot
+    predicate = observed["sql"].split("IF ", 1)[1].split("THROW 50001", 1)[0].strip()
+    sqlglot.parse_one("SELECT 1 WHERE " + predicate, read="tsql")
     return observed
 
 
@@ -89,8 +92,8 @@ def test_scd2_generates_atomic_history_safety_and_idempotency_checks(monkeypatch
     assert "INSERT INTO [dbo].[customers]" in sql
     assert "target.[_is_current] = 1" in sql
     assert "target.[name]" in sql
-    assert "target.[_watermark_value] = source.[_watermark_value]" not in sql
-    assert "target.[_watermark_value] <> source.[_watermark_value]" in sql
+    assert "target.[_watermark_value] = source.[_watermark_value]" in sql
+    assert "target.[_watermark_value] <> source.[_watermark_value]" not in sql
     assert "target.[_effective_from] <> source.[_effective_from]" not in sql
     assert "BEGIN TRANSACTION" in sql and "ROLLBACK TRANSACTION" in sql
 
@@ -217,3 +220,31 @@ def test_writer_contract_excludes_governed_scd_parameters():
     parameters = signature(writer.write_warehouse_table).parameters
     assert "load_strategy" not in parameters
     assert "load_strategy_parameters" not in parameters
+
+
+
+@pytest.mark.parametrize("target_exists", [True, False])
+def test_scd2_hash_matches_retained_effective_time_and_refreshed_source_fields(monkeypatch, spark_session, target_exists):
+    """Unchanged history refreshes ingestion values while its hash describes the stored effective time."""
+    from pyspark.sql import functions as F
+    incoming = spark_session.createDataFrame([(1, "Ada", 3, 200)], "customer_id int, name string, effective_at long, ingested_at_utc long")
+    incoming = (pipeline_shared.add_row_hash(incoming).withColumn("_effective_from", F.col("effective_at"))
+                .withColumn("_effective_to", F.lit(None).cast("long")).withColumn("_is_current", F.lit(True)))
+    current = spark_session.createDataFrame([(1, 1)], "customer_id int, effective_at long")
+    queries = []
+    def read_current(*args, **kwargs):
+        queries.append(args[2])
+        if not target_exists:
+            raise RuntimeError("Invalid object name 'dbo.customers'.")
+        return current
+    monkeypatch.setattr(io_shared, 'read_warehouse_synapsesql', read_current)
+    result = _capture_sql(monkeypatch, incoming, {"load_strategy": "scd2", "key_columns": ["customer_id"], "effective_column": "effective_at"})
+    staged = result['frames'][0].first()
+    expected = (pipeline_shared.add_row_hash(incoming.withColumn('effective_at', F.lit(1).cast('long'))).first()._row_hash
+                if target_exists else incoming.first()._row_hash)
+    assert staged._fabricops_unchanged_row_hash == expected
+    assert (staged._row_hash != expected) == target_exists
+    assert 'WHERE [_is_current] = 1' in queries[0]
+    assert 'target.[_row_hash] = source.[_fabricops_unchanged_row_hash]' in result['sql']
+    assert "AND name <> '_fabricops_unchanged_row_hash'" in result['sql']
+    assert 'SELECT * INTO' not in result['sql']

@@ -883,7 +883,7 @@ def get_store(config: Any | dict[str, Any] | None, active_workspace_id: str, sto
 def is_table_not_found_error(exc: Exception) -> bool:
     """Return whether an exception indicates a missing metadata table."""
     text = str(exc).lower()
-    return any(token in text for token in ("table or view not found", "table not found", "not found", "does not exist", "delta table doesn't exist"))
+    return any(token in text for token in ("table or view not found", "table not found", "not found", "does not exist", "delta table doesn't exist", "invalid object name"))
 
 
 def stable_metadata_id(*parts: Any) -> str:

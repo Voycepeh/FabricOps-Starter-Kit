@@ -196,8 +196,10 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
     )
     assert recorded == {
         "keys": "target.`student_id` <=> source.`student_id`",
-        "change": "NOT (target.`status` <=> source.`status`) OR NOT (target.`_watermark_value` <=> source.`_watermark_value`)",
+        "change": "NOT (target.`status` <=> source.`status`)",
         "technical_update": {
+            "_row_hash": "source.`_row_hash`",
+            "_watermark_value": "source.`_watermark_value`",
             "_dq_check_status": "source.`_dq_check_status`",
             "_committed_at": "source.`_committed_at`",
             "_committed_by": "source.`_committed_by`",
@@ -268,7 +270,7 @@ def test_scd2_identical_business_state_updates_audit_without_new_version(monkeyp
     )
     incoming = (
         spark_session.createDataFrame(
-            [(1, "active", "2026-08-22", 100)],
+            [(1, "active", "2026-08-22", 200)],
             ["student_id", "status", "effective_at", "_watermark_value"],
         )
         .withColumn("_effective_from", F.col("effective_at"))
@@ -287,9 +289,10 @@ def test_scd2_identical_business_state_updates_audit_without_new_version(monkeyp
     )
 
     expire, technical = recorded["updates"]
-    assert expire[0] == "NOT (target.`status` <=> source.`status`) OR NOT (target.`_watermark_value` <=> source.`_watermark_value`)"
+    assert expire[0] == "NOT (target.`status` <=> source.`status`)"
     assert technical[0] == f"NOT ({expire[0]})"
-    assert "_watermark_value" not in technical[1]
+    assert technical[1]["_watermark_value"] == "source.`_watermark_value`"
+    assert "sha2" in str(technical[1]["_row_hash"])
     assert recorded["insert_values"]["student_id"] == "source.`student_id`"
     assert recorded["appends"] == 0
 

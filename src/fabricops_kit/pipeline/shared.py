@@ -317,7 +317,7 @@ _TARGET_AUDIT_COLUMNS = (
 )
 _SCD2_LIFECYCLE_COLUMNS = ("_effective_from", "_effective_to", "_is_current")
 _TARGET_TECHNICAL_COLUMNS = {
-    "_row_hash",
+    *_DEFAULT_PROFILE_EXCLUDE_COLUMNS,
     *_TARGET_AUDIT_COLUMNS,
     *_SCD2_LIFECYCLE_COLUMNS,
 }
@@ -966,10 +966,10 @@ def _publication_value(column, datatype):
     return column
 
 
-def add_row_hash(dataframe):
-    """Hash final incoming values using the versioned, typed Spark JSON contract.
+def row_hash_expression(dataframe, *, values=None):
+    """Build a canonical typed hash expression, optionally for resulting SCD values.
 
-    This internal operation replaces any supplied hash. Only FabricOps-owned audit,
+    This internal expression ignores any supplied hash. Only FabricOps-owned audit,
     SCD lifecycle and reserved DQ/FabricOps fields are excluded; source Job IDs,
     ingestion timestamps and similarly named business values remain significant.
     """
@@ -986,6 +986,7 @@ def add_row_hash(dataframe):
             return {"map": [descriptor(datatype.keyType), descriptor(datatype.valueType)]}
         return datatype.simpleString()
 
+    values = values or {}
     names = sorted(name for name in dataframe.columns
                    if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
                    and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
@@ -993,12 +994,17 @@ def add_row_hash(dataframe):
         raise ValueError("A managed write requires unique named incoming data columns.")
     schema = json.dumps({"version": 1, "columns": [(name, descriptor(dataframe.schema[name].dataType))
                                                 for name in names]}, separators=(",", ":"), ensure_ascii=True)
-    values = F.struct(*[_publication_value(F.col("`" + name.replace("`", "``") + "`"),
+    values = F.struct(*[_publication_value(values.get(name, F.col("`" + name.replace("`", "``") + "`")),
                                          dataframe.schema[name].dataType).alias(name) for name in names])
     encoded = F.to_json(values, options={"ignoreNullFields": "false", "timeZone": "UTC",
                                         "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
                                         "timestampNTZFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"})
-    return dataframe.withColumn("_row_hash", F.sha2(F.concat(F.lit(schema + "\n"), encoded), 256))
+    return F.sha2(F.concat(F.lit(schema + "\n"), encoded), 256)
+
+
+def add_row_hash(dataframe):
+    """Recalculate the mandatory hash of final incoming data without a Spark action."""
+    return dataframe.withColumn("_row_hash", row_hash_expression(dataframe))
 
 
 def validate_target_row_hash(identity, *, context, cache_hashes=False):
@@ -1020,6 +1026,9 @@ def validate_target_row_hash(identity, *, context, cache_hashes=False):
         raise ValueError("Existing target has no _row_hash. Use an explicitly validated full overwrite "
                          "or migrate and validate historical rows before appending or SCD publication.")
     from pyspark.sql import functions as F
+    from pyspark.sql.types import StringType
+    if not isinstance(target.schema["_row_hash"].dataType, StringType):
+        raise ValueError("Existing target _row_hash must use the canonical SHA256 string type; reconcile before publication.")
     hashes = target.select("_row_hash")
     if cache_hashes:
         from pyspark import StorageLevel
@@ -1163,7 +1172,9 @@ class PublicationBatch:
         if self._owns_cache:
             self.dataframe.persist(StorageLevel.MEMORY_AND_DISK)
         try:
-            names = sorted(set(self.dataframe.columns) - _TARGET_TECHNICAL_COLUMNS)
+            names = sorted(name for name in self.dataframe.columns
+                           if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+                           and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
             if not names:
                 raise ValueError("A publication batch must contain business columns.")
             totals = row_hash_totals(self.dataframe)
@@ -3573,7 +3584,7 @@ def execute_lakehouse_processing(
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         technical_updates = {
-            name: f"source.`{name}`" for name in persisted_df.columns if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name != "_row_hash"
+            name: f"source.`{name}`" for name in persisted_df.columns if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
         }
         merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
         if technical_updates:
@@ -3592,6 +3603,12 @@ def execute_lakehouse_processing(
         name: f"source.`{name}`" for name in persisted_df.columns
         if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
     }
+    if "_row_hash" in persisted_df.columns:
+        # Only technical fields are refreshed on an unchanged version. In particular,
+        # effective/untracked business values remain from the stored version.
+        values = {name: F.col(("source." if name in technical_updates else "target.")
+                             + "`" + name.replace("`", "``") + "`") for name in persisted_df.columns}
+        technical_updates["_row_hash"] = row_hash_expression(persisted_df, values=values)
     merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
     reserved = sorted(set(merge_keys) & set(persisted_df.columns))
     if reserved:

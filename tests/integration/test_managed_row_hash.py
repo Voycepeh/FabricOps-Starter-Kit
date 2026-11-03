@@ -57,6 +57,9 @@ def test_existing_targets_require_valid_hashes(spark_session, monkeypatch):
     frame = frame.withColumn('_row_hash', F.lit(None).cast('string'))
     with pytest.raises(ValueError, match='invalid historical'):
         shared.validate_target_row_hash(identity, context={})
+    frame = frame.withColumn("_row_hash", F.encode(F.lit("a" * 64), "UTF-8"))
+    with pytest.raises(ValueError, match="string type"):
+        shared.validate_target_row_hash(identity, context={})
     frame = add_row_hash(frame)
     shared.validate_target_row_hash(identity, context={})
 
