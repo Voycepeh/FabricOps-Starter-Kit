@@ -27,6 +27,8 @@ FabricOps keeps that work behind a readable notebook flow: **Setup → Read → 
 
 The result is a pipeline pattern that engineers can clone and adapt without rebuilding the governance and engineering plumbing each time.
 
+**Curious what FabricOps handles behind the scenes?** [Explore the engineering decisions and their trade-offs](#what-fabricops-takes-care-of-for-you), including store routing, Warehouse SQL pushdown, row-level audit fields, recovery and Data Contract checks.
+
 Inside `02_pipeline.ipynb`, four functions frame the engineer's own transformation:
 
 | Pipeline function | Purpose |
@@ -181,6 +183,15 @@ Reliable pipelines need more than a successful write. These engineering decision
     **Where to look:** `src/fabricops_kit/pipeline/pipeline_read.py` implements `_warehouse_incremental_query()` and `_filter_lakehouse_incremental()`. `src/fabricops_kit/io/shared.py` implements `read_warehouse_synapsesql()`. [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `source_table_id`, `target_table_id`, `watermark_type` and `max_change_value` for accepted progress.
 
     **Trade-off:** SQL pushdown can reduce Warehouse data transferred into Spark, but still incurs connector and Warehouse query overhead. It is an efficiency design, not a guarantee that Warehouse reads outperform direct Lakehouse Delta reads.
+
+??? info "Every published row tells us where it came from"
+    Published data should carry enough context to identify which Fabric execution wrote it, without every engineer having to add tracking columns manually.
+
+    **How it works:** Internal `pipeline_write()` resolves one run-consistent audit record with `resolve_target_audit_fields()` and uses `add_target_audit_fields()` to add `_committed_at`, `_committed_by`, `_activity_id`, `_workspace_id`, `_notebook_id` and `_notebook_name` to managed target rows. The physical target also receives `_row_hash`, computed from the final business row values rather than those audit literals. SCD2 targets additionally carry `_effective_from`, `_effective_to` and `_is_current` for record history.
+
+    **Where to look:** These are **physical columns on the published Lakehouse or Warehouse target**, not a separate audit metadata table. The definitions and `add_target_audit_fields()` are in `src/fabricops_kit/pipeline/shared.py`; `pipeline_write()` calls them in `src/fabricops_kit/pipeline/pipeline_write.py`. [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) and [`METADATA_DATA_LINEAGE`](../reference/metadata/metadata_data_lineage.md) separately describe run-level outcomes and lineage.
+
+    **Trade-off:** Every managed target stores extra columns. These identify the publishing execution, not necessarily the original creator of each source record; updates and merges can refresh audit values.
 
 ??? info "A failed run shouldn't mean writing everything twice"
     A successful write followed by a metadata failure should not silently duplicate the same publication on retry.
