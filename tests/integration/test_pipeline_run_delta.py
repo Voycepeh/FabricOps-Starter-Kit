@@ -13,7 +13,7 @@ import json
 
 from fabricops_kit import finalize_pipeline
 from fabricops_kit.activated_pipeline import shared as activation
-from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types, metadata_table_schema_registry, encode_metadata_row, decode_metadata_row
 from fabricops_kit.pipeline import shared
 
 pytestmark = pytest.mark.spark
@@ -45,7 +45,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         monkeypatch.setattr(module, 'read_lakehouse_table', lambda table, **kwargs: spark_session.read.format('delta').load(paths[table]))
     shared.resolve_pipeline_registration(pipeline_id, context=context, spark_session=spark_session)
     def append(table, rows):
-        spark_session.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows], registry[table]).write.format('delta').mode('append').save(paths[table])
+        spark_session.createDataFrame([encode_metadata_row(table, coerce_metadata_row_types(table, {**row, **audit})) for row in rows], registry[table]).write.format('delta').mode('append').save(paths[table])
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1', 'start_date': '2020-01-01',
                  'expiry_date': '2099-01-01', 'agreement_name': 'Agreement'}
     # Agreement's non-null authored fields are irrelevant to exact date/version validation.
@@ -92,7 +92,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
             for table in json.loads(plan.participants_json)]
         plan.evidence['boundary_completed'] = True
     def rows():
-        return [row.asDict(recursive=True) for row in spark_session.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).collect()]
+        return [decode_metadata_row('METADATA_PIPELINE_RUN', row.asDict(recursive=True)) for row in spark_session.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).collect()]
     return SimpleNamespace(spark=spark_session, paths=paths, context=context, make=make, complete=complete,
                            rows=rows, append=append, audit=audit)
 
@@ -123,8 +123,10 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
             pipeline_name='Orders', pipeline_version='1',
             agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
     r.append('METADATA_GUARDRAIL_RESULTS', [removed])
+    from pyspark.sql import functions as F
+    remaining = [item for item in records[0]['operations'] if item['operation_key'] != 'source:table0']
     DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
-        set={'operations': "filter(operations, item -> item.operation_key <> 'source:table0')"})
+        set={'operations': F.lit(encode_metadata_row('METADATA_PIPELINE_RUN', {'operations': remaining})['operations'])})
     with pytest.raises(ValueError, match='whole-run|source outside|Guardrail evidence'):
         activation.tested_pipeline_run(testing_run_id=plan.plan_id,
             pipeline_name='Orders', pipeline_version='1',
@@ -255,7 +257,7 @@ def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_de
     for plan in plans:
         shared.persist_pipeline_run(plan, spark_session=r.spark)
     # Force normal file-level contention so the bounded OCC retry is exercised.
-    r.spark.createDataFrame(r.rows(), metadata_table_schema_registry()['METADATA_PIPELINE_RUN']).coalesce(1).write.format('delta').mode('overwrite').save(r.paths['METADATA_PIPELINE_RUN'])
+    r.spark.createDataFrame([encode_metadata_row('METADATA_PIPELINE_RUN', row) for row in r.rows()], metadata_table_schema_registry()['METADATA_PIPELINE_RUN']).coalesce(1).write.format('delta').mode('overwrite').save(r.paths['METADATA_PIPELINE_RUN'])
     for iteration in range(3):
         ready = Barrier(2)
         for plan in plans:
@@ -274,14 +276,14 @@ def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_de
         DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).history().select('operation').collect())
 
 
-def test_sql_explodes_native_operation_and_stage_fields(runs_delta):
-    """Read statuses and exact contracts through typed fields without JSON parsing."""
+def test_spark_decodes_json_operation_and_stage_fields(runs_delta):
+    """Decode authoritative JSON into typed Spark fields for status and Contract queries."""
     r = runs_delta
     plan = r.make()
     r.complete(plan)
     finalize_pipeline(shared.PipelineSession(plan, r.spark))
     from pyspark.sql import functions as F
-    runs = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN'])
+    runs = shared.decode_metadata_dataframe('METADATA_PIPELINE_RUN', r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN']))
     operations = runs.select(F.explode('operations').alias('op'))
     assert {row.table_id for row in operations.select('op.table_id').collect()} == {'table0', 'table1'}
     assert operations.filter(F.col('op.contract_version') == 1).count() == 2

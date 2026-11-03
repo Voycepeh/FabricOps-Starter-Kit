@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 CANONICAL_METADATA_TABLES = [
@@ -167,6 +167,12 @@ CATALOGUE_NESTED_FIELDS = {
 }
 
 
+METADATA_JSON_COLUMNS = {
+    "METADATA_DATA_CATALOGUE": tuple(CATALOGUE_NESTED_FIELDS),
+    "METADATA_PIPELINE_RUN": ("operations", "profiling", "failures"),
+}
+
+
 def build_metadata_schema(table_name: str, fields: list[tuple[str, Any] | tuple[str, Any, bool]]) -> Any:
     """Build a typed Spark StructType for a metadata table."""
     try:
@@ -271,10 +277,10 @@ def audit_schema_fields() -> list[tuple[str, str, bool]]:
     return list(AUDIT_SCHEMA_FIELDS)
 
 
-def metadata_table_schema_registry() -> dict[str, Any]:
-    """Return canonical metadata table names mapped to typed Spark schemas."""
+def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
+    """Return physical schemas, or typed logical contracts for JSON metadata."""
     audit = audit_schema_fields()
-    return {
+    schemas = {
         "METADATA_DATA_STEWARD": build_metadata_schema(
             "METADATA_DATA_STEWARD",
             [("steward_id", "string", False), ("steward_name", "string"), ("steward_role", "string"), ("contact", "string"), ("is_active", "boolean"), ("custom_fields_json", "string"), *audit],
@@ -495,6 +501,15 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
     }
 
+    if not logical:
+        string_type = schemas["METADATA_DATA_CONTRACT"].fields[0].dataType
+        for table, names in METADATA_JSON_COLUMNS.items():
+            for field in schemas[table].fields:
+                if field.name in names:
+                    field.dataType = string_type
+            schemas[table] = type(schemas[table])(schemas[table].fields)
+    return schemas
+
 
 def _coerce_metadata_value(value: Any, type_name: str) -> Any:
     """Coerce one metadata value to the Python type expected by the setup schema."""
@@ -535,8 +550,8 @@ def _coerce_metadata_field(value, data_type):
     return _coerce_metadata_value(value, type(data_type).__name__)
 
 
-def validate_catalogue_value(value: Any, data_type: Any, *, field: str) -> Any:
-    """Validate a native Catalogue value without lossy Spark/JSON coercion.
+def validate_metadata_value(value: Any, data_type: Any, *, field: str) -> Any:
+    """Validate a typed logical metadata value without lossy scalar coercion.
 
     Missing nullable struct fields become null; unknown fields, null array
     elements, numeric overflow and scalar coercions fail closed.
@@ -553,12 +568,17 @@ def validate_catalogue_value(value: Any, data_type: Any, *, field: str) -> Any:
         unknown = set(value) - {item.name for item in data_type.fields}
         if unknown:
             raise ValueError(f"{field} contains unknown fields: {', '.join(sorted(unknown))}.")
-        return {item.name: validate_catalogue_value(value.get(item.name), item.dataType,
-                field=f"{field}.{item.name}") for item in data_type.fields}
+        result = {}
+        for item in data_type.fields:
+            member = value.get(item.name)
+            if member is None and not item.nullable:
+                raise ValueError(f"{field}.{item.name} cannot be null.")
+            result[item.name] = validate_metadata_value(member, item.dataType, field=f"{field}.{item.name}")
+        return result
     if hasattr(data_type, "elementType"):
         if not isinstance(value, list) or any(item is None for item in value):
             raise ValueError(f"{field} must be an array of non-null elements.")
-        return [validate_catalogue_value(item, data_type.elementType, field=f"{field}[{index}]")
+        return [validate_metadata_value(item, data_type.elementType, field=f"{field}[{index}]")
                 for index, item in enumerate(value)]
     kind = type(data_type).__name__
     valid = False
@@ -569,6 +589,13 @@ def validate_catalogue_value(value: Any, data_type: Any, *, field: str) -> Any:
     elif kind in {"IntegerType", "LongType"}:
         bits = 32 if kind == "IntegerType" else 64
         valid = type(value) is int and -(2 ** (bits - 1)) <= value < 2 ** (bits - 1)
+    elif kind == "TimestampType":
+        try:
+            parsed = value if isinstance(value, datetime) else datetime.fromisoformat(value.replace("Z", "+00:00")) if isinstance(value, str) else None
+        except ValueError as exc:
+            raise ValueError(f"{field} must be an ISO timestamp.") from exc
+        if parsed is not None:
+            return parsed if isinstance(value, datetime) else parsed.astimezone(UTC).replace(tzinfo=None) if parsed.tzinfo else parsed
     elif kind == "DoubleType":
         valid = type(value) in {int, float} and math.isfinite(value)
         if valid:
@@ -579,9 +606,9 @@ def validate_catalogue_value(value: Any, data_type: Any, *, field: str) -> Any:
 
 
 def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
-    """Return a metadata row with values aligned to the bootstrap schema types."""
+    """Return typed logical metadata; encode JSON fields at physical writes."""
     try:
-        schema = metadata_table_schema_registry().get(table_name)
+        schema = metadata_table_schema_registry(logical=True).get(table_name)
     except Exception:
         schema = None
     if schema is None:
@@ -589,8 +616,8 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     coerced = dict(row)
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
-            if table_name == "METADATA_DATA_CATALOGUE" and field.name in CATALOGUE_NESTED_FIELDS:
-                coerced[field.name] = validate_catalogue_value(coerced[field.name], field.dataType, field=field.name)
+            if field.name in METADATA_JSON_COLUMNS.get(table_name, ()):
+                coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
             elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:
@@ -599,6 +626,103 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
                 else:
                     coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
     return coerced
+
+
+def metadata_json_schema(table_name: str) -> dict[str, Any]:
+    """Return logical fields stored as JSON strings, with their Spark types."""
+    schema = metadata_table_schema_registry(logical=True).get(table_name)
+    names = METADATA_JSON_COLUMNS.get(table_name, ())
+    return {field.name: field.dataType for field in schema.fields if field.name in names} if schema else {}
+
+
+def parse_metadata_json(value: str, *, field: str) -> Any:
+    """Parse strict JSON, rejecting duplicate keys and nonfinite constants."""
+    import json
+
+    def unique_object(pairs):
+        result = {}
+        for name, item in pairs:
+            if name in result:
+                raise ValueError(f"{field} contains duplicate JSON field {name}.")
+            result[name] = item
+        return result
+
+    def invalid_constant(token):
+        raise ValueError(f"{field} contains nonfinite JSON number {token}.")
+
+    try:
+        return json.loads(value, object_pairs_hook=unique_object, parse_constant=invalid_constant)
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"{field} contains invalid JSON: {exc}") from exc
+
+
+def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Decode physical JSON metadata into validated logical dictionaries/lists.
+
+    Native logical values are accepted for application calls, not as a physical
+    schema fallback. Missing nullable struct members retain their explicit nulls.
+    """
+    result = dict(row)
+    required = table_name == "METADATA_PIPELINE_RUN"
+    for name, kind in metadata_json_schema(table_name).items():
+        if name not in result:
+            continue
+        value = result[name]
+        if isinstance(value, str):
+            value = parse_metadata_json(value, field=name)
+        if value is None and required:
+            raise ValueError(f"{table_name}.{name} cannot be null.")
+        result[name] = validate_metadata_value(value, kind, field=name)
+    return result
+
+
+def encode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Encode logical JSON fields for physical writes without changing other data.
+
+    Existing valid JSON text is retained exactly, allowing whole-row Run CAS to
+    compare the actual committed bytes, including historical whitespace/key order.
+    """
+    import json
+
+    result = dict(row)
+    decoded = decode_metadata_row(table_name, row)
+    for name in metadata_json_schema(table_name):
+        if name in result and not isinstance(result[name], str):
+            value = decoded[name]
+            result[name] = None if value is None else json.dumps(
+                value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+                allow_nan=False, default=_metadata_json_default,
+            )
+    return result
+
+
+def _metadata_json_default(value):
+    """Encode native timestamp instants consistently with retained Run hashes."""
+    if isinstance(value, datetime):
+        return (value.astimezone(UTC).replace(tzinfo=None) if value.tzinfo else value).isoformat()
+    raise TypeError(f"Unsupported JSON metadata value: {type(value).__name__}.")
+
+
+def decode_metadata_dataframe(table_name: str, frame: Any) -> Any:
+    """Decode JSON in Spark for authoritative profiling-history aggregation.
+
+    Strict validation uses the same row codec before typed parsing; malformed
+    JSON must never silently turn into null or an empty completion history.
+    """
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import StringType
+
+    for name, kind in metadata_json_schema(table_name).items():
+        if name not in frame.columns:
+            continue
+
+        def validate(value, name=name):
+            decode_metadata_row(table_name, {name: value})
+            return value
+
+        checked = F.udf(validate, StringType())(F.col(name))
+        frame = frame.withColumn(name, F.from_json(checked, kind, {"mode": "FAILFAST", "timeZone": "UTC"}))
+    return frame
 
 
 def metadata_schema_type_name(data_type: Any) -> str:

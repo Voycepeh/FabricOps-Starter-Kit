@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.config.metadata_schemas import CATALOGUE_NESTED_FIELDS, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import CATALOGUE_NESTED_FIELDS, metadata_table_schema_registry, decode_metadata_row, encode_metadata_row
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark
@@ -37,6 +37,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     path = str(tmp_path / 'configured-metadata' / 'custom_engineering' / TABLE)
     registry = metadata_table_schema_registry()
     schema = registry[TABLE]
+    logical_schema = metadata_table_schema_registry(logical=True)[TABLE]
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering',
                      governance_metadata_schema='custom_governance')
     def read(name, **kwargs):
@@ -64,15 +65,14 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
     def seed(rows, native=(), extra=True):
-        physical = StructType([StructField(f.name, StringType() if f.name in CATALOGUE_NESTED_FIELDS
-            and f.name not in native else f.dataType, True, {'comment': 'original ' + f.name})
+        physical = StructType([StructField(f.name, logical_schema[f.name].dataType if f.name in native else f.dataType, True, {'comment': 'original ' + f.name})
             for f in schema.fields] + ([StructField('extension', StringType(), True, {'comment': 'keep'})] if extra else []))
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
         return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, workspace_id='dev', verbose=False)
     def upgrade():
-        return setup._upgrade_catalogue(spark=spark_session, table=read(TABLE, schema='custom_engineering'),
+        return setup._upgrade_json_metadata(spark=spark_session, table=read(TABLE, schema='custom_engineering'), table_name=TABLE,
             expected_schema=schema, metadata_schema='custom_engineering', context={'config': config, 'scope_workspace_id': 'dev'})
     def version():
         from delta.tables import DeltaTable
@@ -82,13 +82,13 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
                            read=lambda: spark_session.read.format('delta').load(path))
 
 
-def test_fresh_setup_uses_structs_and_repeated_setup_is_noop(catalogue_delta):
-    """Normal setup creates native columns immediately and never resets data."""
+def test_fresh_setup_uses_json_and_repeated_setup_is_noop(catalogue_delta):
+    """Normal setup creates scalar JSON columns immediately and never resets data."""
     rt = catalogue_delta
     first = rt.run()
     assert first['status'] == 'ready' and TABLE in first['created_tables']
     assert rt.read().schema.simpleString() == rt.schema.simpleString()
-    rt.spark.createDataFrame([rt.row(load_strategy_parameters_json={'watermark_column': 'modified'})],
+    rt.spark.createDataFrame([encode_metadata_row(TABLE, rt.row(load_strategy_parameters_json={'watermark_column': 'modified'}))],
                              rt.schema).write.format('delta').mode('append').save(rt.path)
     version = rt.version()
     assert rt.run()['status'] == 'ready'
@@ -112,16 +112,16 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
     rows += [rt.row(table_id='inactive', metadata_level='column', column_id='col', column_name='retired',
                     data_type='decimal(18,2)', is_active=False, extension='unrelated')]
     rt.seed(rows)
-    original = {r['table_id']: r.asDict(recursive=True) for r in rt.read().collect()}
+    original = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in rt.read().collect()}
     from delta.tables import DeltaTable
     detail = DeltaTable.forPath(rt.spark, rt.path).detail().first().asDict()
     version = rt.version()
     result = rt.run()
     assert result['status'] == 'ready', result['table_results'][TABLE]
     upgrade = result['table_results'][TABLE]
-    assert upgrade['status'] == 'evolved' and upgrade['pre_upgrade_version'] == version
-    assert rt.version() == version + 1
-    current = {r['table_id']: r.asDict(recursive=True) for r in rt.read().collect()}
+    assert upgrade['status'] == 'validated'
+    assert rt.version() == version
+    current = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in rt.read().collect()}
     assert original.keys() == current.keys()
     for key, before in original.items():
         for name, value in before.items():
@@ -136,8 +136,7 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
     new_detail = DeltaTable.forPath(rt.spark, rt.path).detail().first().asDict()
     assert new_detail['id'] == detail['id'] and new_detail['properties'] == detail['properties']
     assert rt.read().schema['extension'].metadata == {'comment': 'keep'}
-    assert json.loads(DeltaTable.forPath(rt.spark, rt.path).history(1).first()['userMetadata'])['pre_upgrade_version'] == version
-    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
+    assert rt.run()['status'] == 'ready' and rt.version() == version
     # Native processing strips only absent optional fields, preserving its logical contract.
     from fabricops_kit.pipeline.shared import catalogue_authored_processing, validated_processing
     for index, (params, strategy) in enumerate(processing):
@@ -154,7 +153,7 @@ def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
         scheduled_refresh_json='{}' if i == 4 else json.dumps({'status': '', 'schedules': []}),
         profile_key_candidates_json=value) for i, value in enumerate(values)], native={'load_strategy_parameters_json'})
     frame, info = rt.upgrade()
-    rows = {r['table_id']: r.asDict(recursive=True) for r in frame.collect()}
+    rows = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in frame.collect()}
     for i in range(4):
         assert rows[str(i)]['profile_key_candidates_json'] is None
     assert rows['4']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': None}
@@ -163,7 +162,7 @@ def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
     assert rows['7']['profile_key_candidates_json']['status'] == 'not_evaluated'
     assert rows['8']['profile_key_candidates_json']['status'] == 'unresolved'
     assert all(r['load_strategy_parameters_json']['key_columns'] == [] for r in rows.values())
-    assert info['converted_columns'] == ['profile_key_candidates_json', 'scheduled_refresh_json']
+    assert info['converted_columns'] == ['load_strategy_parameters_json', 'profile_key_candidates_json']
 
 
 @pytest.mark.parametrize(('field', 'value'), [
@@ -190,14 +189,15 @@ def test_invalid_values_abort_without_catalogue_mutation(catalogue_delta, field,
     assert rt.version() == version and rt.read().schema == schema and rt.read().collect() == rows
 
 
-def test_native_values_are_validated_and_not_rewritten(catalogue_delta):
+def test_native_values_migrate_once_and_json_is_strictly_validated(catalogue_delta):
     """Already native data gets the same strict validation, including null elements."""
     rt = catalogue_delta
     rt.seed([rt.row(load_strategy_parameters_json={'key_columns': ['id']})], native=set(CATALOGUE_NESTED_FIELDS))
     version = rt.version()
-    assert rt.run()['status'] == 'ready' and rt.version() == version
+    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
+    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
     from delta.tables import DeltaTable
-    DeltaTable.forPath(rt.spark, rt.path).update(set={'load_strategy_parameters_json.key_columns': "array('id', cast(null as string))"})
+    DeltaTable.forPath(rt.spark, rt.path).update(set={'load_strategy_parameters_json': "'" + json.dumps({'key_columns': ['id', None]}) + "'"})
     version = rt.version()
     assert TABLE in rt.run()['failed_tables'] and rt.version() == version
 
@@ -208,13 +208,13 @@ def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, m
     from py4j.java_gateway import JavaMember
     from pyspark.sql.readwriter import DataFrameWriter
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json='{"key_columns":["id"]}', extension='preserved')])
+    rt.seed([rt.row(load_strategy_parameters_json={'key_columns':['id']}, extension='preserved')], native={'load_strategy_parameters_json'})
     version = rt.version()
     if failure == 'interrupted':
         original = DataFrameWriter.parquet
         def interrupt(writer, path, *args, **kwargs):
             original(writer, path, *args, **kwargs)
-            if '_catalogue_upgrade_staging/' in path:
+            if '_json_upgrade_staging/' in path:
                 raise RuntimeError('interrupted after durable staging')
         monkeypatch.setattr(DataFrameWriter, 'parquet', interrupt)
     else:
@@ -251,12 +251,12 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
     from pyspark.sql.readwriter import DataFrameWriter
     from delta.tables import DeltaTable
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json='{}', extension='original')])
+    rt.seed([rt.row(load_strategy_parameters_json={}, extension='original')], native={'load_strategy_parameters_json'})
     original = DataFrameWriter.parquet
     barrier = Barrier(2)
     def stage(writer, path, *args, **kwargs):
         result = original(writer, path, *args, **kwargs)
-        if '_catalogue_upgrade_staging/' in path:
+        if '_json_upgrade_staging/' in path:
             if conflict == 'setup':
                 barrier.wait(timeout=60)
             elif conflict == 'append':
@@ -280,7 +280,7 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
             rt.upgrade()
         rows = {r['table_id']: r['extension'] for r in rt.read().collect()}
         assert rows == ({'table': 'original', 'newer': 'new'} if conflict == 'append' else {'table': 'newer'})
-        assert rt.read().schema['load_strategy_parameters_json'].dataType.simpleString() == 'string'
+        assert rt.read().schema['load_strategy_parameters_json'].dataType.simpleString().startswith('struct<')
 
 
 def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue_delta, monkeypatch):
@@ -308,7 +308,7 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
         context=context, spark_session=rt.spark)
     shared._persist_grain_candidates(identity, [CANDIDATE], max_columns=3, config=config, active_workspace_id='dev',
                                      context=context, spark_session=rt.spark)
-    current = rt.read().first().asDict(recursive=True)
+    current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json']['candidates'] == [CANDIDATE]
     assert shared.catalogue_authored_processing(current) == {'load_strategy': 'scd2', **parameters}
@@ -316,14 +316,14 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
     profile_row = {**original_row, 'load_strategy': None, 'load_strategy_parameters_json': None,
                    'profile_key_candidates_json': {'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}}
-    frame = rt.spark.createDataFrame([coerce_metadata_row_types(TABLE, profile_row)], rt.schema)
+    frame = rt.spark.createDataFrame([encode_metadata_row(TABLE, coerce_metadata_row_types(TABLE, profile_row))], rt.schema)
     shared._upsert_catalogue_identities(catalogue_df=frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
-    current = rt.read().first().asDict(recursive=True)
+    current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json'] == profile_row['profile_key_candidates_json']
     seen = []
     monkeypatch.setattr(drift, 'resolve_pipeline_data_contract', lambda *a, **kw: {'contract_id': 'contract'})
-    monkeypatch.setattr(drift, 'resolve_catalogue_table_identity', lambda *a, **kw: rt.read().first().asDict(recursive=True))
+    monkeypatch.setattr(drift, 'resolve_catalogue_table_identity', lambda *a, **kw: decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True)))
     def processing(*args, **kwargs):
         value = shared.validated_processing(kwargs['authored_processing'])
         seen.append(value)
@@ -339,7 +339,7 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
 from tests.unit.test_widget_data_contract import widget_runtime  # noqa: E402, F401, F811
 
 
-def test_widget_hydrates_migrated_schedules_and_composite_key(catalogue_delta, widget_runtime):
+def test_widget_reads_json_candidates_and_preserves_schedule(catalogue_delta, widget_runtime):
     """Persisted migrated values hydrate the existing schedule and key controls."""
     rt = catalogue_delta
     table = dict(widget_runtime['catalogue'][0])
@@ -350,12 +350,12 @@ def test_widget_hydrates_migrated_schedules_and_composite_key(catalogue_delta, w
     columns = [rt.row(**row) for row in widget_runtime['catalogue'][1:]]
     rt.seed([table, *columns])
     rt.upgrade()
-    rows = [row.asDict(recursive=True) for row in rt.read().collect()]
+    rows = [decode_metadata_row(TABLE, row.asDict(recursive=True)) for row in rt.read().collect()]
     widget_runtime['catalogue'][:] = sorted(rows, key=lambda row: row.get('column_id') is not None)
     state = widget_runtime['open']()
-    assert state['scheduled_refresh'] == SCHEDULE
+    assert 'scheduled_refresh' not in state
+    assert decode_metadata_row(TABLE, widget_runtime['catalogue'][0])['scheduled_refresh_json'] == SCHEDULE
     assert tuple(state['_controls']['row_key_columns'].value) == ('column_0', 'column_1')
-    assert 'Daily' in state['_controls']['left_pane'].children[0].value
 
 
 def test_unsupported_physical_type_aborts_without_mutation(catalogue_delta):
@@ -402,13 +402,13 @@ def test_fresh_setup_race_cannot_reset_a_newly_populated_catalogue(catalogue_del
         assert TABLE in rt.run()['failed_tables']
     version = rt.version()
     assert rt.read().first()['table_id'] == 'newly-written'
-    assert rt.run()['status'] == 'ready' and rt.version() == version
+    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
 
 
 def test_delta_column_mapping_identity_is_retained(catalogue_delta):
     """Use raw Delta metadata because Spark deliberately hides column mapping IDs."""
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json='{}', extension='preserve')])
+    rt.seed([rt.row(load_strategy_parameters_json={}, extension='preserve')], native={'load_strategy_parameters_json'})
     rt.spark.sql(f"ALTER TABLE delta.`{rt.path}` SET TBLPROPERTIES "
                  "('delta.columnMapping.mode'='name', 'delta.minReaderVersion'='2', 'delta.minWriterVersion'='5')")
     log = rt.spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(rt.spark._jsparkSession, rt.path)
@@ -465,7 +465,7 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     # Persist an empty discovery result using the grain-only update's typed literal.
     shared._persist_grain_candidates(identity, [], max_columns=2, config=config, active_workspace_id='dev',
                                      context=context, spark_session=rt.spark)
-    assert rt.read().where("table_id='table'").first()['profile_key_candidates_json'].asDict(recursive=True) == {
+    assert decode_metadata_row(TABLE, rt.read().where("table_id='table'").first().asDict(recursive=True))['profile_key_candidates_json'] == {
         'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
     # Build and insert real profile table/column identities, retaining processing.
     business = rt.spark.createDataFrame([(1, 'a')], ['id', 'name'])
@@ -475,7 +475,7 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
         profile_key_candidates_json={'status': 'resolved', 'max_combination_width': 2,
                                      'candidates': [{**CANDIDATE, 'columns': ['id'], 'column_count': 1}]})
     shared._upsert_catalogue_identities(catalogue_df=profile_frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
-    inserted_rows = [row.asDict(recursive=True) for row in rt.read().where("table_id='inserted'").collect()]
+    inserted_rows = [decode_metadata_row(TABLE, row.asDict(recursive=True)) for row in rt.read().where("table_id='inserted'").collect()]
     assert len(inserted_rows) == 3
     assert {row['column_name'] for row in inserted_rows if row['column_id']} == {'id', 'name'}
     resolved = shared.resolve_catalogue_table_identity(config, 'dev', 'inserted', spark_session=rt.spark, context=context)

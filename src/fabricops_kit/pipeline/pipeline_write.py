@@ -10,6 +10,7 @@ from typing import Any
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
+    encode_metadata_row,
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
@@ -119,7 +120,8 @@ def _persist_target_processing(
         },
     )
     spark_session = spark_session or dataframe.sparkSession
-    source = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
+    source = spark_session.createDataFrame([encode_metadata_row(CATALOGUE_TABLE, row)],
+        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "Metadata",
         CATALOGUE_TABLE,

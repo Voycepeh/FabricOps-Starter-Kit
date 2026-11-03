@@ -140,8 +140,8 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_PIPELINE_RUN": {
         "purpose": "Records Test and Live operation participation, exact table contracts and execution outcomes.",
-        "grain": "One row per execution with native observed operation/stage status, timing, finalization, profiling and safe failures.",
-        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Native operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
+        "grain": "One row per execution with JSON-encoded observed operation/stage status, timing, finalization, profiling and safe failures.",
+        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Validated JSON operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
         "primary_key": ["run_id"],
         "foreign_keys": [
             {"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "approvals[].approval_id", "cardinality": "N:1", "statement": "Live runs reference one nested immutable approval, not authority_id. Test runs have no approval. Pipeline and workspace must match the approval."},
@@ -184,7 +184,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CATALOGUE": {
         "purpose": "Lists registered tables and columns, where they are stored, their data types and whether they are still active.",
         "grain": "One current table or column observation in one workspace.",
-        "implementation_notes": "The current structural registry of known table and column assets. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
+        "implementation_notes": "The current structural registry of known table and column assets. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
         "primary_key": ["workspace_id", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [

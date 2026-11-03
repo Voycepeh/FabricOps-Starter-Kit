@@ -1614,7 +1614,10 @@ def widget_data_contract(
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
-        discovery = table.get("profile_key_candidates_json") or {}
+        from fabricops_kit.config.metadata_schemas import decode_metadata_row
+        discovery = decode_metadata_row("METADATA_DATA_CATALOGUE", {
+            "profile_key_candidates_json": table.get("profile_key_candidates_json"),
+        })["profile_key_candidates_json"] or {}
         raw_profile_key_candidates = discovery.get("candidates") or []
         profile_key_candidates = [
             dict(candidate)

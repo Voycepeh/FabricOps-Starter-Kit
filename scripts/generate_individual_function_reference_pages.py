@@ -4720,7 +4720,10 @@ def generate_metadata_reference_pages() -> None:
                 paths.update(schema_paths(dtype, path + "."))
         return paths
 
-    field_names_by_table = {name: schema_paths(schema) for name, schema in registry.items()}
+    # JSON columns retain typed application-level references, while the rendered
+    # physical schema must describe their actual scalar SQL-compatible types.
+    logical_registry = metadata_table_schema_registry(logical=True)
+    field_names_by_table = {name: schema_paths(schema) for name, schema in logical_registry.items()}
     for table_name in canonical_tables:
         model = table_models[table_name]
         if not isinstance(model, dict):

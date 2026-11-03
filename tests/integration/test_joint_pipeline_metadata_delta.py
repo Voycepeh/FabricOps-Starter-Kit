@@ -152,7 +152,7 @@ def test_rebound_notebook_requires_a_new_finalized_test_and_decision(runs_delta,
     replacement = {**r.context, "notebook_id": "replacement"}
     pipeline.resolve_pipeline_registration(test.pipeline_id, context=replacement,
         previous_binding=(r.context["workspace_id"], r.context["notebook_id"]), spark_session=r.spark)
-    with pytest.raises(ValueError, match="rerun Test and approve the new binding"):
+    with pytest.raises(ValueError, match="Registered notebook changed since activation"):
         authority.build_live_pipeline_plan(pipeline_id=test.pipeline_id, context=replacement, spark_session=r.spark)
     native = authority.authority_records(context=replacement, spark_session=r.spark)
     assert len(native["approvals"]) == 1 and not native["reservations"]

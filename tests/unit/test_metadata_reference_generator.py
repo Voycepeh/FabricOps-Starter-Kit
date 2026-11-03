@@ -25,7 +25,7 @@ def _schema_fields() -> dict[str, set[str]]:
             elif hasattr(dtype, "fields"):
                 result.update(paths(dtype, path + "."))
         return result
-    return {name: paths(schema) for name, schema in metadata_table_schema_registry().items()}
+    return {name: paths(schema) for name, schema in metadata_table_schema_registry(logical=True).items()}
 
 
 
@@ -111,6 +111,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "Managed by" not in page
         assert "captured" in page.lower()
 
+    run_page = first_pages["metadata_pipeline_run.md"]
+    assert 'operations[].contract_id' in run_page
+    assert '<code>operations</code></td><td><code>string</code>' in run_page
+    assert 'Fields in operations' not in run_page
     contract_page = first_pages["metadata_data_contract.md"]
     assert "[`widget_data_contract`](../../api/reference/widget_data_contract.md)" in contract_page
     assert "widget_register_data_contract.md" not in contract_page
@@ -512,15 +516,15 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert "ACTIVATION_STATE" not in js
 
 
-def test_schema_html_keeps_nested_types_inside_outer_cells() -> None:
-    """Nested Spark field tables stay inside valid outer schema table cells."""
+def test_schema_html_describes_json_as_scalar_cells() -> None:
+    """Catalogue JSON strings are documented as scalar physical SQL columns."""
     from pathlib import Path
 
     page = Path("docs/reference/metadata/metadata_data_catalogue.md").read_text()
     assert '<table class="metadata-schema-table"><thead><tr>' in page
     assert (
         '<td><code>load_strategy_parameters_json</code></td>'
-        '<td><details class="metadata-structured-type">'
+        '<td><code>string</code>'
     ) in page
-    assert 'aria-label="Fields in load_strategy_parameters_json"' in page
+    assert 'aria-label="Fields in load_strategy_parameters_json"' not in page
     assert "| Column | Data type | Description |" not in page
