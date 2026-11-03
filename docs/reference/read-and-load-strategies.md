@@ -22,14 +22,15 @@ The standard choices are:
 | Side | Options |
 | --- | --- |
 | **Read Mode** | Full, Incremental |
-| **Write Mode** | Overwrite, Append, SCD1, SCD2 |
+| **Write Mode** | Overwrite, Append All, Append New Only, SCD1, SCD2 |
 
 ## Common combinations
 
 | Read → Load | Typical use |
 | --- | --- |
 | **Full → Overwrite** | Rebuild the complete target from the complete source. |
-| **Incremental → Append** | Process only new source work and append it. |
+| **Full / Incremental → Append All** | Append every incoming row, including identical duplicates. |
+| **Full / Incremental → Append New Only** | Append hashes not already present in the target. |
 | **Full / Incremental → SCD1** | Maintain the latest state for each business key. |
 | **Full / Incremental → SCD2** | Maintain historical versions for each business key. |
 
@@ -168,7 +169,7 @@ The standard choices are:
 
     ### What it does
 
-    `load_strategy="overwrite"` publishes the prepared DataFrame as the target state.
+    `write_mode="overwrite"` replaces the entire target with the prepared DataFrame. Every new full execution performs the replacement, including identical content. Incoming duplicates are retained; FabricOps does not convert this operation into MERGE.
 
     ### When to use it
 
@@ -203,48 +204,25 @@ The standard choices are:
 
 ---
 
-## Append
+## Append All
 
-??? example "Append — before and after"
+`write_mode="append_all"` appends every incoming record, including identical duplicates. A new Full Read execution appends the complete incoming data again. Publication receipts protect retries of the same publication; they do not turn a new full run into a content no-op.
 
-    ### What it does
+The first Incremental Read bootstraps the complete source. Append All requires a new or empty target if that relationship has no accepted checkpoint, preserving existing bootstrap safety.
 
-    `load_strategy="append"` adds the prepared rows to the existing target.
+## Append New Only
 
-    ### When to use it
+`write_mode="append_new_only"` compares incoming `_row_hash` values with hashes already published in the target. It collapses identical incoming hashes and appends only unseen hashes using a distributed Spark anti-join. No business key or extra Data Contract setting is required.
 
-    Use Append for new immutable/event-like rows where an incoming batch should be added rather than matched against existing business keys.
+A changed Job ID, timestamp or other included value produces a new hash and an additional row. It does not update an old row or infer a deletion. Full Read compares the complete incoming scope; Incremental Read compares only the selected scope.
 
-    ### Example
+For a target containing `A` and incoming rows `A, A, B`:
 
-    Existing target:
-
-    | order_id | status |
-    | --- | --- |
-    | O001 | New |
-    | O002 | Shipped |
-
-    Prepared DataFrame:
-
-    | order_id | status |
-    | --- | --- |
-    | O003 | Delivered |
-    | O004 | New |
-
-    After Append:
-
-    | order_id | status |
-    | --- | --- |
-    | O001 | New |
-    | O002 | Shipped |
-    | O003 | Delivered |
-    | O004 | New |
-
-    ### Incremental bootstrap safety
-
-    On the first Incremental → Append run, the Read side has no baseline and therefore returns the full source.
-
-    FabricOps allows that bootstrap only when the target is new or empty. If the target is already populated but no committed source-to-target baseline exists, publication fails rather than silently duplicating the source.
+| Strategy | Target after the write |
+| --- | --- |
+| Overwrite | `A, A, B` |
+| Append All | `A, A, A, B` |
+| Append New Only | `A, B` |
 
 ---
 
@@ -366,7 +344,7 @@ The standard choices are:
 
 The two settings should be reasoned about separately.
 
-For example, **Incremental does not automatically mean Append**. If changed rows can arrive for existing business keys, Incremental + SCD1 or Incremental + SCD2 may be the correct target behavior.
+For example, **Incremental does not automatically mean an append strategy**. If changed rows can arrive for existing business keys, Incremental + SCD1 or Incremental + SCD2 may be the correct target behavior.
 
 Likewise, Full does not automatically mean Overwrite. A Full source can still feed an SCD merge when the target needs keyed current-state or history semantics.
 
@@ -376,10 +354,47 @@ Likewise, Full does not automatically mean Overwrite. A Full source can still fe
 - Incremental requires a governed `watermark_column`, or the SCD2 `effective_column` fallback.
 - A missing Incremental baseline bootstraps with a Full read.
 - Incremental + whole-table Overwrite is rejected.
-- Incremental + Append bootstrap requires a new/empty target when no accepted baseline exists.
+- Incremental + Append All bootstrap requires a new/empty target when no accepted baseline exists.
 - SCD1 requires `key_columns`.
 - SCD2 requires `key_columns` and `effective_column`.
 - Multiple `orchestrate_write()` calls publish independently; they are not one atomic transaction.
+
+## Mandatory row hashes
+
+Every managed pipeline output row contains a lowercase, 64-character SHA256 `_row_hash`. Hash contract v1 covers values **after transformations and Sensitive Data treatment**. New/replaced rows hash final incoming values; matched SCD rows hash their resulting stored values, including retained effective times and refreshed ingestion fields. All incoming data columns participate, including source Job IDs, `loaded_at`, `pipeline_run_id` and ingestion timestamps.
+
+The excluded fields are `_row_hash`, the FabricOps audit fields `_committed_at`, `_committed_by`, `_activity_id`, `_workspace_id`, `_notebook_id`, `_notebook_name`, SCD2 lifecycle fields `_effective_from`, `_effective_to`, `_is_current`, and reserved generated `_fabricops_*` / `_dq_*` fields. Supplied row hashes are recalculated.
+
+Column and nested struct names are sorted; map entries are sorted recursively; array order remains significant. The versioned schema includes column names and logical types. Serialization uses Spark JSON with explicit null fields, UTC timestamps at microsecond precision, and wall-clock `timestamp_ntz` values. Null, empty values and absent fields differ; schema nullability annotations do not change a value's logical type.
+
+An existing target without `_row_hash`, or with missing/invalid historical hashes, fails explicitly before non-overwrite publication. Use a reviewed complete overwrite or validate a deliberate historical migration. FabricOps does not silently assume old rows have hashes. Reconcile existing checkpoint and receipt references when migrating a populated incremental target. The old managed strategy `append` is rejected for new writes; select an explicit strategy and author a new contract version where applicable. Historical receipts and Run facts retain their recorded names for verification. Existing SCD key, tracked-column and ingestion-field rules still decide updates and new versions; a changed hash alone does not create SCD2 history. Retained effective values and refreshed technical values participate in the resulting stored-row hash.
+
+## Full Source Observation
+
+Configure this independently of each Read Mode near pipeline setup:
+
+```python
+pipeline = setup_pipeline(
+    pipeline_id=PIPELINE_ID,
+    pipeline_mode="Ungoverned",
+    observe_source=False,       # True requests observation in this execution.
+    source_observation_days=7,   # None disables automatic observation.
+)
+```
+
+When due, the next Read observes the **entire configured physical source**, ignoring incremental SQL predicates and custom query filters for observation. A complete physical Read is reused where available. The processing DataFrame keeps its normal full or incremental scope.
+
+The result is exposed as `read_result["full_source_observation"]` and reports first observation, changed, unchanged or skipped. It compares with the previous successfully accepted full observation for this pipeline and source. Disappearing hashes change the fingerprint but never authorize row deletion or SCD expiration. A changed fingerprint does not add a blocking policy; existing explicitly configured Source Drift policies still apply.
+
+`METADATA_PROCESSING_STATE` stores captured `source_observation` rows and publication-bound `full_source_baseline` records. A failed or nonpublishing/no-op Write does not accept a newer full baseline or consume its interval. Exact recovery accepts the original publication's source records. Full observation scans and hashes the source, so choose its interval to match source size and operational needs.
+
+## Retry and concurrency boundaries
+
+The existing Serializable Pipeline Registry target lease excludes concurrent managed writers, including physical aliases, until finalization. A competing attempt fails before comparing/publishing a target snapshot. A crashed lease requires reconciliation; do not bypass it with an independent writer.
+
+Publication receipts and physical target markers protect interrupted publication and metadata recovery. Completed new Full Read runs with Overwrite or Append All execute again. Whole-table Overwrite remains prohibited for incremental input. SCD1 and SCD2 retain key-based semantics and do not delete or expire missing keys solely from source absence.
+
+Lakehouse verification uses Delta commit receipts. Warehouse verification uses the exact count of rows carrying the publication audit marker. Empty Warehouse publication fails closed when no durable row marker can prove it; inspect the target before retrying. Append New Only with no unseen hashes returns an explicit nonpublishing no-op.
 
 ## Contract and metadata lifecycle
 

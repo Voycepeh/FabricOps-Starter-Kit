@@ -428,7 +428,7 @@ def test_02b_has_ordered_repeat_safe_incremental_append_flow():
     assert 'read_mode="incremental"' in source
     assert 'read_parameters={"watermark_column": "modified_datetime"}' in source
     assert 'table_name="inventory_movements_incremental"' in source
-    assert 'write_mode="append"' in source
+    assert 'write_mode="append_all"' in source
     assert 'sources=' not in _demo_cell('02B_incremental_append_demo.ipynb', 'write-1').source
     assert "should_process" not in source
     write = _demo_cell("02B_incremental_append_demo.ipynb", "write-1").source

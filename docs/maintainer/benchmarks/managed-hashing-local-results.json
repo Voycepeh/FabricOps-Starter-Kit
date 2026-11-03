@@ -1,0 +1,45 @@
+{
+  "runtime": "local Spark 4.1.1",
+  "workers": 2,
+  "limitations": "Single measurements; cached synthetic source, Parquet writes and mocked metadata transport. No Fabric capacity, Warehouse service or metadata transaction latency claims.",
+  "measurements": [
+    {
+      "rows": 100000,
+      "seconds": {
+        "hash_calculation_and_cache": 1.228,
+        "distributed_target_hash_comparison": 1.2621,
+        "cached_publication_multiset_aggregate": 0.7577,
+        "full_source_observation_cached_read": 0.8225,
+        "publication_hash_aggregate_and_mocked_receipt_lookup": 0.944,
+        "parquet_write_without_hash": 1.221,
+        "parquet_write_with_hash": 0.3359,
+        "parquet_target_hash_scan_and_comparison": 0.6808,
+        "full_source_observation_parquet_read": 0.9667
+      },
+      "parquet_bytes": {
+        "plain": 2794609,
+        "hashed": 9379855
+      },
+      "unseen_rows": 50000
+    },
+    {
+      "rows": 1000000,
+      "seconds": {
+        "hash_calculation_and_cache": 2.7341,
+        "distributed_target_hash_comparison": 2.7115,
+        "cached_publication_multiset_aggregate": 2.8194,
+        "full_source_observation_cached_read": 4.124,
+        "publication_hash_aggregate_and_mocked_receipt_lookup": 6.5432,
+        "parquet_write_without_hash": 1.1278,
+        "parquet_write_with_hash": 1.318,
+        "parquet_target_hash_scan_and_comparison": 2.2928,
+        "full_source_observation_parquet_read": 5.9046
+      },
+      "parquet_bytes": {
+        "plain": 23954599,
+        "hashed": 90032136
+      },
+      "unseen_rows": 500000
+    }
+  ]
+}

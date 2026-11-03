@@ -242,7 +242,7 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     display(missing)
     ```
 
-    For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append"`, and the fresh Governed plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
+    For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append_all"`, and the fresh Governed plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
 6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
 
 `METADATA_PROCESSING_STATE` records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while typed publication receipts allow recovery across run IDs. Exact Write retries recover the original persisted source members even when pending in-memory snapshots were lost. The Preview rename and schema replacement require the explicit [Processing State cutover](../maintainer/metadata-v2-target-model.md#processing-state-upgrade); setup rejects the legacy table rather than silently starting empty progress.

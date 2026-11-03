@@ -40,12 +40,13 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         exec(compile(tree, f'{path.name}:{cell.id}', 'exec'), namespace)
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
     notebook_setup.assert_called_once_with()
-    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Ungoverned')
+    observation = dict(observe_source=False, source_observation_days=None) if path.stem in {'02_pipeline', '02B_incremental_append_demo'} else {}
+    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Ungoverned', **observation)
     assert namespace['PIPELINE_ID'] == setup.return_value.pipeline_id
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
-        '02B_incremental_append_demo': (1, ['append']),
+        '02B_incremental_append_demo': (1, ['append_all']),
         '02C_scd_demo': (1, ['scd1','scd2']),
     }
     count, modes = expected[path.stem]
@@ -71,7 +72,10 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == 1
     assert len(calls['finalize_pipeline']) == 1
     assert ids.index('finalize-run') > ids.index('write-heading')
-    assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == {'pipeline_id','pipeline_mode'}
+    expected_setup = {'pipeline_id','pipeline_mode'}
+    if path.stem in {'02_pipeline', '02B_incremental_append_demo'}:
+        expected_setup |= {'observe_source', 'source_observation_days'}
+    assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == expected_setup
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform
 
