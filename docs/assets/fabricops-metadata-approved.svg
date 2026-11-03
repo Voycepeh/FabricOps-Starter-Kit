@@ -11,25 +11,25 @@
 <path d="M335 170H425" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="349" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="389" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="nested">
-<title>One exact Agreement version governs many pipeline approvals, each retaining its ID, version and content hash (1-N; exact nested reference; application-enforced)</title>
+<g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="physical">
+<title>One exact Agreement version may govern multiple pipeline activations, each retaining its ID, version and content hash (1-N; keyed reference; application-enforced)</title>
 <path d="M725 170H815" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="739" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="779" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
-<title>Pipeline approvals may share multiple exact Contract versions; Registry ownership retains their IDs, versions and payload hashes (N-N; exact nested reference; application-enforced)</title>
+<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
+<title>Each workspace/Table ID activation references one exact frozen Contract version and payload hash, independently of pipeline activation (N-1; keyed reference; application-enforced)</title>
 <path d="M1115 170H1205" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
+<rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
 <title>Run operations reference exact table contract versions (N-N; exact nested reference; application-enforced)</title>
 <path d="M725 464H755V388H1175V218H1205" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="739" y="453" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="468.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="207" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1-N" data-kind="nested">
-<title>One Registry approval authorizes many Live runs through approval_id. Each approval also retains one Test run_id. Cardinality describes approvals, not the singleton authority row (1-N; exact nested reference; application-enforced)</title>
-<path d="M900 253V328H575V423" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="889" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="900" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="564" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
+<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1-N" data-kind="logical">
+<title>Governed provenance pins pipeline_activation_id; historical activation decisions remain in durable audit. Deployment verification is pending; candidates grant no run authority (1-N; logical identity reference)</title>
+<path d="M900 253V328H575V423" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="889" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="900" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="564" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="575" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_CONTRACT" data-cardinality="1-N" data-kind="physical">
 <title>Catalogue table to contract versions (1-N; keyed reference; application-enforced)</title>
@@ -109,15 +109,11 @@
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#1168B6"/>
 <text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
 <text x="828" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">authority_id</text>
-<text x="828" y="155" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">UK</text>
-<text x="866" y="155" fill="#243550" font-size="14" font-family="Arial, sans-serif">approvals[].approval_id</text>
+<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">record_id</text>
+<text x="828" y="155" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
+<text x="866" y="155" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id/version</text>
 <text x="828" y="175" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="175" fill="#243550" font-size="14" font-family="Arial, sans-serif">approvals[].testing_run_id</text>
-<text x="828" y="195" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="195" fill="#243550" font-size="12" font-family="Arial, sans-serif">approvals[].agreement_id/version</text>
-<text x="828" y="215" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="215" fill="#243550" font-size="11" font-family="Arial, sans-serif">table_ownership[].contract_id/version</text>
+<text x="866" y="175" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id/version</text>
 <text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
@@ -150,7 +146,7 @@
 <text x="438" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
 <text x="476" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
 <text x="438" y="504" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">approval_id</text>
+<text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_activation_id</text>
 <text x="438" y="528" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
 <text x="476" y="528" fill="#243550" font-size="12" font-family="Arial, sans-serif">operations[].contract_id/version</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>

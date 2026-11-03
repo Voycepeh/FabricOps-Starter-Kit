@@ -7,12 +7,12 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Prepare Testing or resolve an approved workspace configuration for Live.
+Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending deployment verification.
 
 
 ## Usage notes
 
-Call after setup_notebook() and before Read, Transform and Write. Test registers or recovers the Pipeline ID automatically.
+Call after setup_notebook() and before Read, Transform and Write. Persistent execution requires an explicit saved Pipeline ID.
 
 
 ## Example usage
@@ -22,10 +22,7 @@ Call after setup_notebook() and before Read, Transform and Write. Test registers
 ```python
 context = setup_notebook()
 pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
-orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-independent_copy = setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)
-reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned",
-    previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
+preview = setup_pipeline(pipeline_mode="Dry Run")
 ```
 
 </div>
@@ -38,14 +35,7 @@ reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned",
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def setup_pipeline(
-    *,
-    pipeline_id: str | None=None,
-    pipeline_mode: str='Ungoverned',
-    new_pipeline: bool=False,
-    previous_workspace_id: str | None=None,
-    previous_notebook_id: str | None=None,
-):
+def setup_pipeline(*, pipeline_id: str | None=None, pipeline_mode: str='Ungoverned')
 ```
 
 </div>
@@ -60,57 +50,46 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Permanent UUIDv4. Omit to recover the exact notebook binding or register a new UUID in Ungoverned mode. Dry Run may use a session-only UUID and never registers it. Governed never allocates a new UUID. A changed same-workspace_id binding requires both previous notebook IDs. |
-| `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview without writing, execute without contracts, or execute with activated contracts enforced. |
-| `new_pipeline` | `bool` | No | `False` | Explicitly create a new identity for an independent notebook copy. Omit pipeline_id when set. An already registered notebook is rejected. |
-| `previous_workspace_id` | `str \| None` | No | `None` | Supply both old binding IDs to explicitly rebind a reuploaded notebook. Rebinding requires Ungoverned mode and no active Governed runs. |
-| `previous_notebook_id` | `str \| None` | No | `None` | Not documented yet |
+| `pipeline_id` | `str \| None` | No | `None` | Canonical lowercase UUIDv4 kept in version-controlled pipeline source, stable across environments and notebook deployments. Required for Ungoverned and Governed. Dry Run may allocate a session-only ID. |
+| `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
 
 </div>
 
 ## Returns
 
 PipelineSession
-    Contract selection, pipeline_id containing the permanent UUID, registration
-    details and the automatically refreshed execution report. Read and
-    Write calls use this execution through a context-local binding.
+    Context-local Read/Write execution and in-memory report. Call
+    finalize_pipeline after every Read, transformation and Write completes.
 
 ### Return interpretation
 
-Returns a context-local execution session exposing pipeline_id, contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.
+Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending trusted deployment verification.
 
 ## Raises / Errors
 
 ValueError
-    For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
-    missing Governed activation.
+    If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
 RuntimeError
-    If setup_notebook() has not completed successfully for the current
-    execution, or a Spark session is unavailable.
+    If notebook setup or Spark is unavailable, or Governed deployment
+    verification has not been established. Governed fails before admission
+    and publication; a caller-supplied Git SHA cannot authorize it.
 
 ### Common failure causes
 
 - Missing, failed or outdated setup_notebook() initialization.
 - Invalid frozen contract selections.
-- Missing notebook registration or approved Live configuration.
+- Missing explicit persistent Pipeline ID or pending Governed deployment verification.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Call setup_notebook() first to initialize configuration and display notebook
-readiness. This function reuses that configuration without rerunning
-00_env_config or displaying the workspace_id summary. Cross-workspace
-configuration is selected only through setup_notebook(config_workspace_id=...).
-Repeated pipeline setup closes the preceding execution owned by this task.
-Repeated notebook setup closes its pipeline and invalidates prior configuration,
-including when the new setup fails. Changed runtime identity requires fresh
-notebook setup.
-
-Fabric cell events identify failures, not successful notebook completion.
-Call finalize_pipeline after all Reads, transformations and Writes.
-Neither a successful Write nor interpreter shutdown proves completion. Dry
-Run finalization returns only a session summary and does not persist it.
+Call setup_notebook first. Spark and Fabric identity come from that setup.
+There is no permanent registration, approval, notebook rebinding or automatic
+UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
+setup closes the previous execution. Dry Run never writes Registry, Run,
+profiling results or Processing State. Persistent runs record final outcomes;
+a successful Write does not imply successful whole-notebook completion.
 
 </div>
 
@@ -118,13 +97,11 @@ Run finalization returns only a session summary and does not persist it.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Dry Run evaluates real reads, transformations, profiling and optionally
-selected contract Guardrails without persisting target data or operational
-state. Ungoverned executes without Data Contracts while retaining operational
-checks and blocks writes to tables already governed in the workspace.
-Governed resolves only activated workspace authority and enforces its exact
-contract versions, destinations and ownership throughout the run.
-Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
+Dry Run previews transformations, optional Contract checks and profiling without
+durable mutations. Ungoverned publishes without activated Contracts, but cannot
+write protected Table IDs or physical destination aliases. Governed requires
+activated deployment and independently activated table Contracts. It currently
+fails closed until trusted deployment verification is proven and integrated.
 
 </div>
 
@@ -137,7 +114,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L222">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L187">View on GitHub</a>
 </div>
 
 
@@ -153,7 +130,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 92 |
+| Live-critical dependencies | 15 |
 
 ### Release history
 
@@ -165,95 +142,18 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.activation_impact</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.approval_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.commit_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.pipeline_authority_row</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.pipeline_table_mappings</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.read_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.run_contracts</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.testing_run_evidence</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_authority_collections</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.workspace_activation</code></li>
-<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
-<li><code>fabricops_kit.config.audit._context_get</code></li>
-<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
-<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
-<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.build_governed_pipeline_plan</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
-<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
-<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.build_table_id</code></li>
-<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.get_store</code></li>
-<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
-<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
-<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
-<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
-<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
-<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
-<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
-<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
-<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
-<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
-<li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
-<li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
-<li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
-<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.close_current_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.commit_pipeline_registration</code></li>
-<li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
-<li><code>fabricops_kit.pipeline.shared.read_pipeline_registry</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_registration</code></li>
 <li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_registrations</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>
 <li><code>fabricops_kit.widgets.shared.require_ipywidgets</code></li>

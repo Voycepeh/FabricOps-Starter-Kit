@@ -7,7 +7,7 @@ import json
 import pytest
 
 from fabricops_kit import finalize_pipeline
-from fabricops_kit.activated_pipeline import shared as activation
+from fabricops_kit.activated_pipeline import shared as activation, migrate_registry as migration
 from fabricops_kit.config.metadata_schemas import (
     decode_metadata_row, encode_metadata_row, metadata_json_schema, metadata_table_schema_registry,
 )
@@ -27,9 +27,7 @@ def legacy_run(runs_delta, monkeypatch):
     plan = r.make()
     r.complete(plan)
     finalize_pipeline(shared.PipelineSession(plan, r.spark))
-    approval = activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-        pipeline_name='Orders', pipeline_version='1', agreement_id='agreement', agreement_version='1',
-        context=r.context, spark_session=r.spark)
+    approval = activation.manifest_digest(migration._legacy_testing_run_evidence(r.rows()[0], context=r.context, spark_session=r.spark)[0])
     logical = r.rows()[0]
     native = metadata_table_schema_registry(logical=True)[RUN]
     registry = metadata_table_schema_registry()
@@ -53,7 +51,7 @@ def legacy_run(runs_delta, monkeypatch):
     def read(table, **kwargs):
         if table not in registry:
             raise RuntimeError('[PATH_NOT_FOUND]')
-        return r.spark.read.format('delta').load(r.paths[RUN]) if table == RUN else r.spark.createDataFrame([], registry[table])
+        return r.spark.read.format('delta').load(r.paths[table]) if table in {RUN, 'METADATA_PIPELINE_REGISTRY'} else r.spark.createDataFrame([], registry[table])
 
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', lambda *a, **kw: pytest.fail('existing tables must not be recreated'))
@@ -70,7 +68,7 @@ def legacy_run(runs_delta, monkeypatch):
 
 
 @pytest.mark.parametrize('native_columns', [('operations', 'profiling', 'failures'), ('operations',), ()])
-def test_automatic_run_upgrade_retains_approval_hashes_and_idempotency(legacy_run, native_columns):
+def test_automatic_run_upgrade_retains_historical_evidence_hashes_and_idempotency(legacy_run, native_columns):
     """Native/mixed/JSON upgrade never changes a retained approvable Test."""
     f = legacy_run
     f.seed(native_columns)
@@ -85,11 +83,8 @@ def test_automatic_run_upgrade_retains_approval_hashes_and_idempotency(legacy_ru
     raw = f.read().first().asDict(recursive=True)
     assert all(isinstance(raw[name], str) for name in metadata_json_schema(RUN))
     assert shared.pipeline_record_content(decode_metadata_row(RUN, raw)) == shared.pipeline_record_content(f.logical)
-    approval = activation.tested_pipeline_run(testing_run_id=f.plan.plan_id,
-        pipeline_name='Orders', pipeline_version='1', agreement_id='agreement', agreement_version='1',
-        context=r.context, spark_session=r.spark)
-    assert approval['approval_id'] == f.approval['approval_id']
-    assert approval['testing_evidence_sha256'] == f.approval['testing_evidence_sha256']
+    approval = activation.manifest_digest(migration._legacy_testing_run_evidence(r.rows()[0], context=r.context, spark_session=r.spark)[0])
+    assert approval == f.approval
     after = DeltaTable.forPath(r.spark, r.paths[RUN]).detail().first().asDict()
     assert before['id'] == after['id'] and before['properties'] == after['properties']
     assert f.migrate()['status'] == 'ready' and f.version() == version + migrated

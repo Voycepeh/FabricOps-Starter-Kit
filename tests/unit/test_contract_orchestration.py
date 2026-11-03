@@ -108,7 +108,7 @@ def runtime(monkeypatch, spark_session):
     # and the authored lifecycle integration test, rather than legacy active flags.
     from dataclasses import replace
     from fabricops_kit.activated_pipeline import shared as activation
-    monkeypatch.setattr(activation, "verify_live_plan", lambda *a, **kw: None)
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     journal = shared.PipelineOperation
     def verified_journal(plan, role, arguments):
         if plan.execution_mode == "live" and plan.evidence["failures"]:
@@ -124,7 +124,7 @@ def runtime(monkeypatch, spark_session):
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
         plan = setup_pipeline(execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
                                               selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
-        return replace(plan, execution_mode="live", approval_id="verified-by-boundary") if mode == "live" else plan
+        return replace(plan, execution_mode="live", pipeline_activation_id="verified-by-boundary") if mode == "live" else plan
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "schedule_table_profiling",
                             lambda *args, **kwargs: {"status": "passed", "row_count": 2})

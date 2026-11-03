@@ -99,10 +99,13 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
-    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and set(expected) != set(existing):
+    provenance = {"pipeline_activation_id", "deployment_id", "git_commit_sha", "deployment_verification_status", "run_schema_version"}
+    supported_run_addition = (table_name == "METADATA_PIPELINE_RUN" and allow_missing
+        and not (set(existing) - set(expected)) and set(expected) - set(existing) <= provenance)
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and set(expected) != set(existing) and not supported_run_addition:
         raise ValueError(
             f"Unsupported {table_name} physical schema. Stop writers, back up and reconcile retained history; "
-            "follow docs/maintainer/metadata-v2-target-model.md#joint-redesign-rollout-and-reset-policy. "
+            "follow docs/maintainer/metadata-v2-target-model.md#recovery-and-rollback. "
             "Automatic additive evolution is unsafe."
         )
     if table_name == "METADATA_PROCESSING_STATE" and (
@@ -420,7 +423,8 @@ def setup_metadata_tables(
     and committed versions. Rerun setup after interruption or a reported conflict;
     never automatically restore over later valid writes. Stop old writers before
     migration and restart them with the compatible package/schema pair. Registry
-    authority, business publication fingerprints and Processing State are unchanged.
+    cutover archives historical authority and preserves non-authorizing candidates.
+    Business publication fingerprints and Processing State are unchanged.
 
     This function prepares the metadata table structures only. It does not
     create business metadata records such as stewards, agreements, catalogue
@@ -581,10 +585,14 @@ def setup_metadata_tables(
     establish progress for populated targets; reconcile retained progress or
     deliberately rebuild/replay targets before resuming incremental work.
 
-    ``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
+    ``METADATA_PIPELINE_REGISTRY`` requires exactly one control row plus sparse
+    pipeline_activation and table_contract_activation records.
     ``METADATA_PIPELINE_RUN`` requires complete logical execution facts in JSON strings, with exact table/contract references, bindings and operation modes.
-    Old Registry layouts and incomplete Run facts require explicit
-    stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
+    Supported singleton Registry layouts migrate only after draining reservations,
+    exact historical validation and durable archival. Ambiguous or unsupported
+    history blocks cutover. New Run provenance columns are nullable for historical
+    rows and never reinterpret old Test hashes. Governed readiness remains blocked
+    pending trusted deployment verification; setup reports that separately.
 
     Existing tables are validated by canonical column name and compatible
     Spark data type. Physical Spark/Delta nullability is intentionally not
@@ -599,9 +607,9 @@ def setup_metadata_tables(
     tables, and ``raise_on_failure=True`` raises only after all tables have
     been processed when failures exist.
 
-    Pipeline Registry is seeded with its native authority row using
+    Pipeline Registry is seeded with its control row using
     error-if-exists creation; repeat initialization validates the existing schema
-    without replacing identity or approval history. A missing ordinary table is
+    after verified archival; old selections become non-authorizing reactivation candidates. A missing ordinary table is
     created by writing an empty Spark DataFrame with the
     required FabricOps table structure. This creates the metadata table structure but
     does not populate business metadata records. The function does not
@@ -661,12 +669,22 @@ def setup_metadata_tables(
                     mode="errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite",
                     verbose=False,
                     context=context,
+                    options={"delta.isolationLevel": "Serializable"} if table_name == "METADATA_PIPELINE_REGISTRY" else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
             upgrade = None
+            if table_name == "METADATA_PIPELINE_REGISTRY":
+                from fabricops_kit.activated_pipeline.migrate_registry import migrate_registry
+                table, upgrade = migrate_registry(table=table, context=context, spark_session=spark)
+                if hasattr(table, "schema"):
+                    from fabricops_kit.activated_pipeline.shared import registry_control, DEPLOYMENT_PENDING
+                    rows = [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in table.collect()]
+                    control = registry_control(rows)
+                    candidates = [row["record_id"] for row in rows if row.get("status") == "requires_reactivation"]
+                    warnings.append(DEPLOYMENT_PENDING + (" Migration candidates require explicit reactivation." if candidates else ""))
             if metadata_json_schema(table_name):
                 table, upgrade = _upgrade_json_metadata(
                     spark=spark, table=table, table_name=table_name, expected_schema=schema,
@@ -715,7 +733,8 @@ def setup_metadata_tables(
             elif upgrade:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
-                    **_result(table_name, "evolved", "JSON metadata automatically upgraded to SQL-compatible strings and verified."),
+                    **_result(table_name, "evolved", "Registry archived and migrated without authorizing candidates." if table_name == "METADATA_PIPELINE_REGISTRY"
+                        else "JSON metadata automatically upgraded to SQL-compatible strings and verified."),
                     **upgrade,
                 }
                 if verbose:
@@ -737,6 +756,12 @@ def setup_metadata_tables(
                 validated_tables.append(table_name)
                 table_results[table_name] = _result(
                     table_name, "validated", "Existing metadata table schema is compatible."
+                )
+            if table_name == "METADATA_PIPELINE_REGISTRY" and hasattr(table, "schema"):
+                table_results[table_name].update(
+                    migration_archive_uri=control.get("migration_archive_uri"),
+                    migration_archive_sha256=control.get("migration_archive_sha256"),
+                    requires_reactivation=candidates,
                 )
         except Exception as exc:  # continue after per-table failures
             failed_tables.append(table_name)
@@ -791,6 +816,7 @@ def setup_metadata_tables(
     fully_qualified_tables = [f"{metadata_table_physical_schema(normalized, table)}.{table}" for table in registry]
     result = {
         "status": status,
+        "governed_execution": {"status": "blocked", "reason": "Trusted deployment verification is pending; activation candidates grant no publication authority."},
         "data_agreement": data_agreement,
         "governance": governance,
         "tables": list(registry),

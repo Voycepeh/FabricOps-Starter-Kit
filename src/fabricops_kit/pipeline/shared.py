@@ -37,9 +37,10 @@ class PipelineExecutionPlan:
     contracts_json: str
     runtime_context: Any = dataclass_field(repr=False, compare=False)
     pipeline_id: str = ""
-    approval_id: str = ""
-    approved_operations_json: str = "[]"
-    activation_revision: str = ""
+    pipeline_activation_id: str = ""
+    activated_operations_json: str = "[]"
+    deployment_id: str = ""
+    git_commit_sha: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -90,6 +91,9 @@ class PipelineExecutionPlan:
 def persistence_permitted(context):
     """Apply the single execution-level policy at a durable mutation boundary."""
     plan = (context or {}).get("execution_plan")
+    if getattr(plan, "execution_mode", None) in {"governed", "live"}:
+        from fabricops_kit.activated_pipeline.shared import verify_governed_plan
+        verify_governed_plan(plan)
     return plan is None or plan.permits_persistence
 
 
@@ -2757,8 +2761,8 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
         context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
     if plan.execution_mode in {"governed", "live"}:
-        from fabricops_kit.activated_pipeline.shared import verify_live_plan
-        verify_live_plan(plan, spark_session=spark_session)
+        from fabricops_kit.activated_pipeline.shared import verify_governed_plan
+        verify_governed_plan(plan, spark_session=spark_session)
     for table_id in identities:
         load_table_guardrail_rules(config, active_workspace_id, table_id=table_id, spark_session=spark_session, context=context)
     return context
@@ -5673,6 +5677,13 @@ def pipeline_record_content(value):
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
     row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
+    provenance = ("pipeline_activation_id", "deployment_id", "git_commit_sha", "deployment_verification_status", "run_schema_version")
+    if row.get("run_schema_version") is None:
+        if any(row.get(key) is not None for key in provenance):
+            raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
+        row = {key: value for key, value in row.items() if key not in provenance}
+    elif row["run_schema_version"] != 2:
+        raise ValueError("Unsupported Pipeline Run schema version.")
     operations = row["operations"]
     keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
     if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
@@ -5719,10 +5730,13 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
-    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.approval_id or None,
+    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": None,
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
-        "activation_revision": plan.activation_revision or None,
+        "activation_revision": None,
+        "pipeline_activation_id": plan.pipeline_activation_id or None, "deployment_id": plan.deployment_id or None,
+        "git_commit_sha": plan.git_commit_sha or None, "deployment_verification_status": "not_required" if plan.execution_mode in {"dry_run", "ungoverned", "testing"} else "unverified",
+        "run_schema_version": 2,
         "boundary_completed": plan.evidence.get("boundary_completed", False),
         "operations": sorted(operations, key=lambda item: item["operation_key"]),
         "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
@@ -5938,11 +5952,16 @@ class PipelineOperation:
                 args["sources"] = tuple(args["sources"])
                 self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
             if plan.execution_mode in {"governed", "live"}:
-                approved = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.approved_operations_json)}
-                tested = approved.get((table_id, self.role))
+                from fabricops_kit.activated_pipeline.shared import verify_governed_plan
+                verify_governed_plan(plan, spark_session=args.get("spark_session"))
+                activated = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
+                selected = activated.get((table_id, self.role))
                 enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
-                if not plan.approval_id or tested is None or any(self.record.get(name) != tested.get(name) for name in enforced):
+                if not plan.pipeline_activation_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
+            elif plan.execution_mode == "ungoverned" and self.role == "target":
+                from fabricops_kit.activated_pipeline.shared import guard_ungoverned_write
+                guard_ungoverned_write(plan, table_id, actual_binding, spark_session=args.get("spark_session"))
             persist_pipeline_run(plan, spark_session=args.get("spark_session"))
             return self
         except BaseException as exc:
@@ -6161,12 +6180,6 @@ class PipelineSession:
                     if (self.plan.execution_mode == "ungoverned" and participant_role == "target"
                             and table_id in self.plan.runtime_context.get("_governed_table_ids", ())):
                         raise ValueError(f"Ungoverned cannot write governed table {table_id!r}; use Governed mode with its activated Data Contract.")
-                    if self.plan.execution_mode == "ungoverned" and participant_role == "target":
-                        from fabricops_kit.activated_pipeline.shared import authority_records
-                        authority = authority_records(context=self.plan.runtime_context, spark_session=self.spark)
-                        if any(row.get("workspace_id") == self.plan.workspace_id and row.get("table_id") == table_id
-                               for row in authority.get("table_ownership", [])):
-                            raise ValueError(f"Ungoverned cannot write governed table {table_id!r}; use Governed mode with its activated Data Contract.")
                     roles = list(identities.get(table_id, {}).get("roles", []))
                     if participant_role not in roles:
                         logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
@@ -6291,125 +6304,16 @@ def validate_pipeline_id(pipeline_id):
     except ValueError:
         identity = None
     if identity is None or identity.version != 4 or str(identity) != pipeline_id.lower():
-        raise ValueError("pipeline_id must be a canonical UUIDv4; omit it for automatic registration.")
+        raise ValueError("pipeline_id must be a canonical UUIDv4 stored in version-controlled pipeline source.")
     return str(identity)
 
 
-def validate_pipeline_registrations(bindings):
-    """Require unique permanent UUID/workspace_id and active notebook bindings."""
-    logical, notebooks = set(), set()
-    for row in bindings:
-        if validate_pipeline_id(row.get("pipeline_id")) != row["pipeline_id"]:
-            raise ValueError("Pipeline Registry UUIDs must use canonical lowercase spelling.")
-        key = (row["pipeline_id"], row.get("workspace_id"))
-        if key in logical or not key[1] or row.get("registration_status") not in {"Active", "Retired"}:
-            raise ValueError("Ambiguous Pipeline Registry: conflicting logical bindings; repair the registry.")
-        logical.add(key)
-        if row["registration_status"] == "Active":
-            notebook = (row.get("workspace_id"), row.get("notebook_id"))
-            if not all(notebook) or notebook in notebooks:
-                raise ValueError("Ambiguous Pipeline Registry: conflicting active notebook bindings; repair the registry.")
-            notebooks.add(notebook)
-
-
-def read_pipeline_registry(*, context, spark_session=None, registry_snapshot=None):
-    """Read Engineering registrations from the shared Registry serialization domain."""
-    from fabricops_kit.activated_pipeline.shared import authority_records
-    authority = registry_snapshot or authority_records(context=context, spark_session=spark_session)
-    bindings = authority["registrations"]
-    validate_pipeline_registrations(bindings)
-    return authority["token"], bindings
-
-
-def commit_pipeline_registration(row, *, expected_token, context, spark_session=None):
-    """Publish a binding through the same authority CAS as admission and approval."""
-    from fabricops_kit.activated_pipeline.shared import authority_records, read_pipeline_authority, commit_pipeline_authority, workspace_activation
-    snapshot = authority_records(context=context, spark_session=spark_session)
-    if snapshot["token"] != expected_token:
-        raise ValueError("Stale Pipeline Registry; rerun setup.")
-    token, state = read_pipeline_authority(context=context, spark_session=spark_session, registry_snapshot=snapshot)
-    bindings = state["registrations"]
-    key = (row["pipeline_id"], row["workspace_id"])
-    existing = next((item for item in bindings if (item["pipeline_id"], item["workspace_id"]) == key), None)
-    if existing and (existing["workspace_id"], existing["notebook_id"]) != (row["workspace_id"], row["notebook_id"]):
-        current = workspace_activation(state, row["workspace_id"])
-        if any(run["pipeline_id"] == row["pipeline_id"] for run in current["runs"].values()):
-            raise ValueError("Drain running execution or rebind before changing notebook ownership.")
-    if any(item["registration_status"] == "Active" and (item["workspace_id"], item["notebook_id"]) == (row["workspace_id"], row["notebook_id"])
-           and (item["pipeline_id"], item["workspace_id"]) != key for item in bindings):
-        raise ValueError("Conflicting active notebook binding.")
-    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
-    row = {**row, **build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime)}
-    state["registrations"] = [item for item in bindings if (item["pipeline_id"], item["workspace_id"]) != key] + [row]
-    commit_pipeline_authority(state, expected_token=token, context=context, spark_session=spark_session, registry_snapshot=snapshot)
-
-
-def resolve_pipeline_registration(pipeline_id=None, *, context, spark_session=None, new_pipeline=False,
-                                  previous_binding=None, allow_new_identity=True, persist=True,
-                                  registry_snapshot=None):
-    """Resolve, recover or explicitly rebind one portable pipeline UUID in a workspace."""
-    from datetime import datetime, timezone
-    config, active_workspace_id, runtime = resolve_fabric_context(context=context)
-    workspace, notebook = str(runtime.get("workspace_id") or ""), str(runtime.get("notebook_id") or "")
-    if not workspace or not notebook:
-        raise ValueError("Pipeline registration requires the caller's Fabric workspace_id and notebook_id.")
-    if workspace != active_workspace_id:
-        raise ValueError("Pipeline workspace scope must match the calling Engineering workspace.")
-    supplied = pipeline_id is not None
-    if new_pipeline and supplied:
-        raise ValueError("New pipeline registration requires an omitted pipeline_id.")
-    if supplied:
-        pipeline_id = validate_pipeline_id(pipeline_id)
-    token, rows = read_pipeline_registry(context=context, spark_session=spark_session,
-                                         registry_snapshot=registry_snapshot)
-    exact = next((row for row in rows if row["registration_status"] == "Active"
-                  and (row["workspace_id"], row["notebook_id"]) == (workspace, notebook)), None)
-    if exact and (new_pipeline or (pipeline_id and pipeline_id != exact["pipeline_id"])):
-        raise ValueError("This notebook already owns a different Pipeline UUID; use a new notebook for an independent pipeline.")
-    if exact and exact["workspace_id"] != active_workspace_id:
-        raise ValueError("This notebook is registered to another workspace_id; review workspace configuration and registry bindings.")
-    if not allow_new_identity and pipeline_id is None and exact is None:
-        raise ValueError("Governed requires an existing registered Pipeline ID and activated configuration. Run Ungoverned first to register this notebook, or supply its activated pipeline_id.")
-    if pipeline_id is None:
-        pipeline_id = exact["pipeline_id"] if exact else str(uuid4())
-        if exact is None:
-            while any(row["pipeline_id"] == pipeline_id for row in rows):
-                pipeline_id = str(uuid4())
-    existing = next((row for row in rows if row["pipeline_id"] == pipeline_id and row["workspace_id"] == active_workspace_id), None)
-    status = "Recovered" if exact else "New"
-    if existing:
-        if existing["registration_status"] != "Active":
-            raise ValueError("This Pipeline UUID is Retired in this workspace_id; review its registration before reuse.")
-        old = (existing["workspace_id"], existing["notebook_id"])
-        if old != (workspace, notebook):
-            if previous_binding != old:
-                raise ValueError("Pipeline UUID belongs to another notebook in this workspace_id. Call setup_pipeline with previous_workspace_id and previous_notebook_id to rebind, or omit pipeline_id with new_pipeline=True in an independent copy.")
-            status = "Rebound"
-        elif previous_binding is not None and previous_binding != old:
-            raise ValueError("Previous binding changed; refresh the registry before rebinding.")
-        else:
-            status = "Existing" if supplied else "Recovered"
-    elif previous_binding is not None:
-        raise ValueError("No existing workspace_id binding to rebind; run setup_pipeline for promotion.")
-    elif any(row["pipeline_id"] == pipeline_id for row in rows):
-        status = "Registered"
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime)
-    row = {"pipeline_id": pipeline_id, "workspace_id": workspace,
-           "notebook_id": notebook, "notebook_name": str(runtime.get("notebook_name") or ""),
-           "registered_at": existing["registered_at"] if existing else now,
-           "registered_by": existing["registered_by"] if existing else audit["_committed_by"],
-           "registration_status": "Active"}
-    if persist and (not existing or any(row.get(key) != existing.get(key) for key in ("workspace_id", "notebook_id", "notebook_name"))):
-        commit_pipeline_registration(row, expected_token=token, context=context, spark_session=spark_session)
-    return {**row, "resolution": status if persist or existing else "Session only"}
-
-
-def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
-                           new_pipeline=False, previous_binding=None):
+def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
     """Resolve runtime services and install conservative notebook lifecycle reporting."""
     import atexit
     from contextlib import nullcontext
+    if pipeline_id is None and pipeline_mode != "Dry Run":
+        raise ValueError("Persistent pipelines require an explicit stable pipeline_id.")
     try:
         from IPython import get_ipython
     except ModuleNotFoundError as exc:
@@ -6433,29 +6337,19 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None,
     with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
         spark = get_spark_session()
     with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
-        from fabricops_kit.activated_pipeline.shared import authority_records
-        registry_snapshot = authority_records(context=runtime, spark_session=spark)
-        registration = resolve_pipeline_registration(pipeline_id, context=runtime, spark_session=spark,
-            new_pipeline=new_pipeline, previous_binding=previous_binding,
-            allow_new_identity=pipeline_mode != "Governed", persist=pipeline_mode != "Dry Run",
-            registry_snapshot=registry_snapshot)
-        pipeline_id = registration["pipeline_id"]
-        print(f'FabricOps Pipeline\nPipeline ID: {pipeline_id}\nRegistration: {registration["resolution"]}\nMode: {pipeline_mode}')
-        print("Retain this UUID in source only for cross-workspace promotion; this notebook recovers it automatically.")
+        pipeline_id = validate_pipeline_id(pipeline_id) if pipeline_id is not None else str(uuid4())
+        print(f"FabricOps Pipeline\nPipeline ID: {pipeline_id}\nMode: {pipeline_mode}")
+        print("Keep the stable Pipeline ID in version-controlled pipeline source.")
         if pipeline_mode == "Governed":
-            from fabricops_kit.activated_pipeline.shared import build_live_pipeline_plan
-            plan = build_live_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
+            from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
+            plan = build_governed_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
         else:
             execution_mode = "dry_run" if pipeline_mode == "Dry Run" else "ungoverned"
-            governed_table_ids = {row["table_id"] for row in registry_snapshot.get("table_ownership", [])
-                                  if row.get("workspace_id") == active_workspace_id}
             plan = PipelineExecutionPlan(execution_mode, active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()),
-                "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark,
-                "_pipeline_bindings": {}, "_governed_table_ids": frozenset(governed_table_ids)}),
+                "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
-    session.registration = registration
     try:
         if shell is not None:
             with startup.phase("form_loading", "Loading optional frozen Data Contracts…" if pipeline_mode == "Dry Run" else "Preparing pipeline controls…"):

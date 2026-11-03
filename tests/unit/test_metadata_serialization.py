@@ -34,14 +34,14 @@ def logical_run():
     })
 
 
-def test_six_columns_are_physically_strings_and_registry_is_unchanged():
-    """Physical JSON does not create a reporting table or change Registry authority."""
+def test_six_columns_are_physically_strings_and_registry_is_scalar():
+    """Physical JSON does not create a reporting table or introduce nested Registry authority."""
     physical = metadata_table_schema_registry()
     assert len(physical) == 12
     for table in (RUN, CATALOGUE):
         assert all(metadata_schema_type_name(field.dataType) == 'string'
                    for field in physical[table].fields if field.name in metadata_json_schema(table))
-    assert metadata_schema_type_name(physical['METADATA_PIPELINE_REGISTRY']['approvals'].dataType).startswith('array<struct<')
+    assert all(not hasattr(field.dataType, 'elementType') for field in physical['METADATA_PIPELINE_REGISTRY'])
 
 
 def test_retained_run_hash_and_python_interfaces_survive_json_roundtrip():

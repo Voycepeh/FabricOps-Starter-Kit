@@ -1,75 +1,37 @@
-"""Inspect the single-row Registry MERGE and exact acknowledgement recovery."""
-# ruff: noqa: D103
-import copy
-import re
-import sys
-from types import SimpleNamespace
-
+"""Retained Run format integrity after additive activation provenance columns."""
+from datetime import datetime
+from copy import deepcopy
 import pytest
-
-from fabricops_kit.activated_pipeline import shared as service
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
-
-
-@pytest.fixture
-def delta_authority(monkeypatch):
-    central = {"row": service.empty_pipeline_authority(), "after_commit": False, "before_commit": False}
-    calls = []
-    context = {"config": {}, "scope_workspace_id": "DEV"}
-    monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: ({}, "DEV", context))
-    monkeypatch.setattr(service, "resolve_configured_lakehouse_table", lambda *a, **kw: ("Metadata", service.PIPELINE_AUTHORITY_TABLE, "engineering", "configured/authority"))
-    monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {})
-    monkeypatch.setattr(service, "authority_records", lambda **kw: copy.deepcopy(central["row"]))
-    class Merge:
-        def alias(self, name): return self
-        def merge(self, source, predicate):
-            assert predicate == "target.authority_id = source.authority_id"
-            self.row = source.row
-            return self
-        def whenMatchedUpdate(self, set):
-            self.changes = set
-            return self
-        def execute(self):
-            assert "snapshot_json" not in self.changes
-            assert all(self.changes[key] == f"source.`{key}`" for key in ("approvals", "reservations", "registrations"))
-            assert "raise_error('Stale Pipeline Registry authority; refresh')" in self.changes["token"]
-            expected = re.search("target.token = '([^']*)'", self.changes["token"]).group(1)
-            calls.append("merge")
-            if central["before_commit"]: raise OSError("write failed")
-            if expected != central["row"]["token"]: raise ValueError("Stale Pipeline Registry authority")
-            central["row"] = copy.deepcopy(self.row)
-            if central["after_commit"]: raise OSError("acknowledgement lost")
-    class Frame:
-        def __init__(self, rows): self.row = rows[0]
-        def alias(self, name): return self
-    spark = SimpleNamespace(sql=lambda statement: pytest.fail("runtime DDL is forbidden"),
-                            createDataFrame=lambda rows, schema: Frame(rows))
-    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=lambda *_: Merge())))
-    monkeypatch.setattr(service, "get_spark_session", lambda supplied=None, *_args, **_kwargs: spark)
-    return context, central, calls
+from fabricops_kit.pipeline import shared
+from fabricops_kit.activated_pipeline.shared import manifest_digest, RUN_PROVENANCE_FIELDS
 
 
-def test_existing_singleton_updates_atomically_and_stale_token_fails(delta_authority):
-    context, central, calls = delta_authority
-    proposed = {"workspaces": {}}
-    service.workspace_activation(proposed, "DEV")["revision"] = "release-one"
-    service.commit_pipeline_authority(proposed, expected_token="initial", context=context)
-    committed = copy.deepcopy(central["row"])
-    assert committed["revisions"] == [{"workspace_id": "DEV", "revision": "release-one"}]
-    assert calls == ["merge"]
-    with pytest.raises(ValueError, match="Stale"):
-        service.commit_pipeline_authority({"workspaces": {}}, expected_token="initial", context=context)
-    assert central["row"] == committed
+def legacy_run():
+    """Return an original hash-bearing Run without newer physical provenance."""
+    return dict(run_id="retained", pipeline_id="logical", execution_mode="testing", workspace_id="DEV",
+        started_at=datetime(2026, 1, 1), completed_at=None, status="incomplete", boundary_completed=False,
+        approval_id=None, activation_revision=None, operations=[], profiling=[], failures=[], warnings_json="[]")
 
 
-def test_failure_exposes_no_partial_snapshot_and_lost_acknowledgement_is_confirmed(delta_authority):
-    context, central, _calls = delta_authority
-    proposed = {"workspaces": {}}
-    service.workspace_activation(proposed, "DEV")["revision"] = "release-one"
-    original = copy.deepcopy(central["row"])
-    central["before_commit"] = True
-    with pytest.raises(OSError): service.commit_pipeline_authority(proposed, expected_token="initial", context=context)
-    assert central["row"] == original
-    central.update(before_commit=False, after_commit=True)
-    result = service.commit_pipeline_authority(proposed, expected_token="initial", context=context)
-    assert result == central["row"]["token"]
+def test_null_additive_columns_preserve_exact_historical_hash():
+    """Spark's additive nulls cannot alter a frozen Test's original evidence."""
+    original = legacy_run()
+    digest = manifest_digest(original)
+    padded = {**deepcopy(original), **dict.fromkeys(RUN_PROVENANCE_FIELDS)}
+    assert shared.validate_pipeline_run(padded) == original
+    assert manifest_digest(shared.validate_pipeline_run(padded)) == digest
+    # Literal golden protects the exact historic hash format.
+    assert digest == '0e731725fb75fd4ab578903d7e14802d47068c065289c98e241d2c1213ce47f6'
+
+
+@pytest.mark.parametrize("field", RUN_PROVENANCE_FIELDS[:-1])
+def test_unversioned_run_rejects_nonnull_new_provenance(field):
+    """Unexpected new facts on old evidence fail rather than being erased for a hash."""
+    with pytest.raises(ValueError, match="unexpected new provenance"):
+        shared.validate_pipeline_run({**legacy_run(), field: "forged"})
+
+
+def test_unknown_run_version_rejected():
+    """A newer evidence version cannot accidentally use the old hash semantics."""
+    with pytest.raises(ValueError, match="schema version"):
+        shared.validate_pipeline_run({**legacy_run(), "run_schema_version": 99})

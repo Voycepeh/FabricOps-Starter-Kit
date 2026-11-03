@@ -41,7 +41,11 @@ def _canonical_metadata_reader(reader):
     def read(name, *args, **kwargs):
         if name not in CANONICAL_METADATA_TABLES:
             raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
-        return reader(name, *args, **kwargs)
+        frame = reader(name, *args, **kwargs)
+        if name == "METADATA_PIPELINE_REGISTRY" and hasattr(frame, "schema"):
+            from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
+            frame.collect = lambda: [empty_pipeline_authority()]
+        return frame
 
     return read
 
@@ -425,7 +429,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             self.pending_schema = None
 
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("record_id") == "central" or (
                 rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
                     "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
             )
@@ -451,7 +455,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
-        assert options is None
+        assert options == ({"delta.isolationLevel": "Serializable"} if table_name == "METADATA_PIPELINE_REGISTRY" else None)
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns
@@ -925,7 +929,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
-            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("authority_id") == "central" or (
+            assert rows == [] or rows[0].get("pipeline_id") == "central" or rows[0].get("record_id") == "central" or (
                 rows[0].get("state_id") == "central" and json.loads(rows[0]["snapshot_json"]) == {
                     "format": "fabricops.table-profiling.v1", "policies": {}, "history": {}}
             )

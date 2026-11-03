@@ -13,6 +13,7 @@ import json
 
 from fabricops_kit import finalize_pipeline
 from fabricops_kit.activated_pipeline import shared as activation
+from fabricops_kit.activated_pipeline import migrate_registry as migration
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types, metadata_table_schema_registry, encode_metadata_row, decode_metadata_row
 from fabricops_kit.pipeline import shared
 
@@ -30,12 +31,13 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     registry = metadata_table_schema_registry()
     for table in tables:
         initial = [{**activation.empty_pipeline_authority(), **{name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}}] if table == 'METADATA_PIPELINE_REGISTRY' else []
-        spark_session.createDataFrame(initial, registry[table]).write.format('delta').save(paths[table])
+        spark_session.createDataFrame(initial, registry[table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(paths[table])
     audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
     audit.update(_workspace_id='DEV', _notebook_id='notebook')
     context = {'config': {}, 'scope_workspace_id': 'DEV', 'workspace_id': 'DEV', 'notebook_id': 'notebook'}
     # Explicit plans isolate Delta persistence from Fabric notebook initialization.
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     pipeline_id = '4c7ae400-85ab-4023-9427-e8fde20bd596'
     for module in (shared, activation):
         monkeypatch.setattr(module, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
@@ -43,7 +45,6 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         monkeypatch.setattr(module, 'resolve_configured_lakehouse_table',
             lambda store, table, schema, **kwargs: (store, table, 'engineering', paths[table]))
         monkeypatch.setattr(module, 'read_lakehouse_table', lambda table, **kwargs: spark_session.read.format('delta').load(paths[table]))
-    shared.resolve_pipeline_registration(pipeline_id, context=context, spark_session=spark_session)
     def append(table, rows):
         spark_session.createDataFrame([encode_metadata_row(table, coerce_metadata_row_types(table, {**row, **audit})) for row in rows], registry[table]).write.format('delta').mode('append').save(paths[table])
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1', 'start_date': '2020-01-01',
@@ -75,7 +76,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         plan = shared.PipelineExecutionPlan(mode, 'DEV', 'notebook', run_id or str(uuid4()),
             shared.canonical_pipeline_json(participants), '{}', shared.canonical_pipeline_json(contracts),
             {**context, '_pipeline_bindings': bindings}, pipeline_id=pipeline_id,
-            approval_id='release' if mode == 'live' else '')
+            pipeline_activation_id='release' if mode == 'live' else '')
         return plan
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
@@ -110,27 +111,21 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
     assert len(records) == 1
     assert len(records[0]['operations']) == len(roles)
     assert shared.validate_pipeline_run(records[0])['status'] == 'succeeded'
-    manifest = activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-        pipeline_name='Orders', pipeline_version='1',
-        agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
-    assert manifest['testing_run_id'] == plan.plan_id
+    manifest = migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
+    assert manifest[0]['run']['run_id'] == plan.plan_id
     from delta.tables import DeltaTable
     removed = plan.evidence['guardrail_history'][0]
     DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).delete(
         "guardrail_result_id = '" + removed['guardrail_result_id'] + "'")
     with pytest.raises(ValueError, match='Guardrail evidence is missing'):
-        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-            pipeline_name='Orders', pipeline_version='1',
-            agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
+        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
     r.append('METADATA_GUARDRAIL_RESULTS', [removed])
     from pyspark.sql import functions as F
     remaining = [item for item in records[0]['operations'] if item['operation_key'] != 'source:table0']
     DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
         set={'operations': F.lit(encode_metadata_row('METADATA_PIPELINE_RUN', {'operations': remaining})['operations'])})
     with pytest.raises(ValueError, match='whole-run|source outside|Guardrail evidence'):
-        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-            pipeline_name='Orders', pipeline_version='1',
-            agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
+        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
 
 
 def test_stale_writer_cannot_replace_a_newer_run_or_operation_array(runs_delta):
@@ -227,9 +222,7 @@ def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
     from delta.tables import DeltaTable
     DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).update(set={'workspace_id': "'FOREIGN'"})
     with pytest.raises(ValueError, match='provenance'):
-        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-            pipeline_name='Orders', pipeline_version='1',
-            agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
+        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
 
 
 def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monkeypatch):
@@ -245,9 +238,7 @@ def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monke
     assert r.rows() == []
     assert r.spark.read.format('delta').load(r.paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
     with pytest.raises(ValueError, match='missing or duplicated'):
-        activation.tested_pipeline_run(testing_run_id=plan.plan_id,
-            pipeline_name='Orders', pipeline_version='1',
-            agreement_id='agreement', agreement_version='1', context=r.context, spark_session=r.spark)
+        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
 
 
 def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_delta):

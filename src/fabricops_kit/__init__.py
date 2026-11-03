@@ -18,6 +18,7 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
+from .data_contract import activate_data_contract
 
 from .io import (
     read_lakehouse_csv,
@@ -58,6 +59,8 @@ CONFIG_EXPORTS = (
     "setup_notebook",
     "setup_metadata_tables",
 )
+
+DATA_CONTRACT_EXPORTS = ("activate_data_contract",)
 
 DATA_AGENT_EXPORTS = (
     "create_data_agent",
@@ -123,4 +126,4 @@ def _load_package_version() -> str:
 
 __version__ = _load_package_version()
 
-__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *DATA_AGENT_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]
+__all__ = [*ACCESS_EXPORTS, *CONFIG_EXPORTS, *DATA_CONTRACT_EXPORTS, *DATA_AGENT_EXPORTS, *IO_EXPORTS, *PIPELINE_EXPORTS, *WIDGET_EXPORTS]

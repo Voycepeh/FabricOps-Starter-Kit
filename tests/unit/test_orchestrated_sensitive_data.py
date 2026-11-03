@@ -18,6 +18,8 @@ sensitive_module = importlib.import_module("fabricops_kit.pipeline.check_sensiti
 @pytest.fixture
 def write_workflow(monkeypatch):
     """Keep the treatment/evidence path real while isolating physical publication."""
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     identity = {"table_id": "target-id", "table_name": "customers", "store_type": "lakehouse", "store": "Silver", "schema": "dbo"}
     monkeypatch.setattr(write_module, "resolve_table_id", lambda **_kwargs: "target-id")
     monkeypatch.setattr(write_module, "check_schema", lambda *_args, **_kwargs: {"status": "passed", "can_continue": True})
@@ -181,6 +183,8 @@ def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monke
 @pytest.fixture(autouse=True)
 def isolated_operation_journal(monkeypatch):
     """Stage unit tests isolate run storage; lifecycle tests exercise the real journal."""
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     from contextlib import nullcontext
     from importlib import import_module
     from unittest.mock import Mock

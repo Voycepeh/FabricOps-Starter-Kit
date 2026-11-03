@@ -127,96 +127,61 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(
-    *, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned",
-    new_pipeline: bool = False, previous_workspace_id: str | None = None,
-    previous_notebook_id: str | None = None,
-):
-    """Start an isolated pipeline in Dry Run, Ungoverned or Governed mode.
+def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned"):
+    """Start a pipeline using a stable logical Pipeline ID and one execution mode.
 
-    Dry Run evaluates real reads, transformations, profiling and optionally
-    selected contract Guardrails without persisting target data or operational
-    state. Ungoverned executes without Data Contracts while retaining operational
-    checks and blocks writes to tables already governed in the workspace.
-    Governed resolves only activated workspace authority and enforces its exact
-    contract versions, destinations and ownership throughout the run.
-    Spark and supported Fabric runtime identity are resolved internally. The caller workspace and notebook IDs are required for registration.
+    Dry Run previews transformations, optional Contract checks and profiling without
+    durable mutations. Ungoverned publishes without activated Contracts, but cannot
+    write protected Table IDs or physical destination aliases. Governed requires
+    activated deployment and independently activated table Contracts. It currently
+    fails closed until trusted deployment verification is proven and integrated.
 
     Parameters
     ----------
     pipeline_id : str | None, optional
-        Permanent UUIDv4. Omit to recover the exact notebook binding or register
-        a new UUID in Ungoverned mode. Dry Run may use a session-only UUID and
-        never registers it. Governed never allocates a new UUID.
-        A changed same-workspace_id binding requires both previous notebook IDs.
+        Canonical lowercase UUIDv4 kept in version-controlled pipeline source,
+        stable across environments and notebook deployments. Required for
+        Ungoverned and Governed. Dry Run may allocate a session-only ID.
     pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
-        Preview without writing, execute without contracts, or execute with
-        activated contracts enforced.
-    new_pipeline : bool, default=False
-        Explicitly create a new identity for an independent notebook copy. Omit
-        pipeline_id when set. An already registered notebook is rejected.
-    previous_workspace_id, previous_notebook_id : str | None, optional
-        Supply both old binding IDs to explicitly rebind a reuploaded notebook.
-        Rebinding requires Ungoverned mode and no active Governed runs.
+        Preview, publish without governance, or enforce activated governance.
 
     Returns
     -------
     PipelineSession
-        Contract selection, pipeline_id containing the permanent UUID, registration
-        details and the automatically refreshed execution report. Read and
-        Write calls use this execution through a context-local binding.
+        Context-local Read/Write execution and in-memory report. Call
+        finalize_pipeline after every Read, transformation and Write completes.
 
     Notes
     -----
-    Call setup_notebook() first to initialize configuration and display notebook
-    readiness. This function reuses that configuration without rerunning
-    00_env_config or displaying the workspace_id summary. Cross-workspace
-    configuration is selected only through setup_notebook(config_workspace_id=...).
-    Repeated pipeline setup closes the preceding execution owned by this task.
-    Repeated notebook setup closes its pipeline and invalidates prior configuration,
-    including when the new setup fails. Changed runtime identity requires fresh
-    notebook setup.
-
-    Fabric cell events identify failures, not successful notebook completion.
-    Call finalize_pipeline after all Reads, transformations and Writes.
-    Neither a successful Write nor interpreter shutdown proves completion. Dry
-    Run finalization returns only a session summary and does not persist it.
+    Call setup_notebook first. Spark and Fabric identity come from that setup.
+    There is no permanent registration, approval, notebook rebinding or automatic
+    UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
+    setup closes the previous execution. Dry Run never writes Registry, Run,
+    profiling results or Processing State. Persistent runs record final outcomes;
+    a successful Write does not imply successful whole-notebook completion.
 
     Raises
     ------
     ValueError
-        For an invalid UUIDv4, conflicting notebook binding, unsupported mode or
-        missing Governed activation.
+        If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
     RuntimeError
-        If setup_notebook() has not completed successfully for the current
-        execution, or a Spark session is unavailable.
+        If notebook setup or Spark is unavailable, or Governed deployment
+        verification has not been established. Governed fails before admission
+        and publication; a caller-supplied Git SHA cannot authorize it.
 
     Examples
     --------
     >>> context = setup_notebook()
     >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
-    >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
-    >>> independent_copy = setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)
-    >>> reuploaded = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned",
-    ...     previous_workspace_id=old_workspace_id, previous_notebook_id=old_notebook_id)
+    >>> preview = setup_pipeline(pipeline_mode="Dry Run")
 
     """
-    from fabricops_kit.pipeline.shared import start_pipeline_session
+    from fabricops_kit.pipeline.shared import start_pipeline_session, validate_pipeline_id
 
-    if pipeline_id is not None:
-        from fabricops_kit.pipeline.shared import validate_pipeline_id
-        pipeline_id = validate_pipeline_id(pipeline_id)
     if pipeline_mode not in {"Dry Run", "Ungoverned", "Governed"}:
         raise ValueError("pipeline_mode must be exactly Dry Run, Ungoverned or Governed.")
-    if not isinstance(new_pipeline, bool) or (new_pipeline and pipeline_id is not None):
-        raise ValueError("new_pipeline=True requires an omitted pipeline_id.")
-    if (previous_workspace_id is None) != (previous_notebook_id is None):
-        raise ValueError("Supply both previous_workspace_id and previous_notebook_id for rebinding.")
-    if previous_workspace_id is not None and (pipeline_id is None or new_pipeline or pipeline_mode != "Ungoverned"):
-        raise ValueError("Rebinding requires a saved pipeline_id and pipeline_mode='Ungoverned'.")
-    return start_pipeline_session(
-        pipeline_id, pipeline_mode,
-        inspector=_inspector,
-        new_pipeline=new_pipeline,
-        previous_binding=(previous_workspace_id, previous_notebook_id) if previous_workspace_id is not None else None,
-    )
+    if pipeline_id is not None:
+        pipeline_id = validate_pipeline_id(pipeline_id)
+    elif pipeline_mode != "Dry Run":
+        raise ValueError("Persistent pipelines require an explicit stable pipeline_id.")
+    return start_pipeline_session(pipeline_id, pipeline_mode, inspector=_inspector)

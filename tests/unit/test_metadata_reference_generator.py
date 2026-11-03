@@ -121,23 +121,23 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
     activated_page = first_pages["metadata_pipeline_registry.md"]
-    for category, count in (("total", 16), ("engineering", 4), ("governance", 4), ("audit", 8)):
+    for category, count in (("total", 39), ("engineering", 5), ("governance", 26), ("audit", 8)):
         card = activated_page.split(f'class="metadata-column-kpi metadata-column-kpi--{category}">', 1)[1].split("</div>", 1)[0]
         assert f'<strong class="metadata-column-kpi__value">{count}</strong>' in card
-    for column in ("revisions", "approvals", "selections", "table_ownership"):
+    for column in ("pipeline_id", "table_id", "activation_id", "status"):
         assert f'<tr class="metadata-column--governance"><td><code>{column}</code>' in activated_page
-    for column in ("authority_id", "token", "registrations", "reservations"):
+    for column in ("record_id", "record_type", "schema_version", "token", "leases_json"):
         assert f'<tr class="metadata-column--engineering"><td><code>{column}</code>' in activated_page
     assert '<tr class="metadata-column--audit"><td><code>_committed_by</code>' in activated_page
-    assert "`approvals`" in activated_page and "`authority_id`" in activated_page
-    assert "atomic native authority" in activated_page
+    assert "<code>record_id</code>" in activated_page and "requires_reactivation" in activated_page
+    assert "Serializable whole-table Delta transaction" in activated_page
     assert '<div class="metadata-schema-table">' in activated_page
     assert "markdown=\"1\"" not in activated_page
     assert "{: .metadata-schema-table }" not in activated_page
-    assert '<table class="metadata-nested-type" aria-label="Fields in registrations">' in activated_page
-    assert "<code>destination.workspace_id</code>" in activated_page
+    assert 'aria-label="Fields in registrations"' not in activated_page
+    assert "<code>operations_json</code>" in activated_page
     assert "`array<struct<" not in activated_page
-    assert "via `agreement_id` + `agreement_version`" not in activated_page
+    assert "via `agreement_id` + `agreement_version`" in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → M)**" in contract_page
     assert "not a unique physical Catalogue foreign key" in contract_page
     assert "via `table_id`" in contract_page
@@ -324,8 +324,9 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
         "orchestrate_read", "orchestrate_write", "profile_table"
     }
     assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_RUN"]
-    assert "setup_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
-    assert {"orchestrate_read", "orchestrate_write"} <= set(METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"])
+    assert "activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "orchestrate_write" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "orchestrate_read" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_PROFILED"]
     assert "scan_effective_access" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]
@@ -415,16 +416,16 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     }
     assert len(actual) == len(connectors)
     assert all(source != target for source, target in actual)
-    assert all(edge.get("data-cardinality") in {"1-N", "N-N"} for edge in connectors)
+    assert all(edge.get("data-cardinality") in {"1-N", "N-1", "N-N"} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
-    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "nested"
+    assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
     assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1-N"
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1-N"
-    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
+    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N-1"
     assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
-    assert all(edge.get("data-cardinality") == "1-N" for edge in connectors if edge.get("data-kind") == "physical")
+    assert all(edge.get("data-cardinality") in {"1-N", "N-1"} for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)
     assert "stroke-dasharray" not in svg.read_text(encoding="utf-8")
     registry = next(a for a in svg_tree.findall(f".//{namespace}a")
