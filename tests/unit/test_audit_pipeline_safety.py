@@ -190,6 +190,6 @@ def test_source_free_target_reaches_physical_publication(monkeypatch):
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda context: commits.append(context))
     monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
     result = module.pipeline_write(object(), store="Silver", schema="dbo", table_name="mapping", source_table_ids=[], verbose=False)
-    assert result["strategy"] == "append"
+    assert result["strategy"] == "append_all"
     assert len(writes) == 1
     assert commits[0]["source_table_ids"] == []

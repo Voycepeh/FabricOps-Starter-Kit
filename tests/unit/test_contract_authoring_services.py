@@ -111,12 +111,12 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     assert inherited_payload["table"]["processing_source"] == "previous_contract"
 
     rows[:] = [frozen]
-    catalogue[0]["load_strategy"] = "append"
+    catalogue[0]["load_strategy"] = "append_all"
     scanned = service.create_contract_draft(
         table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     scanned_payload = json.loads(scanned["contract_payload_json"])
-    assert scanned_payload["table"]["processing"] == {"load_strategy": "append"}
+    assert scanned_payload["table"]["processing"] == {"load_strategy": "append_all"}
     assert scanned_payload["table"]["processing_source"] == "catalogue"
 
 
@@ -374,7 +374,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
             "contract": {"contract_id": "contract-orders", "contract_version": 1, "status": "draft"},
             "table": {
                 "table_id": "orders",
-                "processing": {"load_strategy": "append"},
+                "processing": {"load_strategy": "append_all"},
                 "processing_source": "catalogue",
             },
             "enrichment": {"table": [], "columns": []},
@@ -384,7 +384,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
     tables = {
         "METADATA_DATA_CATALOGUE": [{
             "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
-            "schema_name": "sales", "table_name": "orders", "load_strategy": "append",
+            "schema_name": "sales", "table_name": "orders", "load_strategy": "append_all",
             "load_strategy_parameters_json": {}, "is_active": True,
         }],
         "enrichment": [],
@@ -407,7 +407,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
         draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev",
     )
 
-    assert payload["table"]["processing"]["load_strategy"] == "append"
+    assert payload["table"]["processing"]["load_strategy"] == "append_all"
     assert "scheduled_refresh" not in payload["table"]
     frozen = service.freeze_contract_record(draft=draft, audit={})
     assert "scheduled_refresh" not in json.loads(frozen["contract_payload_json"])["table"]
@@ -601,7 +601,7 @@ def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
     policy = service.default_profiling_policy()
     policy['standard'] = {'frequency': 'interval', 'days': 7, 'trigger': 'write'}
     payload = {'contract': {'contract_id': 'c', 'contract_version': 2, 'status': 'draft'},
-               'table': {'table_id': 'orders', 'processing': {'load_strategy': 'append'}, 'columns': []},
+               'table': {'table_id': 'orders', 'processing': {'load_strategy': 'append_all'}, 'columns': []},
                'enrichment': {'table': [], 'columns': []}, 'guardrails': [], 'profiling': policy}
     draft = {'contract_id': 'c', 'contract_version': 2, 'table_id': 'orders', 'status': 'draft',
              'contract_payload_json': json.dumps(payload)}

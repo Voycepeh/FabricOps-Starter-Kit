@@ -36,7 +36,7 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         "resolve_catalogue_table_identity",
         lambda _config, _env, table_id, **kwargs: {
             "table_id": f"canonical-{table_id}",
-            "load_strategy": "append" if table_id == "source-a" else None,
+            "load_strategy": "append_all" if table_id == "source-a" else None,
             "load_strategy_parameters_json": {},
         },
     )
@@ -44,7 +44,7 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         drift,
         "resolve_table_processing_definition",
         lambda _config, _env, table_id, **kwargs: processing_table_ids.append(table_id)
-        or {"load_strategy": "append"},
+        or {"load_strategy": "append_all"},
     )
     monkeypatch.setattr(
         drift, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"}
@@ -62,7 +62,7 @@ def test_source_drift_resolves_source_processing(monkeypatch) -> None:
         {
             "source_table_id": "canonical-source-a",
             "target_table_id": "canonical-target-a",
-            "source_processing": {"load_strategy": "append"},
+            "source_processing": {"load_strategy": "append_all"},
             "spark_session": "spark",
             "context": {},
         }
@@ -160,7 +160,7 @@ def test_explicit_source_drift_check_still_requires_its_rule(monkeypatch) -> Non
         shared.check_source_drift_for_target(
             source_table_id="source-a",
             target_table_id="target-a",
-            source_processing={"load_strategy": "append"},
+            source_processing={"load_strategy": "append_all"},
         )
 
 

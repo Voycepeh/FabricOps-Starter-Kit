@@ -34,6 +34,7 @@ def benchmark(spark, size):
         F.create_map(F.lit('b'), F.col('id'), F.lit('a'), F.lit(1)).alias('attributes')).cache()
     base.count()
     hashed = shared.add_row_hash(base).cache()
+    plan = None
     try:
         digest_length = measure(seconds, 'hash_calculation_and_cache',
             lambda: hashed.agg(F.sum(F.length('_row_hash')).alias('n')).first().n)
@@ -69,9 +70,24 @@ def benchmark(spark, size):
             measure(seconds, 'parquet_write_with_hash', lambda: hashed.write.parquet(str(root / 'hashed')))
             result['parquet_bytes'] = {kind: sum(path.stat().st_size for path in (root / kind).glob('*.parquet'))
                                        for kind in ('plain', 'hashed')}
+            seen.write.parquet(str(root / 'target_hashes'))
+            cold_target = spark.read.parquet(str(root / 'target_hashes')).select('_row_hash')
+            assert measure(seconds, 'parquet_target_hash_scan_and_comparison',
+                lambda: hashed.dropDuplicates(['_row_hash']).join(cold_target, '_row_hash', 'left_anti').count()) == unseen
+            cold_source = spark.read.parquet(str(root / 'plain'))
+            with patch.object(shared, 'read_lakehouse_table', return_value=[]), \
+                 patch.object(shared, 'metadata_table_physical_schema', return_value=None), \
+                 patch.object(shared, '_merge_source_observation_records'), \
+                 patch.object(shared, 'build_pipeline_audit_fields', return_value={'_committed_at': datetime.now(UTC)}):
+                cold_observed = measure(seconds, 'full_source_observation_parquet_read',
+                    lambda: shared.observe_full_source(identity, dataframe=cold_source, context=context))
+                assert cold_observed['content_fingerprint'] == observed['content_fingerprint']
         result['unseen_rows'] = unseen
         return result
     finally:
+        if plan is not None:
+            for frame in plan.evidence.pop("source_observation_caches", []):
+                frame.unpersist()
         hashed.unpersist()
         base.unpersist()
 

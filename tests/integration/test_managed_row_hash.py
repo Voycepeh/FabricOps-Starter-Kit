@@ -59,3 +59,14 @@ def test_existing_targets_require_valid_hashes(spark_session, monkeypatch):
         shared.validate_target_row_hash(identity, context={})
     frame = add_row_hash(frame)
     shared.validate_target_row_hash(identity, context={})
+
+
+def test_hash_v1_golden_serialization_and_final_treated_values(spark_session):
+    import hashlib
+    frame = spark_session.createDataFrame([(1, None)], 'x int, v string')
+    expected = hashlib.sha256(b'{"version":1,"columns":[["v","string"],["x","int"]]}\n{"v":null,"x":1}').hexdigest()
+    assert add_row_hash(frame).first()._row_hash == expected
+    treated = add_row_hash(frame).withColumn('v', F.lit('tokenized-value'))
+    actual = add_row_hash(treated).first()._row_hash
+    assert actual != expected
+    assert actual == add_row_hash(treated.drop('_row_hash')).first()._row_hash
