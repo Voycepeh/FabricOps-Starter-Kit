@@ -97,10 +97,4 @@ FabricOps records the technical context around each participating table so Engin
 
     Dry Run keeps these results in memory. Persistent modes commit applicable metadata only through the execution/finalization boundaries. Whole-table profiling and frequency distributions can be expensive, so policy and scheduling matter.
 
-## Go deeper
-
-<div class="fabricops-cta-row" markdown="1">
-[Run Guided Demo Step 2](guided-demo/02-build-and-run-etl.md){ .md-button .md-button--primary }
-</div>
-
 </div>

@@ -87,8 +87,4 @@ Consumers receive access through native Fabric controls. A Warehouse can provide
 
 Continue with [Governance](governance.md) for Data Contract decisions or the [Guided Demo](guided-demo.md) for the runnable lifecycle.
 
-<div class="fabricops-cta-row" markdown="1">
-[Explore Engineering](engineering.md){ .md-button .md-button--primary }
-</div>
-
 </div>

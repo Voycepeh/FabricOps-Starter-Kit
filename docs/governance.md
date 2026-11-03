@@ -100,10 +100,4 @@ Use the [interactive metadata model](reference/metadata.md) to explore relations
 
     The metadata is operational evidence, not a substitute for Fabric audit logs or permissions. `METADATA_DATA_ACCESS` records supported observed access paths; it is not a complete inventory of Direct Lake, workspace, OneLake and report-layer security.
 
-## Go deeper
-
-<div class="fabricops-cta-row" markdown="1">
-[Run Guided Demo Step 1](guided-demo/01-establish-governance-context.md){ .md-button .md-button--primary }
-</div>
-
 </div>
