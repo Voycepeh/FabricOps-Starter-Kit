@@ -1,8 +1,8 @@
 <div class="fabricops-product-page" markdown="1">
 
-# Governed engineering for Microsoft Fabric
+# Microsoft Fabric gives you the platform.
 
-**FabricOps Starter Kit connects reusable notebook pipelines with governance decisions that Engineering can inspect and validate.** Start with the outcome, then go as deep as the implementation requires.
+**FabricOps gives you the Plug-and-play Data Engineering and Data Governance foundations.**
 
 <video class="fabricops-page-video" controls preload="metadata" aria-label="FabricOps Starter Kit overview video">
   <source src="assets/FabricOps_Overview_Video_web.mp4" type="video/mp4">
@@ -77,19 +77,15 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Reference Documentation</span>
     <strong class="fabricops-metadata-preview__title" id="reference-documentation-title">Inspect the implemented FabricOps contracts</strong>
-    <span class="fabricops-metadata-preview__description">Explore public functions, Data Quality rules, metadata structures, PySpark guidance, and canonical terminology.</span>
+    <span class="fabricops-metadata-preview__description">Explore public functions, Data Quality rules, PySpark guidance, canonical terminology, and the maintainer Call Flow Dashboard.</span>
   </span>
   <nav class="fabricops-preview-menu" aria-label="FabricOps reference documentation">
     <a href="reference/">Function Reference</a>
     <a href="reference/dq-rules/">Data Quality Rules</a>
-    <a href="reference/metadata/">Metadata Tables</a>
     <a href="reference/pyspark-transformation/">PySpark Transformation</a>
     <a href="glossary/">Glossary</a>
+    <a href="assets/public-function-call-flows-dashboard.html">Call Flow Dashboard <small>Maintainer</small></a>
   </nav>
 </section>
-
-## What is available today?
-
-Core notebook setup, Fabric I/O, pipeline orchestration, profiling and metadata capture are **Live** public capabilities. Data Contract authoring, activation and AI-assisted authoring remain **Preview**. Governed execution currently fails closed until trusted deployment verification is integrated; use the reference lifecycle labels for the authoritative status of each callable.
 
 </div>
