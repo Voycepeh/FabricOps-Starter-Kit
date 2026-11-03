@@ -9,20 +9,18 @@
   Your browser does not support embedded video. <a href="assets/FabricOps_Overview_Video_web.mp4">Open the FabricOps overview video</a>.
 </video>
 
-## Two foundations, one workflow
-
 ![Governance and Engineering working in a continuous FabricOps cycle](assets/fabricops-roles.png){ .fabricops-home-loop }
 
 FabricOps keeps project-specific PySpark visible between governed boundaries. Governance can work from Engineering observations and profiles; Engineering can trace expectations to exact contract versions and Guardrail Results.
 
 <div class="fabricops-foundations">
-  <a class="fabricops-card" href="engineering/">
-    <strong>Engineering</strong>
-    <small>Build portable Read → Transform → Write pipelines across Lakehouses and Warehouses, with incremental processing, recovery, profiling and lineage.</small>
-  </a>
-  <a class="fabricops-card" href="governance/">
+  <a class="fabricops-card fabricops-card--governance" href="governance/">
     <strong>Governance</strong>
     <small>Turn steward decisions, Data Contracts, Enrichment and Guardrails into structured metadata connected to the real engineering flow.</small>
+  </a>
+  <a class="fabricops-card fabricops-card--engineering" href="engineering/">
+    <strong>Engineering</strong>
+    <small>Build portable Read → Transform → Write pipelines across Lakehouses and Warehouses, with incremental processing, recovery, profiling and lineage.</small>
   </a>
 </div>
 
@@ -42,8 +40,8 @@ See [Architecture](architecture.md) for the workspace topology, Governance ↔ E
 
 <a class="fabricops-metadata-preview fabricops-guided-preview" href="guided-demo/" aria-label="Start the seven-step FabricOps Guided Demo">
   <span class="fabricops-metadata-preview__body">
-    <span class="fabricops-metadata-preview__eyebrow">Guided implementation</span>
-    <strong class="fabricops-metadata-preview__title">Run the seven-step FabricOps lifecycle</strong>
+    <span class="fabricops-metadata-preview__eyebrow">Guided Demo</span>
+    <strong class="fabricops-metadata-preview__title">Run the seven-step FabricOps workflow</strong>
     <span class="fabricops-metadata-preview__description">Prepare Microsoft Fabric, build the pipeline, author and preview Data Contracts, then follow the Production and consumption hand-offs.</span>
     <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
   </span>

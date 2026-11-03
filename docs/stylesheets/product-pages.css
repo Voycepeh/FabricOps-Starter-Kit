@@ -82,6 +82,14 @@
 .fabricops-card img { width: 100%; max-height: 15rem; margin: 0 0 0.75rem; object-fit: contain; }
 .fabricops-card strong { font-size: 1rem; }
 .fabricops-card small { margin-top: 0.4rem; color: var(--md-default-fg-color--light); line-height: 1.5; }
+.md-typeset .fabricops-card--governance { border-color: #8b5cf6; background: #f4f0ff; }
+.md-typeset .fabricops-card--governance strong { color: #5b21b6; }
+.md-typeset .fabricops-card--engineering { border-color: #2583e8; background: #eef6ff; }
+.md-typeset .fabricops-card--engineering strong { color: #0759a8; }
+.md-typeset .fabricops-card--governance:hover,
+.md-typeset .fabricops-card--governance:focus { border-color: #6d28d9; background: #eee7ff; }
+.md-typeset .fabricops-card--engineering:hover,
+.md-typeset .fabricops-card--engineering:focus { border-color: #0969c5; background: #e4f1ff; }
 .md-typeset .fabricops-home-loop { display: block; width: min(100%, 48rem); max-height: 27rem; margin: 1rem auto 1.35rem; border: 0; object-fit: contain; }
 .fabricops-evidence-grid figure { min-width: 0; margin: 0; text-align: center; }
 .fabricops-evidence-grid img { width: 100%; max-height: 22rem; margin: 0; object-fit: contain; }
