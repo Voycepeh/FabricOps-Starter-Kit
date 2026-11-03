@@ -1,6 +1,6 @@
 <div class="fabricops-product-page" markdown="1">
 
-# Architecture
+# How FabricOps is set up in Microsoft Fabric
 
 **Governance defines expectations, Engineering produces and validates data, and shared metadata connects both without hiding project-owned transformations.**
 
@@ -79,12 +79,15 @@ The configured Metadata Lakehouse holds three Governance-owned tables and nine E
 
     The [Metadata Reference](reference/metadata.md) is generated from `src/fabricops_kit/config/metadata_schemas.py` and writer ownership metadata. Use it instead of inferring columns from a diagram.
 
-## Data Contracts and consumers
-
-A Data Contract is the table-level governed definition: observed table identity and processing, descriptive Enrichment, and executable Guardrails. Governance can freeze an immutable version; Engineering can preview that exact payload against real data. The contract does not deploy notebooks, grant access or prove executable integrity.
-
-Consumers receive access through native Fabric controls. A Warehouse can provide a useful SQL consumption boundary and Query Insights, but query history is not a complete table-level access audit. Direct Lake, Spark and other paths can bypass Warehouse SQL history. FabricOps records observed access metadata where supported; it does not replace Fabric security administration.
-
-Continue with [Governance](governance.md) for Data Contract decisions or the [Guided Demo](guided-demo.md) for the runnable lifecycle.
+<div class="fabricops-foundations">
+  <a class="fabricops-card fabricops-card--governance" href="../governance/">
+    <strong>Governance</strong>
+    <small>Inspect Governance as Code, Data Contract authoring and activation, sensitive data treatment, Data Quality, and reporting metadata.</small>
+  </a>
+  <a class="fabricops-card fabricops-card--engineering" href="../engineering/">
+    <strong>Engineering</strong>
+    <small>Inspect orchestration, Fabric I/O, incremental and historical processing, publication recovery, profiling, lineage, and observability.</small>
+  </a>
+</div>
 
 </div>
