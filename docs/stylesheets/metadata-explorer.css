@@ -249,6 +249,18 @@
   vertical-align: top;
 }
 .metadata-explorer-section-body code { white-space: normal; overflow-wrap: anywhere; }
+/* Preserve the generator's indented JSON inside nested schema examples. */
+.md-typeset .metadata-explorer-section-body pre code,
+.md-typeset .metadata-structured-type pre code {
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.md-typeset .metadata-structured-type pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .metadata-explorer-reference-content { font-size: 13px; }
 .md-typeset .metadata-column-kpis {
   display: grid;
