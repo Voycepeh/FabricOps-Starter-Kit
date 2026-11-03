@@ -1242,12 +1242,11 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
                 assert not isinstance(value, datetime), path
 
     audit_columns = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
-    registry = metadata_table_schema_registry()
+    registry = metadata_table_schema_registry(logical=True)
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         assert audit_columns.issubset({field.name for field in schema.fields})
-        sample = {field.name: sample_value(field.dataType, native=(table_name == "METADATA_DATA_CATALOGUE"
-            and field.name.endswith("_json"))) for field in schema.fields}
+        sample = {field.name: sample_value(field.dataType, native=(table_name in {"METADATA_DATA_CATALOGUE", "METADATA_PIPELINE_RUN"})) for field in schema.fields}
         row = coerce_metadata_row_types(table_name, sample)
         for field in schema.fields:
             assert_runtime_type(row[field.name], field.dataType, table_name + "." + field.name)
@@ -1279,7 +1278,7 @@ def test_metadata_schema_registry_is_shared_source_for_setup_and_runtime_coercio
     assert "metadata_table_schema_registry()" in setup_source
     assert "def coerce_metadata_row_types" in schema_source
     assert "def _coerce_metadata_value" in schema_source
-    assert "metadata_table_schema_registry().get(table_name)" in schema_source
+    assert "metadata_table_schema_registry(logical=True).get(table_name)" in schema_source
     assert "def metadata_table_schema_registry" in schema_source
     assert "def _metadata_table_schema_registry" not in schema_source
 

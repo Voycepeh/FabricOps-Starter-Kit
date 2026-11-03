@@ -18,7 +18,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit import orchestrate_read, orchestrate_write
-from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, coerce_metadata_row_types
+from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, coerce_metadata_row_types, encode_metadata_row
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.pipeline import shared as runtime
 from tests.helpers import framework_config
@@ -135,7 +135,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
                 if value.get(field.name) is None and not field.nullable:
                     value[field.name] = {"StringType": "unused", "IntegerType": 1, "LongType": 0,
                                          "BooleanType": False, "TimestampType": now, "DateType": now.date(), "DoubleType": 0.0}.get(type(field.dataType).__name__)
-            values.append(value)
+            values.append(encode_metadata_row(name, value))
         return spark_session.createDataFrame(values, registry[name])
 
     def write(frame, name, **kwargs):

@@ -58,9 +58,9 @@ AUDIT_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_FIELD_DESCRIPTIONS = {
-    "load_strategy_parameters_json": "Native Spark struct containing optional watermark, key, effective and tracked columns. The retained `_json` suffix is historical; this value is not JSON text.",
-    "scheduled_refresh_json": "Native Spark struct containing captured status and ordered schedules (enabled, frequency, times and timezone). The retained `_json` suffix is historical; this value is not JSON text.",
-    "profile_key_candidates_json": "Native Spark struct containing discovery status, maximum combination width and ordered candidate metrics. Historical list-only candidates have null status and null maximum width. The retained `_json` suffix is historical; this value is not JSON text.",
+    "load_strategy_parameters_json": "Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.",
+    "scheduled_refresh_json": "Validated JSON STRING containing captured status and ordered schedules (enabled, frequency, times and timezone); decoded to a logical object in application code.",
+    "profile_key_candidates_json": "Validated JSON STRING containing discovery status, maximum combination width and ordered candidate metrics; decoded to a logical object in application code. Historical list-only candidates have null status and null maximum width.",
     "agreement_version": "Canonical agreement version associated with the row.",
     "agreement_id": "Stable identifier for the agreement lifecycle.",
     "agreement_name": "Human-readable name for the agreement.",
@@ -226,11 +226,35 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "selections": "Current approved decision per pipeline and workspace, published atomically with ownership.",
     "table_ownership": "Native exact contract, physical destination, writer and readers per workspace/table.",
     "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
-    "profiling": "Typed per-table activity outcomes and physical result snapshot completion markers.",
+    "profiling": "Validated JSON STRING containing per-table activity outcomes and physical result snapshot completion markers; decoded to a logical array in application code.",
     "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
-    "failures": "Native safe failure codes and exception class names; never raw exception messages.",
+    "failures": "Validated JSON STRING containing safe failure codes and exception class names; decoded to a logical array in application code. Never raw exception messages.",
     "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
-    "operations": "Native Read/Write operation facts: table ID, role, exact contract version/hash, destination, modes, source associations, status, timing and stages. Query directly with explode(operations); no configuration join is required.",
+    "operations": "Validated JSON STRING containing Read/Write operation facts: table ID, role, exact contract version/hash, destination, modes, source associations, status, timing and stages; decoded to a logical array in application code. Parse JSON before expanding operations in Spark or Power Query; no configuration join is required.",
+}
+
+METADATA_JSON_EXAMPLES = {
+    "METADATA_DATA_CATALOGUE": {
+        "load_strategy_parameters_json": {"watermark_column": "modified_at", "key_columns": ["id"]},
+        "scheduled_refresh_json": {"status": "configured", "schedules": [
+            {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "UTC"},
+        ]},
+        "profile_key_candidates_json": {"status": "resolved", "max_combination_width": 2, "candidates": [
+            {"columns": ["id"], "column_count": 1, "row_count": 100, "distinct_count": 100,
+             "uniqueness_percent": 100.0, "null_count": 0},
+        ]},
+    },
+    "METADATA_PIPELINE_RUN": {
+        "operations": [{"operation_key": "write:orders", "table_id": "orders", "pipeline_role": "target",
+            "destination": {"workspace_id": "example-workspace", "item_id": "example-lakehouse",
+                "kind": "lakehouse", "schema": "demo", "table_name": "orders"},
+            "write_mode": "append", "source_table_ids": ["source-orders"], "status": "succeeded",
+            "stages": [{"stage": "Processing", "status": "passed"}]}],
+        "profiling": [{"context_key": "example-context", "activity": "standard", "status": "passed",
+            "results_persisted": True, "profile_snapshot_id": "example-snapshot", "table_id": "orders",
+            "row_count": 100}],
+        "failures": [{"code": "evidence_persistence_failed", "exception_type": "RuntimeError"}],
+    },
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
@@ -4389,9 +4413,11 @@ def _metadata_inline_html(value: str) -> str:
         for part in parts
     )
 
-def _metadata_type_cell(type_name: str, *, column: str) -> str:
-    """Render native nested Spark fields as an accessible, compact subtable."""
-    nested = _metadata_nested_struct(type_name)
+def _metadata_type_cell(
+    type_name: str, *, column: str, logical_type: str | None = None, example: Any = None,
+) -> str:
+    """Render physical types and expandable native or logical JSON field tables."""
+    nested = _metadata_nested_struct(logical_type or type_name)
     if nested is None:
         return f"<code>{html_escape(type_name)}</code>"
 
@@ -4414,12 +4440,18 @@ def _metadata_type_cell(type_name: str, *, column: str) -> str:
                 append_fields(member_nested[1], path, depth + 1)
 
     append_fields(nested[1])
+    json_example = (
+        '<p>Representative JSON value (optional fields omitted):</p>'
+        f'<pre><code class="language-json">{html_escape(json.dumps(example, indent=2))}</code></pre>'
+        if logical_type and example is not None else ""
+    )
+    physical_type = f'<code>{html_escape(type_name)}</code>' if logical_type else ""
     return (
-        '<details class="metadata-structured-type">'
-        f'<summary><code>{nested[0]}</code></summary>'
+        f'{physical_type}<details class="metadata-structured-type">'
+        f'<summary>{"Logical JSON schema: " if logical_type else ""}<code>{nested[0]}</code></summary>'
         f'<table class="metadata-nested-type" aria-label="Fields in {html_escape(column)}">'
         '<thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead>'
-        f'<tbody>{"".join(field_rows)}</tbody></table></details>'
+        f'<tbody>{"".join(field_rows)}</tbody></table>{json_example}</details>'
     )
 
 
@@ -4720,7 +4752,10 @@ def generate_metadata_reference_pages() -> None:
                 paths.update(schema_paths(dtype, path + "."))
         return paths
 
-    field_names_by_table = {name: schema_paths(schema) for name, schema in registry.items()}
+    # JSON columns retain typed application-level references, while the rendered
+    # physical schema must describe their actual scalar SQL-compatible types.
+    logical_registry = metadata_table_schema_registry(logical=True)
+    field_names_by_table = {name: schema_paths(schema) for name, schema in logical_registry.items()}
     for table_name in canonical_tables:
         model = table_models[table_name]
         if not isinstance(model, dict):
@@ -4782,6 +4817,8 @@ def generate_metadata_reference_pages() -> None:
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
         rows = metadata_table_schema_rows(registry[table_name])
+        logical_types = {row["name"]: row["type"]
+            for row in metadata_table_schema_rows(logical_registry[table_name])}
         categories = _metadata_column_categories(
             table_name, rows, overrides=category_overrides,
             audit_column_names=audit_column_names,
@@ -4874,9 +4911,14 @@ def generate_metadata_reference_pages() -> None:
         ]
         for row in rows:
             column = str(row["name"])
+            logical_type = logical_types[column] if (
+                row["type"] == "string" and _metadata_nested_struct(logical_types[column])
+            ) else None
+            type_cell = _metadata_type_cell(str(row["type"]), column=column, logical_type=logical_type,
+                example=METADATA_JSON_EXAMPLES.get(table_name, {}).get(column))
             lines.append(
                 f'<tr class="metadata-column--{categories[column]}"><td><code>{html_escape(column)}</code></td>'
-                f'<td>{_metadata_type_cell(str(row["type"]), column=column)}</td>'
+                f'<td>{type_cell}</td>'
                 f'<td>{_metadata_inline_html(_metadata_field_description(table_name, column))}</td></tr>'
             )
         lines.extend(["</tbody></table>", "</div>"])

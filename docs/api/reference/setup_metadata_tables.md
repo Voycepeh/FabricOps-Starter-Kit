@@ -122,22 +122,23 @@ Spark is resolved automatically from the existing execution session.
 No session is created; Spark-dependent work raises
 ``RuntimeError`` when no session is available.
 
-Creates missing metadata tables, additively evolves existing metadata
-tables with missing canonical columns, and validates canonical column
-types against the registry for the installed FabricOps version. Existing
-data and extra physical columns are preserved; incompatible canonical
-types and known legacy schemas are reported as failures. Catalogue's
-``load_strategy_parameters_json``, ``scheduled_refresh_json`` and
-``profile_key_candidates_json`` retain their names but store native Spark
-structs. Supported historical strings are strictly validated and converted
-automatically in one conflict-checked Delta commit at the configured location.
-Rows, unrelated columns, audit values and table properties are preserved.
-The per-table evolved result records the pre-upgrade and committed versions.
-Blank strings become null; historical list-only candidates retain their order
-with null status and null maximum width. Repeated setup validates native
-values without rewriting them. Interrupted or unacknowledged commits can be
-recovered by rerunning setup. Recovery never automatically restores an older
-version over subsequent writes; see the Catalogue upgrade guidance.
+Creates missing metadata tables, additively evolves supported missing columns,
+and validates physical types at the configured Metadata Lakehouse. Catalogue's
+three structured ``*_json`` fields and Run's ``operations``, ``profiling`` and
+``failures`` are SQL-compatible JSON strings. Application interfaces retain
+validated dictionaries/lists through centralized physical serialization.
+Supported native/mixed schemas are automatically converted in one pinned,
+conflict-checked Delta schema-and-data commit per table. Historical Catalogue
+blank strings become SQL null and list-only candidates keep their order with
+null status/maximum width. Already valid JSON text is retained without a
+rewrite. Missing or ambiguous Run facts and malformed JSON fail closed.
+
+Rows, audit values, extension columns, table identity/properties and Run Delta
+transaction identities are preserved. Per-table evolved results report source
+and committed versions. Rerun setup after interruption or a reported conflict;
+never automatically restore over later valid writes. Stop old writers before
+migration and restart them with the compatible package/schema pair. Registry
+authority, business publication fingerprints and Processing State are unchanged.
 
 This function prepares the metadata table structures only. It does not
 create business metadata records such as stewards, agreements, catalogue
@@ -154,9 +155,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:394`
+`fabricops_kit/config/setup_metadata_tables.py:393`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L394-L825">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L825">View on GitHub</a>
 </div>
 
 
@@ -263,8 +264,8 @@ establish progress for populated targets; reconcile retained progress or
 deliberately rebuild/replay targets before resuming incremental work.
 
 ``METADATA_PIPELINE_REGISTRY`` requires one native authority row.
-``METADATA_PIPELINE_RUN`` requires native execution facts with exact table/contract references, bindings and operation modes.
-Old Registry/Run layouts and incomplete native layouts require explicit
+``METADATA_PIPELINE_RUN`` requires complete logical execution facts in JSON strings, with exact table/contract references, bindings and operation modes.
+Old Registry layouts and incomplete Run facts require explicit
 stopped-deployment reconciliation or a deliberate disposable Preview reset; setup never adds columns to reinterpret existing run history.
 
 Existing tables are validated by canonical column name and compatible
@@ -300,7 +301,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 49 |
+| Live-critical dependencies | 54 |
 
 ### Release history
 
@@ -323,12 +324,16 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.validate_catalogue_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._parse_catalogue_value</code></li>
@@ -338,7 +343,7 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_table_is_missing</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
-<li><code>fabricops_kit.config.setup_metadata_tables._upgrade_catalogue</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._upgrade_json_metadata</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
@@ -364,6 +369,7 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 
 

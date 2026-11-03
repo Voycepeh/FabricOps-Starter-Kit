@@ -21,6 +21,7 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
+    decode_metadata_row,
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
@@ -102,7 +103,10 @@ def create_contract_draft(
     ]
     if not table_rows:
         raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
-    table = table_rows[-1]
+    table = dict(table_rows[-1])
+    table.update(decode_metadata_row("METADATA_DATA_CATALOGUE", {
+        "load_strategy_parameters_json": table.get("load_strategy_parameters_json"),
+    }))
     observed_columns = [
         _fields(row, ("column_id", "column_name", "data_type"))
         for row in current if row.get("column_id")

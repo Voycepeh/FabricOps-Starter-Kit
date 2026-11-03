@@ -25,7 +25,7 @@ def _schema_fields() -> dict[str, set[str]]:
             elif hasattr(dtype, "fields"):
                 result.update(paths(dtype, path + "."))
         return result
-    return {name: paths(schema) for name, schema in metadata_table_schema_registry().items()}
+    return {name: paths(schema) for name, schema in metadata_table_schema_registry(logical=True).items()}
 
 
 
@@ -111,6 +111,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "Managed by" not in page
         assert "captured" in page.lower()
 
+    run_page = first_pages["metadata_pipeline_run.md"]
+    assert 'operations[].contract_id' in run_page
+    assert '<code>operations</code></td><td><code>string</code>' in run_page
+    assert 'Fields in operations' in run_page
     contract_page = first_pages["metadata_data_contract.md"]
     assert "[`widget_data_contract`](../../api/reference/widget_data_contract.md)" in contract_page
     assert "widget_register_data_contract.md" not in contract_page
@@ -512,15 +516,81 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert "ACTIVATION_STATE" not in js
 
 
-def test_schema_html_keeps_nested_types_inside_outer_cells() -> None:
-    """Nested Spark field tables stay inside valid outer schema table cells."""
+def test_schema_html_describes_json_as_scalar_cells() -> None:
+    """Catalogue JSON keeps its physical string type and logical field table."""
     from pathlib import Path
 
     page = Path("docs/reference/metadata/metadata_data_catalogue.md").read_text()
     assert '<table class="metadata-schema-table"><thead><tr>' in page
     assert (
         '<td><code>load_strategy_parameters_json</code></td>'
-        '<td><details class="metadata-structured-type">'
+        '<td><code>string</code>'
     ) in page
     assert 'aria-label="Fields in load_strategy_parameters_json"' in page
     assert "| Column | Data type | Description |" not in page
+
+
+def test_json_metadata_documents_all_logical_fields_and_valid_examples(tmp_path, monkeypatch) -> None:
+    """All six physical strings expose canonical logical children and useful JSON."""
+    import html
+    import json
+    import re
+
+    from fabricops_kit.config.metadata_schemas import METADATA_JSON_COLUMNS, validate_metadata_value
+
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "metadata")
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", tmp_path / "metadata.md")
+    generator.generate_metadata_reference_pages()
+    schemas = metadata_table_schema_registry(logical=True)
+    documented = set()
+
+    def fields(kind, prefix=""):
+        if hasattr(kind, "elementType"):
+            yield from fields(kind.elementType, prefix)
+        for field in getattr(kind, "fields", []):
+            path = prefix + field.name
+            label = generator._metadata_nested_struct(field.dataType.simpleString())
+            yield path, label[0] if label else field.dataType.simpleString()
+            yield from fields(field.dataType, path + ".")
+
+    for table, columns in METADATA_JSON_COLUMNS.items():
+        page = (tmp_path / "metadata" / f"{table.lower()}.md").read_text()
+        assert "Native Spark struct" not in page
+        assert "Native Read/Write" not in page
+        assert "Native safe failure" not in page
+        assert "explode(operations)" not in page
+        for column in columns:
+            assert f'<td><code>{column}</code></td><td><code>string</code>' in page
+            nested = page.split(f'aria-label="Fields in {column}"', 1)[1].split("</details>", 1)[0]
+            kind = next(field.dataType for field in schemas[table].fields if field.name == column)
+            for path, label in fields(kind):
+                assert f'<code>{html.escape(path)}</code></td><td><code>{html.escape(label)}</code>' in nested
+            example_text = re.search(r'<code class="language-json">(.*?)</code>', nested, re.S).group(1)
+            example = json.loads(html.unescape(example_text))
+            assert example
+            validate_metadata_value(example, kind, field=column)
+            documented.add((table, column))
+        assert page.count("Logical JSON schema:") == len(columns)
+    assert len(documented) == 6
+
+
+def test_json_metadata_logical_schema_follows_registry_changes(tmp_path, monkeypatch) -> None:
+    """New deeper logical fields come from the registry, without generator edits."""
+    from copy import deepcopy
+
+    from fabricops_kit.config import metadata_schemas
+
+    registry = metadata_schemas.metadata_table_schema_registry
+    logical = deepcopy(registry(logical=True))
+    operation = next(field.dataType.elementType for field in logical["METADATA_PIPELINE_RUN"].fields
+        if field.name == "operations")
+    destination = next(field.dataType for field in operation.fields if field.name == "destination")
+    destination.fields.extend(metadata_schemas.build_metadata_schema("example", [
+        ("verification", {"struct": [("checks", [("code", "string")])]})]).fields)
+    monkeypatch.setattr(metadata_schemas, "metadata_table_schema_registry",
+        lambda **kwargs: logical if kwargs.get("logical") else registry())
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "metadata")
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", tmp_path / "metadata.md")
+    generator.generate_metadata_reference_pages()
+    page = (tmp_path / "metadata" / "metadata_pipeline_run.md").read_text()
+    assert '<code>destination.verification.checks.code</code></td><td><code>string</code>' in page

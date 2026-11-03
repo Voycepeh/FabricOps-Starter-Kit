@@ -29,7 +29,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, 'get_spark_session', lambda *args, **_kwargs: spark)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_workspace_id': 'workspace', '_notebook_id': 'notebook'})
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, active_workspace_id, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
-    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'store': value['store'], 'table_name': value['table_name']} for key, value in identities.items()})
+    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'workspace_id': 'dev', 'item_id': value['store'], 'kind': 'lakehouse', 'schema': value.get('schema'), 'table_name': value['table_name']} for key, value in identities.items()})
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *args, **kwargs: [])
     monkeypatch.setattr(shared, 'read_lakehouse_table', Mock(side_effect=AssertionError('unexpected metadata read')))
     writes = Mock()

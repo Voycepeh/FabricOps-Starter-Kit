@@ -13,6 +13,7 @@ from unittest.mock import Mock
 import pytest
 
 from fabricops_kit.pipeline import shared
+from fabricops_kit.config.metadata_schemas import encode_metadata_row
 
 REAL_HISTORY = shared.profiling_completion_history
 
@@ -393,8 +394,8 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
             for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling'] if event['status'] == 'passed']}
     metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
-        list(rows.values()) if isinstance(rows, dict) else rows,
-        'run_id string, execution_mode string, workspace_id string, profiling array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string>>' if table == 'METADATA_PIPELINE_RUN'
+        [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
         else 'table_id string, workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []

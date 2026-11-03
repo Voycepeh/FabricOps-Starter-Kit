@@ -30,7 +30,9 @@ print(json.dumps(metadata_table_schema_rows(metadata_table_schema_registry()['ME
 '''
     actual = subprocess.check_output([sys.executable, '-c', code], env={**os.environ, 'PYTHONPATH': 'src'}, text=True)
     assert json.loads(actual) == expected
-    types = {item['name']: item['type'] for item in expected}
+    assert all(item['type'] == 'string' for item in expected if item['name'] in CATALOGUE_NESTED_FIELDS)
+    logical = metadata_table_schema_rows(metadata_table_schema_registry(logical=True)['METADATA_DATA_CATALOGUE'])
+    types = {item['name']: item['type'] for item in logical}
     assert types['load_strategy_parameters_json'] == (
         'struct<watermark_column:string,key_columns:array<string>,effective_column:string,tracked_columns:array<string>>')
     assert types['scheduled_refresh_json'] == (
@@ -54,7 +56,7 @@ print(json.dumps(metadata_table_schema_rows(metadata_table_schema_registry()['ME
 ])
 def test_strict_historical_parser_rejects_lossy_values(field, value):
     """Spark's permissive string/numeric/null coercions are never migration rules."""
-    schema = metadata_table_schema_registry()['METADATA_DATA_CATALOGUE']
+    schema = metadata_table_schema_registry(logical=True)['METADATA_DATA_CATALOGUE']
     kind = next(item.dataType for item in schema.fields if item.name == field)
     with pytest.raises(ValueError):
         migration._parse_catalogue_value(value, kind, field=field, historical=True)

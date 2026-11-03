@@ -519,8 +519,8 @@ def test_profiling_outcomes_preserve_run_grain_and_completion_status(runtime):
     """A legitimate skip or independent activity failure cannot overwrite pipeline status."""
     make, operation, saved, _, _ = runtime
     plan = make(roles=('source', 'target'))
-    events = [{'table_id': 'table0', 'activity': 'standard', 'status': 'skipped', 'reason': 'interval_not_elapsed'},
-              {'table_id': 'table1', 'activity': 'frequency', 'status': 'failed', 'reason': 'RuntimeError'}]
+    events = [{'context_key': 'physical0', 'table_id': 'table0', 'activity': 'standard', 'status': 'skipped', 'reason': 'interval_not_elapsed'},
+              {'context_key': 'physical1', 'table_id': 'table1', 'activity': 'frequency', 'status': 'failed', 'reason': 'RuntimeError'}]
     for event in events:
         shared.record_profiling_outcome(event, context={'execution_plan': plan})
     for index in range(2):

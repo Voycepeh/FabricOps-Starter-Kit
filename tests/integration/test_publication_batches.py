@@ -851,3 +851,23 @@ def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processi
     assert len([row for row in baseline if row["is_present"] is None]) == 1
     removed = [row for row in baseline if row["is_present"] is False]
     assert {row["partition_value"] for row in removed} == set(partitions)
+
+
+def test_full_overwrite_fingerprint_suppresses_reordered_identical_business_rows(publication_runtime):
+    """The metadata migration must retain order-independent full-overwrite suppression."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
+    prepared = run.stage(1, incremental=False)
+    run.publish(prepared)
+    version = run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version']
+    original = run.read('target').collect()
+    run.state['activity'] = 'new-activity-same-business-data'
+    run.publish(prepared.orderBy(F.desc('id')).repartition(2))
+    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version
+    assert run.read('target').collect() == original
+    run.state['activity'] = 'changed-business-data'
+    changed = prepared.withColumn('value', F.when(F.col('id') == 1, F.lit('changed')).otherwise(F.col('value')))
+    run.publish(changed)
+    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version + 1
+    assert run.read('target').where("id = 1").first()['value'] == 'changed'

@@ -260,6 +260,9 @@ from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_column_id, build_table_id, get_store
 from ..config.metadata_schemas import (
     coerce_metadata_row_types,
+    encode_metadata_row,
+    decode_metadata_row,
+    decode_metadata_dataframe,
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
@@ -2929,7 +2932,7 @@ def resolve_catalogue_table_identity(
         from pyspark.sql import functions as F
         frame = frame.where((F.col("table_id") == canonical_id) & (F.col("workspace_id") == active_workspace_id) & (F.col("metadata_level") == "table"))
     for raw in frame.collect():
-        row = _row_to_dict(raw)
+        row = decode_metadata_row(CATALOGUE_TABLE, _row_to_dict(raw))
         if (
             str(row.get("workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "").strip() == canonical_id
@@ -5669,6 +5672,7 @@ def pipeline_record_content(value):
 
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
+    row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
     operations = row["operations"]
     keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
     if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
@@ -5744,8 +5748,10 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     spark = get_spark_session(spark_session, context=plan.runtime_context)
     table = "METADATA_PIPELINE_RUN"
     schema = metadata_table_schema_registry()[table]
-    physical = validate_pipeline_run(row)
+    physical = encode_metadata_row(table, validate_pipeline_run(row))
     expected = plan.evidence.get("persisted_run_row")
+    if expected is not None:
+        expected = encode_metadata_row(table, expected)
     frame = spark.createDataFrame([{**physical, "_expected": expected}], StructType([
         *schema.fields, StructField("_expected", schema, True)]))
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
@@ -5803,8 +5809,8 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
             try:
                 matches = _read_pipeline_run_rows(plan, spark_session=spark_session)
                 if len(matches) == 1:
-                    validate_pipeline_run(matches[0])
-                    if pipeline_record_content(matches[0]) == pipeline_record_content(row):
+                    observed = validate_pipeline_run(matches[0])
+                    if pipeline_record_content(observed) == pipeline_record_content(row):
                         plan.evidence["persisted_run_row"] = matches[0]
                         return row
             except Exception:
@@ -6584,7 +6590,7 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
         return read_lakehouse_table(table, store="Metadata",
             schema=metadata_table_physical_schema(config, table),
             context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True}).filter(F.col("workspace_id") == active_workspace_id)
-    events = (frame("METADATA_PIPELINE_RUN")
+    events = (decode_metadata_dataframe("METADATA_PIPELINE_RUN", frame("METADATA_PIPELINE_RUN"))
         .filter(F.col("execution_mode").isin("ungoverned", "governed", "live"))
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
@@ -7723,7 +7729,9 @@ def _catalogue_dataframe_from_profiled(
                 },
             )
         )
-    return profiled_df.sparkSession.createDataFrame(rows, schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
+    return profiled_df.sparkSession.createDataFrame(
+        [encode_metadata_row(CATALOGUE_TABLE, row) for row in rows],
+        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
 
 
 def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_workspace_id: str, spark_session: Any) -> None:
@@ -8125,14 +8133,8 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     if table.toDF().where(condition).limit(2).count() != 1:
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
-    def literal(value):
-        if isinstance(value, dict):
-            return F.struct(*[literal(item).alias(name) for name, item in value.items()])
-        if isinstance(value, list):
-            return F.array(*[literal(item) for item in value])
-        return F.lit(value)
-
-    candidate_schema = metadata_table_schema_registry()[CATALOGUE_TABLE]["profile_key_candidates_json"].dataType
-    candidate_value = literal(_key_candidate_evidence(candidates, max_columns=max_columns)).cast(candidate_schema)
+    candidate_value = F.lit(encode_metadata_row(CATALOGUE_TABLE, {
+        "profile_key_candidates_json": _key_candidate_evidence(candidates, max_columns=max_columns),
+    })["profile_key_candidates_json"])
     table.update(condition=condition, set={"profile_key_candidates_json": candidate_value,
         **{name: F.lit(value) for name, value in audit.items()}})

@@ -2,98 +2,87 @@
 
 **Implementation:** pipeline activation selects an exact finalized Test Run. Registry and Run are the only pipeline metadata tables; there is no separate Definition or Configuration table.
 
-## Automatic Catalogue nested-type upgrade
+## Automatic SQL-compatible Run and Catalogue upgrade
 
-Install the new package and run the normal `setup_metadata_tables()` call before
-resuming Catalogue writers. Fresh tables immediately use the canonical native
-Spark schema. Existing `METADATA_DATA_CATALOGUE` tables are upgraded at their
-configured Metadata Lakehouse and engineering schema location; no table rebuild,
-column rename, parallel replacement column or manual conversion is required.
+Stop Run/Catalogue producers, install the new package and run normal
+`setup_metadata_tables()` before restarting all writers with that package.
+Fresh installations use scalar string fields. Registry authority is unchanged
+in this stage; its replacement is a separate reviewed change. No reporting
+projection tables are created.
 
-The exact names `load_strategy_parameters_json`, `scheduled_refresh_json` and
-`profile_key_candidates_json` are retained. **Their `_json` suffix is historical:
-all three contain native structs after setup.** Runtime code reads dictionaries
-and ordered arrays and writes structured values. Contract documents and external
-transport still use JSON. See the [current Catalogue schema](../reference/metadata/metadata_data_catalogue.md)
-for every field and nested type.
+The physical `METADATA_PIPELINE_RUN.operations`, `profiling`, `failures` and
+Catalogue `load_strategy_parameters_json`, `scheduled_refresh_json`,
+`profile_key_candidates_json` columns contain validated JSON **strings**.
+Central codecs retain typed dictionaries/lists in application interfaces,
+including Run operation timestamps and logical null fields. Catalogue preserves
+Scheduled Refresh discovery, ordered schedules/times/timezones, processing
+parameters and grain candidate metrics. Profiling eligibility still reads the
+committed Run, not a report copy.
 
 ### Conversion rules
 
-The target fields match the current producers and the `v0.2.5` tag's
-`pipeline_write.py`, `profile_table.py` and `scheduled_refresh.py`. Processing
-retains all four optional parameter fields. Scheduled Refresh retains status,
-all schedules, enabled flags, frequency, ordered times and timezone. Discovery
-retains its status (including `resolved`, `unresolved` and `not_evaluated`),
-maximum combination width and all six metrics for every ordered candidate.
-No status or optional setting is inferred from the presence of candidates.
+Setup supports exact known native, string and mixed layouts. It validates every
+converted value, rejects unknown members/types, duplicate JSON keys, null array
+elements, nonfinite numbers and numeric overflow. Required Run collections cannot
+be null; duplicate Run IDs or incomplete required facts fail closed. Unrelated
+physical columns are preserved, including nested extensions; their presence does
+not establish SQL visibility for those extensions.
 
-| Historical value | Native value |
+| Value | Target meaning |
 | --- | --- |
-| SQL null, JSON `null`, empty or whitespace-only string | SQL null (uncaptured) |
-| `{}` | Non-null struct with null members |
-| Explicit null member | Null member |
-| Empty string member | Empty string member |
-| Empty array member | Empty array, preserving its distinction from null |
-| List-only key-candidate JSON, including `[]` | Struct with `status=null`, `max_combination_width=null`, and the original ordered `candidates` array |
-| Discovery object | Original status, width and ordered candidates; absent members become null |
+| SQL null in nullable Catalogue fields | SQL null (uncaptured) |
+| JSON object with missing optional fields | Logical explicit null members; valid stored text need not be rewritten |
+| Ordered empty/nonempty array | Same array, distinct from SQL null |
+| Historical Catalogue blank/whitespace or JSON `null` | SQL null |
+| Historical list-only key candidates, including `[]` | Object with null status/maximum width and the original candidate order |
+| Already valid JSON text | Exact original text retained, including whitespace/key order |
 
-List-only candidates must be objects with the documented candidate fields, not
-bare column names. Missing metrics stay null. Setup rejects unknown fields at
-any depth, duplicate JSON keys, malformed JSON, invalid scalar/element types,
-null array elements, non-finite numbers and integer overflow. Unsupported
-physical types fail setup rather than being coerced. A mixture of string and
-canonical struct columns is supported; native values are validated too.
+Catalogue-only historical exceptions never apply to Run. Frozen Contract payload
+bytes, Test/Agreement hashes, safe failure occurrences, large counts and timestamp
+instants/microseconds are preserved. Run update CAS compares the exact previous
+physical strings; approval and read-back checks compare decoded logical content.
+No business-row publication hashing, identical-batch suppression, target writes,
+checkpoints, Source Drift or retry protocol changes are part of this conversion.
 
-### Atomicity, retries and recovery
+### Atomicity and repeated setup
 
-Setup pins a Delta transaction snapshot and registers a whole-table read. It
-strictly validates all three values and unrelated canonical types, then writes
-the complete replacement to a separate durable staging path. All rows and
-physical columns are retained, including inactive table/column rows, unexpected
-extension columns and existing audit values. Setup never recreates row audit
-timestamps. Table identity, existing properties, field metadata and configured
-location are preserved. Mapped Delta tables retain existing physical column IDs
-and names; Delta advances its internal ID allocator for the new struct members.
+Each affected table upgrade pins a Delta snapshot, registers its whole-table read,
+validates its complete supported source, and materializes durable staging before
+mutation. Schema and replacement files commit together in one optimistic Delta
+transaction. Metadata conflicts reject concurrent appends/updates or competing
+setup attempts rather than overwriting their rows. No check-then-overwrite or
+physical table swap is used. Table ID, properties, audit fields, column mapping,
+row multiplicity and existing Run transaction-deduplication history are retained.
 
-The transaction changes schema and replaces data files together in one atomic
-Delta commit. Delta's metadata-changing whole-table transaction rejects
-concurrent appends, updates and competing setup commits, including writers that
-do not participate in a FabricOps lock. A stale replacement cannot overwrite a
-newer row. Retry normal setup after a reported conflict.
+An `evolved` result reports `pre_upgrade_version`, `upgrade_version` and
+`converted_columns`; Delta commit metadata records `fabricops_json_upgrade`,
+the table and pre-upgrade version. Read-back verifies exact committed schema and
+replacement-row multiset, including extensions. Already valid target tables are
+validated without rewriting/reseeding them. Setup may report per-table partial
+failure; finish validation of the full required schema set before resuming writers.
 
-The `evolved` Catalogue result clearly reports the automatic upgrade and includes
-`pre_upgrade_version`, `upgrade_version` and `converted_columns`. Delta history
-also records `fabricops_catalogue_upgrade` and `pre_upgrade_version` in commit
-`userMetadata`. Setup reads the exact committed version back and verifies schema
-and every replacement row, including duplicates and unaffected values.
+### Recovery and rollback
 
-An interruption before commit leaves the original Catalogue intact. An
-interruption after commit, including lost acknowledgement, leaves the native
-Catalogue authoritative: rerun setup to validate it without conversion or another
-commit. Temporary staging files from a terminated process may be removed once no
-upgrade attempt is using them. Failed transactions can leave unreferenced Delta
-data files; use the normal retention-aware Delta maintenance process.
+Before commit, interruption leaves source data authoritative; after commit,
+including lost acknowledgement, rerun setup follows the committed target schema.
+No automatic restore occurs. Staging files from terminated attempts may be removed
+only after confirming no active attempt owns them; retain Delta files/history
+through acceptance and use normal retention-aware maintenance for orphan files.
 
-**Rollback boundary:** automatic rollback is never performed. Retain Delta
-history and files until the upgrade has been accepted. If recovery requires the
-pre-upgrade version, stop all Catalogue writers, confirm that the current head
-is exactly the recorded upgrade commit, and restore the pre-upgrade version with
-the matching older package. If any later valid write exists, restoring the old
-version would discard it: reconcile those writes into a separately reviewed
-recovery instead. Do not restore over subsequent writes or run an old package
-against the native schema.
-
-This upgrade changes only Catalogue's three structured fields. Steward and
-Agreement `custom_fields_json`, other Agreement fields, profile calculations,
-statistical/frequency tables, Pipeline Run, Activation State and Processing State
-are unchanged.
+For an offline rollback, stop all writers, confirm each current head is exactly
+its recorded upgrade commit, and restore a mutually compatible package/schema set.
+If later valid writes exist, reconcile them through a reviewed forward recovery;
+restoring an older version would discard data. Do not run old native writers on
+JSON schemas or restore metadata over subsequent business/Processing State progress.
+Validate actual SQL endpoint discovery, string lengths/Unicode and timestamps in
+Fabric; local Delta tests do not establish tenant endpoint behavior.
 
 ## Responsibilities
 
 | Owner | Stored facts |
 | --- | --- |
 | `engineering.METADATA_PIPELINE_REGISTRY` | Permanent pipeline/notebook registrations, immutable approvals of finalized Tests, environment selections/revisions, table ownership and Live/rebind reservations |
-| `engineering.METADATA_PIPELINE_RUN` | One execution with native table operations, exact contract references, locations, read/write modes, statuses, stages, timing, profiling and safe failures |
+| `engineering.METADATA_PIPELINE_RUN` | One execution with JSON-encoded table operations, exact contract references, locations, read/write modes, statuses, stages, timing, profiling and safe failures |
 | `governance.METADATA_DATA_CONTRACT` | Versioned table-level schema, grain, quality, sensitive-data, processing and profiling policies |
 | `governance.METADATA_DATA_AGREEMENT` | Versioned authored Agreements referenced by approvals |
 | `engineering.METADATA_GUARDRAIL_RESULTS` | Exact rule-level results tied to `run_id`, table and contract version |
@@ -114,7 +103,7 @@ No Contract remains valid for exploratory Test. Every operation needs a valid fr
 
 1. Setup resolves a permanent pipeline UUID and notebook binding. Test discovers source/target participation through actual orchestrator calls.
 2. Each operation records its table, exact selected contract, binding, mode and outcome. The notebook still executes its own transformation code.
-3. Explicit finalization requires all discovered operations to complete and records the whole-run boundary. Parent status and native operations publish in one Run transaction. A partial diagnostic write cannot make a Test approvable.
+3. Explicit finalization requires all discovered operations to complete and records the whole-run boundary. Parent status and JSON-encoded operations publish in one Run transaction. A partial diagnostic write cannot make a Test approvable.
 4. The activation widget lists successful finalized Tests by pipeline/environment. Governance selects an exact Test and Agreement version and supplies an immutable pipeline approval label.
 5. Approval revalidates required stages, complete rule-level diagnostics, exact contracts, Test notebook binding and Agreement effectiveness. Registry retains the Test ID and result integrity hash, Agreement version/hash, decision labels and audit. No second configuration document is created.
 6. One Registry compare-and-swap publishes approvals, active selections, coordinated table/contract/writer mappings and the environment revision atomically. Shared tables must use one exact contract/binding per environment; each target has at most one writer. Affected running pipelines drain before cutover.
@@ -126,11 +115,12 @@ No Contract remains valid for exploratory Test. Every operation needs a valid fr
 ## Querying actual table and contract participation
 
 ```sql
-SELECT r.run_id, r.pipeline_id, r.environment_name,
+SELECT r.run_id, r.pipeline_id, r.workspace_id,
        op.table_id, op.pipeline_role, op.contract_id, op.contract_version,
        op.read_mode, op.write_mode, op.status
 FROM engineering.METADATA_PIPELINE_RUN r
-LATERAL VIEW explode(r.operations) observed AS op;
+LATERAL VIEW explode(from_json(r.operations,
+  'array<struct<table_id:string,pipeline_role:string,contract_id:string,contract_version:int,read_mode:string,write_mode:string,status:string>>')) observed AS op;
 ```
 
 Use the configured physical Engineering schema. No Definition/Configuration join is required. For per-rule outcomes, join Guardrail Results by `run_id` and exact table/contract/rule identity without multiplying operation counts.
@@ -139,7 +129,7 @@ Use the configured physical Engineering schema. No Definition/Configuration join
 
 Registry has one setup-seeded central row. Registration, approval, admission and rebind use one matched-only Delta MERGE with an expected token. There are no runtime child inserts or per-update DDL. Missing/duplicate authority fails closed. Approved decision history and permanent registrations are retained. A lost acknowledgement is accepted only after exact complete-content read-back.
 
-Run has one native row per `run_id`. First publication uses a stable Delta transaction identity; subsequent updates compare the complete previous row. Terminal outcomes are immutable and failed runs cannot regress to success. Parent, operations/stages, profiling and safe failures publish together. This preserves the existing whole-run concurrency and recovery guarantees without a Definition append or join.
+Run has one authoritative row per `run_id` with scalar JSON collections. First publication uses a stable Delta transaction identity; subsequent updates compare the complete previous row. Terminal outcomes are immutable and failed runs cannot regress to success. Parent, operations/stages, profiling and safe failures publish together. This preserves the existing whole-run concurrency and recovery guarantees without a Definition append or join.
 
 Approved Tests, frozen contracts, Agreements and rule results must remain retained and unchanged. Approval hashes protect result integrity, not notebook configuration identity. Missing, duplicated or changed retained references block approval/Live; there is no latest-version fallback.
 
@@ -186,7 +176,7 @@ This is a breaking Preview layout change. The six supported Live schemas and Pro
 
 1. Stop Test/Live producers and activation; drain execution reservations. Back up affected tables with their exact Delta versions and package revision.
 2. For disposable Preview Registry/Run history, make an explicit reset decision. Create the new Registry and Run tables only after the old layout is backed up. Do not drop or rebuild supported Live tables or Processing State.
-3. For retained approvals/history, reconcile each old run's operation membership, exact contract references, bindings and modes into the new native operation array. Revalidate retained Test diagnostics and Agreement versions; old definition/candidate IDs cannot be relabeled as run IDs. Do not invent missing successful operations or notebook bindings. If required facts cannot be established, rerun Test and approve a new run rather than asserting equivalence.
+3. For retained approvals/history, reconcile each old run's operation membership, exact contract references, bindings and modes into the new logical operation array. Revalidate retained Test diagnostics and Agreement versions; old definition/candidate IDs cannot be relabeled as run IDs. Do not invent missing successful operations or notebook bindings. If required facts cannot be established, rerun Test and approve a new run rather than asserting equivalence.
 4. Old `METADATA_ACTIVATION_STATE` snapshots and the unmerged #1707 Definition layout are not runtime readers or aliases. Preserve any required history before explicit cleanup. The former Run converter applies only with its historical #1700 package/layout and must not run against this schema.
 5. Validate unique run/approval identities, immutable terminal history, exact result hashes, table/contract/writer mappings and empty reconciled reservations before enabling Live. Retain backups and the previous package/schema boundary for rollback; never mix writers from the two layouts.
 
