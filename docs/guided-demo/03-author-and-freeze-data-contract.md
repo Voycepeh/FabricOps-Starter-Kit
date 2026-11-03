@@ -9,7 +9,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
     Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [Sensitive Data Classification & Treatment](../solutions/ai-assisted-data-contract-authoring.md).
+    Learn more: [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment).
 
 Scheduled Refresh is operational metadata in `METADATA_DATA_CATALOGUE`, captured by the writer pipeline. If discovery is unavailable, the writer records `unavailable` and continues. Data Contract authoring and freezing do not depend on it. Freshness Guardrails retain their independently authored source-data arrival expectations.
 

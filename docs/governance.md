@@ -64,7 +64,7 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
     AI output is neither authoritative nor part of runtime enforcement. Classification alone does not trigger treatment. Preview availability also depends on Fabric AI Functions and the active Fabric runtime.
 
-    [Explore the complete sensitive-data authoring flow →](solutions/ai-assisted-data-contract-authoring.md)
+    Use the [Sensitive Data Treatments reference](reference/sensitive-data-treatments.md) for the supported Mask, Bucket, Tokenize and Remove parameters, and [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) for the persisted payload schema.
 
 ## Business rules and Data Quality
 
@@ -76,13 +76,13 @@ Governance can author supported Data Quality rules directly or use AI to transla
 
 ??? info "Under the Hood — rules, execution and persisted results"
 
-    The AI path supplies the requirement, governed schema, optional profile evidence, existing rules and the supported DQ grammar. It prefers structured rules and uses constrained Custom Expression only when the requirement cannot be represented faithfully. Returned rule types, columns, parameters and expression grammar are validated before staging.
+    The AI path supplies the requirement, governed schema, optional profile evidence, existing rules and the supported DQ grammar through a single-row `fabricops_prompt` DataFrame passed to Fabric AI Functions with `ai.generate_response()`. It prefers structured rules and uses constrained Custom Expression only when the requirement cannot be represented faithfully. Returned structured JSON, rule types, columns, parameters and expression grammar are validated before staging.
 
     Approved rules live in the contract payload. `check_dq()` evaluates them at the applicable Read or Write boundary. The orchestrator can return row-level `_dq_failed_rules`, `_dq_check_status` and `failed_values` diagnostics to the caller. `METADATA_GUARDRAIL_RESULTS` stores only aggregate outcomes including `guardrail_type`, `status`, `can_continue`, `reason` and `result_payload_json`.
 
     Warn/Block is authored policy, not an execution result. Profiling supplies evidence, not automatic contractual thresholds. Full violation material can be expensive and remains caller-controlled.
 
-    [Explore natural-language rule authoring →](solutions/business-rules-to-data-quality.md)
+    Use the [Data Quality Rules reference](reference/dq-rules/index.md) for the supported rule grammar and [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) for the persisted aggregate result schema.
 
 ## Metadata relationships and reporting
 

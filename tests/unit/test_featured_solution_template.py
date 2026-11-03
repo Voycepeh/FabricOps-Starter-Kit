@@ -5,12 +5,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 FEATURED_SOLUTION_PAGES = (
-    ROOT / "docs/solutions/plug-and-play-data-pipelines.md",
     ROOT / "docs/solutions/production-table-to-data-agent.md",
-    ROOT / "docs/solutions/ai-assisted-data-contract-authoring.md",
-    ROOT / "docs/solutions/business-rules-to-data-quality.md",
     ROOT / "docs/solutions/effective-data-access.md",
 )
+
+ABSORBED_SOLUTION_REDIRECTS = {
+    ROOT / "docs/solutions/plug-and-play-data-pipelines.md": "../../engineering/#plug-and-play-pipelines-and-orchestration",
+    ROOT / "docs/solutions/ai-assisted-data-contract-authoring.md": "../../governance/#sensitive-data-discovery-classification-and-treatment",
+    ROOT / "docs/solutions/business-rules-to-data-quality.md": "../../governance/#business-rules-and-data-quality",
+}
 
 REQUIRED_HEADINGS = (
     "## The problem",
@@ -44,3 +47,14 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
             assert "<details" not in under_hood, page
             assert "<details" not in example, page
             assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
+
+
+def test_absorbed_solution_pages_redirect_to_canonical_capability_sections():
+    """Keep old solution URLs working without restoring duplicate content."""
+    for page, target in ABSORBED_SOLUTION_REDIRECTS.items():
+        text = page.read_text(encoding="utf-8")
+
+        assert f'content="0; url={target}"' in text, page
+        assert f'href="{target}"' in text, page
+        assert "# This page moved" in text, page
+        assert "## The problem" not in text, page

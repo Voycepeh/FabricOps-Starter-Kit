@@ -406,7 +406,7 @@ After successful publication, FabricOps persists the resolved target processing 
 
 ## Related documentation
 
-- [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
+- [Plug-and-Play pipelines and orchestration](../engineering.md#plug-and-play-pipelines-and-orchestration)
 - [`orchestrate_read()`](../api/reference/orchestrate_read.md)
 - [`orchestrate_write()`](../api/reference/orchestrate_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)

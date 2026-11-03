@@ -4,8 +4,6 @@
 
 **Build the project-specific transformation once; reuse FabricOps boundaries for configuration, reads, publication, metadata and diagnostics.**
 
-![Engineering capability visual coming soon](assets/visual-coming-soon.svg){ .fabricops-placeholder }
-
 <div class="fabricops-status-row">
   <span class="fabricops-release-status fabricops-release-status--live">Core pipeline: Live</span>
   <span class="fabricops-release-status fabricops-release-status--preview">Governed execution: gated</span>
@@ -48,6 +46,8 @@ One notebook can address configured Lakehouse and Warehouse sources and targets 
 ## Incremental and historical processing
 
 Read mode and Write mode are independent. A pipeline can combine **Full** or **Incremental** reads with **Overwrite**, **Append All**, **Append New Only**, **SCD1** or **SCD2** writes.
+
+The [Read & Write Modes reference](reference/read-and-load-strategies.md) documents the supported combinations, parameters and examples.
 
 ??? info "Under the Hood — checkpoints, row hashes and SCD state"
 

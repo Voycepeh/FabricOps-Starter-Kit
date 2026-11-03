@@ -92,6 +92,6 @@ def test_llms_txt_uses_relative_documentation_links_for_versioned_snapshots() ->
     llms_text = (ROOT / "docs" / "llms.txt").read_text(encoding="utf-8")
 
     assert "https://voycepeh.github.io/FabricOps-Starter-Kit/" not in llms_text
-    assert "(how-fabricops-works.md)" in llms_text
+    assert "(architecture.md)" in llms_text
     assert "(reference.md)" in llms_text
     assert "(reference/dq-rules.md)" in llms_text
