@@ -153,7 +153,7 @@ A common pattern is **Full → Overwrite** for rebuilding a target or **Incremen
 
 ## What FabricOps Takes Care of for You
 
-Running a pipeline is easy when everything goes right. The harder part is keeping data accurate when sources change, a run fails or the same data arrives again. Each topic starts with the business outcome; expand it for the functions, exact stored evidence and known trade-off.
+Running a pipeline is easy when everything goes right. The harder part is keeping data accurate when sources change, a run fails or the same data arrives again. Each topic starts with the business outcome; expand it for the functions, exact stored evidence and known trade-off. These explanations follow the expanded implementation in PR #1774, including managed hashing, write strategies, source observation and publication coordination.
 
 ??? info "A failed run shouldn't mean starting over"
     If a write succeeded but saving its processing history failed, a retry should not blindly insert the same batch again.
@@ -191,6 +191,24 @@ Running a pipeline is easy when everything goes right. The harder part is keepin
 
     **Trade-off:** Row hashing adds compute and a physical target column. `append_new_only` must compare hashes against the target and does **not** update or delete existing rows; a changed source Job ID or ingestion timestamp may produce a new hash. Existing targets with missing or invalid hashes need an explicitly reviewed overwrite or migration before non-overwrite publication.
 
+??? info "Two pipelines shouldn't silently overwrite each other's work"
+    When multiple pipelines publish to the same table, one writer must not change the target while another is checking whether its rows are already there.
+
+    **How it works:** `setup_pipeline()` establishes the managed pipeline's publication authority. Internal `pipeline_write()` uses the target lease in the Serializable Pipeline Registry to exclude competing managed writers while it validates the target, compares hashes and publishes. `finalize_pipeline()` releases the pipeline's lease. An interrupted lease is not silently ignored.
+
+    **Where to look:** [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) stores the control state in `leases_json`. `src/fabricops_kit/activated_pipeline/shared.py` manages the lease; `src/fabricops_kit/pipeline/pipeline_write.py` performs the guarded publication.
+
+    **Trade-off:** A target has to wait for its active managed writer. A crashed or stale lease can require reconciliation, and the lease protects cooperating FabricOps writers rather than arbitrary external writes.
+
+??? info "Read only what you need, without changing how the target is updated"
+    Reading new source changes and deciding how to write them are separate decisions. A changed product record may need an update, while an event log may need every row preserved.
+
+    **How it works:** [`orchestrate_read()`](../api/reference/orchestrate_read.md) selects `read_mode="full"` or `"incremental"`. [`orchestrate_write()`](../api/reference/orchestrate_write.md) independently selects `write_mode="overwrite"`, `"append_all"`, `"append_new_only"`, `"scd1"` or `"scd2"`. `pipeline_write()` rejects unsafe combinations such as overwriting a complete target with a partial incremental input.
+
+    **Where to look:** [Read & Write Modes](../reference/read-and-load-strategies.md) explains the supported combinations. [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `publication_strategy`, `source_table_id`, `target_table_id` and `watermark_type` for persisted publication and progress evidence.
+
+    **Trade-off:** More explicit choices require engineers to select the right strategy. In return, FabricOps does not assume that incremental reading always means appending.
+
 ??? info "We can spot changes in the complete source, even during incremental processing"
     A small incremental batch should not hide changes or disappearing records elsewhere in the source.
 
@@ -212,7 +230,7 @@ Running a pipeline is easy when everything goes right. The harder part is keepin
 ??? info "When FabricOps isn't sure, it doesn't guess"
     Missing processing history or failed required checks should not silently become an unsafe publication.
 
-    **How it works:** `orchestrate_read()` and `orchestrate_write()` run applicable `check_schema()`, `check_grain()`, `check_dq()`, `check_freshness()` and `check_sensitive_data()` stages. Internal `pipeline_write()` also validates writer ownership, checkpoints and existing target hashes. The Registry uses a target lease to exclude competing managed writers. Governed deployment verification currently fails closed until trusted verification is integrated.
+    **How it works:** `orchestrate_read()` and `orchestrate_write()` run applicable `check_schema()`, `check_grain()`, `check_dq()`, `check_freshness()` and `check_sensitive_data()` stages. Internal `pipeline_write()` also validates writer ownership, checkpoints and existing target hashes. The Registry also protects managed target publication with an exclusive lease (explained separately below). Governed deployment verification currently fails closed until trusted verification is integrated.
 
     **Where to look:** [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) records `guardrail_result_id`, `guardrail_type`, `status`, `can_continue`, `reason` and `result_payload_json` for persisted outcomes. [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) holds the writer activation and lease context; [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) holds checkpoint and receipt evidence.
 
