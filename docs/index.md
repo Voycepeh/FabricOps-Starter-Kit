@@ -26,6 +26,8 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   </a>
 </div>
 
+See [Architecture](architecture.md) for the workspace topology, Governance ↔ Engineering cycle, shared metadata and consumer hand-off.
+
 <a class="fabricops-metadata-preview" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata tables map">
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Interactive reference</span>
@@ -50,12 +52,27 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   </span>
 </a>
 
-## Choose your route
+## Download FabricOps
 
-<div class="fabricops-capability-grid">
-  <a class="fabricops-card" href="architecture/"><strong>Architecture</strong><small>See the workspace topology, Governance ↔ Engineering cycle, shared metadata and consumer hand-off.</small></a>
-  <a class="fabricops-card" href="reference/"><strong>Function Reference</strong><small>Inspect lifecycle status, signatures, behavior, source locations and call flows for public functions.</small></a>
-</div>
+Get the Python package, reusable notebook templates, and demo assets to start building. Follow the Guided Demo above to put them to work.
+
+<nav class="fabricops-resource-list" aria-label="Download FabricOps resources">
+  <a href="releases/">Releases <small>Python package</small></a>
+  <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates <small>Reusable Fabric notebooks</small></a>
+  <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets <small>Sample data for the walkthrough</small></a>
+</nav>
+
+## Reference Documentation
+
+Explore FabricOps functions, Data Quality rules, metadata structures, and implementation guidance.
+
+<nav class="fabricops-resource-list" aria-label="FabricOps reference documentation">
+  <a href="reference/">Function Reference</a>
+  <a href="reference/dq-rules/">Data Quality Rules</a>
+  <a href="reference/metadata/">Metadata Tables</a>
+  <a href="reference/pyspark-transformation/">PySpark Transformation</a>
+  <a href="glossary/">Glossary</a>
+</nav>
 
 ## What is available today?
 
