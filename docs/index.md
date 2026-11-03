@@ -1,3 +1,5 @@
+<div class="fabricops-product-page" markdown="1">
+
 # Governed engineering for Microsoft Fabric
 
 **FabricOps Starter Kit connects reusable notebook pipelines with governance decisions that Engineering can inspect and validate.** Start with the outcome, then go as deep as the implementation requires.
@@ -40,9 +42,7 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
 
 <div class="fabricops-capability-grid">
   <a class="fabricops-card" href="architecture/"><strong>Architecture</strong><small>See the workspace topology, Governance ↔ Engineering cycle, shared metadata and consumer hand-off.</small></a>
-  <a class="fabricops-card" href="guided-demo/"><strong>Guided Demo</strong><small>Follow setup plus the seven-step lifecycle in Microsoft Fabric with runnable notebooks and expected outputs.</small></a>
   <a class="fabricops-card" href="reference/"><strong>Function Reference</strong><small>Inspect lifecycle status, signatures, behavior, source locations and call flows for public functions.</small></a>
-  <a class="fabricops-card" href="reference/metadata/"><strong>Metadata Reference</strong><small>Explore all 12 canonical metadata tables, columns, writers and relationships.</small></a>
 </div>
 
 ## What is available today?
@@ -51,6 +51,6 @@ Core notebook setup, Fabric I/O, pipeline orchestration, profiling and metadata 
 
 <div class="fabricops-cta-row" markdown="1">
 [Run the Guided Demo](guided-demo.md){ .md-button .md-button--primary }
-[Browse releases](releases/index.md){ .md-button }
-[Open the glossary](glossary.md){ .md-button }
+</div>
+
 </div>

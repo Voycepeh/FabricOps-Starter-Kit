@@ -1,8 +1,10 @@
+<div class="fabricops-product-page" markdown="1">
+
 # Engineering
 
 **Build the project-specific transformation once; reuse FabricOps boundaries for configuration, reads, publication, metadata and diagnostics.**
 
-![A FabricOps pipeline promoted from Engineering Development to Engineering Production](assets/05/PipelinesDeploymentOverview.png){ .fabricops-section-evidence }
+![Engineering capability visual coming soon](assets/visual-coming-soon.svg){ .fabricops-placeholder }
 
 <div class="fabricops-status-row">
   <span class="fabricops-release-status fabricops-release-status--live">Core pipeline: Live</span>
@@ -12,8 +14,6 @@
 The standard notebook flow is **Setup → Read → Transform → Write → Finalize**. The transformation remains ordinary project-owned PySpark. Dry Run and Ungoverned execution are available; Governed execution currently fails closed pending trusted deployment verification.
 
 ## Plug-and-Play pipelines and orchestration
-
-![FabricOps setup and execution output in the pipeline notebook](assets/02/Setup.png){ .fabricops-section-evidence }
 
 [`00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) maps logical Fabric stores to each workspace. [`02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb) wraps a readable engineering path:
 
@@ -35,11 +35,6 @@ The standard notebook flow is **Setup → Read → Transform → Write → Final
 
 ## Lakehouse and Warehouse integration
 
-<div class="fabricops-evidence-grid">
-  <figure><img src="../assets/02/Silver_Table_LH.png" alt="Silver table in a Fabric Lakehouse" loading="lazy"><figcaption>Lakehouse target</figcaption></figure>
-  <figure><img src="../assets/02/Gold_Table_WH.png" alt="Gold table in a Fabric Warehouse" loading="lazy"><figcaption>Warehouse target</figcaption></figure>
-</div>
-
 One notebook can address configured Lakehouse and Warehouse sources and targets without relying on one attached default Lakehouse. FabricOps resolves the logical store for the active workspace; Fabric permissions still decide whether access succeeds.
 
 ??? info "Under the Hood — store routing and Warehouse pushdown"
@@ -51,11 +46,6 @@ One notebook can address configured Lakehouse and Warehouse sources and targets 
     Pushdown can reduce data moved into Spark, but connector and Warehouse query costs remain. It is an efficiency choice, not a guarantee that Warehouse access outperforms direct Delta reads.
 
 ## Incremental and historical processing
-
-<div class="fabricops-evidence-grid">
-  <figure><img src="../assets/2b/Incremental_Read_Day2.png" alt="Incremental Day 2 read output" loading="lazy"><figcaption>Bounded incremental batch</figcaption></figure>
-  <figure><img src="../assets/2c/SCDDay3.png" alt="SCD history after Day 3 processing" loading="lazy"><figcaption>Retained SCD history</figcaption></figure>
-</div>
 
 Read mode and Write mode are independent. A pipeline can combine **Full** or **Incremental** reads with **Overwrite**, **Append All**, **Append New Only**, **SCD1** or **SCD2** writes.
 
@@ -74,8 +64,6 @@ Read mode and Write mode are independent. A pipeline can combine **Full** or **I
     `METADATA_PROCESSING_STATE` records `record_type=full_source_baseline`, `source_table_id`, `row_count`, `content_fingerprint`, `publication_id` and `accepted_at`. The full scan provides evidence; it does not automatically delete rows or block publication, and it adds compute.
 
 ## Reliable publication, retries and recovery
-
-![Fabric Deployment Pipeline view for moving the reviewed engineering artifact](assets/05/DeploymentPipeline.png){ .fabricops-section-evidence }
 
 FabricOps separates preparing data from accepting progress. A retry is recovered only when the framework can reconcile the batch identity, saved receipt and physical target.
 
@@ -99,8 +87,6 @@ FabricOps separates preparing data from accepting progress. A retry is recovered
 
 ## Profiling, lineage and observability
 
-![FabricOps metadata captured after pipeline execution](assets/02/Metadat_Captured.png){ .fabricops-section-evidence }
-
 FabricOps records the technical context around each participating table so Engineering and Governance can reason from the same observations.
 
 ??? info "Under the Hood — what is stored and when"
@@ -115,6 +101,6 @@ FabricOps records the technical context around each participating table so Engin
 
 <div class="fabricops-cta-row" markdown="1">
 [Run Guided Demo Step 2](guided-demo/02-build-and-run-etl.md){ .md-button .md-button--primary }
-[Compare Read & Write modes](reference/read-and-load-strategies.md){ .md-button }
-[Browse pipeline functions](reference/index.md){ .md-button }
+</div>
+
 </div>

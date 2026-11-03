@@ -1,3 +1,5 @@
+<div class="fabricops-product-page" markdown="1">
+
 # Architecture
 
 **Governance defines expectations, Engineering produces and validates data, and shared metadata connects both without hiding project-owned transformations.**
@@ -83,8 +85,10 @@ A Data Contract is the table-level governed definition: observed table identity 
 
 Consumers receive access through native Fabric controls. A Warehouse can provide a useful SQL consumption boundary and Query Insights, but query history is not a complete table-level access audit. Direct Lake, Spark and other paths can bypass Warehouse SQL history. FabricOps records observed access metadata where supported; it does not replace Fabric security administration.
 
+Continue with [Governance](governance.md) for Data Contract decisions or the [Guided Demo](guided-demo.md) for the runnable lifecycle.
+
 <div class="fabricops-cta-row" markdown="1">
 [Explore Engineering](engineering.md){ .md-button .md-button--primary }
-[Explore Governance](governance.md){ .md-button }
-[Run the lifecycle](guided-demo.md){ .md-button }
+</div>
+
 </div>

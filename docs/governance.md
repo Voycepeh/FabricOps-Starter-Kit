@@ -1,11 +1,8 @@
+<div class="fabricops-product-page" markdown="1">
+
 # Governance
 
 **Turn governance decisions into versioned metadata that the engineering workflow can read, preview and—when the deployment gate is available—enforce.**
-
-<div class="fabricops-evidence-grid">
-  <figure><img src="../assets/01/Widget_Steward.png" alt="FabricOps Data Steward widget in a Microsoft Fabric notebook" loading="lazy"><figcaption>Accountable people and roles</figcaption></figure>
-  <figure><img src="../assets/01/Widget_Agreement.png" alt="FabricOps Data Agreement widget in a Microsoft Fabric notebook" loading="lazy"><figcaption>Purpose and approved use</figcaption></figure>
-</div>
 
 <div class="fabricops-status-row">
   <span class="fabricops-release-status fabricops-release-status--live">Stewards &amp; Agreements: Live</span>
@@ -93,11 +90,7 @@ Governance can author supported Data Quality rules directly or use AI to transla
 
 The 12 canonical tables join Governance intent to Engineering observations and outcomes. The interactive explorer exposes their keys, exact columns, authoritative writer functions and relationships.
 
-<div class="fabricops-cta-row" markdown="1">
-[Open the interactive metadata model](reference/metadata.md){ .md-button .md-button--primary }
-[Inspect exact contract columns](reference/metadata/metadata_data_contract.md){ .md-button }
-[Inspect Guardrail Results](reference/metadata/metadata_guardrail_results.md){ .md-button }
-</div>
+Use the [interactive metadata model](reference/metadata.md) to explore relationships, then inspect the exact [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) and [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) schemas when implementation detail is needed.
 
 ??? info "Under the Hood — Power BI and other consumers"
 
@@ -111,6 +104,6 @@ The 12 canonical tables join Governance intent to Engineering observations and o
 
 <div class="fabricops-cta-row" markdown="1">
 [Run Guided Demo Step 1](guided-demo/01-establish-governance-context.md){ .md-button .md-button--primary }
-[Author a Data Contract](guided-demo/03-author-and-freeze-data-contract.md){ .md-button }
-[Browse Data Quality rules](reference/dq-rules/index.md){ .md-button }
+</div>
+
 </div>
