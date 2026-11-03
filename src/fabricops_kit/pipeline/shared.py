@@ -37,10 +37,10 @@ class PipelineExecutionPlan:
     contracts_json: str
     runtime_context: Any = dataclass_field(repr=False, compare=False)
     pipeline_id: str = ""
-    pipeline_activation_id: str = ""
+    pipeline_version: int | None = None
+    promotion_id: str = ""
+    governed_notebook_id: str = ""
     activated_operations_json: str = "[]"
-    deployment_id: str = ""
-    git_commit_sha: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -5780,7 +5780,7 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
 def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None):
     """Freeze dynamic Dry Run or Ungoverned participants under one execution."""
     if execution_mode in {"governed", "live"}:
-        raise ValueError("Governed requires Activated Pipeline authority; use setup_pipeline to resolve it.")
+        raise ValueError("Governed requires Pipeline Promotion authority; use setup_pipeline to resolve it.")
     from types import MappingProxyType
 
     if execution_mode not in {"dry_run", "ungoverned", "testing"}:
@@ -5888,13 +5888,15 @@ def pipeline_record_content(value):
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
     row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
-    provenance = ("pipeline_activation_id", "deployment_id", "git_commit_sha", "deployment_verification_status", "run_schema_version")
+    provenance = ("execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
     if row.get("run_schema_version") is None:
         if any(row.get(key) is not None for key in provenance):
             raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
         row = {key: value for key, value in row.items() if key not in provenance}
-    elif row["run_schema_version"] != 2:
+    elif row["run_schema_version"] != 3:
         raise ValueError("Unsupported Pipeline Run schema version.")
+    elif row.get("execution_mode") == "governed" and any(row.get(key) in (None, "") for key in provenance):
+        raise ValueError("Governed Run requires exact Pipeline Promotion and execution identity provenance.")
     operations = row["operations"]
     keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
     if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
@@ -5946,9 +5948,10 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
         "activation_revision": None,
-        "pipeline_activation_id": plan.pipeline_activation_id or None, "deployment_id": plan.deployment_id or None,
-        "git_commit_sha": plan.git_commit_sha or None, "deployment_verification_status": "not_required" if plan.execution_mode in {"dry_run", "ungoverned", "testing"} else "unverified",
-        "run_schema_version": 2,
+        "execution_workspace_id": plan.workspace_id, "pipeline_version": plan.pipeline_version,
+        "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
+        "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
+        "run_schema_version": 3,
         "boundary_completed": plan.evidence.get("boundary_completed", False),
         "operations": sorted(operations, key=lambda item: item["operation_key"]),
         "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
@@ -6169,8 +6172,11 @@ class PipelineOperation:
                 activated = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
                 selected = activated.get((table_id, self.role))
                 enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
-                if not plan.pipeline_activation_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
+                if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
+                if self.role == "target":
+                    from fabricops_kit.activated_pipeline.shared import guard_governed_write
+                    guard_governed_write(plan, actual_binding, spark_session=args.get("spark_session"))
             elif plan.execution_mode == "ungoverned" and self.role == "target":
                 from fabricops_kit.activated_pipeline.shared import guard_ungoverned_write
                 guard_ungoverned_write(plan, table_id, actual_binding, spark_session=args.get("spark_session"))
@@ -6563,6 +6569,12 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
                 "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
+            if pipeline_mode == "Dry Run" and runtime.get("notebook_id"):
+                try:
+                    from fabricops_kit.activated_pipeline.shared import FabricNotebookClient
+                    plan.evidence["notebook_snapshot"] = FabricNotebookClient().definition(active_workspace_id, runtime["notebook_id"])
+                except Exception:
+                    plan.evidence["notebook_snapshot_unavailable"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     try:
         if shell is not None:

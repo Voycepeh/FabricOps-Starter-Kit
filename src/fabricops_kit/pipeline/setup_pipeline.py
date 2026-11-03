@@ -134,8 +134,8 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
     Dry Run previews transformations, optional Contract checks and profiling without
     durable mutations. Ungoverned publishes without activated Contracts, but cannot
     write protected Table IDs or physical destination aliases. Governed requires
-    activated deployment and independently activated table Contracts. It currently
-    fails closed until trusted deployment verification is proven and integrated.
+    a promoted notebook and independently activated Contracts for all sources
+    and targets. It remains fail closed pending signed-in Fabric validation.
 
     Parameters
     ----------
@@ -176,9 +176,8 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
     ValueError
         If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
     RuntimeError
-        If notebook setup or Spark is unavailable, or Governed deployment
-        verification has not been established. Governed fails before admission
-        and publication; a caller-supplied Git SHA cannot authorize it.
+        If notebook setup or Spark is unavailable, or signed-in Fabric validation
+        remains pending. Governed fails before admission and publication.
 
     Examples
     --------
@@ -201,5 +200,9 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
             or not isinstance(source_observation_days, int) or source_observation_days <= 0):
         raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
     session = start_pipeline_session(pipeline_id, pipeline_mode, inspector=_inspector)
-    session.plan.evidence["source_observation_policy"] = {"manual": observe_source, "days": source_observation_days}
+    policy = {"manual": observe_source, "days": source_observation_days}
+    if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != policy:
+        session.close(failed=True)
+        raise RuntimeError("Governed parameter overrides differ from the frozen notebook; Dry Run and promote a new version.")
+    session.plan.evidence["source_observation_policy"] = policy
     return session

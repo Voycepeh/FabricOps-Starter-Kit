@@ -110,8 +110,8 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. An Activated Pipeline selects one successful finalized Test Run and exact Data Agreement version. Native Run operations reference the exact table contracts checked; authored payloads remain in Data Contract.\n\n"
-    "One Data Agreement can govern multiple Activated Pipelines, each reusing frozen contracts.\n\n"
+    "A Data Contract is the immutable, versioned governed definition of one table. Authoring freezes its table identity, catalogue structure, processing definition, Enrichment, and active Guardrail expectations without an Agreement linkage. Pipeline Promotion freezes a manually Dry Run notebook and its exact destination bindings, with an effective Data Agreement where applicable. METADATA_DATA_CONTRACT_ACTIVATION independently selects frozen Contracts per physical workspace/Table ID; Runs record the exact versions used.\n\n"
+    "One Data Agreement can govern multiple Pipeline Promotions, each reusing frozen contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
 )
@@ -122,34 +122,40 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
-    "METADATA_PIPELINE_REGISTRY": {
-        "purpose": "Stores workspace pipeline activations and independent workspace/Table ID Contract activations in one transactional Registry.",
-        "grain": "One pipeline activation per workspace/Pipeline ID, one Contract activation per workspace/Table ID, plus one control row.",
-        "implementation_notes": "All fields are SQL-compatible scalars. A Serializable whole-table Delta transaction commits all activation and control changes together. operations_json contains the activated read/write descriptors; leases_json holds transient policy leases. Exact frozen Contracts remain in Data Contract. Migrated selections are requires_reactivation candidates, with complete historical evidence retained in the checksummed migration archive. Pipeline activation and Governed publication remain blocked pending trusted deployment verification. Ungoverned cannot publish to protected tables or destination aliases. Tenant metadata writers are trusted; UI confirmation is not authentication.",
-        "primary_key": ["record_id"],
+    "METADATA_DATA_CONTRACT_ACTIVATION": {
+        "purpose": "Selects one exact globally frozen Contract for each physical table workspace/Table ID.",
+        "grain": "One current activation per physical workspace_id and table_id, with an optimistic concurrency revision.",
+        "implementation_notes": "Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical binding. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
+        "primary_key": ["workspace_id", "table_id"],
         "foreign_keys": [
-            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Pipeline records retain an exact Agreement ID/version and content hash; neither component is independently unique."},
-            {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Composite reference with agreement_id; exact content and current effectiveness are checked."},
-            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Table-contract records reference a frozen exact Contract version for their workspace/Table ID."},
-            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with contract_id and immutable payload hash; never inferred from frozen status alone."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Composite exact Contract reference with contract_version and payload_sha256."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Exact globally frozen version, independent of authoring evidence workspace."},
         ],
-        "relationships": [
-            {"related_table": "METADATA_DATA_AGREEMENT", "fields": ["agreement_id", "agreement_version"], "cardinality": "N:1", "statement": "Pipeline activation preserves exact Agreement safeguards."},
-            {"related_table": "METADATA_DATA_CONTRACT", "fields": ["contract_id", "contract_version"], "cardinality": "N:1", "statement": "Contract activation is independent of pipeline deployment activation."},
+        "relationships": [{"related_table": "METADATA_DATA_CONTRACT", "fields": ["contract_id", "contract_version"], "cardinality": "N:1", "statement": "Independent per-physical-workspace activation of global definitions."}],
+    },
+    "METADATA_PIPELINE_REGISTRY": {
+        "purpose": "Retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity.",
+        "grain": "One immutable version per execution workspace/Pipeline ID/version; at most one active version per workspace/Pipeline ID.",
+        "implementation_notes": "Serializable whole-table conditional replacement rejects stale approvals and phantom inserts. Superseded versions remain. Complete ipynb snapshots are write-once Metadata Lakehouse Files; Registry stores exact URIs and full/executable hashes. Logical stores resolve through destination configuration. No Contract Activation rows, Git/deployment attestation, control rows or per-run leases belong in Registry. Imported dependencies are not frozen. Saved-definition checks have TOCTOU limits; Governed admission remains blocked pending signed-in Fabric validation.",
+        "primary_key": ["execution_workspace_id", "pipeline_id", "pipeline_version"],
+        "foreign_keys": [
+            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Optional exact effective Agreement ID/version and digest where applicable."},
+            {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Composite reference with agreement_id; validate exact content and effectiveness."},
         ],
+        "relationships": [{"related_table": "METADATA_DATA_AGREEMENT", "fields": ["agreement_id", "agreement_version"], "cardinality": "N:1", "statement": "Pipeline Promotion retains exact Agreement safeguards where applicable."}],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records Dry Run/Ungoverned/Governed operation participation and retained historical Test/Live execution outcomes.",
-        "grain": "One row per execution with JSON-encoded observed operation/stage status, timing, finalization, profiling and safe failures.",
-        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Validated JSON operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. New runs use versioned activation/deployment provenance. approval_id and activation_revision remain nullable historical facts only; original Test hashes exclude new null provenance columns. Governed publication is blocked pending trusted deployment verification. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
+        "purpose": "Records actual pipeline execution outcomes and exact per-operation Contract versions.",
+        "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
+        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Explicit development reset discards old Run history and Processing State; normal setup never deletes either.",
         "primary_key": ["run_id"],
         "foreign_keys": [
-            {"local_field": "pipeline_activation_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "activation_id", "cardinality": "N:1", "statement": "Versioned Governed provenance pins a pipeline activation. Replaced historical activation IDs resolve through durable audit, not a current-row fallback."},
-            {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Each contracted operation references one exact Contract using contract_id plus contract_version and verifies the payload hash. Test operations may be uncontracted; activation requires all contracts."},
-            {"local_field": "operations[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with operations[].contract_id; neither field is independently unique."},
+            {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
+            {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Composite exact per-operation Contract identity with version and payload SHA."},
+            {"local_field": "operations[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Exact frozen version used by the operation."},
         ],
-        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["pipeline_activation_id"], "cardinality": "N:1", "statement": "New Governed provenance pins an activation ID; legacy approval references remain historical audit facts."},
-                          {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Actual operations record exact table contract IDs, versions and hashes; authored payloads remain in Data Contract."}],
+        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["promotion_id"], "cardinality": "N:1", "statement": "Captured frozen version and promotion identity."},
+                          {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Exact Contract definitions used by actual operations."}],
     },
     "METADATA_DATA_STEWARD": {
         "purpose": "Identifies the people responsible for governing data.",
@@ -170,13 +176,13 @@ METADATA_TABLE_MODELS = {
             {"local_field": "recipient_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one recipient steward; one steward can receive many agreement versions."},
         ],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One exact Data Agreement version can govern many Activated Pipeline versions."},
+            {"cardinality": "1:N", "statement": "One exact Data Agreement version can govern many Pipeline Promotion versions."},
         ],
     },
     "METADATA_DATA_CONTRACT": {
         "purpose": "Defines one global immutable table contract history. Workspace observations supply authoring evidence; workspace activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table.",
-        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Agreement linkage belongs to Activated Pipeline.",
+        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Agreement linkage belongs to Pipeline Promotion.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [],
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
@@ -271,8 +277,8 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
-    # Scheduled Read/Write profiling acquires Registry claims; standalone profile_table does not.
-    "METADATA_PIPELINE_REGISTRY": ["activate_data_contract", "finalize_pipeline", "orchestrate_write"],
+    "METADATA_DATA_CONTRACT_ACTIVATION": ["activate_data_contract", "widget_activate_data_contract"],
+    "METADATA_PIPELINE_REGISTRY": ["promote_pipeline", "widget_activate_pipeline"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -289,6 +295,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_DATA_CONTRACT_ACTIVATION",
     "METADATA_DATA_CATALOGUE",
     "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
@@ -1619,16 +1626,19 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
+{'kind': 'function', 'module': 'activated_pipeline.promote_pipeline', 'function_type': 'callable', 'symbol_name': 'promote_pipeline', 'summary_override': 'Archive and promote one reviewed manually tested notebook into a separate Governed item.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
+{'kind': 'function', 'module': 'activated_pipeline.restore_pipeline', 'function_type': 'callable', 'symbol_name': 'restore_pipeline', 'summary_override': 'Preserve changed code and restore the exact active notebook snapshot.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
+{'kind': 'function', 'module': 'widgets.widget_activate_data_contract', 'function_type': 'callable', 'symbol_name': 'widget_activate_data_contract', 'summary_override': 'Review and activate an exact frozen Contract in its physical workspace.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
  {'kind': 'function', 'module': 'data_contract.activate_data_contract', 'function_type': 'callable',
   'symbol_name': 'activate_data_contract', 'summary_override': 'Activate one frozen Contract independently for a workspace/Table ID.',
   'template_notebook': '01_governance', 'template_segment': 'Data Contract activation',
   'sidebar_group': '3. Governance', 'sidebar_include': False,
   'related_functions': ['widget_data_contract', 'widget_activate_pipeline']},
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
-  'summary_override': 'Inspect direct activations and the pending Governed deployment gate.',
+  'summary_override': 'Review and promote manually tested notebooks into separate Governed copies.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use to inspect migrated pipeline candidates and independent Contract activations.',
-  'expanded_purpose': 'Shows workspace-scoped direct Registry records without the removed Test/approval/version lifecycle. Pipeline activation remains blocked pending trusted deployment verification.',
+  'use_when': 'Use to review destination bindings and promote a completed manual Dry Run.',
+  'expanded_purpose': 'Shows retained immutable Pipeline Promotion versions and reviews the exact notebook, physical bindings and Contracts. Governed admission remains blocked pending signed-in Fabric validation.',
   'related_functions': ['setup_pipeline']},
 
 
@@ -1639,13 +1649,13 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending deployment verification.',
+ 'summary_override': 'Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending signed-in Fabric validation.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
  'use_when': 'Call after setup_notebook() and before Read, Transform and Write. Persistent execution requires an explicit saved Pipeline ID.',
  'related_functions': ['setup_notebook', 'finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending trusted deployment verification.',
- 'expanded_purpose': 'Reuse initialized notebook configuration without rerunning 00_env_config. Dry Run may preview selected frozen Contracts. Ungoverned publishes without activated Contracts but cannot write protected assets. Governed cannot start until trusted deployment verification is integrated.',
+ 'return_interpretation': 'Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending signed-in Fabric validation.',
+ 'expanded_purpose': 'Reuse initialized notebook configuration without rerunning 00_env_config. Dry Run may preview selected frozen Contracts. Ungoverned publishes without activated Contracts but cannot write protected assets. Governed cannot start until signed-in Fabric validation is integrated.',
  'common_failure_causes': ['Missing, failed or outdated setup_notebook() initialization.', 'Invalid frozen contract selections.', 'Missing explicit persistent Pipeline ID or pending Governed deployment verification.']},
 
 
@@ -2120,20 +2130,12 @@ def related_guides(symbol_name: str) -> list[dict[str, str]]:
     return RELATED_GUIDES_BY_SYMBOL.get(symbol_name, [])
 
 
-METADATA_TABLE_PURPOSES["METADATA_PIPELINE_REGISTRY"] = METADATA_TABLE_MODELS["METADATA_PIPELINE_REGISTRY"]["purpose"]
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
-    "__default__": ["fabricops_kit.activated_pipeline.shared.commit_registry", "fabricops_kit.activated_pipeline.migrate_registry.migrate_registry"],
+    "__default__": ["fabricops_kit.activated_pipeline.shared.commit_pipeline_promotion"],
     "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    "leases_json": ["fabricops_kit.activated_pipeline.shared.guard_ungoverned_write", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
-    "contract_id": ["fabricops_kit.activated_pipeline.shared.set_table_contract_activation"],
-    "contract_version": ["fabricops_kit.activated_pipeline.shared.set_table_contract_activation"],
 }
-
-METADATA_COLUMN_CATEGORIES = {
-    "METADATA_PIPELINE_REGISTRY": {name: "governance" for name in (
-        "workspace_id", "pipeline_id", "pipeline_name", "table_id", "activation_id", "status",
-        "activated_by", "activated_at", "notebook_id", "git_repository", "git_commit_sha", "deployment_id",
-        "deployment_manifest_uri", "deployment_manifest_sha256", "verification_method", "operations_json",
-        "agreement_id", "agreement_version", "agreement_sha256", "contract_id", "contract_version", "payload_sha256", "destination_json",
-        "last_governance_change_id", "last_governance_audit_uri", "migration_archive_uri", "migration_archive_sha256")},
+METADATA_COLUMN_OWNERS["METADATA_DATA_CONTRACT_ACTIVATION"] = {
+    "__default__": ["fabricops_kit.activated_pipeline.shared.set_table_contract_activation"],
+    "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
 }
+METADATA_COLUMN_CATEGORIES = {}

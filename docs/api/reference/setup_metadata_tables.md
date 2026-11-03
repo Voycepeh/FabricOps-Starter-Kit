@@ -138,7 +138,7 @@ transaction identities are preserved. Per-table evolved results report source
 and committed versions. Rerun setup after interruption or a reported conflict;
 never automatically restore over later valid writes. Stop old writers before
 migration and restart them with the compatible package/schema pair. Registry
-cutover archives historical authority and preserves non-authorizing candidates.
+is initialized empty; obsolete development authority requires explicit reset.
 Business publication fingerprints and Processing State are unchanged.
 
 This function prepares the metadata table structures only. It does not
@@ -158,7 +158,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:396`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L396-L851">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L396-L835">View on GitHub</a>
 </div>
 
 
@@ -222,9 +222,9 @@ Detailed table contents:
   Guardrails; each Save overwrites that draft JSON in place.
   Separate definition tables are neither required nor deleted by setup.
   Freezing changes the version to ``frozen`` and makes its JSON immutable.
-  A later version is seeded from the previous frozen JSON. Activation keeps
-  ``status='frozen'`` and uses ``is_active`` to identify the Production
-  version while linking the exact Data Agreement version.
+  A later version is seeded from the previous frozen JSON. Independent
+  METADATA_DATA_CONTRACT_ACTIVATION rows select exact versions in each
+  physical table workspace; frozen definitions remain unchanged.
 - ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
   ``metadata_level``, ``table_id``, ``column_id``, ``workspace_id``,
   physical table context, ``column_name``, ``data_type``, profiling dates,
@@ -264,8 +264,8 @@ alerts and underlying I/O messages. A fresh Processing State table does not
 establish progress for populated targets; reconcile retained progress or
 deliberately rebuild/replay targets before resuming incremental work.
 
-``METADATA_PIPELINE_REGISTRY`` requires exactly one control row plus sparse
-pipeline_activation and table_contract_activation records.
+``METADATA_PIPELINE_REGISTRY`` stores only immutable per-workspace Pipeline
+Promotion versions, with at most one active version per workspace/Pipeline ID.
 ``METADATA_PIPELINE_RUN`` requires complete logical execution facts in JSON strings, with exact table/contract references, bindings and operation modes.
 Supported singleton Registry layouts migrate only after draining reservations,
 exact historical validation and durable archival. Ambiguous or unsupported
@@ -286,11 +286,14 @@ because their schema differs. Processing continues for remaining metadata
 tables, and ``raise_on_failure=True`` raises only after all tables have
 been processed when failures exist.
 
-Pipeline Registry is seeded with its control row using
-error-if-exists creation; repeat initialization validates the existing schema
-after verified archival; old selections become non-authorizing reactivation candidates. A missing ordinary table is
-created by writing an empty Spark DataFrame with the
-required FabricOps table structure. This creates the metadata table structure but
+The 13 canonical tables include Governance-owned
+METADATA_DATA_CONTRACT_ACTIVATION and a Pipeline Registry containing only
+immutable per-workspace promotion versions. Fresh tables are empty; no
+control row or activation is manufactured. Authority tables use Serializable
+isolation and error-if-exists creation. Existing obsolete development schemas
+fail with explicit reset guidance; normal setup never deletes metadata or
+business targets. A missing ordinary table is created with its canonical
+structure but
 does not populate business metadata records. The function does not
 automatically create steward records, agreements, contracts, catalogue
 records, profile records, lineage events, access assignments, enrichment
@@ -306,7 +309,7 @@ their respective FabricOps workflows.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 83 |
+| Live-critical dependencies | 44 |
 
 ### Release history
 
@@ -321,37 +324,8 @@ their respective FabricOps workflows.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.migrate_registry._legacy_approval_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.migrate_registry._legacy_pipeline_table_mappings</code></li>
-<li><code>fabricops_kit.activated_pipeline.migrate_registry._legacy_registry_schema</code></li>
-<li><code>fabricops_kit.activated_pipeline.migrate_registry._legacy_run_contracts</code></li>
-<li><code>fabricops_kit.activated_pipeline.migrate_registry._legacy_testing_run_evidence</code></li>
-<li><code>fabricops_kit.activated_pipeline.migrate_registry.migrate_registry</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.empty_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.ensure_registry_audit_receipts</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.read_governance_archive</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.registry_business_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.registry_control</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.registry_path</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.registry_record_id</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.replace_registry_transaction</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.write_governance_archive</code></li>
-<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
-<li><code>fabricops_kit.config.audit._context_get</code></li>
-<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
-<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
-<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
@@ -377,14 +351,10 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
-<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
@@ -397,12 +367,6 @@ their respective FabricOps workflows.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
-<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
-<li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 

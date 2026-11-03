@@ -23,6 +23,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_STEWARD": "governance",
         "METADATA_DATA_AGREEMENT": "governance",
         "METADATA_DATA_CONTRACT": "governance",
+        "METADATA_DATA_CONTRACT_ACTIVATION": "governance",
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
@@ -318,11 +319,8 @@ def test_processing_state_table_has_no_legacy_alias():
 
 def test_pipeline_registry_has_no_profiling_coordination_collection():
     """The unreleased profiling claim collection is not part of Registry state."""
-    from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
-
     registry = metadata_table_schema_registry()["METADATA_PIPELINE_REGISTRY"]
     assert "profiling_claims" not in registry.fieldNames()
-    assert "profiling_claims" not in empty_pipeline_authority()
 
 
 def test_pipeline_run_old_schema_requires_offline_conversion():

@@ -1,5 +1,8 @@
 # Step 6. Run the pipeline in Production
 
+!!! important "Governed admission remains blocked"
+    Complete the signed-in Fabric acceptance checklist before enabling Governed execution. The workflow below describes the intended validated runtime. A promoted Registry row does not override this gate. Imported dependencies are not frozen; saved-definition verification has TOCTOU limits.
+
 ### Before you begin
 
 Complete [Step 5](05-activate-data-contract-and-promote.md) and use the promoted Production pipeline.
@@ -36,9 +39,9 @@ The same source reads, transformations, Guardrail checks, governed write logic, 
 
 Governed uses the **same pipeline workflow in the Production workspace**, with contracts resolved exclusively from activated workspace authority. It verifies the exact effective Agreement, Data Contract versions, active approval and configured physical bindings before execution. Read and Write behavior must match the activated operation configuration.
 
-Set `PIPELINE_MODE = "Governed"` after Step 5. Headless setup resolves the currently activated workspace revision automatically. Governed has no contract-selection widget or deployment-file selection. Workspace names route execution and never infer a mode.
+Run the **separate promoted Governed notebook** returned by Step 5, after tenant validation is complete. Do not switch the development notebook to Governed manually. Its frozen setup mode and exact behavior parameters are verified; ordinary parameter overrides cannot change approved behavior.
 
-Use the same public calls as every other mode: `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`. The active session is shared internally; do not pass an execution-plan argument. Governed pins one activation revision, and affected running executions must drain before a coordinated switch.
+Use the same public calls: `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`. A new start must use the currently active notebook version. Already admitted older versions may finish with their captured version and Contracts; physical target publication claims exclude conflicting writers. Engineers explicitly rebind their schedules to the intended active item. Schedule timing alone may change without promotion.
 
 ### Check the two independent publications
 
@@ -67,6 +70,6 @@ FabricOps remains relevant to the access boundary through its effective-access s
 
 ### Expected result
 
-Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the approved Activated Pipeline manifest, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
+Engineering Production completes the validated pipeline workflow, publishes governed Production outputs using the reviewed Pipeline Promotion, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
 
 **Next:** [Step 7. Publish governed data to a Fabric Data Agent](07-consume-production-data.md)

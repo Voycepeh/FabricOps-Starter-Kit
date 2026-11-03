@@ -29,15 +29,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
-<details id="activated-pipeline">
-<summary><strong>activated pipeline</strong> — A pipeline deployment authorized for one execution workspace, distinct from table Contract activation.</summary>
-<p>A pipeline_activation record in METADATA_PIPELINE_REGISTRY identifies a stable Pipeline ID, workspace notebook deployment, operation configuration and exact Agreement reference. Its participating Table IDs require independently activated frozen Contracts. Migration candidates have requires_reactivation status and grant no execution authority. Trusted deployment verification must be proven before pipeline activation and Governed publication can be enabled.</p>
-<p><strong>Also known as:</strong> activated pipelines</p>
+<details id="pipeline-promotion">
+<summary><strong>Pipeline Promotion</strong> — A reviewed immutable notebook implementation and separate Governed item for one execution workspace.</summary>
+<p>A Pipeline Promotion freezes a complete notebook implementation as one immutable version in an execution workspace. METADATA_PIPELINE_REGISTRY retains its separate Governed notebook identity, snapshot URI, executable hash, exact physical bindings and Agreement reference where applicable. Every source and target requires an independently activated frozen Contract in its physical workspace. Governed admission remains blocked pending signed-in Fabric validation. Imported dependencies are not frozen; saved-definition verification has TOCTOU limits.</p>
 </details>
 
 <details id="pipeline-registry">
-<summary><strong>Pipeline Registry</strong> — Atomic store for pipeline activations, independent table Contract activations and one control record.</summary>
-<p>METADATA_PIPELINE_REGISTRY stores pipeline_activation, table_contract_activation and control scalar rows in one Serializable Delta transaction. Each business kind has its own workspace/logical-ID key. The control token serializes changes and transient policy leases. Retired registration/approval/selection/revision/ownership histories remain in a durable migration archive; they are not runtime authority.</p>
+<summary><strong>Pipeline Registry</strong> — Immutable per-workspace Pipeline Promotion versions with at most one active version per workspace/Pipeline ID.</summary>
+<p>METADATA_PIPELINE_REGISTRY stores only immutable per-workspace Pipeline Promotion versions. A Serializable conditional transaction enforces at most one active version per execution workspace/Pipeline ID and retains superseded rows. METADATA_DATA_CONTRACT_ACTIVATION independently selects frozen Contracts per physical workspace/Table ID. Publication claims remain outside Registry in Metadata Lakehouse Files.</p>
 </details>
 
 <details id="pipeline-execution-plan">
@@ -348,7 +347,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, destination, modes, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 2 adds activation/deployment provenance. Historical approval_id and activation_revision remain audit facts; old Test hashes exclude new null provenance columns.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Preserve released content/hash semantics; an explicit development reset discards old Run history.</p>
 </details>
 
 <details id="pyspark">

@@ -113,7 +113,7 @@ def test_setup_arguments_remove_registration_and_rebind(runtime):
             setup_pipeline(**{removed: True})
     with pytest.raises(ValueError, match="explicit stable pipeline_id"):
         setup_pipeline(pipeline_mode="Ungoverned")
-    with pytest.raises(RuntimeError, match="trusted deployment verification"):
+    with pytest.raises(RuntimeError, match="signed-in Fabric"):
         setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Governed")
 
 
@@ -445,7 +445,8 @@ def test_finalization_checks_runtime_identity_for_explicit_and_active_sessions(
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     release = Mock(side_effect=lambda plan, **kwargs: plan.evidence.pop('lease_token'))
     if mode == 'Governed':
-        pipeline.plan = replace(pipeline.plan, execution_mode='governed')
+        pipeline.plan = replace(pipeline.plan, execution_mode='governed', pipeline_version=1,
+            promotion_id='reviewed', governed_notebook_id=pipeline.plan.notebook_id)
         pipeline.plan.evidence['lease_token'] = pipeline.plan.plan_id
         activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         monkeypatch.setattr(activation, 'release_pipeline_lease', release)

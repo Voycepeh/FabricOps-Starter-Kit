@@ -1,6 +1,6 @@
 # Governed Pipeline Promotion v3 — implementation contract
 
-> **Status:** Implementation specification for an unreleased breaking redesign. This document does **not** enable Governed execution by itself. Do not merge a specification-only PR as a completed feature.
+> **Status:** Implementation contract for an unreleased breaking redesign. Backend, widgets and local tests are implemented; signed-in Fabric acceptance remains pending. Governed admission remains blocked. See the [validation checklist](governed-pipeline-promotion-v3-validation.md) and [explicit reset procedure](governed-pipeline-promotion-v3-reset.md).
 
 ## Decision record
 
@@ -96,4 +96,4 @@ The snapshot and the physically cloned Governed notebook are distinct: never reg
 
 ## Definition of done
 
-The PR must contain functioning implementation, migration, widget updates, docs, tests, and a Fabric integration checklist. `Governed` cannot be advertised enabled merely by removing `DEPLOYMENT_PENDING` unless trusted checks actually work. Until then, keep it fail closed. Do not merge on green CI alone if Fabric-only security assumptions remain untested.
+The PR must contain functioning implementation, explicit development reset instructions, widget updates, docs, tests, and a Fabric integration checklist. `Governed` cannot be advertised enabled merely by removing `DEPLOYMENT_PENDING` unless trusted checks actually work. Until then, keep it fail closed. Do not merge on green CI alone if Fabric-only security assumptions remain untested.

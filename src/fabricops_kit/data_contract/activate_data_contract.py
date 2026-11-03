@@ -1,67 +1,65 @@
-"""Notebook-facing independent environment/Table ID Contract activation."""
+"""Activate exact frozen Contracts independently of Pipeline Promotion."""
 from __future__ import annotations
 
 
 def activate_data_contract(table_id: str, contract_id: str, contract_version: int, *,
-                           expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False):
-    """Activate one exact frozen Data Contract for the configured execution workspace.
-
-    This action is independent of pipeline activation. It protects the Table ID
-    and its physical destination from Ungoverned publication. It never unfreezes
-    or copies a Contract, activates a pipeline or enables Governed execution.
+                           expected_activation_id: str | None, activation_id: str,
+                           workspace_id: str | None = None, governance_confirmed: bool = False):
+    """Activate a frozen Contract in its physical table workspace.
 
     Parameters
     ----------
     table_id, contract_id : str
         Exact logical Table ID and globally frozen Contract identity.
     contract_version : int
-        Exact frozen version, never a latest-version fallback.
-    expected_token : str
-        Current Registry control token from the reviewed snapshot. Stale review
-        is rejected; refresh and review before retrying.
+        Exact frozen positive version; never a latest-version fallback.
+    expected_activation_id : str | None
+        Previously reviewed activation ID; None asserts no existing activation.
+    activation_id : str
+        Unique operation ID retained for safe retry after a lost acknowledgement.
     workspace_id : str | None, optional
-        Target execution workspace; defaults to the notebook configuration scope.
-        Central Metadata routing remains separate from this activation scope.
+        Physical table workspace, defaulting to the current execution scope.
+        Metadata continues to use the configured central Metadata Lakehouse.
     governance_confirmed : bool, default=False
-        Explicit confirmation of the reviewed governance change. This is not
-        authentication: metadata write principals must be trusted and restricted
-        by tenant permissions.
+        Review confirmation. Actual metadata storage permissions authorize writes;
+        this flag grants no permissions.
 
     Returns
     -------
     dict
-        Committed table_contract_activation record with immutable activation ID.
+        Committed METADATA_DATA_CONTRACT_ACTIVATION row, including revision.
 
     Raises
     ------
     ValueError
-        If confirmation, exact frozen identity, current token, destination or
-        active pipeline compatibility fails, or an affected execution must drain.
+        If the exact frozen Contract, physical binding, operation ID or expected
+        activation is invalid, or another Table ID aliases the physical table.
     RuntimeError
-        If notebook/Spark context, atomic publication or exact readback fails.
-        A failed acknowledgement requires inspecting the Registry and audit
-        transaction before another governance decision.
+        If a writer holds the publication claim, Fabric/Spark is unavailable or
+        transactional readback fails. Reconcile interrupted writers before retry.
 
     Notes
     -----
-    Call setup_notebook first. The central configured Metadata Lakehouse is used.
-    The one Registry transaction retains a durable before/after audit snapshot.
-    No business data, Processing State or historical Run is changed.
+    Call setup_notebook first. Frozen definitions are immutable and global;
+    activations are per physical workspace/Table ID. Existing admitted runs keep
+    captured Contracts; the next run resolves the new version. Normal setup never
+    drops development metadata. No business target or Processing State is changed.
 
     Examples
     --------
-    >>> activated = activate_data_contract(TABLE_ID, CONTRACT_ID, 1,
-    ...     expected_token=reviewed_token, governance_confirmed=True)
+    >>> result = activate_data_contract(TABLE_ID, CONTRACT_ID, 1,
+    ...     expected_activation_id=None, activation_id=OPERATION_ID,
+    ...     governance_confirmed=True)
 
     """
     from fabricops_kit.activated_pipeline.shared import set_table_contract_activation
     from fabricops_kit.config.shared import resolve_fabric_context
-
     config, workspace, runtime = resolve_fabric_context()
-    target_workspace = workspace if workspace_id is None else str(workspace_id).strip()
-    if not target_workspace:
+    target = workspace if workspace_id is None else str(workspace_id).strip()
+    if not target:
         raise ValueError("workspace_id must be nonblank.")
     return set_table_contract_activation(table_id, contract_id, contract_version,
-        expected_token=expected_token, governance_confirmed=governance_confirmed,
-        context={**runtime, "config": config, "scope_workspace_id": target_workspace,
+        expected_activation_id=expected_activation_id, activation_id=activation_id,
+        governance_confirmed=governance_confirmed,
+        context={**runtime, "config": config, "scope_workspace_id": target,
             "metadata_workspace_id": runtime.get("metadata_workspace_id") or workspace})

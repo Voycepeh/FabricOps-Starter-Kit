@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1540" height="980" viewBox="0 0 1540 980" role="img" aria-label="FabricOps metadata relationship diagram">
-<rect width="1540" height="980" fill="#FFFFFF"/>
-<rect x="17" y="16" width="1506" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1930" height="980" viewBox="0 0 1930 980" role="img" aria-label="FabricOps metadata relationship diagram">
+<rect width="1930" height="980" fill="#FFFFFF"/>
+<rect x="17" y="16" width="1896" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
 <rect x="17" y="303" width="1506" height="638" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
 <text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance and pipeline authority</text>
 <text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
@@ -12,14 +12,14 @@
 <rect x="349" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="389" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="physical">
-<title>One exact Agreement version may govern multiple pipeline activations, each retaining its ID, version and content hash (1-N; keyed reference; application-enforced)</title>
+<title>One exact Agreement version may govern multiple Pipeline Promotions, each retaining its ID, version and content hash (1-N; keyed reference; application-enforced)</title>
 <path d="M725 170H815" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="739" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="779" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
-<title>Each workspace/Table ID activation references one exact frozen Contract version and payload hash, independently of pipeline activation (N-1; keyed reference; application-enforced)</title>
-<path d="M1115 170H1205" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text>
+<g class="metadata-er-relationship" data-from="DATA_CONTRACT_ACTIVATION" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
+<title>Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion (N-1; keyed reference; application-enforced)</title>
+<path d="M1595 170H1505" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1559" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1570" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1519" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1530" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
 <title>Run operations reference exact table contract versions (N-N; exact nested reference; application-enforced)</title>
@@ -27,7 +27,7 @@
 <rect x="739" y="453" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="468.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="207" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1-N" data-kind="logical">
-<title>Governed provenance pins pipeline_activation_id; historical activation decisions remain in durable audit. Deployment verification is pending; candidates grant no run authority (1-N; logical identity reference)</title>
+<title>Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending (1-N; logical identity reference)</title>
 <path d="M900 253V328H575V423" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="889" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="900" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">1</text><rect x="564" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="575" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
@@ -109,11 +109,13 @@
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#1168B6"/>
 <text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
 <text x="828" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">record_id</text>
-<text x="828" y="155" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="155" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id/version</text>
-<text x="828" y="175" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="866" y="175" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id/version</text>
+<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">execution_workspace_id</text>
+<text x="828" y="155" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="866" y="155" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_id</text>
+<text x="828" y="175" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="866" y="175" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_version</text>
+<text x="828" y="195" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
+<text x="866" y="195" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id/version</text>
 <text x="828" y="240" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
@@ -146,7 +148,7 @@
 <text x="438" y="480" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
 <text x="476" y="480" fill="#243550" font-size="14" font-family="Arial, sans-serif">run_id</text>
 <text x="438" y="504" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">pipeline_activation_id</text>
+<text x="476" y="504" fill="#243550" font-size="14" font-family="Arial, sans-serif">promotion_id</text>
 <text x="438" y="528" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
 <text x="476" y="528" fill="#243550" font-size="12" font-family="Arial, sans-serif">operations[].contract_id/version</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
@@ -222,4 +224,16 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
+<rect x="1595" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M1599 78H1891Q1895 78 1895 82V115H1595V82Q1595 78 1599 78Z" fill="#7144AE"/>
+<text x="1745" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
+<text x="1608" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="1646" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">workspace_id</text>
+<text x="1608" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="1646" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
+<text x="1608" y="183" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
+<text x="1646" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id/version</text>
+<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
+</a>
 </svg>

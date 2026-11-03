@@ -165,8 +165,10 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         def approved(**kwargs):
             config, active_workspace_id, runtime = resolve_fabric_context()
-            return shared.PipelineExecutionPlan('governed', active_workspace_id, 'caller-notebook', 'approved-run',
+            plan = shared.PipelineExecutionPlan('governed', active_workspace_id, 'caller-notebook', 'approved-run',
                                                '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
+            plan.evidence['approved_parameters'] = {'manual': False, 'days': None}
+            return plan
         monkeypatch.setattr(live, 'build_governed_pipeline_plan', approved)
     import IPython
     monkeypatch.setattr(IPython, 'get_ipython', lambda: None)

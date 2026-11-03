@@ -58,8 +58,7 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
 
     class Frame:
         def collect(self):
-            from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
-            return [empty_pipeline_authority()]
+            return []
 
         def __init__(self, schema):
             self.schema = schema

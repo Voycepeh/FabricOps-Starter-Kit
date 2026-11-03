@@ -22,7 +22,7 @@ GLOSSARY_GROUPS = [
             "fabricops-starter-kit",
             "data-agreement",
             "data-contract",
-            "activated-pipeline",
+            "pipeline-promotion",
             "pipeline-registry",
             "pipeline-execution-plan",
             "dry-run",

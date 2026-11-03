@@ -13,7 +13,6 @@ import json
 
 from fabricops_kit import finalize_pipeline
 from fabricops_kit.activated_pipeline import shared as activation
-from fabricops_kit.activated_pipeline import migrate_registry as migration
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types, metadata_table_schema_registry, encode_metadata_row, decode_metadata_row
 from fabricops_kit.pipeline import shared
 
@@ -30,7 +29,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     paths = {table: str(tmp_path / table) for table in tables}
     registry = metadata_table_schema_registry()
     for table in tables:
-        initial = [{**activation.empty_pipeline_authority(), **{name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}}] if table == 'METADATA_PIPELINE_REGISTRY' else []
+        initial = []
         spark_session.createDataFrame(initial, registry[table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(paths[table])
     audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
     audit.update(_workspace_id='DEV', _notebook_id='notebook')
@@ -76,7 +75,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         plan = shared.PipelineExecutionPlan(mode, 'DEV', 'notebook', run_id or str(uuid4()),
             shared.canonical_pipeline_json(participants), '{}', shared.canonical_pipeline_json(contracts),
             {**context, '_pipeline_bindings': bindings}, pipeline_id=pipeline_id,
-            pipeline_activation_id='release' if mode == 'live' else '')
+            promotion_id='release' if mode == 'live' else '')
         return plan
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
@@ -111,21 +110,6 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
     assert len(records) == 1
     assert len(records[0]['operations']) == len(roles)
     assert shared.validate_pipeline_run(records[0])['status'] == 'succeeded'
-    manifest = migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
-    assert manifest[0]['run']['run_id'] == plan.plan_id
-    from delta.tables import DeltaTable
-    removed = plan.evidence['guardrail_history'][0]
-    DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).delete(
-        "guardrail_result_id = '" + removed['guardrail_result_id'] + "'")
-    with pytest.raises(ValueError, match='Guardrail evidence is missing'):
-        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
-    r.append('METADATA_GUARDRAIL_RESULTS', [removed])
-    from pyspark.sql import functions as F
-    remaining = [item for item in records[0]['operations'] if item['operation_key'] != 'source:table0']
-    DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
-        set={'operations': F.lit(encode_metadata_row('METADATA_PIPELINE_RUN', {'operations': remaining})['operations'])})
-    with pytest.raises(ValueError, match='whole-run|source outside|Guardrail evidence'):
-        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
 
 
 def test_stale_writer_cannot_replace_a_newer_run_or_operation_array(runs_delta):
@@ -213,18 +197,6 @@ def test_simultaneous_updates_accept_one_complete_run(runs_delta):
     assert shared.validate_pipeline_run(r.rows()[0])['run_id'] == plan.plan_id
 
 
-def test_foreign_guardrail_provenance_cannot_approve(runs_delta):
-    """Matching run/rule IDs from a different workspace_id never count as Test proof."""
-    r = runs_delta
-    plan = r.make(roles=('source',))
-    r.complete(plan)
-    finalize_pipeline(shared.PipelineSession(plan, r.spark))
-    from delta.tables import DeltaTable
-    DeltaTable.forPath(r.spark, r.paths['METADATA_GUARDRAIL_RESULTS']).update(set={'workspace_id': "'FOREIGN'"})
-    with pytest.raises(ValueError, match='provenance'):
-        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
-
-
 def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monkeypatch):
     """A failure between diagnostic and run commits leaves no approving snapshot."""
     r = runs_delta
@@ -237,8 +209,6 @@ def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monke
         finalize_pipeline(shared.PipelineSession(plan, r.spark))
     assert r.rows() == []
     assert r.spark.read.format('delta').load(r.paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
-    with pytest.raises(ValueError, match='missing or duplicated'):
-        migration._legacy_testing_run_evidence(activation.exact_record(activation.metadata_records("METADATA_PIPELINE_RUN", context=r.context, spark_session=r.spark, run_id=plan.plan_id), run_id=plan.plan_id), context=r.context, spark_session=r.spark)
 
 
 def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_delta):

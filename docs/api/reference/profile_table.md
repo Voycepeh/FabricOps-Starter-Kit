@@ -238,7 +238,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 86 |
+| Live-critical dependencies | 106 |
 
 ### Release history
 
@@ -252,7 +252,22 @@ distinct snapshot identity.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.check_promotion_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
@@ -333,11 +348,16 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 
 

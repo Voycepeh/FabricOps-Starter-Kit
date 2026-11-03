@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1540" height="980" viewBox="0 0 1540 980" role="img" aria-label="FabricOps metadata relationship diagram">
-<rect width="1540" height="980" fill="#FFFFFF"/>
-<rect x="17" y="16" width="1506" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1930" height="980" viewBox="0 0 1930 980" role="img" aria-label="FabricOps metadata relationship diagram">
+<rect width="1930" height="980" fill="#FFFFFF"/>
+<rect x="17" y="16" width="1896" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
 <rect x="17" y="303" width="1506" height="638" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
 <text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance and pipeline authority</text>
 <text x="36" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering Schema</text>
@@ -78,4 +78,10 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
+<rect x="1595" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
+<path d="M1599 78H1891Q1895 78 1895 82V115H1595V82Q1595 78 1599 78Z" fill="#7144AE"/>
+<text x="1745" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
+<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
+</a>
 </svg>

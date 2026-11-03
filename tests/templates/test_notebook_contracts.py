@@ -216,16 +216,18 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     assert "refuses to write any table that is already governed" in normalized["step_4"]
     assert "incomplete" in normalized["step_4"]
 
-    assert "# step 5. activate data contracts and deploy" in normalized["step_5"]
-    assert "exact effective data agreement" in normalized["step_5"]
-    assert "review the affected release" in normalized["step_5"]
-    assert "fabric or ci tooling" in normalized["step_5"]
-    assert "deploy the reviewed notebook" in normalized["step_5"]
+    assert "# step 5. activate contracts and promote the notebook" in normalized["step_5"]
+    assert "exact effective agreement" in normalized["step_5"]
+    assert "physical table workspace" in normalized["step_5"]
+    assert "separate governed notebook" in normalized["step_5"]
+    assert "never moves schedules" in normalized["step_5"]
+    assert "toctou" in normalized["step_5"]
+    assert "governed admission remains blocked" in normalized["step_5"]
 
     assert "# step 6. run the pipeline in production" in normalized["step_6"]
     assert "same pipeline workflow in the production workspace" in normalized["step_6"]
-    assert "activated workspace authority" in normalized["step_6"]
-    assert "do not pass an execution-plan argument" in normalized["step_6"]
+    assert "separate promoted governed notebook" in normalized["step_6"]
+    assert "currently active notebook version" in normalized["step_6"]
     assert "read → transform → write" in normalized["step_6"]
 
     lifecycle_steps = (

@@ -113,7 +113,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     state = SimpleNamespace(config=config, context=context, metadata={name: [] for name in registry}, business={}, reads=[], commits={})
 
     from fabricops_kit.activated_pipeline import shared as activation
-    state.metadata["METADATA_PIPELINE_REGISTRY"] = [{**activation.empty_pipeline_authority(), **audit}]
+    state.metadata["METADATA_PIPELINE_REGISTRY"] = []
     activity_times = {}
     def audit_fields(**kwargs):
         activity = context["activity_id"]
@@ -260,7 +260,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     frozen_json = {row["contract_id"]: row["contract_payload_json"] for row in (source, schema_source, target)}
     before = _activation(state)
     assert not before["records"] and before["ready"] is False
-    assert "trusted deployment verification" in before["reason"]
+    assert "signed-in Fabric" in before["reason"]
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
@@ -308,7 +308,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert not widget["records"] and widget["ready"] is False
     assert widget["token"] == before["token"]
     from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
-    with pytest.raises(RuntimeError, match="trusted deployment verification"):
+    with pytest.raises(RuntimeError, match="signed-in Fabric"):
         build_governed_pipeline_plan(pipeline_id=coordinates["pipeline_id"], context=state.context,
             spark_session=state.spark)
     assert len(state.metadata["METADATA_PIPELINE_RUN"]) == 1

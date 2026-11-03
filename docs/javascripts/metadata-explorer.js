@@ -7,8 +7,9 @@
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
-    ["PIPELINE_REGISTRY", "engineering", ["record_id"], ["agreement_id/version", "contract_id/version"], "metadata_pipeline_registry/"],
-    ["PIPELINE_RUN", "engineering", ["run_id"], ["pipeline_activation_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
+    ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id"], ["contract_id/version"], "metadata_data_contract_activation/"],
+    ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["agreement_id/version"], "metadata_pipeline_registry/"],
+    ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
     ["DATA_CATALOGUE", "engineering", ["environment_name", "table_id", "column_id"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
@@ -23,11 +24,11 @@
   // Registry cardinalities describe separate activation records; control is internal.
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1-N", "Exact activation Agreement versions"],
-    ["PIPELINE_REGISTRY", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
+    ["DATA_AGREEMENT", "PIPELINE_REGISTRY", "1-N", "Exact Pipeline Promotion Agreement versions"],
+    ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
     ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Run activation provenance; deployment verification pending"],
+    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
     ["PIPELINE_RUN", "PROCESSING_STATE", "1-N", "Run processing state"],
     ["DATA_CATALOGUE", "PROCESSING_STATE", "1-N", "Source and target processing state"],
@@ -229,10 +230,10 @@
           rows.push(child + "." + fk.local_field + " → " + other + "." + fk.referenced_field + suffix);
         }
       }
-      // A registration is unique by pipeline and environment inside the authority.
+      // Runs reference exact immutable per-workspace Pipeline Promotions.
       if ((from === "PIPELINE_REGISTRY" && to === "PIPELINE_RUN") ||
           (to === "PIPELINE_REGISTRY" && from === "PIPELINE_RUN")) {
-        rows.push("PIPELINE_RUN.pipeline_id + environment_name → PIPELINE_REGISTRY.registrations[].pipeline_id + environment_name (registered pipeline and environment; Live approval must match both)");
+        rows.push("PIPELINE_RUN.promotion_id → PIPELINE_REGISTRY.promotion_id (exact immutable per-workspace Pipeline Promotion)");
       }
       if (rows.length) return rows;
       return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];

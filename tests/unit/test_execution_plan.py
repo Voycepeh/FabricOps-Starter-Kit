@@ -131,10 +131,10 @@ def test_testing_can_select_inactive_candidate_but_live_cannot(plan_runtime):
     selections = {"source": {"contract_id": "contract-source", "contract_version": 2}, "target": {"contract_id": "contract-target", "contract_version": 1}}
     plan = make(selections=selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
-    with pytest.raises(ValueError, match="Activated Pipeline"):
+    with pytest.raises(ValueError, match="Pipeline Promotion"):
         make("live", selections)
     selections["source"]["contract_version"] = 1
-    with pytest.raises(ValueError, match="Activated Pipeline"):
+    with pytest.raises(ValueError, match="Pipeline Promotion"):
         make("live", selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
 
@@ -144,7 +144,7 @@ def test_testing_no_contract_is_diagnostic_only_even_when_legacy_active_flag_exi
     rows, _, make, row = plan_runtime
     rows.append(row(active=True))
     assert json.loads(make().contracts_json)["source"] is None
-    with pytest.raises(ValueError, match="Activated Pipeline"):
+    with pytest.raises(ValueError, match="Pipeline Promotion"):
         make("live")
 
 
@@ -188,7 +188,7 @@ def test_live_builder_rejects_individual_contract_authority(plan_runtime):
     """Even matching legacy active flags cannot construct a Live execution plan."""
     rows, _, make, row = plan_runtime
     rows.extend([row(active=True), row(table_id="target", active=True)])
-    with pytest.raises(ValueError, match="Activated Pipeline"):
+    with pytest.raises(ValueError, match="Pipeline Promotion"):
         make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
 
 
