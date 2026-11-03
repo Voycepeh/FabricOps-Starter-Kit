@@ -153,7 +153,34 @@ A common pattern is **Full → Overwrite** for rebuilding a target or **Incremen
 
 ## What FabricOps Takes Care of for You
 
-Reliable pipelines need more than a successful write. These six engineering decisions explain how FabricOps handles the difficult cases. Expand a title for the implementation, stored evidence and trade-off.
+Reliable pipelines need more than a successful write. These engineering decisions explain how FabricOps coordinates Fabric access, processing and safe publication. Expand a title for the implementation, stored evidence and trade-off.
+
+??? info "One function coordinates the checks around each read and write"
+    Engineers should focus on their transformation, not repeat the same validation, profiling and publishing steps for every table.
+
+    **How it works:** [`orchestrate_read()`](../api/reference/orchestrate_read.md) calls `pipeline_read()`, then runs applicable Freshness, Schema, Grain and Data Quality checks and schedules source profiling. After the engineer's PySpark transformation, [`orchestrate_write()`](../api/reference/orchestrate_write.md) coordinates Schema, Sensitive Data treatment, Source Drift, Grain and Data Quality checks before calling `pipeline_write()` and scheduling post-publication profiling. The active execution mode and selected Data Contract determine which checks apply. Stage outcomes are collected rather than hidden.
+
+    **Where to look:** [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) records persisted rule outcomes such as `guardrail_type`, `status`, `can_continue` and `reason`. [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) captures `operations` and the finalized run status; profiling uses [`METADATA_DATA_PROFILED`](../reference/metadata/metadata_data_profiled.md).
+
+    **Trade-off:** The orchestrators deliberately impose a repeatable execution sequence. Engineers retain control of transformations but cannot treat a blocked governed check as an ordinary successful publication.
+
+??? info "One notebook can work with more than one Fabric store"
+    Fabric's default notebook attachment is not a convenient way to address every source and destination across workspaces.
+
+    **How it works:** [`00 Env Config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb) defines logical store names and their environment-specific workspace, item and store type. Internal `resolve_fabric_context()`, `get_store()` and `resolve_store()` select the correct physical store for the running workspace. Lakehouse reads resolve OneLake `abfss://` table or file paths; Warehouse reads use the Fabric Spark connector with the configured Warehouse identity. `orchestrate_read()` and `orchestrate_write()` use the logical store key, not a hard-coded default attachment.
+
+    **Where to look:** `src/fabricops_kit/config/shared.py` implements `get_store()` and the Lakehouse `FabricStore.root` path; `src/fabricops_kit/io/shared.py` implements `resolve_store()` and the physical Lakehouse and Warehouse readers. The store mapping lives in each workspace's `00 Env Config`, not in a new metadata table.
+
+    **Trade-off:** This avoids dependence on one attached default Lakehouse, but does not bypass Fabric permissions. Each workspace and item still needs valid configuration and access rights.
+
+??? info "Warehouse reads filter at the source instead of moving everything into Spark"
+    An incremental job should not fetch a whole Warehouse table just to discard most of its rows in PySpark.
+
+    **How it works:** [`pipeline_read()`](../api/reference/pipeline_read.md) resolves the accepted source-to-target watermark, then internal `_warehouse_incremental_query()` builds a bounded T-SQL `WHERE` predicate. The generated query is passed to `read_warehouse_query()` through Fabric's `synapsesql` connector. Lakehouse incremental reads instead apply Spark filtering to the Delta DataFrame. Caller-supplied Warehouse SQL is supported for full reads, but rejected in Incremental mode because FabricOps must own the checkpoint predicate.
+
+    **Where to look:** `src/fabricops_kit/pipeline/pipeline_read.py` implements `_warehouse_incremental_query()` and `_filter_lakehouse_incremental()`. `src/fabricops_kit/io/shared.py` implements `read_warehouse_synapsesql()`. [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `source_table_id`, `target_table_id`, `watermark_type` and `max_change_value` for accepted progress.
+
+    **Trade-off:** SQL pushdown can reduce Warehouse data transferred into Spark, but still incurs connector and Warehouse query overhead. It is an efficiency design, not a guarantee that Warehouse reads outperform direct Lakehouse Delta reads.
 
 ??? info "A failed run shouldn't mean writing everything twice"
     A successful write followed by a metadata failure should not silently duplicate the same publication on retry.
