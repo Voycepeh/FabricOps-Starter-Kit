@@ -1,0 +1,42 @@
+{
+  "disclaimer": "Synthetic local Spark results; not Microsoft Fabric capacity benchmarks. Billion-row values in the report are arithmetic linear extrapolations, not forecasts.",
+  "recorded_at": "2026-11-03",
+  "environment": {
+    "spark": "4.1.1",
+    "python": "3.11.16",
+    "local_threads": 2,
+    "logical_cpus": 3,
+    "memory_gib": 9.7,
+    "shuffle_partitions": 8,
+    "adaptive_query_execution": false
+  },
+  "method": {
+    "both_sides_computed": "Source and target have no row hash; both are serialized and hashed during comparison.",
+    "persisted_target": "Target already stores customer_id and _row_hash; incoming source has no hash and computes it during comparison.",
+    "no_hash_baseline": "Full read and overwrite without any fingerprint or row-hash calculation."
+  },
+  "measurements": {
+    "100000": [
+      {"approach": "no_hash_overwrite", "case": "unchanged", "elapsed_seconds": 0.654024, "rows_scanned": 100000, "rows_written": 100000, "spark_jobs": 3},
+      {"approach": "fingerprint_skip", "case": "unchanged", "elapsed_seconds": 1.256344, "rows_scanned": 100000, "rows_written": 0, "spark_jobs": 2},
+      {"approach": "both_sides_computed", "case": "unchanged", "elapsed_seconds": 1.84901, "rows_scanned": 200000, "rows_written": 0, "spark_jobs": 4, "shuffle_read_bytes": 14012846},
+      {"approach": "persisted_target", "case": "unchanged", "elapsed_seconds": 1.195454, "rows_scanned": 200000, "rows_written": 0, "spark_jobs": 4, "shuffle_read_bytes": 14012846},
+      {"approach": "both_sides_computed", "case": "changed_1", "elapsed_seconds": 1.599098, "rows_scanned": 200000, "rows_written": 0, "updated": 1000, "spark_jobs": 4, "shuffle_read_bytes": 14012931},
+      {"approach": "persisted_target", "case": "changed_1", "elapsed_seconds": 1.285354, "rows_scanned": 200000, "rows_written": 0, "updated": 1000, "spark_jobs": 4, "shuffle_read_bytes": 14012931},
+      {"approach": "both_sides_computed", "case": "deleted", "elapsed_seconds": 1.835176, "rows_scanned": 199000, "rows_written": 0, "deleted": 1000, "spark_jobs": 4, "shuffle_read_bytes": 13940677},
+      {"approach": "persisted_target", "case": "deleted", "elapsed_seconds": 1.113374, "rows_scanned": 199000, "rows_written": 0, "deleted": 1000, "spark_jobs": 4, "shuffle_read_bytes": 13940677}
+    ],
+    "1000000": [
+      {"approach": "no_hash_overwrite", "case": "unchanged", "elapsed_seconds": 2.211849, "rows_scanned": 1000000, "rows_written": 1000000, "spark_jobs": 3},
+      {"approach": "fingerprint_skip", "case": "unchanged", "elapsed_seconds": 7.210685, "rows_scanned": 1000000, "rows_written": 0, "spark_jobs": 2},
+      {"approach": "no_hash_overwrite", "case": "changed_1", "elapsed_seconds": 2.435185, "rows_scanned": 1000000, "rows_written": 1000000, "spark_jobs": 3},
+      {"approach": "fingerprint_and_write", "case": "changed_1", "elapsed_seconds": 9.126525, "rows_scanned": 1000000, "rows_written": 1000000, "spark_jobs": 4},
+      {"approach": "both_sides_computed", "case": "unchanged", "elapsed_seconds": 5.548991, "rows_scanned": 2000000, "rows_written": 0, "spark_jobs": 4, "shuffle_read_bytes": 139843511},
+      {"approach": "persisted_target", "case": "unchanged", "elapsed_seconds": 5.170536, "rows_scanned": 2000000, "rows_written": 0, "spark_jobs": 4, "shuffle_read_bytes": 139843511},
+      {"approach": "both_sides_computed", "case": "changed_1", "elapsed_seconds": 7.124381, "rows_scanned": 2000000, "rows_written": 0, "updated": 10000, "spark_jobs": 4, "shuffle_read_bytes": 139842822},
+      {"approach": "persisted_target", "case": "changed_1", "elapsed_seconds": 4.68288, "rows_scanned": 2000000, "rows_written": 0, "updated": 10000, "spark_jobs": 4, "shuffle_read_bytes": 139842822},
+      {"approach": "both_sides_computed", "case": "deleted", "elapsed_seconds": 7.573671, "rows_scanned": 1990000, "rows_written": 0, "deleted": 10000, "spark_jobs": 4, "shuffle_read_bytes": 139120117},
+      {"approach": "persisted_target", "case": "deleted", "elapsed_seconds": 4.538925, "rows_scanned": 1990000, "rows_written": 0, "deleted": 10000, "spark_jobs": 4, "shuffle_read_bytes": 139120117}
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "disclaimer": "Synthetic local Spark results; not Microsoft Fabric capacity benchmarks. Candidate metadata was simulated and is not a Delta Change Data Feed measurement.",
+  "recorded_at": "2026-11-03",
+  "environment": {
+    "spark": "4.1.1",
+    "python": "3.11.16",
+    "local_threads": 2,
+    "logical_cpus": 3,
+    "memory_gib": 9.7,
+    "shuffle_partitions": 8,
+    "adaptive_query_execution": false,
+    "materialization": "DISK_ONLY for partition benchmark phase boundaries",
+    "storage_format": "30-way partitioned Parquet with Snappy compression"
+  },
+  "method": {
+    "partitions": 30,
+    "cases": ["unchanged", "changed_day", "late_update", "missing_rows"],
+    "full_fingerprint": "Scans, hashes, transforms and writes the full snapshot when changed.",
+    "partition_fingerprint": "Scans and hashes the full snapshot, then transforms and writes only changed partitions.",
+    "candidate_metadata": "Uses a simulated candidate-partition list, verifies candidate partition fingerprints, compares candidate source/target rows by business key and row hash, then writes candidate partitions."
+  },
+  "measurements": {
+    "100000": [
+      {"approach": "full_fingerprint", "case": "unchanged", "total_seconds": 1.041255, "read_seconds": 0.44736, "hash_seconds": 0.59387, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 100000, "rows_written": 0, "changed_partitions": 0, "spark_jobs": 3, "spark_stages": 5, "shuffle_read_bytes": 419},
+      {"approach": "partition_fingerprint", "case": "unchanged", "total_seconds": 1.094848, "read_seconds": 0.440724, "hash_seconds": 0.654081, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 100000, "rows_written": 0, "changed_partitions": 0, "spark_jobs": 3, "spark_stages": 5, "shuffle_read_bytes": 3356},
+      {"approach": "candidate_metadata", "case": "unchanged", "total_seconds": 0.000002, "read_seconds": 0.0, "hash_seconds": 0.0, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 0, "rows_written": 0, "changed_partitions": 0, "note": "In-memory simulated metadata lookup only; excludes real Delta metadata lookup cost."},
+      {"approach": "full_fingerprint", "case": "changed_day", "total_seconds": 2.644765, "read_seconds": 0.515059, "hash_seconds": 0.854991, "row_compare_seconds": 0.0, "transform_seconds": 0.580774, "write_seconds": 0.693913, "rows_scanned": 100000, "rows_written": 100000, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 539},
+      {"approach": "partition_fingerprint", "case": "changed_day", "total_seconds": 1.650545, "read_seconds": 0.503738, "hash_seconds": 0.890525, "row_compare_seconds": 0.0, "transform_seconds": 0.129371, "write_seconds": 0.12686, "rows_scanned": 100000, "rows_written": 3333, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3561},
+      {"approach": "candidate_metadata", "case": "changed_day", "total_seconds": 1.276355, "read_seconds": 0.293401, "hash_seconds": 0.154117, "row_compare_seconds": 0.658685, "transform_seconds": 0.072003, "write_seconds": 0.098117, "rows_scanned": 6666, "rows_written": 3333, "changed_partitions": 1, "inserted": 0, "updated": 3333, "deleted": 0, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 471764},
+      {"approach": "full_fingerprint", "case": "late_update", "total_seconds": 2.053295, "read_seconds": 0.540676, "hash_seconds": 0.580814, "row_compare_seconds": 0.0, "transform_seconds": 0.399965, "write_seconds": 0.531816, "rows_scanned": 100000, "rows_written": 100000, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 537},
+      {"approach": "partition_fingerprint", "case": "late_update", "total_seconds": 1.654582, "read_seconds": 0.489306, "hash_seconds": 0.78781, "row_compare_seconds": 0.0, "transform_seconds": 0.267589, "write_seconds": 0.109826, "rows_scanned": 100000, "rows_written": 3333, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3479},
+      {"approach": "candidate_metadata", "case": "late_update", "total_seconds": 1.00357, "read_seconds": 0.231876, "hash_seconds": 0.176402, "row_compare_seconds": 0.365446, "transform_seconds": 0.070525, "write_seconds": 0.15929, "rows_scanned": 6666, "rows_written": 3333, "changed_partitions": 1, "inserted": 0, "updated": 333, "deleted": 0, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 471656},
+      {"approach": "full_fingerprint", "case": "missing_rows", "total_seconds": 2.342099, "read_seconds": 0.445728, "hash_seconds": 0.603401, "row_compare_seconds": 0.0, "transform_seconds": 0.463381, "write_seconds": 0.829565, "rows_scanned": 99967, "rows_written": 99967, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 539},
+      {"approach": "partition_fingerprint", "case": "missing_rows", "total_seconds": 1.47151, "read_seconds": 0.395095, "hash_seconds": 0.81578, "row_compare_seconds": 0.0, "transform_seconds": 0.148419, "write_seconds": 0.112141, "rows_scanned": 99967, "rows_written": 3300, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3485},
+      {"approach": "candidate_metadata", "case": "missing_rows", "total_seconds": 1.132845, "read_seconds": 0.418422, "hash_seconds": 0.205178, "row_compare_seconds": 0.360656, "transform_seconds": 0.056909, "write_seconds": 0.091648, "rows_scanned": 6633, "rows_written": 3300, "changed_partitions": 1, "inserted": 0, "updated": 0, "deleted": 33, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 469450}
+    ],
+    "1000000": [
+      {"approach": "full_fingerprint", "case": "unchanged", "total_seconds": 7.40934, "read_seconds": 1.991698, "hash_seconds": 5.417548, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 1000000, "rows_written": 0, "changed_partitions": 0, "spark_jobs": 3, "spark_stages": 5, "shuffle_read_bytes": 424},
+      {"approach": "partition_fingerprint", "case": "unchanged", "total_seconds": 7.572242, "read_seconds": 1.911204, "hash_seconds": 5.660991, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 1000000, "rows_written": 0, "changed_partitions": 0, "spark_jobs": 3, "spark_stages": 5, "shuffle_read_bytes": 3388},
+      {"approach": "candidate_metadata", "case": "unchanged", "total_seconds": 0.000003, "read_seconds": 0.0, "hash_seconds": 0.0, "row_compare_seconds": 0.0, "transform_seconds": 0.0, "write_seconds": 0.0, "rows_scanned": 0, "rows_written": 0, "changed_partitions": 0, "note": "In-memory simulated metadata lookup only; excludes real Delta metadata lookup cost."},
+      {"approach": "full_fingerprint", "case": "changed_day", "total_seconds": 15.199238, "read_seconds": 2.481922, "hash_seconds": 5.513459, "row_compare_seconds": 0.0, "transform_seconds": 3.970011, "write_seconds": 3.23382, "rows_scanned": 1000000, "rows_written": 1000000, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 543},
+      {"approach": "partition_fingerprint", "case": "changed_day", "total_seconds": 8.728442, "read_seconds": 2.312415, "hash_seconds": 5.789036, "row_compare_seconds": 0.0, "transform_seconds": 0.405351, "write_seconds": 0.221542, "rows_scanned": 1000000, "rows_written": 33333, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3410},
+      {"approach": "candidate_metadata", "case": "changed_day", "total_seconds": 2.348799, "read_seconds": 0.487833, "hash_seconds": 0.458569, "row_compare_seconds": 0.822381, "transform_seconds": 0.252795, "write_seconds": 0.327189, "rows_scanned": 66666, "rows_written": 33333, "changed_partitions": 1, "inserted": 0, "updated": 33333, "deleted": 0, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 4664525},
+      {"approach": "full_fingerprint", "case": "late_update", "total_seconds": 15.054409, "read_seconds": 2.160331, "hash_seconds": 5.186778, "row_compare_seconds": 0.0, "transform_seconds": 3.952544, "write_seconds": 3.75473, "rows_scanned": 1000000, "rows_written": 1000000, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 548},
+      {"approach": "partition_fingerprint", "case": "late_update", "total_seconds": 8.154841, "read_seconds": 1.855033, "hash_seconds": 5.636932, "row_compare_seconds": 0.0, "transform_seconds": 0.364896, "write_seconds": 0.297927, "rows_scanned": 1000000, "rows_written": 33333, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3409},
+      {"approach": "candidate_metadata", "case": "late_update", "total_seconds": 1.853433, "read_seconds": 0.363161, "hash_seconds": 0.441825, "row_compare_seconds": 0.66302, "transform_seconds": 0.165986, "write_seconds": 0.219409, "rows_scanned": 66666, "rows_written": 33333, "changed_partitions": 1, "inserted": 0, "updated": 3333, "deleted": 0, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 4665392},
+      {"approach": "full_fingerprint", "case": "missing_rows", "total_seconds": 13.925003, "read_seconds": 1.906672, "hash_seconds": 5.302149, "row_compare_seconds": 0.0, "transform_seconds": 3.415605, "write_seconds": 3.30055, "rows_scanned": 999667, "rows_written": 999667, "changed_partitions": 30, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 544},
+      {"approach": "partition_fingerprint", "case": "missing_rows", "total_seconds": 8.378112, "read_seconds": 2.071006, "hash_seconds": 5.637504, "row_compare_seconds": 0.0, "transform_seconds": 0.422344, "write_seconds": 0.24719, "rows_scanned": 999667, "rows_written": 33000, "changed_partitions": 1, "spark_jobs": 5, "spark_stages": 8, "shuffle_read_bytes": 3503},
+      {"approach": "candidate_metadata", "case": "missing_rows", "total_seconds": 1.774415, "read_seconds": 0.298821, "hash_seconds": 0.43013, "row_compare_seconds": 0.703499, "transform_seconds": 0.151445, "write_seconds": 0.190486, "rows_scanned": 66333, "rows_written": 33000, "changed_partitions": 1, "inserted": 0, "updated": 0, "deleted": 333, "spark_jobs": 11, "spark_stages": 22, "shuffle_read_bytes": 4640216}
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "disclaimer": "Synthetic local Spark results; not Microsoft Fabric capacity benchmarks.",
+  "recorded_at": "2026-11-03",
+  "environment": {
+    "spark": "4.1.1",
+    "python": "3.11.16",
+    "local_threads": 2,
+    "logical_cpus": 3,
+    "memory_gib": 9.7,
+    "shuffle_partitions": 8,
+    "adaptive_query_execution": false,
+    "storage_format": "Parquet with Snappy compression"
+  },
+  "commands": [
+    ".venv/bin/python scripts/benchmark_row_hashing.py --scales 100000 --output /tmp/row-hash-100k.json",
+    ".venv/bin/python scripts/benchmark_row_hashing.py --scales 1000000 --output /tmp/row-hash-1m.json",
+    ".venv/bin/python scripts/benchmark_row_hashing.py --scales 10000000 --cases unchanged --output /tmp/row-hash-10m.json"
+  ],
+  "scales": {
+    "100000": {
+      "baseline_target_bytes": 2189741,
+      "row_hash_target_bytes": 8854333,
+      "row_hash_storage_overhead_bytes": 6664592,
+      "row_hash_storage_overhead_percent": 304.3553,
+      "measurements": [
+        {"scenario": "full_read_overwrite_no_hash", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 1.63234, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "full_read_overwrite_no_hash", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 0.767503, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "full_read_overwrite_no_hash", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 0.987267, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "current_batch_fingerprint", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 3.174865, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 420, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "current_batch_fingerprint", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 1.486219, "spark_jobs": 2, "spark_stages": 3, "shuffle_read_bytes": 302, "rows_scanned": 100000, "rows_written": 0},
+        {"scenario": "current_batch_fingerprint", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 2.253406, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 420, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 2.568269, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 420, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 1.379686, "spark_jobs": 2, "spark_stages": 3, "shuffle_read_bytes": 302, "rows_scanned": 100000, "rows_written": 0},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 2.315609, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 420, "rows_scanned": 100000, "rows_written": 100000},
+        {"scenario": "business_key_row_hash_compare", "case": "unchanged", "elapsed_seconds": 1.942702, "spark_jobs": 4, "spark_stages": 10, "shuffle_read_bytes": 14012846, "inserted": 0, "updated": 0, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "changed_1", "elapsed_seconds": 2.005845, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 14012931, "inserted": 0, "updated": 1000, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "changed_10", "elapsed_seconds": 1.941346, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 14013273, "inserted": 0, "updated": 10000, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "new", "elapsed_seconds": 2.122739, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 14088491, "inserted": 1000, "updated": 0, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "deleted", "elapsed_seconds": 2.316065, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 13940677, "inserted": 0, "updated": 0, "deleted": 1000},
+        {"scenario": "business_key_row_hash_compare", "case": "duplicates", "elapsed_seconds": 0.472515, "spark_jobs": 3, "spark_stages": 7, "shuffle_read_bytes": 534924, "duplicate_keys_rejected": true},
+        {"scenario": "business_key_row_hash_compare", "case": "reordered", "elapsed_seconds": 1.759771, "spark_jobs": 4, "spark_stages": 14, "shuffle_read_bytes": 21092658, "inserted": 0, "updated": 0, "deleted": 0},
+        {"scenario": "watermark_incremental", "case": "new", "elapsed_seconds": 0.336435, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 115, "rows_scanned": 100000, "rows_written": 10000},
+        {"scenario": "hash_based_scd1", "case": "changed_1", "elapsed_seconds": 3.143239, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 200000, "rows_written": 1000},
+        {"scenario": "hash_based_scd2", "case": "changed_1", "elapsed_seconds": 4.571577, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 200000, "rows_written": 2000},
+        {"scenario": "hash_based_scd1", "case": "changed_10", "elapsed_seconds": 2.264792, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 200000, "rows_written": 10000},
+        {"scenario": "hash_based_scd2", "case": "changed_10", "elapsed_seconds": 3.776053, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 200000, "rows_written": 20000}
+      ]
+    },
+    "1000000": {
+      "baseline_target_bytes": 20162370,
+      "row_hash_target_bytes": 86746220,
+      "row_hash_storage_overhead_bytes": 66583850,
+      "row_hash_storage_overhead_percent": 330.2382,
+      "measurements": [
+        {"scenario": "full_read_overwrite_no_hash", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 3.588103, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "full_read_overwrite_no_hash", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 2.398293, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "full_read_overwrite_no_hash", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 2.994062, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "current_batch_fingerprint", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 12.414793, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 424, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "current_batch_fingerprint", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 8.278093, "spark_jobs": 2, "spark_stages": 3, "shuffle_read_bytes": 306, "rows_scanned": 1000000, "rows_written": 0},
+        {"scenario": "current_batch_fingerprint", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 10.851949, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 423, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "first_load", "case": "unchanged", "elapsed_seconds": 12.108059, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 424, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "unchanged_rerun", "case": "unchanged", "elapsed_seconds": 8.246143, "spark_jobs": 2, "spark_stages": 3, "shuffle_read_bytes": 306, "rows_scanned": 1000000, "rows_written": 0},
+        {"scenario": "persisted_row_hash_fingerprint", "phase": "changed_rerun", "case": "changed_1", "elapsed_seconds": 10.930081, "spark_jobs": 4, "spark_stages": 6, "shuffle_read_bytes": 423, "rows_scanned": 1000000, "rows_written": 1000000},
+        {"scenario": "business_key_row_hash_compare", "case": "unchanged", "elapsed_seconds": 7.771054, "spark_jobs": 4, "spark_stages": 10, "shuffle_read_bytes": 139843511, "inserted": 0, "updated": 0, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "changed_1", "elapsed_seconds": 7.848666, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 139842822, "inserted": 0, "updated": 10000, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "changed_10", "elapsed_seconds": 7.811025, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 139842402, "inserted": 0, "updated": 100000, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "new", "elapsed_seconds": 8.686094, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 140571705, "inserted": 10000, "updated": 0, "deleted": 0},
+        {"scenario": "business_key_row_hash_compare", "case": "deleted", "elapsed_seconds": 8.245895, "spark_jobs": 4, "spark_stages": 11, "shuffle_read_bytes": 139120117, "inserted": 0, "updated": 0, "deleted": 10000},
+        {"scenario": "business_key_row_hash_compare", "case": "duplicates", "elapsed_seconds": 0.92922, "spark_jobs": 3, "spark_stages": 7, "shuffle_read_bytes": 5159577, "duplicate_keys_rejected": true},
+        {"scenario": "business_key_row_hash_compare", "case": "reordered", "elapsed_seconds": 7.95498, "spark_jobs": 4, "spark_stages": 14, "shuffle_read_bytes": 210384816, "inserted": 0, "updated": 0, "deleted": 0},
+        {"scenario": "watermark_incremental", "case": "new", "elapsed_seconds": 0.928374, "spark_jobs": 3, "spark_stages": 4, "shuffle_read_bytes": 118, "rows_scanned": 1000000, "rows_written": 100000},
+        {"scenario": "hash_based_scd1", "case": "changed_1", "elapsed_seconds": 14.010128, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 2000000, "rows_written": 10000},
+        {"scenario": "hash_based_scd2", "case": "changed_1", "elapsed_seconds": 24.456889, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 2000000, "rows_written": 20000},
+        {"scenario": "hash_based_scd1", "case": "changed_10", "elapsed_seconds": 14.768128, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 2000000, "rows_written": 100000},
+        {"scenario": "hash_based_scd2", "case": "changed_10", "elapsed_seconds": 25.813229, "spark_jobs": 4, "spark_stages": 5, "shuffle_read_bytes": 118, "rows_scanned": 2000000, "rows_written": 200000}
+      ]
+    },
+    "10000000": {
+      "status": "not_completed_resource_limit",
+      "completed_phases": ["full_read_overwrite_no_hash", "current_batch_fingerprint"],
+      "failed_phase": "persisted_row_hash_fingerprint.first_load",
+      "failure": "Java heap space exhausted after MEMORY_AND_DISK cache spill while writing the hashed target; no partial timings are reported."
+    }
+  }
+}

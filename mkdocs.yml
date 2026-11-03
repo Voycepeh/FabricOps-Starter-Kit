@@ -61,6 +61,7 @@ nav:
       - Initial Specs: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
+      - Row Hashing & Change Detection Research: maintainer/row-hashing-change-detection-research.md
 
 markdown_extensions:
   - abbr
