@@ -14,7 +14,7 @@ The Registry has three scalar record types:
 
 The generated [Registry reference](../reference/metadata/metadata_pipeline_registry.md) lists physical columns and types. All canonical metadata fields are SQL endpoint compatible. Run and Catalogue JSON STRING columns retain their logical Python interfaces and expandable logical-schema documentation.
 
-**Governed execution and pipeline activation remain unavailable until trusted deployment verification is proven in Fabric and integrated.** Neither an old successful Test, a migration candidate, a notebook-supplied Git SHA nor a raw activation field proves executing code identity. This PR introduces no verifier, attestation service or custom notebook hashing.
+**Governed execution and pipeline activation remain unavailable until trusted deployment verification is proven in Fabric and integrated.** Neither an old successful Test, a migration candidate, a notebook-supplied Git SHA nor a raw activation field proves executing code identity. No deployment verifier is implemented; see the [provenance investigation and blocker](#deployment-provenance-investigation-and-blocker).
 
 A new Contract can be frozen and activated independently through activate_data_contract, using the exact frozen identity, reviewed Registry token, explicit target workspace and Governance confirmation. Metadata write principals must be trusted under tenant permissions; confirmation is not authentication. Central Metadata routing remains separate from the target execution workspace. Each Contract activation pins its reviewed physical destination in destination_json; alias checks use that stored binding without requiring every notebook to configure foreign environments. Migration copies the exact destination from validated legacy ownership. Missing or malformed bindings fail closed. A later Catalogue/configuration move does not move the protected destination; reactivate explicitly after draining affected executions.
 
@@ -80,6 +80,51 @@ This PR adds no partition fingerprinting, persisted row hashes, reporting projec
 Local real-Delta tests cover stale/overlapping Registry changes, blind append phantoms, missing control, exact lost-ack recovery, independent Contract activation, target-policy leases, migration idempotence, tampered history rejection and historical Run hash stability. Publication regression tests cover current strategies and retry/fingerprint behavior.
 
 Before Live rollout, a Fabric canary must validate the internal Delta transaction API/version, effective Serializable conflict behavior, archive permissions/retention, column mapping and actual SQL endpoint visibility. Passing local tests is not Fabric execution proof. The next deployment-assurance stage must prove trusted deployment barriers, dependency provenance and job/session correlation before enabling any Governed path.
+
+## Deployment provenance investigation and blocker
+
+**Decision on 3 November 2026: stop Governed enablement.** Investigation of the documented Microsoft Fabric interfaces has not established an independently trustworthy binding between approved deployment bytes, dependencies and the actual execution session before admission. This is a blocker for completing #1766, not a claim that Fabric can never support such a binding. No tenant Fabric validation was performed. The baseline includes merged #1768 (`c07817c23`) and #1770 (`3477c3123`).
+
+### Documented capabilities and remaining gaps
+
+| Microsoft interface | What it supplies | Why it does not establish the required binding |
+| --- | --- | --- |
+| [Get Notebook Definition](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/get-notebook-definition) | Public notebook definition parts retrieved through Fabric REST, supporting a separate verifier identity | A saved definition is not documented as the immutable code revision consumed by a particular running session. Definition retrieval and job submission are separate operations. |
+| [Run On Demand Notebook](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/background-jobs/run-on-demand-notebook) | Job submission, session configuration, environment references and dependency paths | The documented request does not condition execution on an approved notebook content digest and complete dependency digest. Referencing a mutable item or path does not pin its bytes. |
+| [Core Get Item Job Instance](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance) and [notebook job instance details](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/background-jobs/get-notebook-job-instance%28beta%29) | Job identity/status; notebook details include Livy/application correlation and an execution snapshot URL | No reviewed response contract supplies a verified code-and-dependency manifest bound to that job before admission. A snapshot URL alone is not such a manifest. In high concurrency, the session creator item can differ from the executing item. |
+| [NotebookUtils runtime context](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-runtime) | Read-only runtime properties including workspace, notebook, activity and environment identity | Read-only service properties aid correlation, but values forwarded through notebook Python code do not independently authenticate the caller of FabricOps or attest imported code. Reference run IDs are context-specific. |
+| [Environment library management](https://learn.microsoft.com/en-us/fabric/data-engineering/environment-manage-library) | Full publishing creates a stable library snapshot; Quick publishing installs at session startup | Environment identity alone does not attest all executing bytes. Quick packages can override Full packages, and notebook Resources and inline installs are outside environment publishing. |
+
+The missing guarantee is security-critical: verifying a saved notebook, starting a job, then verifying the saved notebook again does not prove the intervening executed revision. A change followed by restoration can pass both checks. Even an exact notebook digest would omit referenced notebooks, resources, wheels, transitive packages and session overrides unless those are also independently pinned and bound to the job.
+
+No reviewed documentation establishes an atomic deployment-to-execution barrier or a pre-admission attestation covering that dependency closure. No authenticated Fabric tenant or independently operated verification authority was available to test one. An external deployment service with restricted permissions may be a future design, but it is not an implemented or validated security mechanism here. A service token returned to arbitrary notebook code would also need protection against replay from a different execution.
+
+### Behavior while blocked
+
+`build_governed_pipeline_plan` and `verify_governed_plan` in `src/fabricops_kit/activated_pipeline/shared.py` reject execution unconditionally. `setup_pipeline()` and the persistence checks used by pipeline reads, writes and finalization retain this gate. The activation widget reports verification unavailability; editing deployment IDs, verification flags or in-memory plans cannot satisfy the gate. Historical approval records and migration candidates remain non-authorizing.
+
+Separate workspace/Table ID Contract activation, exact frozen Contract validation, Agreement checks and Registry CAS remain as implemented in #1770. Dry Run and Ungoverned retain their current behavior. Shared-target Append support and writer-scoped progress/receipts are **not implemented by this investigation**; no concurrent-writer safety claim follows from it. Overwrite and unsupported concurrent modes retain existing restrictions. Fingerprints, checkpoints, publication recovery and Run metadata are unchanged.
+
+### Evidence required before resuming implementation
+
+1. Identify a supported Fabric mechanism or independently operated authority that authenticates the actual execution and binds its workspace, Notebook ID, logical Pipeline ID, job/activity and session to approved notebook and dependency bytes. Record the API contract, trust principals, permissions and retention requirements. Evidence must exist before Governed admission, not only after publication.
+2. Demonstrate how edits, dependency replacement, session reuse, replay and direct public API calls cannot bypass that binding. The notebook must not hold authority to mint its own verification or modify the verifier, Registry authority or retained verification records.
+3. Specify how that independently verified deployment binds to the current pipeline activation while separate Contract activations pin exact frozen ID/version/hash. Pin those versions throughout execution; reject missing, stale, ambiguous, revoked or mismatched authority. Retained historical approvals cannot substitute for current activation.
+4. Only after proving the boundary, implement admission and compatible Append publication with pipeline/source/target-scoped progress, operation-scoped transaction identities and receipts, and finalization ownership checks. Add the requested unit, contract and real Delta concurrency/recovery tests. Successful Governed execution cannot be tested honestly against the current blocked implementation.
+
+### Required Fabric canaries
+
+Run in disposable workspaces with synthetic data and independently captured service responses. Record tenant runtime/package revisions, API versions, principals, job/session identities and exact Delta table versions; keep secrets out of retained reports.
+
+| Canary | Required result before enabling the corresponding capability |
+| --- | --- |
+| Deployment provenance | Independently inspect the executed revision and dependency closure. Change notebook content, referenced notebook, resource and wheel separately, including change-and-restore between checks. Every unapproved execution is denied before admission. If evidence is unavailable until completion, keep Governed blocked. |
+| Runtime identity | Exercise scheduled, API, interactive, reference and reused high-concurrency sessions. Substitute workspace, Notebook ID, Pipeline ID, job ID and session ID; replay evidence from another execution. Reject every mismatch without relying on notebook-reported flags or exit values. Unsupported contexts remain blocked. |
+| Activation and finalization | Race pipeline/Contract reactivation against admission and an active run; verify exact version pinning and stale-review rejection. Fail transformation/publication and attempt forged-plan finalization. No failed execution receives successful finalization or advances another writer's progress. |
+| Delta transactions and recovery | Once Append multiwriter support exists, race two pipelines against one target and verify each retains independent progress and receipts. Retry each operation, inject commit conflicts and drop commit acknowledgements. Reconcile exact transaction/target markers before accepting progress; verify no duplicates or cross-writer finalization. Confirm conflicting Overwrite, Merge, SCD1 and SCD2 admission remains rejected. |
+| SQL analytics endpoint | After supported metadata setup and representative runs, query the actual endpoint for Registry/Run/Catalogue/Processing State scalar columns and JSON values. Check discovery delay, Unicode, long payloads, timestamps and visibility after migration/commit; do not assume Spark readback proves SQL availability. |
+
+Local unit or Spark/Delta results cannot satisfy these Fabric canaries. Until the provenance canaries establish the trust boundary, preserve the unconditional Governed gate and report this stage as blocked.
 
 ## Processing State upgrade
 
