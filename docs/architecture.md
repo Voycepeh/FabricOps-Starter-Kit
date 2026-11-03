@@ -79,6 +79,8 @@ The configured Metadata Lakehouse holds three Governance-owned tables and nine E
 
     The [Metadata Reference](reference/metadata.md) is generated from `src/fabricops_kit/config/metadata_schemas.py` and writer ownership metadata. Use it instead of inferring columns from a diagram.
 
+## What's next
+
 <div class="fabricops-foundations">
   <a class="fabricops-card fabricops-card--governance" href="../governance/">
     <strong>Governance</strong>
@@ -89,5 +91,17 @@ The configured Metadata Lakehouse holds three Governance-owned tables and nine E
     <small>Inspect orchestration, Fabric I/O, incremental and historical processing, publication recovery, profiling, lineage, and observability.</small>
   </a>
 </div>
+
+<a class="fabricops-metadata-preview fabricops-guided-preview" href="../guided-demo/" aria-label="Start the seven-step FabricOps Guided Demo">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Guided Demo</span>
+    <strong class="fabricops-metadata-preview__title">Run the seven-step FabricOps workflow</strong>
+    <span class="fabricops-metadata-preview__description">Prepare Microsoft Fabric, build the pipeline, author and preview Data Contracts, then follow the Production and consumption hand-offs.</span>
+    <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
+  </span>
+  <span class="fabricops-metadata-preview__image" aria-hidden="true">
+    <img src="../assets/fabricops-role-workflow.png" alt="" loading="lazy" decoding="async">
+  </span>
+</a>
 
 </div>
