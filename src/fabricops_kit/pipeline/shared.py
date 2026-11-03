@@ -1056,6 +1056,82 @@ def filter_unpublished_rows(dataframe, identity, *, context, target_hashes=None)
         *["`" + name.replace("`", "``") + "`" for name in dataframe.columns])
 
 
+def row_hash_totals(dataframe):
+    """Reduce cached hashes to a bounded multiset fingerprint, preserving multiplicity."""
+    from pyspark.sql import functions as F
+    return dataframe.select(F.col("_row_hash").alias("hash")).agg(F.count("*").alias("rows"), *[
+        F.sum(F.conv(F.substring("hash", offset, 16), 16, 10).cast("decimal(38,0)")).alias(f"h{offset}")
+        for offset in (1, 17, 33, 49)
+    ]).first().asDict()
+
+
+def observe_full_source(identity, *, dataframe=None, context):
+    """Observe the physical source independently of read scope and Guardrail policy."""
+    plan = context.get("execution_plan")
+    policy = getattr(plan, "evidence", {}).get("source_observation_policy", {})
+    if not policy.get("manual") and policy.get("days") is None:
+        return {"status": "skipped", "reason": "automatic observation disabled"}
+    try:
+        state = read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
+        if hasattr(state, "where"):
+            from pyspark.sql import functions as F
+            state = state.where((F.col("workspace_id") == context["scope_workspace_id"])
+                                & (F.col("pipeline_id") == plan.pipeline_id))
+        history = _processing_state_rows(state)
+    except Exception as exc:
+        if not is_table_not_found_error(exc):
+            raise
+        history = []
+    source_id = str(identity["table_id"])
+    relevant = [row for row in history if row.get("record_type") == "full_source_baseline"
+                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
+                and row.get("workspace_id") == context["scope_workspace_id"]]
+    for target_id in {row["target_table_id"] for row in relevant if row.get("status") == "staged"}:
+        history = _recover_completed_source_observations(history, config=context["config"],
+            active_workspace_id=context["scope_workspace_id"], context=context,
+            source_table_id=source_id, target_table_id=target_id)
+    accepted = [row for row in history if row.get("record_type") == "full_source_baseline"
+                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
+                and row.get("workspace_id") == context["scope_workspace_id"] and row.get("status") == "committed"]
+    previous = max(accepted, key=lambda row: _watermark_timestamp(row.get("observed_at") or row["accepted_at"]), default=None)
+    now = datetime.now(UTC)
+    if previous is not None and not policy["manual"]:
+        last = datetime.fromisoformat(_watermark_timestamp(previous.get("observed_at") or previous["accepted_at"]).replace("Z", "+00:00"))
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=UTC)
+        if now - last < timedelta(days=policy["days"]):
+            return {"status": "skipped", "reason": "interval not elapsed"}
+    from fabricops_kit.io import read_warehouse_table
+    reuse_frame = dataframe is not None
+    if dataframe is None:
+        if identity["store_type"] == "lakehouse":
+            dataframe = read_lakehouse_table(identity["table_name"], store=identity["store"], schema=identity.get("schema"), context=context)
+        else:
+            # Deliberately use the physical table, never the normal Read SQL WHERE.
+            dataframe = read_warehouse_table(identity["schema"], identity["table_name"], store=identity["store"], context=context)
+    from pyspark import StorageLevel
+    if reuse_frame and not dataframe.is_cached:
+        dataframe.persist(StorageLevel.MEMORY_AND_DISK)
+        plan.evidence.setdefault("source_observation_caches", []).append(dataframe)
+    totals = row_hash_totals(add_row_hash(dataframe))
+    fingerprint = hashlib.sha256(json.dumps(totals, sort_keys=True, default=str).encode()).hexdigest()
+    observation_id = str(uuid4())
+    audit = build_pipeline_audit_fields(config=context["config"], active_workspace_id=context["scope_workspace_id"], runtime_context=context)
+    row = {**audit, "record_id": _processing_state_id(context["scope_workspace_id"], source_id, observation_id),
+           "record_type": "source_observation", "status": "observed", "observation_id": observation_id,
+           "run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "workspace_id": context["scope_workspace_id"],
+           "source_table_id": source_id, "source_table_name": identity["table_name"], "observed_at": now,
+           "partition_column": None, "partition_value": None, "row_count": totals["rows"],
+           "content_fingerprint": fingerprint, "is_present": True}
+    if persistence_permitted(context):
+        _merge_source_observation_records([row], config=context["config"], context=context)
+    plan.evidence.setdefault("full_source_observations", {})[source_id] = [row]
+    changed = previous is not None and previous["content_fingerprint"] != fingerprint
+    return {"status": "changed" if changed else "unchanged" if previous else "first_observation",
+            "changed": changed if previous else None, "row_count": totals["rows"], "content_fingerprint": fingerprint}
+
+
 class PublicationBatch:
     """Bind an immutable prepared batch to a durable, exact target-write marker.
 
@@ -1090,13 +1166,7 @@ class PublicationBatch:
             names = sorted(set(self.dataframe.columns) - _TARGET_TECHNICAL_COLUMNS)
             if not names:
                 raise ValueError("A publication batch must contain business columns.")
-            hashes = self.dataframe.select(F.col("_row_hash").alias("hash"))
-            # Bounded, order-independent multiset fingerprint; row multiplicity
-            # matters. This action establishes retry identity, never presentation.
-            totals = hashes.agg(F.count("*").alias("rows"), *[
-                F.sum(F.conv(F.substring("hash", offset, 16), 16, 10).cast("decimal(38,0)")).alias(f"h{offset}")
-                for offset in (1, 17, 33, 49)
-            ]).first().asDict()
+            totals = row_hash_totals(self.dataframe)
             self.input_rows = totals["rows"]
             boundary = {
                 "workspace_id": self.context["scope_workspace_id"], "target": self.identity["table_id"],
@@ -1252,6 +1322,7 @@ def _verify_retry_observations(batch, history):
         for pending, record_type in (
             (_PENDING_SOURCE_OBSERVATIONS.get(key, []), "incremental_checkpoint"),
             (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), "drift_baseline"),
+            (getattr(batch.context.get("execution_plan"), "evidence", {}).get("full_source_observations", {}).get(source_id, []), "full_source_baseline"),
         ):
             if not pending:
                 continue
@@ -1347,7 +1418,7 @@ def _processing_state_rows(history):
     rows = observation_rows(history)
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
-                or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "publication_receipt"}
+                or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
             raise RuntimeError("Unsupported legacy or invalid METADATA_PROCESSING_STATE record; reconcile and explicitly migrate or reset the Preview table before retrying.")
@@ -1839,12 +1910,13 @@ def check_source_drift_for_target(
     return result
 
 
-def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids):
+def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids, context=None):
     """Freeze source evidence so later reads cannot change a publication's checkpoint."""
     return {
         source_id: {
             "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
             "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
+            "full": [dict(row) for row in getattr((context or {}).get("execution_plan"), "evidence", {}).get("full_source_observations", {}).get(source_id, [])],
         }
         for source_id in source_table_ids
     }
@@ -1880,8 +1952,8 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
         captured = success_context["observation_snapshot"][source_id]
         source_name = _CURRENT_TABLE_IDENTITIES.get(source_id, {}).get("table_name") or resolve_catalogue_table_identity(
             context["config"], active_workspace_id, source_id, context=context).get("table_name")
-        for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline")):
-            for row in captured[kind]:
+        for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline"), ("full", "full_source_baseline")):
+            for row in captured.get(kind, []):
                 records.append({**{name: row.get(name) for name in (
                     "observation_id", "partition_value", "row_count", "min_change_value", "max_change_value",
                     "content_fingerprint", "is_present", "partition_column", "change_column", "watermark_type")},
@@ -6383,6 +6455,8 @@ class PipelineSession:
         finally:
             import atexit
             atexit.unregister(self.close)
+            for frame in self.plan.evidence.pop("source_observation_caches", []):
+                frame.unpersist()
             self.closed = True
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)

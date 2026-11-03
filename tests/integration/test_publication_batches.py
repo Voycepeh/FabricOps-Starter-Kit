@@ -908,3 +908,28 @@ def test_append_new_only_duplicate_batch_changed_values_and_retry(publication_ru
         run.state["activity"] = name
         run.publish(frame.withColumn(name, F.lit("changed")))
     assert run.read("target").count() == 3
+
+
+@pytest.mark.parametrize('failure', ['before', 'finalize'])
+def test_full_observation_acceptance_follows_verified_publication(durable_processing_state, failure):
+    """Failed writes never accept full baselines; interrupted acknowledgements recover atomically."""
+    run = durable_processing_state
+    run.context['execution_plan'].plan_id = 'observation-run'
+    run.context['execution_plan'].pipeline_id = 'pipeline'
+    run.context['execution_plan'].evidence['source_observation_policy'] = {'manual': True, 'days': None}
+    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
+    frame = run.stage(1, incremental=False)
+    result = shared.observe_full_source({'table_id': 'source', 'table_name': 'source', 'store': 'Bronze',
+        'store_type': 'lakehouse', 'schema': None}, dataframe=frame, context=run.context)
+    assert result['row_count'] == 8
+    run.state['fail'] = failure
+    with pytest.raises(RuntimeError):
+        run.publish(frame)
+    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
+    assert not any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
+    run.state['fail'] = None
+    run.publish(frame)
+    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
+    assert any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
+    accepted = next(row for row in history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed')
+    assert {row['status'] for row in history if row.get('publication_id') == accepted['publication_id']} == {'committed'}

@@ -194,7 +194,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PROCESSING_STATE": {
         "purpose": "Stores source observations, accepted checkpoints, Source Drift baselines and publication receipts so pipelines can resume and recover processing safely.",
         "grain": "One source snapshot partition/header, source-to-target progress member, or exact target publication receipt.",
-        "implementation_notes": "record_type distinguishes source_observation, incremental_checkpoint, drift_baseline and publication_receipt. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.",
+        "implementation_notes": "record_type distinguishes source_observation, incremental_checkpoint, drift_baseline, full_source_baseline and publication_receipt. Pipeline-level full observation ignores incremental predicates; full_source_baseline records are accepted only after verified target publication. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.",
         "primary_key": ["record_id"],
 
         "foreign_keys": [

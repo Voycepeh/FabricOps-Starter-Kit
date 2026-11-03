@@ -604,7 +604,7 @@ def pipeline_write(
         "context": context,
         "observation_snapshot": snapshot_pipeline_write_observations(
             workspace_id=active_workspace_id, activity_id=execution_id, target_table_id=target_table_id,
-            source_table_ids=publication_source_ids,
+            source_table_ids=publication_source_ids, context=context,
         ),
     }
     prepared_df = add_target_audit_fields(add_row_hash(df), audit)

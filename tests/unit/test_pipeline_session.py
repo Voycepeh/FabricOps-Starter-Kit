@@ -107,7 +107,7 @@ def test_exact_mode_validation(runtime, mode):
 
 def test_setup_arguments_remove_registration_and_rebind(runtime):
     import inspect
-    assert list(inspect.signature(setup_pipeline).parameters) == ["pipeline_id", "pipeline_mode"]
+    assert list(inspect.signature(setup_pipeline).parameters) == ["pipeline_id", "pipeline_mode", "observe_source", "source_observation_days"]
     for removed in ("new_pipeline", "previous_workspace_id", "previous_notebook_id"):
         with pytest.raises(TypeError):
             setup_pipeline(**{removed: True})

@@ -10,6 +10,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table
 from fabricops_kit.pipeline.shared import (
     capture_source_observation,
+    observe_full_source,
     resolve_catalogue_table_identity,
     resolve_incremental_source_scope,
     resolve_incremental_observation_columns,
@@ -432,6 +433,9 @@ def pipeline_read(
             context={**(io_context or {}), "_spark_session": spark_session},
         )
 
+    full_observation = observe_full_source(identity,
+        dataframe=(complete_dataframe if store_kind == "lakehouse" else dataframe if read_mode == "full" and query is None else None),
+        context=context)
     if has_contract and observation is None:
         observation = capture_source_observation(
             table_id=str(identity["table_id"]), dataframe=dataframe, source_identity=identity, context=context, spark_session=spark_session
@@ -450,6 +454,8 @@ def pipeline_read(
     recovery = context.get("_fabricops_source_observation_recovery", [])[recovery_start:]
     if verbose:
         print(f"4. Source Observation → {observation_label}")
+        if full_observation["status"] != "skipped":
+            print(f"   Full physical source → {full_observation['status']}")
         for recovered in recovery:
             print(f"   Recovery → {recovered['status'].replace('_', ' ')}; {recovered['batches']} exact batch(es) verified")
         if scope.get("has_data") is False:
@@ -458,6 +464,7 @@ def pipeline_read(
 
     return {
         "source_observation_recovery": recovery,
+        "full_source_observation": full_observation,
         "read_metrics": {
             "rows_read": 0 if scope.get("has_data") is False else None,
             "columns": len(dataframe.columns) if hasattr(dataframe, "columns") else None,

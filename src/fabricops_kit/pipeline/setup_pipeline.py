@@ -127,7 +127,8 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned"):
+def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned",
+                   observe_source: bool = False, source_observation_days: int | None = None):
     """Start a pipeline using a stable logical Pipeline ID and one execution mode.
 
     Dry Run previews transformations, optional Contract checks and profiling without
@@ -144,6 +145,16 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
         Ungoverned and Governed. Dry Run may allocate a session-only ID.
     pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
         Preview, publish without governance, or enforce activated governance.
+
+    observe_source : bool, default=False
+        Manually request a full physical Source Observation for this execution.
+    source_observation_days : int or None, default=None
+        Automatically observe after this many days since the last accepted full
+        observation. None disables automatic observation. Manual requests override
+        the interval. Incremental SQL scope does not restrict observation. Baselines
+        are accepted only with verified target publication; failed or no-op writes
+        do not consume the interval. Changed fingerprints are diagnostic unless
+        a separately configured Source Drift policy blocks publication.
 
     Returns
     -------
@@ -184,4 +195,11 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
         pipeline_id = validate_pipeline_id(pipeline_id)
     elif pipeline_mode != "Dry Run":
         raise ValueError("Persistent pipelines require an explicit stable pipeline_id.")
-    return start_pipeline_session(pipeline_id, pipeline_mode, inspector=_inspector)
+    if not isinstance(observe_source, bool):
+        raise ValueError("observe_source must be a boolean.")
+    if source_observation_days is not None and (isinstance(source_observation_days, bool)
+            or not isinstance(source_observation_days, int) or source_observation_days <= 0):
+        raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
+    session = start_pipeline_session(pipeline_id, pipeline_mode, inspector=_inspector)
+    session.plan.evidence["source_observation_policy"] = {"manual": observe_source, "days": source_observation_days}
+    return session

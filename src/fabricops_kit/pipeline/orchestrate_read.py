@@ -126,6 +126,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         summary.details([("Physical reader", reader_name), ("Columns", metrics["columns"])])
         for recovered in source.get("source_observation_recovery", []):
             summary.details([("Source Observation", recovered["status"].replace("_", " ")), ("Exact batches verified", recovered["batches"])])
+        full_observation = source.get("full_source_observation", {})
+        if full_observation.get("status") not in {None, "skipped"}:
+            summary.details([("Full Source Observation", full_observation["status"])])
         if source.get("has_data") is False:
             summary.details([("Scope", "Empty incremental scope")])
         dataframe, table_id = source["dataframe"], source["table_id"]
