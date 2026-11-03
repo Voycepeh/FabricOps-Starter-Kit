@@ -122,11 +122,11 @@ workspace. The caller identity comes from
 ``config_workspace_id`` never replace it. No configuration load provisions
 metadata tables.
 
-Print a startup summary in the calling notebook with the installed FabricOps
-version, documentation link, configuration source, and configuration workspace (name when available, ID),
-caller workspace, notebook and run identity, resolved workspace_id, audit timezone, metadata schemas,
-requested targets, readiness status, and any warning, skipped, or failed
-checks. This output is visible even when Fabric keeps the configuration
+Print a sequenced startup summary in the calling notebook with the installed
+FabricOps version, readiness, configuration source, runtime identity, and
+exact bold ``store=`` parameter values for the requested Fabric targets.
+Warnings, skipped checks, and failures appear in a final attention section.
+This output is visible even when Fabric keeps the configuration
 notebook output in a separate execution snapshot. Explicit configuration
 also prints the summary. Both paths publish configuration for setup_pipeline()
 and downstream IO. Rerunning notebook setup closes the current pipeline and

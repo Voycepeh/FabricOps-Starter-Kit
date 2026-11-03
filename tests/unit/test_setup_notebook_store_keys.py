@@ -70,9 +70,9 @@ def test_explicit_setup_summary_reports_failed_checks(capsys, monkeypatch) -> No
     assert "Configuration: explicit configuration" in output
     assert "00_env_config" not in output
     assert "ignored-workspace" not in output
-    assert "Workspace: dev" in output
-    assert "- Gold: Gold (warehouse;" in output
-    assert "Readiness: ready" in output
+    assert "Resolved workspace: dev" in output
+    assert '- store="Gold" → Gold (warehouse;' in output
+    assert "3. Fabric store parameters" in output
     assert "notebook_naming" not in output
     assert "Notebook name does not match" not in output
     assert "- warn: spark_session:" in output
@@ -83,5 +83,4 @@ def test_setup_summary_handles_no_requested_targets(capsys) -> None:
     setup_notebook(_config(), workspace_id="dev", required_targets=[], local_fallback_name="02_pipeline")
 
     output = capsys.readouterr().out
-    assert "Targets:\n- None requested" in output
-    assert "Readiness: ready" in output
+    assert '3. Fabric store parameters (use the exact value for store="...")\n- None requested' in output

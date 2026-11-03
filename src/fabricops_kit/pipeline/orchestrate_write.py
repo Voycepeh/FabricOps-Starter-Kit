@@ -201,7 +201,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             strategy = write_result.get("strategy", write_mode)
             columns = getattr(prepared, "columns", None)
             metrics.setdefault("input_columns", len(columns) if columns is not None else None)
-            summary.details([("Strategy", strategy.title()), ("Target", target), ("Rows committed", metrics["rows_committed"]), ("Columns", metrics["input_columns"])])
             try:
                 profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", context=context, spark_session=spark_session))
                            if published else skip_table_profiling(target_id, "write", "No successful publication", context=context, spark_session=spark_session))

@@ -89,6 +89,8 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
 dict
     Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+    The notebook summary omits a row count because Spark reads are lazy; it
+    does not materialize the returned DataFrame merely to count it.
 
 Raises RuntimeError when no pipeline is active or a persistent stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
@@ -127,7 +129,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L143">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L147">View on GitHub</a>
 </div>
 
 

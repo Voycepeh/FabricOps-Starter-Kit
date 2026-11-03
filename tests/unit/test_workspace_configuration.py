@@ -201,7 +201,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         location = 'cross-workspace' if config_workspace else 'same-workspace'
         config_name = 'Shared Configuration' if config_workspace else 'Engineering'
         assert f'Configuration: 00_env_config ({location}; workspace: {config_name} ({config_workspace or "dev-ws"}))' in notebook_output
-        assert 'Workspace: dev-ws' in notebook_output
+        assert 'Resolved workspace: dev-ws' in notebook_output
         assert 'Readiness: ready' in notebook_output
         assert 'Configuration:' not in output
         assert 'Readiness:' not in output
@@ -394,7 +394,7 @@ def test_setup_summary_is_visible_without_child_notebook_output(
     result = setup_notebook(config_workspace_id=config_workspace, required_targets=['Gold', 'Metadata'])
 
     output = capsys.readouterr().out
-    assert output.count(f'FabricOps v{__version__}') == 1
+    assert output.count(f'FabricOps v{__version__} · Readiness: ready') == 1
     assert 'Docs, examples, releases & support:' in output
     assert 'https://github.com/Voycepeh/FabricOps-Starter-Kit' in output
     location = 'cross-workspace' if config_workspace else 'same-workspace'
@@ -402,17 +402,19 @@ def test_setup_summary_is_visible_without_child_notebook_output(
         f'{reported_config_name} ({config_workspace or "dev-ws"})'
         if reported_config_name else config_workspace or 'dev-ws'
     )
+    assert '1. Configuration' in output
     assert f'Configuration: 00_env_config ({location}; workspace: {displayed_workspace})' in output
     assert 'Caller workspace: Engineering (dev-ws)' in output
     assert 'Notebook: 02_pipeline_orders' in output
     assert 'Run ID: caller-run' in output
-    assert 'Workspace: dev-ws' in output
+    assert 'Resolved workspace: dev-ws' in output
+    assert '2. Runtime' in output
     assert 'Audit timezone: Asia/Singapore' in output
-    assert 'Metadata schemas: governance=governance, engineering=engineering' in output
-    assert '- Gold: wh_Gold (warehouse;' in output
-    assert '- Metadata: Metadata (lakehouse; schema: governance; workspace: workspace)' in output
-    assert '- Bronze:' not in output
-    assert 'Readiness: ready' in output
+    assert 'Metadata schemas:' not in output
+    assert '3. Fabric store parameters' in output
+    assert '- store="Gold" → wh_Gold (warehouse;' in output
+    assert '- store="Metadata" → Metadata (lakehouse; workspace ID: workspace; item ID: metadata-id)' in output
+    assert 'store="Bronze"' not in output
     assert 'abfss://' not in output
     assert 'path_config' not in output
     assert result.workspace_id == 'dev-ws'
@@ -450,9 +452,9 @@ def test_governance_summary_filters_targets_without_restricting_config(configura
     output = capsys.readouterr().out
     assert set(result.paths) == {'Metadata'}
     assert result.workspace_id == 'metadata-ws'
-    assert 'Workspace: metadata-ws' in output
-    assert '- Metadata:' in output
-    assert all(f'- {name}:' not in output for name in ['Bronze', 'Silver', 'Gold'])
+    assert 'Resolved workspace: metadata-ws' in output
+    assert 'store="Metadata"' in output
+    assert all(f'store="{name}"' not in output for name in ['Bronze', 'Silver', 'Gold'])
     assert set(resolve_fabric_context()[0].path_config.paths['dev-ws']) == {'Bronze', 'Silver', 'Gold', 'Metadata'}
 
 

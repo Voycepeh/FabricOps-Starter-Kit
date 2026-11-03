@@ -64,6 +64,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     -------
     dict
         Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+        The notebook summary omits a row count because Spark reads are lazy; it
+        does not materialize the returned DataFrame merely to count it.
 
     Raises RuntimeError when no pipeline is active or a persistent stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
@@ -119,7 +121,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         metrics.setdefault("rows_read", None)
         columns = getattr(source["dataframe"], "columns", None)
         metrics.setdefault("columns", len(columns) if columns is not None else None)
-        summary.details([("Physical reader", reader_name), ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"])])
+        # Spark reads are lazy, so the orchestration display must not imply that
+        # row materialization happened at the physical Read boundary.
+        summary.details([("Physical reader", reader_name), ("Columns", metrics["columns"])])
         for recovered in source.get("source_observation_recovery", []):
             summary.details([("Source Observation", recovered["status"].replace("_", " ")), ("Exact batches verified", recovered["batches"])])
         if source.get("has_data") is False:
@@ -137,7 +141,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             metrics["rows_read"] = profile.get("row_count")
         duration = summary.finish([
             ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),
-            ("Rows read", metrics["rows_read"]), ("Columns", metrics["columns"]),
+            ("Columns", metrics["columns"]),
         ])
         operation.complete(stages, rows_read=metrics.get("rows_read"))
         return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})
