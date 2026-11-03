@@ -125,8 +125,8 @@ def test_profiling_never_reads_or_updates_pipeline_registry(metadata, monkeypatc
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
     read = Mock(side_effect=AssertionError('profiling must not read the Registry'))
     commit = Mock(side_effect=AssertionError('profiling must not update the Registry'))
-    monkeypatch.setattr(activation, 'read_pipeline_authority', read)
-    monkeypatch.setattr(activation, 'commit_pipeline_authority', commit)
+    monkeypatch.setattr(activation, 'read_registry', read)
+    monkeypatch.setattr(activation, 'commit_registry', commit)
     result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert result['status'] == 'passed'
     read.assert_not_called()
@@ -230,6 +230,11 @@ def test_profiling_execution_modes_compute_and_persist_as_required(
     context = metadata.make_context(mode)
     context['execution_plan'].permits_persistence = permits_persistence
     context['execution_plan'].execution_mode = mode
+    if mode == 'governed':
+        with pytest.raises(RuntimeError, match="trusted deployment verification"):
+            shared.schedule_table_profiling('orders', 'read', context=context)
+        metadata.profiler.assert_not_called()
+        return
     result = shared.schedule_table_profiling('orders', 'read', context=context)
     assert result['status'] == 'passed'
     if mode == 'dry_run':

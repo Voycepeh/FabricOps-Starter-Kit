@@ -57,6 +57,10 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
     monkeypatch.setattr('fabricops_kit.config.audit.build_runtime_audit_fields', lambda **kw: {})
 
     class Frame:
+        def collect(self):
+            from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
+            return [empty_pipeline_authority()]
+
         def __init__(self, schema):
             self.schema = schema
 
@@ -102,7 +106,8 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
     assert set(routes) == {(schema, name) for schema in ('custom_gov', 'custom_eng') for name in RETIRED_PREVIEW_METADATA_TABLES}
     assert len(routes) == 2 * len(RETIRED_PREVIEW_METADATA_TABLES)
     assert writes == ([] if canonical_exists else list(registry))
-    warnings = result['warnings']
+    warnings = [warning for warning in result['warnings'] if 'trusted deployment verification' not in warning]
+    assert result['governed_execution']['status'] == 'blocked'
     assert len(warnings) == (0 if presence == 'missing' else len(routes))
     for (schema, name), warning in zip(routes, warnings):
         assert f'{schema}.{name}' in warning

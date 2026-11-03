@@ -238,7 +238,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 85 |
+| Live-critical dependencies | 86 |
 
 ### Release history
 
@@ -252,6 +252,7 @@ distinct snapshot identity.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>

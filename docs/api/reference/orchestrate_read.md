@@ -145,7 +145,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 216 |
+| Live-critical dependencies | 200 |
 
 ### Release history
 
@@ -158,20 +158,7 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.approval_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.authority_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.pipeline_table_mappings</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.read_pipeline_authority</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.run_contracts</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.testing_run_evidence</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_authority_collections</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.verify_live_plan</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.workspace_activation</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
@@ -187,7 +174,6 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
@@ -369,8 +355,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_registrations</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>

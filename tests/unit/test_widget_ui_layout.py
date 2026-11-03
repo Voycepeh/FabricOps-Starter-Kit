@@ -54,7 +54,7 @@ def test_live_widget_inventory_uses_the_canonical_page_composer():
     from fabricops_kit.pipeline.shared import start_pipeline_session
     assert "start_pipeline_session" in inspect.getsource(pipeline)
     assert "form_page(" in inspect.getsource(start_pipeline_session)
-    assert "build_live_pipeline_plan" in inspect.getsource(start_pipeline_session)
+    assert "build_governed_pipeline_plan" in inspect.getsource(start_pipeline_session)
 
 
 def test_form_page_is_a_stable_full_width_scrolling_viewport(monkeypatch):

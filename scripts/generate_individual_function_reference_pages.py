@@ -58,6 +58,7 @@ AUDIT_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_FIELD_DESCRIPTIONS = {
+    "destination_json": "Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.",
     "load_strategy_parameters_json": "Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.",
     "scheduled_refresh_json": "Validated JSON STRING containing captured status and ordered schedules (enabled, frequency, times and timezone); decoded to a logical object in application code.",
     "profile_key_candidates_json": "Validated JSON STRING containing discovery status, maximum combination width and ordered candidate metrics; decoded to a logical object in application code. Historical list-only candidates have null status and null maximum width.",
@@ -212,20 +213,31 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 
 PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
-    "authority_id": "Singleton publication identity central; runtime writers never insert a missing authority.",
-    "token": "Shared compare-and-swap fence for registration, approval, admission, rebind and profiling mutations.",
+    "record_id": "Deterministic workspace/record-kind/logical-ID key; the sole control key is central.",
+    "record_type": "pipeline_activation, table_contract_activation or control. Filter business kinds for reporting.",
+    "schema_version": "Explicit Registry layout version 2.",
+    "activation_id": "Immutable UUID for one activated governance decision; null on migration candidates.",
+    "status": "active or requires_reactivation; candidates grant no execution authority.",
+    "token": "Control-only shared CAS token; every Registry mutation replaces it under Serializable isolation.",
+    "operations_json": "Validated JSON STRING containing read/write descriptors, physical destinations and source associations, without copied Contract definitions.",
+    "leases_json": "Control-only validated JSON array of transient policy leases. Crashed leases require cancellation/reconciliation; they do not expire automatically.",
+    "migration_archive_uri": "Immutable pre-cutover audit snapshot URI retaining all six original collections, schema, table identity/version and registration IDs.",
+    "migration_archive_sha256": "SHA256 of the exact durable migration archive bytes.",
+    "last_governance_change_id": "Most recent committed governance decision identity; lease churn preserves it.",
+    "last_governance_audit_uri": "Durable before/after governance snapshot referenced by the committed transaction.",
+    "verification_method": "Reserved trusted deployment assurance method; caller assertions never enable Governed.",
 }
 
 PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
+    "pipeline_activation_id": "Exact pipeline activation pinned by versioned Governed provenance, never an approval alias.",
+    "deployment_id": "Trusted deployment artifact correlation; null when not applicable.",
+    "git_commit_sha": "Repository-qualified immutable revision provenance; a supplied string alone is not verified evidence.",
+    "deployment_verification_status": "Versioned Run deployment-assurance outcome; new Ungoverned/Dry Run records use not_required.",
+    "run_schema_version": "Version 2 includes activation/deployment provenance. Null denotes the original retained evidence format.",
+    "activation_revision": "Nullable historical workspace revision; retained for old Run audit only.",
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
-    "approval_id": "Exact Governance decision retained in the Registry authority; Live runs pin this decision.",
-    "registrations": "Native permanent Pipeline UUID and workspace notebook bindings; registration never permits Live.",
-    "revisions": "Native workspace activation revisions published with selections and ownership.",
-    "approvals": "Append-only decisions referencing complete finalized Test Runs and exact Agreement versions/hashes.",
-    "selections": "Current approved decision per pipeline and workspace, published atomically with ownership.",
-    "table_ownership": "Native exact contract, physical destination, writer and readers per workspace/table.",
-    "reservations": "Native Live reservations and transient rebind barriers protected by the shared authority token.",
+    "approval_id": "Nullable historical approval reference retained unchanged for audit; never new activation authority.",
     "profiling": "Validated JSON STRING containing per-table activity outcomes and physical result snapshot completion markers; decoded to a logical array in application code.",
     "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
     "failures": "Validated JSON STRING containing safe failure codes and exception class names; decoded to a logical array in application code. Never raw exception messages.",
@@ -5705,6 +5717,7 @@ def main() -> None:
                 "setup_metadata_tables",
                 "widget_render_data_steward",
                 "widget_render_data_agreement",
+                "activate_data_contract",
                 "widget_data_contract",
                 "widget_activate_pipeline",
             },

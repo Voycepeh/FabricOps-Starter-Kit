@@ -306,6 +306,8 @@ def test_returned_token_mapping_retains_absent_identities(spark_session):
 @pytest.mark.parametrize('collision', [False, True])
 def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode, collision):
     """Exercise real token generation and reuse around a mocked Delta vault merge."""
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     import sys
     import types
     from fabricops_kit.config import GovernanceConfig

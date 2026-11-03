@@ -11,16 +11,13 @@ import pytest
 
 from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline import shared
-from fabricops_kit.pipeline.shared import resolve_pipeline_registration as REAL_REGISTRATION
 
 
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
-    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": identity or "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     activation = importlib.import_module("fabricops_kit.activated_pipeline.shared")
-    monkeypatch.setattr(activation, "authority_records", lambda **kwargs: {
-        "token": "token", "registrations": [], "table_ownership": []})
+    monkeypatch.setattr(activation, "guard_ungoverned_write", lambda *args, **kwargs: None)
     config = {}
     context = {'config': config, 'scope_workspace_id': 'dev'}
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
@@ -76,7 +73,7 @@ def test_ungoverned_executes_without_contracts_and_persists(runtime, monkeypatch
     saved = []
     monkeypatch.setattr(shared, "_merge_pipeline_run_row", lambda plan, row, **kwargs: saved.append(dict(row)))
     runtime.publication.return_value = {"published": True, "table_id": "summary", "status": "passed"}
-    session = setup_pipeline(pipeline_mode="Ungoverned")
+    session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
     source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     result = orchestrate_write(source["dataframe"], store="Gold", schema="demo",
                                table_name="summary", write_mode="overwrite")
@@ -90,15 +87,12 @@ def test_ungoverned_executes_without_contracts_and_persists(runtime, monkeypatch
 
 def test_ungoverned_rechecks_and_blocks_a_governed_target(runtime, monkeypatch):
     activation = importlib.import_module("fabricops_kit.activated_pipeline.shared")
-    reads = iter([
-        {"token": "token", "registrations": [], "table_ownership": []},
-        {"token": "token", "registrations": [],
-         "table_ownership": [{"workspace_id": "dev", "table_id": "summary"}]},
-    ])
-    monkeypatch.setattr(activation, "authority_records", lambda **kwargs: next(reads))
+    def blocked(*args, **kwargs):
+        raise ValueError("Ungoverned cannot write governed table 'summary'")
+    monkeypatch.setattr(activation, "guard_ungoverned_write", blocked)
     monkeypatch.setattr(shared, "_merge_pipeline_run_row", lambda *args, **kwargs: None)
 
-    setup_pipeline(pipeline_mode="Ungoverned")
+    setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
     source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     with pytest.raises(ValueError, match="Ungoverned cannot write governed table 'summary'"):
         orchestrate_write(source["dataframe"], store="Gold", schema="demo",
@@ -111,31 +105,16 @@ def test_exact_mode_validation(runtime, mode):
         setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode=mode)
 
 
-def test_setup_arguments_cover_explicit_copy_and_rebind_without_write_flags(runtime):
+def test_setup_arguments_remove_registration_and_rebind(runtime):
     import inspect
-    assert list(inspect.signature(setup_pipeline).parameters) == [
-        'pipeline_id', 'pipeline_mode', 'new_pipeline',
-        'previous_workspace_id', 'previous_notebook_id']
-    with pytest.raises(TypeError):
-        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Dry Run', testing_writes=True)
-    with pytest.raises(ValueError, match='omitted pipeline_id'):
-        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', new_pipeline=True)
-    with pytest.raises(ValueError, match='Supply both'):
-        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', previous_workspace_id='old')
-
-
-def test_setup_forwards_new_identity_and_rebind_requests(runtime, monkeypatch):
-    requests = []
-    def resolve(identity, **kwargs):
-        requests.append((identity, kwargs['new_pipeline'], kwargs['previous_binding']))
-        return {'pipeline_id': identity or '8f32a471-6c91-4b7e-9d13-2f0c947eab52', 'resolution': 'New'}
-    monkeypatch.setattr(shared, 'resolve_pipeline_registration', resolve)
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda *args, **kwargs: None)
-    setup_pipeline(pipeline_mode='Ungoverned', new_pipeline=True)
-    setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Ungoverned',
-        previous_workspace_id='old-workspace', previous_notebook_id='old-notebook')
-    assert requests == [(None, True, None),
-        ('8f32a471-6c91-4b7e-9d13-2f0c947eab52', False, ('old-workspace', 'old-notebook'))]
+    assert list(inspect.signature(setup_pipeline).parameters) == ["pipeline_id", "pipeline_mode"]
+    for removed in ("new_pipeline", "previous_workspace_id", "previous_notebook_id"):
+        with pytest.raises(TypeError):
+            setup_pipeline(**{removed: True})
+    with pytest.raises(ValueError, match="explicit stable pipeline_id"):
+        setup_pipeline(pipeline_mode="Ungoverned")
+    with pytest.raises(RuntimeError, match="trusted deployment verification"):
+        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Governed")
 
 
 def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
@@ -202,13 +181,6 @@ def test_contexts_isolate_same_pipeline_name(runtime):
             context.run(session.close)
 
 
-def test_live_resolves_only_approved_manifest(runtime, monkeypatch):
-    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-    builder = Mock(side_effect=ValueError('No approved pipeline configuration'))
-    monkeypatch.setattr(activation, 'build_live_pipeline_plan', builder)
-    with pytest.raises(ValueError, match='No approved'):
-        setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Governed')
-    assert set(builder.call_args.kwargs) == {'pipeline_id', 'context', 'spark_session'}
 
 
 def test_contract_selection_freezes_at_first_operation(runtime, monkeypatch):
@@ -380,61 +352,6 @@ def test_active_finalization_cannot_be_claimed_from_another_task(runtime):
     asyncio.run(scenario())
 
 
-def test_finalized_governed_test_can_be_reviewed_directly(runtime, monkeypatch):
-    from fabricops_kit import finalize_pipeline
-    from datetime import date, timedelta
-    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-    config_shared = importlib.import_module('fabricops_kit.config.shared')
-    monkeypatch.setattr(config_shared, 'resolve_runtime_context',
-        lambda context=None: {'workspace_id': 'dev', 'notebook_id': 'notebook', 'activity_id': 'fabric-test-run'})
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: {'_workspace_id': 'dev', '_notebook_id': 'notebook'})
-    session = setup_pipeline(pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Dry Run')
-    payload = {'contract': {'contract_id': 'frozen', 'contract_version': 1, 'status': 'frozen'},
-               'table': {'table_id': 'orders', 'columns': []}, 'guardrails': [],
-               'enrichment': {'table': [], 'columns': []}}
-    row = {'table_id': 'orders', 'contract_id': 'frozen', 'contract_version': 1,
-           'status': 'frozen', 'workspace_id': 'dev',
-           'contract_payload_json': json.dumps(payload), 'contract_payload': payload}
-    monkeypatch.setattr(shared, 'resolve_data_contract_version', Mock(return_value=row))
-    session.select_contract('orders', 'frozen', 1)
-    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    committed = []
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
-    save_profile = Mock(return_value={})
-    monkeypatch.setattr(shared, '_persist_profile_observation', save_profile)
-    session.plan.evidence['profile_observations'] = [{'profile_snapshot_id': 'governed-observation',
-        'identity': {'table_id': 'orders'}, 'trigger': 'read', 'activities': set()}]
-    session.plan = replace(session.plan, execution_mode='testing')
-    result = finalize_pipeline(session)
-    assert result['status'] == 'succeeded' and len(committed) == 1
-    save_profile.assert_called_once()
-    agreement = {'agreement_id': 'agreement', 'agreement_version': '1.0.0',
-                 'start_date': date.today().isoformat(), 'expiry_date': (date.today() + timedelta(days=30)).isoformat()}
-    records = {'METADATA_PIPELINE_RUN': committed, 'METADATA_DATA_CONTRACT': [row],
-               'METADATA_GUARDRAIL_RESULTS': [], 'METADATA_DATA_AGREEMENT': [agreement]}
-    monkeypatch.setattr(activation, 'metadata_records', lambda table, **kwargs: records[table])
-    monkeypatch.setattr(activation, 'resolve_fabric_context', shared.resolve_fabric_context)
-    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', [{'pipeline_id': result['pipeline_id'], 'workspace_id': 'dev', 'registration_status': 'Active', 'notebook_id': 'notebook'}]))
-    monkeypatch.setattr(activation, 'build_runtime_audit_fields', shared.build_runtime_audit_fields)
-    # The isolated orchestrator fixture omits checks; review must reject it first.
-    with pytest.raises(ValueError, match="operation stages"):
-        activation.tested_pipeline_run(testing_run_id=result['run_id'], pipeline_name='Orders', pipeline_version='1',
-            agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'scope_workspace_id': 'dev'})
-    committed[0]['_workspace_id'] = 'dev'
-    result['_workspace_id'] = 'dev'
-    for operation in committed[0]['operations']:
-        operation['stages'].append({'stage': 'Schema', 'status': 'passed'})
-    structural = shared.contract_guardrail_rows(row, workspace_id='dev', table_id='orders')[0]
-    records['METADATA_GUARDRAIL_RESULTS'] = [{'guardrail_result_id': 'structural', 'run_id': result['run_id'],
-        'table_id': 'orders', 'contract_id': 'frozen', 'contract_version': 1,
-        'guardrail_rule_id': structural['guardrail_rule_id'], 'guardrail_version': 1,
-        'workspace_id': 'dev', 'execution_type': 'testing', 'can_continue': True,
-        **{key: committed[0].get(key) for key in ('_workspace_id', '_notebook_id', '_activity_id')}}]
-    manifest = activation.tested_pipeline_run(testing_run_id=result['run_id'],
-        pipeline_name='Orders', pipeline_version='1',
-        agreement_id='agreement', agreement_version='1.0.0', context={'config': {}, 'scope_workspace_id': 'dev', 'workspace_id': 'workspace'})
-    assert manifest['testing_run_id'] == result['run_id']
-    assert manifest['pipeline_id'] == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
 
 
 
@@ -463,7 +380,7 @@ def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys, mon
     output = capsys.readouterr().out
     assert f'Pipeline ID: {session.pipeline_id}' in output
     assert 'Save this Pipeline ID' not in output
-    assert 'cross-workspace promotion' in output
+    assert 'version-controlled pipeline source' in output
     assert 'Mode: Dry Run' in output
     assert 'Workspace:' not in output
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda *args, **kwargs: None)
@@ -472,54 +389,6 @@ def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys, mon
     runtime.writes.assert_not_called()
 
 
-def test_automatic_registration_read_write_finalize_recovery_and_promotion(runtime, monkeypatch, fake_notebookutils):
-    """One Test setup is immediately usable and preserves its UUID across deployments."""
-    from copy import deepcopy
-    from uuid import UUID
-    from fabricops_kit import setup_notebook, finalize_pipeline
-    from fabricops_kit.config.shared import get_default_fabric_context, resolve_fabric_context
-    from fabricops_kit.io import shared as io
-    from tests.unit.test_setup_notebook_store_keys import _config
-
-    monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
-    monkeypatch.setattr(shared, 'resolve_fabric_context', resolve_fabric_context)
-    monkeypatch.setattr(shared, 'resolve_pipeline_registration', REAL_REGISTRATION)
-    monkeypatch.setattr(runtime.spark.conf, 'set', Mock(), raising=False)
-    monkeypatch.setattr(io, 'get_spark_session', lambda: runtime.spark)
-    registry, runs = [], []
-    monkeypatch.setattr(shared, 'read_pipeline_registry', lambda **kwargs: ('token', deepcopy(registry)))
-    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_committed_by': 'engineer'})
-    def commit(row, **kwargs):
-        registry[:] = [old for old in registry if (old['pipeline_id'], old['workspace_id']) !=
-                      (row['pipeline_id'], row['workspace_id'])] + [deepcopy(row)]
-    monkeypatch.setattr(shared, 'commit_pipeline_registration', commit)
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: runs.append(dict(row)))
-    fake_notebookutils.context['currentWorkspaceId'] = 'dev'
-    setup_notebook(_config(), workspace_id='dev')
-    pipeline = setup_pipeline(pipeline_id=None, pipeline_mode='Ungoverned')
-    identity = pipeline.pipeline_id
-    assert UUID(identity).version == 4 and pipeline.registration['resolution'] == 'New'
-    source = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    orchestrate_write(source['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
-    assert [key.split(':', 1)[0] for key in pipeline.plan.evidence['operations']] == ['source', 'target']
-    assert finalize_pipeline()['status'] == 'ungoverned_completed'
-    assert runs and runs[-1]['pipeline_id'] == identity
-    assert runs[-1]['status'] == 'ungoverned_completed'
-    fake_notebookutils.context['currentNotebookName'] = 'renamed pipeline'
-    setup_notebook(_config(), workspace_id='dev')
-    recovered = setup_pipeline(pipeline_id=None)
-    assert recovered.pipeline_id == identity
-    assert recovered.registration['resolution'] == 'Recovered'
-    assert len(registry) == 1
-    # A fresh notebook execution in another workspace supplies the original identity.
-    fake_notebookutils.context.update(currentWorkspaceId='prod', currentNotebookId='notebook-prod')
-    promoted_config = _config()
-    promoted_config.path_config.paths['prod'] = promoted_config.path_config.paths.pop('dev')
-    setup_notebook(promoted_config, workspace_id='prod')
-    assert recovered.closed and not recovered.sources
-    promoted = setup_pipeline(pipeline_id=identity, pipeline_mode='Ungoverned')
-    assert promoted.pipeline_id == identity and promoted.registration['resolution'] == 'Registered'
-    assert len(registry) == 2 and {row['pipeline_id'] for row in registry} == {identity}
 
 
 def test_notebook_reload_closes_pipeline_and_uses_fresh_configuration(runtime, monkeypatch, fake_notebookutils):
@@ -530,19 +399,19 @@ def test_notebook_reload_closes_pipeline_and_uses_fresh_configuration(runtime, m
     monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
     original = _config()
     setup_notebook(original, workspace_id='dev')
-    first = setup_pipeline()
+    first = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     fresh = _config()
     setup_notebook(fresh, workspace_id='dev')
     assert first.closed and not first.sources
-    second = setup_pipeline()
+    second = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     assert second.plan.runtime_context['config'] is fresh
     assert second.plan.plan_id != first.plan.plan_id
     with pytest.raises(ValueError):
         setup_notebook(fresh, workspace_id='dev', required_targets=['missing'])
     assert second.closed
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
-        setup_pipeline()
+        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 
 
 def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch, fake_notebookutils):
@@ -552,7 +421,7 @@ def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch
     from tests.unit.test_setup_notebook_store_keys import _config
     monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
     setup_notebook(_config(), workspace_id='dev')
-    session = setup_pipeline()
+    session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     fake_notebookutils.context['currentWorkspaceId'] = 'different-workspace'
     with pytest.raises(RuntimeError, match='Notebook execution changed'):
         orchestrate_read(store='Bronze', schema='demo', table_name='orders')
@@ -600,7 +469,7 @@ def test_closed_finalization_remains_idempotent_after_setup_is_invalidated(runti
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
     setup_notebook(_config(), workspace_id='dev')
-    pipeline = setup_pipeline()
+    pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     result = finalize_pipeline(pipeline)
     assert result['boundary_completed'] is True and committed[-1]['status'] == 'ungoverned_completed'
@@ -616,7 +485,7 @@ def test_finalize_emits_compact_summary_even_when_report_widget_exists(runtime, 
     """The final outcome is visible when notebook assignment suppresses the return value."""
     from fabricops_kit import finalize_pipeline
 
-    session = setup_pipeline(pipeline_mode="Ungoverned")
+    session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
     session.report = SimpleNamespace(value='')
 
     result = finalize_pipeline(session)

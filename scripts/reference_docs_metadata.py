@@ -123,32 +123,32 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_REGISTRY": {
-        "purpose": "Coordinates Engineering registrations and Governance decisions through one atomic native authority.",
-        "grain": "One central row: native registrations, approvals, selections, ownership and execution/profiling reservations.",
-        "implementation_notes": "A matched-only Delta compare-and-swap publishes all typed collections together. Registration, approval, admission, rebind and profiling share one token; no snapshot JSON or child-row insertion is authoritative. Exact finalized Test runs and Agreements resolve by retained content-checked references. There is no separate configuration table.",
-        "primary_key": ["authority_id"],
+        "purpose": "Stores workspace pipeline activations and independent workspace/Table ID Contract activations in one transactional Registry.",
+        "grain": "One pipeline activation per workspace/Pipeline ID, one Contract activation per workspace/Table ID, plus one control row.",
+        "implementation_notes": "All fields are SQL-compatible scalars. A Serializable whole-table Delta transaction commits all activation and control changes together. operations_json contains the activated read/write descriptors; leases_json holds transient policy leases. Exact frozen Contracts remain in Data Contract. Migrated selections are requires_reactivation candidates, with complete historical evidence retained in the checksummed migration archive. Pipeline activation and Governed publication remain blocked pending trusted deployment verification. Ungoverned cannot publish to protected tables or destination aliases. Tenant metadata writers are trusted; UI confirmation is not authentication.",
+        "primary_key": ["record_id"],
         "foreign_keys": [
-            {"local_field": "approvals[].testing_run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Each nested approval retains one exact finalized Test Run; many approvals may reuse a Test. Application-enforced reference."},
-            {"local_field": "approvals[].agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Composite reference with approvals[].agreement_version to one exact Agreement version, verified with its content hash."},
-            {"local_field": "approvals[].agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Composite reference with approvals[].agreement_id; neither field is independently unique."},
-            {"local_field": "table_ownership[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Composite reference with table_ownership[].contract_version; ownership retains the exact approved table contract and payload hash."},
-            {"local_field": "table_ownership[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with table_ownership[].contract_id; the referenced contract must match the owned table."},
+            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Pipeline records retain an exact Agreement ID/version and content hash; neither component is independently unique."},
+            {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Composite reference with agreement_id; exact content and current effectiveness are checked."},
+            {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Table-contract records reference a frozen exact Contract version for their workspace/Table ID."},
+            {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with contract_id and immutable payload hash; never inferred from frozen status alone."},
         ],
         "relationships": [
-                          {"related_table": "METADATA_DATA_AGREEMENT", "fields": ["approvals"], "cardinality": "N:M", "statement": "Native approvals retain exact Agreement version and content hash references."},
-                          {"related_table": "METADATA_PIPELINE_RUN", "fields": ["approvals", "reservations"], "cardinality": "1:N", "statement": "Approvals retain exact finalized Test identities; selected approvals authorize reserved Live runs."}],
+            {"related_table": "METADATA_DATA_AGREEMENT", "fields": ["agreement_id", "agreement_version"], "cardinality": "N:1", "statement": "Pipeline activation preserves exact Agreement safeguards."},
+            {"related_table": "METADATA_DATA_CONTRACT", "fields": ["contract_id", "contract_version"], "cardinality": "N:1", "statement": "Contract activation is independent of pipeline deployment activation."},
+        ],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records Test and Live operation participation, exact table contracts and execution outcomes.",
+        "purpose": "Records Dry Run/Ungoverned/Governed operation participation and retained historical Test/Live execution outcomes.",
         "grain": "One row per execution with JSON-encoded observed operation/stage status, timing, finalization, profiling and safe failures.",
-        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Validated JSON operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. Live pins approval_id and compares these fields before operations. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
+        "implementation_notes": "Whole-row CAS atomically publishes the parent and all operations/stages. Validated JSON operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. New runs use versioned activation/deployment provenance. approval_id and activation_revision remain nullable historical facts only; original Test hashes exclude new null provenance columns. Governed publication is blocked pending trusted deployment verification. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.",
         "primary_key": ["run_id"],
         "foreign_keys": [
-            {"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "approvals[].approval_id", "cardinality": "N:1", "statement": "Live runs reference one nested immutable approval, not authority_id. Test runs have no approval. Pipeline and workspace must match the approval."},
+            {"local_field": "pipeline_activation_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "activation_id", "cardinality": "N:1", "statement": "Versioned Governed provenance pins a pipeline activation. Replaced historical activation IDs resolve through durable audit, not a current-row fallback."},
             {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Each contracted operation references one exact Contract using contract_id plus contract_version and verifies the payload hash. Test operations may be uncontracted; activation requires all contracts."},
             {"local_field": "operations[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Composite reference with operations[].contract_id; neither field is independently unique."},
         ],
-        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Live runs pin an exact native approval and workspace revision in the Registry authority."},
+        "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["pipeline_activation_id"], "cardinality": "N:1", "statement": "New Governed provenance pins an activation ID; legacy approval references remain historical audit facts."},
                           {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Actual operations record exact table contract IDs, versions and hashes; authored payloads remain in Data Contract."}],
     },
     "METADATA_DATA_STEWARD": {
@@ -272,7 +272,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     # Scheduled Read/Write profiling acquires Registry claims; standalone profile_table does not.
-    "METADATA_PIPELINE_REGISTRY": ["widget_activate_pipeline", "setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"],
+    "METADATA_PIPELINE_REGISTRY": ["activate_data_contract", "finalize_pipeline", "orchestrate_write"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -1619,11 +1619,16 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
+ {'kind': 'function', 'module': 'data_contract.activate_data_contract', 'function_type': 'callable',
+  'symbol_name': 'activate_data_contract', 'summary_override': 'Activate one frozen Contract independently for a workspace/Table ID.',
+  'template_notebook': '01_governance', 'template_segment': 'Data Contract activation',
+  'sidebar_group': '3. Governance', 'sidebar_include': False,
+  'related_functions': ['widget_data_contract', 'widget_activate_pipeline']},
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
-  'summary_override': 'Review complete persisted Testing and activate an exact whole pipeline.',
+  'summary_override': 'Inspect direct activations and the pending Governed deployment gate.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use after finalize_pipeline commits complete successful governed Test results.',
-  'expanded_purpose': 'Shows exact contracts/rules and processing configuration identity, diagnostics, warnings, Agreement and fingerprint before explicit Governance confirmation. Activation neither deploys nor publishes.',
+  'use_when': 'Use to inspect migrated pipeline candidates and independent Contract activations.',
+  'expanded_purpose': 'Shows workspace-scoped direct Registry records without the removed Test/approval/version lifecycle. Pipeline activation remains blocked pending trusted deployment verification.',
   'related_functions': ['setup_pipeline']},
 
 
@@ -1634,14 +1639,14 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
  'module': 'pipeline.setup_pipeline',
  'function_type': 'callable',
- 'summary_override': 'Prepare Testing or resolve an approved workspace configuration for Live.',
+ 'summary_override': 'Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending deployment verification.',
  'symbol_name': 'setup_pipeline', 'template_notebook': '02_pipeline',
  'template_segment': 'Configure the pipeline and whole-run boundary',
- 'use_when': 'Call after setup_notebook() and before Read, Transform and Write. Test registers or recovers the Pipeline ID automatically.',
+ 'use_when': 'Call after setup_notebook() and before Read, Transform and Write. Persistent execution requires an explicit saved Pipeline ID.',
  'related_functions': ['setup_notebook', 'finalize_pipeline', 'widget_data_contract', 'orchestrate_read', 'orchestrate_write'],
- 'return_interpretation': 'Returns a context-local execution session exposing pipeline_id, contract selection and automatic reporting; finalize_pipeline records completion and commits Test results; interrupted runs remain incomplete.',
- 'expanded_purpose': 'Reuse initialized notebook configuration without rerunning 00_env_config. Select a frozen contract or No Contract independently for each Testing participant. Live resolves and pins one approved revision from the central authority.',
- 'common_failure_causes': ['Missing, failed or outdated setup_notebook() initialization.', 'Invalid frozen contract selections.', 'Missing notebook registration or approved Live configuration.']},
+ 'return_interpretation': 'Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending trusted deployment verification.',
+ 'expanded_purpose': 'Reuse initialized notebook configuration without rerunning 00_env_config. Dry Run may preview selected frozen Contracts. Ungoverned publishes without activated Contracts but cannot write protected assets. Governed cannot start until trusted deployment verification is integrated.',
+ 'common_failure_causes': ['Missing, failed or outdated setup_notebook() initialization.', 'Invalid frozen contract selections.', 'Missing explicit persistent Pipeline ID or pending Governed deployment verification.']},
 
 
 
@@ -1650,7 +1655,7 @@ PUBLIC_SYMBOL_DOCS = [
 
 FOCUSED_FUNCTION_DOC_UPDATES = {
     "setup_metadata_tables": {
-        "expanded_purpose": "Creates, additively evolves, or validates the FabricOps metadata tables required by the framework in the configured metadata lakehouse. Missing canonical columns are added without rewriting existing rows, while incompatible canonical types and known legacy schemas still fail validation. Physical nullability is not compared or migrated.",
+        "expanded_purpose": "Creates, additively evolves, or validates the FabricOps metadata tables required by the framework in the configured metadata lakehouse. Compatible missing columns are additive. Supported singleton Registry history is archived and mapped to non-authorizing reactivation candidates in one verified transaction; ambiguous history and unresolved reservations block cutover. Run provenance additions preserve legacy evidence hashes. Physical nullability is not compared or migrated.",
         "when_to_use": "Run during initial workspace setup, after deploying a FabricOps version with metadata schema changes, or when recreating a development metadata workspace. Do not use it as a substitute for setup_notebook, which resolves notebook execution context and configuration.",
         "parameters": "config is the FabricOps configuration used to resolve the selected active_workspace_id, metadata lakehouse target, governance metadata schema, and engineering metadata schema; active_workspace_id selects the workspace; require_active_steward enforces existing active steward readiness; verbose controls setup output; raise_on_failure raises after all tables are processed if any table fails.",
         "returns": "dict[str, Any] setup report after all managed metadata tables have been created, additively evolved, or validated, including status, metadata_schemas, fully_qualified_tables, created_tables, evolved_tables, validated_tables, failed_tables, table_results, data_agreement, governance, engineering, and active metadata counts.",
@@ -2117,21 +2122,18 @@ def related_guides(symbol_name: str) -> list[dict[str, str]]:
 
 METADATA_TABLE_PURPOSES["METADATA_PIPELINE_REGISTRY"] = METADATA_TABLE_MODELS["METADATA_PIPELINE_REGISTRY"]["purpose"]
 METADATA_COLUMN_OWNERS["METADATA_PIPELINE_REGISTRY"] = {
-    "__default__": ["fabricops_kit.activated_pipeline.shared.commit_pipeline_authority"],
+    "__default__": ["fabricops_kit.activated_pipeline.shared.commit_registry", "fabricops_kit.activated_pipeline.migrate_registry.migrate_registry"],
     "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    "registrations": ["fabricops_kit.pipeline.shared.commit_pipeline_registration"],
-    "approvals": ["fabricops_kit.activated_pipeline.shared.approve_pipeline_release"],
-    "reservations": ["fabricops_kit.activated_pipeline.shared.build_live_pipeline_plan", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
+    "leases_json": ["fabricops_kit.activated_pipeline.shared.guard_ungoverned_write", "fabricops_kit.activated_pipeline.shared.release_pipeline_lease"],
+    "contract_id": ["fabricops_kit.activated_pipeline.shared.set_table_contract_activation"],
+    "contract_version": ["fabricops_kit.activated_pipeline.shared.set_table_contract_activation"],
 }
 
-# Column responsibility for the generated schema view. The Registry is stored
-# in Engineering, but its approval and published selection fields are governed
-# by Governance decisions. Shared authority keys belong to Engineering.
 METADATA_COLUMN_CATEGORIES = {
-    "METADATA_PIPELINE_REGISTRY": {
-        "revisions": "governance",
-        "approvals": "governance",
-        "selections": "governance",
-        "table_ownership": "governance",
-    },
+    "METADATA_PIPELINE_REGISTRY": {name: "governance" for name in (
+        "workspace_id", "pipeline_id", "pipeline_name", "table_id", "activation_id", "status",
+        "activated_by", "activated_at", "notebook_id", "git_repository", "git_commit_sha", "deployment_id",
+        "deployment_manifest_uri", "deployment_manifest_sha256", "verification_method", "operations_json",
+        "agreement_id", "agreement_version", "agreement_sha256", "contract_id", "contract_version", "payload_sha256", "destination_json",
+        "last_governance_change_id", "last_governance_audit_uri", "migration_archive_uri", "migration_archive_sha256")},
 }

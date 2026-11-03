@@ -6,17 +6,24 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Review complete persisted Testing and activate an exact whole pipeline.
+Inspect direct activations and the pending Governed deployment gate.
 
 
 ## Usage notes
 
-Use after finalize_pipeline commits complete successful governed Test results.
+Use to inspect migrated pipeline candidates and independent Contract activations.
 
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+```python
+review = widget_activate_pipeline()
+reviewed_token = review["token"]
+```
+
+</div>
 
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
@@ -41,44 +48,43 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `—` | No | `None` | Not documented yet |
-| `context` | `—` | No | `None` | Not documented yet |
+| `pipeline_id` | `str \| None` | No | `None` | Filter pipeline records by stable logical UUIDv4. |
+| `context` | `dict \| None` | No | `None` | Existing FabricOps context; central Metadata routing is preserved. |
 
 </div>
 
 ## Returns
 
-Not documented yet
+dict
+    Widget, scoped activation records, reviewed control token and readiness
+    reason. Opening the widget changes no metadata or publication authority.
 
 ## Raises / Errors
 
-Not documented yet
+ValueError
+    If identity or the Registry is missing, corrupt or ambiguous.
+RuntimeError
+    If notebook/Spark/widget services are unavailable.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Use activate_data_contract for independent frozen Contract activation after
+review. Tenant permissions must restrict governance writes to trusted actors.
+This inspection UI does not authenticate or attest a deployment.
+
+</div>
 
 ## Behavior and scope
 
 <div class="reference-docstring-intro" markdown="1">
 
-Spark is resolved automatically from the existing execution session.
-No session is created; Spark-dependent work raises
-``RuntimeError`` when no session is available.
-
-Displays workspace_id, current/proposed table contracts, writer ownership,
-affected pipelines, missing tests, conflicts and complete release readiness.
-Completed Testing runs missing contracts are listed by table ID and excluded
-from review. Extra candidate controls appear for shared-table dependencies.
-Supply an immutable release version for
-every selected pipeline. The backend revalidates complete Testing, exact
-contracts, Agreement, locations and operation modes at review and again at approval.
-
-One explicit approval publishes the entire workspace_id revision atomically.
-Stale review, missing tests, competing writers, contract conflicts or affected
-running executions block approval. Approval never deploys or writes business
-data and does not resolve the target workspace's physical stores. Central
-Governance Metadata routing is sufficient for activation; governed execution
-still requires and revalidates the target environment's configured stores.
-Failed commits cannot expose a partial release. Returns widget state,
-refresh, review_release and perform_activation. Metadata errors raise or are
-displayed by button actions; opening the widget changes no approval.
+The previous Test/approval/version-selection lifecycle is removed. Migrated
+pipelines are requires_reactivation candidates, never verified deployments.
+Pipeline activation and Governed publication remain disabled until a tenant-
+proven trusted deployment mechanism is integrated. A Git SHA typed into a
+widget cannot satisfy this requirement.
 
 </div>
 
@@ -89,9 +95,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:67`
+`fabricops_kit/widgets/widget_activate_pipeline.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L67-L312">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L13-L82">View on GitHub</a>
 </div>
 
 

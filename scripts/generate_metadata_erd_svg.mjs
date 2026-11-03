@@ -9,10 +9,10 @@ function renderMetadataSvg(layout, models) {
   // corridor, keeping nearer routes nested instead of crossing their stems.
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1-N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","PIPELINE_REGISTRY","1-N","nested","M725 170H815",[725,170],[815,170],"One exact Agreement version governs many pipeline approvals, each retaining its ID, version and content hash"],
-    ["PIPELINE_REGISTRY","DATA_CONTRACT","N-N","nested","M1115 170H1205",[1115,170],[1205,170],"Pipeline approvals may share multiple exact Contract versions; Registry ownership retains their IDs, versions and payload hashes"],
+    ["DATA_AGREEMENT","PIPELINE_REGISTRY","1-N","physical","M725 170H815",[725,170],[815,170],"One exact Agreement version may govern multiple pipeline activations, each retaining its ID, version and content hash"],
+    ["PIPELINE_REGISTRY","DATA_CONTRACT","N-1","physical","M1115 170H1205",[1115,170],[1205,170],"Each workspace/Table ID activation references one exact frozen Contract version and payload hash, independently of pipeline activation"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M725 464H755V388H1175V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","nested","M900 253V328H575V423",[900,253],[575,423],"One Registry approval authorizes many Live runs through approval_id. Each approval also retains one Test run_id. Cardinality describes approvals, not the singleton authority row"],
+    ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M900 253V328H575V423",[900,253],[575,423],"Governed provenance pins pipeline_activation_id; historical activation decisions remain in durable audit. Deployment verification is pending; candidates grant no run authority"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1-N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],

@@ -1,162 +1,87 @@
-# Pipeline metadata: Run-based activation
+# Pipeline activation metadata and controlled cutover
 
-**Implementation:** pipeline activation selects an exact finalized Test Run. Registry and Run are the only pipeline metadata tables; there is no separate Definition or Configuration table.
+Pipeline governance uses a workspace pipeline deployment activation and an independent workspace/Table ID frozen Data Contract activation. Both live in the existing Engineering Pipeline Registry. There are still twelve canonical metadata tables.
 
-## Automatic SQL-compatible Run and Catalogue upgrade
+## Current implementation and security boundary
 
-Stop Run/Catalogue producers, install the new package and run normal
-`setup_metadata_tables()` before restarting all writers with that package.
-Fresh installations use scalar string fields. Registry authority is unchanged
-in this stage; its replacement is a separate reviewed change. No reporting
-projection tables are created.
+The Registry has three scalar record types:
 
-The physical `METADATA_PIPELINE_RUN.operations`, `profiling`, `failures` and
-Catalogue `load_strategy_parameters_json`, `scheduled_refresh_json`,
-`profile_key_candidates_json` columns contain validated JSON **strings**.
-Central codecs retain typed dictionaries/lists in application interfaces,
-including Run operation timestamps and logical null fields. Catalogue preserves
-Scheduled Refresh discovery, ordered schedules/times/timezones, processing
-parameters and grain candidate metrics. Profiling eligibility still reads the
-committed Run, not a report copy.
+| Record type | Key | Responsibility |
+| --- | --- | --- |
+| pipeline_activation | Workspace + stable Pipeline ID | Deployed notebook, operation manifest, Agreement and deployment provenance |
+| table_contract_activation | Workspace + Table ID | Exact globally frozen Contract ID/version/payload hash and reviewed physical destination JSON |
+| control | central | Shared CAS token, transient policy leases and durable audit references |
 
-### Conversion rules
+The generated [Registry reference](../reference/metadata/metadata_pipeline_registry.md) lists physical columns and types. All canonical metadata fields are SQL endpoint compatible. Run and Catalogue JSON STRING columns retain their logical Python interfaces and expandable logical-schema documentation.
 
-Setup supports exact known native, string and mixed layouts. It validates every
-converted value, rejects unknown members/types, duplicate JSON keys, null array
-elements, nonfinite numbers and numeric overflow. Required Run collections cannot
-be null; duplicate Run IDs or incomplete required facts fail closed. Unrelated
-physical columns are preserved, including nested extensions; their presence does
-not establish SQL visibility for those extensions.
+**Governed execution and pipeline activation remain unavailable until trusted deployment verification is proven in Fabric and integrated.** Neither an old successful Test, a migration candidate, a notebook-supplied Git SHA nor a raw activation field proves executing code identity. This PR introduces no verifier, attestation service or custom notebook hashing.
 
-| Value | Target meaning |
-| --- | --- |
-| SQL null in nullable Catalogue fields | SQL null (uncaptured) |
-| JSON object with missing optional fields | Logical explicit null members; valid stored text need not be rewritten |
-| Ordered empty/nonempty array | Same array, distinct from SQL null |
-| Historical Catalogue blank/whitespace or JSON `null` | SQL null |
-| Historical list-only key candidates, including `[]` | Object with null status/maximum width and the original candidate order |
-| Already valid JSON text | Exact original text retained, including whitespace/key order |
+A new Contract can be frozen and activated independently through activate_data_contract, using the exact frozen identity, reviewed Registry token, explicit target workspace and Governance confirmation. Metadata write principals must be trusted under tenant permissions; confirmation is not authentication. Central Metadata routing remains separate from the target execution workspace. Each Contract activation pins its reviewed physical destination in destination_json; alias checks use that stored binding without requiring every notebook to configure foreign environments. Migration copies the exact destination from validated legacy ownership. Missing or malformed bindings fail closed. A later Catalogue/configuration move does not move the protected destination; reactivate explicitly after draining affected executions.
 
-Catalogue-only historical exceptions never apply to Run. Frozen Contract payload
-bytes, Test/Agreement hashes, safe failure occurrences, large counts and timestamp
-instants/microseconds are preserved. Run update CAS compares the exact previous
-physical strings; approval and read-back checks compare decoded logical content.
-No business-row publication hashing, identical-batch suppression, target writes,
-checkpoints, Source Drift or retry protocol changes are part of this conversion.
+Consumers still need unambiguous, exact and effective Agreement context. Contract activation alone does not authorize data consumption. With pipeline activation blocked, new consumer provisioning that depends on active pipeline Agreement context also remains blocked.
 
-### Atomicity and repeated setup
+## Execution modes and identity
 
-Each affected table upgrade pins a Delta snapshot, registers its whole-table read,
-validates its complete supported source, and materializes durable staging before
-mutation. Schema and replacement files commit together in one optimistic Delta
-transaction. Metadata conflicts reject concurrent appends/updates or competing
-setup attempts rather than overwriting their rows. No check-then-overwrite or
-physical table swap is used. Table ID, properties, audit fields, column mapping,
-row multiplicity and existing Run transaction-deduplication history are retained.
+| Mode | Publication | Contracts | Identity |
+| --- | --- | --- | --- |
+| Dry Run | Disabled; no durable Run, profile, checkpoint or Registry mutations | Optional preview | Explicit saved Pipeline ID or session-only UUID |
+| Ungoverned | Existing publication/profiling/recovery behavior | No activated Contract required; protected targets and aliases are blocked | Explicit saved Pipeline ID required |
+| Governed | Blocked pending trusted deployment assurance | Requires independently activated exact Contracts | Explicit saved Pipeline ID and verified activated deployment required |
 
-An `evolved` result reports `pre_upgrade_version`, `upgrade_version` and
-`converted_columns`; Delta commit metadata records `fabricops_json_upgrade`,
-the table and pre-upgrade version. Read-back verifies exact committed schema and
-replacement-row multiset, including extensions. Already valid target tables are
-validated without rewriting/reseeding them. Setup may report per-table partial
-failure; finish validation of the full required schema set before resuming writers.
+A Pipeline ID is a lowercase logical UUIDv4, independent of workspace, Notebook ID and Run ID. Generate it once and retain it in version-controlled source. Registration recovery, approval/version history, selection pointers, workspace release revisions, ownership aggregates and rebind APIs are removed. setup_pipeline now accepts only pipeline_id and pipeline_mode.
 
-### Recovery and rollback
+Pipeline Run records keep their existing JSON operations, statuses, finalization and whole-row CAS. New nullable provenance columns are pipeline_activation_id, deployment_id, git_commit_sha, deployment_verification_status and run_schema_version. New records use version 2. Old/null versions use exactly the original hash-bearing fields, excluding additive null provenance. Unexpected non-null new provenance on old evidence is rejected rather than stripped to make a hash pass. Historical approval_id and activation_revision remain audit columns only.
 
-Before commit, interruption leaves source data authoritative; after commit,
-including lost acknowledgement, rerun setup follows the committed target schema.
-No automatic restore occurs. Staging files from terminated attempts may be removed
-only after confirming no active attempt owns them; retain Delta files/history
-through acceptance and use normal retention-aware maintenance for orphan files.
+## Atomic consistency and protection
 
-For an offline rollback, stop all writers, confirm each current head is exactly
-its recorded upgrade commit, and restore a mutually compatible package/schema set.
-If later valid writes exist, reconcile them through a reviewed forward recovery;
-restoring an older version would discard data. Do not run old native writers on
-JSON schemas or restore metadata over subsequent business/Processing State progress.
-Validate actual SQL endpoint discovery, string lengths/Unicode and timestamps in
-Fabric; local Delta tests do not establish tenant endpoint behavior.
+Every Registry mutation pins the whole small table in a Delta transaction, reads and validates the unique control/business identities, checks the reviewed token, stages replacement files, and commits all rows and the new token together under Serializable isolation. Runtime writers never recreate missing control. Independent MERGEs or untracked overwrite are not used.
 
-## Responsibilities
+Blind appends and phantom activation inserts conflict with tracked whole-table replacement. A stale human review requires refresh and review. A unique mutation marker plus exact historical-version readback resolves lost acknowledgement; a newer unrelated head is not proof that a failed attempt should be replayed.
 
-| Owner | Stored facts |
-| --- | --- |
-| `engineering.METADATA_PIPELINE_REGISTRY` | Permanent pipeline/notebook registrations, immutable approvals of finalized Tests, environment selections/revisions, table ownership and Live/rebind reservations |
-| `engineering.METADATA_PIPELINE_RUN` | One execution with JSON-encoded table operations, exact contract references, locations, read/write modes, statuses, stages, timing, profiling and safe failures |
-| `governance.METADATA_DATA_CONTRACT` | Versioned table-level schema, grain, quality, sensitive-data, processing and profiling policies |
-| `governance.METADATA_DATA_AGREEMENT` | Versioned authored Agreements referenced by approvals |
-| `engineering.METADATA_GUARDRAIL_RESULTS` | Exact rule-level results tied to `run_id`, table and contract version |
-| `engineering.METADATA_DATA_LINEAGE` | Observed source/target participation following successful Live publication; this Live schema is unchanged |
-| `engineering.METADATA_PROCESSING_STATE` | Accepted incremental checkpoints, drift baselines and publication recovery; this schema/protocol is unchanged |
+Governance changes first write a durable before/after audit snapshot, then reference it in the same Registry transaction. Committed receipts beside each archive preserve exact version/content proof beyond Delta log retention. Snapshots link to the previous committed governance archive. Setup repairs a missing post-commit receipt only from exact retained history; conflicting or missing evidence blocks the next mutation. An orphan archive does not prove a committed decision. Raw Metadata/Files writers remain trusted; use tenant permissions and retention to prevent alteration or deletion of referenced evidence.
 
-Governance owns approval decisions even though Registry is physically in Engineering. The confirmation in the activation widget is an explicit workflow action, not an authenticated Governance role check. Configure Fabric permissions and notebook execution identities deliberately; schema placement and atomic transactions do not establish independent approval authorization.
+Ungoverned target admission takes a minimal policy lease in the same CAS domain, held through run finalization. Contract activation drains affected leases, including physical destination aliases, before replacing policy. This lease changes neither publication identity nor processing progress. A crash leaves coordination closed: cancel/fence the old execution, reconcile its publication receipts and explicitly review recovery. Leases never expire merely because time passed. A metadata token is not a storage-enforced fence against a still-running privileged writer.
 
-## What an operation records
+Multiple governed writers remain blocked at activation review, including Append, until writer-scoped progress/receipt work is implemented separately. Overwrite remains exclusive; Merge/Upsert aliases and declared-but-unenforced SCD scopes are rejected.
 
-Each Run operation records `operation_key`, `table_id`, `pipeline_role`, nullable exact `contract_id`/`contract_version`/`payload_sha256`, physical `destination`, `read_mode` or `write_mode`, nullable `query_sha256`, `incremental_target_table_id`, and `source_table_ids`, plus actual status, timing and stages. The SQL hash protects an approved Warehouse Read without retaining SQL text. Source associations describe pipeline participation, not proven DataFrame transformation edges.
+## Automatic Registry migration
 
-These are the fields Live checks. Do not retain project configuration, arbitrary Read/Write argument dictionaries, Spark settings, diagnostics options or configuration fingerprints. Processing keys, watermarks and write-strategy rules remain owned and validated by the selected table contract. Profiling/discovery schedules come from that contract and physical table completion history. Grain Guardrails execute independently of optional grain discovery.
+Stop all old Registry writers, activation actions and pipeline executions before cutover. Drain and reconcile all old reservations; setup never clears them as a shortcut. Record the package revision, Delta table IDs/versions/properties and retention settings. Do not vacuum recovery files during acceptance.
 
-No Contract remains valid for exploratory Test. Every operation needs a valid frozen contract before activation. Test operations are in memory; explicit `finalize_pipeline` publishes allowed Test results and Guardrail diagnostics, never business writes, checkpoints, Catalogue or Lineage.
+setup_metadata_tables recognizes only the supported six-collection singleton schema. It:
 
-## Test, approval and Live
+1. Pins the exact Registry Delta snapshot and rejects duplicate/missing singleton, identities, unknown layouts/extensions and unresolved reservations.
+2. Validates retained successful Test operations, rule-level diagnostics, Contract hashes and exact Agreement content, including nonselected approvals.
+3. Checks every selection against its retained approval and notebook binding, then reconstructs exact table participation and compares it with old ownership. Missing, changed or conflicting evidence blocks migration.
+4. Writes a checksummed durable archive outside canonical SQL tables containing the complete original row, all six collections, original schema, table metadata/version and registration IDs. Delta time travel alone is not the archive.
+5. Maps selected pipeline and table Contract configurations to requires_reactivation candidates with null activation decision/provenance. Nonselected/retired registration and approval history remains in the archive, never active authority. No Git proof is fabricated.
+6. Atomically replaces Registry schema/files and sets Serializable isolation while retaining table identity/properties and existing transaction facts. It verifies exact committed row contents/types. Repeat setup validates target state without changing tokens, IDs or audit.
 
-1. Setup resolves a permanent pipeline UUID and notebook binding. Test discovers source/target participation through actual orchestrator calls.
-2. Each operation records its table, exact selected contract, binding, mode and outcome. The notebook still executes its own transformation code.
-3. Explicit finalization requires all discovered operations to complete and records the whole-run boundary. Parent status and JSON-encoded operations publish in one Run transaction. A partial diagnostic write cannot make a Test approvable.
-4. The activation widget lists successful finalized Tests by pipeline/environment. Governance selects an exact Test and Agreement version and supplies an immutable pipeline approval label.
-5. Approval revalidates required stages, complete rule-level diagnostics, exact contracts, Test notebook binding and Agreement effectiveness. Registry retains the Test ID and result integrity hash, Agreement version/hash, decision labels and audit. No second configuration document is created.
-6. One Registry compare-and-swap publishes approvals, active selections, coordinated table/contract/writer mappings and the environment revision atomically. Shared tables must use one exact contract/binding per environment; each target has at most one writer. Affected running pipelines drain before cutover.
-7. Live setup resolves the exact retained Test and approved contracts and reserves the execution under the same Registry token. Before each operation, the orchestrator validates table, location, source associations, mode, SQL hash and incremental target. A materially different call fails before the operation executes.
-8. Live records actual outcomes and releases only its own pinned reservation. Explicit finalization checks completion; it does not undo earlier business publications. Observed Lineage remains recorded if publication succeeds before a later stage fails.
+Setup reports the archive/checksum, source and committed versions, saved Pipeline IDs and candidate identities. Structural readiness is separate from governed_execution.status, which remains blocked. All migration evidence and historical execution records remain inspectable. Malformed history must be restored/reconciled explicitly; no arbitrary latest-version fallback or automatic business replay is allowed.
 
-**Approval does not verify arbitrary notebook transformation code, scan future cells or replace notebook code with stored configuration.** No notebook-code fingerprint is claimed. Changed notebook bindings require a new finalized Test and approval. The kernel's cell-completion hook detects failures; it cannot prove whole-notebook success.
+Registry extensions or unsupported physical layouts require review before conversion. The migration deliberately pauses old Governed authorization; uninterrupted use of the old trust model requires retaining the previous package/schema until reviewed cutover is possible.
 
-## Querying actual table and contract participation
+## Recovery and rollback
 
-```sql
-SELECT r.run_id, r.pipeline_id, r.workspace_id,
-       op.table_id, op.pipeline_role, op.contract_id, op.contract_version,
-       op.read_mode, op.write_mode, op.status
-FROM engineering.METADATA_PIPELINE_RUN r
-LATERAL VIEW explode(from_json(r.operations,
-  'array<struct<table_id:string,pipeline_role:string,contract_id:string,contract_version:int,read_mode:string,write_mode:string,status:string>>')) observed AS op;
-```
+Before commit, source data is authoritative; failed staging/audit files cannot authorize anything. After commit, including lost acknowledgement, inspect the recorded transaction and rerun setup. Post-commit verification failure blocks readiness and requires inspection. No automatic restore occurs.
 
-Use the configured physical Engineering schema. No Definition/Configuration join is required. For per-rule outcomes, join Guardrail Results by `run_id` and exact table/contract/rule identity without multiplying operation counts.
+Clean orphan staging/audit files only after confirming no active attempt owns them and no committed transaction references them. Retain committed archives and receipts outside ordinary Delta-log/vacuum retention.
 
-## Transactions and retained history
+An offline rollback is permitted only with stopped writers and verified current heads matching the recorded upgrade boundaries, before subsequent governance or business changes. Restore a mutually compatible package/schema set; never restore only Registry while keeping incompatible writers. After subsequent writes, use reviewed forward reconciliation. Blind RESTORE can discard valid activations, Run evidence or Processing State progress.
 
-Registry has one setup-seeded central row. Registration, approval, admission and rebind use one matched-only Delta MERGE with an expected token. There are no runtime child inserts or per-update DDL. Missing/duplicate authority fails closed. Approved decision history and permanent registrations are retained. A lost acknowledgement is accepted only after exact complete-content read-back.
+## Preserved processing behavior
 
-Run has one authoritative row per `run_id` with scalar JSON collections. First publication uses a stable Delta transaction identity; subsequent updates compare the complete previous row. Terminal outcomes are immutable and failed runs cannot regress to success. Parent, operations/stages, profiling and safe failures publish together. This preserves the existing whole-run concurrency and recovery guarantees without a Definition append or join.
+Full Read/Overwrite, watermark Source Observation incremental reads, Append, SCD1/SCD2, Source Drift, profiling, lineage, Run finalization, publication receipts, retry recovery and checkpoints retain their existing owners and algorithms. The order-independent prepared-business-row fingerprint remains unchanged, including suppression of an identical full overwrite.
 
-Approved Tests, frozen contracts, Agreements and rule results must remain retained and unchanged. Approval hashes protect result integrity, not notebook configuration identity. Missing, duplicated or changed retained references block approval/Live; there is no latest-version fallback.
+This PR adds no partition fingerprinting, persisted row hashes, reporting projection tables, writer namespace redesign or Git deployment verifier.
 
-## Preserved Processing State protocol
+## Validation and deployment gates
 
-### Processing state (engineering)
+Local real-Delta tests cover stale/overlapping Registry changes, blind append phantoms, missing control, exact lost-ack recovery, independent Contract activation, target-policy leases, migration idempotence, tampered history rejection and historical Run hash stability. Publication regression tests cover current strategies and retry/fingerprint behavior.
 
-`engineering.METADATA_PROCESSING_STATE` replaces Preview `METADATA_SOURCE_OBSERVATION` as the canonical Processing State table. Its four record types separate captured source state from accepted progress and physical publication evidence. The six Live schemas and the existing governance/engineering ownership routing are unchanged.
+Before Live rollout, a Fabric canary must validate the internal Delta transaction API/version, effective Serializable conflict behavior, archive permissions/retention, column mapping and actual SQL endpoint visibility. Passing local tests is not Fabric execution proof. The next deployment-assurance stage must prove trusted deployment barriers, dependency provenance and job/session correlation before enabling any Governed path.
 
-| Record type | Grain and lifecycle |
-| --- | --- |
-| `source_observation` | One captured source snapshot partition (or explicit empty-source row), `status=observed`; no target or publication link and never read as accepted progress |
-| `incremental_checkpoint` | One source/target/environment observation partition bound to a publication, `staged` → `committed` after verification |
-| `drift_baseline` | One source/target/environment observation partition or removal tombstone, `staged` → `committed` after verification and a continuing Guardrail decision |
-| `publication_receipt` | One exact target/environment publication attempt, including source-free writes, `staged` → `committed` with all source members |
-
-The canonical [Processing State physical reference](../reference/metadata/metadata_processing_state.md) is generated from `metadata_schemas.py`. Its schema and recovery protocol are outside the joint redesign. Preserve these guarantees:
-
-1. Read observations alone never advance accepted checkpoints or Source Drift baselines. Stage one exact publication receipt and all source members atomically before target mutation; accept them together only after physical publication is verified.
-2. Lakehouse recovery requires the exact Delta receipt and applicable target markers. Warehouse append/overwrite requires the full prepared row count with exact activity/time markers; partial or unprovable empty publication blocks recovery. Warehouse SCD retains its existing SQL transaction and latest-publication checks. One target's writers remain serialized.
-3. Lost acknowledgements and retries recover the original persisted member set, run identities and publication, including across process restarts. They never accept a newer Read snapshot or replay a completed append. Keep target evidence and required Delta history.
-4. Preserve lossless bounds/types, UTC versus wall-time timestamps, SQL NULL versus empty-string partitions, empty-source headers and removal tombstones. Repeated staging cannot regress committed progress.
-5. Catalogue and Lineage finalization are separate commits. Recovery of Processing State does not imply those commits succeeded; retry their exact publication finalization when needed. There is no cross-table transaction or independent-concurrent-Warehouse exactly-once claim.
-
-Primary integration points are `capture_source_observation`, `resolve_incremental_source_scope`, `check_source_drift_for_target`, `PublicationBatch`, `stage_pipeline_write_observations`, `commit_pipeline_write_success` and `_recover_completed_source_observations`. Audit their links to pipeline/run identity and writer admission without redesigning their persistence.
-
-### Processing State upgrade
+## Processing State upgrade
 
 This existing cutover procedure applies only to deployments still using the pre-#1698 layout: `METADATA_SOURCE_OBSERVATION` → `METADATA_PROCESSING_STATE`. There is no legacy alias or fallback reader. Setup permits the old physical table to remain, including alongside the canonical table, and returns an advisory retirement alert. A fresh canonical table does not establish valid operational progress for populated targets. `observation_status` and `publication_payload_json` are removed. Old rows must **not** be additive-evolved into typed progress. Setup and runtime still reject an incompatible layout under the canonical `METADATA_PROCESSING_STATE` name, including an empty table. No compatibility reader, automatic migration, reset, or discard is performed.
 
@@ -169,29 +94,3 @@ This existing cutover procedure applies only to deployments still using the pre-
 The current exact receipt includes its physical strategy. Old Delta commit metadata cannot be rewritten into new physical proof: retain old receipts for reconciliation, and use a reviewed target rebuild/replay to establish new-format receipts wherever automatic retry verification is needed. Migrating accepted progress alone does not retrofit old physical receipts. Recovery restores Processing State; replay the exact prepared Write if separate Catalogue or Lineage finalization also needs retry.
 
 No automatic conversion is supplied because old rows can lack watermark types, column identities or exact physical publication proof. Operators decide archival retention after reconciliation. Existing Processing State tests are regression requirements for the joint redesign; their local results do not validate an actual Fabric Warehouse deployment.
-
-## Joint redesign rollout and reset policy
-
-This is a breaking Preview layout change. The six supported Live schemas and Processing State remain unchanged. Setup refuses incompatible Registry/Run layouts; it never adds columns to reinterpret history, drops tables or automatically resets checkpoints.
-
-1. Stop Test/Live producers and activation; drain execution reservations. Back up affected tables with their exact Delta versions and package revision.
-2. For disposable Preview Registry/Run history, make an explicit reset decision. Create the new Registry and Run tables only after the old layout is backed up. Do not drop or rebuild supported Live tables or Processing State.
-3. For retained approvals/history, reconcile each old run's operation membership, exact contract references, bindings and modes into the new logical operation array. Revalidate retained Test diagnostics and Agreement versions; old definition/candidate IDs cannot be relabeled as run IDs. Do not invent missing successful operations or notebook bindings. If required facts cannot be established, rerun Test and approve a new run rather than asserting equivalence.
-4. Old `METADATA_ACTIVATION_STATE` snapshots and the unmerged #1707 Definition layout are not runtime readers or aliases. Preserve any required history before explicit cleanup. The former Run converter applies only with its historical #1700 package/layout and must not run against this schema.
-5. Validate unique run/approval identities, immutable terminal history, exact result hashes, table/contract/writer mappings and empty reconciled reservations before enabling Live. Retain backups and the previous package/schema boundary for rollback; never mix writers from the two layouts.
-
-## Verification and deployment boundaries
-
-Regression coverage exercises actual operation capture, selective Live rejection, finalized Test approval, shared-table/writer conflicts, rebind and admission races, immutable history, stale transactions, lost acknowledgements, concurrent profiling and unchanged supported Live schemas. Local Spark/Delta checks do not prove actual Fabric permissions, Lakehouse concurrency/cutover or Warehouse recovery. Validate those in the deployment environment before enabling Live.
-
-## Metadata retirement guidance
-
-`RETIRED_PREVIEW_METADATA_TABLES` in `metadata_schemas.py` remains the source for advisory cleanup notices. Setup probes known names in the configured schemas without collecting old rows or migrating/deleting their data. Retired Preview tables do not authorize execution.
-
-### Logical keys and schema ownership
-
-Registry remains physically in the configured Engineering schema. Governance owns approval decisions; Engineering executes registration, admission, reservations and profiling coordination against the same atomic row. Its position beside Governance tables in the diagram shows that shared responsibility and does not introduce a third physical schema.
-
-Registry's row key is `authority_id` (the singleton `central`); Run's row key is `run_id`. Registry collection keys are validated separately: registrations and selections use `(environment_name, pipeline_id)`, approvals use `approval_id`, revisions use `environment_name`, ownership uses `(environment_name, table_id)`, and reservations use `(environment_name, reservation_id)`. A Run operation is unique by both `operation_key` and `(table_id, pipeline_role)` within its Run.
-
-Registry approvals reference `Run.run_id` through `testing_run_id` and Agreement's composite `(agreement_id, agreement_version)`. Run's nullable `approval_id` references a nested Registry approval; Test runs have no approval. Run operations and Registry ownership reference Contract's composite `(contract_id, contract_version)`. Retained hashes verify content as well as identity. These are application-enforced references; Delta does not enforce SQL primary or foreign key constraints. Table IDs refer to logical table identities; Catalogue's physical row key also includes environment and column identity, so `table_id` alone is not a foreign key to its full row key.

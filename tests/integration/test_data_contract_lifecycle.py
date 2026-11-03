@@ -244,22 +244,23 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     return frozen
 
 
-def _activation(state, testing_results=()):
-    """Open whole-pipeline Governance review with the real headless service."""
+def _activation(state):
+    """Inspect direct activation records with the real headless service."""
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
     return call_with_spark(state.spark, module.widget_activate_pipeline, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
          context=state.context)
 
 
 def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
-    """Author/freeze, bootstrap-free Testing, explicit Governance review, then governed Live."""
+    """Authored/frozen payloads validate transformations without granting deployment authority."""
     state = lifecycle
     source = _author_and_freeze(state, state.source_id, source=True)
     schema_source = _author_and_freeze(state, state.schema_source_id, source=True, schema_only=True)
     target = _author_and_freeze(state, state.target_id, source=False)
     frozen_json = {row["contract_id"]: row["contract_payload_json"] for row in (source, schema_source, target)}
     before = _activation(state)
-    assert not before["eligible_runs"] and before["activate"].disabled
+    assert not before["records"] and before["ready"] is False
+    assert "trusted deployment verification" in before["reason"]
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
@@ -286,7 +287,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     from fabricops_kit.pipeline.shared import finalize_pipeline_run
     assert finalize_pipeline_run(plan, spark_session=state.spark)["status"] == "failed"
     gate = _activation(state)
-    assert not gate["eligible_runs"] and gate["activate"].disabled
+    assert not gate["records"] and gate["ready"] is False
+    assert gate["token"] == before["token"]
     plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="testing", selections=choices,
         spark_session=state.spark, context=state.context)
     with plan:
@@ -303,7 +305,12 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     runtime.publish_pipeline_testing_results(plan, spark_session=state.spark)
     widget = _activation(state)
-    assert len(widget["eligible_runs"]) == 1 and widget["activate"].disabled
+    assert not widget["records"] and widget["ready"] is False
+    assert widget["token"] == before["token"]
+    from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
+    with pytest.raises(RuntimeError, match="trusted deployment verification"):
+        build_governed_pipeline_plan(pipeline_id=coordinates["pipeline_id"], context=state.context,
+            spark_session=state.spark)
     assert len(state.metadata["METADATA_PIPELINE_RUN"]) == 1
     assert state.metadata["METADATA_GUARDRAIL_RESULTS"]
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]]

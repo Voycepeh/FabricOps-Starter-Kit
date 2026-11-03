@@ -52,13 +52,12 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         root = state["_controls"]["page"]
         assert reads == ["catalogue"]
     else:
-        monkeypatch.setattr(module, "metadata_records", lambda table, **kw: read(table, [])())
-        monkeypatch.setattr(module, "read_pipeline_authority", read("activation", (None, {})))
-        monkeypatch.setattr(module, "workspace_activation", lambda *_: {"pipelines": {}, "tables": {}, "revision": 0})
+        from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
+        monkeypatch.setattr(module, "read_registry", read("activation", [empty_pipeline_authority()]))
         monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
         state = module.widget_activate_pipeline()
         root = state["widget"]
-        assert reads == ["METADATA_PIPELINE_RUN", "METADATA_DATA_AGREEMENT", "activation"]
+        assert reads == ["activation"]
     assert outputs[-1][1] is root
     banner_updates = [
         value.data
@@ -95,18 +94,15 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
         calls.append("collect")
         return []
 
-    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda identity, **kwargs: {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "get_default_fabric_context", reuse)
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=collect))
     from fabricops_kit.activated_pipeline import shared as authority
-    monkeypatch.setattr(authority, "authority_records", lambda **kw: {
-        "token": "token", "registrations": [], "table_ownership": []})
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = shared.start_pipeline_session("generic", "Dry Run")
+        session = shared.start_pipeline_session("8f32a471-6c91-4b7e-9d13-2f0c947eab52", "Dry Run")
         assert calls == ["reuse", "collect"]
         assert "spark_loading" in session.startup_timings
         assert session.controls == []
@@ -193,12 +189,8 @@ def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, 
     monkeypatch.setattr(shared, "get_default_fabric_context", lambda **kw: {"config": config, "scope_workspace_id": "dev"})
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda **kw: (config, "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda: object())
-    monkeypatch.setattr(shared, "resolve_pipeline_registration", lambda *a, **kw: {
-        "pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "resolution": "Recovered"})
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: SimpleNamespace(collect=lambda: [_row()]))
     from fabricops_kit.activated_pipeline import shared as authority
-    monkeypatch.setattr(authority, "authority_records", lambda **kw: {
-        "token": "token", "registrations": [], "table_ownership": []})
     original_update = ip.update_display
     displayed_reports = []
 

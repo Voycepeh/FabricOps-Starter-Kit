@@ -91,7 +91,7 @@ New drafts capture every current observed column once. Columns default to requir
 
 In Pipeline Activation, select the Engineering workspace, pipeline and reviewed activation evidence. The workspace independently activates the selected release and frozen contracts. Other workspaces can use other versions. Deployment belongs to Fabric/CI tooling; no promotion sequence is enforced.
 
-`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline()` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
+`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline(pipeline_id=PIPELINE_ID)` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
 
 ## Pipeline execution mode
 
@@ -192,8 +192,8 @@ The authority uses a single JSON snapshot to guarantee metadata atomicity, tradi
 
 ### Permanent pipeline identity
 
-`setup_pipeline(pipeline_mode="Ungoverned")` resolves the caller workspace and notebook IDs, recovers their exact Active registration, or allocates a UUIDv4 in `engineering.METADATA_PIPELINE_REGISTRY`. Assign `PIPELINE_ID = pipeline.pipeline_id` immediately after setup, as the templates do. Dry Run does not persist a new registration. Governed requires an existing registered and activated identity. The returned session exposes `pipeline.pipeline_id`; its execution ID remains separate.
+Persistent Ungoverned and Governed calls require an explicit saved UUIDv4 Pipeline ID. Generate it once, paste it into the notebook configuration and retain it in version-controlled source across environments and notebook redeployments. Dry Run may omit it for a session-only identity. There is no registration, automatic UUID recovery, rebind or new-pipeline lifecycle.
 
-Notebook names are informational. A rename preserves identity. After reupload, call `setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned", previous_workspace_id=..., previous_notebook_id=...)` to approve moving the existing workspace binding to the caller. For an independent notebook copy, omit the copied UUID and call `setup_pipeline(pipeline_mode="Ungoverned", new_pipeline=True)`. Neither action changes activated authority.
+Notebook names and deployment Notebook IDs do not define logical pipeline identity. An independent pipeline copy needs its own saved Pipeline ID. Migrated IDs are listed in the Registry migration archive and setup report. Old selections become requires_reactivation candidates; they do not verify deployed code. Governed setup/publication remain blocked pending trusted deployment verification, so a Git SHA typed into a notebook cannot enable them. Independent frozen Contract activation is available through activate_data_contract after explicit review of the control token and target workspace.
 
 `pipeline_result = finalize_pipeline(pipeline)` records the accurate completion status for persisting modes and returns a session-only summary for Dry Run. Governance validates the current workspace/notebook registration, complete accepted evidence, exact contracts per table, configuration and Agreement, then freezes the approved manifest in `engineering.METADATA_PIPELINE_REGISTRY`. Dry Run does not commit business tables; Governed execution exercises the activated publication permissions and target transaction.

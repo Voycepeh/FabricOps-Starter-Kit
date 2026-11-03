@@ -16,6 +16,8 @@ from fabricops_kit.pipeline.shared import pipeline_physical_bindings, resolve_ph
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep the real journal and persistence logic; simulate only Fabric/Delta I/O."""
+    from fabricops_kit.activated_pipeline import shared as activation
+    monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     from importlib import metadata
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
@@ -76,7 +78,7 @@ def runtime(monkeypatch):
             preview = replace(plan, execution_mode="testing", evidence={})
             for index in range(len(roles)):
                 operation(preview, index)
-            plan = replace(plan, approval_id="approved-release", approved_operations_json=json.dumps(shared.persist_pipeline_run(preview)["operations"], default=str))
+            plan = replace(plan, pipeline_activation_id="approved-release", activated_operations_json=json.dumps(shared.persist_pipeline_run(preview)["operations"], default=str))
         shared.persist_pipeline_run(plan)
         return plan
 
@@ -281,7 +283,7 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 22
+    assert len(fields) == 27
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
     assert {"operations", "approval_id", "profiling", "boundary_completed"} <= set(fields)
@@ -473,7 +475,7 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
     original = make(roles=(role,))
     contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
     plan = replace(original, execution_mode=mode, workspace_id="dev", participants_json=json.dumps(identities),
-                   contracts_json=json.dumps({key: None for key in contracts}), evidence={}, approved_operations_json="[]",
+                   contracts_json=json.dumps({key: None for key in contracts}), evidence={}, activated_operations_json="[]",
                    runtime_context={"config": config, "scope_workspace_id": "dev", "_pipeline_bindings": bindings})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)
