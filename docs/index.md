@@ -1,4 +1,4 @@
-<div class="fabricops-product-page" markdown="1">
+<div class="fabricops-product-page fabricops-home-page" markdown="1">
 
 # Microsoft Fabric gives you the platform.
 
