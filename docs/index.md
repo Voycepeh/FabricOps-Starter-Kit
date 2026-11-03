@@ -24,7 +24,17 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   </a>
 </div>
 
-See [Architecture](architecture.md) for the workspace topology, Governance ↔ Engineering cycle, shared metadata and consumer hand-off.
+<a class="fabricops-metadata-preview fabricops-architecture-preview" href="architecture/" aria-label="Explore the FabricOps Architecture">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Architecture</span>
+    <strong class="fabricops-metadata-preview__title">See how FabricOps fits together</strong>
+    <span class="fabricops-metadata-preview__description">Understand the Governance, Engineering Development, Engineering Production, shared metadata, Data Contract, and consumer relationships.</span>
+    <span class="fabricops-metadata-preview__action">Explore Architecture <span aria-hidden="true">→</span></span>
+  </span>
+  <span class="fabricops-metadata-preview__image" aria-hidden="true">
+    <img src="assets/fabricops-operating-model-overview.png" alt="" loading="eager" decoding="async">
+  </span>
+</a>
 
 <a class="fabricops-metadata-preview" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata tables map">
   <span class="fabricops-metadata-preview__body">
@@ -50,27 +60,44 @@ See [Architecture](architecture.md) for the workspace topology, Governance ↔ E
   </span>
 </a>
 
-## Download FabricOps
+<section class="fabricops-metadata-preview fabricops-resource-preview" aria-labelledby="download-fabricops-title">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Download FabricOps</span>
+    <strong class="fabricops-metadata-preview__title" id="download-fabricops-title">Get the package, notebooks, and demo assets</strong>
+    <span class="fabricops-metadata-preview__description">Install the Python package, reuse the notebook templates, and download the demo data used by the Guided Demo.</span>
+    <span class="fabricops-preview-link-list">
+      <a href="releases/">Releases <small>Python package</small></a>
+      <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates</a>
+      <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets</a>
+    </span>
+  </span>
+  <span class="fabricops-preview-menu" aria-hidden="true">
+    <span>Python package</span>
+    <span>Notebook templates</span>
+    <span>Demo assets</span>
+  </span>
+</section>
 
-Get the Python package, reusable notebook templates, and demo assets to start building. Follow the Guided Demo above to put them to work.
-
-<nav class="fabricops-resource-list" aria-label="Download FabricOps resources">
-  <a href="releases/">Releases <small>Python package</small></a>
-  <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates <small>Reusable Fabric notebooks</small></a>
-  <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets <small>Sample data for the walkthrough</small></a>
-</nav>
-
-## Reference Documentation
-
-Explore FabricOps functions, Data Quality rules, metadata structures, and implementation guidance.
-
-<nav class="fabricops-resource-list" aria-label="FabricOps reference documentation">
-  <a href="reference/">Function Reference</a>
-  <a href="reference/dq-rules/">Data Quality Rules</a>
-  <a href="reference/metadata/">Metadata Tables</a>
-  <a href="reference/pyspark-transformation/">PySpark Transformation</a>
-  <a href="glossary/">Glossary</a>
-</nav>
+<section class="fabricops-metadata-preview fabricops-resource-preview" aria-labelledby="reference-documentation-title">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Reference Documentation</span>
+    <strong class="fabricops-metadata-preview__title" id="reference-documentation-title">Inspect the implemented FabricOps contracts</strong>
+    <span class="fabricops-metadata-preview__description">Explore public functions, Data Quality rules, metadata structures, PySpark guidance, and canonical terminology.</span>
+    <span class="fabricops-preview-link-list">
+      <a href="reference/">Function Reference</a>
+      <a href="reference/dq-rules/">Data Quality Rules</a>
+      <a href="reference/metadata/">Metadata Tables</a>
+      <a href="reference/pyspark-transformation/">PySpark Transformation</a>
+      <a href="glossary/">Glossary</a>
+    </span>
+  </span>
+  <span class="fabricops-preview-menu" aria-hidden="true">
+    <span>Functions</span>
+    <span>Rules</span>
+    <span>Metadata</span>
+    <span>Glossary</span>
+  </span>
+</section>
 
 ## What is available today?
 
