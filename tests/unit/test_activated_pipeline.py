@@ -182,3 +182,18 @@ def test_contract_activation_rejects_missing_or_invalid_frozen_binding(value):
     row = {**contract_candidate(), "destination_json": value}
     with pytest.raises(ValueError):
         service.registry_control([service.empty_pipeline_authority(), row])
+
+
+def test_target_lease_excludes_another_run_and_physical_alias(monkeypatch):
+    """A published hash snapshot remains protected until finalization releases the lease."""
+    rows = [service.empty_pipeline_authority()]
+    monkeypatch.setattr(service, 'read_registry', lambda **kw: rows)
+    monkeypatch.setattr(service, 'commit_registry', lambda *a, **kw: None)
+    def plan(run):
+        return SimpleNamespace(runtime_context={}, workspace_id='DEV', pipeline_id=PIPELINE_ID, plan_id=run, evidence={})
+    first = plan('first')
+    service.guard_ungoverned_write(first, 'orders', operation()['destination'])
+    service.guard_ungoverned_write(first, 'orders', operation()['destination'])
+    with pytest.raises(RuntimeError, match='publication lease'):
+        service.guard_ungoverned_write(plan('second'), 'physical-alias', operation()['destination'])
+    service.guard_ungoverned_write(plan('second'), 'other', operation(table='other')['destination'])

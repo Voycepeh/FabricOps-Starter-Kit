@@ -1024,6 +1024,24 @@ def validate_target_row_hash(identity, *, context):
         raise ValueError("Existing target has missing or invalid historical _row_hash values; reconcile before publication.")
 
 
+def filter_unpublished_rows(dataframe, identity, *, context):
+    """Compare only hash projections in Spark under the managed target publication lease."""
+    from fabricops_kit.io import read_warehouse_table
+    distinct = dataframe.dropDuplicates(["_row_hash"])
+    try:
+        if identity.get("store_type") == "lakehouse":
+            target = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                                          schema=identity.get("schema"), context=context)
+        else:
+            target = read_warehouse_table(identity["schema"], identity["table_name"],
+                                          store=identity["store"], context=context)
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return distinct
+        raise
+    return distinct.join(target.select("_row_hash"), on="_row_hash", how="left_anti")
+
+
 class PublicationBatch:
     """Bind an immutable prepared batch to a durable, exact target-write marker.
 
@@ -1073,6 +1091,17 @@ class PublicationBatch:
                 "content": totals,
             }
             batch_id = hashlib.sha256(json.dumps(boundary, sort_keys=True, default=str).encode()).hexdigest()
+            # Content identifies recovery; execution identifies a new user publication.
+            # A fresh Overwrite/Append All must execute even for identical content.
+            content_id = batch_id
+            incremental = incremental_publication_scopes(workspace_id=self.context["scope_workspace_id"],
+                activity_id=source_observation_run_id(self.context) or str(self.audit["_activity_id"]),
+                target_table_id=self.identity["table_id"], source_table_ids=self.source_table_ids)
+            self.execution_scoped = self.processing["load_strategy"] == "overwrite" or (
+                self.processing["load_strategy"] == "append_all" and not incremental)
+            if self.execution_scoped:
+                execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
+                batch_id = f"{content_id}:{execution_id}"
             # Fresh per-batch audit time, independent of a notebook's reused
             # activity and of caller-provided run-consistent audit timestamps.
             self.audit["_committed_at"] = datetime.now(UTC)
@@ -1081,6 +1110,13 @@ class PublicationBatch:
                             "run_id": source_observation_run_id(self.context),
                             "strategy": self.processing["load_strategy"]}
             history_rows = []
+            execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
+            journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
+            recoveries = journal.setdefault("publication_recoveries", {})
+            alias_key = (execution_id, content_id)
+            alias = recoveries.get(alias_key)
+            if alias and _accepts_publication_receipt(self, alias):
+                self.receipt, self.already_applied = alias, True
             try:
                 history = read_lakehouse_table(
                     _PROCESSING_STATE_TABLE, store="Metadata",
@@ -1094,7 +1130,11 @@ class PublicationBatch:
                             or row.get("target_table_id") != self.identity["table_id"]):
                         continue
                     receipt = _publication_receipt(row, history_rows)
-                    if receipt.get("batch_id") == batch_id and receipt not in receipts:
+                    if (receipt.get("batch_id") == batch_id or (
+                            self.execution_scoped
+                            and row.get("status") == "staged"
+                            and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
+                        )) and receipt not in receipts:
                         receipts.append(receipt)
                 for receipt in receipts:
                     if _accepts_publication_receipt(self, receipt):
@@ -1111,6 +1151,8 @@ class PublicationBatch:
                 if receipt and _accepts_publication_receipt(self, receipt):
                     self.receipt = receipt
                     self.already_applied = True
+            if self.already_applied and self.receipt["batch_id"] != batch_id:
+                recoveries[alias_key] = dict(self.receipt)
             if self.already_applied:
                 _verify_retry_observations(self, history_rows)
                 self._freeze_publication_snapshot(history_rows)
@@ -1167,6 +1209,8 @@ class PublicationBatch:
 
     def __exit__(self, *_exc):
         """Release only the cache owned by this publication attempt."""
+        if hasattr(self, "filtered_dataframe"):
+            self.filtered_dataframe.unpersist()
         for key, captured in self._active_sources.items():
             if _ACTIVE_PUBLICATION_SOURCES.get(key) == captured:
                 _ACTIVE_PUBLICATION_SOURCES.pop(key, None)
@@ -1230,7 +1274,7 @@ def _accepts_publication_receipt(batch, receipt):
     """Require current target state before suppressing a keyed SCD merge."""
     if not _physical_target_has_publication(batch.identity, receipt, context=batch.context):
         return False
-    if batch.processing["load_strategy"] not in {"scd1", "scd2"}:
+    if batch.processing["load_strategy"] not in {"scd1", "scd2", "append_new_only"}:
         return True
     if batch.identity.get("store_type") == "lakehouse":
         from delta.tables import DeltaTable
@@ -1318,7 +1362,7 @@ def _physical_target_has_publication(
     """Verify both literals bound to an exact staged batch's atomic write."""
     if not receipt:
         return False
-    if receipt.get("strategy") not in {"append", "overwrite", "scd1", "scd2"}:
+    if receipt.get("strategy") not in {"append_all", "append_new_only", "overwrite", "scd1", "scd2"}:
         raise RuntimeError("Unsupported legacy target publication receipt; reconcile and rebuild/replay the target under the new Processing State schema before retrying.")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     escaped = receipt["activity_id"].replace("'", "''")
@@ -1362,7 +1406,7 @@ def _physical_target_has_publication(
                 store=str(identity["store"]), context=context,
             )
             marked = int(frame.first()["fabricops_publication_rows"])
-            if receipt.get("strategy") in {"append", "overwrite"}:
+            if receipt.get("strategy") in {"append_all", "append_new_only", "overwrite"}:
                 if marked and marked != receipt["input_rows"]:
                     raise RuntimeError("Incomplete Warehouse publication marker count; reconcile the partial publication before retrying. Checkpoint was not advanced.")
                 if receipt["input_rows"] == 0:
@@ -3208,12 +3252,13 @@ def validated_processing(processing: Any) -> dict[str, Any]:
     if not isinstance(processing, dict):
         raise ValueError("Data Contract processing definition is missing or malformed.")
     strategy = str(processing.get("load_strategy") or "").strip().lower()
-    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+    if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
         raise ValueError("Processing definition has an invalid load_strategy.")
     definition = {**processing, "load_strategy": strategy}
     allowed = {
         "overwrite": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
-        "append": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
+        "append_all": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
+        "append_new_only": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
         "scd1": {"load_strategy", "key_columns", "watermark_column", "source", "contract_id", "contract_version"},
         "scd2": {
             "load_strategy", "key_columns", "effective_column", "tracked_columns", "watermark_column",
@@ -3400,7 +3445,7 @@ def execute_lakehouse_processing(
     if not set(_TARGET_AUDIT_COLUMNS) <= columns:
         persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
-    if strategy == "append":
+    if strategy in {"append_all", "append_new_only"}:
         write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
@@ -3608,7 +3653,7 @@ def evaluate_source_drift_guardrail(
             "Governance must author and activate one first."
         )
     strategy = _string_value(load_strategy).lower()
-    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+    if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
         raise ValueError("load_strategy must be one of: overwrite, append, scd1, scd2")
     severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     if severity not in {"blocking", "warning"}:
@@ -3646,7 +3691,7 @@ def evaluate_source_drift_guardrail(
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    compatible = strategy != "append" or not historical_mutation
+    compatible = strategy not in {"append_all", "append_new_only"} or not historical_mutation
     if compatible:
         result.update(
             status="passed",
@@ -3658,7 +3703,7 @@ def evaluate_source_drift_guardrail(
         result.update(
             status="failed" if blocking else "warning",
             can_continue=not blocking,
-            reason="Previously processed source data changed; governed 'append' processing cannot reconcile historical mutation.",
+            reason="Previously processed source data changed; configured append processing cannot reconcile historical mutation.",
         )
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
@@ -5754,7 +5799,7 @@ def validate_pipeline_run(row):
             raise ValueError("Duplicate Pipeline Run source association.")
         if item["status"] == "succeeded":
             mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
-            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "scd1", "scd2"}
+            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
@@ -6689,7 +6734,7 @@ PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
-LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
+LOAD_STRATEGIES = {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
 
 
 _PROFILE_EXCLUDED_NAMES = {
@@ -7219,7 +7264,8 @@ def _processing_definition(
         parameters = dict(load_strategy_parameters)
     allowed = {
         "overwrite": {"watermark_column"},
-        "append": {"watermark_column"},
+        "append_all": {"watermark_column"},
+        "append_new_only": {"watermark_column"},
         "scd1": {"key_columns", "watermark_column"},
         "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
     }[strategy]

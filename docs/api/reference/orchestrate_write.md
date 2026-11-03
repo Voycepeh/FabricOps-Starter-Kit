@@ -150,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 232 |
+| Live-critical dependencies | 233 |
 
 ### Release history
 
@@ -351,6 +351,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>

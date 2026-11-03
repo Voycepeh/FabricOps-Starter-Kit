@@ -282,7 +282,7 @@ class BatchDouble:
         pass
 
 
-def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", context=None):
+def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append_all", context=None):
     context = context if context is not None else {}
     identity = _identity(f"{store_type}:unified:dbo:students", store_type=store_type)
     monkeypatch.setattr(write_module, "resolve_fabric_context", lambda: ("config", "dev", context))
@@ -304,6 +304,8 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append", cont
     monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **kwargs: False))
     monkeypatch.setattr(shared_module, "stage_pipeline_write_observations", lambda value: [])
     monkeypatch.setattr(write_module, "add_target_audit_fields", lambda frame, _audit_values: frame)
+    monkeypatch.setattr(write_module, "add_row_hash", lambda frame: frame)
+    monkeypatch.setattr(write_module, "validate_target_row_hash", lambda *a, **kw: None)
     monkeypatch.setattr(
         write_module,
         "_writer_scheduled_refresh",
@@ -386,9 +388,9 @@ def test_warehouse_first_write_treats_missing_target_as_not_applied(monkeypatch)
 @pytest.mark.parametrize(
     ("store_type", "strategy", "writer"),
     [
-        ("lakehouse", "append", "lakehouse"),
+        ("lakehouse", "append_all", "lakehouse"),
         ("lakehouse", "overwrite", "lakehouse"),
-        ("warehouse", "append", "warehouse"),
+        ("warehouse", "append_all", "warehouse"),
         ("warehouse", "overwrite", "warehouse"),
     ],
 )
@@ -476,7 +478,7 @@ def test_incremental_append_bootstrap_requires_new_or_empty_target(
     monkeypatch, target_has_rows
 ):
     """Append bootstrap fails safely when an existing target already has data."""
-    _patch_write(monkeypatch, strategy="append")
+    _patch_write(monkeypatch, strategy="append_all")
     monkeypatch.setattr(
         write_module,
         "incremental_publication_scopes",
@@ -738,7 +740,7 @@ def test_pipeline_write_failure_does_not_commit_or_establish_profile(monkeypatch
     assert "_fabricops_active_profile_registration" not in context
 
 
-@pytest.mark.parametrize("strategy", ["append", "overwrite", "scd1", "scd2"])
+@pytest.mark.parametrize("strategy", ["append_all", "overwrite", "scd1", "scd2"])
 def test_pipeline_write_retry_uses_exact_batch_proof_and_replays_metadata(
     monkeypatch, spark_session, strategy
 ):
@@ -763,7 +765,7 @@ def test_pipeline_write_retry_uses_exact_batch_proof_and_replays_metadata(
     def publish(*_args, **_kwargs):
         physical.append(strategy)
         marker["present"] = True
-        if strategy in {"append", "overwrite"}:
+        if strategy in {"append_all", "overwrite"}:
             _kwargs["context"]["_fabricops_write_metrics"].update(rows_committed=8, measurement_source="delta_commit")
 
     monkeypatch.setattr(io_package, "write_lakehouse_table", publish)
@@ -799,7 +801,7 @@ def test_pipeline_write_retry_uses_exact_batch_proof_and_replays_metadata(
     assert "_fabricops_active_profile_registration" not in context
 
 
-@pytest.mark.parametrize("strategy", ["append", "overwrite", "scd1", "scd2"])
+@pytest.mark.parametrize("strategy", ["append_all", "overwrite", "scd1", "scd2"])
 def test_no_marker_publication_can_be_safely_reevaluated(monkeypatch, spark_session, strategy):
     """Empty or no-op publications may repeat because they have no duplicate side effect."""
     identity, _context = _patch_write(monkeypatch, strategy=strategy)
@@ -833,7 +835,7 @@ def test_no_marker_publication_can_be_safely_reevaluated(monkeypatch, spark_sess
 
 
 def test_failed_physical_publication_does_not_finalize_metadata(monkeypatch):
-    _patch_write(monkeypatch, strategy="append")
+    _patch_write(monkeypatch, strategy="append_all")
     finalizations = []
     monkeypatch.setattr(
         io_package,
@@ -989,7 +991,7 @@ def test_scd_reconciles_new_batch_even_when_activity_already_exists(monkeypatch,
     assert events == [strategy]
 
 
-@pytest.mark.parametrize("strategy", ["append", "overwrite"])
+@pytest.mark.parametrize("strategy", ["append_all", "overwrite"])
 def test_non_scd_retry_skips_verified_exact_batch(monkeypatch, strategy):
     """Non-keyed writes must retain their duplicate-publication protection."""
     _patch_write(monkeypatch, strategy=strategy)
@@ -1010,7 +1012,7 @@ def test_non_scd_retry_skips_verified_exact_batch(monkeypatch, strategy):
 @pytest.mark.parametrize("has_data,committed", [(True, 3), (False, 0)])
 def test_incremental_append_preserves_physical_commit_metrics(monkeypatch, has_data, committed):
     """Incremental scopes never replace measured writer rows with source counts."""
-    _patch_write(monkeypatch, strategy="append")
+    _patch_write(monkeypatch, strategy="append_all")
     monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {
         "source": {"first_run": False, "has_data": has_data, "row_count": 100},
     })
@@ -1057,7 +1059,7 @@ def test_scd_bootstrap_reports_only_measured_insertions(monkeypatch, spark_sessi
 
 def test_publication_outcome_survives_metadata_finalization_failure(monkeypatch):
     """A cross-store finalization failure cannot imply that business publication rolled back."""
-    _patch_write(monkeypatch, strategy="append")
+    _patch_write(monkeypatch, strategy="append_all")
     published = []
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: published.append(True))
     def fail(**kwargs):
@@ -1075,7 +1077,7 @@ def test_testing_rejects_populated_incremental_bootstrap_without_writing(monkeyp
     """Testing evaluates bootstrap safety while keeping all durable boundaries read-only."""
     from types import SimpleNamespace
     context = {'execution_plan': SimpleNamespace(permits_persistence=False)}
-    _patch_write(monkeypatch, strategy='append', context=context)
+    _patch_write(monkeypatch, strategy='append_all', context=context)
     monkeypatch.setattr(write_module, 'incremental_publication_scopes', lambda **kw: {'source': {'first_run': True}})
     monkeypatch.setattr(write_module, '_target_has_rows', lambda **kw: True)
     monkeypatch.setattr(io_package, 'write_lakehouse_table', lambda *a, **kw: pytest.fail('Testing wrote business rows'))

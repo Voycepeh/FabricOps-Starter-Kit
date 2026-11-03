@@ -56,13 +56,13 @@ def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
         object(), table_name="students", store="Silver", schema="dbo",
-        processing={"load_strategy": "append"},
+        processing={"load_strategy": "append_all"},
         scope={"type": "full_dataset"},
     )
     assert calls[0][1]["mode"] == "append"
 
 
-@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append")])
+@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append_all", "append")])
 def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spark_session, strategy, mode):
     calls = []
     resolutions = []

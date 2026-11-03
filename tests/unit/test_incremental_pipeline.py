@@ -115,13 +115,13 @@ def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypa
         "store": "Bronze",
         "schema": "demo",
         "table_name": "orders",
-        "load_strategy": "append",
+        "load_strategy": "append_all",
         "load_strategy_parameters_json": {'watermark_column': 'processed_at'},
     }
     captured = []
     monkeypatch.setattr(read_module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(read_module, "resolve_catalogue_table_identity", lambda *a, **k: identity)
-    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *a, **k: {"contract_payload": {"table": {"processing": {"load_strategy": "append", "watermark_column": "processed_at"}}}})
+    monkeypatch.setattr(read_module, "resolve_pipeline_data_contract", lambda *a, **k: {"contract_payload": {"table": {"processing": {"load_strategy": "append_all", "watermark_column": "processed_at"}}}})
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "complete-frame")
     monkeypatch.setattr(
         read_module,
@@ -161,7 +161,7 @@ def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
 
 def test_incremental_columns_come_from_processing_without_source_drift():
     identity = {
-        "load_strategy": "append",
+        "load_strategy": "append_all",
         "load_strategy_parameters_json": {'watermark_column': 'processed_at'},
     }
 
@@ -176,7 +176,7 @@ def test_incremental_processing_column_can_differ_from_source_drift():
         "contract_payload": {
             "table": {
                 "processing": {
-                    "load_strategy": "append",
+                    "load_strategy": "append_all",
                     "watermark_column": "processed_at",
                 }
             },
@@ -198,13 +198,13 @@ def test_incremental_processing_column_can_differ_from_source_drift():
 def test_partition_only_incremental_processing_is_rejected():
     with pytest.raises(ValueError, match="unsupported fields: partition_column"):
         shared.validated_processing(
-            {"load_strategy": "append", "partition_column": "business_date"}
+            {"load_strategy": "append_all", "partition_column": "business_date"}
         )
 
 
 def test_incremental_observation_requires_governed_watermark():
     identity = {
-        "load_strategy": "append",
+        "load_strategy": "append_all",
         "load_strategy_parameters_json": {'partition_column': 'business_date'},
     }
 
@@ -533,7 +533,7 @@ def test_incremental_read_parameters_override_missing_catalogue_watermark(monkey
         "store": "Bronze",
         "schema": "demo",
         "table_name": "orders",
-        "load_strategy": "append",
+        "load_strategy": "append_all",
         "load_strategy_parameters_json": {},
     }
     captured = []
@@ -559,7 +559,7 @@ def test_incremental_read_parameters_override_missing_catalogue_watermark(monkey
 
 def test_incremental_parameters_reject_selected_contract_conflict():
     contract = {"contract_payload": {"table": {"processing": {
-        "load_strategy": "append", "watermark_column": "governed_date"
+        "load_strategy": "append_all", "watermark_column": "governed_date"
     }}}}
     with pytest.raises(ValueError, match="conflicts with selected Data Contract"):
         read_module._resolve_requested_incremental_columns(
