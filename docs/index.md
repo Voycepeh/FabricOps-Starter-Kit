@@ -38,6 +38,18 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   </span>
 </a>
 
+<a class="fabricops-metadata-preview fabricops-guided-preview" href="guided-demo/" aria-label="Start the seven-step FabricOps Guided Demo">
+  <span class="fabricops-metadata-preview__body">
+    <span class="fabricops-metadata-preview__eyebrow">Guided implementation</span>
+    <strong class="fabricops-metadata-preview__title">Run the seven-step FabricOps lifecycle</strong>
+    <span class="fabricops-metadata-preview__description">Prepare Microsoft Fabric, build the pipeline, author and preview Data Contracts, then follow the Production and consumption hand-offs.</span>
+    <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
+  </span>
+  <span class="fabricops-metadata-preview__image" aria-hidden="true">
+    <img src="assets/fabricops-role-workflow.png" alt="" loading="eager" decoding="async">
+  </span>
+</a>
+
 ## Choose your route
 
 <div class="fabricops-capability-grid">
@@ -48,9 +60,5 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
 ## What is available today?
 
 Core notebook setup, Fabric I/O, pipeline orchestration, profiling and metadata capture are **Live** public capabilities. Data Contract authoring, activation and AI-assisted authoring remain **Preview**. Governed execution currently fails closed until trusted deployment verification is integrated; use the reference lifecycle labels for the authoritative status of each callable.
-
-<div class="fabricops-cta-row" markdown="1">
-[Run the Guided Demo](guided-demo.md){ .md-button .md-button--primary }
-</div>
 
 </div>
