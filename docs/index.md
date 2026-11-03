@@ -65,17 +65,12 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
     <span class="fabricops-metadata-preview__eyebrow">Download FabricOps</span>
     <strong class="fabricops-metadata-preview__title" id="download-fabricops-title">Get the package, notebooks, and demo assets</strong>
     <span class="fabricops-metadata-preview__description">Install the Python package, reuse the notebook templates, and download the demo data used by the Guided Demo.</span>
-    <span class="fabricops-preview-link-list">
-      <a href="releases/">Releases <small>Python package</small></a>
-      <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates</a>
-      <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets</a>
-    </span>
   </span>
-  <span class="fabricops-preview-menu" aria-hidden="true">
-    <span>Python package</span>
-    <span>Notebook templates</span>
-    <span>Demo assets</span>
-  </span>
+  <nav class="fabricops-preview-menu" aria-label="Download FabricOps resources">
+    <a href="releases/">Releases <small>Python package</small></a>
+    <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Notebook Templates</a>
+    <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/DemoData">Demo Assets</a>
+  </nav>
 </section>
 
 <section class="fabricops-metadata-preview fabricops-resource-preview" aria-labelledby="reference-documentation-title">
@@ -83,20 +78,14 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
     <span class="fabricops-metadata-preview__eyebrow">Reference Documentation</span>
     <strong class="fabricops-metadata-preview__title" id="reference-documentation-title">Inspect the implemented FabricOps contracts</strong>
     <span class="fabricops-metadata-preview__description">Explore public functions, Data Quality rules, metadata structures, PySpark guidance, and canonical terminology.</span>
-    <span class="fabricops-preview-link-list">
-      <a href="reference/">Function Reference</a>
-      <a href="reference/dq-rules/">Data Quality Rules</a>
-      <a href="reference/metadata/">Metadata Tables</a>
-      <a href="reference/pyspark-transformation/">PySpark Transformation</a>
-      <a href="glossary/">Glossary</a>
-    </span>
   </span>
-  <span class="fabricops-preview-menu" aria-hidden="true">
-    <span>Functions</span>
-    <span>Rules</span>
-    <span>Metadata</span>
-    <span>Glossary</span>
-  </span>
+  <nav class="fabricops-preview-menu" aria-label="FabricOps reference documentation">
+    <a href="reference/">Function Reference</a>
+    <a href="reference/dq-rules/">Data Quality Rules</a>
+    <a href="reference/metadata/">Metadata Tables</a>
+    <a href="reference/pyspark-transformation/">PySpark Transformation</a>
+    <a href="glossary/">Glossary</a>
+  </nav>
 </section>
 
 ## What is available today?

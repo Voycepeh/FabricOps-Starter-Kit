@@ -123,11 +123,6 @@
 .fabricops-architecture-preview .fabricops-metadata-preview__image { height: 10rem; }
 .fabricops-architecture-preview .fabricops-metadata-preview__image img { padding: 0.35rem; }
 .fabricops-resource-preview { cursor: default; }
-.fabricops-preview-link-list { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin-top: 0.3rem; }
-.md-typeset .fabricops-preview-link-list a { color: var(--md-primary-fg-color); font-size: 0.75rem; font-weight: 750; text-decoration: none; }
-.md-typeset .fabricops-preview-link-list a:hover,
-.md-typeset .fabricops-preview-link-list a:focus { text-decoration: underline; }
-.md-typeset .fabricops-preview-link-list small { color: inherit; font-size: inherit; }
 .fabricops-preview-menu {
   display: grid;
   align-content: center;
@@ -139,7 +134,27 @@
   border-radius: 0.4rem;
   background: color-mix(in srgb, var(--md-default-fg-color) 3%, var(--md-default-bg-color));
 }
-.fabricops-preview-menu span { padding: 0.35rem 0.5rem; border-left: 0.18rem solid var(--md-primary-fg-color); color: var(--md-default-fg-color--light); font-size: 0.7rem; font-weight: 650; }
+.md-typeset .fabricops-preview-menu a {
+  display: flex;
+  flex-direction: column;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 28%, var(--md-default-fg-color--lightest));
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.25rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.md-typeset .fabricops-preview-menu a:hover,
+.md-typeset .fabricops-preview-menu a:focus {
+  border-color: var(--md-primary-fg-color);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 8%, var(--md-default-bg-color));
+  color: var(--md-primary-fg-color);
+}
+.md-typeset .fabricops-preview-menu small { margin-top: 0.08rem; color: var(--md-default-fg-color--light); font-size: 0.6rem; font-weight: 400; }
 
 @media screen and (max-width: 760px) {
   .fabricops-hero,
@@ -148,4 +163,9 @@
   .fabricops-evidence-grid { grid-template-columns: 1fr; }
   .fabricops-hero { padding: 1rem; }
   .md-typeset .fabricops-product-page > h2 { margin-top: 2.4rem; }
+}
+
+@media screen and (max-width: 600px) {
+  .md-typeset .fabricops-resource-preview { grid-template-columns: 1fr; }
+  .fabricops-resource-preview .fabricops-preview-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
 }
