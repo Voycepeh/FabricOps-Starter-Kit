@@ -153,97 +153,61 @@ A common pattern is **Full → Overwrite** for rebuilding a target or **Incremen
 
 ## What FabricOps Takes Care of for You
 
-Running a pipeline is easy when everything goes right. The harder part is keeping data accurate when sources change, a run fails or the same data arrives again. Each topic starts with the business outcome; expand it for the functions, exact stored evidence and known trade-off. These explanations follow the expanded implementation in PR #1774, including managed hashing, write strategies, source observation and publication coordination.
+Reliable pipelines need more than a successful write. These six engineering decisions explain how FabricOps handles the difficult cases. Expand a title for the implementation, stored evidence and trade-off.
 
-??? info "A failed run shouldn't mean starting over"
-    If a write succeeded but saving its processing history failed, a retry should not blindly insert the same batch again.
+??? info "A failed run shouldn't mean writing everything twice"
+    A successful write followed by a metadata failure should not silently duplicate the same publication on retry.
 
-    **How it works:** [`orchestrate_write()`](../api/reference/orchestrate_write.md) calls internal `pipeline_write()` and `PublicationBatch`. A deterministic batch identity is checked against the exact publication receipt and physical target. Lakehouse verification uses Delta commit evidence; Warehouse verification requires the exact publication audit-marker row count. An unverified or partial write fails closed.
+    **How it works:** [`orchestrate_write()`](../api/reference/orchestrate_write.md) delegates to internal `pipeline_write()` and `PublicationBatch`. FabricOps checks the batch identity, saved receipt and physical target before recovering. Lakehouse verification uses Delta commit evidence; Warehouse verification checks the exact publication audit-marker row count. Unverifiable or partial writes fail closed.
 
-    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `record_type = publication_receipt`, `record_id`, `publication_id`, `publication_batch_id`, `publication_activity_id`, `publication_input_rows`, `target_table_id` and `status`. `PublicationBatch` is implemented in `src/fabricops_kit/pipeline/shared.py`.
+    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) records `record_type = publication_receipt`, `publication_id`, `publication_batch_id`, `publication_activity_id`, `publication_input_rows`, `target_table_id` and `status`. Implementation: `src/fabricops_kit/pipeline/shared.py`.
 
-    **Trade-off:** Physical verification and fingerprinting add Spark and metadata work. A Warehouse publication without verifiable row markers cannot be assumed successful.
+    **Trade-off:** Fingerprinting and physical verification cost compute. Recovery requires evidence, not a best-effort guess.
 
-??? info "We only mark data as processed when it's safely written"
-    Reading 1,000 records does not mean those records have reached the destination.
+??? info "Incremental runs don't lose track of unfinished work"
+    Reading a record does not mean it has reached the destination, and records arriving during a run should not shift the current processing boundary.
 
-    **How it works:** [`pipeline_read()`](../api/reference/pipeline_read.md), called by `orchestrate_read()`, resolves the last accepted watermark for the exact source and target. Internal `pipeline_write()` stages the next progress and accepts it only with verified publication. Publication receipts and their source members are acknowledged together.
+    **How it works:** [`pipeline_read()`](../api/reference/pipeline_read.md), called by `orchestrate_read()`, resolves the accepted source-to-target watermark and captures an upper bound for the current read. Lakehouse filtering uses Spark; Warehouse filtering uses FabricOps-owned SQL. Internal `pipeline_write()` commits progress only after verified publication. First-time incremental reads bootstrap from the source, subject to target safety checks.
 
-    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) uses `record_type = incremental_checkpoint`, `source_table_id`, `target_table_id`, `max_change_value`, `watermark_type`, `publication_id`, `status` and `accepted_at`.
+    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) records `record_type = source_observation` or `incremental_checkpoint`, `source_table_id`, `target_table_id`, `watermark_type`, `min_change_value`, `max_change_value`, `status` and `accepted_at`.
 
-    **Trade-off:** Each source-to-target relationship needs its own checkpoint. A first incremental read without an accepted baseline bootstraps from the source, and unsafe target combinations are rejected.
+    **Trade-off:** Each source-to-target pair needs its own checkpoint; later arrivals wait for another run. Correctness depends on a reliable source change value.
 
-??? info "New records arriving mid-run won't disrupt the current batch"
-    A source can continue receiving new records while a pipeline works through a defined batch.
+??? info "Different kinds of changes need different write behaviour"
+    An event log may need every record, while another target should ignore repeated rows or maintain the latest state of each business key.
 
-    **How it works:** [`pipeline_read()`](../api/reference/pipeline_read.md) captures an upper watermark and reads after the accepted lower watermark through that upper bound. Lakehouse filtering uses Spark; Warehouse filtering uses FabricOps-owned SQL. A later source change is left for a subsequent run.
+    **How it works:** [`orchestrate_read()`](../api/reference/orchestrate_read.md) selects Full or Incremental independently of [`orchestrate_write()`](../api/reference/orchestrate_write.md). Internal `pipeline_write()` supports Overwrite, Append All, Append New Only, SCD1 and SCD2. `add_row_hash()` and `row_hash_expression()` calculate a mandatory SHA256 `_row_hash` after transformation and Sensitive Data treatment. `append_new_only` uses `filter_unpublished_rows()` to remove repeated incoming hashes and anti-join target hashes; SCD strategies use business keys. A separate `PublicationBatch` fingerprint supports retry recovery.
 
-    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) records `record_type = source_observation` and `incremental_checkpoint`, with `observation_id`, `partition_column`, `change_column`, `watermark_type`, `min_change_value` and `max_change_value`.
+    **Where to look:** The **published target table** stores `_row_hash`; [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `publication_batch_id`, `publication_input_rows` and `publication_strategy`. See [Read & Write Modes](../reference/read-and-load-strategies.md) for the exact strategy rules.
 
-    **Trade-off:** Some fresh records wait for the next run. Incremental correctness depends on a trustworthy source watermark, not simply on the time the notebook ran.
+    **Trade-off:** Hashing and target comparison add compute. Append New Only does not update or delete existing rows, and changed ingestion values can change the hash. Existing targets with missing or invalid hashes require reviewed migration or overwrite.
 
-??? info "FabricOps knows whether a row is new or already published"
-    Different use cases need different treatment of repeated records: preserve all, keep only unseen rows or update a business key.
+??? info "We can see beyond the rows processed today"
+    An incremental batch might look healthy even when records elsewhere in the full source have changed or disappeared.
 
-    **How it works:** Internal `add_row_hash()` and `row_hash_expression()` calculate the mandatory SHA256 `_row_hash` **after transformations and Sensitive Data treatment**. The hash includes business and source ingestion values, column names and logical types, while excluding FabricOps-owned audit and SCD lifecycle fields. `pipeline_write()` applies the chosen `write_mode`: `append_all` keeps identical duplicates; `append_new_only` uses `filter_unpublished_rows()` to drop duplicate incoming hashes and Spark anti-join against target hashes; SCD1/SCD2 continue to use their governed business-key rules. Separately, `PublicationBatch` aggregates row hashes into a multiplicity-sensitive batch fingerprint for retry recovery.
+    **How it works:** [`setup_pipeline()`](../api/reference/setup_pipeline.md) configures `observe_source` and `source_observation_days`. Internal `observe_full_source()` can fingerprint the complete physical source independently of the incremental read; `orchestrate_read()` exposes `full_source_observation`. The baseline is accepted after verified publication. Separately, `orchestrate_read()` and `orchestrate_write()` schedule whole-table profiling for row counts, missing values and common values.
 
-    **Where to look:** Every managed **published target table** stores `_row_hash` on each row; it is **not** a column in a FabricOps metadata table. [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores the separate publication receipt fields `publication_batch_id`, `publication_input_rows` and `publication_strategy`. See [Read & Write Modes](../reference/read-and-load-strategies.md) for strategy behavior and hash rules.
+    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) records `record_type = full_source_baseline`, `source_table_id`, `row_count`, `content_fingerprint`, `publication_id` and `accepted_at`. [`METADATA_DATA_PROFILED`](../reference/metadata/metadata_data_profiled.md) records `profile_snapshot_id`, `table_id`, `column_id`, `row_count` and `non_null_count`; [`METADATA_DATA_PROFILED_FREQUENCY`](../reference/metadata/metadata_data_profiled_frequency.md) records `frequency_id`, `column_id` and `value`.
 
-    **Trade-off:** Row hashing adds compute and a physical target column. `append_new_only` must compare hashes against the target and does **not** update or delete existing rows; a changed source Job ID or ingestion timestamp may produce a new hash. Existing targets with missing or invalid hashes need an explicitly reviewed overwrite or migration before non-overwrite publication.
+    **Trade-off:** Full-source observation and profiling both scan beyond the incremental batch, so they are scheduled. A changed source fingerprint provides evidence, not automatic deletion or a publication block.
 
-??? info "Two pipelines shouldn't silently overwrite each other's work"
-    When multiple pipelines publish to the same table, one writer must not change the target while another is checking whether its rows are already there.
+??? info "Unsafe changes are stopped rather than guessed through"
+    A failed rule, inconsistent target or competing writer should not silently produce an unreliable result.
 
-    **How it works:** `setup_pipeline()` establishes the managed pipeline's publication authority. Internal `pipeline_write()` uses the target lease in the Serializable Pipeline Registry to exclude competing managed writers while it validates the target, compares hashes and publishes. `finalize_pipeline()` releases the pipeline's lease. An interrupted lease is not silently ignored.
+    **How it works:** `orchestrate_read()` and `orchestrate_write()` apply relevant schema, grain, Data Quality, freshness and Sensitive Data checks. Internal `pipeline_write()` validates checkpoints, existing target hashes and publication ownership. A target lease in the Serializable Pipeline Registry prevents competing **managed** writers from publishing concurrently; `finalize_pipeline()` releases it. Governed deployment verification currently fails closed pending trusted verification.
 
-    **Where to look:** [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) stores the control state in `leases_json`. `src/fabricops_kit/activated_pipeline/shared.py` manages the lease; `src/fabricops_kit/pipeline/pipeline_write.py` performs the guarded publication.
+    **Where to look:** [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) stores `guardrail_type`, `status`, `can_continue`, `reason` and `result_payload_json`. [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) stores managed lease state in `leases_json`; [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) holds checkpoints and publication receipts.
 
-    **Trade-off:** A target has to wait for its active managed writer. A crashed or stale lease can require reconciliation, and the lease protects cooperating FabricOps writers rather than arbitrary external writes.
+    **Trade-off:** Extra validation and exclusive leases require coordination. Interrupted leases or inconsistent targets can need manual reconciliation; external writers are not protected by FabricOps leases.
 
-??? info "Read only what you need, without changing how the target is updated"
-    Reading new source changes and deciding how to write them are separate decisions. A changed product record may need an update, while an event log may need every row preserved.
+??? info "Every completed run has an explanation"
+    Engineers need to know which tables participated, what happened and whether the entire notebook finished, not just whether one write succeeded.
 
-    **How it works:** [`orchestrate_read()`](../api/reference/orchestrate_read.md) selects `read_mode="full"` or `"incremental"`. [`orchestrate_write()`](../api/reference/orchestrate_write.md) independently selects `write_mode="overwrite"`, `"append_all"`, `"append_new_only"`, `"scd1"` or `"scd2"`. `pipeline_write()` rejects unsafe combinations such as overwriting a complete target with a partial incremental input.
+    **How it works:** [`setup_pipeline()`](../api/reference/setup_pipeline.md) starts the session; the orchestrators collect operation results and timings; [`finalize_pipeline()`](../api/reference/finalize_pipeline.md) persists the run outcome in persistent modes. Dry Run keeps results in memory. Multiple target writes remain independent rather than one atomic transaction.
 
-    **Where to look:** [Read & Write Modes](../reference/read-and-load-strategies.md) explains the supported combinations. [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `publication_strategy`, `source_table_id`, `target_table_id` and `watermark_type` for persisted publication and progress evidence.
+    **Where to look:** [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) stores `run_id`, `pipeline_id`, `execution_mode`, `status`, `operations`, `boundary_completed` and `completed_at`. [`METADATA_DATA_LINEAGE`](../reference/metadata/metadata_data_lineage.md) stores `lineage_id`, `table_id`, `pipeline_role` and `workspace_id`.
 
-    **Trade-off:** More explicit choices require engineers to select the right strategy. In return, FabricOps does not assume that incremental reading always means appending.
-
-??? info "We can spot changes in the complete source, even during incremental processing"
-    A small incremental batch should not hide changes or disappearing records elsewhere in the source.
-
-    **How it works:** [`setup_pipeline()`](../api/reference/setup_pipeline.md) accepts `observe_source` and `source_observation_days`. When requested or due, internal `observe_full_source()` observes the complete physical source independently of `read_mode`; `orchestrate_read()` exposes the result as `full_source_observation`. The baseline is accepted only after a verified target publication. A changed fingerprint is evidence, not an instruction to delete target rows or automatically block publication.
-
-    **Where to look:** [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) uses `record_type = source_observation` and `full_source_baseline`, with `source_table_id`, `observation_id`, `row_count`, `content_fingerprint`, `is_present`, `publication_id` and `accepted_at`.
-
-    **Trade-off:** Full-source observation adds a source scan and hashing work, so its interval should reflect data volume. A no-op or failed write does not consume the next observation interval.
-
-??? info "You can understand your data without writing profiling code"
-    FabricOps can capture missing-value statistics, row counts and common values automatically.
-
-    **How it works:** [`orchestrate_read()`](../api/reference/orchestrate_read.md) and [`orchestrate_write()`](../api/reference/orchestrate_write.md) schedule profiling when due. Read-side profiling observes the complete physical source; post-publication profiling observes the published target.
-
-    **Where to look:** [`METADATA_DATA_PROFILED`](../reference/metadata/metadata_data_profiled.md) stores `profile_id`, `profile_snapshot_id`, `table_id`, `column_id`, `row_count` and `non_null_count`. [`METADATA_DATA_PROFILED_FREQUENCY`](../reference/metadata/metadata_data_profiled_frequency.md) stores `frequency_id`, `profile_snapshot_id`, `column_id` and `value`.
-
-    **Trade-off:** Whole-table profiling uses additional compute. It is scheduled rather than necessarily repeated on every operation.
-
-??? info "When FabricOps isn't sure, it doesn't guess"
-    Missing processing history or failed required checks should not silently become an unsafe publication.
-
-    **How it works:** `orchestrate_read()` and `orchestrate_write()` run applicable `check_schema()`, `check_grain()`, `check_dq()`, `check_freshness()` and `check_sensitive_data()` stages. Internal `pipeline_write()` also validates writer ownership, checkpoints and existing target hashes. The Registry also protects managed target publication with an exclusive lease (explained separately below). Governed deployment verification currently fails closed until trusted verification is integrated.
-
-    **Where to look:** [`METADATA_GUARDRAIL_RESULTS`](../reference/metadata/metadata_guardrail_results.md) records `guardrail_result_id`, `guardrail_type`, `status`, `can_continue`, `reason` and `result_payload_json` for persisted outcomes. [`METADATA_PIPELINE_REGISTRY`](../reference/metadata/metadata_pipeline_registry.md) holds the writer activation and lease context; [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) holds checkpoint and receipt evidence.
-
-    **Trade-off:** More checks and exclusive publication leases add coordination. A crashed lease or an inconsistent target can require deliberate reconciliation.
-
-??? info "Every completed pipeline run leaves a record of what happened"
-    Engineers should be able to tell which tables participated, which operations ran and whether the whole execution completed.
-
-    **How it works:** [`setup_pipeline()`](../api/reference/setup_pipeline.md) starts the session; the orchestrators collect operation and stage outcomes; [`finalize_pipeline()`](../api/reference/finalize_pipeline.md) persists the final run for persistent modes. Dry Run keeps results in memory. Multiple writes publish independently, not as one atomic transaction.
-
-    **Where to look:** [`METADATA_PIPELINE_RUN`](../reference/metadata/metadata_pipeline_run.md) stores `run_id`, `pipeline_id`, `execution_mode`, `status`, `operations`, `boundary_completed` and `completed_at`. [`METADATA_DATA_LINEAGE`](../reference/metadata/metadata_data_lineage.md) records `lineage_id`, `table_id`, `pipeline_role` and `workspace_id`.
-
-    **Trade-off:** Finalization is explicit. A successful individual write is not proof that the entire notebook completed.
+    **Trade-off:** Explicit finalization is required. A successful individual publication does not mean the entire pipeline completed.
 
 ## Get started
 
