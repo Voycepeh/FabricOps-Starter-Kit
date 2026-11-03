@@ -18,6 +18,9 @@ from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric
 from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
+    add_row_hash,
+    filter_unpublished_rows,
+    validate_target_row_hash,
     catalogue_authored_processing,
     incremental_publication_scopes,
     resolve_catalogue_table_identity,
@@ -338,7 +341,7 @@ def pipeline_write(
     table_id : str, optional
         Canonical registered target identity. This identity form is mutually
         exclusive with ``store``, ``schema``, and ``table_name``.
-    load_strategy : {"overwrite", "append", "scd1", "scd2"}, optional
+    load_strategy : {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}, optional
         Authored processing proposal. The selected frozen payload is authoritative;
         Live requires the active version and Testing evaluates the selected candidate.
     load_strategy_parameters : dict, optional
@@ -393,6 +396,17 @@ def pipeline_write(
 
     Maintainer Notes
     ----------------
+    Every published row carries a lowercase SHA256 ``_row_hash`` of final incoming
+    values after caller transformations and Sensitive Data treatment. Hash contract
+    v1 includes column names and exact logical types, sorts column/nested struct
+    names and map entries, preserves array order, includes explicit nulls, and uses
+    Spark JSON with UTC timestamps at microsecond precision. Null, empty and absent
+    schema fields differ. Source Job IDs and ingestion timestamps are included.
+    Only ``_row_hash``, FabricOps audit and SCD lifecycle fields and reserved
+    ``_fabricops_*``/``_dq_*`` fields are excluded. Supplied hashes are recalculated.
+    Existing targets without valid historical hashes fail before non-overwrite
+    publication; full overwrite replaces the complete target.
+
     The governed orchestration performs these mechanical steps:
 
     1. Resolve the canonical target ``table_id``.
@@ -417,10 +431,20 @@ def pipeline_write(
     this target, rather than internal read or preparation dictionaries. This
     keeps multiple target writes in one activity exact and independent.
 
+    Overwrite replaces the entire target and Append All appends every incoming row,
+    including duplicates. Identical content in a new full-read execution publishes
+    again. Append New Only deduplicates incoming hashes and appends a distributed
+    anti-join against target hashes. A changed hash is additional content, not an update.
+    An empty unseen scope is an explicit no-op and does not advance Processing State.
+    Target leases in the existing Serializable Pipeline Registry exclude concurrent
+    managed writers; interrupted leases require reconciliation before another writer.
+
     Retries identify the exact prepared business-row multiset, processing definition,
     source membership, workspace_id and target. The pipeline plan ID scopes transient
     source state and is persisted as Source Observation run_id. The original writer
     run_id is retained in the batch receipt, allowing verified cross-run recovery
+    of staged publications. Completed full-read Append All/Overwrite runs are
+    independent publications; incremental retry protection remains checkpoint-bound
     while preserving the real Fabric activity audit. Before publication, target-specific
     Source Observations bind that batch to the real Fabric activity and a fresh
     publication timestamp. Both audit literals materialize in the same physical transaction
@@ -431,7 +455,7 @@ def pipeline_write(
     every original source member from persisted Processing State if pending
     in-memory snapshots were lost, and preserves their originating run identities. New batches
     in a reused interactive activity proceed through the existing writers and keyed
-    SCD merges. Empty writes may have no row marker and can safely be replayed.
+    SCD merges. Empty Warehouse writes fail closed when no durable row marker can prove publication.
 
     SCD retry suppression additionally requires the receipt to describe the latest
     target publication. An older receipt surviving on an untouched row cannot
@@ -561,7 +585,7 @@ def pipeline_write(
     if incremental_scopes and strategy == "overwrite":
         raise ValueError(
             "Incremental source data cannot be published with whole-table overwrite. "
-            "Use append, SCD1, or SCD2."
+            "Use append_all, append_new_only, SCD1, or SCD2."
         )
     bootstrap_sources = [
         source_table_id
@@ -580,12 +604,12 @@ def pipeline_write(
         "context": context,
         "observation_snapshot": snapshot_pipeline_write_observations(
             workspace_id=active_workspace_id, activity_id=execution_id, target_table_id=target_table_id,
-            source_table_ids=publication_source_ids,
+            source_table_ids=publication_source_ids, context=context,
         ),
     }
-    prepared_df = add_target_audit_fields(df, audit)
+    prepared_df = add_target_audit_fields(add_row_hash(df), audit)
     if not persistence_permitted(context):
-        if strategy == "append" and bootstrap_sources and _target_has_rows(
+        if strategy == "append_all" and bootstrap_sources and _target_has_rows(
             identity=identity, context=context, spark_session=spark_session,
         ):
             raise ValueError(
@@ -607,10 +631,14 @@ def pipeline_write(
                 "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
                                  "metadata finalization after publication"]},
         }
+    if strategy not in {"overwrite", "append_new_only"}:
+        validate_target_row_hash(identity, context=context)
     with PublicationBatch(
         df, identity=identity, processing=_physical_processing_definition(processing),
         source_table_ids=publication_source_ids, audit=audit, context=context,
     ) as batch:
+        if strategy == "append_new_only":
+            batch.target_hashes = validate_target_row_hash(identity, context=context, cache_hashes=True)
         audit = batch.audit
         write_metrics["input_rows"] = batch.input_rows
         if batch.input_rows == 0 and incremental_scopes and all(
@@ -623,15 +651,22 @@ def pipeline_write(
                     "publication_status": "empty_incremental_scope", "write_metrics": write_metrics}
         success_context["publication"] = batch.receipt
         success_context["publication_snapshot"] = batch.publication_snapshot
+        if batch.already_applied:
+            # Recovery accepts the original source membership, never a newer
+            # diagnostic full observation captured after that physical publication.
+            for captured in success_context["observation_snapshot"].values():
+                captured["full"] = []
         io_context["_fabricops_publication_receipt"] = batch.receipt
-        if store_kind == "lakehouse" and strategy in {"append", "overwrite"}:
+        if store_kind == "lakehouse" and strategy == "overwrite":
+            physical_options["overwriteSchema"] = "true"
+        if store_kind == "lakehouse" and strategy in {"append_all", "append_new_only", "overwrite"}:
             physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
-            if strategy == "append":
+            if strategy in {"append_all", "append_new_only"}:
                 physical_options["txnAppId"] = f"fabricops-publication:{batch.receipt['batch_id']}"
                 physical_options["txnVersion"] = 0
         prepared_df = add_target_audit_fields(batch.dataframe, audit)
         if (
-            strategy == "append"
+            strategy == "append_all"
             and bootstrap_sources
             and not batch.already_applied
             and _target_has_rows(identity=identity, context=context, spark_session=spark_session)
@@ -641,6 +676,21 @@ def pipeline_write(
                 "The target already contains rows but no committed source-to-target baseline exists; "
                 "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
             )
+        if strategy == "append_new_only" and not batch.already_applied:
+            prepared_df = filter_unpublished_rows(prepared_df, identity, context=context, target_hashes=batch.target_hashes)
+            # Materialize once; both the receipt and the physical write use this snapshot.
+            from pyspark import StorageLevel
+            prepared_df.persist(StorageLevel.MEMORY_AND_DISK)
+            batch.filtered_dataframe = prepared_df
+            output_rows = prepared_df.count()
+            if output_rows == 0:
+                write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="no_unseen_hashes")
+                return {"table_id": target_table_id, "strategy": strategy, "published": False,
+                        "publication_status": "no_unseen_hashes", "write_metrics": write_metrics}
+            batch.receipt["input_rows"] = output_rows
+            success_context["publication"] = batch.receipt
+            if store_kind == "lakehouse":
+                physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
         if strategy == "scd2":
             from pyspark.sql import functions as F
 
@@ -684,13 +734,13 @@ def pipeline_write(
                 label = "metadata-finalization recovery" if batch.finalization_recovery else "already-applied exact batch"
                 print(f"5. Physical publication → {label}; exact batch verified")
         elif store_kind == "lakehouse":
-            if strategy in {"append", "overwrite"}:
+            if strategy in {"append_all", "append_new_only", "overwrite"}:
                 write_lakehouse_table(
                     prepared_df,
                     str(identity["table_name"]),
                     store=str(identity["store"]),
                     schema=identity.get("schema"),
-                    mode=strategy,
+                    mode="append" if strategy in {"append_all", "append_new_only"} else "overwrite",
                     repartition_by=repartition_by,
                     options=physical_options,
                     verbose=False,
@@ -709,13 +759,13 @@ def pipeline_write(
             else:
                 raise ValueError(f"Unsupported governed load strategy {strategy!r}.")
         elif store_kind == "warehouse":
-            if strategy in {"append", "overwrite"}:
+            if strategy in {"append_all", "append_new_only", "overwrite"}:
                 write_warehouse_table(
                     prepared_df,
                     str(identity["schema"]),
                     str(identity["table_name"]),
                     store=str(identity["store"]),
-                    mode=strategy,
+                    mode="append" if strategy in {"append_all", "append_new_only"} else "overwrite",
                     repartition_by=repartition_by,
                     options=physical_options,
                     context=io_context,
@@ -739,7 +789,11 @@ def pipeline_write(
         batch.confirm()
         if batch.receipt != attempted_receipt:
             success_context["publication"] = batch.receipt
+            if store_kind == "lakehouse":
+                physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             success_context["publication_snapshot"] = batch.publication_snapshot
+            for captured in success_context["observation_snapshot"].values():
+                captured["full"] = []
             stage_pipeline_write_observations(success_context)
             write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
         try:

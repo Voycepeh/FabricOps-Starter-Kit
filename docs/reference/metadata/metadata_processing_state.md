@@ -34,7 +34,7 @@ via `source_table_id` + `target_table_id`
 `METADATA_PROCESSING_STATE` **(N → 1)**
 via `publication_id`
 
-**Implementation details:** record_type distinguishes source_observation, incremental_checkpoint, drift_baseline and publication_receipt. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.
+**Implementation details:** record_type distinguishes source_observation, incremental_checkpoint, drift_baseline, full_source_baseline and publication_receipt. Pipeline-level full observation ignores incremental predicates; full_source_baseline records are accepted only after verified target publication. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.
 
 ## Column summary
 
@@ -52,7 +52,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>record_id</code></td><td><code>string</code></td><td>Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.</td></tr>
-<tr class="metadata-column--engineering"><td><code>record_type</code></td><td><code>string</code></td><td>source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.</td></tr>
+<tr class="metadata-column--engineering"><td><code>record_type</code></td><td><code>string</code></td><td>source_observation, incremental_checkpoint, drift_baseline, full_source_baseline, or publication_receipt.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>observed for captured source observations; staged before target publication; committed only after exact physical publication verification.</td></tr>
 <tr class="metadata-column--engineering"><td><code>observation_id</code></td><td><code>string</code></td><td>Identifier grouping the partitions of one captured source snapshot.</td></tr>
 <tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.</td></tr>

@@ -56,7 +56,7 @@ def test_empty_input_and_blank_string_values(spark_session):
 @pytest.mark.parametrize("active", [True, False])
 def test_assembled_frozen_runtime_round_trip(active):
     """Inactive keys and descriptions survive assembly and freezing without active rules."""
-    draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "workspace_id": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append"}}})}
+    draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "workspace_id": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append_all"}}})}
     rule = {**_rule(active=active), "contract_id": "c", "contract_version": 2, "workspace_id": "dev"}
     payload, _warnings = contracts.assemble_contract_payload(draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "t", "workspace_id": "dev", "metadata_level": "table", "table_name": "history"}, *[
             {"table_id": "t", "workspace_id": "dev", "metadata_level": "column", "column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]], enrichment_rows=[{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "workspace_id": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}], guardrail_rows=[rule])

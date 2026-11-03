@@ -16,7 +16,7 @@ def _catalogue_rows(count: int = 2) -> list[dict]:
     rows = [{
         "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
-        "layer": "Silver", "load_strategy": "append",
+        "layer": "Silver", "load_strategy": "append_all",
         "load_strategy_parameters_json": {}, "is_active": True,
         "_workspace_id": "workspace-id", "_workspace_name": "Development",
         "_notebook_id": "writer-notebook-id",
@@ -176,7 +176,7 @@ def widget_runtime(monkeypatch):
         },
         "table": {
             **catalogue[0],
-            "processing": {"load_strategy": "append"},
+            "processing": {"load_strategy": "append_all"},
             "processing_source": "catalogue",
             "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[1:])],
         },
@@ -676,7 +676,8 @@ def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypat
     assert state["pending_table_id"] == "audit-orders"
 
 
-def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime):
+@pytest.mark.parametrize('strategy', ['append_all', 'append_new_only'])
+def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime, strategy):
     """Fallback processing stays editable and is saved inside the exact draft JSON."""
     payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
     payload["table"]["processing"] = {"load_strategy": "overwrite"}
@@ -687,15 +688,17 @@ def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_r
     controls = state["_controls"]
 
     assert controls["load_strategy"].disabled is False
-    controls["load_strategy"].value = "append"
+    assert tuple(controls["load_strategy"].options) == ("overwrite", "append_all", "append_new_only", "scd1", "scd2")
+    controls["load_strategy"].value = strategy
+    assert controls["key_columns"].layout.display == "none"
     controls["top_nav"].value = "Review"
     controls["save_data_contract"].click()
 
     saved = widget_runtime["calls"]["draft"][-1]
-    assert saved["table"]["processing"] == {"load_strategy": "append"}
+    assert saved["table"]["processing"] == {"load_strategy": strategy}
     assert saved["table"]["processing_source"] == "manual"
     persisted = json.loads(widget_runtime["contract"]["contract_payload_json"])
-    assert persisted["table"]["processing"] == {"load_strategy": "append"}
+    assert persisted["table"]["processing"] == {"load_strategy": strategy}
     assert persisted["table"]["processing_source"] == "manual"
 
 
@@ -777,7 +780,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
     assert len(controls["table_guardrails"]["source_drift"]["parameters"]) == 2
-    assert controls["load_strategy"].value == "append"
+    assert controls["load_strategy"].value == "append_all"
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["business_saved"].value == ""
@@ -3298,7 +3301,7 @@ def test_review_shows_changes_since_last_save(widget_runtime):
 
 def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime):
     """Stale metadata must not trigger ipywidgets 'Invalid selection: value not found'."""
-    widget_runtime["catalogue"][0]["load_strategy"] = "append"
+    widget_runtime["catalogue"][0]["load_strategy"] = "append_all"
     widget_runtime["catalogue"][0]["load_strategy_parameters_json"] = {
         "watermark_column": "removed_watermark",
     }

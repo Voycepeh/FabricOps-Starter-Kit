@@ -111,3 +111,16 @@ def test_spark_history_decode_rejects_corrupt_nonnull_json(spark_session):
     frame = spark_session.createDataFrame([('{"unexpected":"object"}',)], 'profiling string')
     with pytest.raises(Exception, match='profiling must be an array'):
         decode_metadata_dataframe(RUN, frame).select('profiling').collect()
+
+
+def test_historical_append_run_facts_keep_their_exact_hash():
+    """Retained operation facts remain readable without accepting append for new processing."""
+    from fabricops_kit.pipeline.shared import validated_processing
+    before = logical_run()
+    before['operations'][0].update(operation_key='target:orders', pipeline_role='target', read_mode=None, write_mode='append')
+    digest = manifest_digest(before)
+    after = validate_pipeline_run(encode_metadata_row(RUN, before))
+    assert manifest_digest(after) == digest
+    assert after['operations'][0]['write_mode'] == 'append'
+    with pytest.raises(ValueError, match='invalid load_strategy'):
+        validated_processing({'load_strategy': 'append'})

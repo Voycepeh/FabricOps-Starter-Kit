@@ -2311,6 +2311,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -2564,7 +2576,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
           "signature_before": null
         },
         {
@@ -2739,13 +2751,13 @@
         }
       ],
       "summary": {
-        "added": 15,
+        "added": 16,
         "modified": 12,
-        "nonbreaking": 15,
+        "nonbreaking": 16,
         "potentially_breaking": 12,
         "removed": 14,
         "review_required": 14,
-        "total": 41
+        "total": 42
       },
       "target": "main"
     },
@@ -3113,7 +3125,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -5064,6 +5076,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -5321,7 +5345,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
           "signature_before": null
         },
         {
@@ -5422,13 +5446,13 @@
         }
       ],
       "summary": {
-        "added": 11,
+        "added": 12,
         "modified": 14,
-        "nonbreaking": 12,
+        "nonbreaking": 13,
         "potentially_breaking": 14,
         "removed": 12,
         "review_required": 11,
-        "total": 37
+        "total": 38
       },
       "target": "main"
     },
@@ -5807,7 +5831,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -7692,6 +7716,18 @@
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -7959,7 +7995,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
           "signature_before": null
         },
         {
@@ -8048,13 +8084,13 @@
         }
       ],
       "summary": {
-        "added": 3,
+        "added": 4,
         "modified": 21,
-        "nonbreaking": 4,
+        "nonbreaking": 5,
         "potentially_breaking": 21,
         "removed": 10,
         "review_required": 9,
-        "total": 34
+        "total": 35
       },
       "target": "main"
     },
@@ -8423,7 +8459,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -10001,15 +10037,42 @@
     },
     {
       "baseline": "v0.3.0",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: new_pipeline.",
+            "Parameter removed: previous_notebook_id.",
+            "Parameter removed: previous_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        }
+      ],
       "summary": {
-        "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
-        "potentially_breaking": 0,
+        "added": 1,
+        "modified": 1,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 2
       },
       "target": "main"
     },
@@ -10037,9 +10100,11 @@
           "reasons": [
             "Parameter removed: new_pipeline.",
             "Parameter removed: previous_notebook_id.",
-            "Parameter removed: previous_workspace_id."
+            "Parameter removed: previous_workspace_id.",
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         }
       ],
@@ -11533,15 +11598,42 @@
     },
     {
       "baseline": "v0.3.1",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Parameter removed: new_pipeline.",
+            "Parameter removed: previous_notebook_id.",
+            "Parameter removed: previous_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+        }
+      ],
       "summary": {
-        "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
-        "potentially_breaking": 0,
+        "added": 1,
+        "modified": 1,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 2
       },
       "target": "main"
     },
@@ -11569,9 +11661,11 @@
           "reasons": [
             "Parameter removed: new_pipeline.",
             "Parameter removed: previous_notebook_id.",
-            "Parameter removed: previous_workspace_id."
+            "Parameter removed: previous_workspace_id.",
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         }
       ],
@@ -11683,6 +11777,18 @@
           ],
           "signature_after": null,
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -11939,7 +12045,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
         },
         {
           "change_type": "added",
@@ -12117,9 +12223,9 @@
         "modified": 12,
         "nonbreaking": 14,
         "potentially_breaking": 20,
-        "removed": 15,
-        "review_required": 7,
-        "total": 41
+        "removed": 16,
+        "review_required": 8,
+        "total": 42
       },
       "target": "v0.1.0"
     },
@@ -12227,6 +12333,18 @@
           ],
           "signature_after": null,
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -12487,7 +12605,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
         },
         {
           "change_type": "added",
@@ -12591,9 +12709,9 @@
         "modified": 14,
         "nonbreaking": 12,
         "potentially_breaking": 18,
-        "removed": 11,
-        "review_required": 7,
-        "total": 37
+        "removed": 12,
+        "review_required": 8,
+        "total": 38
       },
       "target": "v0.2.0"
     },
@@ -12681,6 +12799,18 @@
           ],
           "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -12951,7 +13081,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
         },
         {
           "change_type": "added",
@@ -13043,37 +13173,91 @@
         "modified": 21,
         "nonbreaking": 12,
         "potentially_breaking": 21,
-        "removed": 3,
-        "review_required": 1,
-        "total": 34
+        "removed": 4,
+        "review_required": 2,
+        "total": 35
       },
       "target": "v0.2.5"
     },
     {
       "baseline": "main",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Optional parameter added: new_pipeline.",
+            "Optional parameter added: previous_notebook_id.",
+            "Optional parameter added: previous_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
+        "modified": 1,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 2
       },
       "target": "v0.3.0"
     },
     {
       "baseline": "main",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
+          "reasons": [
+            "Optional parameter added: new_pipeline.",
+            "Optional parameter added: previous_notebook_id.",
+            "Optional parameter added: previous_workspace_id."
+          ],
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+        }
+      ],
       "summary": {
         "added": 0,
-        "modified": 0,
-        "nonbreaking": 0,
+        "modified": 1,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 2
       },
       "target": "v0.3.1"
     },
@@ -13081,40 +13265,27 @@
       "baseline": "main",
       "changes": [
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "signature_before": null
-        },
-        {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
-            "Parameter removed: new_pipeline.",
-            "Parameter removed: previous_notebook_id.",
-            "Parameter removed: previous_workspace_id."
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
         }
       ],
       "summary": {
-        "added": 1,
+        "added": 0,
         "modified": 1,
         "nonbreaking": 1,
-        "potentially_breaking": 1,
+        "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 2
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -13483,7 +13654,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "added",
@@ -14043,7 +14214,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "added",
@@ -14519,7 +14690,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "added",
@@ -14634,24 +14805,26 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days.",
             "Optional parameter added: new_pipeline.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 0,
         "modified": 1,
-        "nonbreaking": 1,
-        "potentially_breaking": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 1,
         "total": 2
@@ -14675,24 +14848,26 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days.",
             "Optional parameter added: new_pipeline.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 0,
         "modified": 1,
-        "nonbreaking": 1,
-        "potentially_breaking": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 1,
         "total": 2
@@ -14703,40 +14878,27 @@
       "baseline": "working-tree",
       "changes": [
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
-        },
-        {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
-            "Optional parameter added: new_pipeline.",
-            "Optional parameter added: previous_notebook_id.",
-            "Optional parameter added: previous_workspace_id."
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
+          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 0,
         "modified": 1,
-        "nonbreaking": 1,
-        "potentially_breaking": 0,
-        "removed": 1,
-        "review_required": 1,
-        "total": 2
+        "nonbreaking": 0,
+        "potentially_breaking": 1,
+        "removed": 0,
+        "review_required": 0,
+        "total": 1
       },
       "target": "main"
     }
@@ -23978,6 +24140,66 @@
         {
           "certainty": "certain",
           "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "table_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "contract_id",
+              "required": true
+            },
+            {
+              "annotation": "int",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "contract_version",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "expected_token",
+              "required": true
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "workspace_id",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "governance_confirmed",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "return_annotation": null,
+          "signature": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "source_path": "src/fabricops_kit/data_contract/activate_data_contract.py",
+          "source_qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
             {
@@ -24983,35 +25205,11 @@
               "kind": "keyword_only",
               "name": "pipeline_mode",
               "required": false
-            },
-            {
-              "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "new_pipeline",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "previous_workspace_id",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "previous_notebook_id",
-              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -25123,7 +25321,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "c07817c2348c020d434b76c37c0ca64402b8c742",
+      "revision": "0dc51d43926fe0fc32f2b7df9b6d63f073342ad9",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -26617,11 +26815,27 @@
               "kind": "keyword_only",
               "name": "pipeline_mode",
               "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "observe_source",
+              "required": false
+            },
+            {
+              "annotation": "int | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "source_observation_days",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
+          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -26736,7 +26950,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:3d81192d08b28e9677a6a9933605e1360ecc1eee651010f28f6d43a0b9c3e921",
+      "source_digest": "sha256:6344c2378e0378640d4c1895ad2b2ae0461ecba90e024c2572d688188bb04778",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

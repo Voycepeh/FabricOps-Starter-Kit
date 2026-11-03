@@ -1,5 +1,6 @@
 """Stable explicit logical pipeline identities without permanent registrations."""
 from uuid import uuid4
+from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
 
@@ -16,7 +17,7 @@ def test_persistent_setup_requires_saved_pipeline_id(mode):
 
 def test_saved_pipeline_id_is_independent_of_deployment(monkeypatch):
     """Identical Pipeline IDs pass unchanged across notebook/environment promotion."""
-    launch = Mock(return_value=object())
+    launch = Mock(return_value=SimpleNamespace(plan=SimpleNamespace(evidence={})))
     monkeypatch.setattr(shared, "start_pipeline_session", launch)
     identity = str(uuid4())
     setup_pipeline(pipeline_id=identity, pipeline_mode="Ungoverned")

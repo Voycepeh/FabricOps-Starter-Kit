@@ -71,15 +71,30 @@ An offline rollback is permitted only with stopped writers and verified current 
 
 ## Preserved processing behavior
 
-Full Read/Overwrite, watermark Source Observation incremental reads, Append, SCD1/SCD2, Source Drift, profiling, lineage, Run finalization, publication receipts, retry recovery and checkpoints retain their existing owners and algorithms. The order-independent prepared-business-row fingerprint remains unchanged, including suppression of an identical full overwrite.
+Watermark incremental reads, SCD1/SCD2 version rules, Source Drift, profiling, lineage, Run finalization, publication receipts, retry recovery and checkpoints retain their existing owners. Every managed row now persists a canonical SHA256 `_row_hash`. Overwrite and Append All distinguish new full executions from exact retries; Append New Only compares target hashes under the existing Registry publication lease.
 
-This PR adds no partition fingerprinting, persisted row hashes, reporting projection tables, writer namespace redesign or Git deployment verifier.
+Full Source Observation is configured on the pipeline and uses `full_source_baseline` records in `METADATA_PROCESSING_STATE`; it does not introduce a metadata table or Data Contract requirement. Captured observations are not accepted progress until verified publication. A newer diagnostic fingerprint cannot change the source membership of an exact recovered publication. No candidate partition architecture or Git deployment verifier is introduced.
 
 ## Validation and deployment gates
 
 Local real-Delta tests cover stale/overlapping Registry changes, blind append phantoms, missing control, exact lost-ack recovery, independent Contract activation, target-policy leases, migration idempotence, tampered history rejection and historical Run hash stability. Publication regression tests cover current strategies and retry/fingerprint behavior.
 
 Before Live rollout, a Fabric canary must validate the internal Delta transaction API/version, effective Serializable conflict behavior, archive permissions/retention, column mapping and actual SQL endpoint visibility. Passing local tests is not Fabric execution proof. The next deployment-assurance stage must prove trusted deployment barriers, dependency provenance and job/session correlation before enabling any Governed path.
+
+## Local managed hashing measurements
+
+The reproducible [benchmark results](benchmarks/managed-hashing-local-results.json) use two local Spark workers, synthetic rows and Parquet. Metadata transport is mocked. These single measurements cover local computation and I/O, not Fabric capacity, Warehouse connector performance or metadata transaction latency.
+
+| Operation | 100K rows | 1M rows |
+| --- | ---: | ---: |
+| Hash calculation and cache | 1.23 s | 2.73 s |
+| Local Parquet target hash scan and comparison | 0.68 s | 2.29 s |
+| Full observation with a Parquet source read | 0.97 s | 5.90 s |
+| Publication hash/aggregate with mocked receipt lookup | 0.94 s | 6.54 s |
+
+Run `PYTHONPATH=src uv run python scripts/benchmark_managed_hashing.py --output work/managed-hashing-results.json` from the repository root. Hash comparison validates a 50% unseen scope. The source observation check also verifies that cached and Parquet-round-tripped values produce the same full fingerprint.
+
+The 1M-row synthetic target grew from 24.0 MB to 90.0 MB with the hash column. Storage and timing depend on data width, layout, caching and runtime. [PR #1769](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1769) likewise found that persisted target hashes save serialization work while full scans and shuffle remain significant. Keep usable incremental predicates and choose full observation intervals deliberately.
 
 ## Processing State upgrade
 

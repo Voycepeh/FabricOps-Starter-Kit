@@ -1435,6 +1435,14 @@ def test_metadata_writer_sources_do_not_replace_schemas():
     for root in roots:
         for path in root.glob("*.py"):
             text = path.read_text(encoding="utf-8")
+            if path.name == "pipeline_write.py":
+                # Whole-table data replacement may migrate the managed output
+                # schema. Metadata writers must still preserve their schemas.
+                text = text.replace(
+                    '        if store_kind == "lakehouse" and strategy == "overwrite":\n'
+                    '            physical_options["overwriteSchema"] = "true"\n',
+                    "",
+                )
             if "metadata" in text.lower() and "overwriteSchema" in text:
                 offenders.append(str(path))
     assert offenders == []

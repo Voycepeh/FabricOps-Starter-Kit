@@ -143,13 +143,13 @@ def test_profile_failure_exposes_completed_publication_and_original_cause(monkey
     context = execution_context_stub({"target": None})
     monkeypatch.setattr(write, "resolve_table_id", lambda **_kwargs: "target")
     monkeypatch.setattr(write, "prepare_pipeline_execution", lambda *_args, **_kwargs: context)
-    publish = Mock(return_value={"table_id": "target", "strategy": "append", "write_metrics": {"rows_committed": 4}})
+    publish = Mock(return_value={"table_id": "target", "strategy": "append_all", "write_metrics": {"rows_committed": 4}})
     monkeypatch.setattr(write, "pipeline_write", publish)
     cause = ValueError("profile service unavailable")
     monkeypatch.setattr(write, "schedule_table_profiling", Mock(side_effect=cause))
     with pytest.raises(RuntimeError, match="publication and checkpoint finalization already succeeded") as raised:
         run_pipeline_operation(write.orchestrate_write, SimpleNamespace(columns=["id"]), plan=PLAN, sources=[], store="Silver", schema="demo",
-                                table_name="orders", write_mode="append")
+                                table_name="orders", write_mode="append_all")
     assert raised.value.published is True
     assert raised.value.table_id == "target"
     assert raised.value.write_metrics["rows_committed"] == 4

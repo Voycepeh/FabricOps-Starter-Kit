@@ -1822,7 +1822,7 @@ def widget_data_contract(
         processing_source = contracts.contract_processing_source(row)
         processing_locked = processing_source == "catalogue"
         load_strategy_control = widgets.Dropdown(
-            options=("overwrite", "append", "scd1", "scd2"),
+            options=("overwrite", "append_all", "append_new_only", "scd1", "scd2"),
             value=str(processing.get("load_strategy") or "overwrite"),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Load strategy"),
@@ -1876,7 +1876,7 @@ def widget_data_contract(
 
         def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
             strategy = str(load_strategy_control.value or "overwrite")
-            watermark_column_control.layout.display = "" if strategy in {"append", "scd1", "scd2"} else "none"
+            watermark_column_control.layout.display = "" if strategy in {"append_all", "append_new_only", "scd1", "scd2"} else "none"
             key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
             effective_column_control.layout.display = "" if strategy == "scd2" else "none"
             tracked_columns_control.layout.display = "" if strategy == "scd2" else "none"
@@ -1884,7 +1884,7 @@ def widget_data_contract(
         def build_processing() -> dict[str, Any]:
             strategy = str(load_strategy_control.value or "").strip()
             value: dict[str, Any] = {"load_strategy": strategy}
-            if strategy in {"append", "scd1", "scd2"}:
+            if strategy in {"append_all", "append_new_only", "scd1", "scd2"}:
                 watermark = str(watermark_column_control.value or "").strip()
                 if watermark:
                     value["watermark_column"] = watermark

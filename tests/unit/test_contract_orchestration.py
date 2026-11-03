@@ -144,7 +144,7 @@ def write(plan, source, spark, dataframe=None, strategy="overwrite", parameters=
                                verbose=False, spark_session=spark)
 
 
-@pytest.mark.parametrize("strategy,parameters", [("overwrite", None), ("append", None),
+@pytest.mark.parametrize("strategy,parameters", [("overwrite", None), ("append_all", None), ("append_new_only", None),
     ("scd1", {"key_columns": ["id"]}), ("scd2", {"key_columns": ["id"], "effective_column": "id"})])
 def test_testing_all_strategies_have_only_diagnostic_mutations(runtime, spark_session, strategy, parameters):
     """Read/profile/check/write paths evaluate but no durable boundary is called."""
@@ -223,7 +223,7 @@ def test_headless_requires_mode_and_every_explicit_choice(runtime):
         setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 
 
-@pytest.mark.parametrize("strategy,parameters", [("append", None), ("scd1", {"key_columns": ["id"]}),
+@pytest.mark.parametrize("strategy,parameters", [("append_all", None), ("append_new_only", None), ("scd1", {"key_columns": ["id"]}),
     ("scd2", {"key_columns": ["id"], "effective_column": "id"})])
 def test_testing_incremental_bootstrap_does_not_advance_checkpoints(runtime, spark_session, strategy, parameters):
     """Incremental reads evaluate real bounds and all supported incremental strategies without writes."""

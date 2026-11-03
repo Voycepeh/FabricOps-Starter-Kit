@@ -13,10 +13,10 @@ Completed learning demos are kept separately under `templates/DemoData/`:
 | Demo notebook | Purpose |
 | --- | --- |
 | `02A_full_refresh_demo.ipynb` | Orders, Products, and Order History Full → Overwrite example. |
-| `02B_incremental_append_demo.ipynb` | Multi-day inventory Incremental → Append example. |
+| `02B_incremental_append_demo.ipynb` | Multi-day inventory Incremental → Append All example. |
 | `02C_scd_demo.ipynb` | Multi-day Product Master SCD1 and SCD2 example. |
 
-> **Multiple Write blocks:** each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. A retry runs the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
+> **Multiple Write blocks:** each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. A retry runs the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append All in a new Full Read execution. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.
 
 For the end-to-end workflow, follow the [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/).
 
@@ -152,6 +152,14 @@ pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pi
 ```
 
 Profiling options, diagnostic detail and repartitioning may differ from the approved operation; Governed execution emits warnings and records approved and actual values. Contract mappings, table identities, roles, destinations, source relationships, SQL settings, read/write strategies and transformation settings require approval. Revalidate a changed Data Contract or processing configuration before coordinated approval. Prior approvals containing executable/dependency identity require fresh complete validation and activation; frozen Data Contracts remain unchanged.
+
+## Write strategies and full Source Observation
+
+Select `overwrite`, `append_all`, `append_new_only`, `scd1` or `scd2` directly in each `orchestrate_write()` call. Read Mode remains a separate per-source choice. Every managed output contains `_row_hash`; hashing needs no business key or extra contract setting.
+
+The existing Setup Pipeline cell exposes `observe_source=False` and `source_observation_days=None`. Set the boolean to `True` for a manual full physical observation, or set a positive interval such as `7` for automatic observation on a due Read. `None` disables automatic observation. Observation ignores incremental predicates while processing keeps its selected scope. Accepted observation state advances only with verified target publication.
+
+See [Read & Write Modes](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/read-and-load-strategies/) for the five strategies, exact hash inputs, legacy-target handling and retry boundaries.
 
 ## Shared table profiling
 

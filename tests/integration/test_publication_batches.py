@@ -28,8 +28,8 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     spark_session.conf.set('spark.databricks.delta.snapshotPartitions', '2')
     merge_processing_state = shared._merge_source_observation_records
     history = []
-    state = {"activity": "interactive", "fail": None, "target": "target", "mode": "append"}
-    context = {"config": object(), "scope_workspace_id": "dev", "execution_plan": SimpleNamespace(permits_persistence=True, simulations=[])}
+    state = {"activity": "interactive", "fail": None, "target": "target", "mode": "append_all"}
+    context = {"config": object(), "scope_workspace_id": "dev", "execution_plan": SimpleNamespace(permits_persistence=True, simulations=[], evidence={})}
 
     def identity(*_args, **kwargs):
         name = kwargs.get("table_name", state["target"])
@@ -77,7 +77,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: spark_session)
     monkeypatch.setattr(writer, 'resolve_target_audit_fields', lambda _c: audit())
     monkeypatch.setattr(writer, 'resolve_table_processing_definition', lambda *a, **k: (
-        state['processing'] if state.get('processing') else {'load_strategy': state['mode']} if state['mode'] == 'append' else
+        state['processing'] if state.get('processing') else {'load_strategy': state['mode']} if state['mode'] in {'append_all', 'append_new_only'} else
         {'load_strategy': state['mode'], 'key_columns': ['id'], **({'effective_column': 'modified', 'tracked_columns': ['value']} if state['mode'] == 'scd2' else {})}))
     monkeypatch.setattr(writer, '_writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})
     monkeypatch.setattr(writer, '_persist_target_processing', lambda **kw: None)
@@ -97,7 +97,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     def stage(day, *, incremental=True):
         rows = [(i, 'updated' if day >= 2 and i == 2 else 'initial', day if i == 2 else 1)
                 for i in range(1, (9 if day == 1 else 13))]
-        if state['mode'] != 'append':
+        if state['mode'] not in {'append_all', 'append_new_only'}:
             rows = [(i, 'price' if day >= 2 and i == 2 else 'category' if day >= 3 and i == 1 else 'initial',
                      2 if day >= 2 and i == 2 else 3 if day >= 3 and i == 1 else 1) for i in range(1, 9)]
         # Stage a physical Bronze snapshot separately from reading and merging.
@@ -190,14 +190,14 @@ def test_checkpoint_isolation_across_physical_targets(publication_runtime):
     assert run.read('target').count() == 12
 
 
-def test_full_append_exact_retry_survives_new_activity(publication_runtime):
+def test_full_append_new_activity_publishes_again(publication_runtime):
     run = publication_runtime
     df = run.stage(1, incremental=False)
     run.publish(df)
     run.state['activity'] = 'new-scheduled-activity'
     result = run.publish(df.orderBy('id', ascending=False))
-    assert result['publication_status'] == 'already_applied'
-    assert run.read('target').count() == 8
+    assert result['publication_status'] != 'already_applied'
+    assert run.read('target').count() == 16
 
 
 def test_existing_divergence_requires_explicit_verified_repair(publication_runtime):
@@ -375,7 +375,7 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
     previous_zone = run.spark.conf.get('spark.sql.session.timeZone')
     run.spark.conf.set('spark.sql.session.timeZone', 'Asia/Singapore')
     identity = {'table_id': 'source', 'table_name': 'source', 'store': 'Bronze',
-                'store_type': 'lakehouse', 'schema': None, 'load_strategy': 'append',
+                'store_type': 'lakehouse', 'schema': None, 'load_strategy': 'append_all',
                 'load_strategy_parameters_json': {'watermark_column': 'modified_datetime'}}
     monkeypatch.setattr(reader, 'resolve_fabric_context', lambda: (run.context['config'], 'dev', run.context))
     monkeypatch.setattr(reader, 'resolve_catalogue_table_identity', lambda *a, **kw: identity)
@@ -480,6 +480,7 @@ def warehouse_publication_runtime(publication_runtime, monkeypatch):
         stamp = datetime.fromisoformat(re.search(r"CAST\('([^']+)' AS", sql).group(1)).replace(tzinfo=UTC)
         return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp))).agg(F.count('*').alias('fabricops_publication_rows'))
 
+    monkeypatch.setattr(io, 'read_warehouse_table', lambda schema, name, **kw: run.read(name))
     monkeypatch.setattr(io, 'write_warehouse_table', warehouse_write)
     monkeypatch.setattr(shared, 'read_warehouse_query', warehouse_query)
     return run
@@ -501,12 +502,12 @@ def test_warehouse_full_append_has_durable_retry_receipt(warehouse_publication_r
         publish()
     run.state.update(fail=None, activity='cross-activity-retry')
     result = publish()
-    assert run.read('target').count() == 8
-    assert result['publication_status'] == ('published' if failure == 'before' else 'metadata_recovered' if failure == 'finalize' else 'already_applied')
+    assert run.read('target').count() == (16 if failure is None else 8)
+    assert result['publication_status'] == ('published' if failure == 'before' else 'metadata_recovered' if failure == 'finalize' else 'published')
     assert any(row['record_type'] == 'publication_receipt' and row['status'] == 'committed' for row in run.history)
     assert not any(row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed' for row in run.history)
     publish()
-    assert run.read('target').count() == 8
+    assert run.read('target').count() == (16 if failure is None else 8)
 
 
 def test_retained_published_frame_cannot_accept_a_new_read_checkpoint(publication_runtime):
@@ -557,16 +558,16 @@ def test_warehouse_scd_retry_requires_latest_publication(warehouse_publication_r
     assert sorted((row.id, row.value) for row in current.collect()) == [(1, 'A'), (2, 'A')]
 
 
-@pytest.mark.parametrize('mode', ['append', 'scd1', 'scd2'])
+@pytest.mark.parametrize('mode', ['append_all', 'scd1', 'scd2'])
 def test_distinct_runs_share_real_activity_and_isolate_source_state(publication_runtime, mode):
     run = publication_runtime
     run.state['mode'] = mode
     for day, expected in [(1, 8), (2, 9), (3, 10)]:
         run.context['execution_plan'].plan_id = f'pipeline-run-{day}'
-        run.publish(run.stage(day, incremental=mode == 'append'))
+        run.publish(run.stage(day, incremental=mode == 'append_all'))
         assert run.read('target').count() == (expected if mode == 'scd2' else 8 if mode == 'scd1' or day == 1 else 12)
     assert {row._activity_id for row in run.read('target').select('_activity_id').collect()} == {'interactive'}
-    if mode == 'append':
+    if mode == 'append_all':
         accepted = [row for row in run.history if row['record_type'] == 'incremental_checkpoint' and row['status'] == 'committed']
         assert {row['run_id'] for row in accepted} == {'pipeline-run-1', 'pipeline-run-2'}
         import json
@@ -853,8 +854,8 @@ def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processi
     assert {row["partition_value"] for row in removed} == set(partitions)
 
 
-def test_full_overwrite_fingerprint_suppresses_reordered_identical_business_rows(publication_runtime):
-    """The metadata migration must retain order-independent full-overwrite suppression."""
+def test_full_overwrite_new_activity_replaces_identical_business_rows(publication_runtime):
+    """Each new execution must physically overwrite even when content is identical."""
     from pyspark.sql import functions as F
     run = publication_runtime
     run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
@@ -864,10 +865,141 @@ def test_full_overwrite_fingerprint_suppresses_reordered_identical_business_rows
     original = run.read('target').collect()
     run.state['activity'] = 'new-activity-same-business-data'
     run.publish(prepared.orderBy(F.desc('id')).repartition(2))
-    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version
-    assert run.read('target').collect() == original
+    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version + 1
+    assert [(r.id, r.value) for r in sorted(run.read('target').collect(), key=lambda r: r.id)] == [(r.id, r.value) for r in sorted(original, key=lambda r: r.id)]
     run.state['activity'] = 'changed-business-data'
     changed = prepared.withColumn('value', F.when(F.col('id') == 1, F.lit('changed')).otherwise(F.col('value')))
     run.publish(changed)
-    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version + 1
+    assert run.delta.forPath(run.spark, str(run.path / 'target')).history(1).first()['version'] == version + 2
     assert run.read('target').where("id = 1").first()['value'] == 'changed'
+
+
+@pytest.mark.parametrize("strategy,expected", [("overwrite", 2), ("append_all", 4), ("append_new_only", 2), ("scd1", 2), ("scd2", 2)])
+def test_repeated_full_read_follows_explicit_strategy(publication_runtime, strategy, expected):
+    """New executions obey the chosen write strategy for identical complete source data."""
+    run = publication_runtime
+    processing = {"load_strategy": strategy}
+    if strategy in {"scd1", "scd2"}:
+        processing["key_columns"] = ["id"]
+    if strategy == "scd2":
+        processing.update(effective_column="modified", tracked_columns=["value"])
+    run.state.update(mode=strategy, processing=processing)
+    frame = run.spark.createDataFrame([(1, "a", 1), (2, "b", 1)], "id long, value string, modified long")
+    run.publish(frame)
+    run.state["activity"] = "next-execution"
+    run.publish(frame)
+    assert run.read("target").count() == expected
+    assert run.read("target").where("_row_hash IS NULL").count() == 0
+
+
+@pytest.mark.parametrize("store", ["lakehouse", "warehouse"])
+def test_append_new_only_duplicate_batch_changed_values_and_retry(publication_runtime, request, store):
+    """Changed source Job IDs/timestamps append additional content without key semantics."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    if store == "warehouse":
+        request.getfixturevalue("warehouse_publication_runtime")
+    run.state.update(mode="append_new_only", processing={"load_strategy": "append_new_only"})
+    frame = run.spark.createDataFrame([(1, "job-1", "time-1"), (1, "job-1", "time-1")], "id long, job_id string, source_timestamp string")
+    run.publish(frame)
+    run.publish(frame)
+    assert run.read("target").count() == 1
+    for name in ("job_id", "source_timestamp"):
+        run.state["activity"] = name
+        run.publish(frame.withColumn(name, F.lit("changed")))
+    assert run.read("target").count() == 3
+
+
+@pytest.mark.parametrize('failure', ['before', 'finalize'])
+def test_full_observation_acceptance_follows_verified_publication(durable_processing_state, failure):
+    """Failed writes never accept full baselines; interrupted acknowledgements recover atomically."""
+    run = durable_processing_state
+    run.context['execution_plan'].plan_id = 'observation-run'
+    run.context['execution_plan'].pipeline_id = 'pipeline'
+    run.context['execution_plan'].evidence['source_observation_policy'] = {'manual': True, 'days': None}
+    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
+    frame = run.stage(1, incremental=False)
+    result = shared.observe_full_source({'table_id': 'source', 'table_name': 'source', 'store': 'Bronze',
+        'store_type': 'lakehouse', 'schema': None}, dataframe=frame, context=run.context)
+    assert result['row_count'] == 8
+    run.state['fail'] = failure
+    with pytest.raises(RuntimeError):
+        run.publish(frame)
+    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
+    assert not any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
+    run.state['fail'] = None
+    run.publish(frame)
+    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
+    assert any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
+    accepted = next(row for row in history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed')
+    assert {row['status'] for row in history if row.get('publication_id') == accepted['publication_id']} == {'committed'}
+
+
+@pytest.mark.parametrize('first_observation,metadata_lost', [(True, False), (False, False), (False, True)])
+def test_changed_full_observation_does_not_block_or_advance_an_exact_retry(publication_runtime, first_observation, metadata_lost):
+    """A diagnostic fingerprint change cannot block recovery or claim a newer accepted baseline."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    plan = run.context['execution_plan']
+    plan.plan_id, plan.pipeline_id = 'original', 'pipeline'
+    plan.evidence['source_observation_policy'] = {'manual': True, 'days': None}
+    run.state.update(mode='append_new_only', processing={'load_strategy': 'append_new_only'})
+    frame = run.stage(1, incremental=False)
+    identity = {'table_id': 'source', 'table_name': 'source', 'store': 'Bronze', 'store_type': 'lakehouse'}
+    if first_observation:
+        shared.observe_full_source(identity, dataframe=frame, context=run.context)
+    run.publish(frame)
+    if metadata_lost:
+        run.history.clear()
+    plan.plan_id = 'new-execution'
+    observed = shared.observe_full_source(identity, dataframe=frame.withColumn('source_timestamp', F.lit('changed')), context=run.context)
+    assert observed['status'] == ('changed' if first_observation else 'first_observation')
+    result = run.publish(frame)  # transformation output is unchanged
+    assert result['publication_status'] == 'already_applied'
+    assert run.read('target').count() == 8
+    accepted = [row for row in run.history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed']
+    assert len(accepted) == int(first_observation)
+    assert all(row['content_fingerprint'] != observed['content_fingerprint'] for row in accepted)
+
+
+@pytest.mark.parametrize('strategy', ['scd1', 'scd2'])
+def test_scd_ingestion_refresh_preserves_history_and_stored_hash(publication_runtime, strategy):
+    """Existing timestamp exclusions still control history; hashes follow actual stored values."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    processing = {'load_strategy': strategy, 'key_columns': ['id']}
+    if strategy == 'scd2':
+        processing['effective_column'] = 'modified'
+    run.state.update(mode=strategy, processing=processing)
+    frame = run.spark.createDataFrame([(1, 'A', 1, 10)], 'id long, value string, modified long, ingested_at_utc long')
+    run.publish(frame)
+    original_hash = run.read('target').first()._row_hash
+    next_frame = frame.withColumn('ingested_at_utc', F.lit(20).cast('long'))
+    if strategy == 'scd2':
+        next_frame = next_frame.withColumn('modified', F.lit(2).cast('long'))
+    run.state['activity'] = 'next-ingestion'
+    run.publish(next_frame)
+    stored = run.read('target')
+    assert stored.count() == 1
+    assert stored.first().ingested_at_utc == 20
+    assert stored.first()._row_hash != original_hash
+    expected = shared.add_row_hash(stored.select(*frame.columns)).first()._row_hash
+    assert stored.first()._row_hash == expected
+    if strategy == 'scd2':
+        assert stored.first().modified == 1 and stored.first()._effective_from == 1
+
+
+@pytest.mark.parametrize('legacy_hash', ['missing', 'wrong_type'])
+def test_full_overwrite_replaces_legacy_schema_with_mandatory_hash(publication_runtime, legacy_hash):
+    """An explicit complete overwrite upgrades the target without assuming old hashes exist."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    frame = run.stage(1, incremental=False)
+    old = frame if legacy_hash == 'missing' else frame.withColumn('_row_hash', F.encode(F.lit('a' * 64), 'UTF-8'))
+    old.write.format('delta').mode('overwrite').save(str(run.path / 'target'))
+    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
+    run.publish(frame)
+    target = run.read('target')
+    assert target.count() == frame.count()
+    assert target.schema['_row_hash'].dataType.simpleString() == 'string'
+    assert target.where('_row_hash IS NULL').count() == 0

@@ -116,7 +116,7 @@ def test_summary_duration_is_wall_clock_and_unknown_values_are_explicit(capsys):
     assert "Total duration  → 88.55s" in output
 
 
-@pytest.mark.parametrize("mode", ["overwrite", "append", "scd1", "scd2"])
+@pytest.mark.parametrize("mode", ["overwrite", "append_all", "append_new_only", "scd1", "scd2"])
 @pytest.mark.parametrize("profile_rows", [100, None, 0])
 def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile_rows, capsys, monkeypatch):
     module = import_module("fabricops_kit.pipeline.orchestrate_write")
@@ -126,13 +126,13 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
         for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
-        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append", "overwrite"} else None}}))
+        stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append_all", "append_new_only", "overwrite"} else None}}))
         stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": profile_rows}))
         result = run_pipeline_operation(module.orchestrate_write, frame, plan=PLAN, sources=[], store="Silver", schema="demo", table_name="orders", write_mode=mode)
     assert result["write_metrics"]["total_target_rows"] == (42 if profile_rows is None else profile_rows)
     assert result["write_metrics"]["input_rows"] is None
     assert result["write_metrics"]["input_columns"] == 2
-    assert result["write_metrics"]["rows_committed"] == (8 if mode in {"append", "overwrite"} else None)
+    assert result["write_metrics"]["rows_committed"] == (8 if mode in {"append_all", "append_new_only", "overwrite"} else None)
     output = capsys.readouterr().out
     assert "FabricOps WRITE Summary" in output
     assert "Load status     → Loaded" in output
@@ -163,7 +163,7 @@ def test_write_summary_uses_data_engineering_load_status(
     frame = SimpleNamespace(columns=["id"])
     write_result = {
         "table_id": "target",
-        "strategy": "append",
+        "strategy": "append_all",
         "published": published,
         "publication_status": publication_status,
         "write_metrics": {"rows_committed": 0},
@@ -192,7 +192,7 @@ def test_write_summary_uses_data_engineering_load_status(
             store="Silver",
             schema="demo",
             table_name="orders",
-            write_mode="append",
+            write_mode="append_all",
         )
     output = capsys.readouterr().out
     assert f"Load status     → {expected_label}" in output

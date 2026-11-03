@@ -190,9 +190,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:111`
+`fabricops_kit/pipeline/pipeline_read.py:112`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L111-L486">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L112-L493">View on GitHub</a>
 </div>
 
 
@@ -251,7 +251,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 99 |
+| Live-critical dependencies | 104 |
 
 ### Release history
 
@@ -337,6 +337,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
+<li><code>fabricops_kit.pipeline.shared._publication_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
@@ -346,12 +347,14 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_observation_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
+<li><code>fabricops_kit.pipeline.shared.add_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.capture_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.observe_full_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_freshness_observation_column</code></li>
@@ -360,6 +363,8 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_source_drift_observation_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
+<li><code>fabricops_kit.pipeline.shared.row_hash_totals</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>

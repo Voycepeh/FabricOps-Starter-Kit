@@ -150,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 229 |
+| Live-critical dependencies | 234 |
 
 ### Release history
 
@@ -298,6 +298,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
+<li><code>fabricops_kit.pipeline.shared._publication_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
@@ -329,6 +330,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
+<li><code>fabricops_kit.pipeline.shared.add_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
@@ -349,6 +351,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
@@ -377,6 +380,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_table_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
+<li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
@@ -390,6 +394,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_target_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>

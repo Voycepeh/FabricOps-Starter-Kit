@@ -174,7 +174,7 @@ writes["target"] = orchestrate_write(
 display(writes["target"]["dataframe"].limit(10))
 ```
 
-Choose the target store, schema, and table. The supported load strategies are `"overwrite"`, `"append"`, `"scd1"`, and `"scd2"`. Strategy-specific parameters such as SCD keys belong in `write_parameters`; see [Step 2C: SCD1 and SCD2](02C-build-and-run-scd-etl.md).
+Choose the target store, schema, and table. The supported load strategies are `"overwrite"`, `"append_all"`, `"append_new_only"`, `"scd1"`, and `"scd2"`. Strategy-specific parameters such as SCD keys belong in `write_parameters`; see [Step 2C: SCD1 and SCD2](02C-build-and-run-scd-etl.md).
 
 Read and Write previews show the DataFrames returned or submitted by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains the load outcome, stage results, and available metrics.
 
@@ -186,9 +186,9 @@ FabricOps identifies an exact prepared batch before it writes the target. It mat
 | --- | --- | --- |
 | **Loaded** | This prepared batch has not already been applied. | Runs the selected physical write and records its receipt. |
 | **Already loaded** | The same prepared batch has a verified successful receipt for this target. | Skips the redundant physical write. No new rows are written by this attempt. |
-| **Skipped — no new data** | An Incremental Read produced an empty scope. | Skips the write because there are no eligible rows to load. |
+| **Skipped — no new data** | An Incremental Read is empty, or Append New Only has no unseen hashes. | Skips publication and does not advance a newer full observation baseline. |
 
-This applies to **Overwrite** as well as Append and the SCD strategies. An Overwrite request does not force a redundant physical overwrite when the exact same prepared batch has already been applied. If the source or transformation produces different business data, the fingerprint changes and FabricOps treats it as a new batch.
+A new Full Read execution with **Overwrite** replaces the complete target, even for identical content. **Append All** appends every incoming row again, including duplicates. **Append New Only** filters hashes already present in the target. Receipt-based recovery still protects the same interrupted publication and incremental checkpoint; it does not suppress a new full Overwrite or Append All request. See [the exact strategies and Source Observation settings](../reference/read-and-load-strategies.md).
 
 The batch check does not make the upstream Read or your PySpark transformation disappear: those steps still run to produce and identify the prepared input. It avoids repeating the physical target write after an exact prior batch is verified. **Rows loaded: 0** for **Already loaded** means zero rows were written by this attempt; it does not mean the target contains zero rows.
 

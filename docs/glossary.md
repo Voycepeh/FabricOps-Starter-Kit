@@ -108,7 +108,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="load-strategy">
 <summary><strong>Load Strategy</strong> — The governed method used to write a target table.</summary>
-<p>FabricOps supports four load strategies: overwrite, append, SCD1, and SCD2. The target Data Contract stores the selected strategy and any required parameters.</p>
+<p>FabricOps supports five write strategies: overwrite, append_all, append_new_only, scd1 and scd2. Engineering selects read mode independently; business keys are needed only for SCD.</p>
 <p><strong>Also known as:</strong> write strategy</p>
 </details>
 
@@ -173,12 +173,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="processing-state">
 <summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
-<p>METADATA_PROCESSING_STATE stores Processing State using record_type. Source capture is separate from accepted incremental progress and Source Drift baselines. Target publication receipts link the source records accepted atomically after physical verification.</p>
+<p>METADATA_PROCESSING_STATE stores captured observations, accepted incremental checkpoints, accepted Source Drift and full-source baselines, and target publication receipts. Source members are accepted atomically only after physical publication verification.</p>
 </details>
 
 <details id="source-observation">
-<summary><strong>Source Observation</strong> — Captured source state used to evaluate incremental execution and Source Drift.</summary>
-<p>METADATA_PROCESSING_STATE distinguishes source_observation records from incremental_checkpoint, drift_baseline and publication_receipt records. Capturing an observation does not accept progress. Checkpoints and baselines become committed only after the corresponding target publication is verified.</p>
+<summary><strong>Source Observation</strong> — Captured source state for incremental execution, Source Drift or full physical-source comparison.</summary>
+<p>Pipeline setup can request a manual full Source Observation or an interval in days. Automatic observation can be disabled. Full observation ignores incremental SQL predicates and reuses a full Read when available. METADATA_PROCESSING_STATE stores captured source_observation rows and accepts full_source_baseline records only after verified target publication. Changed fingerprints report source state; they do not infer row deletions or add a blocking policy.</p>
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 
@@ -395,9 +395,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> partition_by</p>
 </details>
 
-<details id="append">
-<summary><strong>Append</strong> — A load strategy that adds incoming rows to the target.</summary>
-<p>FabricOps adds the prepared incoming rows without changing existing target rows.</p>
+<details id="append-all">
+<summary><strong>Append All</strong> — A write strategy that appends every incoming row, including duplicates.</summary>
+<p>append_all appends all prepared rows. A new execution appends identical data again; an interrupted publication retains receipt-based recovery.</p>
+</details>
+
+<details id="append-new-only">
+<summary><strong>Append New Only</strong> — A write strategy that appends previously unpublished row hashes.</summary>
+<p>append_new_only deduplicates incoming hashes and uses a distributed comparison against target _row_hash values. A changed hash is an additional row, never an update or inferred deletion.</p>
 </details>
 
 <details id="overwrite">

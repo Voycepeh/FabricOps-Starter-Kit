@@ -33,7 +33,7 @@ def catalogue_row(table_id: str, table_name: str, *, active=True, level="table")
         "layer": "Silver",
         "schema_name": "sales",
         "table_name": table_name,
-        "load_strategy": "append" if table_id == "table-a" else "overwrite",
+        "load_strategy": "append_all" if table_id == "table-a" else "overwrite",
         "load_strategy_parameters_json": {},
         "is_active": active,
     }
@@ -50,7 +50,7 @@ def test_catalogue_resolver_isolates_canonical_table_id(monkeypatch):
     assert identity["table_id"] == "table-a"
     assert identity["table_name"] == "orders"
     assert identity["store"] == "Silver"
-    assert shared.catalogue_authored_processing(identity)["load_strategy"] == "append"
+    assert shared.catalogue_authored_processing(identity)["load_strategy"] == "append_all"
 
 
 def test_catalogue_resolver_suppresses_internal_io_log(monkeypatch):

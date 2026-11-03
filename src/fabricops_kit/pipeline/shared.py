@@ -961,9 +961,184 @@ def _publication_value(column, datatype):
         return F.transform(column, lambda item: _publication_value(item, datatype.elementType))
     if isinstance(datatype, StructType):
         return F.when(column.isNull(), F.lit(None)).otherwise(F.struct(*[
-            _publication_value(column[field.name], field.dataType).alias(field.name) for field in datatype.fields
+            _publication_value(column[field.name], field.dataType).alias(field.name) for field in sorted(datatype.fields, key=lambda item: item.name)
         ]))
     return column
+
+
+def row_hash_expression(dataframe, *, values=None):
+    """Build a canonical typed hash expression, optionally for resulting SCD values.
+
+    This internal expression ignores any supplied hash. Only FabricOps-owned audit,
+    SCD lifecycle and reserved DQ/FabricOps fields are excluded; source Job IDs,
+    ingestion timestamps and similarly named business values remain significant.
+    """
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import ArrayType, MapType, StructType
+
+    def descriptor(datatype):
+        if isinstance(datatype, StructType):
+            return {"struct": [(item.name, descriptor(item.dataType))
+                               for item in sorted(datatype.fields, key=lambda item: item.name)]}
+        if isinstance(datatype, ArrayType):
+            return {"array": descriptor(datatype.elementType)}
+        if isinstance(datatype, MapType):
+            return {"map": [descriptor(datatype.keyType), descriptor(datatype.valueType)]}
+        return datatype.simpleString()
+
+    values = values or {}
+    names = sorted(name for name in dataframe.columns
+                   if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+                   and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
+    if not names or len(dataframe.columns) != len(set(dataframe.columns)):
+        raise ValueError("A managed write requires unique named incoming data columns.")
+    schema = json.dumps({"version": 1, "columns": [(name, descriptor(dataframe.schema[name].dataType))
+                                                for name in names]}, separators=(",", ":"), ensure_ascii=True)
+    values = F.struct(*[_publication_value(values.get(name, F.col("`" + name.replace("`", "``") + "`")),
+                                         dataframe.schema[name].dataType).alias(name) for name in names])
+    encoded = F.to_json(values, options={"ignoreNullFields": "false", "timeZone": "UTC",
+                                        "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+                                        "timestampNTZFormat": "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"})
+    return F.sha2(F.concat(F.lit(schema + "\n"), encoded), 256)
+
+
+def add_row_hash(dataframe):
+    """Recalculate the mandatory hash of final incoming data without a Spark action."""
+    return dataframe.withColumn("_row_hash", row_hash_expression(dataframe))
+
+
+def validate_target_row_hash(identity, *, context, cache_hashes=False):
+    """Fail explicitly on legacy targets; overwrite is the complete replacement boundary."""
+    from fabricops_kit.io import read_warehouse_table
+
+    try:
+        if identity.get("store_type") == "lakehouse":
+            target = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                                          schema=identity.get("schema"), context=context)
+        else:
+            target = read_warehouse_table(identity["schema"], identity["table_name"],
+                                          store=identity["store"], context=context)
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return
+        raise
+    if "_row_hash" not in target.columns:
+        raise ValueError("Existing target has no _row_hash. Use an explicitly validated full overwrite "
+                         "or migrate and validate historical rows before appending or SCD publication.")
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import StringType
+    if not isinstance(target.schema["_row_hash"].dataType, StringType):
+        raise ValueError("Existing target _row_hash must use the canonical SHA256 string type; reconcile before publication.")
+    hashes = target.select("_row_hash")
+    if cache_hashes:
+        from pyspark import StorageLevel
+        hashes.persist(StorageLevel.MEMORY_AND_DISK)
+    try:
+        if hashes.where(F.col("_row_hash").isNull() | ~F.col("_row_hash").rlike("^[0-9a-f]{64}$")).limit(1).count():
+            raise ValueError("Existing target has missing or invalid historical _row_hash values; reconcile before publication.")
+    except BaseException:
+        if cache_hashes:
+            hashes.unpersist()
+        raise
+    return hashes
+
+
+def filter_unpublished_rows(dataframe, identity, *, context, target_hashes=None):
+    """Compare only hash projections in Spark under the managed target publication lease."""
+    from fabricops_kit.io import read_warehouse_table
+    distinct = dataframe.dropDuplicates(["_row_hash"])
+    if target_hashes is not None:
+        return distinct.join(target_hashes, on="_row_hash", how="left_anti").select(
+            *["`" + name.replace("`", "``") + "`" for name in dataframe.columns])
+    try:
+        if identity.get("store_type") == "lakehouse":
+            target = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                                          schema=identity.get("schema"), context=context)
+        else:
+            target = read_warehouse_table(identity["schema"], identity["table_name"],
+                                          store=identity["store"], context=context)
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return distinct
+        raise
+    return distinct.join(target.select("_row_hash"), on="_row_hash", how="left_anti").select(
+        *["`" + name.replace("`", "``") + "`" for name in dataframe.columns])
+
+
+def row_hash_totals(dataframe):
+    """Reduce cached hashes to a bounded multiset fingerprint, preserving multiplicity."""
+    from pyspark.sql import functions as F
+    return dataframe.select(F.col("_row_hash").alias("hash")).agg(F.count("*").alias("rows"), *[
+        F.sum(F.conv(F.substring("hash", offset, 16), 16, 10).cast("decimal(38,0)")).alias(f"h{offset}")
+        for offset in (1, 17, 33, 49)
+    ]).first().asDict()
+
+
+def observe_full_source(identity, *, dataframe=None, context):
+    """Observe the physical source independently of read scope and Guardrail policy."""
+    plan = context.get("execution_plan")
+    policy = getattr(plan, "evidence", {}).get("source_observation_policy", {})
+    if not policy.get("manual") and policy.get("days") is None:
+        return {"status": "skipped", "reason": "automatic observation disabled"}
+    try:
+        state = read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
+        if hasattr(state, "where"):
+            from pyspark.sql import functions as F
+            state = state.where((F.col("workspace_id") == context["scope_workspace_id"])
+                                & (F.col("pipeline_id") == plan.pipeline_id))
+        history = _processing_state_rows(state)
+    except Exception as exc:
+        if not is_table_not_found_error(exc):
+            raise
+        history = []
+    source_id = str(identity["table_id"])
+    relevant = [row for row in history if row.get("record_type") == "full_source_baseline"
+                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
+                and row.get("workspace_id") == context["scope_workspace_id"]]
+    for target_id in {row["target_table_id"] for row in relevant if row.get("status") == "staged"}:
+        history = _recover_completed_source_observations(history, config=context["config"],
+            active_workspace_id=context["scope_workspace_id"], context=context,
+            source_table_id=source_id, target_table_id=target_id)
+    accepted = [row for row in history if row.get("record_type") == "full_source_baseline"
+                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
+                and row.get("workspace_id") == context["scope_workspace_id"] and row.get("status") == "committed"]
+    previous = max(accepted, key=lambda row: _watermark_timestamp(row.get("observed_at") or row["accepted_at"]), default=None)
+    now = datetime.now(UTC)
+    if previous is not None and not policy["manual"]:
+        last = datetime.fromisoformat(_watermark_timestamp(previous.get("observed_at") or previous["accepted_at"]).replace("Z", "+00:00"))
+        if last.tzinfo is None:
+            last = last.replace(tzinfo=UTC)
+        if now - last < timedelta(days=policy["days"]):
+            return {"status": "skipped", "reason": "interval not elapsed"}
+    from fabricops_kit.io import read_warehouse_table
+    reuse_frame = dataframe is not None
+    if dataframe is None:
+        if identity["store_type"] == "lakehouse":
+            dataframe = read_lakehouse_table(identity["table_name"], store=identity["store"], schema=identity.get("schema"), context=context)
+        else:
+            # Deliberately use the physical table, never the normal Read SQL WHERE.
+            dataframe = read_warehouse_table(identity["schema"], identity["table_name"], store=identity["store"], context=context)
+    from pyspark import StorageLevel
+    if reuse_frame and not dataframe.is_cached:
+        dataframe.persist(StorageLevel.MEMORY_AND_DISK)
+        plan.evidence.setdefault("source_observation_caches", []).append(dataframe)
+    totals = row_hash_totals(add_row_hash(dataframe))
+    fingerprint = hashlib.sha256(json.dumps(totals, sort_keys=True, default=str).encode()).hexdigest()
+    observation_id = str(uuid4())
+    audit = build_pipeline_audit_fields(config=context["config"], active_workspace_id=context["scope_workspace_id"], runtime_context=context)
+    row = {**audit, "record_id": _processing_state_id(context["scope_workspace_id"], source_id, observation_id),
+           "record_type": "source_observation", "status": "observed", "observation_id": observation_id,
+           "run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "workspace_id": context["scope_workspace_id"],
+           "source_table_id": source_id, "source_table_name": identity["table_name"], "observed_at": now,
+           "partition_column": None, "partition_value": None, "row_count": totals["rows"],
+           "content_fingerprint": fingerprint, "is_present": True}
+    if persistence_permitted(context):
+        _merge_source_observation_records([row], config=context["config"], context=context)
+    plan.evidence.setdefault("full_source_observations", {})[source_id] = [row]
+    changed = previous is not None and previous["content_fingerprint"] != fingerprint
+    return {"status": "changed" if changed else "unchanged" if previous else "first_observation",
+            "changed": changed if previous else None, "row_count": totals["rows"], "content_fingerprint": fingerprint}
 
 
 class PublicationBatch:
@@ -977,7 +1152,7 @@ class PublicationBatch:
 
     def __init__(self, dataframe, *, identity, processing, source_table_ids, audit, context):
         """Retain the publication boundary without evaluating Spark data."""
-        self.dataframe = dataframe
+        self.dataframe = add_row_hash(dataframe)
         self.identity = identity
         self.processing = processing
         self.source_table_ids = source_table_ids
@@ -987,7 +1162,7 @@ class PublicationBatch:
         self.finalization_recovery = False
         self.receipt = {}
         self.publication_snapshot = []
-        self._owns_cache = not dataframe.is_cached
+        self._owns_cache = True
 
     def __enter__(self):
         """Materialize and identify the exact input before staging or writing."""
@@ -997,18 +1172,12 @@ class PublicationBatch:
         if self._owns_cache:
             self.dataframe.persist(StorageLevel.MEMORY_AND_DISK)
         try:
-            names = sorted(set(self.dataframe.columns) - _TARGET_TECHNICAL_COLUMNS)
+            names = sorted(name for name in self.dataframe.columns
+                           if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+                           and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
             if not names:
                 raise ValueError("A publication batch must contain business columns.")
-            encoded = F.to_json(F.struct(*[_publication_value(F.col(f"`{n}`"), self.dataframe.schema[n].dataType).alias(n) for n in names]),
-                                options={"ignoreNullFields": "false", "timeZone": "UTC"})
-            hashes = self.dataframe.select(F.sha2(encoded, 256).alias("hash"))
-            # Bounded, order-independent multiset fingerprint; row multiplicity
-            # matters. This action establishes retry identity, never presentation.
-            totals = hashes.agg(F.count("*").alias("rows"), *[
-                F.sum(F.conv(F.substring("hash", offset, 16), 16, 10).cast("decimal(38,0)")).alias(f"h{offset}")
-                for offset in (1, 17, 33, 49)
-            ]).first().asDict()
+            totals = row_hash_totals(self.dataframe)
             self.input_rows = totals["rows"]
             boundary = {
                 "workspace_id": self.context["scope_workspace_id"], "target": self.identity["table_id"],
@@ -1017,6 +1186,22 @@ class PublicationBatch:
                 "content": totals,
             }
             batch_id = hashlib.sha256(json.dumps(boundary, sort_keys=True, default=str).encode()).hexdigest()
+            # Content identifies recovery; execution identifies a new user publication.
+            # A fresh Overwrite/Append All must execute even for identical content.
+            content_id = batch_id
+            incremental = incremental_publication_scopes(workspace_id=self.context["scope_workspace_id"],
+                activity_id=source_observation_run_id(self.context) or str(self.audit["_activity_id"]),
+                target_table_id=self.identity["table_id"], source_table_ids=self.source_table_ids)
+            execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
+            journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
+            # Successful acceptance clears transient checkpoints. Retained-frame
+            # retries must keep the identity chosen when this execution admitted it.
+            classifications = journal.setdefault("publication_scopes", {})
+            self.execution_scoped = classifications.setdefault((execution_id, content_id),
+                self.processing["load_strategy"] == "overwrite" or (
+                    self.processing["load_strategy"] == "append_all" and not incremental))
+            if self.execution_scoped:
+                batch_id = f"{content_id}:{execution_id}"
             # Fresh per-batch audit time, independent of a notebook's reused
             # activity and of caller-provided run-consistent audit timestamps.
             self.audit["_committed_at"] = datetime.now(UTC)
@@ -1025,6 +1210,13 @@ class PublicationBatch:
                             "run_id": source_observation_run_id(self.context),
                             "strategy": self.processing["load_strategy"]}
             history_rows = []
+            execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
+            journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
+            recoveries = journal.setdefault("publication_recoveries", {})
+            alias_key = (execution_id, content_id)
+            alias = recoveries.get(alias_key)
+            if alias and _accepts_publication_receipt(self, alias):
+                self.receipt, self.already_applied = alias, True
             try:
                 history = read_lakehouse_table(
                     _PROCESSING_STATE_TABLE, store="Metadata",
@@ -1038,7 +1230,11 @@ class PublicationBatch:
                             or row.get("target_table_id") != self.identity["table_id"]):
                         continue
                     receipt = _publication_receipt(row, history_rows)
-                    if receipt.get("batch_id") == batch_id and receipt not in receipts:
+                    if (receipt.get("batch_id") == batch_id or (
+                            self.execution_scoped
+                            and row.get("status") == "staged"
+                            and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
+                        )) and receipt not in receipts:
                         receipts.append(receipt)
                 for receipt in receipts:
                     if _accepts_publication_receipt(self, receipt):
@@ -1055,6 +1251,8 @@ class PublicationBatch:
                 if receipt and _accepts_publication_receipt(self, receipt):
                     self.receipt = receipt
                     self.already_applied = True
+            if self.already_applied and self.receipt["batch_id"] != batch_id:
+                recoveries[alias_key] = dict(self.receipt)
             if self.already_applied:
                 _verify_retry_observations(self, history_rows)
                 self._freeze_publication_snapshot(history_rows)
@@ -1111,6 +1309,10 @@ class PublicationBatch:
 
     def __exit__(self, *_exc):
         """Release only the cache owned by this publication attempt."""
+        if getattr(self, "target_hashes", None) is not None:
+            self.target_hashes.unpersist()
+        if hasattr(self, "filtered_dataframe"):
+            self.filtered_dataframe.unpersist()
         for key, captured in self._active_sources.items():
             if _ACTIVE_PUBLICATION_SOURCES.get(key) == captured:
                 _ACTIVE_PUBLICATION_SOURCES.pop(key, None)
@@ -1174,7 +1376,7 @@ def _accepts_publication_receipt(batch, receipt):
     """Require current target state before suppressing a keyed SCD merge."""
     if not _physical_target_has_publication(batch.identity, receipt, context=batch.context):
         return False
-    if batch.processing["load_strategy"] not in {"scd1", "scd2"}:
+    if batch.processing["load_strategy"] not in {"scd1", "scd2", "append_new_only"}:
         return True
     if batch.identity.get("store_type") == "lakehouse":
         from delta.tables import DeltaTable
@@ -1226,7 +1428,7 @@ def _processing_state_rows(history):
     rows = observation_rows(history)
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
-                or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "publication_receipt"}
+                or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
             raise RuntimeError("Unsupported legacy or invalid METADATA_PROCESSING_STATE record; reconcile and explicitly migrate or reset the Preview table before retrying.")
@@ -1262,7 +1464,8 @@ def _physical_target_has_publication(
     """Verify both literals bound to an exact staged batch's atomic write."""
     if not receipt:
         return False
-    if receipt.get("strategy") not in {"append", "overwrite", "scd1", "scd2"}:
+    # Preserve historical receipt facts verbatim; new strategy validation rejects append.
+    if receipt.get("strategy") not in {"append", "append_all", "append_new_only", "overwrite", "scd1", "scd2"}:
         raise RuntimeError("Unsupported legacy target publication receipt; reconcile and rebuild/replay the target under the new Processing State schema before retrying.")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     escaped = receipt["activity_id"].replace("'", "''")
@@ -1306,7 +1509,7 @@ def _physical_target_has_publication(
                 store=str(identity["store"]), context=context,
             )
             marked = int(frame.first()["fabricops_publication_rows"])
-            if receipt.get("strategy") in {"append", "overwrite"}:
+            if receipt.get("strategy") in {"append", "append_all", "append_new_only", "overwrite"}:
                 if marked and marked != receipt["input_rows"]:
                     raise RuntimeError("Incomplete Warehouse publication marker count; reconcile the partial publication before retrying. Checkpoint was not advanced.")
                 if receipt["input_rows"] == 0:
@@ -1718,12 +1921,13 @@ def check_source_drift_for_target(
     return result
 
 
-def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids):
+def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids, context=None):
     """Freeze source evidence so later reads cannot change a publication's checkpoint."""
     return {
         source_id: {
             "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
             "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
+            "full": [dict(row) for row in getattr((context or {}).get("execution_plan"), "evidence", {}).get("full_source_observations", {}).get(source_id, [])],
         }
         for source_id in source_table_ids
     }
@@ -1759,8 +1963,8 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
         captured = success_context["observation_snapshot"][source_id]
         source_name = _CURRENT_TABLE_IDENTITIES.get(source_id, {}).get("table_name") or resolve_catalogue_table_identity(
             context["config"], active_workspace_id, source_id, context=context).get("table_name")
-        for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline")):
-            for row in captured[kind]:
+        for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline"), ("full", "full_source_baseline")):
+            for row in captured.get(kind, []):
                 records.append({**{name: row.get(name) for name in (
                     "observation_id", "partition_value", "row_count", "min_change_value", "max_change_value",
                     "content_fingerprint", "is_present", "partition_column", "change_column", "watermark_type")},
@@ -3152,12 +3356,13 @@ def validated_processing(processing: Any) -> dict[str, Any]:
     if not isinstance(processing, dict):
         raise ValueError("Data Contract processing definition is missing or malformed.")
     strategy = str(processing.get("load_strategy") or "").strip().lower()
-    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+    if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
         raise ValueError("Processing definition has an invalid load_strategy.")
     definition = {**processing, "load_strategy": strategy}
     allowed = {
         "overwrite": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
-        "append": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
+        "append_all": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
+        "append_new_only": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
         "scd1": {"load_strategy", "key_columns", "watermark_column", "source", "contract_id", "contract_version"},
         "scd2": {
             "load_strategy", "key_columns", "effective_column", "tracked_columns", "watermark_column",
@@ -3291,7 +3496,7 @@ def add_target_audit_fields(df, audit_fields: Mapping[str, Any]):
     """Add resolved operational audit literals to incoming target rows."""
     from pyspark.sql import functions as F
 
-    result = df
+    result = df if "_row_hash" in df.columns else add_row_hash(df)
     for name in _TARGET_AUDIT_COLUMNS:
         result = result.withColumn(name, F.lit(audit_fields[name]))
     return result
@@ -3344,7 +3549,7 @@ def execute_lakehouse_processing(
     if not set(_TARGET_AUDIT_COLUMNS) <= columns:
         persisted_df = add_target_audit_fields(df, resolve_target_audit_fields(context))
 
-    if strategy == "append":
+    if strategy in {"append_all", "append_new_only"}:
         write_lakehouse_table(persisted_df, table_name, store=store, schema=schema, mode="append", context=context)
         return
     if strategy == "overwrite":
@@ -3379,7 +3584,7 @@ def execute_lakehouse_processing(
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         technical_updates = {
-            name: f"source.`{name}`" for name in persisted_df.columns if name in _TARGET_TECHNICAL_COLUMNS
+            name: f"source.`{name}`" for name in persisted_df.columns if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
         }
         merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
         if technical_updates:
@@ -3396,8 +3601,14 @@ def execute_lakehouse_processing(
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     technical_updates = {
         name: f"source.`{name}`" for name in persisted_df.columns
-        if name in _TARGET_TECHNICAL_COLUMNS and name not in _SCD2_LIFECYCLE_COLUMNS
+        if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
     }
+    if "_row_hash" in persisted_df.columns:
+        # Only technical fields are refreshed on an unchanged version. In particular,
+        # effective/untracked business values remain from the stored version.
+        values = {name: F.col(("source." if name in technical_updates else "target.")
+                             + "`" + name.replace("`", "``") + "`") for name in persisted_df.columns}
+        technical_updates["_row_hash"] = row_hash_expression(persisted_df, values=values)
     merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
     reserved = sorted(set(merge_keys) & set(persisted_df.columns))
     if reserved:
@@ -3552,7 +3763,7 @@ def evaluate_source_drift_guardrail(
             "Governance must author and activate one first."
         )
     strategy = _string_value(load_strategy).lower()
-    if strategy not in {"overwrite", "append", "scd1", "scd2"}:
+    if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
         raise ValueError("load_strategy must be one of: overwrite, append, scd1, scd2")
     severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
     if severity not in {"blocking", "warning"}:
@@ -3590,7 +3801,7 @@ def evaluate_source_drift_guardrail(
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    compatible = strategy != "append" or not historical_mutation
+    compatible = strategy not in {"append_all", "append_new_only"} or not historical_mutation
     if compatible:
         result.update(
             status="passed",
@@ -3602,7 +3813,7 @@ def evaluate_source_drift_guardrail(
         result.update(
             status="failed" if blocking else "warning",
             can_continue=not blocking,
-            reason="Previously processed source data changed; governed 'append' processing cannot reconcile historical mutation.",
+            reason="Previously processed source data changed; configured append processing cannot reconcile historical mutation.",
         )
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
@@ -5698,7 +5909,8 @@ def validate_pipeline_run(row):
             raise ValueError("Duplicate Pipeline Run source association.")
         if item["status"] == "succeeded":
             mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
-            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "scd1", "scd2"}
+            # Run records retain historical strategy facts; execution validates the five current choices.
+            allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "append_all", "append_new_only", "scd1", "scd2"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
@@ -6261,6 +6473,8 @@ class PipelineSession:
         finally:
             import atexit
             atexit.unregister(self.close)
+            for frame in self.plan.evidence.pop("source_observation_caches", []):
+                frame.unpersist()
             self.closed = True
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
@@ -6633,7 +6847,7 @@ PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
-LOAD_STRATEGIES = {"overwrite", "append", "scd1", "scd2"}
+LOAD_STRATEGIES = {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
 
 
 _PROFILE_EXCLUDED_NAMES = {
@@ -7163,7 +7377,8 @@ def _processing_definition(
         parameters = dict(load_strategy_parameters)
     allowed = {
         "overwrite": {"watermark_column"},
-        "append": {"watermark_column"},
+        "append_all": {"watermark_column"},
+        "append_new_only": {"watermark_column"},
         "scd1": {"key_columns", "watermark_column"},
         "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
     }[strategy]

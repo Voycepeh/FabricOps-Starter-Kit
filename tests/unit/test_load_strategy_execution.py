@@ -56,13 +56,13 @@ def test_append_uses_low_level_append_only_after_scope_resolution(monkeypatch):
     calls = _capture_writes(monkeypatch)
     shared.execute_lakehouse_processing(
         object(), table_name="students", store="Silver", schema="dbo",
-        processing={"load_strategy": "append"},
+        processing={"load_strategy": "append_all"},
         scope={"type": "full_dataset"},
     )
     assert calls[0][1]["mode"] == "append"
 
 
-@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append", "append")])
+@pytest.mark.parametrize(("strategy", "mode"), [("overwrite", "overwrite"), ("append_all", "append")])
 def test_normal_writes_add_one_consistent_compact_audit_record(monkeypatch, spark_session, strategy, mode):
     calls = []
     resolutions = []
@@ -186,8 +186,8 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
 
     _install_delta(monkeypatch, ExistingDelta)
     incoming = spark_session.createDataFrame(
-        [(1, "active", 200, "old-audit")],
-        ["student_id", "status", "_watermark_value", "_committed_by"],
+        [(1, "active", 200, "old-audit", "passed")],
+        ["student_id", "status", "_watermark_value", "_committed_by", "_dq_check_status"],
     )
     shared.execute_lakehouse_processing(
         incoming, table_name="students", store="Silver", schema="dbo",
@@ -198,7 +198,9 @@ def test_scd1_merge_is_business_change_aware_and_ignores_audit_columns(monkeypat
         "keys": "target.`student_id` <=> source.`student_id`",
         "change": "NOT (target.`status` <=> source.`status`)",
         "technical_update": {
+            "_row_hash": "source.`_row_hash`",
             "_watermark_value": "source.`_watermark_value`",
+            "_dq_check_status": "source.`_dq_check_status`",
             "_committed_at": "source.`_committed_at`",
             "_committed_by": "source.`_committed_by`",
             "_activity_id": "source.`_activity_id`",
@@ -219,7 +221,7 @@ def test_scd2_explicit_tracking_rejects_technical_columns():
         )
 
 
-def test_scd2_identical_business_state_updates_watermark_without_new_version(monkeypatch, spark_session):
+def test_scd2_identical_business_state_updates_audit_without_new_version(monkeypatch, spark_session):
     """An unchanged current row takes only the technical SCD2 merge branch."""
     from pyspark.sql import functions as F
 
@@ -288,8 +290,9 @@ def test_scd2_identical_business_state_updates_watermark_without_new_version(mon
 
     expire, technical = recorded["updates"]
     assert expire[0] == "NOT (target.`status` <=> source.`status`)"
-    assert technical[0] == "NOT (NOT (target.`status` <=> source.`status`))"
+    assert technical[0] == f"NOT ({expire[0]})"
     assert technical[1]["_watermark_value"] == "source.`_watermark_value`"
+    assert "sha2" in str(technical[1]["_row_hash"])
     assert recorded["insert_values"]["student_id"] == "source.`student_id`"
     assert recorded["appends"] == 0
 

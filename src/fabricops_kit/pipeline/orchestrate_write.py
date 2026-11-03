@@ -55,7 +55,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         Explicit physical schema; pass None for a schemaless store.
     table_name : str
         Physical target table name.
-    write_mode : {"overwrite", "append", "scd1", "scd2"}
+    write_mode : {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
         Proposed strategy; must match the selected contract processing definition.
     write_parameters : dict, optional
         Strategy parameters including SCD key_columns and SCD2 effective_column.

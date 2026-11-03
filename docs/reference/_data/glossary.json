@@ -188,7 +188,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The governed method used to write a target table.",
-    "long_definition": "FabricOps supports four load strategies: overwrite, append, SCD1, and SCD2. The target Data Contract stores the selected strategy and any required parameters.",
+    "long_definition": "FabricOps supports five write strategies: overwrite, append_all, append_new_only, scd1 and scd2. Engineering selects read mode independently; business keys are needed only for SCD.",
     "preferred_usage": "Use load strategy for governed target write behaviour.",
     "avoid_usage": "source pattern or Source Drift behaviour as a second strategy"
   },
@@ -590,13 +590,23 @@
     "avoid_usage": "incremental partition"
   },
   {
-    "id": "append",
-    "term": "append",
+    "id": "append-all",
+    "term": "Append All",
     "aliases": [],
     "category": "Data Engineering concepts",
-    "short_definition": "A load strategy that adds incoming rows to the target.",
-    "long_definition": "FabricOps adds the prepared incoming rows without changing existing target rows.",
-    "preferred_usage": "Use append for an additive target write strategy.",
+    "short_definition": "A write strategy that appends every incoming row, including duplicates.",
+    "long_definition": "append_all appends all prepared rows. A new execution appends identical data again; an interrupted publication retains receipt-based recovery.",
+    "preferred_usage": "Use Append All for append_all publication.",
+    "avoid_usage": "incremental load when the read scope rather than write strategy is meant"
+  },
+  {
+    "id": "append-new-only",
+    "term": "Append New Only",
+    "aliases": [],
+    "category": "Data Engineering concepts",
+    "short_definition": "A write strategy that appends previously unpublished row hashes.",
+    "long_definition": "append_new_only deduplicates incoming hashes and uses a distributed comparison against target _row_hash values. A changed hash is an additional row, never an update or inferred deletion.",
+    "preferred_usage": "Use Append New Only for append_new_only publication.",
     "avoid_usage": "incremental load when the read scope rather than write strategy is meant"
   },
   {
@@ -680,8 +690,8 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.",
-    "long_definition": "METADATA_PROCESSING_STATE stores Processing State using record_type. Source capture is separate from accepted incremental progress and Source Drift baselines. Target publication receipts link the source records accepted atomically after physical verification.",
-    "preferred_usage": "Use Processing State for the four typed record responsibilities in METADATA_PROCESSING_STATE.",
+    "long_definition": "METADATA_PROCESSING_STATE stores captured observations, accepted incremental checkpoints, accepted Source Drift and full-source baselines, and target publication receipts. Source members are accepted atomically only after physical publication verification.",
+    "preferred_usage": "Use Processing State for the typed records in METADATA_PROCESSING_STATE.",
     "avoid_usage": "pipeline run or activation state when Processing State is meant",
     "tooltip_labels": [
       "Processing State",
@@ -695,9 +705,9 @@
       "source observations"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Captured source state used to evaluate incremental execution and Source Drift.",
-    "long_definition": "METADATA_PROCESSING_STATE distinguishes source_observation records from incremental_checkpoint, drift_baseline and publication_receipt records. Capturing an observation does not accept progress. Checkpoints and baselines become committed only after the corresponding target publication is verified.",
-    "preferred_usage": "Use source observation for captured source state; use drift_baseline for an accepted Source Drift baseline.",
+    "short_definition": "Captured source state for incremental execution, Source Drift or full physical-source comparison.",
+    "long_definition": "Pipeline setup can request a manual full Source Observation or an interval in days. Automatic observation can be disabled. Full observation ignores incremental SQL predicates and reuses a full Read when available. METADATA_PROCESSING_STATE stores captured source_observation rows and accepts full_source_baseline records only after verified target publication. Changed fingerprints report source state; they do not infer row deletions or add a blocking policy.",
+    "preferred_usage": "Use Source Observation for capture; full_source_baseline names the accepted full physical-source fingerprint.",
     "avoid_usage": "profile when the drift baseline is specifically meant",
     "tooltip_labels": [
       "Source Observation",

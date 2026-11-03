@@ -68,13 +68,13 @@ def test_target_baselines_are_independent_under_one_source_rule(monkeypatch):
     configure(monkeypatch, history)
     append_result = shared.check_source_drift_for_target(
         source_table_id="source", target_table_id="target-append",
-        source_processing={"load_strategy": "append"},
+        source_processing={"load_strategy": "append_all"},
     )
     assert append_result["can_continue"] is False
     assert append_result["target_table_id"] == "target-append"
     result = shared.check_source_drift_for_target(
         source_table_id="source", target_table_id="target-overwrite",
-        source_processing={"load_strategy": "append"},
+        source_processing={"load_strategy": "append_all"},
     )
     assert result["can_continue"] is False
     assert result["target_table_id"] == "target-overwrite"
@@ -98,7 +98,7 @@ def test_success_for_one_target_does_not_advance_another(monkeypatch):
     configure(monkeypatch, [])
     shared.check_source_drift_for_target(
         source_table_id="source", target_table_id="target-a",
-        source_processing={"load_strategy": "append"},
+        source_processing={"load_strategy": "append_all"},
     )
     assert ("dev", "run", "source", "target-a") in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
     assert ("dev", "run", "source", "target-b") not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
@@ -112,7 +112,7 @@ def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
     for target in ("target-a", "target-b"):
         shared.check_source_drift_for_target(
             source_table_id="source", target_table_id=target,
-            source_processing={"load_strategy": "append"},
+            source_processing={"load_strategy": "append_all"},
         )
     assert shared.get_current_source_observation(
         workspace_id="dev", activity_id="run", table_id="source"
@@ -125,7 +125,7 @@ def test_blocked_drift_discards_pending_acceptance(monkeypatch):
     key = ("dev", "run", "source", "target-a")
     shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [row()]
     result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-                                                 source_processing={"load_strategy": "append"})
+                                                 source_processing={"load_strategy": "append_all"})
     assert result["can_continue"] is False
     assert key not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
 
@@ -134,7 +134,7 @@ def test_observed_and_other_environment_baselines_are_not_accepted(monkeypatch):
     configure(monkeypatch, [row(target="target-a", count=1),
                            {**row(target="target-a", count=1, status="committed"), "workspace_id": "prod"}])
     result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-                                                 source_processing={"load_strategy": "append"})
+                                                 source_processing={"load_strategy": "append_all"})
     assert result["first_observation"] is True
     assert result["can_continue"] is True
 
@@ -148,7 +148,7 @@ def test_null_partition_after_an_empty_baseline_is_new_not_reappeared(monkeypatc
     shared.set_current_source_observation(workspace_id="dev", activity_id="run", table_id="source",
         observation=[{**row(), "partition_value": None}])
     result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-        source_processing={"load_strategy": "append"})
+        source_processing={"load_strategy": "append_all"})
     assert result["can_continue"] is True
     assert result["new_partitions"] == [None]
     assert result["reappeared_partitions"] == []

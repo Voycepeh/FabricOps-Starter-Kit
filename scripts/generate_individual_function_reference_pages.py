@@ -271,7 +271,7 @@ METADATA_JSON_EXAMPLES = {
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
-    "record_type": "source_observation, incremental_checkpoint, drift_baseline, or publication_receipt.",
+    "record_type": "source_observation, incremental_checkpoint, drift_baseline, full_source_baseline, or publication_receipt.",
     "status": "observed for captured source observations; staged before target publication; committed only after exact physical publication verification.",
     "observation_id": "Identifier grouping the partitions of one captured source snapshot.",
     "run_id": "Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.",

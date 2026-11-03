@@ -111,7 +111,7 @@ def activation_operations(value):
         normalized_destination(operation["destination"])
         read, write = operation["read_mode"], operation["write_mode"]
         if (role == "source" and (read not in {"full", "incremental"} or write is not None)
-                or role == "target" and (write not in {"append", "overwrite", "scd1", "scd2"} or read is not None)):
+                or role == "target" and (write not in {"append_all", "append_new_only", "overwrite", "scd1", "scd2"} or read is not None)):
             raise ValueError("Unsupported activated read/write strategy.")
         sources = operation["source_table_ids"]
         if not isinstance(sources, list) or any(not isinstance(item, str) or not item for item in sources) or len(sources) != len(set(sources)):
@@ -518,8 +518,8 @@ def verify_governed_plan(plan, *, spark_session=None):
 def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
     """Pin an unprotected target for the run, excluding racing Contract activation.
 
-    This policy lease does not change publication identity, checkpoints or Delta
-    concurrency. A crashed run leaves a lease requiring explicit reconciliation.
+    The Serializable Registry control token excludes concurrent managed writers
+    to this physical target. A crashed run requires explicit reconciliation.
     """
     rows = read_registry(context=plan.runtime_context, spark_session=spark_session)
     control = registry_control(rows)
@@ -543,6 +543,11 @@ def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
     if any(lease["lease_id"] == lease_id for lease in leases):
         plan.evidence["lease_token"] = plan.plan_id
         return
+    # The existing Serializable Registry control CAS provides a distributed
+    # publication mutex, including physical aliases and writers in other workspaces.
+    if any(normalized_destination(lease["destination"]) == physical for lease in leases):
+        raise RuntimeError("Another pipeline holds this target's publication lease. Finalize that run "
+                           "or reconcile its interrupted publication before retrying.")
     leases.append({"lease_id": lease_id, "kind": "ungoverned_publication", "run_id": plan.plan_id,
         "pipeline_id": plan.pipeline_id, "workspace_id": plan.workspace_id, "table_id": table_id, "destination": destination})
     control["leases_json"] = canonical_pipeline_json(leases)
