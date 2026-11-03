@@ -130,7 +130,7 @@ Data Agents are the first planned automated destination, not the definition of c
 | Glossary | Canonical user-facing term definitions and the FabricOps / Governance / Engineering concept grouping. |
 | README | Repository orientation. |
 | Documentation home | Product introduction and navigation. |
-| How FabricOps Works | Architecture and operating model. |
+| Architecture | Workspace operating model, Governance ↔ Engineering cycle and shared metadata. |
 | Notebook Templates | Notebook responsibilities and downloads. |
 | Guided Demo | Maintained execution instructions, step-specific concept guidance, and contextual rationale. |
 | Metadata and function reference | Detailed technical contracts. |

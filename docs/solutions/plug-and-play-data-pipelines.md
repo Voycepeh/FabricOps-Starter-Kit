@@ -1,6 +1,7 @@
 # Plug-and-Play Data Pipelines with Optional Data Contract Enforcement
 
-<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+<span class="fabricops-release-status fabricops-release-status--live">Core pipeline: Live</span>
+<span class="fabricops-release-status fabricops-release-status--preview">Governed enforcement: gated</span>
 
 ![Development to Production pipeline promotion](../assets/05/PipelinesDeploymentOverview.png){ .fabricops-solution-hero }
 
@@ -10,7 +11,7 @@ Building a reliable data pipeline involves much more than reading a table, trans
 
 A new engineer should not need to understand or rebuild all of that governance and engineering plumbing before they can create a reliable pipeline. At the same time, the framework should not hide so much that nobody can understand what the pipeline is doing.
 
-FabricOps keeps that work behind a readable notebook flow: **Setup → Read → Transform → Write → Finalize**. Engineers own the PySpark transformation; FabricOps handles the repeatable pipeline operations and applies Data Contract enforcement when Governed mode is selected.
+FabricOps keeps that work behind a readable notebook flow: **Setup → Read → Transform → Write → Finalize**. Engineers own the PySpark transformation; FabricOps handles the repeatable pipeline operations. The Governed mode is designed to apply activated Data Contracts, but currently fails closed until trusted deployment verification is integrated.
 
 ## The solution
 
@@ -215,4 +216,4 @@ See [Guided Demo Step 2: Build and run the ETL](../guided-demo/02-build-and-run-
 
 ## Go deeper
 
-For the wider lifecycle, see [How FabricOps Works](../how-fabricops-works.md). For implementation details, use [PySpark Transformation](../reference/pyspark-transformation.md) and the [Function Reference](../reference/index.md).
+For the consolidated capability view, see [Engineering](../engineering.md). For the wider operating model, see [Architecture](../architecture.md). For implementation details, use [PySpark Transformation](../reference/pyspark-transformation.md) and the [Function Reference](../reference/index.md).

@@ -4,9 +4,9 @@
 
 `00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then walk you through the implementation.
 
-!!! info "Want to understand the operating model first?"
+!!! info "Want the conceptual operating model first?"
 
-    Read [How FabricOps Works](how-fabricops-works.md) for the Big Picture, Governance ↔ Engineering cycle, Data Contracts, and seven-step lifecycle before running the demo.
+    Read [Architecture](architecture.md) for workspace relationships, the Governance ↔ Engineering cycle and shared metadata. This page focuses on the practical lifecycle you will run.
 
 !!! tip "New to Microsoft Fabric?"
 
@@ -47,6 +47,24 @@ Follow <strong>Steps 1–7</strong> from Governance through Engineering, validat
 
 </div>
 </div>
+
+![Seven-step FabricOps lifecycle from Governance context to governed consumption](assets/fabricops-role-workflow.png){ .fabricops-section-evidence }
+
+The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until the immutable contract candidate and the real pipeline agree.
+
+1. **Establish Governance context.** Record accountable Data Stewards and the versioned Data Agreement that explains why the data is shared.
+2. **Build and observe the pipeline.** Engineering runs real sources and targets in Development, creating Catalogue, profiling, lineage and processing observations.
+3. **Author and freeze Data Contracts.** Governance combines that Engineering evidence with Enrichment, Processing and Guardrails, then freezes exact immutable versions.
+4. **Preview the frozen versions.** Engineering selects those versions in Dry Run and exercises the Read → Transform → Write path without publishing or committing operational state.
+5. **Review activation and deployment implications.** Activation is a separate Preview metadata decision; deployment remains an Engineering/Fabric responsibility. Governed execution currently fails closed pending trusted deployment verification.
+6. **Run the persistent path and grant access.** The runnable demo uses supported execution paths and native Fabric permissions; do not treat Preview activation as proof of Production enforcement.
+7. **Consume and productize.** Approved consumers use native Fabric interfaces or project-specific accelerators with the governed context available in shared metadata.
+
+??? info "Under the Hood — why Steps 3 and 4 iterate"
+
+    A frozen Data Contract never changes in place. If a rule is wrong or the implementation cannot meet it, Governance authors the next version and Engineering previews that new exact payload. Dry Run uses real data but sets `permits_persistence=False`, so target rows, checkpoints, profiles, lineage and run metadata are not committed.
+
+    The stable `table_id` joins the observed table to its contract history. Workspace-specific evidence remains separate from the global version history. See [Governance](governance.md#data-contract-lifecycle) for contract mechanics and [Engineering](engineering.md#plug-and-play-pipelines-and-orchestration) for the execution boundaries.
 
 
 
