@@ -631,12 +631,14 @@ def pipeline_write(
                 "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
                                  "metadata finalization after publication"]},
         }
-    if strategy != "overwrite":
+    if strategy not in {"overwrite", "append_new_only"}:
         validate_target_row_hash(identity, context=context)
     with PublicationBatch(
         df, identity=identity, processing=_physical_processing_definition(processing),
         source_table_ids=publication_source_ids, audit=audit, context=context,
     ) as batch:
+        if strategy == "append_new_only":
+            batch.target_hashes = validate_target_row_hash(identity, context=context, cache_hashes=True)
         audit = batch.audit
         write_metrics["input_rows"] = batch.input_rows
         if batch.input_rows == 0 and incremental_scopes and all(
@@ -668,7 +670,7 @@ def pipeline_write(
                 "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
             )
         if strategy == "append_new_only" and not batch.already_applied:
-            prepared_df = filter_unpublished_rows(prepared_df, identity, context=context)
+            prepared_df = filter_unpublished_rows(prepared_df, identity, context=context, target_hashes=batch.target_hashes)
             # Materialize once; both the receipt and the physical write use this snapshot.
             from pyspark import StorageLevel
             prepared_df.persist(StorageLevel.MEMORY_AND_DISK)

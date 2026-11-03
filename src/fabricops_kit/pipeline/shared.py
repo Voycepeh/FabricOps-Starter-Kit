@@ -1001,7 +1001,7 @@ def add_row_hash(dataframe):
     return dataframe.withColumn("_row_hash", F.sha2(F.concat(F.lit(schema + "\n"), encoded), 256))
 
 
-def validate_target_row_hash(identity, *, context):
+def validate_target_row_hash(identity, *, context, cache_hashes=False):
     """Fail explicitly on legacy targets; overwrite is the complete replacement boundary."""
     from fabricops_kit.io import read_warehouse_table
 
@@ -1020,14 +1020,27 @@ def validate_target_row_hash(identity, *, context):
         raise ValueError("Existing target has no _row_hash. Use an explicitly validated full overwrite "
                          "or migrate and validate historical rows before appending or SCD publication.")
     from pyspark.sql import functions as F
-    if target.where(F.col("_row_hash").isNull() | ~F.col("_row_hash").rlike("^[0-9a-f]{64}$")).limit(1).count():
-        raise ValueError("Existing target has missing or invalid historical _row_hash values; reconcile before publication.")
+    hashes = target.select("_row_hash")
+    if cache_hashes:
+        from pyspark import StorageLevel
+        hashes.persist(StorageLevel.MEMORY_AND_DISK)
+    try:
+        if hashes.where(F.col("_row_hash").isNull() | ~F.col("_row_hash").rlike("^[0-9a-f]{64}$")).limit(1).count():
+            raise ValueError("Existing target has missing or invalid historical _row_hash values; reconcile before publication.")
+    except BaseException:
+        if cache_hashes:
+            hashes.unpersist()
+        raise
+    return hashes
 
 
-def filter_unpublished_rows(dataframe, identity, *, context):
+def filter_unpublished_rows(dataframe, identity, *, context, target_hashes=None):
     """Compare only hash projections in Spark under the managed target publication lease."""
     from fabricops_kit.io import read_warehouse_table
     distinct = dataframe.dropDuplicates(["_row_hash"])
+    if target_hashes is not None:
+        return distinct.join(target_hashes, on="_row_hash", how="left_anti").select(
+            *["`" + name.replace("`", "``") + "`" for name in dataframe.columns])
     try:
         if identity.get("store_type") == "lakehouse":
             target = read_lakehouse_table(identity["table_name"], store=identity["store"],
@@ -1039,7 +1052,8 @@ def filter_unpublished_rows(dataframe, identity, *, context):
         if is_table_not_found_error(exc):
             return distinct
         raise
-    return distinct.join(target.select("_row_hash"), on="_row_hash", how="left_anti")
+    return distinct.join(target.select("_row_hash"), on="_row_hash", how="left_anti").select(
+        *["`" + name.replace("`", "``") + "`" for name in dataframe.columns])
 
 
 class PublicationBatch:
@@ -1097,10 +1111,15 @@ class PublicationBatch:
             incremental = incremental_publication_scopes(workspace_id=self.context["scope_workspace_id"],
                 activity_id=source_observation_run_id(self.context) or str(self.audit["_activity_id"]),
                 target_table_id=self.identity["table_id"], source_table_ids=self.source_table_ids)
-            self.execution_scoped = self.processing["load_strategy"] == "overwrite" or (
-                self.processing["load_strategy"] == "append_all" and not incremental)
+            execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
+            journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
+            # Successful acceptance clears transient checkpoints. Retained-frame
+            # retries must keep the identity chosen when this execution admitted it.
+            classifications = journal.setdefault("publication_scopes", {})
+            self.execution_scoped = classifications.setdefault((execution_id, content_id),
+                self.processing["load_strategy"] == "overwrite" or (
+                    self.processing["load_strategy"] == "append_all" and not incremental))
             if self.execution_scoped:
-                execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
                 batch_id = f"{content_id}:{execution_id}"
             # Fresh per-batch audit time, independent of a notebook's reused
             # activity and of caller-provided run-consistent audit timestamps.
@@ -1209,6 +1228,8 @@ class PublicationBatch:
 
     def __exit__(self, *_exc):
         """Release only the cache owned by this publication attempt."""
+        if getattr(self, "target_hashes", None) is not None:
+            self.target_hashes.unpersist()
         if hasattr(self, "filtered_dataframe"):
             self.filtered_dataframe.unpersist()
         for key, captured in self._active_sources.items():

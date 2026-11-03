@@ -19,7 +19,14 @@ def test_append_new_only_is_distributed_and_preserves_changed_rows(spark_session
     identity = dict(store_type=store_type, store='Silver', schema='dbo', table_name='target')
     result = shared.filter_unpublished_rows(incoming, identity, context={})
     assert sorted((r.id, r.value) for r in result.collect()) == [(1, 'new'), (2, 'new')]
+    assert result.columns == incoming.columns
     assert 'LeftAnti' in result._jdf.queryExecution().optimizedPlan().toString()
+    snapshot = shared.validate_target_row_hash(identity, context={}, cache_hashes=True)
+    try:
+        assert snapshot.is_cached
+        assert shared.filter_unpublished_rows(incoming, identity, context={}, target_hashes=snapshot).count() == 2
+    finally:
+        snapshot.unpersist()
     target = incoming.limit(0)
     assert shared.filter_unpublished_rows(incoming, identity, context={}).count() == 3
     target = incoming
