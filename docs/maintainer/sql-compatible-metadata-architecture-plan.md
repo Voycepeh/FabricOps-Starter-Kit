@@ -1,453 +1,422 @@
-# SQL-compatible metadata architecture and migration plan
+# Simplify Pipeline Registry and Governed execution
 
-Planning proposal for review; no runtime change is authorized by this document.
+Planning proposal for PR #1766: activation authorizes a deployed pipeline version; an independently activated Data Contract governs each environment and Table ID.
 
-## 1. Executive summary
+## 1. Recommendation and review boundary
 
-Recommend **B: an atomic operational Registry with relational reporting projections**. Keep `METADATA_PIPELINE_REGISTRY` as the singleton authority and keep `METADATA_PIPELINE_RUN` as one authoritative snapshot per execution. Convert their nine top-level nested columns, and Catalogue's three nested columns, to physical Spark `string` containing validated JSON. Preserve application dictionaries/lists through centralized codecs at persistence boundaries. Extract reportable collections into physical relational Delta tables. Live authorization and profiling eligibility continue to read authoritative committed state.
+**Replace the previous hybrid Registry/reporting architecture in this PR.** Keep the three execution modes, remove registration/approval/selection lifecycles from operational authority, and store one current pipeline activation per `(workspace_id, pipeline_id)`. Keep SQL-compatible JSON for operation configuration and runtime coordination. Add **no physical reporting tables** initially: Power Query can expand JSON into model-only operation, source and stage tables.
 
-The benefit is SQL endpoint visibility without replacing the existing concurrency protocol. A fully relational authority would require a new distributed transaction/admission design; JSON alone would leave core Power BI questions unanswered. Projections introduce explicit eventual consistency, storage and repair work. Publish complete reporting generations and expose their source versions so a partial refresh cannot look current.
+Recommend retaining **one transactional governance store**, the existing `METADATA_PIPELINE_REGISTRY` Delta table, with two kinds of business record: pipeline activation and table-contract activation. An internal control row coordinates mutations and live executions in that same table. This is a deliberate replacement of the singleton's six collections, not their redistribution into six tables. The user-facing model is:
 
-Keep all current relational tables, especially `METADATA_DATA_PROFILED` and `METADATA_DATA_PROFILED_FREQUENCY`. Do not duplicate Run headers, Contracts, Agreements, Lineage, Guardrail Results, Processing State or Data Access. Keep Scheduled Refresh discovery and stored values. Do not introduce aliases or runtime readers for old layouts. Supported historical physical representations are migration inputs only.
+1. Develop in Dry Run or Ungoverned using a stable Pipeline ID.
+2. Freeze and activate a table's Data Contract for an environment.
+3. Deploy a known pipeline artifact and activate that deployment for the environment.
+4. Governed runs pin both activations, verify the deployment, enforce the contracts and publish safely.
 
-**Implementation requires approval of the physical schema change, projection set, publication protocol, maintenance window and reporting freshness policy in section 10.** No application code, generators, metadata stores, release snapshots or implementation PRs are changed by this audit.
+**Code verification is conditional, not solved by a commit field.** The Microsoft interfaces audited here expose saved definitions, Git synchronization state and runtime identity, but do not document an attestation binding executing notebook bytes to a Git SHA. Recommend a trusted CI/CD deployment and externally gated batch execution model in a protected production workspace. Validate its assumptions in Fabric before enabling Governed publication. If the required assurance cannot be established, Governed must remain unavailable for that deployment; do not label a self-reported SHA “verified.” No custom notebook hashing framework is proposed.
 
-## 2. Audit scope and verified current state
+This document is an architecture and migration plan, not implementation approval. Only this Markdown file and PR metadata are updated. No runtime/schema code, business or metadata tables, notebook templates, generators, dashboard artifacts or release snapshots change now.
 
-### Baseline and evidence
+## 2. Verified baseline and current dependencies
 
-Audited GitHub `origin/main`, fetched on 2 November 2026, commit `389b04ebf9ebf4f67e945326c9cc87c42bf90c55` (v0.3.1 preparation). The checked-out source matched that fetched head and began clean. This is a source audit, not an inspection of a deployed Lakehouse or a Fabric SQL endpoint.
+### Sources and revision
 
-Primary source anchors (paths relative to repository root):
+Audited latest fetched `main` on 3 November 2026: [`c6bda1d5e0fa259cf18171edac39f2f47f8ee086`](https://github.com/Voycepeh/FabricOps-Starter-Kit/commit/c6bda1d5e0fa259cf18171edac39f2f47f8ee086). This supersedes the earlier audit of v0.3.1 preparation. Read `AGENTS.md`, the repository documentation-maintenance skill, canonical schema source, authoritative writers/readers and tests. Current conventions describe the implemented six-collection authority; changing that behavior requires the explicit breaking migration below, not preserving it as a new architecture constraint.
 
-| Source | Verified responsibility |
-| --- | --- |
-| `AGENTS.md`; `.agents/skills/fabricops-docs-maintenance/SKILL.md` | Live data preservation, configured metadata routing, source ownership, generated-artifact and planning boundaries |
-| `src/fabricops_kit/config/metadata_schemas.py` | Twelve canonical tables; physical schemas, logical nested fields, coercion and strict Catalogue validation |
-| `src/fabricops_kit/config/setup_metadata_tables.py` | Creation, schema validation, additive evolution, Registry seeding, atomic Catalogue string-to-native migration, per-table partial-failure reporting |
-| `src/fabricops_kit/activated_pipeline/shared.py` | Registry read/validation, retained Test/Agreement verification, activation, CAS, reservations, consumer contract resolution |
-| `src/fabricops_kit/pipeline/shared.py` | Registration, session setup, operation capture, Run persistence, canonical JSON/hashes, profiling history, profile/frequency/Catalogue persistence |
-| `src/fabricops_kit/pipeline/setup_pipeline.py`; `finalize_pipeline.py` | Public lifecycle boundaries, explicit Test publication, display-only summaries |
-| `src/fabricops_kit/pipeline/orchestrate_read.py`; `orchestrate_write.py`; `pipeline_read.py`; `pipeline_write.py`; `check_source_drift.py` | Execution admission, read/write checks, publication recovery, target processing and schedule capture |
-| `src/fabricops_kit/widgets/widget_activate_pipeline.py`; `widget_data_contract.py` | Exact Test approval and release review; Catalogue key-candidate consumption |
-| `src/fabricops_kit/data_contract/shared.py`; `scheduled_refresh.py`; `src/fabricops_kit/data_agent/shared.py` | Draft processing seed, schedule discovery/normalization, deliberate schedule exclusion from contract payloads, residual agent freshness consumption |
-| `tests/unit/test_catalogue_nested_types.py`; `tests/integration/test_catalogue_upgrade_delta.py` | Strict values; historical JSON/list conversions; real Delta staging, conflict, recovery, extra-column and column-mapping coverage |
-| `tests/integration/test_pipeline_registry_delta.py`; `test_pipeline_run_delta.py`; `test_joint_pipeline_metadata_delta.py` | Registry stale-CAS/races; whole-run atomicity and terminal immutability; exact retained approval references and lost acknowledgements |
-| `docs/reference/_data/glossary.json`; `docs/maintainer/metadata-v2-target-model.md`; `docs/reference/metadata/*.md` | Canonical terminology and documented current model, cross-checked against source |
-| `scripts/generate_individual_function_reference_pages.py` (`generate_metadata_reference_pages`); `scripts/reference_docs_metadata.py` | Owning generator and source metadata for affected references |
+Also inspected [dashboard PR #1764](https://github.com/Voycepeh/FabricOps-Starter-Kit/pull/1764), head `b5965f44671f6ee4786a557f5ed5c001af518b47`: its generator, source-to-model mapping and Registry/Run TMDL partitions. It remains open at this audit. The dashboard uses Import, twelve canonical source tables and semantic dimensions; it creates no persisted reporting copies. Its explicit SQL projections currently omit nested Registry/Run fields and Catalogue structs. Current-source `frozen` status is not proof of activation.
 
-Source is decisive where documentation/tests differ. In particular, portions of `metadata-v2-target-model.md` still refer to `environment_name`; current physical Registry/Run identity uses `workspace_id`. Some Catalogue integration tests still expect schedule hydration in the widget, while current contract-authoring code and unit tests explicitly remove `table.scheduled_refresh`. These are existing inconsistencies to reconcile in the scoped implementation documentation/tests, not reasons to remove stored schedules.
+### Current lifecycle and replacement dependency matrix
 
-### Transaction boundaries that must survive
+Paths in this document are relative to repository root. Function names identify source owners rather than relying on generated documentation.
 
-- Registry: exactly one `authority_id='central'` row; setup seeds it with `errorifexists`. Missing/duplicate authority fails closed. `commit_pipeline_authority` uses a matched-only MERGE and raises inside the transaction on a stale token. All six collections, token and audit publish together. Permanent registrations and approval history are retained. Lost acknowledgement is accepted only on exact complete-content read-back.
-- Approval: exact finalized successful Test, required operation stages, rule-level diagnostics, current notebook binding, exact frozen Contract hashes and exact Agreement version/hash. Registration alone grants no activation. Governance confirmation is a workflow confirmation, not an independently authenticated role check.
-- Current public mode boundary: `setup_pipeline` accepts Dry Run, Ungoverned and Governed. `finalize_pipeline` preserves explicit publication for historical `testing` plans; this audit does not establish a current public path to create a new Testing plan. Retained Testing runs remain approval dependencies. Confirm the intended Test producer before rollout; adding a new mode is separate API scope.
-- Governed admission: `build_live_pipeline_plan` reads registration and authority consistently, pins approval/revision/contracts/physical bindings, then reserves under the same Registry CAS. `verify_live_plan` rechecks authority during execution. Activation/rebind conflict checks share this domain.
-- Run: first publication uses a stable Delta transaction identity, with no bounded `delta.setTransactionRetentionDuration`; updates compare the entire previous row. Terminal outcomes are immutable, stale writers fail, failure cannot become success. Operations, stages, profiling and failures commit with the parent. Projection failure must not enter `plan.evidence['failures']` or make a committed Test unapprovable.
-- Profiling: `profiling_completion_history` explodes authoritative Run `profiling` in Spark and verifies actual summary/frequency snapshots. Empty-frequency and grain completion markers matter. `record_profiling_outcome` rolls back an in-memory event if authoritative persistence fails. This is execution scheduling state, not reporting.
-- Profile history: summary/frequency rows have snapshot identities; replacement is limited to one snapshot. Frequency may exist without summary metrics (`profile_id` null). Preserve these cases and existing snapshot history.
-- Catalogue and Lineage are separate from business publication and Processing State commits. No new cross-table atomicity claim is introduced.
-
-### All twelve affected physical columns: decisions and dependency matrix
-
-`C` = `METADATA_DATA_CATALOGUE`, `R` = `METADATA_PIPELINE_REGISTRY`, `U` = `METADATA_PIPELINE_RUN`. Every row below converts the physical column to `string`; “Extract” additionally means a derived physical table, never a second authority. Exact current types are recorded in Appendix A.
-
-| Column; current Spark type | Purpose and authoritative writer | Readers/dependencies | Power BI field need | Decision; migration/concurrency risk |
-| --- | --- | --- | --- | --- |
-| C.`load_strategy_parameters_json`; struct | Watermark, processing keys, effective and tracked columns. `pipeline_write._persist_target_processing`; profile Catalogue merge preserves existing processing | `catalogue_authored_processing`, `check_source_drift`, `data_contract.shared` draft seed; Catalogue consumers | Scalar `load_strategy` already supports strategy counts; key membership is not required by minimum reporting questions | **Convert**, retain internal processing JSON; decode before `.items()` and existing validation. Preserve arrays/order and coalesce semantics; malformed values must not become defaults |
-| C.`scheduled_refresh_json`; struct | Discovered writer notebook schedules/status. `pipeline_write._writer_scheduled_refresh` + `_persist_target_processing`; Catalogue profile merge preserves it | Stored Catalogue readers; current authoring deliberately strips contract schedule; older tests expect widget hydration; agent reads historical contract `table.scheduled_refresh`, a different field | No schedule analysis requested in minimum model | **Keep / Convert**; retain discovery, enabled flags, local times, zones and unavailable/not-configured distinction. No schedule removal or invented agent integration |
-| C.`profile_key_candidates_json`; struct | Grain-discovery status/width and candidate metrics. `_persist_profile_observation`, `_persist_grain_candidates`, Catalogue upsert | `widget_data_contract` discovery suggestions; draft/UI workflows | Minimum profiling charts use summary/frequency. Candidate ranking could be a later requirement | **Keep / Convert**; preserve large counts, doubles, array ordering, null versus empty. Update direct Spark struct literal update |
-| R.`registrations`; array of structs | Permanent pipeline/workspace/notebook bindings and registration audit. `commit_pipeline_registration` through Registry CAS | `read_pipeline_registry`, registration resolution, `start_pipeline_session`, approval/current-binding checks, activation widget | Yes: identities, names, status, registered date | **Convert / Extract** registration; preserve timestamps, identity uniqueness and permanent history; compare decoded content |
-| R.`revisions`; array of structs | Workspace activation revision. `pipeline_authority_row` through CAS during activation | `read_pipeline_authority`, pinned admission, reservation checks | Yes: workspace even with zero active pipelines; activation revision | **Convert / Extract** workspace revision; not an ordered integer, not the Registry token |
-| R.`approvals`; array of structs | Immutable decision labels and exact Test/Agreement references, warnings and audit. `approve_pipeline_release` → CAS | `approval_record`, `testing_run_evidence`, activation, Live, consumer contract resolution, widget | Yes: who approved which Test/version/Agreement | **Convert / Extract** approval; retain all hashes and timestamps byte/semantic equivalence; migration must not recompute IDs/hashes |
-| R.`selections`; array of structs | Current approval selected per workspace/pipeline. `approve_pipeline_release` → CAS | `read_pipeline_authority`, activation impact, Live, consumer resolution | Yes: active pipelines and authorizing approvals | **Convert / Extract** selection with joined workspace revision. Current state only; cannot reconstruct full activation timeline |
-| R.`table_ownership`; array of structs | Exact shared Contract and binding, optional writer, reader pipeline set. `activation_impact` → CAS | activation conflicts, Live plan validation, approved consumer resolution, Ungoverned admission safeguards | Yes: writer, readers, shared tables, active table Contract | **Convert / Extract** ownership and reader bridge; keep one writer and one binding/Contract per workspace/table |
-| R.`reservations`; array of structs | Live/governed/rebind/profiling coordination, table sets, physical destinations, pinned revision. Admission/release/rebind and profiling routines → CAS | conflict/rebind/drain checks, `verify_live_plan`, session cleanup | Not required for governance/operations dashboards; short-lived reservations are not run history | **Keep / Convert**, internal JSON only; never clear reservations to migrate. Preserve exact pinned data and stale-CAS behavior |
-| U.`operations`; array of structs | Actual Read/Write membership, exact Contracts/bindings/modes/SQL hash, sources, status, clocks and stages. `pipeline_run_row` → `persist_pipeline_run`/`_merge_pipeline_run_row` | approval validation, live approved-operation comparison, summaries, widget, Test integrity hash | Yes: failed/slow operations, sources and stage outcomes | **Convert / Extract** operation, source bridge and stage. Keep authoritative parent snapshot; independent child writes cannot authorize success |
-| U.`profiling`; array of structs | Context-specific activity/outcome, snapshot link, empty/grain markers and physical location. `record_profiling_outcome` → Run commit | **Operational** `profiling_completion_history`, profile scheduling and Test publication; completion reports | Yes for completion/history, gaps and snapshot relationship; metrics already relational | **Convert / Extract** profile event; runtime parses authoritative JSON in Spark, never projection; physical descriptor/context must survive |
-| U.`failures`; array of structs | Safe code/exception type only. Operation/session failure paths and finalization → Run commit | run validation, summaries, approval eligibility | Yes: failure reasons and counts | **Convert / Extract** failure; preserve ordered occurrences, including duplicate codes; never persist raw exception messages |
-
-**Remove: none of the business structures.** Replace the contradictory Catalogue string-to-native upgrade implementation and its current-schema expectations; retain its historical fixtures and safeguards. Do not remove historical release snapshots, retained Tests, Contracts, Agreements or diagnostics.
-
-### Nested members beyond the twelve top-level columns
-
-A recursive review finds **no thirteenth top-level nested column and no MapType in the twelve canonical schemas**. `*_json` strings elsewhere are already scalar even when their logical contents are nested. Subtrees that a top-level-only inventory can miss are:
-
-| Parent | Additional complex paths (`[]` denotes array element) | Treatment |
+| Current state or boundary | Actual writers and readers | Replacement decision |
 | --- | --- | --- |
-| C.load strategy | `.key_columns`, `.tracked_columns` | Ordered arrays inside JSON |
-| C.schedule | `.schedules`, `.schedules[]` struct, `.schedules[].times` | Preserve JSON and local schedule semantics |
-| C.candidates | `.candidates`, `.candidates[]` struct, `.candidates[].columns` | Preserve JSON and candidate order |
-| R.all collections | Every collection element is itself a struct | Flatten reportable element scalars |
-| R.approvals | `[].warnings` | JSON string plus warning count in approval projection; no warning dimension required |
-| R.ownership | `[].readers`, `[].destination` struct | Reader bridge and flattened destination fields |
-| R.reservations | `[].tables`, `[].destinations`, `[].destinations[]` struct | Internal JSON only |
-| U.operations | `[].destination` struct, `[].source_table_ids`, `[].stages`, `[].stages[]` struct | Flatten destination, source bridge, stage child |
-| U.profiling | `[].physical` struct | Flatten physical fields in profile event |
+| `registrations` | `pipeline/shared.py`: `resolve_pipeline_registration`, `read_pipeline_registry`, `commit_pipeline_registration`, `start_pipeline_session`; `activated_pipeline/shared.py`: Test review and Governed notebook-binding checks | Remove permanent registration authority. Stable Pipeline ID comes from version-controlled pipeline metadata; active deployment comes from the pipeline activation row |
+| `approvals` and version-label history | `tested_pipeline_run`, `testing_run_evidence`, `approval_record`, `review_pipeline_release`, `approve_pipeline_release`, `activation_version`; activation widget; retained Test/Agreement/Contract hash verification | Replace with one direct activation decision, its deployment provenance and audit. Retain historical decisions/evidence, not an operational approval lifecycle |
+| `selections` | `read_pipeline_authority`, `workspace_activation`, activation widget and Governed plan construction | Remove. The current pipeline activation row is the selection; no second pointer from selection to approval |
+| `revisions` | Activation computes a workspace digest; admission, verification, release and rebind pin it | Remove workspace release-history entity. Keep transaction token for stale writes and per-record activation IDs for run pinning; unrelated lease changes do not invalidate a run |
+| `table_ownership` | `activation_impact` derives one writer, readers, binding and Contract; `build_live_pipeline_plan`, `verify_live_plan`, Ungoverned target checks and `resolve_approved_consumer_contract` depend on it | Remove persisted writer/readers aggregate. Derive participation from active operation configurations; use independent table-contract activation for the one active Contract |
+| `reservations` | Governed admission/release and registration rebind use the shared CAS; activation checks affected running executions | Keep only current run/admission and publication coordination needed for safety, in one internal JSON value. Remove rebind lifecycle: deployment replacement is activation replacement after drain |
+| Singleton CAS | `authority_records`, `validate_authority_collections`, `pipeline_authority_row`, `commit_pipeline_authority` in `activated_pipeline/shared.py` | Replace the physical singleton contract with a transaction over the one Registry table. Preserve atomic stale-update rejection, exact lost-acknowledgement confirmation and fail-closed missing/duplicate control |
+| Actual Run facts | `pipeline_run_row`, `validate_pipeline_run`, `_read_pipeline_run_rows`, `_merge_pipeline_run_row`, `persist_pipeline_run`, `publish_pipeline_testing_results`, `finalize_pipeline_run`; setup/finalization, widget and contract runtime views | Keep one authoritative row per Run and atomic parent/operation outcomes. Convert its three nested physical fields to JSON strings; retain historical Test records and hashes |
+| Profiling eligibility | `profiling_completion_history` Spark-explodes authoritative Run profiling and checks existing Profiled/Frequency snapshots; `record_profiling_outcome` persists completion markers | Keep authoritative source and scheduling semantics. Decode Run JSON with typed Spark expressions; do not authorize/schedule from Power BI-expanded tables |
+| Publication/checkpoints | `PublicationBatch`, `_latest_source_target_observation`, `_previous_source_target_observation`, `_find_applied_publication`, `_recover_completed_source_observations`, `stage_pipeline_write_observations`, `commit_pipeline_write_success` | Preserve staged receipts, physical verification and accepted progress. Fix writer-scope assumptions before allowing multiple append writers; section 7 |
+| Catalogue | `pipeline_write._persist_target_processing`, Catalogue profile/upsert/grain writers; `catalogue_authored_processing`, `check_source_drift`, contract draft seed and contract widget | Preserve existing fields, schedules, candidate discovery and processing meaning. Convert three physical structs to JSON and update every direct consumer/literal writer |
+| Consumer contracts | `data_agent/shared.py` calls `resolve_approved_consumer_contract`; `data_contract/shared.py` loads pipeline usage for authoring | Resolve the independently active table Contract; preserve explicit Agreement context and ambiguity rejection. Do not infer consumer authorization from any writer's activation |
+| Metadata routing | `metadata_records`, activation widget and contract authoring now distinguish target workspace from central `metadata_workspace_id` | Preserve the latest-main central Metadata routing fix. Environment workspace, deployment workspace and physical destination are not interchangeable |
 
-Preserve extra user extension columns. If they themselves are nested, report the table as still having SQL-invisible columns; do not silently convert unrelated data or claim whole-table SQL compatibility. Retired tables are advisory inventory, not automatic migration inputs.
+Current `METADATA_DATA_CONTRACT` stores globally frozen versions with `evidence_workspace_id`, **not** independent environment activation or a global `is_active` field. Today's active Contract is inferred from approved pipeline participation. `activation_impact` currently rejects a second writer universally. The public setup modes are already Dry Run, Ungoverned and Governed; old `testing` plans remain recognized by Run/finalization code, but the current public setup does not offer a new Testing mode. Do not recreate a Testing lifecycle to activate the new model.
 
-## 3. Target physical schemas
+The repository release workflow builds versioned wheels and SHA256 checksums; it does not currently establish a tenant-specific pipeline notebook deployment attestation. That CI/CD integration is an implementation prerequisite, not an existing capability.
 
-### Operational storage and serialization
+### Current physical schema inventory
 
-Retain the twelve existing table names, routing, scalar fields and audit fields. Change only the twelve inventoried physical types to `StringType`, retaining column names (including Registry/Run names without `_json`). Logical schemas remain separate typed contracts for validation and Spark `from_json`; do not change logical arrays into strings throughout application code.
+There are twelve canonical metadata tables and twelve top-level native nested columns, with no additional top-level Map/Array/Struct found in their canonical schemas:
 
-Use shared architecture-visible codec functions in `config/metadata_schemas.py` (or the existing owning shared modules if that avoids cross-domain dependencies), with no compatibility wrappers. Encode once on physical write, decode once on physical read. Audit all direct DataFrame reads/writes, `createDataFrame`, coercion, Spark literals, `.items()`, `.get()`, `explode`, `event.*`, full-row CAS and exact read-back. `coerce_metadata_row_types` must not silently convert dictionaries to Python `str(dict)`.
-
-Codec rules: strict JSON, duplicate-key rejection, finite numbers, schema/type/range validation, deterministic object-key encoding, preserve array ordering, explicit null fields, ISO microsecond timestamps with UTC instant normalization matching `pipeline_record_content`. Decode typed Registry timestamps to datetimes where existing callers require them; Run profile `completed_at`/`executed_at` are logically strings today and must remain strings in hash-bearing logical objects. Do not change `canonical_pipeline_json`, `manifest_digest`, Contract payload bytes, approval IDs or existing Test/Agreement hashes as a side effect. Test these with retained pre-conversion approvals.
-
-Add **one proposed scalar** to Run: `reporting_snapshot_sha256:string`, digest of normalized committed Run content excluding this digest itself. Compute it in the same authoritative Run commit; include it in physical CAS/read-back. This is a reporting join fence, not approval authority or a replacement for Test hashes. Do not expose it in existing public Run return dictionaries or include it in `pipeline_record_content` used for legacy approval hashes. Separate physical encoding from logical return values explicitly. Historical rows are populated atomically during supported migration, including JSON-only Run schemas missing this new field.
-
-This additive fence costs a schema change but avoids a duplicate Run header table and prevents children from a previous Run state joining a newer authoritative header. Without approval of this field, use a complete versioned Run reporting snapshot including a duplicated header; do not pretend direct joins to the current parent are coherent.
-
-### SQL type contract
-
-All proposed fields use only Spark `string` → SQL `varchar`, `integer` → `int`, `long` → `bigint`, `boolean` → `bit`, `timestamp` → `datetime2`, `double` → `float`, or existing `date` → `date`. No physical Array, Struct, Map, binary, variant or timestamp-NTZ in new tables. Use UTC for timestamp instants; retain schedule timezone and local times in strings. Hash/key values remain strings; do not infer UUID SQL types. Validate actual SQL endpoint lengths and Unicode behavior on Fabric before release, especially long JSON and arbitrary operation keys. A SQL string mapping does not guarantee unrestricted payload length.
-
-Keys below are **logical, application-validated uniqueness/FKs**, not enforced Lakehouse constraints. All new tables live in the configured Engineering metadata schema and use the configured Metadata Lakehouse. Proposed names below are proposals, not existing canonical tables.
-
-Common projection columns: `generation_id:string`, `source_delta_version:long`, `projected_at:timestamp`, `projection_schema_version:integer`. A Registry row also carries `registry_token:string`; each Run child carries `run_id:string`, `reporting_snapshot_sha256:string`. Include `generation_id` in every physical projection key. All unspecified IDs/names/status/hash/mode/reason fields are strings; counts/ordinals/booleans/times have explicit types below. Registry generation is global for that physical singleton, not one independent publication per workspace.
-
-### Registry projections: six tables
-
-| Proposed table | Grain and key within generation | Physical business columns |
+| Table and physical fields | Current type | Target decision |
 | --- | --- | --- |
-| `METADATA_PIPELINE_REGISTRATION` | `(workspace_id,pipeline_id)` | All scalar `REGISTRATION_FIELDS`, including `registered_at:timestamp` and all eight original audit fields (audit `_committed_at:timestamp`, others string) |
-| `METADATA_PIPELINE_WORKSPACE` | `workspace_id` | `workspace_id`, `activation_revision` (from `revisions[].revision`) |
-| `METADATA_PIPELINE_APPROVAL` | `approval_id` | All approval scalars: approval/pipeline/workspace IDs, pipeline name/version, testing run ID/hash, Agreement ID/version/hash, original audit; replace nested warnings with `warnings_json:string`, `warning_count:integer` |
-| `METADATA_PIPELINE_SELECTION` | `(workspace_id,pipeline_id)` | `workspace_id`, `pipeline_id`, `approval_id`, `activation_revision` |
-| `METADATA_TABLE_OWNERSHIP` | `(workspace_id,table_id)` | `workspace_id`, `table_id`, `contract_id`, `contract_version:integer`, `payload_sha256`, `writer_pipeline_id` (nullable), `reader_count:integer`, `is_shared:boolean`, `activation_revision`; flattened destination below |
-| `METADATA_TABLE_READER` | `(workspace_id,table_id,reader_pipeline_id)` | Workspace/table/reader IDs and `activation_revision` |
+| Registry: `registrations`, `revisions`, `approvals`, `selections`, `table_ownership`, `reservations` | Six `array<struct<...>>` columns; inner warnings/readers/tables/destinations also contain arrays/structs | **Remove from active schema after verified archival/mapping.** Replace with scalar activation records and one JSON coordination field, not six renamed JSON collections |
+| Run: `operations`, `profiling`, `failures` | Three `array<struct<...>>`; operations contain destination, stages and source associations; profiling contains physical descriptor | **Keep / Convert** physical types to validated `string`; keep logical dictionaries/lists and historical evidence |
+| Catalogue: `load_strategy_parameters_json` | Struct with watermark/effective columns and key/tracked arrays | **Keep / Convert** to validated JSON string |
+| Catalogue: `scheduled_refresh_json` | Struct with status, schedule array and local-time arrays | **Keep / Convert**; successful writes still discover/persist schedules; current contract authoring strips them from contract payloads |
+| Catalogue: `profile_key_candidates_json` | Struct with discovery status/width, candidate arrays and long/double metrics | **Keep / Convert**; preserve widget discovery and large counts |
 
-Destination flattening: `destination_workspace_id`, `destination_item_id`, `destination_kind`, `destination_schema`, `destination_table_name` (all strings; schema may be null). Do not confuse destination workspace with execution workspace.
+Keep existing relational Steward, Agreement, Contract, Profiled, Frequency, Lineage, Guardrail Results, Processing State and Data Access designs. Contract payload and other existing JSON strings remain scalar. Preserve unrelated extension columns; report any unsupported nested extensions rather than silently rewriting user data or claiming full SQL visibility.
 
-`is_shared` means more than one **distinct participating pipeline** in union of writer and readers; a pipeline both reading and writing the same table counts once. It does not mean data-access permissions or external sharing. Reader-only shared tables are valid.
+## 3. Three execution modes and identity
 
-Selections carry their revision to simplify reporting; workspace rows preserve environments with no selections. Do not add a separate activation event or revision-history table: the authority retains current revisions/selections and approval history, not every past selection transition. The selection's approval is the authorizing decision; the approval label is not a workspace revision. If activation history is required later, approve a separate committed event-history design rather than inventing dates from current-state snapshots.
+### Responsibilities
 
-Existing Lineage records observed source/target participation, often after successful publication, with notebook audit; it cannot replace active ownership/readers or an approval-linked registration. Do not overload it with proposed activation authority.
-
-### Run children: five tables, reusing the existing Run header
-
-| Proposed table | Key within one Run generation | Physical business columns |
-| --- | --- | --- |
-| `METADATA_PIPELINE_RUN_OPERATION` | `(run_id,operation_key)` | `operation_key`, `table_id`, `pipeline_role`, nullable exact Contract ID/version:int/hash; flattened destination; `read_mode`, `write_mode`, `query_sha256`, `incremental_target_table_id`, `status`, `started_at:timestamp`, `completed_at:timestamp`, `duration_seconds:double` |
-| `METADATA_PIPELINE_RUN_SOURCE` | `(run_id,operation_key,source_table_id)` | `operation_key`, `source_table_id`; application FK to the source-role operation in that Run by table ID |
-| `METADATA_PIPELINE_RUN_STAGE` | `(run_id,operation_key,stage_ordinal)` | `operation_key`, `stage_ordinal:integer`, `stage`, `status`, nullable `evaluation_status` |
-| `METADATA_PIPELINE_RUN_PROFILE` | `(run_id,event_ordinal)` | `event_ordinal:integer`, context key, activity/status, `results_persisted:boolean`, `empty_result:boolean`, snapshot ID, `completed_at_text`, `executed_at_text`, parsed nullable `completed_at:timestamp`, `executed_at:timestamp`, reason, table ID, `row_count:long`, trigger, workspace ID, pipeline run ID, flattened `physical_*` destination fields |
-| `METADATA_PIPELINE_RUN_FAILURE` | `(run_id,failure_ordinal)` | `failure_ordinal:integer`, code, nullable exception type |
-
-Retain event ordinals from the authoritative array, not a potentially nonunique context key. Stages preserve order and unsuccessful historical occurrences; do not deduplicate. No raw failure text or full SQL. Duration is elapsed operation wall clock when both timestamps are valid, otherwise null; flag invalid/negative clocks in synchronization diagnostics instead of fabricating zero. Current persisted stage fields lack durations, and Run lacks persisted row-throughput metrics shown in same-session summaries. Slow **operations** are supported; historical stage duration/throughput claims are not. Adding those measurements is separate scope.
-
-Normalize profile event/status and failures because operational completion gaps and failure-code analysis cannot be answered from existing metric tables. Summary/frequency remain the sole physical metric facts. Warnings remain JSON; add scalar counts only where useful. This avoids new warning, destination, Contract payload, processing-key, schedule or key-candidate tables until concrete reporting requirements justify them.
-
-### Reporting synchronization manifest
-
-Propose `METADATA_REPORTING_SYNC`, with logical key `(source_table_id,scope_id)` where source_table_id is the physical Delta table identity (not a business table ID), and scope_id is `central` for Registry or a Run ID. Fields:
-
-- Strings: `source_table_id`, `scope_id`, `source_table_name`, `generation_id`, `source_registry_token` (Registry only), `source_run_sha256` (Run only), `status` (`ready`/`stale`/`failed`/`building`), `last_error_code` (safe), `publication_token` (manifest CAS).
-- Longs: `source_delta_version`, `observed_delta_version`, `projected_row_count` (total across child tables).
-- Integer: `projection_schema_version`.
-- Timestamps: `source_committed_at`, `last_observed_at`, `synchronized_at`, `last_attempt_at`, `last_failure_at`, `sql_verified_at` (nullable).
-
-`generation_id` and its source fields always describe the last **complete published** generation. Before first publication they are null. Attempts/failures never advance that pointer or overwrite the last complete source identity. A status is a stored observation, not a live freshness guarantee; last-observed age must always be visible. Store per-child row counts/checksums in each projection table's Delta commit metadata and validate them before publication; zero-row tables still have a validated completion marker in that commit. Do not require an extra nested manifest column.
-
-## 4. Authority and reporting synchronization protocol
-
-### Registry family
-
-1. Read the Registry's exact committed Delta snapshot at version V and decode/validate the singleton. Retain token T, source physical table identity and source commit time. Do not synchronize from the caller's uncommitted state or from a CAS request that later failed.
-2. Build a deterministic generation ID from source table identity, V and projection-schema version. Flatten the six projections. Validate uniqueness, selection → approval → registration/workspace links, ownership/readers/contracts and source counts. Registry mutations may advance the token without changing an activation revision.
-3. Idempotently write each generation as a bounded generation replacement/MERGE, including removal of surplus rows **only within that unpublished generation**. Never overwrite the live whole reporting tables. Verify every table against its expected data and completion marker, including empty projections. A retry after a crash reconstructs the same output.
-4. Publish the manifest pointer in one matched CAS (initial row creation must be concurrency-safe). Reject lower V, conflicting output for the same generation, stale publication tokens and incompatible transform versions. Delta version orders committed snapshots; random Registry tokens/revision strings cannot order freshness. A superseded builder cannot move the pointer backwards.
-5. Read the current Registry head to record observed lag. The published generation remains valid as an **as-of snapshot** even if newer authority exists. Retry/coalesce to the newest head on the next synchronization; no need to materialize every short-lived reservation-only commit.
-
-Atomicity spans each Delta table and the manifest pointer, not all tables. Completed rows precede pointer publication, so Spark readers following the pointer see a complete generation. Raw unfiltered tables intentionally contain old/unpublished generations; their names must not imply “current”. Readers must filter to the manifest generation.
-
-### Run family
-
-Read committed Run snapshots, validate and flatten all five children for each changed Run. Generation is deterministic from source table identity, Run ID, committed `reporting_snapshot_sha256` and transform version; include source Delta V as provenance. Publish one manifest pointer per Run only after every child is complete. A new incomplete/failed Run state is legitimate reportable state; do not wait only for successful terminal runs. Explicitly finalized Tests use their committed Run after diagnostics publication.
-
-Join existing Run header to manifest on Run ID **and** `reporting_snapshot_sha256=source_run_sha256`, then children on Run ID and generation. A newer parent with old children is “awaiting synchronization”, not zero operations or success. Parent-only failure/status reports can use the existing scalar Run independently while displaying child freshness. A missing manifest must remain visible through a left join.
-
-For initial implementation use a distributed, batched scan of Run IDs/digests versus published manifests; no driver collection of all Run history. Full rebuild is supported from current committed rows without Change Data Feed. Incremental CDF can be a measured optimization later, with full-scan fallback after retention gaps. Terminal runs need no regeneration unless transform version changes. A rebuild at the same source version may replace output only under an explicitly ordered new transform version, never an arbitrary competing builder.
-
-### Invocation, failures and recovery
-
-Use a single domain-owned synchronization implementation shared by setup/rebuild and an explicitly runnable repair path. Planned owner: architecture-visible functions in `activated_pipeline/shared.py` for Registry projections and `pipeline/shared.py` for Run projections, reusing configured I/O and schemas. Do not add a generic mutation framework. A maintainer-facing repair callable, if approved, needs its own public owner file and exports, not a shim.
-
-After confirmed authority commits, attempt synchronization as a best-effort reporting step. It must be outside Registry CAS/Run commit exception scopes and outside lost-acknowledgement content comparisons. In particular, reporting failure must not replay admission, leave a false authoritative failure, invalidate Test hashes or hide a successful activation. Return/log a safe reporting-lag diagnostic through existing setup/warnings conventions. If even manifest failure recording fails, age/source-version comparison still exposes missing freshness.
-
-Post-commit hooks alone are insufficient: a process can die between authority commit and hook. Initial proposal: a separately scheduled repair sweep every five minutes, plus explicit setup/rebuild and post-commit attempts; scheduling infrastructure and freshness SLA need approval. Coalesce Registry work and rate-limit post-commit attempts to avoid eleven child writes on every reservation/Run update. No projection catch-up on the authorization critical path is required.
-
-Retention: retain current and previous complete Registry generations plus generations pinned by an active report refresh, and a configurable grace period exceeding the longest report refresh/SQL synchronization delay. For Run, retain the published generation and the same grace protection. Cleanup is a separate reviewed maintenance operation, never deletion of authoritative rows. Failed/unpublished generations can be rebuilt; do not use a timeout alone to delete an active builder's staging files.
-
-### SQL endpoint and Power BI consistency
-
-SQL endpoint table synchronization is asynchronous and independent for each table. A manifest row becoming visible in SQL does **not** prove all child files/rows are visible there. `sql_verified_at` records a bounded observation only; it is not a distributed commit barrier.
-
-For the first release, use Power BI **Import with controlled refresh** for consistent multi-table reports. The refresh controller captures Registry generation and per-Run pointers once, checks SQL visibility/schema and expected per-table keys/counts against pinned Spark output, imports all tables filtered to those captured identities, then atomically publishes the semantic-model refresh. If verification fails/times out, keep the previous successful model and show its as-of time. Do not reread “latest generation” independently for each table. Use typed physical columns, not Power Query JSON expansion.
-
-Direct Lake/DirectQuery may expose temporary stale/partial discovery across SQL tables. They need a tested generation-pinning/visibility strategy before claiming consistent dashboards. Simple latest-manifest views can be convenient SQL adapters over these physical tables but are not a replacement for physical facts, and do not alone solve endpoint visibility races. Live never uses any of these paths.
-
-## 5. Minimum Power BI model and question coverage
-
-Build stable composite relationship keys in the semantic model (or approved scalar hash keys if needed); Power BI relationships are not composite SQL FKs. Avoid ambiguous automatic many-to-many paths and bidirectional filtering. Every Registry relationship includes the same generation; Run child relationships include Run ID and generation/hash fence.
-
-| Question | Physical facts and join path |
-| --- | --- |
-| Registered pipelines | Registration; logical key workspace + pipeline; use a distinct pipeline dimension in the semantic model for cross-workspace identity |
-| Active per workspace | Workspace → Selection → Registration; Selection → Approval. Left join from Workspace preserves zero-active environments. Use configured workspace identity; display environment labels from existing configuration/semantic dimension, not an invented persisted environment field |
-| Authorizing approvals | Selection.approval_id → Approval → existing Run by testing_run_id; Approval → Agreement by `(agreement_id,agreement_version)`; retain hashes as verification fields |
-| Active table Contract | Ownership `(workspace_id,table_id)` → Contract `(contract_id,contract_version)`; compare stored payload hash. Contract status alone does not mean active |
-| Writer/readers/shared | Ownership.writer_pipeline_id → Registration in same workspace; Reader → Ownership and Registration; use `is_shared` definition above. Reader membership comes from committed active authority, not historical operations |
-| Failing pipelines | Existing Run scalar status/workspace/pipeline, completion time; include incomplete and currently running separately from terminal failed. Define “latest” with started_at plus run_id tie-breaker, never assume run IDs sort by execution time |
-| Failed/slow operations | Run → fenced Operation; status and duration; Stage drilldown; Failure for run-level code. No fabricated operation-level failure code FK because current failures do not retain operation identity |
-| Source associations | Operation → Run Source → source-role Operation by table ID within the same Run. This is declared participation, not proven DataFrame transformation lineage |
-| Profile distributions | Existing Profiled (`profile_id`, snapshot, workspace/table/column) and Frequency (`frequency_id`, snapshot + workspace/table/column, nullable profile_id); profile event joins via snapshot and context/workspace/table |
-| Last synchronized | Reporting Sync: source/observed versions, last attempt, last complete sync, failure code, SQL verification and last report refresh time |
-
-Use a semantic Table dimension from Catalogue **table-level** rows only; column rows form a separate table/column dimension. Catalogue has multiple physical rows per table across columns/workspaces; never join `table_id` directly to the unfiltered full Catalogue as a one-side dimension. Observed Lineage remains a separate historical participation fact and Data Access a separate permission snapshot fact.
-
-Profiled key is `profile_id` (derived from snapshot + column); Frequency key is `frequency_id`. Standard relationship uses non-null `profile_id` plus matched snapshot/workspace/table/column checks. For frequency-only profiles, use a distinct snapshot/table/column dimension and left joins; never invent summary rows or drop distributions for a null profile_id. Run Profile can have multiple activities/events for one snapshot, so aggregate it before joining metric facts to avoid multiplication. Guardrail Results are rule-level: aggregate or drill through by Run/table/Contract/rule rather than multiplying operation/profile measures.
-
-Preserve original audit timestamps and source timestamps. `projected_at` and `synchronized_at` are reporting transport times and must not be used as original registration/approval/execution dates.
-
-## 6. Idempotent setup migration and recovery
-
-### Supported inputs and preflight
-
-`setup_metadata_tables()` becomes the automatic entrypoint for the approved conversion; no manual drop/reset is required. It recognizes **enumerated** physical schema signatures, not arbitrary coercible data:
-
-| Input | Action |
-| --- | --- |
-| Missing table | Create canonical string schema with `errorifexists`; seed Registry once with six encoded empty arrays, existing authority ID/token/audit rules. On creation race, reread and validate the winner; never overwrite it |
-| Current native schema | Strictly validate logical values; convert affected fields and data in a pinned transaction; preserve all scalar/audit values |
-| Already target JSON schema | Validate all documents and Run digest if present; no schema/data rewrite when canonical/valid |
-| Supported historical JSON without Run digest | Preserve documents/decoded meaning; atomically populate digest without changing existing evidence hashes |
-| Mixed native/string affected columns | Classify each field independently, decode/validate, encode canonical target; one commit per affected table |
-| Historical Catalogue blank JSON or list-only candidates | Retain existing documented interpretation: blank/whitespace → SQL null; candidates list → object with null status/max width, ordered candidates. Do not apply this exception to Registry/Run |
-| Unknown types, missing required Registry/Run collections, retired authority layouts, corrupt documents, duplicate identities | Fail closed with table/column/reason and recovery guidance; no inference from current latest Contracts, no automatic reset |
-
-At setup start, preflight all three affected authoritative tables and configured routes before mutation. Record source table IDs, versions, protocol, properties and schema signatures. Registry/Run require exact supported field sets (except explicitly allowed migration additions); Catalogue retains additive evolution and unrelated extensions. Missing required facts in old Preview models remain an explicit reconciliation task under existing guidance. This conversion does not reinterpret retired Activation State or Processing State schemas.
-
-### Writer coordination and commit design
-
-A Delta metadata-changing commit conflicts with concurrent writers at that commit; it does not permanently fence an old notebook that starts a later transaction. Therefore **drain/pause all affected writers and activation and restart them with the new package before resumption**. This deployment prerequisite must be documented; automatic setup conversion does not imply zero-downtime mixed-version support.
-
-No reliable cross-table deployment lock currently exists. Do not infer quiescence from an empty reservation list, and do not automatically clear abandoned reservations. Before conversion reconcile existing live/rebind reservations and in-flight writes. Runtime schema guards in the new package reject old physical types and instruct setup; old packages are not allowed to coexist. Retain deployment access controls through the conversion window.
-
-1. Pin the transaction's source snapshot, `readWholeTable`, source files, schema and table identity; reread from that exact version, not the earlier probe.
-2. Validate **all rows** and logical nested types, including preserved strings. Materialize durable staging at a unique configured-Metadata sibling path. Staging severs read lineage before replacement. Validate row multiset, preserved scalar/audit fields, semantic nested equality, uniqueness/reference rules and digest/evidence invariance before commit.
-3. Change physical schema and remove/add all replacement files in the **same optimistic Delta transaction**. Preserve Delta identity, properties, protocol, partitioning and unrelated column mapping IDs/physical names; changed nested subfields are removed from the physical schema only as part of their parent string conversion. Include migration ID/version, pre-upgrade Delta version and target schema version in commit metadata.
-4. Preserve all existing transaction identity actions, especially Run's first-publication deduplication history. Do not clone-and-swap tables, alter table IDs, or use a normal overwrite after a check. Verify Fabric's Delta transaction API for supported runtime versions before release; existing Catalogue code uses internal JVM APIs and Delta constructor-version handling, not a portable multi-table transaction service.
-5. On Delta conflicts, discard/revalidate the stale attempt and reread committed head. If another setup already completed, validate and no-op. Retry only bounded, recognized conflicts; malformed data/auth/storage failures stop. Never retry an uncertain commit by replaying pipeline/business operations.
-6. Read the exact committed version back and compare schema plus before/after semantic **multisets**, preserving duplicate Catalogue rows and unrelated extensions. Then compare current head for intervening writes. Only verified authority may initialize projections.
-
-Do not add automatic schema merging to Registry/Run that silently reintroduces native columns. All direct writers and readers must move with the same package release. Setup can commit Catalogue, Registry and Run separately: no global atomicity is claimed. A partial upgrade leaves data preserved but operational readiness blocked until every required authority has the target schema and validation succeeds. Existing per-table setup results should retain created/evolved/validated/failure distinctions and add migration versions/reporting warnings without renaming public fields.
-
-### Value preservation rules
-
-- SQL null means absent/uncaptured. JSON `[]` means an explicitly empty collection; `{}` means an empty object, interpreted with the logical contract's nullable fields. Never serialize SQL null as the text `"null"`, and never turn empty lists into SQL null. Required Registry/Run collections must remain arrays; null is invalid. Preserve historical scalar empty strings where they are valid.
-- Reject duplicate JSON keys, trailing data, unknown unsupported fields, wrong root types, null elements where forbidden, booleans presented as integers, overflow, NaN/Infinity and invalid timestamps. Do not let permissive Spark `from_json` silently turn invalid values into null; use strict validation first and fail-fast decoding thereafter.
-- Preserve order of arrays, all nested null fields, long counts beyond 2^53, integer bounds, finite floating-point values and Unicode. No lossy intermediate conversion through JavaScript/float for integer counts.
-- TimestampType values use UTC instant/microsecond normalization consistent with existing hash/read-back logic; fix Spark session timezone during conversion. Keep timezone offsets/local schedule intent and existing string timestamp semantics. Compare pre/post decoded content and all retained Test hashes. JSON text itself need not equal historical whitespace/key order unless referenced by an existing hash; Contract payload JSON bytes are never rewritten.
-- Catalogue `coalesce(source,target)` behavior must preserve its current null-versus-explicit-empty distinctions. Update `_persist_grain_candidates` to write a validated encoded string instead of using the old struct schema. Decode Catalogue before draft/source-drift/widget consumers.
-
-### Recovery, rollback and repeated setup
-
-Before commit interruption: source remains authoritative, staging is disposable after confirming no live builder uses it. Commit with lost acknowledgement: inspect table identity/history/schema and migration metadata, validate committed data and rerun setup; never assume failure means no commit. A bad-data/unsupported-schema failure performs no commit on that table. Post-commit verification failure blocks readiness and retains recovery data; no automatic restore.
-
-Record per-table pre-upgrade and committed versions and retain durable backups/files beyond the acceptance period; suspend vacuum that would remove recovery data. No automatic rollback over later writes. An offline restore is permitted only after stopping writers, confirming the head is exactly the migration commit, and deploying a mutually compatible previous package/schema pair. Because migration spans three tables, rollback/recovery must reconcile the entire package/schema set. If later valid writes exist, use a reviewed forward repair from retained versions and new writes; a blanket Delta RESTORE would lose them. Business target/Processing State boundaries must remain intact.
-
-Repeated successful setup validates target documents without re-encoding/recommitting authority. Validate complete projections and reuse their generation when source/transform is unchanged. On partial projection initialization, rebuild/retry only derived output. Setup operational readiness and reporting readiness must be distinguishable; a projection failure cannot masquerade as fresh reporting or corrupt operational authority.
-
-### Fabric acceptance gate
-
-In a representative schema-enabled Lakehouse with custom configured governance/engineering schemas: migrate fresh/native/string/mixed copies; validate SQL endpoint discovery of all scalar columns; compare SQL types, row counts, Unicode/large JSON, keys and typed timestamps against Spark. Check actual endpoint propagation and empty-table visibility, then exercise controlled Power BI refresh with an interrupted projection generation. Fail the rollout on missing fields/truncation or unverified Delta conflict semantics. Local tests cannot establish these Fabric properties.
-
-## 7. Tradeoff analysis
-
-| Criterion | A. Relational authoritative Registry | B. Atomic Registry + projections (recommended) | C. JSON-only Registry |
+| Capability | Dry Run | Ungoverned | Governed |
 | --- | --- | --- | --- |
-| Implementation complexity | Highest: replace coordination across registrations/approvals/ownership/admission | Moderate: codec/migration plus replayable projection publisher | Lowest persistence change; decoder audit still substantial |
-| Operational safety | Depends on new transactional protocol | Preserves existing singleton and whole-Run invariants | Preserves existing invariants |
-| Concurrency | Could scale by workspace/entity, but cross-table ownership/admission needs transactional storage or a serialized coordinator | Existing singleton contention remains; reporting never blocks authorization | Same singleton contention |
-| Data consistency | Atomic only with redesigned coordination; separate Delta MERGEs are insufficient | Strong within authority, explicit eventual consistency to generation-pinned reports | Strong authority; consumers implement parsing independently |
-| Reporting latency | Low after commits plus endpoint lag | Projection/sweep delay plus endpoint/semantic refresh | Endpoint lag plus per-consumer parse work |
-| Power BI usability | Excellent relational facts | Excellent typed relational facts with freshness contract | Poor for reader/source/stage relationships; fails stated requirement |
-| Migration risk | Highest: changes authority and transaction boundaries | Medium: lossless type conversion with retained authority/projection rebuild | Medium-low, still breaking physical types and hash/decoder risk |
-| Maintenance burden | New coordination/transaction architecture | One codec contract, explicit publisher/rebuild, generation retention | Low library code; duplicated downstream JSON models and correctness burden |
-| Volume/extensibility | Best potential if authority storage redesigned carefully | Singleton rewrite/approval validation grows; Run projections scale incrementally | Same authority growth, increasingly costly reporting parsing |
+| Transformations and physical reads | Yes | Yes | Yes |
+| Publish business data | No | Yes | Yes |
+| Profiling | Yes, preview/in-memory as today | Yes, persisted under current policies | Yes, persisted under activated Contract policies |
+| Require Data Contract | No | No | Yes, independently active for every participating Table ID |
+| Guardrails | Optional selected Contract preview; report blocking outcomes without implying publication permission | No activated-Contract enforcement; retain existing structural/publication safety checks | Enforce exact pinned Contract; block noncontinuing results before publication |
+| Pipeline activation | No | No | Required for workspace + Pipeline ID |
+| Verified deployment | No | No | Required, subject to the externally verified assurance gate in section 5 |
+| Operational persistence | Preserve current Dry Run prohibition on Registry, Run, checkpoint and profile mutations | Run, profiles, Catalogue, Lineage and Processing State as applicable | Same operational facts plus pinned activation/deployment identities |
 
-B is the simplest option that satisfies both safety and physical reporting requirements. Its projections do not solve the singleton's scalability. Today each Registry mutation serializes retained approvals and `read_pipeline_authority` reconstructs/verifies retained references; admission can scale poorly as history grows. Measure Registry JSON bytes, CAS conflict rate, admission latency, approval count, projection lag and Run scan costs. Establish tested limits during Fabric validation. Do not silently archive approval references still needed by Live or prune permanent registrations. Revisit A with measured pressure and an explicit new transaction service/partition strategy, rather than pretending independent relational Delta tables can share current CAS guarantees.
+No target-publication or checkpoint advancement may occur from Dry Run. Successful writes still do not prove whole-notebook completion; retain explicit `finalize_pipeline`, incomplete/failed outcomes and safe failure summaries. Arbitrary user Python/SQL with direct write credentials cannot be sandboxed by a mode flag: these guarantees apply to FabricOps-controlled publication. Production permissions and deployed code must prevent bypass.
 
-## 8. Ordered implementation PR plan
+**Keep the existing Ungoverned protection by default:** it cannot write a table reserved for governed publication in that environment. Extend the check to an active table-contract binding as well as governed pipeline participation, and compare physical destination aliases. This does not require Ungoverned to have a Contract; it prevents it bypassing governance on a protected target. Allowing Ungoverned writes to protected targets would be a separate weakening requiring explicit approval.
 
-No PR is opened by this planning task. Each PR must keep `main` deployable; do not merge canonical schema flips separately from their migration and all required consumers. Proposed new files are explicitly labeled. Paths below are repository-relative.
+### Identity semantics and deliberate API changes
 
-### PR 1 — Logical codecs and authoritative read/write boundaries
+- **Pipeline ID:** existing lowercase UUIDv4 logical identity, generated once and stored in version-controlled pipeline metadata/source. It survives promotion, redeployment and notebook ID changes. It is not derived from Git commit, workspace, read/write combination or notebook ID.
+- **Notebook ID:** physical deployment identity within a Fabric workspace. Replacing it requires new activation, not permanent registration/rebind history. One notebook may contain multiple explicitly identified pipeline entrypoints; do not impose universal notebook-ID or Read/Write-combination uniqueness across pipelines.
+- **Activation ID:** new immutable UUID for one committed pipeline or table-contract activation. Replacing current state changes this ID; leases pin it. This is not a separately approved pipeline version lifecycle.
+- **Git commit:** repository-qualified full object ID recorded by trusted CI/CD. A moving branch/tag or notebook-supplied string is not proof. **Deployment ID** identifies the CI/CD release into Fabric, including its environment/dependency artifact.
+- **Run ID:** execution identity allocated once; independent of activation ID and Fabric job/activity/reference IDs. Persist their correlation where available; do not assume runtime `currentRunId` exists in every context.
 
-- **Objective:** centralize logical/physical serialization while keeping current native schemas and behavior on main until the cutover PR. No transitional public API. Dependency: architecture decisions approved.
-- **Files:** `src/fabricops_kit/config/metadata_schemas.py`; `src/fabricops_kit/activated_pipeline/shared.py`; `src/fabricops_kit/pipeline/shared.py`; `src/fabricops_kit/pipeline/pipeline_write.py`; `src/fabricops_kit/pipeline/check_source_drift.py`; `src/fabricops_kit/data_contract/shared.py`; `src/fabricops_kit/widgets/widget_data_contract.py`. Change public owner files only where source audit shows a direct physical boundary. Codec string mode is used for tests, not dual-schema runtime fallback.
-- **Source:** separate logical validation from physical schema, route native boundary encoding/decoding through shared owners, add strict JSON codec and golden fixtures; retain native output until PR 2. Explicitly cover `authority_records`, `_read_pipeline_run_rows`, `metadata_records`, `start_pipeline_session` direct Registry reads, Spark profiling-history decode, Catalogue literals and draft/widget readers.
-- **Tests:** `tests/unit/test_catalogue_nested_types.py`, `test_pipeline_registry.py`, `test_pipeline_run_records.py`, `test_pipeline_run_evidence.py`, `test_table_profiling_schedules.py`, `test_contract_authoring_services.py`, `test_widget_data_contract.py`; new `tests/unit/test_metadata_serialization.py`. Retained approval/Test hash equivalence, timestamp and numeric round trips, corrupt JSON rejection. Native-path regression remains required.
-- **Migration validation/acceptance:** no physical migration yet; golden logical content/hashes and public dictionaries match. Native Registry stale-CAS/Run terminal tests pass.
-- **Generated:** directly affected function references and call-flow artifacts only under ownership procedure below; no metadata physical reference flip yet.
-- **Rollback:** revert code-only PR with native schema unchanged.
+Recommend requiring the stable Pipeline ID for persistent Ungoverned and Governed calls. Dry Run may allocate a session-only ID. Remove registration-only `new_pipeline`, `previous_workspace_id`, `previous_notebook_id` and rebind outputs in the approved breaking release; provide a one-time migration report listing existing IDs to put into source. Do not replace registration history with automatic re-registration under a new name. This loses automatic recovery of an unactivated notebook's UUID from Registry and must be approved/documented.
 
-### PR 2 — Atomic setup conversion and canonical string cutover
+## 4. Minimal Registry and independent Contract activation
 
-- **Objective:** ship all twelve physical conversions, supported automatic migration and Run reporting digest together. Dependency: PR 1 and validated Delta runtime approach.
-- **Files:** `config/metadata_schemas.py`, `config/setup_metadata_tables.py`, `activated_pipeline/shared.py`, `pipeline/shared.py`, `pipeline/pipeline_write.py` under `src/fabricops_kit/`; any direct boundary owners identified in PR 1; `scripts/reference_docs_metadata.py`; `AGENTS.md` (replace native physical descriptions); `docs/maintainer/metadata-v2-target-model.md`. Preserve historical release documents/manifests.
-- **Source:** replace Catalogue's canonical migration direction in its existing owner; no competing old conversion path. Add enumerated Registry/Run migration, logical/physical digest separation, strict target guards, fresh creation race handling, readiness blocking for partial schema upgrade. Keep current setup public parameters/results and Run return shape.
-- **Tests:** update `tests/unit/test_config.py`, `test_metadata_schemas.py`, `test_catalogue_nested_types.py`, `test_metadata_writer_ownership.py`, `test_scheduled_refresh.py`, `test_pipeline_profile_observations.py`, `test_finalize_pipeline_summary.py`; extend `tests/integration/test_catalogue_upgrade_delta.py`, `test_pipeline_registry_delta.py`, `test_pipeline_run_delta.py`, `test_joint_pipeline_metadata_delta.py`; new `tests/integration/test_sql_metadata_upgrade_delta.py`. Update native SQL-explode expectations to decoded authoritative Spark and later relational report queries.
-- **Migration validation:** fresh/native/string/mixed including each individual mixed column; blank/list-only Catalogue; unchanged repeated setup; null/empty, UTC microseconds, large longs, duplicate rows/extensions, column mapping/properties/transaction IDs; corrupt/unsupported schema before mutation; setup/writer races, blind appends, lost acknowledgements, pre/post staging interruption, partial three-table recovery. Run exact preexisting approval/Live/profiling scheduling fixtures after conversion.
-- **Acceptance:** row multiset and exact retained approval hashes preserved; no reset; migration rerun no authority commit; stale-CAS/immutable terminal/run first-publication semantics unchanged; targeted real-Delta tests pass and Fabric canary completes before general rollout.
-- **Generated:** metadata schema pages plus directly affected individual function references; machine call-flow output only if its content changes; glossary only if a canonical definition actually changes.
-- **Rollback:** pre-write offline compatible package/schema restoration at exact migration heads; otherwise forward repair. Do not revert to old physical writers while new schemas remain.
+### One physical table, three record kinds
 
-### PR 3 — Registry relational projections and generation publication
+Retain `engineering.METADATA_PIPELINE_REGISTRY` at its configured location, replacing its schema through the controlled migration. Governance authorization is a service/permission responsibility, not a consequence of the physical Engineering schema name. Keep twelve canonical tables overall.
 
-- **Objective:** publish six Registry reporting tables and the synchronization manifest without changing authorization. Dependency: PR 2.
-- **Files:** `src/fabricops_kit/config/metadata_schemas.py`; `config/setup_metadata_tables.py`; `activated_pipeline/shared.py`; `pipeline/shared.py` (registration post-commit integration); `scripts/reference_docs_metadata.py`; `docs/maintainer/metadata-v2-target-model.md`; `tests/unit/test_metadata_schemas.py`, `test_metadata_writer_ownership.py`, `test_activation_state_commit.py`, `test_widget_activate_pipeline.py`; new `tests/unit/test_metadata_reporting.py`, `tests/integration/test_metadata_reporting_delta.py`.
-- **Source:** schemas/routing, pinned snapshot builder, complete-generation validation, manifest CAS, safe post-commit diagnostics, setup initialize/rebuild. No projection reads in admission/activation validation.
-- **Tests/migration:** populated Registry backfill; zero selections/readers; reader-only tables; same pipeline read/write; reference integrity; midway crash; empty projection completion; stale/out-of-order builders; repeated same generation; lost pointer acknowledgement; rejected CAS never projected; synchronization failure after successful activation/registration never changes authority outcome.
-- **Acceptance:** all six physical tables reconstruct one committed Registry snapshot and stale-data status is visible. Custom metadata routing and full rebuild after deleting only disposable test projections work.
-- **Generated:** new metadata references/ownership descriptions and affected function references via owning generator; call-flow output if changed.
-- **Rollback:** disable projection hooks/refresh; preserve authority. Prior projection generation can be reselected only as explicitly stale reporting, never rollback operational state. New derived tables may remain inert; cleanup is separate.
+| `record_type` | Logical grain / record key | Authority |
+| --- | --- | --- |
+| `pipeline_activation` | One current row per `(workspace_id,pipeline_id)`; deterministic `record_id` from kind and those IDs | Activated deployment and operation configuration |
+| `table_contract_activation` | One current row per `(workspace_id,table_id)`; deterministic `record_id` from kind and those IDs | Exact active frozen Contract, independent of any pipeline |
+| `control` | Exactly one row, `record_id='central'` | Global transaction token and transient leases only |
 
-### PR 4 — Run children, repair sweep and Power BI model
+Using the same Delta table is intentional: independent Contract activation is a separate governance action, while its publication, compatibility checks and execution drain must be atomic with pipeline admission. A separate Contract-activation table would require a new cross-table protocol. Do not modify globally frozen Contract rows to mark environment activation, and do not duplicate Contract definitions in Registry.
 
-- **Objective:** five Run child tables, scalable per-Run synchronization and controlled reporting refresh. Dependency: PR 3 (shared manifest publication contract).
-- **Files:** `src/fabricops_kit/config/metadata_schemas.py`; `config/setup_metadata_tables.py`; `pipeline/shared.py`; `activated_pipeline/shared.py` (shared manifest integration if required); `scripts/reference_docs_metadata.py`; new `docs/maintainer/sql-metadata-reporting.md`; approved repair public owner `src/fabricops_kit/config/synchronize_metadata_reporting.py` and `config/__init__.py`, `public_api.py` only if a public repair API is approved. No dashboard frontend changes.
-- **Source:** operations/source/stage/profile/failure schemas, digest-fenced joins, batched digest scan, retries/rebuild, repair invocation and documented scheduling deployment; pinned SQL/Power BI import queries and semantic relationship definitions. No second physical Run header table.
-- **Tests:** extend `tests/unit/test_metadata_reporting.py`, `tests/integration/test_metadata_reporting_delta.py`, `test_pipeline_run_delta.py`, `test_joint_pipeline_metadata_delta.py`, `test_table_profiling_schedules.py`, `test_pipeline_profile_observations.py`; verify partial Running→failed/final updates, superseded Run generation, duplicate failure/profile events, nullable contracts, frequency-only snapshots, query hashes and destination workspace separation.
-- **Migration validation:** full retained Run backfill, digest discovery after lost hook, terminal skip, rebuild at new transform version, no driver history collection; simulate parent advance between child writes and pointer publication. Regression proves runtime profiling still ignores projections.
-- **Acceptance:** every minimum question in section 5 answered from typed physical tables; no JSON expansion in Power BI; failed refresh preserves previous model; source/SQL/report freshness visible; timed Fabric concurrency/propagation canary and chosen SLA pass.
-- **Generated:** new schema references, directly affected public/internal function references and call-flow contract as applicable; no dashboard or release regeneration.
-- **Rollback:** stop reporting repair/refresh, revert projection-specific behavior with operational codec/schema retained, rebuild derived output using last approved projection version. Never revert an approved operational migration as a reporting rollback.
+The sparse row kinds are a tradeoff: SQL/Power BI filters `record_type` into two business datasets; internal control is hidden. They add two business entities and one implementation record, not six lifecycle collections. If maintainers reject mixed record kinds, reconsider an explicitly coordinated authoritative store; do not split them into independently maintained Delta tables as a cosmetic simplification.
 
-### Generator and validation procedure for all implementation PRs
+### Proposed physical columns
 
-Retrieve relevant callable slices using `scripts/query_public_function_call_flow.py` before function-level edits. Update canonical schema/docstrings and `scripts/reference_docs_metadata.py`, never generated reference pages manually. If callable structure/source locations/relationships change, run `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`; commit `docs/reference/_data/public-function-call-flows.json` and its `generated-artifacts.json` timestamp only when contract content changes.
+Every field below is SQL endpoint compatible. Fields unused for a record kind are SQL null. The application enforces required fields and logical PKs/FKs; Lakehouse SQL constraints do not enforce them.
 
-Run `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` for directly affected references, including its metadata-page output, then run it **again and confirm no second-run diff**. Expected directly affected outputs include `docs/reference/metadata.md`, `docs/reference/metadata/*.md`, affected `docs/api/reference/*.md`, `docs/reference/index.md`. `AGENTS.md` also lists `docs/reference/function-call-graph.md`, but that path is absent at this baseline; the existing explanatory page is `docs/function-call-graph.md`. Verify actual owning-generator outputs rather than creating or hand-editing the absent path. Exclude unrelated output churn. Validate affected metadata/reference freshness tests and targeted runtime/Delta tests, Ruff/syntax as appropriate and `uv run mkdocs build --strict` using a temporary site directory. Do not regenerate `docs/assets/public-function-call-flows-dashboard.html`. Do not update release snapshots/manifests/versioning or generated timestamps for validation alone.
+| Fields | Spark physical type / SQL endpoint type | Applicable rows / meaning |
+| --- | --- | --- |
+| `record_id`, `record_type` | `string` / `varchar` | All; stable unambiguous row identity and kind |
+| `workspace_id` | `string` / `varchar` | Both business kinds; canonical execution environment key |
+| `pipeline_id`, `pipeline_name` | `string` / `varchar` | Pipeline; logical identity and display name |
+| `table_id` | `string` / `varchar` | Table-contract; logical governed table |
+| `activation_id`, `status` | `string` / `varchar` | Business kinds; status `active` or `requires_reactivation`. Migration candidates never grant authority |
+| `activated_at`, `activated_by` | `timestamp` / `datetime2`; `string` / `varchar` | Business kinds; original governance decision audit; null for an unactivated migration candidate |
+| `notebook_id`, `git_repository`, `git_commit_sha`, `deployment_id` | `string` / `varchar` | Pipeline; deployment workspace is `workspace_id` initially; cross-workspace notebook execution requires separate approved support |
+| `deployment_manifest_uri`, `deployment_manifest_sha256`, `verification_method` | `string` / `varchar` | Pipeline; immutable trusted CI/CD artifact reference/digest and verified method, not a caller assertion |
+| `operations_json` | `string` / `varchar` | Pipeline; one ordered validated array of read/write descriptors; no duplicate source/target lists |
+| `agreement_id`, `agreement_version`, `agreement_sha256` | `string` / `varchar` | Pipeline; preserve exact current Agreement/effectiveness safeguards rather than silently removing them |
+| `contract_id`, `payload_sha256` | `string` / `varchar` | Table-contract; existing exact frozen version reference and immutable payload hash |
+| `contract_version` | `integer` / `int` | Table-contract; exact version |
+| `token` | `string` / `varchar` | Control only; opaque CAS token changed on every Registry mutation |
+| `leases_json` | `string` / `varchar` | Control only; validated transient coordination array, initially `[]` |
+| `last_governance_change_id`, `last_governance_audit_uri` | `string` / `varchar` | Control; most recent committed governance change and its durable audit snapshot; lease churn does not replace these |
+| `migration_archive_uri`, `migration_archive_sha256` | `string` / `varchar` | Control; immutable pre-cutover evidence archive, not runtime authority |
+| `schema_version` | `integer` / `int` | All; explicit canonical layout |
+| Existing eight audit fields | `_committed_at:timestamp`, others `string` | All; preserve configured audit owner and physical-routing semantics |
 
-The current planning change must run **none** of those generators. Its verification is source/schema inventory, document links/structure, diff scope and a documentation build only if that build can respect the no-generator boundary.
+Do not store pipeline version label history, `approval_id`, `testing_run_id`, workspace revision, copied Contract payloads, or permanent registration arrays in new active authority. Optional CI test evidence belongs in the deployment manifest and activation audit, not a new approval entity.
 
-## 9. Risks and unresolved deployment facts
+### Logical operation configuration in `operations_json`
 
-| Risk | Required resolution before rollout |
+Each descriptor contains `operation_key`, `table_id`, `pipeline_role` (`source`/`target`), resolved `destination` (`workspace_id`, `item_id`, `kind`, nullable `schema`, `table_name`), nullable `read_mode`, `write_mode`, `query_sha256`, `incremental_target_table_id`, ordered `source_table_ids`, and a bounded `write_scope` declaration when required. Use existing operation-key and one-operation-per-table-role validation initially. Identical configurations across different Pipeline IDs are permitted.
+
+Read query hashes retain current integrity checks without storing SQL text. Source associations mean pipeline participation, not proven transformation lineage. Processing keys/watermark/history rules remain in the frozen Contract, not copied into the pipeline record. Descriptor write strategy must agree with that Contract. No complete arguments/settings snapshot or generic configuration fingerprint is introduced.
+
+`write_scope` is either absent (whole target) or a validated declarative scope supported by the writer; an arbitrary SQL predicate or engineer assertion is not accepted as proof of disjointness. Initially scoped Merge/SCD multiwriter activation is blocked until the writer can enforce that scope on both incoming rows and target mutation. Declaring a field does not create scoped-write support.
+
+### Contract activation and enforcement
+
+Freeze remains global and immutable in `METADATA_DATA_CONTRACT`. Activate a Contract by publishing/replacing its table-contract row for exactly one environment/Table ID. No pipeline need be active to activate a Contract. Activating a pipeline requires already active Contracts for all participating Table IDs and compatible operation definitions.
+
+Contract activation reviews all affected active pipeline descriptors, drains their pinned runs and validates compatibility with the new frozen processing/Guardrail expectations. If incompatible, require a coordinated transaction replacing/deactivating the affected pipelines; never silently switch their write strategy. A compatible Contract activation need not create a new pipeline deployment activation, but subsequent runs pin the new exact Contract activation. Current in-flight runs cannot observe a changed Contract.
+
+For every Governed read/write, use the run-pinned Contract version/hash and resolved destination; require publication configuration to match the activated descriptor. Contract payloads remain immutable and separately readable, so no cross-table transaction is required to publish a pointer to an already frozen version. Concurrent draft editing cannot affect it. Protect deletion/change of referenced frozen Contracts/Agreements through permissions, validation and retention.
+
+Consumer/Data Agent resolution uses the active table-contract row, not an arbitrary writer's Contract. Preserve the existing Agreement/effectiveness requirement: a consumer must have unambiguous applicable Agreement context; multiple pipeline Agreements must not be treated as interchangeable. Keep ambiguity fail-closed and design any new explicit consumer-Agreement input as a separately reviewed public contract change.
+
+## 5. Git/deployment verification: evidence, limits and smallest mechanism
+
+### What Microsoft's documented interfaces establish
+
+| Capability audited | Establishes | Does not establish |
+| --- | --- | --- |
+| [Notebook source control and deployment](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-source-control-deployment) | Versionable notebook source; dependent bindings may be remapped during deployment | A commit string embedded in code is not execution attestation; raw source bytes may legitimately differ because of environment binding metadata |
+| [Git Get Status](https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-status) | Workspace sync head and item change/conflict observations; requires contributor-or-higher role and configured Git credentials | A returned `workspaceHead` is not an immutable per-run notebook revision. `remoteCommitHash` is branch state, not the deployed execution version |
+| [Get Notebook Definition](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/get-notebook-definition) | Saved public notebook definition in native Git source or ipynb format | Executing kernel contents, imported modules or a no-change guarantee after the request. It requires read/write notebook permissions, making an external verifier preferable to granting these privileges to every run |
+| [NotebookUtils runtime context](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-runtime) | Read-only notebook/workspace/environment identity and context-dependent run/activity correlation | No documented Git commit/content attestation property. `currentRunId` is documented for reference runs, not a universal job identifier |
+| [Run On Demand Item Job](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job) | Starts a job against an item; [notebook API guidance](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-public-api) describes execution settings and monitoring | Audited contract has no documented “execute notebook at this Git commit” selector or signed running-code digest. Caller-overridden execution settings can change the effective environment |
+| [Environment Git and deployment](https://learn.microsoft.com/en-us/fabric/data-engineering/environment-git-and-deployment-pipeline) | Versionable libraries/runtime settings; Git sync stages environment changes which require publishing | Git sync alone does not prove the published execution environment matches that commit |
+| [Manage environment libraries](https://learn.microsoft.com/en-us/fabric/data-engineering/environment-manage-library) | Full publish produces a stable library snapshot for new sessions; Quick/inline installs can change effective packages | An attached Environment ID alone does not prove loaded dependency versions or prevent a notebook override |
+| [Notebook permissions/modes](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook) | Read/execute can be separated from write; effective workspace/item permissions determine capabilities | “Run only” UI mode does not remove inherited Contributor write access or protect from administrators |
+
+These are documentation observations checked on 3 November 2026, not tests in the user's tenant. **Inference:** there is no established native proof of exact running notebook bytes in the interfaces audited. This is not a claim that no other Fabric capability could ever supply one.
+
+### Recommended deployment assurance contract
+
+Use existing Git/CI provenance and native Fabric operations instead of an in-notebook hashing service:
+
+1. CI resolves a protected repository commit and deployment artifact. Its retained manifest records Pipeline ID, commit/repository, notebook artifact/entrypoint, target workspace/item, operation manifest, published Environment identity, exact FabricOps wheel version/checksum and all custom module/resource/dependent-notebook artifact versions.
+2. A trusted deployer deploys and checks the resulting saved item against its known deployment output using the chosen supported deployment/Git tools. For a Git-synchronized production workspace, record its workspace head and item-change state after synchronization; do not equate a moving remote branch head with the activated commit. For a deployment-pipeline/import target, require the deployer's verified output/provenance; Git status of a different source workspace is insufficient.
+3. Store the immutable manifest in CI artifact storage or a protected deployment artifact location. Governance reads it through the trusted producer and binds its digest/reference in activation. A manifest written by the notebook or a URI/digest pasted by an engineer is insufficient.
+4. Allow Governed batch runs only through a trusted launcher that verifies activation/deployment and relevant current saved state before submission. Serialize deploy/update and execution admission through the **same externally enforced deployment barrier**; drain running/queued jobs before changing notebook or dependencies. Every deployment writer must honor the barrier. A preflight API call alone has a time-of-check/time-of-use race.
+5. Use a fresh, noninteractive execution session with the approved published environment; disable reused interactive/high-concurrency sessions for the initial assurance model. No unpinned `%pip`, `%conda`, remote imports, mutable workspace files or unversioned `%run` dependencies. Required imported Python modules are deployed as versioned wheels/resources with artifact checksums, not inferred from the top-level notebook SHA.
+6. Correlate the Fabric job instance and observed runtime notebook/workspace/environment identity to launcher-controlled admission. Job arguments must be allowlisted and must not override the environment, lakehouse routing, mode or activation identity. A user-supplied `verification_ok` or invocation nonce alone cannot authorize publication. If platform job-to-runtime correlation cannot be verified externally in a supported way, the gate remains blocked; do not build a bespoke token/attestation service to conceal that gap.
+7. Before the first publication, validate pinned activation/Contracts, the admitted job binding, actual operation and target. Keep the deployment barrier through run termination; normal Registry lease release does not release protection for an otherwise still-running job. Preserve safe outcome/provenance in Run.
+
+This yields **process-verified deployment assurance under trusted deployment/permission controls**, not cryptographic proof of the interpreter's executed bytes. Administrators and principals with direct publication/metadata write permissions remain trusted. A self-check in code cannot defend against code allowed to remove that check. If the review requires stronger immutability against those actors, reject this assurance level and keep Governed disabled until a suitable native or external trusted execution facility is selected.
+
+A release-specific notebook/Environment item can reduce update races, but is still mutable by privileged writers and increases item management. Prefer protected deployment plus drain first; approve per-release items only if tenant tests show they are necessary. No custom cell canonicalizer, AST scanner or notebook hashing framework is justified at planning time. Ordinary artifact checksums are retained for provenance, not marketed as running-code attestation.
+
+### Fabric feasibility gate before runtime implementation
+
+Run an isolated tenant experiment with manual edits/unsaved interactive cells, stale/reused sessions, Git sync, deployment rebinding, Environment staging/publish, dependency modification, queued jobs, job setting overrides and an attempted deployment during a run. Verify effective workspace/item roles and service identity support; `Git Get Status`/definition retrieval need stronger permissions than basic execution. Prove an externally enforced deployment barrier and job/session correlation, or document failure and block the Governed implementation PR. This experiment uses test artifacts only and requires its own approved tenant execution scope; none is performed in this planning task.
+
+## 6. Activation transaction, pinning and runtime concurrency
+
+### One-table atomic protocol
+
+The new Registry is relational, but **not** a set of independent authoritative Delta tables. All pipeline activations, independent table-contract pointers and control/lease state commit in one Delta transaction.
+
+Proposed implementation uses the existing domain-specific Delta transaction approach (already present in Catalogue migration), adapted for one governance table:
+
+1. Start a transaction and pin its read version. Read the entire small Registry through that transaction, including the control row and all compatibility/lease predicates. Require exactly one valid control record, unique business keys and the caller's expected token. Never synthesize missing authority at runtime.
+2. Compute the complete resulting activation/Contract/lease set from that snapshot. Validate active references, physical destinations, strategy compatibility, affected-run drain, immutable provenance, operation uniqueness and authenticated governance action. Compatibility is recalculated from current active descriptors, not a separately stored ownership map.
+3. Stage replacement data at an isolated path, retain a whole-table read dependency and atomically commit file removals/additions with the new token. No check-then-overwrite, untracked source read or independent control MERGE followed by activation MERGEs. Start with a full small-table replacement transaction; optimize touched-file replacement only after correctness and measured volume require it.
+4. Use the runtime's validated Serializable conflict behavior. Microsoft's [Fabric concurrency guidance](https://learn.microsoft.com/en-us/fabric/data-engineering/delta-lake-concurrency-control) describes Serializable isolation and read/write conflicts; the repository's Catalogue comment currently mentions default WriteSerializable. Do not copy that assumption into the new protocol: verify effective behavior on every supported local/Fabric runtime, including blind appends and phantom activation rows.
+5. On conflict, abort all proposed changes, reread and revalidate; stale human activation review requires refresh/review rather than silently applying a changed proposal. Bound recognized transient retries. Keep a logical mutation ID and stable attempted token; confirm lost acknowledgement through its committed transaction/history and exact proposed state before another mutation. Later unrelated commits must not cause a committed operation to be replayed.
+
+This changes the persistence algorithm, so it requires real-Delta race tests and a Fabric gate. Internal JVM transaction APIs/version support must be established. If they cannot provide tracked reads and the required conflict semantics, stop and choose a reviewed transactional implementation; do not fall back to independently committed MERGEs. No per-update schema/property DDL is required.
+
+Initial centralized serialization is a conscious safety tradeoff, similar to today's shared token, but no retained approval history is reconstructed on admission. Measure Registry row/JSON size, mutation latency and conflict rate before scaling; this is a starter-kit design, not a claim of unlimited control-plane throughput.
+
+### Minimal leases and changes during runs
+
+The control's `leases_json` contains only transient records:
+
+- **Run admission:** lease ID, Run/Pipeline/workspace IDs, pinned pipeline activation ID, exact table-contract activation IDs/versions/hashes, physical participant identities and trusted deployment/job reference. It protects policy and deployed dependencies for the full run. It does not grant write permission by itself.
+- **Publication slot:** owner Run/lease, normalized physical target, and publication identity/state. Acquire immediately before receipt/retry resolution and publication; hold through physical verification and Processing State acknowledgement. Keep required Catalogue/Lineage finalization retry identity. Default to one publication at a time per physical target even when multiple compatible pipelines are activated.
+
+Use one array with a strict lease kind, not a new reservation-history lifecycle. Release only the caller's exact lease after terminal/cancelled execution; a crashed client leaves fail-closed coordination. Do not expire a lease on time alone: cancel/fence the old Fabric job/session, verify it cannot still write, reconcile target receipts, then release through CAS. A token in metadata is not a storage-enforced fence against an already authorized stale writer.
+
+Activation/contract changes must drain all affected leases; unrelated pipelines can continue. A run pins record activation IDs and contracts, not the global token that changes during unrelated operations. Replacing/deactivating the pipeline or any pinned Contract is blocked until it finishes; never let a governance edit silently change an execution's policy. Deployment/dependency changes are additionally blocked by the external barrier because they happen outside Delta.
+
+Shared target publication slots are keyed by normalized physical destination, not merely Table ID or environment label. Reject aliases mapping multiple logical Table IDs to the same physical target unless explicitly reconciled; otherwise “separate environments” could bypass coordination. Preserve existing configured route/binding verification before every mutation.
+
+Governance authorization must be authenticated and separated from ordinary run/lease mutations through the chosen trusted execution/permission boundary. The current widget checkbox is confirmation, not role enforcement. Delta does not offer column-level permissions separating activation edits from lease updates in this one table: principals with raw write access are trusted. If tenant security requires untrusted execution principals to be technically unable to alter governance, approve a service boundary or a different authoritative store before implementation.
+
+## 7. Multiple writers: compatibility, progress and idempotency
+
+### Strategy compatibility policy
+
+All Governed participants reference the **same independently active frozen Contract** for an environment/Table ID. Today's Contract has one exact processing definition; keep it initially. Different write strategies cannot share that Contract by silently broadening it to an allowed-strategy list. Source Table IDs and identical Read/Write descriptors neither prove conflict nor establish identity.
+
+| Writer strategy/pair | Activation-time decision | Runtime/publication requirement |
+| --- | --- | --- |
+| Append + Append | Allow multiple Pipeline IDs when both satisfy the active Contract, destination, append semantics and progress/idempotency scope. Overlapping rows may be intentional; uniqueness/business-key guarantees must still be demonstrably enforceable | Initially serialize publication/receipt acknowledgement per target; isolate writer progress and retry suppression. Parallel Delta appends are a later measured optimization, not required to permit multiple active writers |
+| Overwrite + any other target writer | Reject by default; whole-target replacement is exclusive. A documented coordinated owner may be proposed, but a schedule string is insufficient | Exclusive publication slot and drain conflicting in-flight writers; no blind retry that replaces a newer valid publication |
+| Merge/Upsert + Merge/Upsert | Compatible only with the same Contract/keys, deterministic conflict policy and enforced nonoverlapping key/partition scopes, or an explicit ordering coordinator | Generic Merge/Upsert is **not** a current `load_strategy` value. Do not add an alias to `scd1`. Scope enforcement/strategy support is separate approval; reject unsupported cases |
+| SCD1 + SCD1 | Multiple active writers only after enforceable disjoint key domains or explicit deterministic ownership/ordering is implemented and tested; otherwise exclusive | Serialized publication initially; same key definition and audit semantics; retries must not replace a later winner. A mutex alone does not resolve contradictory business updates |
+| SCD2 + SCD2 | Strongest restriction: compatible keys, effective-time/tracked-column rules and proven disjoint history domains/order. Otherwise exclusive | Preserve temporal history, late-arrival and latest-publication checks; table-level serialization alone cannot make two conflicting histories valid |
+| Mixed strategies, same target | Reject under the initial exact-processing Contract model | Any future coexistence requires explicit Contract semantics and tested publication protocol, not “Delta is ACID” |
+| Readers with writers | Multiple readers permitted; all use active Contracts; reader dependencies participate in Contract-change drain | Keep actual source/target associations and read snapshots. Do not claim a cross-table business snapshot or dataflow graph |
+
+A physical table relationship child is not needed for integrity at this volume: the tracked transaction validates decoded active descriptors. If measured Registry scans or dashboard refresh are too expensive, consider **one** `(workspace_id,pipeline_id,activation_id,table_id,role,operation_key)` relationship table. If derived, it cannot authorize; if authoritative, it must move into the same transactional storage/protocol. No such table is recommended initially.
+
+### Hidden single-writer assumptions that must change first
+
+Removing `activation_impact`'s writer check alone is unsafe:
+
+1. `_latest_source_target_observation` and `_previous_source_target_observation` select accepted progress by workspace/source/target, without filtering the existing `pipeline_id` column. Two pipelines sharing the same Read/Write pair can consume each other's watermark or Source Drift baseline. Scope accepted checkpoints/baselines and recovery to stable Pipeline ID as well as current workspace/source/target; keep existing physical Processing State columns and IDs for historical records.
+2. `PublicationBatch` currently computes content/processing/source/target batch identity without Pipeline ID. Delta append transaction ID uses that batch ID, and `_find_applied_publication` searches batch IDs without writer identity. Identical legitimate outputs from two pipelines can therefore suppress one pipeline's append. Namespace new retry identity by stable Pipeline ID + target operation, not Run ID, and verify the same scope in persisted receipt lookup and physical proof. Retries across runs of the **same** logical pipeline still recover the original publication.
+3. Receipt acknowledgement, Source Drift/incremental staging and Warehouse recovery were designed with target writer serialization. Acquire the shared publication slot before retry lookup/staging/mutation and keep it until acknowledgement. Retain exact-batch membership, row-count/audit markers and no-replay guarantees. No generic concurrent-Warehouse exactly-once guarantee is claimed.
+4. New writer bootstrap against a populated append target still cannot invent a baseline. Require an explicitly established source-specific baseline or safe reviewed full/partition load. This may block some incremental multiwriter activations until progress is prepared; it is not a uniqueness rule on pipeline Read/Write combinations.
+
+Reuse `METADATA_PROCESSING_STATE.pipeline_id`; no new physical checkpoint table is needed. New receipt metadata should carry a receipt schema version and writer/operation scope. Legacy receipt interpretation is limited to exact retained evidence with one proven original Pipeline ID; this is necessary persisted-format recovery, not an obsolete lifecycle API. Ambiguous ownerless/shared historical receipts require reconciliation before cutover. Do not rewrite historical Delta commit proof or retroactively declare old receipts to have new scope.
+
+Implementation must define a tested legacy retry bridge using the original batch identity plus proven owner from retained Processing State, so the original pipeline does not replay a previously published batch after namespacing changes. If original ownership/publication cannot be established, fail closed and reconcile; do not copy one checkpoint to every new writer. Approve this narrowly necessary historical receipt decoder explicitly; no general old-runtime fallback is proposed.
+
+## 8. SQL endpoint and Power BI plan, coordinated with #1764
+
+**No reporting projection publisher, generation manifest, reporting Run digest or twelve-table expansion remains in this proposal.** Canonical tables are the persisted source; Import-mode Power Query creates model-only children. Complex JSON is consciously accepted for bounded, infrequently queried activation operations and Run details.
+
+Use Spark scalar `string`, `integer`, `long`, `boolean`, `timestamp`, `double` and existing `date`, corresponding to SQL string/int/bigint/bit/datetime2/float/date. Validate actual Fabric SQL endpoint string length/Unicode/type exposure; never truncate authoritative JSON to make a report load. Use UTC timestamp instants, preserve schedule local times and timezone names, and avoid nested physical types in all canonical fields.
+
+| Reporting need | Canonical source / Power Query expansion |
 | --- | --- |
-| Hash drift from timestamps, missing fields or physical digest leakage | Golden retained approvals, exact Test/Agreement verification after migration; separate logical objects from physical encoding |
-| Old writers after schema conversion | Enforced maintenance/restart plan; no claim of mixed-version concurrent operation |
-| Independent SQL propagation of tables/manifest | Fabric visibility checks and controlled pinned Import refresh; no unsupported Direct Lake consistency claim |
-| Existing docs and stale schedule-related integration assertions | Reconcile with current source, preserve discovery/storage, correct documentation to workspace IDs and current contract ownership |
-| Internal Delta JVM transaction API/protocol differences | Test supported Fabric runtime versions, column mapping and transaction identity retention; fail unsupported runtime without mutation |
-| Singleton and retained approval growth | Measure serialized size, CAS conflicts and admission latency; choose deployment limits before production expansion |
-| Five-minute repair/sync SLA may be too slow or costly | Confirm cadence, scheduling owner, coalescing, operational budget and acceptable stale age |
-| Long JSON/string or operation keys exceed endpoint limits | Validate real endpoint types, lengths and Unicode; do not truncate authoritative JSON or join keys |
-| Raw projection tables queried without generation filter | Document pinned query contract; semantic model applies filters and visibility validation |
-| Nested user extension columns remain | Preserve data and report incomplete SQL visibility; separately review extension conversions |
-| Run digest changes public/hash-bearing content | Keep digest physical-only, add regression tests for return shapes/hashes; approval is required for the added field |
-| Current public Test-production path is unclear | Confirm how new approvable Tests are produced; preserve retained historical testing behavior and avoid silently adding a new public mode |
-| Historical activation timeline absent | Report current active state plus retained approvals only; request new event authority separately if needed |
+| Activated pipelines, environments, deployment and Git version | Registry scalar `pipeline_activation` rows; activation/verification status plainly visible |
+| Active Contracts by environment/Table ID | Registry scalar `table_contract_activation` rows → Contract `(contract_id,contract_version)`; frozen ≠ active |
+| Sources, targets, strategies and shared tables | Parse pipeline `operations_json`, expand descriptor and destination records in the semantic model; group distinct pipeline participation rather than requiring an owner table |
+| Failing/slow runs and operations | Existing Run scalars plus JSON-expanded operations; derive elapsed operation time from actual timestamps. No historical stage-duration claim: current persisted stage fields have no duration |
+| Stage outcomes, failure codes and profile execution | Model-only expansion of Run operations/stages, failures and profiling; preserve event ordinals and duplicate safe failure occurrences |
+| Profile/frequency history | Existing Profiled and Frequency; preserve independent frequency snapshots with null `profile_id`; joins by actual snapshot/table/column grain |
+| Guardrails, Lineage, permissions and progress | Existing respective relational tables; aggregate at their actual grains, avoid fact fan-out and treat access as observations |
+| Freshness | Semantic refresh time and maximum observed source commit times; show SQL propagation delay and refresh failure. No falsely precise “all metadata synchronized” global timestamp |
 
-No actual metadata volumes, workspace permissions, schedules or endpoint capabilities were available in this source audit. These are deployment acceptance facts, not reasons to invent defaults or claim validation already passed.
+Required coordination changes in #1764's owner/follow-up PR, **not made by this document**:
 
-## 10. Recommended decisions for approval
+- Update `scripts/generate_fabricops_powerbi_project.py` and `scripts/validate_fabricops_powerbi_project.py` for the new Registry schema/kinds and JSON parsing. The existing generator explicitly selects scalar columns and will not automatically import the new JSON just because Spark types change.
+- Regenerate affected TMDL partitions/relationships/measures and PBIR visuals from their owning dashboard generator only when dashboard work is approved. Files include `powerbi/FabricOpsMetadata/FabricOpsMetadata.SemanticModel/definition/tables/METADATA_PIPELINE_REGISTRY.tmdl`, `METADATA_PIPELINE_RUN.tmdl`, `METADATA_DATA_CONTRACT.tmdl`, `DimPipeline.tmdl`, `expressions.tmdl`, `relationships.tmdl`, relevant model-only child definitions and report page definitions.
+- Update `powerbi/FabricOpsMetadata/SOURCE_TO_MODEL.md` and `README.md`: remove old singleton-grain assumptions, distinguish frozen versions from active bindings, and replace scalar-only exclusions with explicit JSON projections. Evaluate removing `pLoadComplexBearingTables` for the all-scalar target after signed-in endpoint validation; do not add hidden legacy lifecycle aliases to the runtime to keep an old report working.
+- Load each imported Run/Registry source once per refresh and derive JSON children from that cached/staged import so headers and their arrays represent the same row snapshot. Do not issue independent “latest” queries for every child. Cross-table endpoint propagation remains asynchronous: display as-of limits and retain the previous successful model if required references are unavailable.
+- Fail refresh visibly on malformed non-null JSON; do not turn parser errors into empty operation lists. Type bigint fields carefully, retain null versus empty arrays and handle arrays without Cartesian multiplication. Use semantic composite keys and single-direction relationships. A duplicate Reader/Writer dimension is not an authority.
 
-1. Approve B: keep singleton Registry and whole-Run authority; convert the twelve physical nested columns to validated JSON strings with unchanged logical/public contracts.
-2. Approve six Registry projections, five Run child projections and one synchronization manifest; keep all existing relational facts and avoid duplicate Run/Contract/Profile headers. Keep revisions and selections logically separate but include revision in selection rows; extract readers separately from ownership.
-3. Approve the physical-only Run digest fence, including exclusion from public return objects and existing approval hashes. If rejected, choose the explicitly duplicated versioned Run reporting header alternative before implementation.
-4. Approve eventual reporting consistency, generation publication, best-effort hooks plus scheduled repair, initial five-minute sweep target, and controlled Power BI Import refresh with SQL visibility checks. Confirm final stale threshold and scheduling owner before PR 4.
-5. Approve a coordinated drain/restart maintenance window and retention-backed recovery boundary. Setup conversion is automatic; supported Live data is never reset/dropped/truncated. Preserve historical release snapshots.
-6. Preserve Scheduled Refresh and Catalogue candidate/processing payloads as JSON for this scope; do not add their relational children until users require field-level analytics. No removal of these functions or values is proposed.
+Power Query JSON expansion is suitable for Import, not a claim of JSON query folding or Direct Lake support. Measure Run history size/refresh cost and implement bounded/date-filtered import where appropriate. Only measured performance or a concrete reporting gap should justify a new physical relationship table.
 
-Proceed in the four focused PRs only after these decisions are reviewed. Fabric canary validation remains a release gate; local source inspection cannot approve a production cutover.
+## 9. Automatic migration, evidence retention and rollback
 
-## Appendix A. Exact current nested Spark type inventory
+### Keep authorization changes explicit
 
-The following inventory was read from the canonical schema registry at the audited commit, including its no-PySpark fallback. It describes the existing schema, not the proposed target.
+A current approval proves old Test/Contract/Agreement facts, **not** an immutable deployed code revision. Automatic migration cannot manufacture that missing proof. Default recommendation is an offline, reviewable cutover: preserve existing evidence and map active configurations as `requires_reactivation`, then activate after trusted deployment verification. **This intentionally pauses existing Governed authorization and requires explicit approval before rollout.** Setup must report that readiness gap, not silently say ready. Do not automatically authorize an old approval under the stronger new semantics, and do not allow fallback to the old approval engine.
 
-### METADATA_DATA_CATALOGUE.load_strategy_parameters_json
+If uninterrupted operation under the old trust model is required, defer cutover and run the old package/schema until reviewed redeployment is ready. A parallel legacy authorization mode would preserve the complexity being removed and is not proposed.
 
-```text
-struct<watermark_column:string,key_columns:array<string>,effective_column:string,tracked_columns:array<string>>
-```
+### Exact legacy mapping
 
-### METADATA_DATA_CATALOGUE.scheduled_refresh_json
+| Existing fact | New state / retention |
+| --- | --- |
+| Stable registration Pipeline ID and notebook deployment | Preserve IDs in migration report and map selected active pipelines to candidate activation rows; put IDs into version-controlled pipeline metadata. Unactivated/retired registration history goes to immutable archive, not active rows |
+| Selected approval and its retained Test operations | Validate exact references/hashes; populate candidate operations and exact Agreement fields from committed selected state. Preserve old approval ID and all historical fields in archive; no fabricated Git/deployment evidence |
+| Nonselected approvals/version labels | Preserve complete archive and original Run references; no runtime approval/version history |
+| Selection + workspace revision | One candidate pipeline row; preserve original revision/selection provenance in archive. Generate new activation ID only on the new governance action |
+| Ownership/readers/Contract binding | Reconstruct independently per workspace/Table ID and compare with selected operations. If every applicable selected reference agrees, create `requires_reactivation` table-contract candidate. Do not infer activation from global frozen status or arbitrarily choose a version |
+| Reservations | Drain and reconcile before cutover; never clear as a shortcut. Existing unresolved leases block the migration |
+| Historical Run/Guardrail/Processing State/Profiled/Frequency/Lineage | Preserve existing rows/IDs/audit/evidence; convert Run/Catalogue physical nested fields losslessly. Existing Run approval references remain historical, resolved through archive for audit rather than active runtime |
+| Legacy accepted progress/receipts | Preserve existing IDs and ownership; migrate reader scoping only after proven Pipeline ID attribution. No checkpoint reset, no automatic target replay or rewriting old physical receipt proof |
 
-```text
-struct<status:string,schedules:array<struct<enabled:boolean,frequency:string,times:array<string>,timezone:string>>>
-```
+There is **no existing generic activation/registration audit table** in the canonical twelve. Run and Guardrail Results already contain execution/quality evidence and should retain it; do not fabricate run rows to store governance decisions or put activation events into Processing State. Preserve non-run registration/approval history in a durable immutable migration archive under the configured Metadata Lakehouse `Files` or approved audit storage, with exact source table identity/version, schema, raw JSON/typed timestamps, package commit and checksums. Delta time travel alone is insufficient archival retention after vacuum. A SQL-queryable activation-history table is an optional future requirement, not silently introduced here.
 
-### METADATA_DATA_CATALOGUE.profile_key_candidates_json
+For new governance changes, write an immutable audit snapshot first, then reference its change ID/URI in the same committed Registry transaction and Delta commit metadata. It contains before/after activations and trusted actor/deployment provenance. A failed transaction may leave an orphan audit file; the file alone never proves a committed activation. Retain committed transaction/change receipts with the archive so deactivation/replacement can be audited after ordinary log retention. Audit history is not a second authorization lifecycle.
 
-```text
-struct<status:string,max_combination_width:int,candidates:array<struct<columns:array<string>,column_count:int,row_count:bigint,distinct_count:bigint,uniqueness_percent:double,null_count:bigint>>>
-```
+### `setup_metadata_tables()` upgrade state machine
 
-### METADATA_PIPELINE_REGISTRY.registrations
+1. **Preflight the entire supported input set.** Resolve central Metadata routes and all three affected tables. Recognize fresh, current native, known JSON-string and supported mixed native/string layouts by exact signatures; inspect table IDs/properties/protocol/column mapping. Reject unknown types, missing required authority facts, duplicate identities, corrupt JSON and retired Preview layouts without changing that table. Inventory unsupported nested extensions separately.
+2. **Prepare and drain.** Stop Test/Run producers, governance updates, deployers and scheduled jobs. Reconcile in-flight receipts/leases against physical targets; retain target audit markers and Delta history. Block automatic migration if any ownership, receipt or selected-Contract ambiguity remains. Document deployment permissions/barriers; an empty lease list does not prove all old writers are stopped.
+3. **Archive and validate mapping.** Materialize immutable full legacy Registry and reference/receipt provenance archives. Check row counts, IDs, all retained Test/Agreement/Contract hashes, registrations and approval cardinalities. Produce deterministic candidate mappings. Derive archive/migration identity from source table ID/version so reruns do not create differing authority.
+4. **Convert Catalogue and Run in pinned transactions.** Replace the existing Catalogue string-to-native canonical direction with native-or-supported-string to string; never leave contradictory upgrade paths. Use snapshot-pinned reads, durable staging and one atomic schema+file commit per table, preserving all rows, unrelated columns, audit, properties, column-mapping identities, partitioning and Run transaction-deduplication state. Real schema-change conflicts must protect against concurrent old writers; a normal overwrite after a check is unsafe.
+5. **Replace Registry last.** After other required schemas and archive/mapping validation succeed, atomically replace the old singleton layout with control + candidate rows in the same Delta table, retaining physical table identity. A fresh installation instead creates control and no business activations with `errorifexists`; a concurrent creator is reread/validated. Existing target schemas validate without reseeding or changing activations. No new empty Registry may silently override populated authority.
+6. **Validate and report.** Read exact committed versions back, compare lossless logical contents and preserved row multisets, verify archive digest and all historical hashes, validate target PKs/kinds and readiness. Partial table conversion is resumable but operational cutover remains blocked until all required schemas/processing scope checks pass. Setup returns operational schema status separately from activation/deployment readiness.
+7. **Reactivate and restart.** Governance explicitly activates independent Contracts and verified deployed pipelines; run Fabric/SQL/Power BI canaries, then enable schedules under the new package. New runtime schema guards reject incompatible layouts; no mixed-version writers or old lifecycle fallback readers.
 
-```text
-array<struct<pipeline_id:string,workspace_id:string,notebook_id:string,notebook_name:string,registered_at:timestamp,registered_by:string,registration_status:string,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>
-```
+### JSON and repeated-setup rules
 
-### METADATA_PIPELINE_REGISTRY.revisions
+Central codecs must separate physical strings from existing application dictionaries/lists. Decode every direct reader, including Spark `explode`/field selections and registry startup/consumer reads; encode every direct DataFrame/literal write. Validate duplicate keys, roots, null elements, unknown fields, numeric ranges/finite doubles and timestamp precision. Do not rely on permissive Spark parsing that silently returns null for invalid JSON.
 
-```text
-array<struct<workspace_id:string,revision:string>>
-```
+Preserve SQL null (uncaptured), JSON `[]` (known empty collection), object emptiness, array order and nullable fields. Required collections cannot become null. Preserve long values above 2^53 and finite numeric semantics without a float/JavaScript roundtrip. Normalize native timestamp instants consistently with existing `pipeline_record_content`, including UTC/microseconds, and preserve existing string timestamp semantics. Never rewrite frozen Contract payload bytes or recompute old approval/Test hashes as a migration side effect.
 
-### METADATA_PIPELINE_REGISTRY.approvals
+Retain Catalogue's documented historical exception: blank/whitespace strings mean SQL null, and list-only key candidates become the known candidate object with null status/maximum width. Do not apply that permissiveness to Registry/Run. Preserve Scheduled Refresh values/discovery and key-candidate order. Direct `_persist_grain_candidates` struct literals and Catalogue coalesce behavior must be updated, not left to implicit Spark coercion.
 
-```text
-array<struct<approval_id:string,pipeline_id:string,workspace_id:string,pipeline_name:string,pipeline_version:string,testing_run_id:string,testing_evidence_sha256:string,agreement_id:string,agreement_version:string,agreement_sha256:string,warnings:array<string>,_committed_by:string,_committed_at:timestamp,_workspace_id:string,_workspace_name:string,_notebook_id:string,_notebook_name:string,_metadata_lakehouse_name:string,_activity_id:string>>
-```
+On target schemas, repeated setup validates without rewriting valid JSON, mutating authority/token, changing candidate status, reactivating anything or rescoping historical evidence. On recognized Delta conflict, reread/revalidate boundedly; a competing completed migration becomes a no-op. On lost acknowledgement, inspect committed migration identity/version rather than replaying target/business actions. New runtime refuses unsupported old schemas; migration input handling is not a general compatibility API.
 
-### METADATA_PIPELINE_REGISTRY.selections
+### Rollback and recovery boundary
 
-```text
-array<struct<workspace_id:string,pipeline_id:string,approval_id:string>>
-```
+Retain backups and Delta files/history through acceptance; suspend vacuum that removes recovery versions. An interruption before a table commit leaves its source intact; staging is disposable only after confirming no active attempt owns it. An interruption after commit is recovered by inspecting history and rerunning setup validation. Post-commit verification failures block readiness and require inspection; never automatically RESTORE.
 
-### METADATA_PIPELINE_REGISTRY.table_ownership
+Before any new business publication, an offline rollback can restore the compatible old package and the full pre-upgrade metadata/schema set after checking current heads and reconciling any new activation actions. Do not restore only Registry while leaving incompatible Run/Catalogue code. After new publications, metadata-only restore can lose checkpoints, scoped receipts and policy history: perform a reviewed forward repair or fully reconcile target/publication boundaries first. Never drop/truncate/reset Live metadata or blindly restore over valid later writes.
 
-```text
-array<struct<workspace_id:string,table_id:string,contract_id:string,contract_version:int,payload_sha256:string,writer:string,readers:array<string>,destination:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>
-```
+## 10. Complexity comparison and choices rejected
 
-### METADATA_PIPELINE_REGISTRY.reservations
+| Dimension | Current `main` | Previous #1766 proposal | Simplified recommendation |
+| --- | --- | --- | --- |
+| Canonical physical metadata tables | 12 | 24 (12 existing + 6 Registry projections + 5 Run children + sync manifest) | **12**, no reporting copies; optional relationship table only after demonstrated need |
+| Registry physical grain | One singleton with six nested arrays | Same singleton encoded as JSON, plus reporting generations | Current pipeline row per environment + current table-contract row per environment + one internal control row |
+| User-facing governance entities | Registration, Test candidate, approval/version history, selection, workspace revision, ownership | Same lifecycle plus projection/synchronization concepts | Table Contract freeze/activation and deployed pipeline activation; execution modes remain three |
+| Persisted coordination collection | Reservations; revision/token; histories rebuilt on reads | Same plus reporting generations/freshness | One transient lease array + CAS token + activation IDs; external deployment barrier is a new prerequisite |
+| Read/write participation | Approved Run operations plus derived ownership | Same plus several reporting relationship tables | One activated operation JSON value; model-only expansion; no duplicated ownership aggregate |
+| Reporting cost | Complex fields unavailable through SQL | Projection publisher, repairs, retention and refresh consistency | Power Query expansion/refresh cost, no projection synchronization service |
+| Code version assurance | Explicitly does not verify notebook transformation code | Unchanged | Conditional external deployment assurance; no unsupported immutability claim |
+| Migration cost | No simplification | Twelve physical conversions plus projection backfill | Breaking authority migration and reactivation, scoped progress/receipt work, six Run/Catalogue conversions; higher governance change risk made explicit |
 
-```text
-array<struct<workspace_id:string,reservation_id:string,pipeline_id:string,mode:string,tables:array<string>,revision:string,destinations:array<struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>>
-```
+Rejected: recreating all six lifecycle collections as JSON; treating a notebook SHA argument as proof; preserving Test/approval APIs as wrappers; separate independently updated authoritative tables; generic Merge→SCD aliases; universal single writer; unrestricted SCD multiwriters; reporting copies solely to expand JSON; using Run/Processing State as a catch-all governance audit log.
 
-### METADATA_PIPELINE_RUN.operations
+A one-row all-JSON workspace Registry is transactionally simpler but does not give the requested relational grain. Fully splitting pipelines, Contracts and leases into independent Delta tables would look cleaner but require cross-table coordination. The mixed-record single-table design is the smallest relational authority with an explicit atomic boundary; its performance/security limits must be accepted, not hidden.
 
-```text
-array<struct<operation_key:string,table_id:string,pipeline_role:string,contract_id:string,contract_version:int,payload_sha256:string,destination:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>,read_mode:string,write_mode:string,query_sha256:string,source_table_ids:array<string>,incremental_target_table_id:string,status:string,started_at:timestamp,completed_at:timestamp,stages:array<struct<stage:string,status:string,evaluation_status:string>>>>
-```
+## 11. Minimal ordered implementation PR plan
 
-### METADATA_PIPELINE_RUN.profiling
+The plan below is conditional on architecture approval and the deployment feasibility gate. Keep each PR focused and deployable; never merge half of a breaking schema/protocol cutover. All paths are relative to repository root; proposed files are labeled. No implementation PR is opened now.
 
-```text
-array<struct<context_key:string,activity:string,status:string,results_persisted:boolean,empty_result:boolean,profile_snapshot_id:string,completed_at:string,reason:string,table_id:string,row_count:bigint,trigger:string,workspace_id:string,pipeline_run_id:string,executed_at:string,physical:struct<workspace_id:string,item_id:string,kind:string,schema:string,table_name:string>>>
-```
+### PR 1 — SQL-safe logical/physical metadata boundaries and lossless conversions
 
-### METADATA_PIPELINE_RUN.failures
+**Objective:** independently deliver SQL-compatible existing Run/Catalogue fields and centralized codecs without changing governance authorization yet. Dependency: approval of preservation/migration rules. This uses the current Registry unchanged; it is not a dual-lifecycle runtime adapter.
 
-```text
-array<struct<code:string,exception_type:string>>
-```
+**Exact source owners:** `src/fabricops_kit/config/metadata_schemas.py`, `config/setup_metadata_tables.py`, `activated_pipeline/shared.py`, `pipeline/shared.py`, `pipeline/pipeline_write.py`, `pipeline/check_source_drift.py`, `data_contract/shared.py`, `widgets/widget_data_contract.py` under the same `src/fabricops_kit/` prefix. Inspect `widgets/widget_activate_pipeline.py`, `pipeline/finalize_pipeline.py` and `data_agent/shared.py` for direct Run/Catalogue consumers; change them only where their read boundary requires it. Keep public dictionaries/lists and old evidence hashes unchanged.
 
-## Appendix B. Planning verification
+**Tests:** `tests/unit/test_catalogue_nested_types.py`, `test_metadata_schemas.py`, `test_config.py`, `test_pipeline_run_records.py`, `test_pipeline_run_evidence.py`, `test_table_profiling_schedules.py`, `test_contract_authoring_services.py`, `test_widget_data_contract.py`; `tests/integration/test_catalogue_upgrade_delta.py`, `test_pipeline_run_delta.py`, `test_joint_pipeline_metadata_delta.py`; new `tests/unit/test_metadata_serialization.py` and `tests/integration/test_sql_metadata_upgrade_delta.py`.
 
-- Fetched `origin/main` and verified the audited commit against the clean checkout.
-- Read canonical schema definitions and verified all twelve exact nested type entries, source paths and proposed-file labels.
-- Strict MkDocs build passed using isolated documentation dependencies and a temporary site directory; no reference/dashboard/release generator was executed.
-- Document structure and whitespace checks passed; the sole repository change is this planning Markdown file. Runtime/Delta tests and Fabric endpoint checks were not executed because no implementation or deployed metadata was changed.
+**Migration validation/acceptance:** fresh/native/string/mixed inputs; corrupt values fail before commit; null/empty, duplicate Catalogue rows/extensions, numeric/timestamp precision, column mapping/properties and Run transaction identities preserved; writer/setup/blind-append conflicts; lost acknowledgement/interruption; rerun no-op; retained Test hashes and profiling eligibility identical.
+
+**Affected docs/generated owners:** `scripts/reference_docs_metadata.py`, `AGENTS.md` native physical descriptions, existing `docs/maintainer/metadata-v2-target-model.md`, directly affected generated metadata/function references. No dashboard or release generation. **Rollback:** offline compatible schema/package pair before later writes; otherwise forward reconciliation, no reset.
+
+### PR 2 — Direct activation authority, mode/identity changes and automatic cutover
+
+**Objective:** replace old lifecycle and introduce independent table-contract activation with atomic pinning. Dependency: PR 1, approved schema/protocol/legacy evidence policy, and a passed deployment feasibility experiment. Until runtime deployment verification is integrated, migrated pipelines remain `requires_reactivation` and Governed publication is blocked.
+
+**Exact owners:** `src/fabricops_kit/config/metadata_schemas.py`, `config/setup_metadata_tables.py`, `activated_pipeline/shared.py`, `pipeline/shared.py`, `pipeline/setup_pipeline.py`, `pipeline/finalize_pipeline.py`, `pipeline/orchestrate_read.py`, `pipeline/orchestrate_write.py`, `pipeline/pipeline_write.py`, `data_contract/shared.py`, `widgets/widget_activate_pipeline.py`, `widgets/widget_data_contract.py`, `data_agent/shared.py`, and public export files only if approved callable ownership changes demand them. Replace obsolete internal APIs outright; do not keep approval/rebind aliases. Add a focused Contract activation public owner (proposed `src/fabricops_kit/data_contract/activate_data_contract.py`) and exports if callable activation is selected, or add the action directly to the owning Contract widget; do not create both wrappers.
+
+**Source:** transactional mixed-record Registry, active-pointer resolution, activation review/Agreement checks, shared control token, run pins/leases, protection for governed targets, stable Pipeline ID public behavior, audit archive, source/target configuration validation. Update current Run snapshots with scalar `pipeline_activation_id:string`, `deployment_id:string`, repository-qualified `git_commit_sha:string`, `deployment_verification_status:string`, and `run_schema_version:integer` for new runs; retain old `approval_id`/`activation_revision` columns as nullable historical evidence, not runtime aliases. Historical frozen Test contents cannot be changed. Preserve a versioned logical Run representation for historical hash verification: old/null run schema version uses exactly the original hash-bearing fields, excluding new physical provenance columns, even when Spark exposes them as null. New versioned Run hashes include the new provenance. Reject unexpected non-null new provenance on a legacy frozen Test; do not silently erase it to make a hash pass. Golden archived Test hashes must validate after additive schema changes. This is retained-evidence format handling, not a legacy authorization fallback. Contract pins remain in operation facts; no duplicated Contract definitions.
+
+**Tests:** `tests/unit/test_pipeline_registry.py`, `test_setup_pipeline.py`, `test_pipeline_session.py`, `test_pipeline_execution_modes.py`, `test_activation_state_commit.py`, `test_activated_pipeline.py`, `test_widget_activate_pipeline.py`, `test_contract_authoring_services.py`, `test_data_agent.py`, `test_metadata_writer_ownership.py`; `tests/integration/test_pipeline_registry_delta.py`, `test_activation_state_delta.py`, `test_joint_pipeline_metadata_delta.py`; new `tests/integration/test_pipeline_activation_migration_delta.py`. Test stale review, simultaneous activation/admission/Contract update/deactivation, phantom inserts/control corruption, exact lost-ack recovery, same notebook/logical IDs, deployment replacement drain, no-Contract failure before publication and unrelated token changes not invalidating pins.
+
+**Migration acceptance:** full legacy record counts/hashes archived; candidate mapping deterministic; no approval upgraded into code proof; zero automatic business replay; repeated setup leaves state unchanged; historical Run evidence queryable; deliberate reactivation pause reported. **Generated/docs:** directly affected schema/function references, glossary (intentional concept changes), `AGENTS.md`, maintainer model and living `templates/notebooks/00_env_config.ipynb`/`02_pipeline.ipynb` only where current examples need the approved mode/identity contract. Follow notebook skill; never update historical release snapshots. **Rollback:** pre-publication package/schema restoration only; after publications use section 9 recovery.
+
+### PR 3 — Trusted deployment gate and writer-safe publication
+
+**Objective:** enable Governed only with verified deployment assurance and support compatible append writers without cross-pipeline progress/retry leakage. Dependency: PR 2 and tenant-proven external gate. These are required safety pieces for the new Governed behavior, not optional follow-up fixes.
+
+**Owners:** `src/fabricops_kit/activated_pipeline/shared.py`, `pipeline/shared.py`, `pipeline/pipeline_write.py`, `pipeline/pipeline_read.py`, `pipeline/orchestrate_read.py`, `pipeline/orchestrate_write.py`, `config/shared.py` for native runtime/job correlation if necessary; proposed tenant deployment integration files `scripts/verify_pipeline_deployment.py` and `docs/maintainer/governed-pipeline-deployment.md`. CI workflow location must follow the selected tenant deployment tool; do not repurpose `.github/workflows/release.yml` package publishing into an unreviewed production deployer. Versioned manifests/built artifacts stay outside canonical runtime tables except their references/required Run scalars.
+
+**Source:** external verification/job binding and fresh session restrictions; publication slots across all active writers; Pipeline-ID-scoped existing checkpoints/baselines; writer-namespaced new receipt/append deduplication; narrowly necessary legacy receipt recovery; strategy-aware activation validation. Multiple append activations can be enabled only when these changes and cross-pipeline tests pass. Keep unsupported Merge/scoped SCD multiwriters rejected; add those capabilities in a separately justified PR if required.
+
+**Tests:** new `tests/unit/test_pipeline_deployment_verification.py`, `tests/integration/test_multiwriter_publication_delta.py`; extend `tests/integration/test_publication_batches.py`, `test_joint_pipeline_metadata_delta.py`, `tests/unit/test_incremental_pipeline.py`, `test_pipeline_execution_modes.py`, `test_table_profiling_schedules.py`. Cover identical and different Read/Write pairs across Pipeline IDs, same-content append not incorrectly deduplicated, same-pipeline cross-run retry, independent watermarks, legacy receipts, first-writer bootstrap, incompatible keys/scopes, physical aliases, Warehouse serial recovery and late stale writer.
+
+**Acceptance/Fabric:** all adversarial deployment cases in section 5; forged SHA/manifest/parameters rejected, denied external verification fails before publication, deployment blocked during active/queued run, actual packages/runtime match allowed artifacts, no old kernel reuse. Append writer coexistence and receipt correctness proven; no claim of parallel Warehouse exactly-once. **Rollback:** stop new admissions, drain/cancel and reconcile publications; disable new Governed/multiwriter capability without replaying or rescoping receipts. Never revert just the writer namespace after new publications.
+
+### PR 4 — Dashboard model alignment with #1764 and rollout validation
+
+**Objective:** make the existing canonical-source dashboard show actual pipeline/Contract activation and bounded JSON operation detail. Dependency: approved schema plus runtime rollout readiness; can be prepared alongside PRs 2–3 but deployed against their verified target schema.
+
+**Owners:** #1764's `scripts/generate_fabricops_powerbi_project.py`, `scripts/validate_fabricops_powerbi_project.py`, `powerbi/FabricOpsMetadata/SOURCE_TO_MODEL.md`, `README.md`, and their owned semantic/report definitions listed in section 8. Add focused JSON/model contract tests under a proposed `tests/unit/test_powerbi_metadata_model.py`. If #1764 is unmerged, align on its branch/follow-up rather than generate a competing dashboard project.
+
+**Acceptance:** twelve canonical physical sources; filtered two business Registry kinds; malformed JSON visible; correct composite keys, no fan-out, independent Frequency facts retained; signed-in SQL endpoint types/lengths/timestamps and Desktop refresh; actual active Contract counts rather than frozen proxy; source/refresh age displayed. Measure refresh size/time before proposing a physical relationship table. **Rollback:** retain previous compatible semantic model/report and clearly mark missing activation detail; no runtime/schema rollback for report failure.
+
+### Generated-artifact discipline across implementation PRs
+
+Query relevant callable slices using `scripts/query_public_function_call_flow.py` before changing functions. Canonical schema/docstrings/`scripts/reference_docs_metadata.py` own references. Regenerate only affected `docs/reference/metadata.md`, `docs/reference/metadata/*.md`, `docs/api/reference/*.md` and reference index outputs through `scripts/generate_individual_function_reference_pages.py`; run it twice and require no second-run diff. Regenerate `public-function-call-flows.json` only if its content contract changes, retaining its timestamp update only with content changes. Do not manually edit generated files or regenerate the call-flow HTML dashboard. Actual graph explainer is `docs/function-call-graph.md`; the alternative path listed in AGENTS is absent at baseline.
+
+Dashboard model changes in PR 4 use their own generator/validator; they do not authorize call-flow dashboard or unrelated release churn. All implementation PRs need targeted tests, real Delta concurrency tests when applicable, relevant Ruff/syntax checks and strict docs build. Preserve historical release snapshots. None of these implementation generators runs for this planning update.
+
+## 12. Decisions requiring approval
+
+1. **Authority shape:** zero new physical tables; pipeline/table-contract/control rows in the one Registry transaction. Accept sparse kinds and global serialization, or select another explicitly transactional store before coding.
+2. **Lifecycle/API break:** activation replaces registration/approval/selection/version-label history. Stable explicit Pipeline ID for persistent runs; remove old registration/rebind arguments and aliases. Independent table-contract activation is a new behavior.
+3. **Code assurance:** approve the external deployment/barrier/job-correlation assurance and its trusted-actor limits only after Fabric feasibility validation. Exact interpreter-byte immutability is not established. No verified gate means no Governed publication.
+4. **Security boundary:** confirm trusted deployer/governance/execution identities and effective permissions. If untrusted run principals must be isolated from raw governance writes, approve a service/authoritative-store boundary; a checkbox or Delta row kind cannot provide that security.
+5. **Multiwriter scope:** compatible Append allowed after writer-scoped progress/receipts and publication serialization. Overwrite exclusive; Merge not currently supported; scoped Merge/SCD remain blocked without enforceable policies. Confirm whether serialized publication meets initial performance needs.
+6. **Historical receipt compatibility:** approve only the direct persisted-format decoder needed to preserve exact legacy retry evidence; no obsolete workflow wrappers. Ambiguous progress/receipt ownership must be reconciled, not copied to multiple writers.
+7. **Cutover pause and evidence retention:** approve drain/redeployment/reactivation for old approvals, durable non-SQL governance archive, original Run/Guardrail/Processing State preservation and rollback boundary. Existing approvals cannot become proof of frozen code automatically.
+8. **Agreement/consumer semantics:** preserve existing Agreement checks and explicit ambiguity failure; approve any new consumer Agreement input separately. Contract activation never implies permission to consume data.
+9. **Reporting:** expand JSON within #1764's Import model; no projection table farm. Only measured need can authorize one physical relationship table later.
+
+Recommended next action is architecture review of these decisions, followed by the isolated Fabric verification experiment. Runtime implementation remains blocked pending that review and the experiment's result.
+
+## Planning validation
+
+This is a source/documentation audit, not a successful tenant deployment or concurrency test. Verified latest-main source, existing Registry readers/writers and checkpoint/receipt scope assumptions; inspected #1764 source contracts; consulted Microsoft's documented Fabric APIs and permissions. Document structure/source-reference checks passed, including all twelve canonical tables and all twelve legacy nested fields. `UV_PROJECT_ENVIRONMENT=/workspace/work/docs-env uv run --no-sync mkdocs build --strict --site-dir /workspace/work/simplified-governance-docs-site` passed. Repository review confirmed that only this planning Markdown file changes; no runtime, generated, notebook or release files changed. PR title/body are updated to this final scope. Runtime and Fabric validation belong to the approved implementation/feasibility gates above.
