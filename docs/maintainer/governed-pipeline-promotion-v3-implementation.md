@@ -4,7 +4,7 @@
 
 ## Decision record
 
-Replace the unreleased #1774 Registry/activation design, including the deployment-attestation gate and its Git/manifest/lease/recovery state machine, with notebook-based Pipeline Promotion and a separate Data Contract Activation authority. Preserve existing released execution semantics, all historical business evidence, and `_row_hash` / `append_all` / `append_new_only` / overwrite / SCD1 / SCD2 behavior. No compatibility promise for unreleased #1774 callers, but do not silently overwrite existing tenant data.
+Replace the unreleased #1774 Registry/activation design, including the deployment-attestation gate and its Git/manifest/lease/recovery state machine, with notebook-based Pipeline Promotion and a separate Data Contract Activation authority. Preserve existing released execution semantics and `_row_hash` / `append_all` / `append_new_only` / overwrite / SCD1 / SCD2 behavior. No compatibility promise for unreleased #1774 callers. Development metadata is reset intentionally, never as a silent setup side effect.
 
 - Dry Run: manual, preview-only, no physical publication or durable run/checkpoint/profiling/lineage/registry mutations.
 - Ungoverned: engineer-owned development and execution; no Contract activation required unless accessing a protected physical target. Must never bypass active Contract protection through an alias.
@@ -42,7 +42,7 @@ A version may be active in one workspace and superseded in another; never key th
 
 ### METADATA_PIPELINE_RUN
 
-Preserve the existing durable Run content hash and historical rows. Add/repurpose provenance for execution workspace, Pipeline ID, frozen version, promotion ID, Governed notebook ID, actual execution identity, and exact resolved Contract ID/version/payload hash per operation. Old rows must still validate against their historical hash schema; do not recompute old hashes with newly added fields.
+Preserve the existing durable Run content hash and historical rows. Add/repurpose provenance for execution workspace, Pipeline ID, frozen version, promotion ID, Governed notebook ID, actual execution identity, and exact resolved Contract ID/version/payload hash per operation. Fresh-start metadata is allowed: historical development Run rows may be dropped during the explicit reset. Preserve released run payload/hash semantics for new executions.
 
 ## Snapshot storage and permissions
 
@@ -67,13 +67,17 @@ The snapshot and the physically cloned Governed notebook are distinct: never reg
 9. Fail closed on ambiguous missing/duplicate Registry identity, API failures, absent source/target Contracts, version mismatch, drift, races, stale schedule target, unavailable verifier, and missing/altered archives. Define how failed partial staged artifacts are identified without treating them as active.
 10. If a privileged actor bypasses FabricOps and executes raw Spark, do not falsely claim the framework prevented it; distinguish policy-gated managed publication from tenant security.
 
-## Migration: unreleased #1774 is breaking
+## Breaking development reset (v0.3.1 baseline; no migration)
 
-- Replace the unreleased `record_type = control / pipeline_activation / table_contract_activation` Registry layout. No need to support #1774 callers indefinitely.
-- **Do not silently destroy tenant data** even though #1774 has not shipped. Provide an explicit dry-run/report/backup-and-cutover procedure for any users running prerelease builds. Stop writers, preserve original rows/audit/snapshot evidence, map valid table Contract activations into the new Governance activation table, map pipeline candidates to `requires_review` (not active—no notebook snapshot attestation exists), and reject unsupported or ambiguous records.
-- Never manufacture trusted notebook snapshots or mark migrated candidates active from Git SHAs, legacy deployment manifests, or old status flags.
-- Keep released metadata tables, run histories, processing checkpoints, hashes, writer modes, and physical paths intact. Re-running setup must be idempotent.
-- Update schema registration, setup/migration, API exports, source code, metadata docs generator, table diagrams, Governance and Engineering widgets, demos, release/upgrade instructions and PBIP consumer where required. Existing open docs/Power BI PRs (#1778/#1764 at planning time) may overlap generated files; coordinate/rebase rather than overwriting unrelated edits.
+**User-approved destructive development cutover:** Treat released v0.3.1 functionality as the behavioral baseline. Do not implement migration, upgrade compatibility, archival conversion, legacy Registry adapters, or old activation fallback for the unreleased #1774 metadata model. Existing development metadata can be **explicitly dropped and recreated** in the new canonical layout. There is no requirement to preserve development metadata rows, historical Runs or Processing State during this reset; use disposable development environments only.
+
+- Provide a clear, explicit developer reset procedure listing the affected **FabricOps-owned canonical metadata tables** and the final 13-table schema. The reset must require intentional operator action; **never automatically delete tables as a side effect of normal `setup_metadata_tables`**.
+- State plainly that resetting `METADATA_PIPELINE_RUN` and `METADATA_PROCESSING_STATE` discards execution audit, checkpoint and idempotence evidence, and that reopening existing output tables without resetting corresponding business targets or establishing new baselines can yield duplicate/wrong data. Do not delete business Lakehouse tables automatically.
+- Apply the breaking schema/model changes directly: remove #1774 control/contract mixed Registry records and deployment fields; move Contract activation to a dedicated Governance table; retain only per-version pipeline approvals in the Registry.
+- Replace the unreleased implementation and its tests outright. No migration helper, complex six-collection loader, legacy transaction receipts, compatibility shim or v2 archive model is required.
+- Preserve **released v0.3.1 user-facing processing semantics** in the new implementation, especially `_row_hash` and load strategies, even though development metadata is discarded.
+- Update schema registration, setup, public exports, widgets, demos, references, release notes and any metadata dashboard/PBIP models for 13 new tables. Open docs/Power BI PRs may overlap; rebase carefully.
+- Test fresh install and explicit reset → fresh setup; verify the new tables are created and initialized idempotently. Tests should not expect conversion of #1774 data.
 
 ## Required acceptance and regression tests
 
@@ -86,7 +90,7 @@ The snapshot and the physically cloned Governed notebook are distinct: never reg
 - Old in-flight runs complete under old captured version after promotion; new old-version starts blocked; collision of writes to same destination serialized or rejected using proven publication constraints.
 - Full snapshot restoration without new promotion, changed-copy preservation and readback verification; modified code requires Dry Run/new version.
 - Fail closed on API unavailable, snapshot missing/corrupt, verifier not authoritative, Contract mismatch, config drift, Agreement expiry; no fallback to Ungoverned.
-- Historical Run validation/hash stability and exact Contracts per operation.
+- Fresh-start Run validation/hash semantics and exact Contracts per operation; explicitly documented loss of old development Run history when reset.
 - Preserve `_row_hash`, `append_all`, `append_new_only`, overwrite, incremental, SCD1/SCD2, profiling, lineage, source observation, retries/publication receipts and Processing State.
 - Fabric signed-in verification: notebook Get/Update/Create Definition, notebook ID stability and behavior under Run/schedule, identity permissions, OneLake File write/read, live Delta concurrent promotions, manual Run vs API preflight timing and TOCTOU limitations. Unit tests alone must not constitute a claim of secured Governed execution.
 
