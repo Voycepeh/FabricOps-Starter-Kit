@@ -933,3 +933,30 @@ def test_full_observation_acceptance_follows_verified_publication(durable_proces
     assert any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
     accepted = next(row for row in history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed')
     assert {row['status'] for row in history if row.get('publication_id') == accepted['publication_id']} == {'committed'}
+
+
+@pytest.mark.parametrize('first_observation,metadata_lost', [(True, False), (False, False), (False, True)])
+def test_changed_full_observation_does_not_block_or_advance_an_exact_retry(publication_runtime, first_observation, metadata_lost):
+    """A diagnostic fingerprint change cannot block recovery or claim a newer accepted baseline."""
+    from pyspark.sql import functions as F
+    run = publication_runtime
+    plan = run.context['execution_plan']
+    plan.plan_id, plan.pipeline_id = 'original', 'pipeline'
+    plan.evidence['source_observation_policy'] = {'manual': True, 'days': None}
+    run.state.update(mode='append_new_only', processing={'load_strategy': 'append_new_only'})
+    frame = run.stage(1, incremental=False)
+    identity = {'table_id': 'source', 'table_name': 'source', 'store': 'Bronze', 'store_type': 'lakehouse'}
+    if first_observation:
+        shared.observe_full_source(identity, dataframe=frame, context=run.context)
+    run.publish(frame)
+    if metadata_lost:
+        run.history.clear()
+    plan.plan_id = 'new-execution'
+    observed = shared.observe_full_source(identity, dataframe=frame.withColumn('source_timestamp', F.lit('changed')), context=run.context)
+    assert observed['status'] == ('changed' if first_observation else 'first_observation')
+    result = run.publish(frame)  # transformation output is unchanged
+    assert result['publication_status'] == 'already_applied'
+    assert run.read('target').count() == 8
+    accepted = [row for row in run.history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed']
+    assert len(accepted) == int(first_observation)
+    assert all(row['content_fingerprint'] != observed['content_fingerprint'] for row in accepted)

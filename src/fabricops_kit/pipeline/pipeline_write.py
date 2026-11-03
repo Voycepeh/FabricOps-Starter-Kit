@@ -651,6 +651,11 @@ def pipeline_write(
                     "publication_status": "empty_incremental_scope", "write_metrics": write_metrics}
         success_context["publication"] = batch.receipt
         success_context["publication_snapshot"] = batch.publication_snapshot
+        if batch.already_applied:
+            # Recovery accepts the original source membership, never a newer
+            # diagnostic full observation captured after that physical publication.
+            for captured in success_context["observation_snapshot"].values():
+                captured["full"] = []
         io_context["_fabricops_publication_receipt"] = batch.receipt
         if store_kind == "lakehouse" and strategy in {"append_all", "append_new_only", "overwrite"}:
             physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
@@ -785,6 +790,8 @@ def pipeline_write(
             if store_kind == "lakehouse":
                 physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             success_context["publication_snapshot"] = batch.publication_snapshot
+            for captured in success_context["observation_snapshot"].values():
+                captured["full"] = []
             stage_pipeline_write_observations(success_context)
             write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
         try:

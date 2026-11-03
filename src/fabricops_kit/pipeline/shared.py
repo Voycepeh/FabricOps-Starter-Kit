@@ -1322,7 +1322,6 @@ def _verify_retry_observations(batch, history):
         for pending, record_type in (
             (_PENDING_SOURCE_OBSERVATIONS.get(key, []), "incremental_checkpoint"),
             (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), "drift_baseline"),
-            (getattr(batch.context.get("execution_plan"), "evidence", {}).get("full_source_observations", {}).get(source_id, []), "full_source_baseline"),
         ):
             if not pending:
                 continue
@@ -1454,7 +1453,8 @@ def _physical_target_has_publication(
     """Verify both literals bound to an exact staged batch's atomic write."""
     if not receipt:
         return False
-    if receipt.get("strategy") not in {"append_all", "append_new_only", "overwrite", "scd1", "scd2"}:
+    # Preserve historical receipt facts verbatim; new strategy validation rejects append.
+    if receipt.get("strategy") not in {"append", "append_all", "append_new_only", "overwrite", "scd1", "scd2"}:
         raise RuntimeError("Unsupported legacy target publication receipt; reconcile and rebuild/replay the target under the new Processing State schema before retrying.")
     store_kind = str(identity.get("store_type") or identity.get("store_kind") or "").lower()
     escaped = receipt["activity_id"].replace("'", "''")
@@ -1498,7 +1498,7 @@ def _physical_target_has_publication(
                 store=str(identity["store"]), context=context,
             )
             marked = int(frame.first()["fabricops_publication_rows"])
-            if receipt.get("strategy") in {"append_all", "append_new_only", "overwrite"}:
+            if receipt.get("strategy") in {"append", "append_all", "append_new_only", "overwrite"}:
                 if marked and marked != receipt["input_rows"]:
                     raise RuntimeError("Incomplete Warehouse publication marker count; reconcile the partial publication before retrying. Checkpoint was not advanced.")
                 if receipt["input_rows"] == 0:
