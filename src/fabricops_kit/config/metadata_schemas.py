@@ -399,7 +399,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                  "workspace_id", "pipeline_id", "pipeline_name", "table_id", "activation_id", "status",
                  "activated_by", "notebook_id", "git_repository", "git_commit_sha", "deployment_id",
                  "deployment_manifest_uri", "deployment_manifest_sha256", "verification_method", "operations_json",
-                 "agreement_id", "agreement_version", "agreement_sha256", "contract_id", "payload_sha256",
+                 "agreement_id", "agreement_version", "agreement_sha256", "contract_id", "payload_sha256", "destination_json",
                  "token", "leases_json", "last_governance_change_id", "last_governance_audit_uri",
                  "migration_archive_uri", "migration_archive_sha256")],
              ("activated_at", "timestamp"), ("contract_version", "integer"), *audit],

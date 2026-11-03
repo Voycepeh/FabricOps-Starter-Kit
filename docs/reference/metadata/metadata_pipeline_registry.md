@@ -35,9 +35,9 @@ via `contract_id` + `contract_version`
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">39</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">40</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">5</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">26</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">27</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
 
@@ -70,6 +70,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--governance"><td><code>agreement_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>agreement_sha256</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
 <tr class="metadata-column--governance"><td><code>payload_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>payload_sha256</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>destination_json</code></td><td><code>string</code></td><td>Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.</td></tr>
 <tr class="metadata-column--engineering"><td><code>token</code></td><td><code>string</code></td><td>Control-only shared CAS token; every Registry mutation replaces it under Serializable isolation.</td></tr>
 <tr class="metadata-column--engineering"><td><code>leases_json</code></td><td><code>string</code></td><td>Control-only validated JSON array of transient policy leases. Crashed leases require cancellation/reconciliation; they do not expire automatically.</td></tr>
 <tr class="metadata-column--governance"><td><code>last_governance_change_id</code></td><td><code>string</code></td><td>Most recent committed governance decision identity; lease churn preserves it.</td></tr>

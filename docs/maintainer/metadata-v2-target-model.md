@@ -9,14 +9,14 @@ The Registry has three scalar record types:
 | Record type | Key | Responsibility |
 | --- | --- | --- |
 | pipeline_activation | Workspace + stable Pipeline ID | Deployed notebook, operation manifest, Agreement and deployment provenance |
-| table_contract_activation | Workspace + Table ID | Exact globally frozen Contract ID/version/payload hash |
+| table_contract_activation | Workspace + Table ID | Exact globally frozen Contract ID/version/payload hash and reviewed physical destination JSON |
 | control | central | Shared CAS token, transient policy leases and durable audit references |
 
 The generated [Registry reference](../reference/metadata/metadata_pipeline_registry.md) lists physical columns and types. All canonical metadata fields are SQL endpoint compatible. Run and Catalogue JSON STRING columns retain their logical Python interfaces and expandable logical-schema documentation.
 
 **Governed execution and pipeline activation remain unavailable until trusted deployment verification is proven in Fabric and integrated.** Neither an old successful Test, a migration candidate, a notebook-supplied Git SHA nor a raw activation field proves executing code identity. This PR introduces no verifier, attestation service or custom notebook hashing.
 
-A new Contract can be frozen and activated independently through activate_data_contract, using the exact frozen identity, reviewed Registry token, explicit target workspace and Governance confirmation. Metadata write principals must be trusted under tenant permissions; confirmation is not authentication. Central Metadata routing remains separate from the target execution workspace.
+A new Contract can be frozen and activated independently through activate_data_contract, using the exact frozen identity, reviewed Registry token, explicit target workspace and Governance confirmation. Metadata write principals must be trusted under tenant permissions; confirmation is not authentication. Central Metadata routing remains separate from the target execution workspace. Each Contract activation pins its reviewed physical destination in destination_json; alias checks use that stored binding without requiring every notebook to configure foreign environments. Migration copies the exact destination from validated legacy ownership. Missing or malformed bindings fail closed. A later Catalogue/configuration move does not move the protected destination; reactivate explicitly after draining affected executions.
 
 Consumers still need unambiguous, exact and effective Agreement context. Contract activation alone does not authorize data consumption. With pipeline activation blocked, new consumer provisioning that depends on active pipeline Agreement context also remains blocked.
 

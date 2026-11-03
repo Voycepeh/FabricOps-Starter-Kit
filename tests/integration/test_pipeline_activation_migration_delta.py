@@ -183,3 +183,29 @@ def test_migration_archive_failure_leaves_legacy_authority_intact(authority_delt
     with pytest.raises(OSError, match="archive unavailable"):
         migration.migrate_registry(table=frame, context=r.context, spark_session=r.spark)
     assert r.spark.read.format("delta").load(r.path).collect() == before
+
+
+@pytest.mark.parametrize("metadata_workspace", [None, "CENTRAL"])
+def test_migration_keeps_central_owner_when_validating_foreign_history(authority_delta, monkeypatch, metadata_workspace):
+    """Engineering Test scope must not replace the setup Metadata routing workspace."""
+    r = authority_delta
+    old = retained_fixture(r)
+    frame = write_legacy(r, old)
+    context = {**r.context, "scope_workspace_id": "GOV"}
+    if metadata_workspace:
+        context["metadata_workspace_id"] = metadata_workspace
+    scopes = []
+    original = service.read_lakehouse_table
+
+    def read(table, **kwargs):
+        scopes.append(kwargs["context"]["scope_workspace_id"])
+        return original(table, **kwargs)
+
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    upgraded, report = migration.migrate_registry(table=frame, context=context, spark_session=r.spark)
+    assert scopes and set(scopes) == {metadata_workspace or "GOV"}
+    rows = [row.asDict(recursive=True) for row in upgraded.collect()]
+    contract = service.exact_record(rows, record_type="table_contract_activation")
+    assert contract["workspace_id"] == "DEV"
+    assert json.loads(contract["destination_json"]) == old["table_ownership"][0]["destination"]
+    assert report["migration_archive_uri"]

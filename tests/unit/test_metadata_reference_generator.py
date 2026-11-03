@@ -121,7 +121,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
     activated_page = first_pages["metadata_pipeline_registry.md"]
-    for category, count in (("total", 39), ("engineering", 5), ("governance", 26), ("audit", 8)):
+    for category, count in (("total", 40), ("engineering", 5), ("governance", 27), ("audit", 8)):
         card = activated_page.split(f'class="metadata-column-kpi metadata-column-kpi--{category}">', 1)[1].split("</div>", 1)[0]
         assert f'<strong class="metadata-column-kpi__value">{count}</strong>' in card
     for column in ("pipeline_id", "table_id", "activation_id", "status"):

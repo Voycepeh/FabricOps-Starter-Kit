@@ -58,6 +58,7 @@ AUDIT_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_FIELD_DESCRIPTIONS = {
+    "destination_json": "Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.",
     "load_strategy_parameters_json": "Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.",
     "scheduled_refresh_json": "Validated JSON STRING containing captured status and ordered schedules (enabled, frequency, times and timezone); decoded to a logical object in application code.",
     "profile_key_candidates_json": "Validated JSON STRING containing discovery status, maximum combination width and ordered candidate metrics; decoded to a logical object in application code. Historical list-only candidates have null status and null maximum width.",

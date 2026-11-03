@@ -143,7 +143,7 @@ def registry_control(rows):
         pipeline_fields = {"pipeline_id", "pipeline_name", "notebook_id", "git_repository", "git_commit_sha", "deployment_id",
                            "deployment_manifest_uri", "deployment_manifest_sha256", "verification_method", "operations_json",
                            "agreement_id", "agreement_version", "agreement_sha256"}
-        contract_fields = {"table_id", "contract_id", "contract_version", "payload_sha256"}
+        contract_fields = {"table_id", "contract_id", "contract_version", "payload_sha256", "destination_json"}
         allowed = common | (control_fields if kind == "control" else decision_fields | (
             pipeline_fields if kind == "pipeline_activation" else contract_fields))
         if any(value is not None for key, value in row.items() if key not in allowed):
@@ -164,6 +164,8 @@ def registry_control(rows):
             activation_operations(row.get("operations_json"))
         elif not row.get("contract_id") or type(row.get("contract_version")) is not int or row["contract_version"] < 1 or not row.get("payload_sha256"):
             raise ValueError("Incomplete exact Contract activation reference.")
+        if kind == "table_contract_activation":
+            normalized_destination(parse_metadata_json(row.get("destination_json"), field="destination_json"))
         key = (kind, workspace, identity)
         if key in business or record_id != registry_record_id(*key):
             raise ValueError("Ambiguous activation identity.")
@@ -531,13 +533,9 @@ def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
                     normalized_destination(op["destination"]) == physical) for op in activation_operations(row["operations_json"])):
                 raise ValueError("Ungoverned cannot write a governed physical destination or alias.")
     # Independent Contract activation protects physical aliases as well as IDs.
-    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings
     for row in rows:
         if row["record_type"] == "table_contract_activation":
-            identity = resolve_catalogue_table_identity(plan.runtime_context["config"], row["workspace_id"], row["table_id"],
-                context=plan.runtime_context, spark_session=spark_session)
-            binding = pipeline_physical_bindings({row["table_id"]: identity}, config=plan.runtime_context["config"],
-                workspace_id=row["workspace_id"])[row["table_id"]]
+            binding = parse_metadata_json(row["destination_json"], field="destination_json")
             if normalized_destination(binding) == physical:
                 raise ValueError("Ungoverned cannot write a protected physical destination alias.")
     leases = parse_metadata_json(control["leases_json"], field="leases_json")
@@ -610,7 +608,8 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     if payload.get("table", {}).get("table_id") != table_id:
         raise ValueError("Frozen payload Table ID does not match.")
     processing = validated_processing(payload["table"].get("processing") or {})
-    identity = resolve_catalogue_table_identity(config, workspace, table_id, context=runtime, spark_session=spark_session)
+    identity = resolve_catalogue_table_identity(config, workspace, table_id,
+        context={**runtime, "scope_workspace_id": runtime.get("metadata_workspace_id") or workspace}, spark_session=spark_session)
     destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=workspace)[table_id]
     leases = parse_metadata_json(control["leases_json"], field="leases_json")
     if any((lease["workspace_id"] == workspace and lease["table_id"] == table_id) or
@@ -619,10 +618,7 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     for row in rows:
         if (row["record_type"] == "table_contract_activation"
                 and (row["workspace_id"], row["table_id"]) != (workspace, table_id)):
-            other = resolve_catalogue_table_identity(config, row["workspace_id"], row["table_id"],
-                context=runtime, spark_session=spark_session)
-            binding = pipeline_physical_bindings({row["table_id"]: other}, config=config,
-                workspace_id=row["workspace_id"])[row["table_id"]]
+            binding = parse_metadata_json(row["destination_json"], field="destination_json")
             if normalized_destination(binding) == normalized_destination(destination):
                 raise ValueError("Conflicting activation Table IDs or environments alias one physical destination.")
     # Validate all affected active descriptors; never silently change their strategy.
@@ -639,7 +635,8 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
         "workspace_id": workspace, "table_id": table_id, "activation_id": str(uuid4()), "status": "active",
         "activated_at": datetime.now(UTC).replace(tzinfo=None), "activated_by": audit["_committed_by"],
         "contract_id": contract_id, "contract_version": contract_version,
-        "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest(), **audit}
+        "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest(),
+        "destination_json": canonical_pipeline_json(destination), **audit}
     resulting = [row for row in rows if row["record_id"] != record_id] + [record]
     commit_registry(resulting, expected_token=expected_token, context=context, spark_session=spark_session, governance_change=True)
     return record

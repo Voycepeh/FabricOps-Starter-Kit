@@ -25,7 +25,8 @@ def contract_candidate(workspace="DEV", table="orders"):
     return dict(record_id=service.registry_record_id("table_contract_activation", workspace, table),
         record_type="table_contract_activation", schema_version=2, workspace_id=workspace,
         table_id=table, status="requires_reactivation", contract_id="contract", contract_version=1,
-        payload_sha256="a" * 64)
+        payload_sha256="a" * 64,
+        destination_json=json.dumps({**operation(table=table)["destination"], "workspace_id": workspace}))
 
 
 def test_registry_has_three_scalar_record_types_and_no_lifecycle_arrays():
@@ -150,3 +151,34 @@ def test_migrated_source_binding_protects_its_original_physical_alias(monkeypatc
         plan_id="alias-run", evidence={})
     with pytest.raises(ValueError, match="alias"):
         service.guard_ungoverned_write(plan, "alias", operation()["destination"])
+
+
+@pytest.mark.parametrize("alias", [False, True])
+def test_foreign_contract_binding_needs_no_foreign_workspace_config(monkeypatch, alias):
+    """Frozen physical bindings protect aliases without foreign Catalogue/config reads."""
+    from fabricops_kit.pipeline import shared as pipeline
+    row = contract_candidate("PROD")
+    rows = [service.empty_pipeline_authority(), row]
+    monkeypatch.setattr(service, "read_registry", lambda **kw: rows)
+    monkeypatch.setattr(pipeline, "resolve_catalogue_table_identity", lambda *a, **kw: pytest.fail("do not re-resolve frozen binding"))
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: pytest.fail("do not require foreign configuration"))
+    commits = []
+    monkeypatch.setattr(service, "commit_registry", lambda *a, **kw: commits.append(a))
+    plan = SimpleNamespace(runtime_context={"config": {}, "scope_workspace_id": "DEV"}, workspace_id="DEV",
+        pipeline_id=PIPELINE_ID, plan_id="local-run", evidence={})
+    destination = json.loads(row["destination_json"]) if alias else operation(table="unrelated")["destination"]
+    if alias:
+        with pytest.raises(ValueError, match="physical destination alias"):
+            service.guard_ungoverned_write(plan, "unrelated", destination)
+        assert not commits
+    else:
+        service.guard_ungoverned_write(plan, "unrelated", destination)
+        assert len(commits) == 1 and plan.evidence["lease_token"] == "local-run"
+
+
+@pytest.mark.parametrize("value", [None, "{}", "not-json"])
+def test_contract_activation_rejects_missing_or_invalid_frozen_binding(value):
+    """Missing physical evidence must never bypass alias protection."""
+    row = {**contract_candidate(), "destination_json": value}
+    with pytest.raises(ValueError):
+        service.registry_control([service.empty_pipeline_authority(), row])

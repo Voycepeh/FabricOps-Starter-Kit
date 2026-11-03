@@ -314,3 +314,44 @@ def test_corrupt_governance_archive_blocks_following_registry_mutation(authority
     with pytest.raises(ValueError, match="audit does not match"):
         service.commit_registry(current, expected_token=control["token"], context=r.context, spark_session=r.spark)
     assert service.read_registry(context=r.context, spark_session=r.spark) == current
+
+
+@pytest.mark.parametrize("alias", [False, True])
+def test_contract_activation_uses_stored_foreign_bindings(authority_delta, monkeypatch, alias):
+    """Activating DEV needs only DEV configuration, even with a PROD candidate."""
+    r = authority_delta
+    frozen_contract(r, monkeypatch)
+    rows = service.read_registry(context=r.context, spark_session=r.spark)
+    foreign = {**contract_candidate("PROD"), **r.audit}
+    if alias:
+        foreign["destination_json"] = json.dumps(operation()["destination"])
+    rows.append(foreign)
+    service.commit_registry(rows, expected_token=service.registry_control(rows)["token"],
+        context=r.context, spark_session=r.spark, governance_change=True)
+    before = service.read_registry(context=r.context, spark_session=r.spark)
+    scopes = []
+
+    def bindings(identities, *, config, workspace_id):
+        scopes.append(workspace_id)
+        assert workspace_id == "DEV"
+        return {"orders": operation()["destination"]}
+
+    def identity(config, workspace_id, table_id, *, context, spark_session):
+        assert workspace_id == "DEV" and context["scope_workspace_id"] == "CENTRAL"
+        return {"table_id": table_id}
+
+    monkeypatch.setattr(pipeline, "resolve_catalogue_table_identity", identity)
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", bindings)
+    def activate():
+        return service.set_table_contract_activation("orders", "contract", 1,
+            expected_token=service.registry_control(before)["token"], governance_confirmed=True,
+            context={**r.context, "metadata_workspace_id": "CENTRAL"}, spark_session=r.spark)
+
+    if alias:
+        with pytest.raises(ValueError, match="alias one physical destination"):
+            activate()
+        assert service.read_registry(context=r.context, spark_session=r.spark) == before
+    else:
+        result = activate()
+        assert json.loads(result["destination_json"]) == operation()["destination"]
+    assert scopes == ["DEV"]

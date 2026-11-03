@@ -208,7 +208,8 @@ def migrate_registry(*, table, context, spark_session):
         native = {key: value for key, value in approval.items() if not key.startswith("_") and key != "approval_id"}
         if manifest_digest(native) != approval["approval_id"]:
             raise ValueError("Legacy approval identity/content mismatch.")
-        scoped = {**context, "scope_workspace_id": approval["workspace_id"]}
+        scoped = {**context, "scope_workspace_id": approval["workspace_id"],
+                  "metadata_workspace_id": context.get("metadata_workspace_id") or context["scope_workspace_id"]}
         approvals[approval["approval_id"]] = _legacy_approval_record(approval, context=scoped, spark_session=spark)
     audit = {name: old[name] for name, *_ in AUDIT_SCHEMA_FIELDS}
     candidates, derived = [], {}
@@ -249,6 +250,7 @@ def migrate_registry(*, table, context, spark_session):
         candidates.append({**audit, "record_id": registry_record_id("table_contract_activation", workspace, table_id),
             "record_type": "table_contract_activation", "schema_version": 2, "workspace_id": workspace,
             "table_id": table_id, "status": "requires_reactivation",
+            "destination_json": canonical_pipeline_json(ref["destination"]),
             **{key: ref[key] for key in ("contract_id", "contract_version", "payload_sha256")}})
     from fabricops_kit import __version__
     archive_payload = {"format": "fabricops-registry-cutover-v2", "package_version": __version__, "source_path": path,
