@@ -140,7 +140,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 
 Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) progress.
 
-Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode is designed to resolve only activated contracts and approved operations; it currently fails closed until trusted deployment verification is integrated.
+Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode resolves activated contracts, an independently approved submission and the deployed notebook identity; it currently fails closed pending signed-in Fabric acceptance.
 
 ## What do I configure in my notebook?
 
@@ -161,19 +161,23 @@ Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeli
 
 Keep the same notebook flow and stable Pipeline ID, but give each workspace its own `00_env_config` mapping. The logical names—such as Bronze, Silver and Gold—stay in the notebook while each workspace resolves its own Fabric items.
 
-Deploy notebook source with Git, CI/CD or Microsoft Fabric Deployment Pipelines. FabricOps does not deploy the notebook and does not copy Fabric permissions. Each workspace validates and activates its own exact contract versions and destinations against the shared global table contract history.
+For the Preview promotion path, save the Development notebook with `PIPELINE_MODE = "Dry Run"` and run through [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md). FabricOps saves the complete submission in the Metadata Lakehouse. Governance reviews that exact package in [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md); after approval, Engineering uses the controls below Finalize to deploy the accepted snapshot as a separate Governed notebook.
 
-### Can FabricOps freeze or time-travel the notebook itself?
+The same stable Pipeline ID spans environments while every promoted version receives its own physical Governed notebook ID. FabricOps does not copy permissions or move schedules: Engineering must explicitly rebind the Fabric schedule or notebook activity to the returned notebook. Git and Fabric deployment history remain useful for project source and environment assets outside the captured notebook.
 
-No. FabricOps freezes immutable **Data Contract payloads** and records reviewed pipeline configuration evidence; it does not archive notebook source or provide notebook time travel. Git and Fabric deployment history must own source versioning and rollback.
+### Can FabricOps freeze or recover the notebook itself?
 
-Governed admission and publication remain blocked until FabricOps can verify the deployed executable through a trusted tenant-proven mechanism. A stable Pipeline ID or a Git SHA typed into notebook code is not tamper evidence. This is a genuine missing capability, not functionality to advertise as Live.
+The Preview promotion workflow archives the complete submitted and promoted notebook snapshots, deploys the exact approved snapshot, and records an immutable per-workspace version in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md). Engineering can submit a reviewed recovery request to restore the active notebook or roll back through a new auditable version; Governance independently approves the request before Engineering applies it.
 
-??? info "Under the Hood — what activation can and cannot prove"
+This is not generic notebook time travel. Only the notebook is frozen—imported dependencies are not—and saved-definition checks have a time-of-check/time-of-use limit. The `Governed/` folder is organizational rather than a permission boundary. Governed admission and publication remain blocked pending the [signed-in Fabric acceptance checklist](maintainer/governed-pipeline-fabric-acceptance.md).
 
-    [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) can retain workspace revisions, table contract activations, readers/writers, reviewed operation settings and execution reservations. It can reject conflicting ownership or destination bindings.
+??? info "Under the Hood — submission, approval and deployment"
 
-    [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) is currently an inspection surface for retained evidence and the pending deployment gate. It does not authenticate or attest the deployed notebook. Deployment and business-table publication remain separate failure boundaries.
+    Finalizing a captured Dry Run saves the complete pre-execution, submitted and promoted notebook definitions, their distinct hashes, recorded test claims, physical and deployment bindings, operation settings and exact applicable Contract payloads. Governance reads the saved submission directly; there is no package download, upload or JSON paste.
+
+    [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) holds Governance decisions and the protected accepted package. [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) separately holds Engineering deployment versions, snapshot pointers and active notebook identity. Approval alone never creates a notebook; deployment never creates Governance authority.
+
+    To reopen controls in the same kernel, rerun `finalize_pipeline(pipeline)`. After a restart, run [`setup_notebook()`](api/reference/setup_notebook.md) and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; this does not rerun the Dry Run or deploy automatically.
 
 ## What evidence do I get after a run?
 

@@ -43,7 +43,7 @@ An independently activated table contract protects that Table ID and physical de
 
 ??? info "Under the Hood — workspace activation"
 
-    [`activate_data_contract()`](api/reference/activate_data_contract.md) records one exact frozen `contract_id` and `contract_version` for a `table_id` and execution `workspace_id`. It requires a reviewed authority token and explicit Governance confirmation.
+    [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) reviews and activates one exact frozen `contract_id` and `contract_version` for a `table_id` in its physical `workspace_id`. The reviewer also selects the applicable exact Data Agreement. The append-only decision is stored in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), separately from the global contract definition.
 
     This action does not activate a pipeline or enable Governed execution. It creates an immutable activation record, prevents casual Ungoverned writes to that protected identity, and leaves historical Pipeline Runs unchanged.
 
@@ -55,11 +55,12 @@ An independently activated table contract protects that Table ID and physical de
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
 6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data outcomes allow continuation.
-7. **Activate deliberately.** Use [`activate_data_contract()`](api/reference/activate_data_contract.md) for the intended workspace. Review pipeline readiness separately in [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md).
-8. **Deploy through Engineering controls.** Git, CI/CD and Microsoft Fabric Deployment Pipelines move notebook source. FabricOps activation does not deploy code.
+7. **Activate the physical table contracts.** Use [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) for every source and target in its physical workspace, selecting the applicable Agreement each time.
+8. **Approve the saved pipeline submission.** Engineering finalizes a saved Dry Run submission. Governance uses [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) to inspect that exact notebook, its recorded checks and resolved bindings, then approve, reject or revoke it. The decision is stored in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md).
+9. **Let Engineering deploy the approval.** Engineering uses the controls beneath [`finalize_pipeline()`](api/reference/finalize_pipeline.md) to deploy the exact approved snapshot as a separate Governed notebook, then explicitly rebinds the Fabric schedule. Governance approval alone never creates or deploys a notebook.
 
 !!! warning "Current Governed execution boundary"
-    FabricOps can freeze and independently activate exact Data Contract versions. Full Governed pipeline admission and publication remain fail-closed until a tenant-proven trusted deployment mechanism can attest the deployed notebook. A typed Git SHA is not accepted as proof.
+    FabricOps can activate exact Contracts, record an independent pipeline decision, and deploy the exact approved notebook snapshot. Governed pipeline admission and publication still fail closed pending the [signed-in Fabric acceptance checklist](maintainer/governed-pipeline-fabric-acceptance.md). Saved-code and hash checks cannot prove the identity of code already executing, and imported dependencies are not frozen.
 
 ## What can I configure inside the contract?
 
@@ -126,8 +127,8 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
 | [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
 | [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing, profiling and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
-| [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review direct table activations, retained validation evidence and the pending deployment gate | Inspection state sourced from [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md); the widget does not authenticate or attest a deployment |
-| [`activate_data_contract()`](api/reference/activate_data_contract.md) | Approve one frozen table contract for one workspace | Immutable workspace/table activation authority in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
+| [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | Select one frozen Contract and applicable Agreement for one physical workspace/table | Reviewed activation history in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
+| [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review an exact saved Engineering submission and approve, reject or revoke it independently | Protected decision history and accepted package in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md); approval does not deploy |
 
 ## How does this govern Engineering pipelines?
 
@@ -135,9 +136,9 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | --- | --- |
 | Dry Run | Engineering can select frozen candidates and see real validation results without publication or metadata commits. |
 | Ungoverned | The pipeline can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. |
-| Governed | Intended to resolve only activated contracts and approved operation settings. It currently fails closed at trusted deployment verification. |
+| Governed | Resolves activated Contracts, an approved submission and the deployed notebook identity. It currently fails closed pending signed-in Fabric acceptance. |
 
-Governance therefore controls the definition and the protected destination without pretending that a Data Contract deploys code. Processing changes, contract mappings, table roles, destinations, source relationships and transformation settings require fresh validation and approval. FabricOps keeps the approval evidence separate from notebook deployment so neither is mistaken for the other.
+Governance therefore controls the definitions, protected physical destinations and independent approval without pretending that approval deploys code. Processing changes, contract mappings, table roles, destinations, source relationships and transformation settings require fresh validation and approval. Engineering separately deploys the exact accepted snapshot and owns schedule rebinding.
 
 ## What can I monitor in Power BI?
 
@@ -160,7 +161,9 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
     | --- | --- |
     | Accountability and approved use | [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md), [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) |
     | Frozen contract coverage and content | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) |
-    | Active versions and pipeline authority | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
+    | Active Contract and Agreement selections | [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
+    | Pipeline decisions and accepted submissions | [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
+    | Deployed pipeline versions and notebook identity | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
     | Table identity and processing | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
     | Profiling trends | [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
     | Pipeline participation and outcomes | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |

@@ -56,8 +56,8 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 2. **Build and observe the pipeline.** Engineering runs real sources and targets in Development, creating Catalogue, profiling, lineage and processing observations.
 3. **Author and freeze Data Contracts.** Governance combines that Engineering evidence with Enrichment, Processing and Guardrails, then freezes exact immutable versions.
 4. **Preview the frozen versions.** Engineering selects those versions in Dry Run and exercises the Read → Transform → Write path without publishing or committing operational state.
-5. **Review activation and deployment implications.** Activation is a separate Preview metadata decision; deployment remains an Engineering/Fabric responsibility. Governed execution currently fails closed pending trusted deployment verification.
-6. **Run the persistent path and grant access.** The runnable demo uses supported execution paths and native Fabric permissions; do not treat Preview activation as proof of Production enforcement.
+5. **Activate, approve and deploy.** Governance activates each physical table Contract, independently approves the saved Dry Run submission, and Engineering deploys that exact snapshot as a separate Governed notebook.
+6. **Run the persistent path and grant access.** Governed execution remains fail-closed pending signed-in Fabric acceptance; use the supported runnable paths and native Fabric permissions without treating Preview promotion as Production enforcement.
 7. **Consume and productize.** Approved consumers use native Fabric interfaces or project-specific accelerators with the governed context available in shared metadata.
 
 ??? info "Under the Hood — why Steps 3 and 4 iterate"
