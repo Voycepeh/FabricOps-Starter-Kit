@@ -60,6 +60,20 @@
               },
               "queryRef": "Measures.Successful Runs",
               "nativeQueryRef": "Successful Runs"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Failed Runs"
+                }
+              },
+              "queryRef": "Measures.Failed Runs",
+              "nativeQueryRef": "Failed Runs"
             }
           ]
         }
@@ -79,7 +93,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recent trend\""
+                  "Value": "\"Recorded run outcomes over time\""
                 }
               }
             }
@@ -92,7 +106,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recent trend visual\""
+                  "Value": "\"Recorded run outcomes over time visual\""
                 }
               }
             }

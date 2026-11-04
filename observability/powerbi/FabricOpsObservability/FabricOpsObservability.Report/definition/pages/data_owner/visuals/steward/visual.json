@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Data steward (all by default)\""
+                  "Value": "\"Data Steward (all by default)\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Data steward (all by default) visual\""
+                  "Value": "\"Data Steward (all by default) visual\""
                 }
               }
             }

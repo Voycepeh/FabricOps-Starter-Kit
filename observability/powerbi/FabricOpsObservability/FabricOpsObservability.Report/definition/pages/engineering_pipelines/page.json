@@ -1,0 +1,790 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "engineering_pipelines",
+  "displayName": "Engineering \u2014 Pipelines",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "workspace_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "performance_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "activation_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_list",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_e",
+      "target": "guardrail_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "workspace_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "pipeline_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "mode_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "date_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "pipelines_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "runs_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "success_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "failed_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "incomplete_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "performance_e",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "pipeline_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrail_e",
+      "target": "activation_e",
+      "type": "DataFilter"
+    }
+  ]
+}

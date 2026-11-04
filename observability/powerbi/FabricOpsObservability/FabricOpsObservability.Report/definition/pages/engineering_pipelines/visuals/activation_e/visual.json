@@ -1,0 +1,170 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "activation_e",
+  "position": {
+    "x": 25,
+    "y": 520,
+    "z": 0,
+    "height": 165,
+    "width": 555,
+    "tabOrder": 545
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Pipeline ID"
+                }
+              },
+              "queryRef": "Pipeline Activation.Pipeline ID",
+              "nativeQueryRef": "Pipeline ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Revision"
+                }
+              },
+              "queryRef": "Pipeline Activation.Revision",
+              "nativeQueryRef": "Revision"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Pipeline Activation.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Decision Kind"
+                }
+              },
+              "queryRef": "Pipeline Activation.Decision Kind",
+              "nativeQueryRef": "Decision Kind"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Decided At"
+                }
+              },
+              "queryRef": "Pipeline Activation.Decided At",
+              "nativeQueryRef": "Decided At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Submitted Dry Run ID"
+                }
+              },
+              "queryRef": "Pipeline Activation.Submitted Dry Run ID",
+              "nativeQueryRef": "Submitted Dry Run ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Submitted Dry Run Status"
+                }
+              },
+              "queryRef": "Pipeline Activation.Submitted Dry Run Status",
+              "nativeQueryRef": "Submitted Dry Run Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Submitted Dry Run Operation Count"
+                }
+              },
+              "queryRef": "Pipeline Activation.Submitted Dry Run Operation Count",
+              "nativeQueryRef": "Submitted Dry Run Operation Count"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Activation decisions and submitted Dry Run evidence\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Activation decisions and submitted Dry Run evidence visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

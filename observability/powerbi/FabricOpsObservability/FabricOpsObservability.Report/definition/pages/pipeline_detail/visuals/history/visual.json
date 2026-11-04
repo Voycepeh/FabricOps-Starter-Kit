@@ -6,7 +6,7 @@
     "y": 270,
     "z": 0,
     "height": 210,
-    "width": 500,
+    "width": 350,
     "tabOrder": 295
   },
   "visual": {
@@ -65,7 +65,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run history\""
+                  "Value": "\"Recorded run history\""
                 }
               }
             }
@@ -78,7 +78,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run history visual\""
+                  "Value": "\"Recorded run history visual\""
                 }
               }
             }

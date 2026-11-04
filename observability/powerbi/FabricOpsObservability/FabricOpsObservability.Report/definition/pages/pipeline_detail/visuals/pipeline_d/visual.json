@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Pipeline Run"
+                      "Entity": "Pipeline"
                     }
                   },
                   "Property": "Pipeline Key"
                 }
               },
-              "queryRef": "Pipeline Run.Pipeline Key",
+              "queryRef": "Pipeline.Pipeline Key",
               "nativeQueryRef": "Pipeline Key"
             }
           ]

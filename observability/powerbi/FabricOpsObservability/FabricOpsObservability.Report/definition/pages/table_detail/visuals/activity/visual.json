@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "activity",
   "position": {
-    "x": 710,
+    "x": 980,
     "y": 485,
     "z": 0,
     "height": 200,
-    "width": 480,
-    "tabOrder": 1195
+    "width": 210,
+    "tabOrder": 1465
   },
   "visual": {
     "visualType": "tableEx",
@@ -79,6 +79,34 @@
                       "Entity": "Run Operation"
                     }
                   },
+                  "Property": "Read Mode"
+                }
+              },
+              "queryRef": "Run Operation.Read Mode",
+              "nativeQueryRef": "Read Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Write Mode"
+                }
+              },
+              "queryRef": "Run Operation.Write Mode",
+              "nativeQueryRef": "Write Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
                   "Property": "Status"
                 }
               },
@@ -103,7 +131,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Related pipeline activity\""
+                  "Value": "\"Related recorded pipeline activity\""
                 }
               }
             }
@@ -116,7 +144,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Related pipeline activity visual\""
+                  "Value": "\"Related recorded pipeline activity visual\""
                 }
               }
             }

@@ -1,0 +1,226 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "all_tables",
+  "position": {
+    "x": 25,
+    "y": 270,
+    "z": 0,
+    "height": 265,
+    "width": 1165,
+    "tabOrder": 295
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Table Key"
+                }
+              },
+              "queryRef": "Catalogue Table.Table Key",
+              "nativeQueryRef": "Table Key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Table ID"
+                }
+              },
+              "queryRef": "Catalogue Table.Table ID",
+              "nativeQueryRef": "Table ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Workspace ID"
+                }
+              },
+              "queryRef": "Catalogue Table.Workspace ID",
+              "nativeQueryRef": "Workspace ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Store Type"
+                }
+              },
+              "queryRef": "Catalogue Table.Store Type",
+              "nativeQueryRef": "Store Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Layer"
+                }
+              },
+              "queryRef": "Catalogue Table.Layer",
+              "nativeQueryRef": "Layer"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Schema Name"
+                }
+              },
+              "queryRef": "Catalogue Table.Schema Name",
+              "nativeQueryRef": "Schema Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Table Name"
+                }
+              },
+              "queryRef": "Catalogue Table.Table Name",
+              "nativeQueryRef": "Table Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Is Active"
+                }
+              },
+              "queryRef": "Catalogue Table.Is Active",
+              "nativeQueryRef": "Is Active"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Selected Contract"
+                }
+              },
+              "queryRef": "Measures.Selected Contract",
+              "nativeQueryRef": "Selected Contract"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Selected Agreement"
+                }
+              },
+              "queryRef": "Measures.Selected Agreement",
+              "nativeQueryRef": "Selected Agreement"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Latest Profiled At"
+                }
+              },
+              "queryRef": "Measures.Latest Profiled At",
+              "nativeQueryRef": "Latest Profiled At"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Recorded Access Observations"
+                }
+              },
+              "queryRef": "Measures.Recorded Access Observations",
+              "nativeQueryRef": "Recorded Access Observations"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"All registered physical tables \\u2014 drill through to Table Detail\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"All registered physical tables \\u2014 drill through to Table Detail visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

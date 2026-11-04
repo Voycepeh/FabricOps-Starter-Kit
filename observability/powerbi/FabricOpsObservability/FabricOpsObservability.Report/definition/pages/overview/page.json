@@ -8,7 +8,7 @@
   "visualInteractions": [
     {
       "source": "workspace",
-      "target": "status",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
@@ -18,27 +18,27 @@
     },
     {
       "source": "workspace",
-      "target": "pipelines",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "tables",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "success",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "coverage",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "attention",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
@@ -48,62 +48,62 @@
     },
     {
       "source": "workspace",
-      "target": "health",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "exceptions",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "status",
+      "source": "mode",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "status",
+      "source": "mode",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "pipelines",
+      "source": "mode",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "tables",
+      "source": "mode",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "success",
+      "source": "mode",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "coverage",
+      "source": "mode",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "attention",
+      "source": "mode",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "status",
+      "source": "mode",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "health",
+      "source": "mode",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "status",
-      "target": "exceptions",
+      "source": "mode",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
@@ -113,32 +113,32 @@
     },
     {
       "source": "date",
-      "target": "status",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "pipelines",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "tables",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "success",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "coverage",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "attention",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
@@ -148,262 +148,262 @@
     },
     {
       "source": "date",
-      "target": "health",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
       "source": "date",
-      "target": "exceptions",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
+      "source": "pipelines_run",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "status",
+      "source": "pipelines_run",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
+      "source": "pipelines_run",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "tables",
+      "source": "pipelines_run",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "success",
+      "source": "pipelines_run",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "coverage",
+      "source": "pipelines_run",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "attention",
+      "source": "pipelines_run",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
+      "source": "pipelines_run",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "health",
+      "source": "pipelines_run",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines",
-      "target": "exceptions",
+      "source": "pipelines_run",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
+      "source": "runs",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "status",
+      "source": "runs",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
+      "source": "runs",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "pipelines",
+      "source": "runs",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "success",
+      "source": "runs",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "coverage",
+      "source": "runs",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "attention",
+      "source": "runs",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
+      "source": "runs",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "health",
+      "source": "runs",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "tables",
-      "target": "exceptions",
+      "source": "runs",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "success",
+      "source": "successful",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "status",
+      "source": "successful",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "success",
+      "source": "successful",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "pipelines",
+      "source": "successful",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "tables",
+      "source": "successful",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "coverage",
+      "source": "successful",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "attention",
+      "source": "successful",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "success",
+      "source": "successful",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "health",
+      "source": "successful",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "success",
-      "target": "exceptions",
+      "source": "successful",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
+      "source": "failed",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "status",
+      "source": "failed",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
+      "source": "failed",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "pipelines",
+      "source": "failed",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "tables",
+      "source": "failed",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "success",
+      "source": "failed",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "attention",
+      "source": "failed",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
+      "source": "failed",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "health",
+      "source": "failed",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "coverage",
-      "target": "exceptions",
+      "source": "failed",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
+      "source": "incomplete",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "status",
+      "source": "incomplete",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
+      "source": "incomplete",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "pipelines",
+      "source": "incomplete",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "tables",
+      "source": "incomplete",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "success",
+      "source": "incomplete",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "coverage",
+      "source": "incomplete",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
+      "source": "incomplete",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "health",
+      "source": "incomplete",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
-      "source": "attention",
-      "target": "exceptions",
+      "source": "incomplete",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
@@ -413,7 +413,7 @@
     },
     {
       "source": "trend",
-      "target": "status",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
@@ -423,137 +423,137 @@
     },
     {
       "source": "trend",
-      "target": "pipelines",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "tables",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "success",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "coverage",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "attention",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "health",
+      "target": "modes",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "exceptions",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "health",
+      "source": "modes",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "status",
+      "source": "modes",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "health",
+      "source": "modes",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "pipelines",
+      "source": "modes",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "tables",
+      "source": "modes",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "success",
+      "source": "modes",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "coverage",
+      "source": "modes",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "attention",
+      "source": "modes",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "health",
+      "source": "modes",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "health",
-      "target": "exceptions",
+      "source": "modes",
+      "target": "recent_runs",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
+      "source": "recent_runs",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "status",
+      "source": "recent_runs",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
+      "source": "recent_runs",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "pipelines",
+      "source": "recent_runs",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "tables",
+      "source": "recent_runs",
+      "target": "runs",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "success",
+      "source": "recent_runs",
+      "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "coverage",
+      "source": "recent_runs",
+      "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "attention",
+      "source": "recent_runs",
+      "target": "incomplete",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
+      "source": "recent_runs",
       "target": "trend",
       "type": "DataFilter"
     },
     {
-      "source": "exceptions",
-      "target": "health",
+      "source": "recent_runs",
+      "target": "modes",
       "type": "DataFilter"
     }
   ]

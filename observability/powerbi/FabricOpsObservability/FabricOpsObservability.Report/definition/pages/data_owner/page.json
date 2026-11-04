@@ -1,459 +1,559 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
   "name": "data_owner",
-  "displayName": "Data Owner",
+  "displayName": "Data Owner \u2014 Tables",
   "displayOption": "FitToPage",
   "height": 720,
   "width": 1280,
   "visualInteractions": [
     {
       "source": "steward",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
       "target": "domain",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "contract_status",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "agreements",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "active_contracts",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "owner_coverage",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "profiled",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "agreement_list",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "table_list",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
       "source": "steward",
-      "target": "profile",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "domain",
+      "source": "role",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "domain",
-      "target": "contract_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "agreements",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "active_contracts",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "owner_coverage",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "profiled",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "agreement_list",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "table_list",
-      "type": "DataFilter"
-    },
-    {
-      "source": "domain",
-      "target": "profile",
-      "type": "DataFilter"
-    },
-    {
-      "source": "contract_status",
-      "target": "steward",
-      "type": "DataFilter"
-    },
-    {
-      "source": "contract_status",
+      "source": "role",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "agreements",
+      "source": "role",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "active_contracts",
+      "source": "role",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "owner_coverage",
+      "source": "role",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "profiled",
+      "source": "role",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "agreement_list",
+      "source": "role",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "table_list",
+      "source": "role",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "contract_status",
-      "target": "profile",
+      "source": "role",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
+      "source": "role",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "domain",
+      "source": "domain",
+      "target": "role",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "contract_status",
+      "source": "domain",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "active_contracts",
+      "source": "domain",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "owner_coverage",
+      "source": "domain",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "profiled",
+      "source": "domain",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "agreement_list",
+      "source": "domain",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "table_list",
+      "source": "domain",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "agreements",
-      "target": "profile",
+      "source": "domain",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
+      "source": "domain",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
+      "source": "tables_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "contract_status",
+      "source": "tables_o",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "agreements",
+      "source": "tables_o",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "owner_coverage",
+      "source": "tables_o",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "profiled",
+      "source": "tables_o",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "agreement_list",
+      "source": "tables_o",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "table_list",
+      "source": "tables_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "active_contracts",
-      "target": "profile",
+      "source": "tables_o",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
+      "source": "agreements_o",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
+      "source": "agreements_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "contract_status",
+      "source": "agreements_o",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "agreements",
+      "source": "agreements_o",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "active_contracts",
+      "source": "agreements_o",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "profiled",
+      "source": "agreements_o",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "agreement_list",
+      "source": "agreements_o",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "table_list",
+      "source": "agreements_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "owner_coverage",
-      "target": "profile",
+      "source": "agreements_o",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
+      "source": "contracts_o",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
+      "source": "contracts_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "contract_status",
+      "source": "contracts_o",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "agreements",
+      "source": "contracts_o",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "active_contracts",
+      "source": "contracts_o",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "owner_coverage",
+      "source": "contracts_o",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "agreement_list",
+      "source": "contracts_o",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "table_list",
+      "source": "contracts_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "profiled",
-      "target": "profile",
+      "source": "contracts_o",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
+      "source": "profiled_o",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
+      "source": "profiled_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "contract_status",
+      "source": "profiled_o",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "agreements",
+      "source": "profiled_o",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "active_contracts",
+      "source": "profiled_o",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "owner_coverage",
+      "source": "profiled_o",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "profiled",
+      "source": "profiled_o",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "table_list",
+      "source": "profiled_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "agreement_list",
-      "target": "profile",
+      "source": "profiled_o",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
+      "source": "access_o",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
+      "source": "access_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "contract_status",
+      "source": "access_o",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "agreements",
+      "source": "access_o",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "active_contracts",
+      "source": "access_o",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "owner_coverage",
+      "source": "access_o",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "profiled",
+      "source": "access_o",
+      "target": "agreements_list",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "agreement_list",
+      "source": "access_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "table_list",
-      "target": "profile",
+      "source": "access_o",
+      "target": "profile_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
+      "source": "agreements_list",
       "target": "steward",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
+      "source": "agreements_list",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
       "target": "domain",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "contract_status",
+      "source": "agreements_list",
+      "target": "tables_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "agreements",
+      "source": "agreements_list",
+      "target": "agreements_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "active_contracts",
+      "source": "agreements_list",
+      "target": "contracts_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "owner_coverage",
+      "source": "agreements_list",
+      "target": "profiled_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "profiled",
+      "source": "agreements_list",
+      "target": "access_o",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "agreement_list",
+      "source": "agreements_list",
+      "target": "owner_tables",
       "type": "DataFilter"
     },
     {
-      "source": "profile",
-      "target": "table_list",
+      "source": "agreements_list",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "owner_tables",
       "type": "DataFilter"
     }
   ]

@@ -18,25 +18,10 @@ table 'Data Contract'
 		summarizeBy: none
 		formatString: #,0
 
-	column 'Table ID'
-		dataType: string
-		lineageTag: e45528cb-b7b6-5ae4-aacb-0ed6e1d99afa
-		sourceColumn: table_id
-
-	column 'Table Name'
-		dataType: string
-		lineageTag: 684ab279-7e8c-5498-afd1-78f71a9bcb84
-		sourceColumn: table_name
-
 	column 'Evidence Workspace ID'
 		dataType: string
 		lineageTag: 2657bcb7-ae79-5719-a61c-6c37a930f177
 		sourceColumn: evidence_workspace_id
-
-	column 'Status'
-		dataType: string
-		lineageTag: 0db8e4e2-456c-5979-81e3-15dd02cf93c5
-		sourceColumn: status
 
 	column 'Processing Strategy'
 		dataType: string
@@ -60,7 +45,7 @@ table 'Data Contract'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(contract_id,'|',contract_version) contract_key,contract_id,contract_version,table_id,table_name,evidence_workspace_id,status,JSON_VALUE(contract_payload_json,'$.table.processing.load_strategy') processing_strategy,(SELECT COUNT(1) FROM OPENJSON(contract_payload_json,'$.guardrails')) guardrail_count,(SELECT TOP(1) JSON_VALUE(value,'$.value') FROM OPENJSON(contract_payload_json,'$.enrichment.table') WHERE JSON_VALUE(value,'$.enrichment_type')='Description') table_description FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT]",
+			    Query = "SELECT CONCAT(contract_id,'|',contract_version) contract_key,contract_id,contract_version,evidence_workspace_id,JSON_VALUE(contract_payload_json,'$.table.processing.load_strategy') processing_strategy,(SELECT COUNT(1) FROM OPENJSON(contract_payload_json,'$.guardrails')) guardrail_count,(SELECT TOP(1) JSON_VALUE(value,'$.value') FROM OPENJSON(contract_payload_json,'$.enrichment.table') WHERE JSON_VALUE(value,'$.enrichment_type')='Description') table_description FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT]",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

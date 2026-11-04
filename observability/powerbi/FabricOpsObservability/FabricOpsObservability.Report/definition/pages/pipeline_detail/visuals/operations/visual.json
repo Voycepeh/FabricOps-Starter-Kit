@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "operations",
   "position": {
-    "x": 550,
+    "x": 795,
     "y": 270,
     "z": 0,
     "height": 210,
-    "width": 640,
-    "tabOrder": 820
+    "width": 395,
+    "tabOrder": 1065
   },
   "visual": {
     "visualType": "tableEx",
@@ -56,6 +56,34 @@
               },
               "queryRef": "Run Operation.Pipeline Role",
               "nativeQueryRef": "Pipeline Role"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Read Mode"
+                }
+              },
+              "queryRef": "Run Operation.Read Mode",
+              "nativeQueryRef": "Read Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Write Mode"
+                }
+              },
+              "queryRef": "Run Operation.Write Mode",
+              "nativeQueryRef": "Write Mode"
             },
             {
               "field": {
@@ -187,7 +215,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Operations and affected tables\""
+                  "Value": "\"Selected run operations and tables\""
                 }
               }
             }
@@ -200,7 +228,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Operations and affected tables visual\""
+                  "Value": "\"Selected run operations and tables visual\""
                 }
               }
             }

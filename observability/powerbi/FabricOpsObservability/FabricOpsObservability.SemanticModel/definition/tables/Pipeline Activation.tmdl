@@ -1,0 +1,100 @@
+table 'Pipeline Activation'
+	lineageTag: 78458a14-c576-5bb0-b5ba-499e44b0dfe9
+
+	column 'Pipeline Key'
+		dataType: string
+		lineageTag: 34b9083f-a5aa-5637-9328-cf0ce97dc965
+		sourceColumn: pipeline_key
+
+	column 'Pipeline ID'
+		dataType: string
+		lineageTag: 9deed800-1c41-587a-bd64-81d3b1dfdc78
+		sourceColumn: pipeline_id
+
+	column 'Approval ID'
+		dataType: string
+		lineageTag: dc742594-5f29-5f2c-93ea-840035b9aede
+		sourceColumn: approval_id
+
+	column 'Submission ID'
+		dataType: string
+		lineageTag: d5e9a7e6-7ce6-5f58-9450-12c2313102ff
+		sourceColumn: submission_id
+
+	column 'Revision'
+		dataType: int64
+		lineageTag: da4ef47a-1b32-50fb-9d67-4688f4547283
+		sourceColumn: revision
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		lineageTag: 959cb095-7486-5512-9a5b-641bff15d579
+		sourceColumn: status
+
+	column 'Decision Kind'
+		dataType: string
+		lineageTag: 91f8b35f-8ca1-5470-a036-df2f9afadac0
+		sourceColumn: decision_kind
+
+	column 'Expected Active Version'
+		dataType: int64
+		lineageTag: 7ac9a86b-c99d-5a4c-affd-4fff95350e33
+		sourceColumn: expected_active_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Restores Promotion ID'
+		dataType: string
+		lineageTag: c601fc63-6c1d-5ca5-8001-5dbf7289096c
+		sourceColumn: restores_promotion_id
+
+	column 'Expires At'
+		dataType: dateTime
+		lineageTag: d762aed2-da69-5dc1-8ea1-3c5a3269c4a4
+		sourceColumn: expires_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Decided At'
+		dataType: dateTime
+		lineageTag: 99fa66cb-83b7-5bbe-896f-e4dd21ace225
+		sourceColumn: decided_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Review Note'
+		dataType: string
+		lineageTag: 08ade1ce-bde9-5696-811a-4868106bd8a5
+		sourceColumn: review_note
+
+	column 'Submitted Dry Run ID'
+		dataType: string
+		lineageTag: cde28f7c-a7bc-520d-9d60-252268ff6dd4
+		sourceColumn: submitted_dry_run_id
+
+	column 'Submitted Dry Run Status'
+		dataType: string
+		lineageTag: eed75857-e798-5f12-add8-3f579d9e3da0
+		sourceColumn: submitted_dry_run_status
+
+	column 'Submitted Dry Run Boundary Completed'
+		dataType: boolean
+		lineageTag: c3a47e84-6108-5673-bbcc-ad775c1a8691
+		sourceColumn: submitted_dry_run_boundary_completed
+
+	column 'Submitted Dry Run Operation Count'
+		dataType: int64
+		lineageTag: 94f4d2ee-0c83-5a85-b61d-3469f7f3c15d
+		sourceColumn: submitted_dry_run_operation_count
+		summarizeBy: none
+		formatString: #,0
+
+	partition 'Pipeline Activation' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(a.execution_workspace_id,'|',a.pipeline_id) pipeline_key,a.pipeline_id,a.approval_id,a.submission_id,a.revision,a.status,a.decision_kind,a.expected_active_version,a.restores_promotion_id,a.expires_at,a.decided_at,a.review_note,JSON_VALUE(a.package_json,'$.dry_run.run_id') submitted_dry_run_id,JSON_VALUE(a.package_json,'$.dry_run.status') submitted_dry_run_status,CASE JSON_VALUE(a.package_json,'$.dry_run.boundary_completed') WHEN 'true' THEN CAST(1 AS bit) WHEN 'false' THEN CAST(0 AS bit) END submitted_dry_run_boundary_completed,(SELECT COUNT(1) FROM OPENJSON(a.package_json,'$.dry_run.operations')) submitted_dry_run_operation_count FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] a WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR a.execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

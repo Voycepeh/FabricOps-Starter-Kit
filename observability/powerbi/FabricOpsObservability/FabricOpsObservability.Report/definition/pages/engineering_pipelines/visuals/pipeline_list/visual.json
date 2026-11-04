@@ -1,0 +1,212 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "pipeline_list",
+  "position": {
+    "x": 570,
+    "y": 270,
+    "z": 0,
+    "height": 225,
+    "width": 620,
+    "tabOrder": 840
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline"
+                    }
+                  },
+                  "Property": "Pipeline Key"
+                }
+              },
+              "queryRef": "Pipeline.Pipeline Key",
+              "nativeQueryRef": "Pipeline Key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline"
+                    }
+                  },
+                  "Property": "Pipeline ID"
+                }
+              },
+              "queryRef": "Pipeline.Pipeline ID",
+              "nativeQueryRef": "Pipeline ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline"
+                    }
+                  },
+                  "Property": "Workspace ID"
+                }
+              },
+              "queryRef": "Pipeline.Workspace ID",
+              "nativeQueryRef": "Workspace ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Pipeline Version"
+                }
+              },
+              "queryRef": "Pipeline Registry.Pipeline Version",
+              "nativeQueryRef": "Pipeline Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Pipeline Registry.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Promotion ID"
+                }
+              },
+              "queryRef": "Pipeline Registry.Promotion ID",
+              "nativeQueryRef": "Promotion ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Promoted At"
+                }
+              },
+              "queryRef": "Pipeline Registry.Promoted At",
+              "nativeQueryRef": "Promoted At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Fabric Notebook URL"
+                }
+              },
+              "queryRef": "Pipeline Registry.Fabric Notebook URL",
+              "nativeQueryRef": "Fabric Notebook URL"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Run Count"
+                }
+              },
+              "queryRef": "Measures.Run Count",
+              "nativeQueryRef": "Run Count"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Latest Recorded Run Status"
+                }
+              },
+              "queryRef": "Measures.Latest Recorded Run Status",
+              "nativeQueryRef": "Latest Recorded Run Status"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Last Recorded Execution"
+                }
+              },
+              "queryRef": "Measures.Last Recorded Execution",
+              "nativeQueryRef": "Last Recorded Execution"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Pipeline identities and recorded activity \\u2014 drill through for details\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Pipeline identities and recorded activity \\u2014 drill through for details visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

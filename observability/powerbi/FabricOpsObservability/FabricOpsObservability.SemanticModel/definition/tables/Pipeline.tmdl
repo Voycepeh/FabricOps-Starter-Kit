@@ -1,0 +1,27 @@
+table 'Pipeline'
+	lineageTag: 363cb5e9-3c3c-52d1-bffc-2c07404870fe
+
+	column 'Pipeline Key'
+		dataType: string
+		lineageTag: eb5535c9-2e90-5f20-8330-0fe62a9bca7a
+		sourceColumn: pipeline_key
+
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: 7d762c15-ee38-5bb6-bd98-b95380be66c6
+		sourceColumn: workspace_id
+
+	column 'Pipeline ID'
+		dataType: string
+		lineageTag: 9ea71b62-3867-5c6a-9ff5-082208c61bc2
+		sourceColumn: pipeline_id
+
+	partition 'Pipeline' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT DISTINCT CONCAT(p.workspace_id,'|',p.pipeline_id) pipeline_key,p.workspace_id,p.pipeline_id FROM (SELECT execution_workspace_id workspace_id,pipeline_id FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION SELECT workspace_id,pipeline_id FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] WHERE started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION SELECT execution_workspace_id workspace_id,pipeline_id FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

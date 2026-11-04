@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "date",
   "position": {
-    "x": 565,
+    "x": 575,
     "y": 55,
     "z": 0,
     "height": 55,
-    "width": 280,
-    "tabOrder": 620
+    "width": 290,
+    "tabOrder": 630
   },
   "visual": {
     "visualType": "slicer",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run date\""
+                  "Value": "\"Run period\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run date visual\""
+                  "Value": "\"Run period visual\""
                 }
               }
             }

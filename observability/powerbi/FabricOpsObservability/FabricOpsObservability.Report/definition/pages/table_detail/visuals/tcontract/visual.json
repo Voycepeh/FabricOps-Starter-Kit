@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "tcontract",
   "position": {
-    "x": 290,
+    "x": 25,
     "y": 135,
     "z": 0,
     "height": 105,
-    "width": 250,
-    "tabOrder": 425
+    "width": 275,
+    "tabOrder": 160
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Current contract\""
+                  "Value": "\"Current recorded Contract\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Current contract visual\""
+                  "Value": "\"Current recorded Contract visual\""
                 }
               }
             }

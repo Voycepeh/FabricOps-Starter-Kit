@@ -18,26 +18,12 @@ table 'Profiled Column'
 		summarizeBy: none
 		formatString: #,0
 
-	column 'Null Count'
-		dataType: int64
-		lineageTag: 8600d0e5-36fb-5003-a495-764c9c3e362e
-		sourceColumn: null_count
-		summarizeBy: none
-		formatString: #,0
-
 	column 'Null Percent'
 		dataType: double
 		lineageTag: d2adc601-eb67-5acf-b13b-dbbd91fe857d
 		sourceColumn: null_percent
 		summarizeBy: none
 		formatString: #,0.0
-
-	column 'Distinct Count'
-		dataType: int64
-		lineageTag: 444723f0-81ab-530f-9eb0-3a2e583bbcd5
-		sourceColumn: distinct_count
-		summarizeBy: none
-		formatString: #,0
 
 	column 'Distinct Percent'
 		dataType: double
@@ -50,13 +36,6 @@ table 'Profiled Column'
 		dataType: string
 		lineageTag: b412ac9d-d684-581a-9fa6-c80c8f78802e
 		sourceColumn: minimum_value
-
-	column 'Median Value'
-		dataType: double
-		lineageTag: b4905193-959a-5b94-ae53-95fab1a8bf8e
-		sourceColumn: median_value
-		summarizeBy: none
-		formatString: #,0.0
 
 	column 'Maximum Value'
 		dataType: string
@@ -74,7 +53,7 @@ table 'Profiled Column'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "WITH p AS (SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,profile_snapshot_id,row_count,null_count,null_percent,distinct_count,distinct_percent,min_value,median_value,max_value,_committed_at profiled_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id,column_id ORDER BY _committed_at DESC,profile_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT column_key,profile_snapshot_id,row_count,null_count,null_percent,distinct_count,distinct_percent,min_value,median_value,max_value,profiled_at FROM p WHERE rn=1",
+			    Query = "WITH p AS (SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,_committed_at profiled_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id,column_id ORDER BY _committed_at DESC,profile_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,profiled_at FROM p WHERE rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

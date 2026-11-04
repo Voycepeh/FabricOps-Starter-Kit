@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Duration\""
+                  "Value": "\"Recorded duration\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Duration visual\""
+                  "Value": "\"Recorded duration visual\""
                 }
               }
             }

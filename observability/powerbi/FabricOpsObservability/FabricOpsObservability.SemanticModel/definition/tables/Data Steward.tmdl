@@ -16,16 +16,6 @@ table 'Data Steward'
 		lineageTag: 0b8de918-ebf8-5cae-890b-35823cae3914
 		sourceColumn: contact
 
-	column 'Steward Role'
-		dataType: string
-		lineageTag: dde32dd2-c92d-5468-a2dc-12ed516b728d
-		sourceColumn: steward_role
-
-	column 'Is Active'
-		dataType: boolean
-		lineageTag: 171a14ba-a62c-5e80-8025-53ae831ce913
-		sourceColumn: is_active
-
 	column 'Steward Display'
 		dataType: string
 		lineageTag: 0c061ec2-201c-55a3-8e9f-6899df0ac07e
@@ -36,7 +26,7 @@ table 'Data Steward'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT steward_id,steward_name,contact,steward_role,is_active,CONCAT(COALESCE(steward_name,steward_id),CASE WHEN contact IS NULL OR contact='' THEN '' ELSE CONCAT(' | ',contact) END) steward_display FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_STEWARD] WHERE is_active=1 OR is_active IS NULL",
+			    Query = "SELECT steward_id,steward_name,contact,CONCAT(COALESCE(steward_name,steward_id),CASE WHEN contact IS NULL OR contact='' THEN '' ELSE CONCAT(' | ',contact) END) steward_display FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_STEWARD] WHERE is_active=1 OR is_active IS NULL",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

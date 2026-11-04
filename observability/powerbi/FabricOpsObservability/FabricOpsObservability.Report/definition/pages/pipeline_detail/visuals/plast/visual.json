@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Last success\""
+                  "Value": "\"Last successful execution\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Last success visual\""
+                  "Value": "\"Last successful execution visual\""
                 }
               }
             }

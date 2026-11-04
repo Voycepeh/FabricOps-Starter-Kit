@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "governance",
   "position": {
-    "x": 605,
+    "x": 470,
     "y": 270,
     "z": 0,
     "height": 190,
-    "width": 585,
-    "tabOrder": 875
+    "width": 720,
+    "tabOrder": 740
   },
   "visual": {
     "visualType": "tableEx",
@@ -201,7 +201,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Activation, agreement and contract\""
+                  "Value": "\"Recorded activation, Agreement and Contract\""
                 }
               }
             }
@@ -214,7 +214,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Activation, agreement and contract visual\""
+                  "Value": "\"Recorded activation, Agreement and Contract visual\""
                 }
               }
             }

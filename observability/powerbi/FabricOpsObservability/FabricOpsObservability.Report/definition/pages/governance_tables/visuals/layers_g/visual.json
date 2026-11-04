@@ -1,0 +1,90 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "layers_g",
+  "position": {
+    "x": 25,
+    "y": 560,
+    "z": 0,
+    "height": 125,
+    "width": 565,
+    "tabOrder": 585
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Layer"
+                }
+              },
+              "queryRef": "Catalogue Table.Layer",
+              "nativeQueryRef": "Layer"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Registered Physical Tables"
+                }
+              },
+              "queryRef": "Measures.Registered Physical Tables",
+              "nativeQueryRef": "Registered Physical Tables"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Tables by recorded layer\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Tables by recorded layer visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

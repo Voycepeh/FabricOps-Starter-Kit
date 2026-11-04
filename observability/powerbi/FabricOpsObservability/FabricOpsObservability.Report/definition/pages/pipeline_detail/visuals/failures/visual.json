@@ -61,7 +61,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Safe failure diagnostics\""
+                  "Value": "\"Recorded safe failure diagnostics\""
                 }
               }
             }
@@ -74,7 +74,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Safe failure diagnostics visual\""
+                  "Value": "\"Recorded safe failure diagnostics visual\""
                 }
               }
             }

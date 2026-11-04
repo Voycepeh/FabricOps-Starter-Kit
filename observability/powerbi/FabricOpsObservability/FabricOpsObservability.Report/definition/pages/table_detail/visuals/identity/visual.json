@@ -6,7 +6,7 @@
     "y": 270,
     "z": 0,
     "height": 190,
-    "width": 555,
+    "width": 430,
     "tabOrder": 295
   },
   "visual": {
@@ -121,11 +121,11 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "First Profiled At"
+                  "Property": "Is Active"
                 }
               },
-              "queryRef": "Catalogue Table.First Profiled At",
-              "nativeQueryRef": "First Profiled At"
+              "queryRef": "Catalogue Table.Is Active",
+              "nativeQueryRef": "Is Active"
             }
           ]
         }

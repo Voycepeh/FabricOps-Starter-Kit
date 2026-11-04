@@ -2,13 +2,25 @@ table Measures
 	lineageTag: 00000000-0000-0000-0000-000000000001
 	measure 'Registered Pipelines' = DISTINCTCOUNT('Pipeline Registry'[Pipeline Key])
 		formatString: #,0
+	measure 'Pipeline Identities' = DISTINCTCOUNT('Pipeline'[Pipeline Key])
+		formatString: #,0
+	measure 'Pipelines Run' = DISTINCTCOUNT('Pipeline Run'[Pipeline Key])
+		formatString: #,0
+	measure 'Submitted Dry Run Submissions' = CALCULATE(DISTINCTCOUNT('Pipeline Activation'[Submission ID]), NOT ISBLANK('Pipeline Activation'[Submitted Dry Run ID]))
+		formatString: #,0
+	measure 'Approved Activation Decisions' = CALCULATE(COUNTROWS('Pipeline Activation'), 'Pipeline Activation'[Status] = "approved")
+		formatString: #,0
+	measure 'Registered Physical Tables' = DISTINCTCOUNT('Catalogue Table'[Table Key])
+		formatString: #,0
 	measure 'Monitored Tables' = CALCULATE(DISTINCTCOUNT('Catalogue Table'[Table Key]), 'Catalogue Table'[Is Active] <> FALSE())
 		formatString: #,0
 	measure 'Run Count' = COUNTROWS('Pipeline Run')
 		formatString: #,0
-	measure 'Successful Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"})
+	measure 'Successful Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}, 'Pipeline Run'[Boundary Completed] = TRUE())
 		formatString: #,0
-	measure 'Failed Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] = "failed" || 'Pipeline Run'[Boundary Completed] = FALSE())
+	measure 'Failed Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] = "failed")
+		formatString: #,0
+	measure 'Incomplete Runs' = COUNTROWS(FILTER('Pipeline Run', 'Pipeline Run'[Status] <> "failed" && (NOT ('Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}) || 'Pipeline Run'[Boundary Completed] <> TRUE())))
 		formatString: #,0
 	measure 'Pipeline Success Rate' = DIVIDE([Successful Runs], [Run Count])
 		formatString: #,0.0%;-#,0.0%;#,0.0%
@@ -18,16 +30,24 @@ table Measures
 		formatString: #,0.0
 	measure 'Duration Deviation Percent' = DIVIDE([Run Duration Minutes]-[Historical Median Duration Minutes],[Historical Median Duration Minutes])
 		formatString: +#,0.0%;-#,0.0%;#,0.0%
-	measure 'Active Contracts' = CALCULATE(COUNTROWS('Contract Activation'), 'Contract Activation'[Status] = "active")
+	measure 'Last Recorded Execution' = MAX('Pipeline Run'[Started At])
+		formatString: yyyy-MM-dd HH:mm
+	measure 'Last Successful Execution' = CALCULATE(MAX('Pipeline Run'[Completed At]), 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}, 'Pipeline Run'[Boundary Completed] = TRUE())
+		formatString: yyyy-MM-dd HH:mm
+	measure 'Latest Recorded Run Status' = VAR LatestRun=TOPN(1,'Pipeline Run','Pipeline Run'[Started At],DESC,'Pipeline Run'[Run ID],DESC) RETURN COALESCE(MAXX(LatestRun,'Pipeline Run'[Status]),"No run recorded")
+		formatString: @
+	measure 'Contract Selections' = COUNTROWS('Contract Activation')
+		formatString: #,0
+	measure 'Active Contracts' = CALCULATE([Contract Selections], 'Contract Activation'[Status] = "active")
 		formatString: #,0
 	measure 'Contract Coverage' = DIVIDE(CALCULATE(DISTINCTCOUNT('Contract Activation'[Table Key]), 'Contract Activation'[Status] = "active"), [Monitored Tables])
 		formatString: #,0.0%;-#,0.0%;#,0.0%
-	measure 'Current Guardrail Failures' = CALCULATE(COUNTROWS('Guardrail Result'), 'Guardrail Result'[Status] IN {"failed", "error"} || 'Guardrail Result'[Can Continue] = FALSE())
+	measure 'Tables With Agreement' = CALCULATE(DISTINCTCOUNT('Contract Activation'[Table Key]), NOT ISBLANK('Contract Activation'[Agreement Key]))
 		formatString: #,0
-	measure 'Last Successful Execution' = CALCULATE(MAX('Pipeline Run'[Completed At]), 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}, 'Pipeline Run'[Boundary Completed] = TRUE())
-		formatString: yyyy-MM-dd HH:mm
-	measure 'Latest Pipeline Status' = COALESCE(MAX('Pipeline Run'[Latest Status]), "Unevaluated")
-		formatString: @
+	measure 'Recorded Guardrail Failures' = CALCULATE(COUNTROWS('Guardrail Result'), 'Guardrail Result'[Status] IN {"failed", "error"})
+		formatString: #,0
+	measure 'Recorded Blocking Guardrail Outcomes' = CALCULATE(COUNTROWS('Guardrail Result'), 'Guardrail Result'[Can Continue] = FALSE() || 'Guardrail Result'[Action] = "Block")
+		formatString: #,0
 	measure 'Agreements' = DISTINCTCOUNT('Data Agreement'[Agreement Key])
 		formatString: #,0
 	measure 'Latest Profiled At' = MAX('Catalogue Table'[Last Profiled At])
@@ -38,11 +58,13 @@ table Measures
 		formatString: #,0.0
 	measure 'Average Distinct Percent' = AVERAGE('Profiled Column'[Distinct Percent])
 		formatString: #,0.0
-	measure 'Selected Contract' = COALESCE(SELECTEDVALUE('Data Contract'[Contract ID]) & " v" & FORMAT(SELECTEDVALUE('Data Contract'[Contract Version]), "0"), "No active contract")
+	measure 'Selected Contract' = VAR ContractId=SELECTEDVALUE('Data Contract'[Contract ID]) RETURN IF(ISBLANK(ContractId), "No active Contract recorded", ContractId & " v" & FORMAT(SELECTEDVALUE('Data Contract'[Contract Version]), "0"))
 		formatString: @
-	measure 'Table Attention State' = VAR HasRuns=CALCULATE(COUNTROWS('Run Operation'))>0 VAR HasContract=CALCULATE(COUNTROWS('Contract Activation'),'Contract Activation'[Status]="active")>0 VAR HasFailure=[Current Guardrail Failures]>0||CALCULATE([Failed Runs])>0 VAR HasIncomplete=CALCULATE(COUNTROWS('Pipeline Run'),'Pipeline Run'[Boundary Completed]=FALSE())>0 RETURN SWITCH(TRUE(),HasFailure,"Failed",NOT HasContract,"Ungoverned",HasIncomplete,"Incomplete",NOT HasRuns,"Unevaluated","Successful")
+	measure 'Selected Agreement' = VAR AgreementName=SELECTEDVALUE('Data Agreement'[Agreement Name]) RETURN IF(ISBLANK(AgreementName), "No Agreement recorded", AgreementName & " v" & SELECTEDVALUE('Data Agreement'[Agreement Version]))
 		formatString: @
-	measure 'Tables Requiring Attention' = COUNTROWS(FILTER(VALUES('Catalogue Table'[Table Key]),[Table Attention State]<>"Successful"))
+	measure 'Recorded Access Observations' = COUNTROWS('Data Access')
+		formatString: #,0
+	measure 'Tables With Recorded Access' = DISTINCTCOUNT('Data Access'[Table Key])
 		formatString: #,0
 	partition Measures = calculated
 		mode: import

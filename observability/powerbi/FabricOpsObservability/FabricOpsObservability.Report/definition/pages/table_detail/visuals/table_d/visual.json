@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Table\""
+                  "Value": "\"Physical workspace/Table\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Table visual\""
+                  "Value": "\"Physical workspace/Table visual\""
                 }
               }
             }

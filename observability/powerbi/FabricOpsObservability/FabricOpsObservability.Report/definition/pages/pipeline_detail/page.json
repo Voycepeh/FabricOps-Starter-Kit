@@ -38,6 +38,11 @@
     },
     {
       "source": "pipeline_d",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -83,6 +88,11 @@
     },
     {
       "source": "run_d",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -128,6 +138,11 @@
     },
     {
       "source": "pstatus",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -173,6 +188,11 @@
     },
     {
       "source": "pduration",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -218,6 +238,11 @@
     },
     {
       "source": "plast",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -263,6 +288,11 @@
     },
     {
       "source": "fabric_link",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -308,6 +338,11 @@
     },
     {
       "source": "history",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -322,6 +357,56 @@
       "type": "DataFilter"
     },
     {
+      "source": "activation_history",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
       "source": "operations",
       "target": "pipeline_d",
       "type": "DataFilter"
@@ -354,6 +439,11 @@
     {
       "source": "operations",
       "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "activation_history",
       "type": "DataFilter"
     },
     {
@@ -403,6 +493,11 @@
     },
     {
       "source": "stages",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
       "target": "operations",
       "type": "DataFilter"
     },
@@ -444,6 +539,11 @@
     {
       "source": "failures",
       "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "activation_history",
       "type": "DataFilter"
     },
     {
@@ -471,23 +571,10 @@
           "Column": {
             "Expression": {
               "SourceRef": {
-                "Entity": "Pipeline Run"
+                "Entity": "Pipeline"
               }
             },
             "Property": "Pipeline Key"
-          }
-        }
-      },
-      {
-        "name": "Run ID",
-        "fieldExpr": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "Pipeline Run"
-              }
-            },
-            "Property": "Run ID"
           }
         }
       }

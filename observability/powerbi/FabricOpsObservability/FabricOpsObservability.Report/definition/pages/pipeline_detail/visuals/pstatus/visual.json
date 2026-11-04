@@ -23,11 +23,11 @@
                       "Entity": "Measures"
                     }
                   },
-                  "Property": "Latest Pipeline Status"
+                  "Property": "Latest Recorded Run Status"
                 }
               },
-              "queryRef": "Measures.Latest Pipeline Status",
-              "nativeQueryRef": "Latest Pipeline Status"
+              "queryRef": "Measures.Latest Recorded Run Status",
+              "nativeQueryRef": "Latest Recorded Run Status"
             }
           ]
         }
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Status\""
+                  "Value": "\"Recorded status\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Status visual\""
+                  "Value": "\"Recorded status visual\""
                 }
               }
             }

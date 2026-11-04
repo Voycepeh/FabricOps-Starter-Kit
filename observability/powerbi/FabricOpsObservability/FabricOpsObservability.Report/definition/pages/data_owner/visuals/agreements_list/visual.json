@@ -1,0 +1,198 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "agreements_list",
+  "position": {
+    "x": 25,
+    "y": 270,
+    "z": 0,
+    "height": 230,
+    "width": 500,
+    "tabOrder": 295
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement ID"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement ID",
+              "nativeQueryRef": "Agreement ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement Name"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement Name",
+              "nativeQueryRef": "Agreement Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement Version"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement Version",
+              "nativeQueryRef": "Agreement Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Domain"
+                }
+              },
+              "queryRef": "Data Agreement.Domain",
+              "nativeQueryRef": "Domain"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Business Purpose"
+                }
+              },
+              "queryRef": "Data Agreement.Business Purpose",
+              "nativeQueryRef": "Business Purpose"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Start Date"
+                }
+              },
+              "queryRef": "Data Agreement.Start Date",
+              "nativeQueryRef": "Start Date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Expiry Date"
+                }
+              },
+              "queryRef": "Data Agreement.Expiry Date",
+              "nativeQueryRef": "Expiry Date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Agreement Steward"
+                    }
+                  },
+                  "Property": "Participation Role"
+                }
+              },
+              "queryRef": "Agreement Steward.Participation Role",
+              "nativeQueryRef": "Participation Role"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Steward"
+                    }
+                  },
+                  "Property": "Steward Name"
+                }
+              },
+              "queryRef": "Data Steward.Steward Name",
+              "nativeQueryRef": "Steward Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Steward"
+                    }
+                  },
+                  "Property": "Contact"
+                }
+              },
+              "queryRef": "Data Steward.Contact",
+              "nativeQueryRef": "Contact"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Agreement participation\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Agreement participation visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

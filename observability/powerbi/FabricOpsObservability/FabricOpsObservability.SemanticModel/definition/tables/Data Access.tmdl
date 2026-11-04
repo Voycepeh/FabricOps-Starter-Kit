@@ -1,0 +1,63 @@
+table 'Data Access'
+	lineageTag: af126be3-3f6e-55b1-bde8-e83d448d20e1
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: b4217844-59ad-5d84-9710-03a135b1269b
+		sourceColumn: table_key
+
+	column 'Access Snapshot ID'
+		dataType: string
+		lineageTag: 9988e76b-5251-5c25-8dd9-10cd2968f19c
+		sourceColumn: access_snapshot_id
+
+	column 'User Principal'
+		dataType: string
+		lineageTag: abb6d957-128e-5cf9-83ac-aaab8f8ef4a3
+		sourceColumn: user_principal
+
+	column 'User Type'
+		dataType: string
+		lineageTag: a459ac82-8039-5ebf-85f3-86d6271d9106
+		sourceColumn: user_type
+
+	column 'Access Level'
+		dataType: string
+		lineageTag: d7a84800-df27-555e-a674-cb8ad6d135d3
+		sourceColumn: access_level
+
+	column 'Access Value'
+		dataType: string
+		lineageTag: 349de44f-970e-5339-bcf3-d65713b8d776
+		sourceColumn: access_value
+
+	column 'Access State'
+		dataType: string
+		lineageTag: c5fa7bcd-eefa-5d16-a4ea-d264792134e9
+		sourceColumn: access_state
+
+	column 'Role Name'
+		dataType: string
+		lineageTag: 842ec4f2-68a2-51cc-8be6-9de8e953ec50
+		sourceColumn: role_name
+
+	column 'Permission Source'
+		dataType: string
+		lineageTag: 0c24649c-65ab-598d-8a56-93e98ea96eff
+		sourceColumn: permission_source
+
+	column 'Observed At'
+		dataType: dateTime
+		lineageTag: fa4885a5-3029-5403-b801-3e8293f593d7
+		sourceColumn: observed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	partition 'Data Access' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "WITH snapshots AS (SELECT workspace_id,table_id,access_snapshot_id,MAX(_committed_at) observed_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY MAX(_committed_at) DESC,access_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') GROUP BY workspace_id,table_id,access_snapshot_id) SELECT CONCAT(a.workspace_id,'|',a.table_id) table_key,a.access_snapshot_id,a.user_principal,a.user_type,a.access_level,a.access_value,a.access_state,a.role_name,a.permission_source,s.observed_at FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] a INNER JOIN snapshots s ON s.workspace_id=a.workspace_id AND s.table_id=a.table_id AND s.access_snapshot_id=a.access_snapshot_id AND s.rn=1",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

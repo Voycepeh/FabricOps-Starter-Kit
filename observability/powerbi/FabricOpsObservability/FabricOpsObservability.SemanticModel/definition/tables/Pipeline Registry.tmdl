@@ -6,16 +6,6 @@ table 'Pipeline Registry'
 		lineageTag: 81d72f5e-088a-587c-bd45-c5003c4e5541
 		sourceColumn: pipeline_key
 
-	column 'Execution Workspace ID'
-		dataType: string
-		lineageTag: b0d04f1f-e1e4-5bf8-95f8-ae33b0580fb8
-		sourceColumn: execution_workspace_id
-
-	column 'Pipeline ID'
-		dataType: string
-		lineageTag: 6b3382a0-c9e5-5d68-94af-76c03bb9a02e
-		sourceColumn: pipeline_id
-
 	column 'Pipeline Version'
 		dataType: int64
 		lineageTag: ab8f1101-d4b8-520c-b5bf-02c58fb3cc40
@@ -32,11 +22,6 @@ table 'Pipeline Registry'
 		dataType: string
 		lineageTag: 3e8d73ce-039c-593b-988f-9d0d6548fe3f
 		sourceColumn: status
-
-	column 'Governed Notebook ID'
-		dataType: string
-		lineageTag: d9941d9b-69bd-522a-a610-907af27ef0ee
-		sourceColumn: governed_notebook_id
 
 	column 'Promoted At'
 		dataType: dateTime
@@ -55,7 +40,7 @@ table 'Pipeline Registry'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "WITH p AS (SELECT CONCAT(execution_workspace_id,'|',pipeline_id) pipeline_key,execution_workspace_id,pipeline_id,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,ROW_NUMBER() OVER(PARTITION BY execution_workspace_id,pipeline_id ORDER BY pipeline_version DESC,promoted_at DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT pipeline_key,execution_workspace_id,pipeline_id,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',execution_workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM p WHERE rn=1",
+			    Query = "WITH p AS (SELECT CONCAT(execution_workspace_id,'|',pipeline_id) pipeline_key,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,execution_workspace_id,ROW_NUMBER() OVER(PARTITION BY execution_workspace_id,pipeline_id ORDER BY pipeline_version DESC,promoted_at DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT pipeline_key,pipeline_version,promotion_id,status,promoted_at,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',execution_workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM p WHERE rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

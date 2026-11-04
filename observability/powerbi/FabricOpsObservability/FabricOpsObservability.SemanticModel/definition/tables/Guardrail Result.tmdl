@@ -1,11 +1,6 @@
 table 'Guardrail Result'
 	lineageTag: a0750854-3bd1-52f2-982c-453b43ae0918
 
-	column 'Guardrail Result ID'
-		dataType: string
-		lineageTag: d070452b-868d-57c4-9630-4526649ba000
-		sourceColumn: guardrail_result_id
-
 	column 'Run ID'
 		dataType: string
 		lineageTag: d0eaeca8-7a5b-5cb6-b19b-958c85361791
@@ -16,20 +11,10 @@ table 'Guardrail Result'
 		lineageTag: ecb68e87-cb9d-5031-8f04-500b9f28e971
 		sourceColumn: table_key
 
-	column 'Table ID'
-		dataType: string
-		lineageTag: f1067de5-d5a9-5138-8756-f621b4991778
-		sourceColumn: table_id
-
 	column 'Table Name'
 		dataType: string
 		lineageTag: 44159885-a060-5db8-9ea3-cc0ffdab20ca
 		sourceColumn: table_name
-
-	column 'Workspace ID'
-		dataType: string
-		lineageTag: 99edc18c-ade3-5263-8ab6-21c40544896a
-		sourceColumn: workspace_id
 
 	column 'Contract ID'
 		dataType: string
@@ -89,7 +74,7 @@ table 'Guardrail Result'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT guardrail_result_id,run_id,CONCAT(workspace_id,'|',table_id) table_key,table_id,table_name,workspace_id,contract_id,contract_version,status,can_continue,severity,guardrail_type,rule_type,action,reason,_committed_at committed_at FROM [" & EngineeringSchemaSql & "].[METADATA_GUARDRAIL_RESULTS] WHERE _committed_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT run_id,CONCAT(workspace_id,'|',table_id) table_key,table_name,contract_id,contract_version,status,can_continue,severity,guardrail_type,rule_type,action,reason,_committed_at committed_at FROM [" & EngineeringSchemaSql & "].[METADATA_GUARDRAIL_RESULTS] WHERE _committed_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

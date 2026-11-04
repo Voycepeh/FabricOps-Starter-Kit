@@ -89,7 +89,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded stages \\u2014 no independent duration\""
+                  "Value": "\"Recorded sequential stages \\u2014 absent stages were not recorded\""
                 }
               }
             }
@@ -102,7 +102,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded stages \\u2014 no independent duration visual\""
+                  "Value": "\"Recorded sequential stages \\u2014 absent stages were not recorded visual\""
                 }
               }
             }

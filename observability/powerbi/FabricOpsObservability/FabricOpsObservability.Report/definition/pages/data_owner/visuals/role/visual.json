@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "role",
+  "position": {
+    "x": 410,
+    "y": 55,
+    "z": 0,
+    "height": 55,
+    "width": 250,
+    "tabOrder": 465
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Agreement Steward"
+                    }
+                  },
+                  "Property": "Participation Role"
+                }
+              },
+              "queryRef": "Agreement Steward.Participation Role",
+              "nativeQueryRef": "Participation Role"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Agreement participation role\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Agreement participation role visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

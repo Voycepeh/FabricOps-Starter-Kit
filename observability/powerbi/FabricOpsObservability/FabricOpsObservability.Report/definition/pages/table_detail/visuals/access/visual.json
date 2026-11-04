@@ -1,0 +1,184 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "access",
+  "position": {
+    "x": 425,
+    "y": 485,
+    "z": 0,
+    "height": 200,
+    "width": 250,
+    "tabOrder": 910
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Access Snapshot ID"
+                }
+              },
+              "queryRef": "Data Access.Access Snapshot ID",
+              "nativeQueryRef": "Access Snapshot ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "User Principal"
+                }
+              },
+              "queryRef": "Data Access.User Principal",
+              "nativeQueryRef": "User Principal"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "User Type"
+                }
+              },
+              "queryRef": "Data Access.User Type",
+              "nativeQueryRef": "User Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Access Level"
+                }
+              },
+              "queryRef": "Data Access.Access Level",
+              "nativeQueryRef": "Access Level"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Access Value"
+                }
+              },
+              "queryRef": "Data Access.Access Value",
+              "nativeQueryRef": "Access Value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Access State"
+                }
+              },
+              "queryRef": "Data Access.Access State",
+              "nativeQueryRef": "Access State"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Role Name"
+                }
+              },
+              "queryRef": "Data Access.Role Name",
+              "nativeQueryRef": "Role Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Permission Source"
+                }
+              },
+              "queryRef": "Data Access.Permission Source",
+              "nativeQueryRef": "Permission Source"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Observed At"
+                }
+              },
+              "queryRef": "Data Access.Observed At",
+              "nativeQueryRef": "Observed At"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Latest recorded access observations\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Latest recorded access observations visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

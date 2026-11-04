@@ -6,7 +6,7 @@
     "y": 485,
     "z": 0,
     "height": 200,
-    "width": 660,
+    "width": 385,
     "tabOrder": 510
   },
   "visual": {
@@ -93,39 +93,11 @@
                       "Entity": "Profiled Column"
                     }
                   },
-                  "Property": "Null Count"
-                }
-              },
-              "queryRef": "Profiled Column.Null Count",
-              "nativeQueryRef": "Null Count"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Profiled Column"
-                    }
-                  },
                   "Property": "Null Percent"
                 }
               },
               "queryRef": "Profiled Column.Null Percent",
               "nativeQueryRef": "Null Percent"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Profiled Column"
-                    }
-                  },
-                  "Property": "Distinct Count"
-                }
-              },
-              "queryRef": "Profiled Column.Distinct Count",
-              "nativeQueryRef": "Distinct Count"
             },
             {
               "field": {
@@ -154,20 +126,6 @@
               },
               "queryRef": "Profiled Column.Minimum Value",
               "nativeQueryRef": "Minimum Value"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Profiled Column"
-                    }
-                  },
-                  "Property": "Median Value"
-                }
-              },
-              "queryRef": "Profiled Column.Median Value",
-              "nativeQueryRef": "Median Value"
             },
             {
               "field": {
@@ -215,7 +173,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Current column profiling\""
+                  "Value": "\"Latest selected column profile\""
                 }
               }
             }
@@ -228,7 +186,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Current column profiling visual\""
+                  "Value": "\"Latest selected column profile visual\""
                 }
               }
             }

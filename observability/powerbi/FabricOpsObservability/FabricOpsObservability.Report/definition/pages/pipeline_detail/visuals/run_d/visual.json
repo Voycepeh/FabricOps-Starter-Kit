@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Selected run\""
+                  "Value": "\"Selected recorded run\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Selected run visual\""
+                  "Value": "\"Selected recorded run visual\""
                 }
               }
             }

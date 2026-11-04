@@ -1,0 +1,90 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "contracts_by_status",
+  "position": {
+    "x": 615,
+    "y": 560,
+    "z": 0,
+    "height": 125,
+    "width": 575,
+    "tabOrder": 1175
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contract Activation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Contract Activation.Status",
+              "nativeQueryRef": "Status"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Contract Selections"
+                }
+              },
+              "queryRef": "Measures.Contract Selections",
+              "nativeQueryRef": "Contract Selections"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Contract selections by recorded status\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Contract selections by recorded status visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
