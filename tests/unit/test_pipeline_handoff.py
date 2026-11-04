@@ -50,6 +50,15 @@ def resign(package):
     package["submission_sha256"] = service.manifest_digest({key: value for key, value in package.items() if key != "submission_sha256"})
     return package
 
+def test_submission_preserves_a_registry_assigned_legacy_pipeline_id():
+    """An existing Registry identity may differ from its original physical notebook ID."""
+    package = package_candidate()
+    package["manifest"]["pipeline_id"] = "00000000-0000-4000-8000-000000000099"
+    resign(package)
+    validated = service.validate_submission(package)
+    assert validated["manifest"]["pipeline_id"] == "00000000-0000-4000-8000-000000000099"
+    assert validated["manifest"]["source_notebook_id"] == PIPELINE_ID
+
 
 @pytest.fixture
 def authority(monkeypatch):
