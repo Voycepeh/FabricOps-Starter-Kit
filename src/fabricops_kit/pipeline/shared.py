@@ -5885,7 +5885,7 @@ def pipeline_record_content(value):
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
     row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
-    provenance = ("execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
+    provenance = ("pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
     if row.get("run_schema_version") is None:
         if any(row.get(key) is not None for key in provenance):
             raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
@@ -5945,7 +5945,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
         "activation_revision": str(plan.evidence["governance_approval"]["revision"]) if plan.execution_mode == "governed" and plan.evidence.get("governance_approval") else None,
-        "execution_workspace_id": plan.workspace_id, "pipeline_version": plan.pipeline_version,
+        "pipeline_version": plan.pipeline_version,
         "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
         "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
         "run_schema_version": 3,

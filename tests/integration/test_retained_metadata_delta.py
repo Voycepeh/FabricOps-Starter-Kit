@@ -14,7 +14,7 @@ from tests.helpers import call_with_spark, framework_config
 from tests.integration.test_pipeline_run_delta import runs_delta
 
 pytestmark = pytest.mark.spark
-PROVENANCE = {'execution_workspace_id', 'pipeline_version', 'promotion_id',
+PROVENANCE = {'pipeline_version', 'promotion_id',
               'governed_notebook_id', 'execution_identity', 'run_schema_version'}
 
 

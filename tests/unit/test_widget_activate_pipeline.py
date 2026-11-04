@@ -39,7 +39,7 @@ def test_governance_reviews_saved_submission_without_file_transfer(authority, de
     ui["controls"]["note"].value = "Reviewed code and test claims independently"
     ui["controls"]["confirm"].value = True
     result = ui["actions"]["decide"]()
-    assert result["status"] == "approved" and result["decided_by"] == "reviewer"
+    assert result["status"] == "approved" and result["_committed_by"] == "reviewer"
     assert authority.tables["METADATA_PIPELINE_REGISTRY"] == []
     assert not any(name in ui["actions"] for name in ("promote", "deploy"))
 

@@ -30,7 +30,7 @@ def package_candidate():
     run = dict(run_id="dry-run", pipeline_id=PIPELINE_ID, approval_id=None, activation_revision=None,
         execution_mode="dry_run", workspace_id="DEV", started_at="2026-11-01T00:00:00", completed_at="2026-11-01T00:01:00",
         status="dry_run_completed", boundary_completed=True, operations=[run_op], profiling=[], failures=[], warnings_json="[]",
-        execution_workspace_id="DEV", pipeline_version=None, promotion_id=None, governed_notebook_id=None,
+        pipeline_version=None, promotion_id=None, governed_notebook_id=None,
         execution_identity="engineer", run_schema_version=3)
     manifest = dict(format_version=1, submission_id=str(uuid4()), pipeline_id=PIPELINE_ID,
         source_workspace_id="DEV", source_notebook_id="development", execution_workspace_id="DEV",
@@ -241,7 +241,7 @@ def test_full_deployment_readback_retry_and_distinct_identities(authority, monke
     monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: ops)
     row = service.deploy_approved_submission(decision["approval_id"], context=authority.eng)
     assert row["approval_id"] == decision["approval_id"] != row["promotion_id"]
-    assert row["promoted_by"] == "engineer" and decision["decided_by"] == "reviewer"
+    assert row["_committed_by"] == "engineer" and decision["_committed_by"] == "reviewer"
     assert files[row["snapshot_uri"]] == snapshot
     assert service.deploy_approved_submission(decision["approval_id"], context=authority.eng) == row
     client.create.assert_called_once()

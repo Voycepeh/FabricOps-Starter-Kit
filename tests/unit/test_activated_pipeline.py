@@ -24,7 +24,7 @@ def contract_candidate(workspace="DEV"):
     """Return an independent per-physical-workspace Contract Activation."""
     return dict(workspace_id=workspace, table_id="orders", contract_id="contract", contract_version=1,
         payload_sha256="a" * 64, activation_id="activation-"+workspace, revision=1, status="active",
-        destination_json=json.dumps(operation(workspace=workspace)["destination"]), activated_by="governance",
+        destination_json=json.dumps(operation(workspace=workspace)["destination"]), _committed_by="governance",
         activated_at=datetime(2026, 1, 1))
 
 
@@ -38,7 +38,7 @@ def promotion(version=1, workspace="DEV", **overrides):
         operations_json=json.dumps([operation(workspace=workspace)]), bindings_sha256=service.manifest_digest([operation(workspace=workspace)]),
         parameters_json='{"manual":false,"days":null}', approval_id=f"approval-{workspace}-{version}",
         submission_id=f"submission-{workspace}-{version}", submission_sha256="d"*64,
-        restored_from_version=None, promoted_by="governance", promoted_at=datetime(2026, 1, 1), **overrides)
+        restored_from_version=None, _committed_by="governance", promoted_at=datetime(2026, 1, 1), **overrides)
 
 
 def notebook(code=None):
