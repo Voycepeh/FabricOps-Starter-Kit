@@ -370,15 +370,22 @@ def pipeline_write(
     Returns
     -------
     dict
-        The canonical ``table_id``, resolved ``strategy``, and ``write_metrics``.
+        The canonical ``table_id``, resolved ``strategy``, ``dataframe`` and ``write_metrics``.
+        ``dataframe`` is the final logical publication input, including row hash
+        and target audit columns. Append New Only returns the filtered rows
+        submitted for insertion. SCD1/SCD2 return prepared processing input
+        (including SCD2 lifecycle columns), not the post-merge destination.
+        Dry Run returns the prepared input available before publication.
         Metrics use integers when reliably measured and None otherwise:
         ``input_rows``, ``input_columns``, ``rows_committed``, ``total_target_rows``,
         ``rows_inserted``, ``rows_updated``, ``rows_unchanged``,
         ``versions_inserted``, and ``versions_expired``. ``measurement_source``
-        identifies Delta commit metadata or an already-applied retry.
+        identifies Delta commit metadata, a confirmed Warehouse publication receipt,
+        or an already-applied retry.
         Committed rows describe this invocation's physical publication only.
         An already-applied append/overwrite retry reports zero new commits.
-        Warehouse connector and SCD merge metrics remain unavailable: audit-only
+        Warehouse overwrite/append metrics fall back to confirmed receipt input rows.
+        SCD merge metrics remain unavailable unless reliably measured: audit-only
         updates cannot be interpreted as business changes. Metrics add no reporting
         counts or Spark jobs. Batch identity and publication verification perform
         the separate actions required for retry safety.
@@ -622,7 +629,7 @@ def pipeline_write(
         write_metrics.update(rows_committed=0, measurement_source="dry_run")
         return {
             "table_id": target_table_id, "strategy": strategy, "published": False,
-            "write_metrics": write_metrics,
+            "write_metrics": write_metrics, "dataframe": prepared_df,
             "dry_run": {"status": "passed", "fully_evaluated": [
                 "processing definition", "writer ownership", "incremental publication safety",
                 "input column names"] + (["SCD business keys"] if strategy in {"scd1", "scd2"} else []),
@@ -647,7 +654,8 @@ def pipeline_write(
             if verbose:
                 print("FabricOps Write → empty incremental scope; no publication or checkpoint commit")
             return {"table_id": target_table_id, "strategy": strategy, "published": False,
-                    "publication_status": "empty_incremental_scope", "write_metrics": write_metrics}
+                    "publication_status": "empty_incremental_scope", "write_metrics": write_metrics,
+                    "dataframe": add_target_audit_fields(batch.dataframe, audit)}
         success_context["publication"] = batch.receipt
         success_context["publication_snapshot"] = batch.publication_snapshot
         if batch.already_applied:
@@ -675,6 +683,9 @@ def pipeline_write(
                 "The target already contains rows but no committed source-to-target baseline exists; "
                 "restore the accepted Source Observation baseline or choose a governed idempotent strategy."
             )
+        if strategy == "append_new_only" and batch.already_applied:
+            # The verified retry submits no rows for insertion in this attempt.
+            prepared_df = prepared_df.limit(0)
         if strategy == "append_new_only" and not batch.already_applied:
             prepared_df = filter_unpublished_rows(prepared_df, identity, context=context, target_hashes=batch.target_hashes)
             # Materialize once; both the receipt and the physical write use this snapshot.
@@ -685,7 +696,8 @@ def pipeline_write(
             if output_rows == 0:
                 write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="no_unseen_hashes")
                 return {"table_id": target_table_id, "strategy": strategy, "published": False,
-                        "publication_status": "no_unseen_hashes", "write_metrics": write_metrics}
+                        "publication_status": "no_unseen_hashes", "write_metrics": write_metrics,
+                        "dataframe": prepared_df}
             batch.receipt["input_rows"] = output_rows
             success_context["publication"] = batch.receipt
             if store_kind == "lakehouse":
@@ -795,6 +807,15 @@ def pipeline_write(
                 captured["full"] = []
             stage_pipeline_write_observations(success_context)
             write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
+        # Receipt counts become committed metrics only after physical confirmation.
+        # Keyed merges cannot infer business changes from their input cardinality.
+        if (store_kind == "warehouse" and strategy in {"overwrite", "append_all", "append_new_only"}
+                and not batch.already_applied and write_metrics["rows_committed"] is None):
+            committed_rows = batch.receipt.get("input_rows")
+            if committed_rows is not None:
+                write_metrics.update(rows_committed=committed_rows, measurement_source="publication_receipt")
+                if strategy in {"append_all", "append_new_only"}:
+                    write_metrics["rows_inserted"] = committed_rows
         try:
             scheduled_refresh = _writer_scheduled_refresh(audit=audit)
             _persist_target_processing(
@@ -831,4 +852,4 @@ def pipeline_write(
                 write_metrics["versions_inserted"] = write_metrics["rows_committed"]
             write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
         return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics,
-                "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}
+                "dataframe": prepared_df, "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}

@@ -149,6 +149,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
         ("already_applied", True, "Already loaded"),
         ("metadata_recovered", True, "Already loaded"),
         ("empty_incremental_scope", False, "Skipped — no new data"),
+        ("no_unseen_hashes", False, "Skipped — no new data"),
     ],
 )
 def test_write_summary_uses_data_engineering_load_status(

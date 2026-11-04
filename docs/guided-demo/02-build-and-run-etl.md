@@ -173,7 +173,11 @@ display(writes["target"]["dataframe"].limit(10))
 
 Choose the target store, schema, and table. The supported load strategies are `"overwrite"`, `"append_all"`, `"append_new_only"`, `"scd1"`, and `"scd2"`. Strategy-specific parameters such as SCD keys belong in `write_parameters`; see [Step 2C: SCD1 and SCD2](02C-build-and-run-scd-etl.md).
 
-Read and Write previews show the DataFrames returned or submitted by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains the load outcome, stage results, and available metrics.
+Write previews show the final prepared input under `result["dataframe"]`, including Sensitive Data treatment, `_row_hash`, target audit columns and applicable SCD2 lifecycle columns. Append New Only shows only rows submitted for insertion. SCD1/SCD2 previews show prepared processing input, rather than the reconstructed post-merge destination. Dry Run returns the prepared input available at that stage without publication. Keep previews bounded with `.limit(10)`; no destination read is needed for this inspection.
+
+**Rows loaded** (`write_metrics["rows_committed"]`) measures rows committed in the current attempt. Native Delta commit metrics take priority. Warehouse Overwrite, Append All and Append New Only fall back to the confirmed PublicationBatch receipt, including duplicate filtering. SCD change counts remain unavailable unless reliably measured. `input_rows` describes the incoming batch; `total_target_rows` is the destination total where profiling provides it.
+
+Read previews show the DataFrames returned by those calls. To verify what was actually committed, inspect the persisted target table in Fabric after a successful persistent run. The returned Write dictionary also contains the load outcome, stage results, and available metrics.
 
 ### How repeated loads behave
 

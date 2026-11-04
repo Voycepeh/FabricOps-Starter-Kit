@@ -322,7 +322,9 @@ def test_testing_missing_dq_column_reports_unevaluated_check_without_losing_rows
     source = read(plan, spark_session)
     changed = source["dataframe"].selectExpr("id as unexpected")
     result = write(plan, source, spark_session, dataframe=changed)
-    assert result["dataframe"] is changed and not result["validation_passed"]
+    assert not result["validation_passed"]
+    assert result["dataframe"].select(*changed.columns).collect() == changed.collect()
+    assert {"_row_hash", "_committed_at", "_activity_id"} <= set(result["dataframe"].columns)
     assert result["dq_result"]["evaluation_status"] == "not_fully_evaluated"
     assert any("Data Quality:" in check for check in result["checks_not_exercised"])
     assert not result["published"]

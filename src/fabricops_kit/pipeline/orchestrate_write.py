@@ -75,10 +75,15 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     Returns
     -------
     dict
-        Prepared dataframe, selected contract, execution identity, validation results,
+        Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
         write metrics, publication state and profiling outcome. Dry Run returns
         processing diagnostics without publication; persistent modes return the
-        actual publication outcome.
+        actual publication outcome. The DataFrame includes Sensitive Data treatment,
+        row hash and target audit columns, plus SCD2 lifecycle columns where applicable.
+        Append New Only returns only rows submitted for insertion. SCD previews
+        represent processing input, not the reconstructed post-merge destination.
+        ``rows_committed`` measures this attempt; ``total_target_rows`` is the
+        destination total where profiling provides it.
 
     Raises RuntimeError when no pipeline is active or a persistent stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
@@ -187,7 +192,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 duration = summary.finish([("Mode", "Dry Run"), ("Target", target),
                                            ("Checks passed", passed), ("Published", "No"), ("Persistence", "Disabled")])
                 operation.complete(stages)
-                return {**common_results, **dry_run, "dataframe": prepared, "published": False,
+                return {**common_results, **dry_run, "dataframe": dry_run.get("dataframe", prepared), "published": False,
                         "publication_status": "not_published", "profile_result": profile,
                         "validation_passed": passed, "testing_completed_at": datetime.now(UTC).isoformat(),
                         "tested_contracts": tested_contract_identities(context, [target_id, *source_ids]),
@@ -221,7 +226,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 "Already loaded"
                 if publication_status in {"already_applied", "metadata_recovered"}
                 else "Skipped — no new data"
-                if publication_status == "empty_incremental_scope"
+                if publication_status in {"empty_incremental_scope", "no_unseen_hashes"}
                 else "Loaded"
                 if published
                 else "Not loaded"
@@ -241,7 +246,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 stages,
                 rows_written=metrics.get("rows_committed") if published else None,
             )
-            return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": prepared, "published": published, "publication_status": publication_status, "profile_result": profile}
+            return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": write_result.get("dataframe", prepared), "published": published, "publication_status": publication_status, "profile_result": profile}
         except Exception:
             mapping = sensitive.get("support_mapping")
             if mapping is not None:
