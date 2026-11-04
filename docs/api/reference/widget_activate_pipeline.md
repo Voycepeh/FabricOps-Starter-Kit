@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Inspect direct activations and the pending Governed deployment gate.
+Review and promote manually tested notebooks into separate Governed copies.
 
 
 ## Usage notes
 
-Use to inspect migrated pipeline candidates and independent Contract activations.
+Use to review destination bindings and promote a completed manual Dry Run.
 
 
 ## Example usage
@@ -19,8 +19,8 @@ Use to inspect migrated pipeline candidates and independent Contract activations
 <div class="reference-example-usage" markdown="1">
 
 ```python
-review = widget_activate_pipeline()
-reviewed_token = review["token"]
+ui = widget_activate_pipeline(dry_run=preview)
+review = ui["actions"]["review"]()
 ```
 
 </div>
@@ -33,7 +33,12 @@ reviewed_token = review["token"]
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict[str, Any]
+def widget_activate_pipeline(
+    *,
+    pipeline_id=None,
+    dry_run=None,
+    context=None,
+) -> dict[str, Any]:
 ```
 
 </div>
@@ -48,43 +53,35 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Filter pipeline records by stable logical UUIDv4. |
-| `context` | `dict \| None` | No | `None` | Existing FabricOps context; central Metadata routing is preserved. |
+| `pipeline_id` | `str \| None` | No | `None` | Stable Pipeline ID used to filter retained immutable version records. |
+| `dry_run` | `PipelineSession \| None` | No | `None` | Completed and finalized manual Dry Run session. Without it the widget displays retained promotions without enabling the promotion action. |
+| `context` | `dict \| None` | No | `None` | Configured notebook context; central Metadata routing is preserved. |
 
 </div>
 
 ## Returns
 
 dict
-    Widget, scoped activation records, reviewed control token and readiness
-    reason. Opening the widget changes no metadata or publication authority.
+    Widget, scoped version records, controls, review action and promotion
+    action. Review creates no artifacts; promotion archives and clones before
+    conditionally switching the active version.
 
 ## Raises / Errors
 
 ValueError
-    If identity or the Registry is missing, corrupt or ambiguous.
+    If pipeline identity or Registry records are ambiguous or invalid.
 RuntimeError
-    If notebook/Spark/widget services are unavailable.
+    If metadata, widgets or Fabric APIs are unavailable. Action errors remain
+    visible without erasing the review or previous active version.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Use activate_data_contract for independent frozen Contract activation after
-review. Tenant permissions must restrict governance writes to trusted actors.
-This inspection UI does not authenticate or attest a deployment.
-
-</div>
-
-## Behavior and scope
-
-<div class="reference-docstring-intro" markdown="1">
-
-The previous Test/approval/version-selection lifecycle is removed. Migrated
-pipelines are requires_reactivation candidates, never verified deployments.
-Pipeline activation and Governed publication remain disabled until a tenant-
-proven trusted deployment mechanism is integrated. A Git SHA typed into a
-widget cannot satisfy this requirement.
+Only notebook code is frozen; dependencies are not. Saved-definition checks
+have TOCTOU limits. Governed remains blocked pending signed-in Fabric validation.
+Engineers manage schedules; this widget never migrates schedules. A Governed
+folder organizes same-workspace copies and confers no permissions.
 
 </div>
 
@@ -95,9 +92,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:13`
+`fabricops_kit/widgets/widget_activate_pipeline.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L13-L82">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L16-L130">View on GitHub</a>
 </div>
 
 

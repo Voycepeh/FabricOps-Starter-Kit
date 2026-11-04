@@ -23,8 +23,7 @@ def test_retirement_inventory_matches_released_lifecycle():
     inventories = [yaml.safe_load(path.read_text()) for path in Path('docs/releases/manifests').glob('*.yml')]
     released = {item['name'] for manifest in inventories for item in manifest['metadata_tables']}
     retired = RETIRED_PREVIEW_METADATA_TABLES
-    assert {name for name, declaration in retired.items() if not declaration.get("unreleased")} == released - set(CANONICAL_METADATA_TABLES)
-    assert {name for name, declaration in retired.items() if declaration.get("unreleased")} == {"METADATA_ACTIVATION_STATE"}
+    assert set(retired) == released - set(CANONICAL_METADATA_TABLES)
     for name in ('METADATA_ENRICHMENT', 'METADATA_GUARDRAIL', 'METADATA_SOURCE_OBSERVATION'):
         assert retired[name]['retired_in'] == '0.3.0'
     for manifest in inventories:
@@ -58,8 +57,7 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
 
     class Frame:
         def collect(self):
-            from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
-            return [empty_pipeline_authority()]
+            return []
 
         def __init__(self, schema):
             self.schema = schema
@@ -115,7 +113,7 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
             assert f"v{RETIRED_PREVIEW_METADATA_TABLES[name]['retired_in']}" in warning
             assert 'no longer supported' in warning
             assert RETIRED_PREVIEW_METADATA_TABLES[name]['guidance'] in warning
-            assert 'Preserve required definitions, progress or history' in warning
+            assert 'Required definitions, progress and history remain untouched' in warning
         else:
             assert 'presence is unknown' in warning
     output = capsys.readouterr().out

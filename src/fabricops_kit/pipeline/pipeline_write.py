@@ -468,9 +468,8 @@ def pipeline_write(
     and their receipt are acknowledged in one Delta merge.
 
     Recovery promotes only staged observations carrying an exact verified receipt.
-    Unsupported legacy Processing State schemas require explicit physical reconciliation
-    and migration/reset before execution;
-    they are never automatically promoted. Prepared rows are cached while their
+    Incompatible Processing State schemas block execution and preserve existing
+    progress; missing checkpoints are never inferred. Prepared rows are cached while their
     content identity is calculated and published, then the owned cache is released.
     This identity action is required for retry safety, not display metrics.
 

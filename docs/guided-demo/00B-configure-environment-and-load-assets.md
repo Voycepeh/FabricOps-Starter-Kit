@@ -128,7 +128,7 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This initializes the central governance and engineering metadata schemas before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-This intentionally breaking workspace model requires a fresh metadata installation; no migration is supplied. Do not combine an empty Processing State table with existing incremental or SCD targets. Use fresh demo targets or perform a separately reviewed rebuild/replay.
+`setup_metadata_tables()` initializes missing metadata and applies compatible schema evolution while preserving existing rows. Existing incremental and SCD targets keep their accepted Processing State; missing checkpoints are never inferred or silently recreated.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

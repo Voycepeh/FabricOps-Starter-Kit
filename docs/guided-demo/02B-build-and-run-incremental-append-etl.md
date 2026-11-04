@@ -216,7 +216,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
 Pause this target's scheduled and interactive writers. Keep the existing tables and `METADATA_PROCESSING_STATE` history. An empty Incremental Read cannot repair a previously accepted checkpoint that is ahead of Silver, and the package never automatically lowers that checkpoint.
 
-1. Upgrade through the explicit [Processing State cutover](../maintainer/metadata-v2-target-model.md#processing-state-upgrade), preserving the existing accepted progress and reconciling old publications. Run `setup_metadata_tables()` to validate `METADATA_PROCESSING_STATE`; the old table is not additively evolved or aliased. Restart the owning notebook's Fabric session so it loads the corrected package.
+1. Run `setup_metadata_tables()` to validate the configured metadata without deleting execution history or accepted Processing State. Incompatible schemas stop setup explicitly; do not empty checkpoints to make an incremental batch appear again.
 2. Read Bronze and Silver explicitly with `read_lakehouse_table()`. Verify Bronze contains exactly M001–M012, Silver has unique, non-null movement keys, and every existing Silver business row equals the corresponding transformed Bronze row. Use the notebook's Transform expression, including `movement_date`, `quantity_in` and `quantity_out`. Compare all business columns, excluding FabricOps audit columns. **Stop if any existing key has conflicting values, unexpected rows, or duplicates.** This repair applies to this immutable Append demo; it is not a general repair for mutable source history.
 3. Build a fresh **Governed** plan in the same owning notebook, with the activated source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Dry Run can validate the repair input. Publication to a Governed destination requires the approved Governed configuration; if the repair changes Read strategy, complete validation and coordinated approval of that repair configuration first.
 4. Construct and inspect only the missing keys before choosing to publish:
@@ -245,29 +245,12 @@ Pause this target's scheduled and interactive writers. Keep the existing tables 
     For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append_all"`, and the fresh Governed plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
 6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
 
-`METADATA_PROCESSING_STATE` records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while typed publication receipts allow recovery across run IDs. Exact Write retries recover the original persisted source members even when pending in-memory snapshots were lost. The Preview rename and schema replacement require the explicit [Processing State cutover](../maintainer/metadata-v2-target-model.md#processing-state-upgrade); setup rejects the legacy table rather than silently starting empty progress.
+`METADATA_PROCESSING_STATE` records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while typed publication receipts allow recovery across run IDs. Exact Write retries recover the original persisted source members even when pending in-memory snapshots were lost.
 
-New writes stage an exact batch receipt before publication. Recovery verifies its Delta commit and target marker; legacy activity-only staged observations are not automatically promoted. A fresh target with a populated Silver table and no accepted baseline still fails safely. If the subset checks above do not hold, reconcile the exact source-to-target relationship with its owner rather than resetting production metadata.
+New writes stage an exact batch receipt before publication. Recovery verifies its Delta commit and target marker; unverified staged observations never advance accepted progress. A fresh target with a populated Silver table and no accepted baseline still fails safely. If the subset checks above do not hold, reconcile the exact source-to-target relationship with its owner rather than resetting production metadata.
 
 The Write result distinguishes `published`, `already_applied`, and `empty_incremental_scope`; Dry Run reports no publication. `already_applied` means the exact batch was verified. SCD row metrics remain `Not available` when the runtime cannot measure business changes reliably.
 
-### Reset the disposable demo environment
+### Repeat the demo safely
 
-Use this only to start a disposable demo over. For checkpoint/target divergence, use the verification and repair procedure above.
-
-An Incremental demo cannot be reset by rerunning Day 1 or deleting only the Silver target. FabricOps remembers successful progress for the exact Bronze-to-Silver relationship.
-
-1. In the Bronze Lakehouse, delete `demo.inventory_movements` from the table explorer.
-2. In the Silver Lakehouse, delete `demo.inventory_movements_incremental` from the table explorer. This removes the appended business data and its publication markers.
-3. Remove only the `METADATA_PROCESSING_STATE` checkpoints and baselines for the `inventory_movements` → `inventory_movements_incremental` relationship and current environment. Remove their linked publication receipts only when no retained members reference them. Do not clear state for other pipelines.
-4. Set `DEMO_DAY = 1`.
-5. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze source. Day 1 of this notebook does not load its own CSV.
-6. Run the notebook with an existing Governed activation, then continue. The Incremental Read bootstraps again and Append recreates the eight-row Silver target.
-
-!!! warning "Keep incremental state aligned"
-
-    The Bronze source, Silver target with publication markers, and scoped Processing State checkpoints and receipts belong to one incremental state. Reset them together. If you cannot perform the scoped metadata cleanup safely, use a fresh Guided Demo environment instead.
-
-**Next optional processing mode:** [Step 2C. Run the SCD1 and SCD2 Demo](02C-build-and-run-scd-etl.md)
-
-**Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
+Repeating unchanged Day 2 or Day 3 demonstrates idempotence and retains the accepted checkpoint. Use separate demo source/target identities for an independent experiment. The Bronze source, Silver target markers, and scoped Processing State checkpoints/receipts describe one publication history; deleting only a target or emptying checkpoints cannot establish a safe new baseline.

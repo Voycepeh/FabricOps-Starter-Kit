@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- Define 13 canonical metadata tables with independent physical Data Contract Activation and immutable per-workspace Pipeline Promotion versions.
+- Add reviewed notebook promotion, complete write-once ipynb archives, saved-code/binding verification and preserved-copy integrity repair. Engineers retain control of schedules.
+- Apply compatible metadata evolution directly in `setup_metadata_tables()`, preserving Catalogue values, retained Pipeline Run content/hashes and Processing State checkpoints and publication receipts. Incompatible schemas fail without deleting data.
+- Validate consumer physical bindings before Data Agent provisioning, retain retry-safe target claim cleanup and resolve default schemas through destination workspace configuration.
+- Preserve `_row_hash`, append strategies, overwrite, incremental, SCD1/SCD2, profiling, lineage and publication receipts. Governed admission remains blocked pending signed-in Fabric acceptance.
+
 ## [0.3.1] - 2026-10-31
 
 ### Fixed

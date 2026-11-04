@@ -180,7 +180,7 @@ Reliable pipelines need more than a successful write. These six engineering deci
 
     **Where to look:** The **published target table** stores `_row_hash`; [`METADATA_PROCESSING_STATE`](../reference/metadata/metadata_processing_state.md) stores `publication_batch_id`, `publication_input_rows` and `publication_strategy`. See [Read & Write Modes](../reference/read-and-load-strategies.md) for the exact strategy rules.
 
-    **Trade-off:** Hashing and target comparison add compute. Append New Only does not update or delete existing rows, and changed ingestion values can change the hash. Existing targets with missing or invalid hashes require reviewed migration or overwrite.
+    **Trade-off:** Hashing and target comparison add compute. Append New Only does not update or delete existing rows, and changed ingestion values can change the hash. Missing or invalid target hashes block non-overwrite publication and preserve existing data.
 
 ??? info "We can see beyond the rows processed today"
     An incremental batch might look healthy even when records elsewhere in the full source have changed or disappeared.

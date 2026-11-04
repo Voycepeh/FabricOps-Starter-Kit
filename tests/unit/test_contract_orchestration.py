@@ -111,20 +111,20 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     journal = shared.PipelineOperation
     def verified_journal(plan, role, arguments):
-        if plan.execution_mode == "live" and plan.evidence["failures"]:
+        if plan.execution_mode == "governed" and plan.evidence["failures"]:
             raise RuntimeError("Pipeline run previously failed; create a new plan.")
-        return journal(replace(plan, execution_mode="testing") if plan.execution_mode == "live" else plan, role, arguments)
+        return journal(replace(plan, execution_mode="dry_run") if plan.execution_mode == "governed" else plan, role, arguments)
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "PipelineOperation", verified_journal)
-    def make(mode="testing", contracted=False, strategy="overwrite", parameters=None):
+    def make(mode="dry_run", contracted=False, strategy="overwrite", parameters=None):
         if contracted and not rows:
-            rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live", strategy=strategy, parameters=parameters)])
+            rows.extend([frozen(SOURCE_ID, active=mode == "governed"), frozen(TARGET_ID, active=mode == "governed", strategy=strategy, parameters=parameters)])
         selections = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]} for row in rows}
         if not contracted:
             selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
-        plan = setup_pipeline(execution_mode="testing" if mode == "live" else mode, sources=[SOURCE], targets=[TARGET],
+        plan = setup_pipeline(execution_mode="dry_run" if mode == "governed" else mode, sources=[SOURCE], targets=[TARGET],
                                               selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
-        return replace(plan, execution_mode="live", pipeline_activation_id="verified-by-boundary") if mode == "live" else plan
+        return replace(plan, execution_mode="governed", promotion_id="verified-by-boundary") if mode == "governed" else plan
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline." + name), "schedule_table_profiling",
                             lambda *args, **kwargs: {"status": "passed", "row_count": 2})
@@ -152,7 +152,7 @@ def test_testing_all_strategies_have_only_diagnostic_mutations(runtime, spark_se
     plan = make(strategy=strategy, parameters=parameters)
     source = read(plan, spark_session)
     result = write(plan, source, spark_session, strategy=strategy, parameters=parameters)
-    assert source["execution_mode"] == result["execution_mode"] == "testing"
+    assert source["execution_mode"] == result["execution_mode"] == "dry_run"
     assert not result["published"] and result["write_metrics"]["rows_committed"] == 0
     assert result["dry_run"]["status"] == "passed" and result["checks_not_exercised"]
     assert ("SCD business keys" in result["dry_run"]["fully_evaluated"]) is (strategy in {"scd1", "scd2"})
@@ -193,7 +193,7 @@ def test_testing_failed_guardrail_returns_violations_without_publication(runtime
 def test_live_guardrail_blocking_prevents_physical_publication(runtime, spark_session):
     """Live preserves Block decisions before entering any business writer."""
     make, _, spies, _ = runtime
-    plan = make("live", contracted=True)
+    plan = make("governed", contracted=True)
     source = read(plan, spark_session)
     bad = spark_session.createDataFrame([(None,)], "id long")
     with pytest.raises(RuntimeError, match="Data Quality"):
@@ -207,7 +207,7 @@ def test_immutable_plan_and_cross_run_sources_are_rejected(runtime, spark_sessio
     make, _, _, _ = runtime
     testing = make()
     with pytest.raises(FrozenInstanceError):
-        testing.execution_mode = "live"
+        testing.execution_mode = "governed"
     source = read(testing, spark_session)
     other = make()
     with pytest.raises(ValueError, match="same execution plan"):
@@ -218,9 +218,9 @@ def test_headless_requires_mode_and_every_explicit_choice(runtime):
     """Headless callers cannot infer Live or silently omit table choices."""
     _, _, _, context = runtime
     with pytest.raises(ValueError, match="every participating"):
-        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline(execution_mode="dry_run", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     with pytest.raises(ValueError, match="every participating"):
-        setup_pipeline(execution_mode="testing", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline(execution_mode="dry_run", sources=[SOURCE], targets=[TARGET], selections={}, context=context, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 
 
 @pytest.mark.parametrize("strategy,parameters", [("append_all", None), ("append_new_only", None), ("scd1", {"key_columns": ["id"]}),
@@ -248,12 +248,12 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
     create_spark.assert_not_called()
 
 
-@pytest.mark.parametrize("mode", ["live"])
+@pytest.mark.parametrize("mode", ["governed"])
 @pytest.mark.parametrize("schedule_available", [True, False])
 def test_initial_publication_publishes_and_commits_lineage(runtime, spark_session, monkeypatch, mode, schedule_available):
     """Initial publication uses its explicit policy without requiring historical Lineage."""
     make, _, spies, _ = runtime
-    plan = make(mode, contracted=mode == "live")
+    plan = make(mode, contracted=mode == "governed")
     schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
 
     def discover(**kwargs):
@@ -274,16 +274,16 @@ def test_initial_publication_publishes_and_commits_lineage(runtime, spark_sessio
     assert capture == {"status": "not_configured" if schedule_available else "unavailable", "schedules": []}
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 @pytest.mark.parametrize("contracted_id", [SOURCE_ID, TARGET_ID])
 def test_mixed_relationship_respects_explicit_no_contract(runtime, spark_session, monkeypatch, mode, contracted_id):
     """Explicit opt-out exempts one participant, retaining the selected contract's checks."""
     _, rows, spies, context = runtime
-    candidate = frozen(contracted_id, active=mode == "live")
+    candidate = frozen(contracted_id, active=mode == "governed")
     rows.append(candidate)
     selections = {SOURCE_ID: {"no_contract": True}, TARGET_ID: {"no_contract": True}}
     selections[contracted_id] = {"contract_id": candidate["contract_id"], "contract_version": 1}
-    if mode == "live":
+    if mode == "governed":
         with pytest.raises(ValueError, match="Governed"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
@@ -365,15 +365,15 @@ def test_failed_read_cannot_reuse_prior_successful_dq_evidence(runtime, spark_se
     assert_testing_mutations_are_diagnostics_only(spies)
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_session, monkeypatch, mode):
     """An explicit target opt-out cannot waive Block outcomes on its contracted source."""
     _, rows, spies, context = runtime
-    candidate = frozen(SOURCE_ID, active=mode == "live")
+    candidate = frozen(SOURCE_ID, active=mode == "governed")
     rows.append(candidate)
     selections = {SOURCE_ID: {"contract_id": candidate["contract_id"], "contract_version": 1},
                   TARGET_ID: {"no_contract": True}}
-    if mode == "live":
+    if mode == "governed":
         with pytest.raises(ValueError, match="Governed"):
             setup_pipeline(execution_mode=mode, sources=[SOURCE], targets=[TARGET],
                 selections=selections, context=context, spark_session=spark_session, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
@@ -392,7 +392,7 @@ def test_no_contract_target_does_not_exempt_failed_source_checks(runtime, spark_
 
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 @pytest.mark.parametrize("disabled", [False, True])
 def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runtime, spark_session, monkeypatch, mode, disabled):
     """An authored empty or disabled set imposes no extra publication decision."""
@@ -407,21 +407,21 @@ def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runti
     plan = make(mode, contracted=True)
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    if mode == "live":
+    if mode == "governed":
         monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     result = write(plan, read(plan, spark_session), spark_session)
-    assert result["published"] is (mode == "live")
+    assert result["published"] is (mode == "governed")
     assert all(row.get("guardrail_type") == "schema" for row in result["source_guardrail_results"])
     assert all(row.get("guardrail_type") == "schema" for row in plan.results)
     assert "coverage_result" not in result
     assert not any("Coverage" in stage["stage"] for stage in result["orchestration_stages"])
     assert [row["contract_payload_json"] for row in rows] == originals
-    if mode == "testing":
+    if mode == "dry_run":
         assert result["validation_passed"]
         assert_testing_mutations_are_diagnostics_only(spies)
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 def test_required_guardrail_that_skips_cannot_authorize_publication(runtime, spark_session, monkeypatch, mode):
     """A configured check that cannot execute fails closed even without a gate."""
     make, _, spies, _ = runtime
@@ -429,7 +429,7 @@ def test_required_guardrail_that_skips_cannot_authorize_publication(runtime, spa
     source = read(plan, spark_session)
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(orchestrator, "check_dq", lambda *a, **kw: {"status": "skipped", "can_continue": True})
-    if mode == "live":
+    if mode == "governed":
         with pytest.raises(RuntimeError, match="configured Guardrail did not execute"):
             write(plan, source, spark_session)
     else:
@@ -440,7 +440,7 @@ def test_required_guardrail_that_skips_cannot_authorize_publication(runtime, spa
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 0
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 def test_warn_failures_report_and_permit_configured_write(runtime, spark_session, monkeypatch, mode):
     """Warn retains violations and allows Live publication after configured checks."""
     make, rows, spies, _ = runtime
@@ -452,21 +452,21 @@ def test_warn_failures_report_and_permit_configured_write(runtime, spark_session
     plan = make(mode, contracted=True)
     monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
-    if mode == "live":
+    if mode == "governed":
         monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 1})
     source = read(plan, spark_session)
     result = write(plan, source, spark_session, dataframe=spark_session.createDataFrame([(None,)], "id long"))
     assert result["dq_result"]["status"] == "warning"
     assert result["dq_result"]["can_continue"]
-    assert result["published"] is (mode == "live")
-    if mode == "testing":
+    assert result["published"] is (mode == "governed")
+    if mode == "dry_run":
         assert result["validation_passed"]
         assert_testing_mutations_are_diagnostics_only(spies)
 
 
 @pytest.mark.parametrize("key", ["coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"])
 @pytest.mark.parametrize("location", ["contract", "table", "guardrail"])
-def test_legacy_coverage_settings_require_explicit_new_contract_migration(key, location):
+def test_unsupported_coverage_settings_preserve_frozen_contracts(key, location):
     """Never silently discard a legacy requirement or mutate its frozen payload."""
     from fabricops_kit.data_contract.shared import validate_contract_definitions
     record = frozen(TARGET_ID)
@@ -475,7 +475,7 @@ def test_legacy_coverage_settings_require_explicit_new_contract_migration(key, l
     definition = {"contract": payload, "table": payload["table"], "guardrail": payload["guardrails"][0]}[location]
     definition[key] = {"action": "Block", "required": ["schema"]}
     original = json.dumps(payload, sort_keys=True)
-    with pytest.raises(ValueError, match="requires migration"):
+    with pytest.raises(ValueError, match="Unsupported Coverage Gate"):
         validate_contract_definitions(payload)
     assert json.dumps(payload, sort_keys=True) == original
 
@@ -485,7 +485,7 @@ def test_legacy_coverage_settings_require_explicit_new_contract_migration(key, l
 def test_live_rejects_source_results_for_another_contract_or_rule(runtime, spark_session, field, value):
     """Configured source rules require exact identities rather than any passing result."""
     make, _, spies, _ = runtime
-    plan = make("live", contracted=True)
+    plan = make("governed", contracted=True)
     source = read(plan, spark_session)
     for result in source["guardrail_outcomes"]:
         result[field] = value
@@ -497,7 +497,7 @@ def test_live_rejects_source_results_for_another_contract_or_rule(runtime, spark
 def test_caught_live_read_failure_cannot_publish_using_an_earlier_success(runtime, spark_session, monkeypatch):
     """Required Read execution survives removal of the independent coverage stage."""
     make, _, spies, _ = runtime
-    plan = make("live", contracted=True)
+    plan = make("governed", contracted=True)
     earlier_source = read(plan, spark_session)
     bad = spark_session.createDataFrame([(None,)], "id long")
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: bad)
@@ -560,7 +560,7 @@ def test_iterable_sources_are_materialized_once_for_evidence_and_execution(runti
 def test_test_mode_never_uses_business_publication_path(runtime, spark_session, monkeypatch):
     """Test transformations and Guardrails cannot authorize a business write."""
     make, _, spies, _ = runtime
-    plan = make("testing", contracted=True)
+    plan = make("dry_run", contracted=True)
     owner = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     monkeypatch.setattr(owner, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
     with plan:
@@ -582,7 +582,7 @@ def test_independent_contract_coverage_executes_and_records_every_table(runtime,
         {SOURCE_ID, TARGET_ID} if coverage == "mixed" else {SOURCE_ID} if coverage == "source_only" else set())
     choices = {row["table_id"]: {"contract_id": row["contract_id"], "contract_version": row["contract_version"]}
                if row["table_id"] in selected else {"no_contract": True} for row in rows}
-    plan = setup_pipeline(execution_mode="testing", sources=[SOURCE, customers], targets=[TARGET],
+    plan = setup_pipeline(execution_mode="dry_run", sources=[SOURCE, customers], targets=[TARGET],
                           selections=choices, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", context=context, spark_session=spark_session)
     source = read(plan, spark_session)
     customer = run_pipeline_operation(orchestrate_read, plan=plan, **customers, spark_session=spark_session,

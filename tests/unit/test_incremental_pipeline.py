@@ -274,7 +274,7 @@ def test_legacy_naive_timestamp_watermark_is_rejected_for_explicit_recovery(monk
         "change_column": "modified_datetime",
         "record_type": "source_observation", "status": "observed",
     }])
-    with pytest.raises(ValueError, match="explicit type.*migrate"):
+    with pytest.raises(ValueError, match="explicit type.*preserved"):
         shared.resolve_incremental_source_scope(
             source_table_id="source-orders", target_table_id="target-a", observation=current
         )
@@ -629,7 +629,7 @@ def test_legacy_activity_only_staging_is_never_automatically_recovered(monkeypat
     monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'target-a'})
     monkeypatch.setattr(shared, '_physical_target_has_publication', lambda *a, **kw: pytest.fail('legacy evidence has no batch proof'))
     monkeypatch.setattr(shared, '_merge_source_observation_records', lambda records, **kw: None)
-    with pytest.raises(RuntimeError, match="Unsupported legacy"):
+    with pytest.raises(RuntimeError, match="Incompatible"):
         shared.resolve_incremental_source_scope(source_table_id='source-orders', target_table_id='target-a', observation=_current('130'))
 
 

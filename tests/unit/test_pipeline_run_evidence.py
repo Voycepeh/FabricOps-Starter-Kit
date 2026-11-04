@@ -18,6 +18,7 @@ def runtime(monkeypatch):
     """Keep the real journal and persistence logic; simulate only Fabric/Delta I/O."""
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
+    monkeypatch.setattr(activation, "publication_claim", lambda *a, **kw: None)
     from importlib import metadata
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))
@@ -63,22 +64,22 @@ def runtime(monkeypatch):
         return Rows()
     monkeypatch.setattr(shared, "read_lakehouse_table", read_run)
 
-    def make(mode="live", roles=("source", "source", "target", "target"), activity="fabric-activity", notebook_name="notebook"):
+    def make(mode="governed", roles=("source", "source", "target", "target"), activity="fabric-activity", notebook_name="notebook"):
         identities = {f"table{i}": {"table_id": f"table{i}", "store": "Bronze" if role == "source" else "Silver", "table_name": f"table{i}",
                                    "schema": "physical", "logical_id": f"asset{i}", "roles": [role]}
                       for i, role in enumerate(roles)}
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
                                             "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
-                            "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "scope_workspace_id": "canary", "activity_id": activity, "notebook_name": notebook_name,
+                            "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "scope_workspace_id": "canary", "user_id": "executor", "activity_id": activity, "notebook_name": notebook_name,
                             "_pipeline_bindings": {key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
-                                            pipeline_id="orders")
+                                            pipeline_id="orders", pipeline_version=1, governed_notebook_id="notebook", promotion_id="approved-release" if mode == "governed" else "")
         contracts.extend(item for item in json.loads(plan.contracts_json).values() if item not in contracts)
-        if mode == "live":
-            preview = replace(plan, execution_mode="testing", evidence={})
+        if mode == "governed":
+            preview = replace(plan, execution_mode="dry_run", evidence={})
             for index in range(len(roles)):
                 operation(preview, index)
-            plan = replace(plan, pipeline_activation_id="approved-release", activated_operations_json=json.dumps(shared.persist_pipeline_run(preview)["operations"], default=str))
+            plan = replace(plan, promotion_id="approved-release", activated_operations_json=json.dumps(shared.persist_pipeline_run(preview)["operations"], default=str))
         shared.persist_pipeline_run(plan)
         return plan
 
@@ -155,7 +156,7 @@ def test_missing_failed_blocking_duplicate_and_external_failures(runtime):
     plan = make(roles=("source",))
     operation(plan, 0)
     assert finalize_pipeline_run(plan, failed=True)["status"] == "failed"
-    assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
+    assert not any(row["execution_mode"] == "dry_run" and row["status"] == "succeeded" for row in saved.values())
 
 
 def test_operation_exception_is_safe_and_unfinalized_success_is_incomplete(runtime):
@@ -196,11 +197,11 @@ def test_evidence_write_failures_poison_the_plan(runtime, point):
             make()
         else:
             finalize_pipeline_run(plan)
-    assert not any(row["execution_mode"] == "testing" and row["status"] == "succeeded" for row in saved.values())
+    assert not any(row["execution_mode"] == "dry_run" and row["status"] == "succeeded" for row in saved.values())
 
 
-@pytest.mark.parametrize("mode,status", [("testing", "succeeded")])
-def test_testing_completion_requires_no_executable_identity(runtime, mode, status):
+@pytest.mark.parametrize("mode,status", [("dry_run", "dry_run_completed")])
+def test_dry_run_completion_requires_no_executable_identity(runtime, mode, status):
     """Bootstrap is honest initial publication, never Testing activation evidence."""
     make, operation, _, _, _ = runtime
     plan = make(mode=mode, roles=("source",))
@@ -213,7 +214,7 @@ def test_testing_completion_requires_no_executable_identity(runtime, mode, statu
 def test_run_retains_only_enforced_settings_and_exact_contract_references(runtime):
     """Unused parameters and raw SQL never become a second configuration store."""
     make, operation, _, _, _ = runtime
-    plan = make(mode="testing", roles=("source",))
+    plan = make(mode="dry_run", roles=("source",))
     operation(plan, 0, read_mode="full", query="SELECT * FROM orders", read_parameters={"password": "hidden-secret"}, dq_diagnostics="full")
     row = shared.persist_pipeline_run(plan)
     item = row["operations"][0]
@@ -283,7 +284,7 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 27
+    assert len(fields) == 28
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
     assert {"operations", "approval_id", "profiling", "boundary_completed"} <= set(fields)
@@ -424,7 +425,7 @@ def test_unreachable_readback_reports_unknown_client_outcome(runtime):
 def test_secondary_metadata_failure_preserves_original_publication_details(runtime):
     """Do not erase an earlier committed publication when diagnostics also fail."""
     make, _, _, _, failure = runtime
-    plan = make(mode="live", roles=("target",))
+    plan = make(mode="governed", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}):
             error = RuntimeError("Profile failed")
@@ -442,7 +443,7 @@ def test_secondary_metadata_failure_preserves_original_publication_details(runti
 def test_post_publication_evidence_failure_retains_published_flag(runtime):
     """An evidence error cannot imply that an already completed Write rolled back."""
     make, operation, _, _, failure = runtime
-    plan = make(mode="live", roles=("target",))
+    plan = make(mode="governed", roles=("target",))
     with pytest.raises(RuntimeError) as raised:
         with shared.PipelineOperation(plan, "target", {"store": "Silver", "schema": "physical", "table_name": "table0", "sources": []}) as journal:
             journal.complete([{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}])
@@ -455,7 +456,7 @@ def test_post_publication_evidence_failure_retains_published_flag(runtime):
 
 
 @pytest.mark.parametrize("role", ["source", "target"])
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(runtime, monkeypatch, role, mode):
     """Logical ID normalization cannot authorize an untested physical destination."""
     from fabricops_kit.config.shared import FabricStore
@@ -476,14 +477,14 @@ def test_operation_cannot_switch_to_case_alias_store_in_another_physical_item(ru
     contracts = {declared["table_id"]: json.loads(original.contracts_json)["table0"]}
     plan = replace(original, execution_mode=mode, workspace_id="dev", participants_json=json.dumps(identities),
                    contracts_json=json.dumps({key: None for key in contracts}), evidence={}, activated_operations_json="[]",
-                   runtime_context={"config": config, "scope_workspace_id": "dev", "_pipeline_bindings": bindings})
+                   runtime_context={"config": config, "scope_workspace_id": "dev", "user_id": "executor", "_pipeline_bindings": bindings})
     monkeypatch.setattr(shared, "resolve_physical_table_identity", resolve_physical_table_identity)
     monkeypatch.setattr(shared, "pipeline_physical_bindings", pipeline_physical_bindings)
     with pytest.raises(ValueError, match="physical destination"):
         with plan:
             with shared.PipelineOperation(plan, role, {"store": "silver", "schema": None, "table_name": "employees", "sources": []}):
                 pytest.fail("A mismatched physical operation must never start")
-    assert (saved[plan.plan_id] if mode == "live" else plan.run_result)["status"] == "failed"
+    assert (saved[plan.plan_id] if mode == "governed" else plan.run_result)["status"] == "failed"
 
 
 @pytest.mark.parametrize('roles', [('source',), ('source', 'source', 'target', 'target')])
@@ -557,3 +558,17 @@ def test_operation_exit_does_not_publish_unconfirmed_profiling_success(runtime, 
     row = saved[plan.plan_id]
     assert row['status'] == 'failed'
     assert not any(event['status'] == 'passed' for event in row['profiling'])
+
+
+@pytest.mark.parametrize('schema', [None, 'physical'])
+def test_original_schema_choice_is_retained_only_in_manual_journal(runtime, monkeypatch, schema):
+    """Review retains schema intent without changing released Run operation/hash fields."""
+    make, _, _, _, _ = runtime
+    plan = make(mode='dry_run', roles=('source',))
+    # Match the declared binding while exercising the original notebook argument.
+    monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda *a, **kw: {'table_id': 'table0', 'store': 'Bronze', 'schema': 'physical', 'table_name': 'table0'})
+    with shared.PipelineOperation(plan, 'source', {'store': 'Bronze', 'schema': schema, 'table_name': 'table0'}) as journal:
+        journal.complete([{'stage': 'Read', 'status': 'passed'}])
+    assert plan.evidence['operations']['source:asset0']['requested_schema'] == schema
+    row = shared.pipeline_run_row(plan, status='dry_run_completed')
+    assert 'requested_schema' not in shared.validate_pipeline_run(row)['operations'][0]

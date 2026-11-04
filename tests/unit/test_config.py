@@ -43,8 +43,7 @@ def _canonical_metadata_reader(reader):
             raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         frame = reader(name, *args, **kwargs)
         if name == "METADATA_PIPELINE_REGISTRY" and hasattr(frame, "schema"):
-            from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
-            frame.collect = lambda: [empty_pipeline_authority()]
+            frame.collect = lambda: []
         return frame
 
     return read
@@ -442,7 +441,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION",
         } else "engineering")
         assert context["scope_workspace_id"] == "dev"
         if table_name not in spark.tables:
@@ -454,8 +453,8 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     ):
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
-        assert mode == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name == "METADATA_PIPELINE_REGISTRY" else None)
+        assert mode == "errorifexists"
+        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} else None)
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns
@@ -941,7 +940,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         return existing[table_name]
 
     def write_table(frame, table_name, **kwargs):
-        assert kwargs.get("mode") == ("errorifexists" if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_RUN", "METADATA_DATA_CATALOGUE"} else "overwrite")
+        assert kwargs.get("mode") == "errorifexists"
         created[table_name] = frame.schema
         existing[table_name] = frame
 

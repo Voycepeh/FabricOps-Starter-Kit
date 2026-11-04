@@ -150,12 +150,12 @@ class FakeSpark:
         return FakeFrame(rows)
 
 
-def execution_plan_stub(mode="live"):
+def execution_plan_stub(mode="governed"):
     """Provide explicit authority for isolated orchestrator stage-order tests."""
-    return SimpleNamespace(execution_mode=mode, permits_persistence=mode == "live", plan_id="test-plan", runtime_context={}, workspace_id="dev", results=[], simulations=[])
+    return SimpleNamespace(execution_mode=mode, permits_persistence=mode in {"ungoverned", "governed"}, plan_id="test-plan", runtime_context={}, workspace_id="dev", results=[], simulations=[])
 
 
-def execution_context_stub(contracts, rules=None, *, mode="live"):
+def execution_context_stub(contracts, rules=None, *, mode="governed"):
     """Complete a mocked planning boundary while keeping stage tests independent of Fabric."""
     return {"execution_plan": execution_plan_stub(mode), "_pipeline_contracts": contracts,
             "_pipeline_rules": rules or {key: [] for key in contracts},

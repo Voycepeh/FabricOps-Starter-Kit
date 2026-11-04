@@ -13,7 +13,7 @@ from tests.unit.test_pipeline_run_evidence import runtime  # noqa: F401
 def test_native_operations_expose_table_and_contract_versions(runtime, roles):
     """One run row contains the exact uniquely keyed Read/Write set."""
     make, operation, _, _, _ = runtime
-    plan = make(mode='testing', roles=roles)
+    plan = make(mode='dry_run', roles=roles)
     for index in range(len(roles)):
         operation(plan, index)
     plan.evidence['boundary_completed'] = True
@@ -32,10 +32,11 @@ def test_native_operations_expose_table_and_contract_versions(runtime, roles):
 def test_incomplete_or_mismatched_operation_array_fails_closed(runtime, defect):
     """A typed but incomplete or foreign operation cannot support parent success."""
     make, operation, _, _, _ = runtime
-    plan = make(mode='testing', roles=('source',))
+    plan = make(mode='dry_run', roles=('source',))
     operation(plan, 0)
     plan.evidence['boundary_completed'] = True
     record = shared.finalize_pipeline_run(plan)
+    record['status'] = 'succeeded'  # Validate retained successful Run facts independently of runtime mode.
     item = record['operations'][0]
     if defect == 'missing':
         record['operations'].clear()
@@ -60,7 +61,7 @@ def test_incomplete_or_mismatched_operation_array_fails_closed(runtime, defect):
 def test_native_run_preserves_profiling_without_configuration_join(runtime):
     """Profile results remain Run facts alongside the operation array."""
     make, operation, _, _, _ = runtime
-    plan = make(mode='testing', roles=('source',))
+    plan = make(mode='dry_run', roles=('source',))
     operation(plan, 0)
     plan.evidence['profiling'] = [{'activity': 'grain', 'status': 'passed', 'context_key': 'physical'}]
     logical = shared.finalize_pipeline_run(plan)

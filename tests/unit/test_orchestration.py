@@ -5,7 +5,7 @@ import importlib
 from types import SimpleNamespace
 from tests.helpers import run_pipeline_operation
 
-LIVE_PLAN = SimpleNamespace(execution_mode="live", plan_id="plan", permits_persistence=True, runtime_context={}, workspace_id="dev", results=[], simulations=[])
+LIVE_PLAN = SimpleNamespace(execution_mode="governed", plan_id="plan", permits_persistence=True, runtime_context={}, workspace_id="dev", results=[], simulations=[])
 
 
 def test_dq_stage_prints_observed_percentages_independently_of_decision(capsys):

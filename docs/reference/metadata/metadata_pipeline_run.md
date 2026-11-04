@@ -1,6 +1,6 @@
 # METADATA_PIPELINE_RUN
 
-Records Dry Run/Ungoverned/Governed operation participation and retained historical Test/Live execution outcomes.
+Records actual pipeline execution outcomes and exact per-operation Contract versions.
 
 ## Writer functions
 
@@ -16,14 +16,14 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One row per execution with JSON-encoded observed operation/stage status, timing, finalization, profiling and safe failures.
+**Grain:** One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.
 
 **Primary key:** `run_id`
 
 **Relationships:**
 
 `METADATA_PIPELINE_REGISTRY` **(N → 1)**
-via `pipeline_activation_id`
+via `promotion_id`
 
 `METADATA_DATA_CONTRACT` **(N → M)**
 via `operations`
@@ -32,16 +32,16 @@ via `operations`
 
 | Local field | Referenced field | Meaning |
 | --- | --- | --- |
-| `operations[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Each contracted operation references one exact Contract using contract_id plus contract_version and verifies the payload hash. Test operations may be uncontracted; activation requires all contracts. |
-| `operations[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Composite reference with operations[].contract_id; neither field is independently unique. |
+| `operations[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Composite exact per-operation Contract identity with version and payload SHA. |
+| `operations[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Exact frozen version used by the operation. |
 
-**Implementation details:** Whole-row CAS atomically publishes the parent and all operations/stages. Validated JSON operations retain table_id, source/target role, exact contract version/hash, destination, read/write mode, SQL hash and source associations. New runs use versioned activation/deployment provenance. approval_id and activation_revision remain nullable historical facts only; original Test hashes exclude new null provenance columns. Governed publication is blocked pending trusted deployment verification. Profiling completion joins physical result snapshots. warnings_json contains variable sanitized diagnostics only. No project settings, full argument snapshots or configuration fingerprints are stored.
+**Implementation details:** Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">27</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">19</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">28</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">20</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -62,11 +62,12 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.</td></tr>
 <tr class="metadata-column--engineering"><td><code>activation_revision</code></td><td><code>string</code></td><td>Nullable historical workspace revision; retained for old Run audit only.</td></tr>
 <tr class="metadata-column--engineering"><td><code>boundary_completed</code></td><td><code>boolean</code></td><td>Whether the explicit whole-run completion boundary finished; independent of operation success.</td></tr>
-<tr class="metadata-column--engineering"><td><code>pipeline_activation_id</code></td><td><code>string</code></td><td>Exact pipeline activation pinned by versioned Governed provenance, never an approval alias.</td></tr>
-<tr class="metadata-column--engineering"><td><code>deployment_id</code></td><td><code>string</code></td><td>Trusted deployment artifact correlation; null when not applicable.</td></tr>
-<tr class="metadata-column--engineering"><td><code>git_commit_sha</code></td><td><code>string</code></td><td>Repository-qualified immutable revision provenance; a supplied string alone is not verified evidence.</td></tr>
-<tr class="metadata-column--engineering"><td><code>deployment_verification_status</code></td><td><code>string</code></td><td>Versioned Run deployment-assurance outcome; new Ungoverned/Dry Run records use not_required.</td></tr>
-<tr class="metadata-column--engineering"><td><code>run_schema_version</code></td><td><code>integer</code></td><td>Version 2 includes activation/deployment provenance. Null denotes the original retained evidence format.</td></tr>
+<tr class="metadata-column--engineering"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>Actual execution workspace captured for this Run.</td></tr>
+<tr class="metadata-column--engineering"><td><code>pipeline_version</code></td><td><code>integer</code></td><td>Frozen per-workspace Pipeline version captured at Governed admission.</td></tr>
+<tr class="metadata-column--engineering"><td><code>promotion_id</code></td><td><code>string</code></td><td>Exact immutable promotion ID captured at admission; superseded versions remain retained.</td></tr>
+<tr class="metadata-column--engineering"><td><code>governed_notebook_id</code></td><td><code>string</code></td><td>Physical Governed notebook item that started this Run.</td></tr>
+<tr class="metadata-column--engineering"><td><code>execution_identity</code></td><td><code>string</code></td><td>Actual runtime principal identity captured independently of the promotion author.</td></tr>
+<tr class="metadata-column--engineering"><td><code>run_schema_version</code></td><td><code>integer</code></td><td>Version 3 includes notebook Pipeline Promotion provenance. Null retains the original Run hash projection.</td></tr>
 <tr class="metadata-column--engineering"><td><code>operations</code></td><td><code>string</code><details class="metadata-structured-type"><summary>Logical JSON schema: <code>Array</code></summary><table class="metadata-nested-type" aria-label="Fields in operations"><thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead><tbody><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>operation_key</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>table_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>pipeline_role</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>contract_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>contract_version</code></td><td><code>int</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>payload_sha256</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>destination</code></td><td><code>Struct</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>destination.workspace_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>destination.item_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>destination.kind</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>destination.schema</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>destination.table_name</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>read_mode</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>write_mode</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>query_sha256</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>source_table_ids</code></td><td><code>array&lt;string&gt;</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>incremental_target_table_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>status</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>started_at</code></td><td><code>timestamp</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>completed_at</code></td><td><code>timestamp</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>stages</code></td><td><code>Array</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>stages.stage</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>stages.status</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>stages.evaluation_status</code></td><td><code>string</code></td></tr></tbody></table><p>Representative JSON value (optional fields omitted):</p><pre><code class="language-json">[
   {
     &quot;operation_key&quot;: &quot;write:orders&quot;,

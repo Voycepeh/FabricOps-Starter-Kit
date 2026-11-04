@@ -121,16 +121,13 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "[`01_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Data Contract authoring" in contract_page
     assert "`METADATA_DATA_AGREEMENT` **(N → 1)**" not in contract_page
     activated_page = first_pages["metadata_pipeline_registry.md"]
-    for category, count in (("total", 40), ("engineering", 5), ("governance", 27), ("audit", 8)):
-        card = activated_page.split(f'class="metadata-column-kpi metadata-column-kpi--{category}">', 1)[1].split("</div>", 1)[0]
-        assert f'<strong class="metadata-column-kpi__value">{count}</strong>' in card
-    for column in ("pipeline_id", "table_id", "activation_id", "status"):
-        assert f'<tr class="metadata-column--governance"><td><code>{column}</code>' in activated_page
-    for column in ("record_id", "record_type", "schema_version", "token", "leases_json"):
+    for column in ("execution_workspace_id", "pipeline_id", "pipeline_version", "promotion_id", "snapshot_uri"):
         assert f'<tr class="metadata-column--engineering"><td><code>{column}</code>' in activated_page
     assert '<tr class="metadata-column--audit"><td><code>_committed_by</code>' in activated_page
-    assert "<code>record_id</code>" in activated_page and "requires_reactivation" in activated_page
-    assert "Serializable whole-table Delta transaction" in activated_page
+    assert "Serializable" in activated_page
+    activation_page = first_pages["metadata_data_contract_activation.md"]
+    for column in ("workspace_id", "table_id", "contract_version", "revision", "activation_id"):
+        assert f'<tr class="metadata-column--governance"><td><code>{column}</code>' in activation_page
     assert '<div class="metadata-schema-table">' in activated_page
     assert "markdown=\"1\"" not in activated_page
     assert "{: .metadata-schema-table }" not in activated_page
@@ -204,8 +201,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 12
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
+    assert len(links) == 13
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -324,8 +321,9 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
         "orchestrate_read", "orchestrate_write", "profile_table"
     }
     assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_RUN"]
-    assert "activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
-    assert "orchestrate_write" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_CONTRACT_ACTIVATION"]
+    assert "promote_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "orchestrate_write" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "orchestrate_read" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_PROFILED"]
@@ -400,7 +398,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -423,7 +421,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
     assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1-N"
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1-N"
-    assert actual[("PIPELINE_REGISTRY", "DATA_CONTRACT")].get("data-cardinality") == "N-1"
+    assert actual[("DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT")].get("data-cardinality") == "N-1"
     assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
     assert all(edge.get("data-cardinality") in {"1-N", "N-1"} for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)

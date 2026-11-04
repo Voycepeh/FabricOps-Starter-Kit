@@ -7,7 +7,7 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending deployment verification.
+Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending signed-in Fabric validation.
 
 
 ## Usage notes
@@ -71,16 +71,15 @@ PipelineSession
 
 ### Return interpretation
 
-Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending trusted deployment verification.
+Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending signed-in Fabric validation.
 
 ## Raises / Errors
 
 ValueError
     If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
 RuntimeError
-    If notebook setup or Spark is unavailable, or Governed deployment
-    verification has not been established. Governed fails before admission
-    and publication; a caller-supplied Git SHA cannot authorize it.
+    If notebook setup or Spark is unavailable, or signed-in Fabric validation
+    remains pending. Governed fails before admission and publication.
 
 ### Common failure causes
 
@@ -108,8 +107,8 @@ a successful Write does not imply successful whole-notebook completion.
 Dry Run previews transformations, optional Contract checks and profiling without
 durable mutations. Ungoverned publishes without activated Contracts, but cannot
 write protected Table IDs or physical destination aliases. Governed requires
-activated deployment and independently activated table Contracts. It currently
-fails closed until trusted deployment verification is proven and integrated.
+a promoted notebook and independently activated Contracts for all sources
+and targets. It remains fail closed pending signed-in Fabric validation.
 
 </div>
 
@@ -122,7 +121,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L205">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L208">View on GitHub</a>
 </div>
 
 
@@ -138,7 +137,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 15 |
+| Live-critical dependencies | 71 |
 
 ### Release history
 
@@ -150,18 +149,74 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.build_governed_pipeline_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.check_promotion_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.reviewed_contracts</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.data_contract.shared.normalize_guardrail_action</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_definitions</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_grain_contract</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_sensitive_data_parameters</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
+<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.close_current_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
 <li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
+<li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>
 <li><code>fabricops_kit.widgets.shared.require_ipywidgets</code></li>

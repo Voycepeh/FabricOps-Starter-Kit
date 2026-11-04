@@ -126,7 +126,7 @@ def test_profiling_never_reads_or_updates_pipeline_registry(metadata, monkeypatc
     read = Mock(side_effect=AssertionError('profiling must not read the Registry'))
     commit = Mock(side_effect=AssertionError('profiling must not update the Registry'))
     monkeypatch.setattr(activation, 'read_registry', read)
-    monkeypatch.setattr(activation, 'commit_registry', commit)
+    monkeypatch.setattr(activation, 'mutate_metadata', commit)
     result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert result['status'] == 'passed'
     read.assert_not_called()
@@ -231,7 +231,7 @@ def test_profiling_execution_modes_compute_and_persist_as_required(
     context['execution_plan'].permits_persistence = permits_persistence
     context['execution_plan'].execution_mode = mode
     if mode == 'governed':
-        with pytest.raises(RuntimeError, match="trusted deployment verification"):
+        with pytest.raises(RuntimeError, match="signed-in Fabric"):
             shared.schedule_table_profiling('orders', 'read', context=context)
         metadata.profiler.assert_not_called()
         return

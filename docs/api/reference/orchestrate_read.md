@@ -145,7 +145,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 205 |
+| Live-critical dependencies | 221 |
 
 ### Release history
 
@@ -158,7 +158,22 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.check_promotion_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
@@ -360,6 +375,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>

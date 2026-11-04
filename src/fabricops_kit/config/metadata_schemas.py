@@ -9,6 +9,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_DATA_CONTRACT_ACTIVATION",
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
@@ -23,14 +24,9 @@ CANONICAL_METADATA_TABLES = [
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 RETIRED_PREVIEW_METADATA_TABLES = {
-    "METADATA_ACTIVATION_STATE": {
-        "unreleased": True,
-        "retired_in": "0.3.0",
-        "guidance": "Authority is now in METADATA_PIPELINE_REGISTRY; drain and reconcile approvals and reservations before cutover. Never append old snapshots to the new Registry.",
-    },
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
-        "guidance": "Use exact Data Agreement and Testing references in METADATA_PIPELINE_REGISTRY where applicable.",
+        "guidance": "METADATA_PIPELINE_REGISTRY records exact Data Agreement references with immutable promotion versions.",
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
@@ -62,7 +58,7 @@ RETIRED_PREVIEW_METADATA_TABLES = {
     },
     "METADATA_SOURCE_OBSERVATION": {
         "retired_in": "0.3.0",
-        "guidance": "METADATA_PROCESSING_STATE is the sole runtime model; reconcile checkpoints and publication receipts before explicit migration or target rebuild/replay.",
+        "guidance": "METADATA_PROCESSING_STATE stores current source observations, checkpoints and publication receipts.",
     },
 }
 
@@ -70,6 +66,7 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
+    "METADATA_DATA_CONTRACT_ACTIVATION",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -391,18 +388,28 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 *audit,
             ],
         ),
+        "METADATA_DATA_CONTRACT_ACTIVATION": build_metadata_schema(
+            "METADATA_DATA_CONTRACT_ACTIVATION",
+            [("workspace_id", "string", False), ("table_id", "string", False),
+             ("contract_id", "string", False), ("contract_version", "integer", False),
+             ("payload_sha256", "string", False), ("activation_id", "string", False),
+             ("revision", "integer", False), ("status", "string", False),
+             ("destination_json", "string", False), ("activated_by", "string", False),
+             ("activated_at", "timestamp", False), *audit],
+        ),
         "METADATA_PIPELINE_REGISTRY": build_metadata_schema(
             "METADATA_PIPELINE_REGISTRY",
-            [("record_id", "string", False), ("record_type", "string", False),
-             ("schema_version", "integer", False),
-             *[(name, "string") for name in (
-                 "workspace_id", "pipeline_id", "pipeline_name", "table_id", "activation_id", "status",
-                 "activated_by", "notebook_id", "git_repository", "git_commit_sha", "deployment_id",
-                 "deployment_manifest_uri", "deployment_manifest_sha256", "verification_method", "operations_json",
-                 "agreement_id", "agreement_version", "agreement_sha256", "contract_id", "payload_sha256", "destination_json",
-                 "token", "leases_json", "last_governance_change_id", "last_governance_audit_uri",
-                 "migration_archive_uri", "migration_archive_sha256")],
-             ("activated_at", "timestamp"), ("contract_version", "integer"), *audit],
+            [("execution_workspace_id", "string", False), ("pipeline_id", "string", False),
+             ("pipeline_version", "integer", False), ("promotion_id", "string", False),
+             ("status", "string", False), ("source_workspace_id", "string", False),
+             ("source_notebook_id", "string", False), ("governed_notebook_id", "string", False),
+             ("snapshot_uri", "string", False), ("snapshot_sha256", "string", False),
+             ("source_snapshot_uri", "string", False), ("source_snapshot_sha256", "string", False),
+             ("executable_sha256", "string", False), ("operations_json", "string", False),
+             ("bindings_sha256", "string", False), ("parameters_json", "string", False),
+             ("agreement_id", "string"), ("agreement_version", "string"), ("agreement_sha256", "string"),
+             ("restored_from_version", "integer"), ("promoted_by", "string", False),
+             ("promoted_at", "timestamp", False), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",
@@ -412,8 +419,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("started_at", "timestamp", False), ("completed_at", "timestamp"),
              ("status", "string", False), ("activation_revision", "string"),
              ("boundary_completed", "boolean", False),
-             ("pipeline_activation_id", "string"), ("deployment_id", "string"),
-             ("git_commit_sha", "string"), ("deployment_verification_status", "string"),
+             ("execution_workspace_id", "string"), ("pipeline_version", "integer"),
+             ("promotion_id", "string"), ("governed_notebook_id", "string"), ("execution_identity", "string"),
              ("run_schema_version", "integer"),
              ("operations", [("operation_key", "string", False),
                  ("table_id", "string", False), ("pipeline_role", "string", False),
@@ -488,6 +495,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         ),
     }
 
+    schemas = {name: schemas[name] for name in CANONICAL_METADATA_TABLES}
     if not logical:
         string_type = schemas["METADATA_DATA_CONTRACT"].fields[0].dataType
         for table, names in METADATA_JSON_COLUMNS.items():

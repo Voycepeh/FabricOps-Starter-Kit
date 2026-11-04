@@ -31,11 +31,11 @@ The notebook follows this sequence:
 | Section | Responsibility |
 | --- | --- |
 | Environment | `setup_notebook()` loads configuration and resolves the caller's workspace environment. |
-| Setup Pipeline | `setup_pipeline()` registers or recovers the pipeline identity and starts the selected execution mode. |
+| Setup Pipeline | `setup_pipeline()` uses the saved Pipeline ID and starts the selected execution mode. |
 | Read | `orchestrate_read()` reads a source and runs applicable checks and profiling. |
 | Transform | Your project-owned PySpark logic joins, filters, derives, aggregates, or selects data. |
 | Write | `orchestrate_write()` checks and publishes the prepared DataFrame using the selected load strategy. |
-| Finalize | `finalize_pipeline(pipeline)` records the outcome and releases Governed execution reservations. |
+| Finalize | `finalize_pipeline(pipeline)` records the outcome and releases physical publication claims. |
 
 A successful Read or Write is not proof that the entire notebook completed. Always run Finalize after the pipeline work; use `finalize_pipeline(pipeline, failed=True)` when catching a project exception.
 
@@ -49,7 +49,7 @@ context = setup_notebook(
 )
 ```
 
-Then run Setup Pipeline. The default `PIPELINE_ID = None` lets FabricOps register or recover this notebook's permanent pipeline UUID automatically. Retain an explicit UUID in source only when you need to promote the same pipeline identity across workspaces.
+Then run Setup Pipeline. Generate one UUIDv4 Pipeline ID, save it as `PIPELINE_ID` in notebook source and reuse it across environments. Ungoverned and Governed execution require this explicit identity; Dry Run may use a session-only identity.
 
 ```python
 PIPELINE_ID = None

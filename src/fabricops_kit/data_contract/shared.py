@@ -352,7 +352,7 @@ def validate_contract_definitions(
     if isinstance(payload.get("guardrails"), list):
         definitions.extend(payload["guardrails"])
     if any(isinstance(definition, dict) and obsolete.intersection(definition) for definition in definitions):
-        raise ValueError("Legacy Coverage Gate configuration requires migration: author required protections as Guardrails in a new draft, remove Coverage Gate settings, then freeze, test and activate the new version. Frozen payloads must not be edited.")
+        raise ValueError("Unsupported Coverage Gate configuration: executable protection must be expressed as canonical Guardrails. Frozen payloads are immutable.")
     enrichment = payload.get("enrichment")
     if not isinstance(enrichment, dict):
         raise ValueError("Data Contract enrichment must be an object with table and columns lists.")
@@ -1405,7 +1405,6 @@ def assemble_contract_payload(
     if not processing:
         raise ValueError("Data Contract draft must define a load strategy before it can be frozen.")
     payload = {
-        **({"definition_migration": draft_payload["definition_migration"]} if "definition_migration" in draft_payload else {}),
         "contract": {
             "contract_id": contract_id,
             "contract_version": contract_version,

@@ -1,199 +1,203 @@
-"""Direct activation validation and mandatory fail-closed deployment assurance."""
+"""Notebook promotion, exact Contract authority and fail-closed admission."""
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from types import SimpleNamespace
-from uuid import uuid4
 import json
 
 import pytest
 
 from fabricops_kit.activated_pipeline import shared as service
+from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_owner
 
 PIPELINE_ID = "4c7ae400-85ab-4023-9427-e8fde20bd596"
 
 
-def operation(role="target", table="orders", mode="overwrite"):
-    """Build one representative supported operation configuration."""
+def operation(role="target", table="orders", mode="overwrite", workspace="DEV"):
+    """Return one exact operation used by unit and actual Delta tests."""
     return dict(operation_key=role + ":Silver/" + table, table_id=table, pipeline_role=role,
-        destination=dict(workspace_id="DEV", item_id="item", kind="lakehouse", schema="demo", table_name=table),
+        destination=dict(workspace_id=workspace, item_id="item", kind="lakehouse", schema="demo", table_name=table),
         read_mode="full" if role == "source" else None, write_mode=mode if role == "target" else None,
-        query_sha256=None, incremental_target_table_id=None, source_table_ids=[])
+        query_sha256=None, incremental_target_table_id=None, source_table_ids=[], requested_schema="demo")
 
 
-def contract_candidate(workspace="DEV", table="orders"):
-    """Build an explicitly non-authorizing table candidate."""
-    return dict(record_id=service.registry_record_id("table_contract_activation", workspace, table),
-        record_type="table_contract_activation", schema_version=2, workspace_id=workspace,
-        table_id=table, status="requires_reactivation", contract_id="contract", contract_version=1,
-        payload_sha256="a" * 64,
-        destination_json=json.dumps({**operation(table=table)["destination"], "workspace_id": workspace}))
+def contract_candidate(workspace="DEV"):
+    """Return an independent per-physical-workspace Contract Activation."""
+    return dict(workspace_id=workspace, table_id="orders", contract_id="contract", contract_version=1,
+        payload_sha256="a" * 64, activation_id="activation-"+workspace, revision=1, status="active",
+        destination_json=json.dumps(operation(workspace=workspace)["destination"]), activated_by="governance",
+        activated_at=datetime(2026, 1, 1))
 
 
-def test_registry_has_three_scalar_record_types_and_no_lifecycle_arrays():
-    """Canonical authority exposes SQL scalars, not obsolete collections."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    schema = metadata_table_schema_registry()[service.REGISTRY_TABLE]
-    assert not {"registrations", "approvals", "selections", "revisions", "table_ownership", "reservations"} & set(schema.fieldNames())
-    assert all(not hasattr(field.dataType, "fields") and not hasattr(field.dataType, "elementType") for field in schema)
-    assert len(metadata_table_schema_registry()) == 12
-    assert service.registry_control([service.empty_pipeline_authority()])["leases_json"] == "[]"
+def promotion(version=1, workspace="DEV", **overrides):
+    """Return a complete immutable promotion row without runtime coordination fields."""
+    return dict(execution_workspace_id=workspace, pipeline_id=PIPELINE_ID, pipeline_version=version,
+        promotion_id=f"promotion-{workspace}-{version}", status="active", source_workspace_id="AUTHOR",
+        source_notebook_id="source", governed_notebook_id=f"governed-{workspace}-{version}",
+        snapshot_uri=f"snapshot-{workspace}-{version}", snapshot_sha256="a"*64,
+        source_snapshot_uri="source.ipynb", source_snapshot_sha256="b"*64, executable_sha256="c"*64,
+        operations_json=json.dumps([operation(workspace=workspace)]), bindings_sha256=service.manifest_digest([operation(workspace=workspace)]),
+        parameters_json='{"manual":false,"days":null}', agreement_id=None, agreement_version=None, agreement_sha256=None,
+        restored_from_version=None, promoted_by="governance", promoted_at=datetime(2026, 1, 1), **overrides)
 
 
-@pytest.mark.parametrize("defect", ["missing_control", "duplicate_control", "business_duplicate", "wrong_key", "candidate_authority", "unknown_kind", "bad_json"])
-def test_registry_rejects_ambiguous_authority(defect):
-    """Malformed state never authorizes or implicitly seeds records."""
-    rows = [service.empty_pipeline_authority(), contract_candidate()]
-    if defect == "missing_control":
-        rows = rows[1:]
-    elif defect == "duplicate_control":
-        rows.append(deepcopy(rows[0]))
-    elif defect == "business_duplicate":
-        rows.append(deepcopy(rows[1]))
-    elif defect == "wrong_key":
-        rows[1]["record_id"] = "other"
-    elif defect == "candidate_authority":
-        rows[1]["activation_id"] = str(uuid4())
-    elif defect == "unknown_kind":
-        rows[1]["record_type"] = "approval"
-    else:
-        rows[0]["leases_json"] = "not-json"
-    with pytest.raises(ValueError):
-        service.registry_control(rows)
+def notebook(code=None):
+    """Build complete notebook bytes, including original Markdown and outputs."""
+    return json.dumps({"nbformat": 4, "nbformat_minor": 5, "metadata": {"kernelspec": {"name": "python3"}}, "cells": [
+        {"cell_type": "markdown", "metadata": {}, "source": "Notes"},
+        {"cell_type": "code", "metadata": {"tags": ["parameters"]}, "execution_count": 1,
+            "outputs": [{"output_type": "stream", "name": "stdout", "text": "output"}],
+            "source": code or f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Dry Run")'}]}).encode()
 
 
-@pytest.mark.parametrize("defect", ["duplicate", "strategy", "scope", "alias", "unbound_source"])
-def test_activation_manifest_rejects_unsupported_or_ambiguous_operations(defect):
-    """Descriptors keep real writer strategies and reject unenforced scope claims."""
-    operations = [operation()]
-    if defect == "duplicate":
-        operations.append(operation())
-    elif defect == "strategy":
-        operations[0]["write_mode"] = "merge"
-    elif defect == "scope":
-        operations[0]["write_scope"] = "trust-me"
-    elif defect == "alias":
-        operations[0]["destination"]["extra"] = "ignored"
-    else:
-        operations[0]["source_table_ids"] = ["missing"]
-    with pytest.raises(ValueError):
-        service.activation_operations(json.dumps(operations))
+def test_canonical_13_tables_and_separate_grains():
+    """Verify canonical 13 tables and separate grains."""
+    registry = metadata_table_schema_registry()
+    assert len(registry) == 13
+    assert metadata_table_owner(service.ACTIVATION_TABLE) == "governance"
+    assert {"record_type", "leases_json", "git_commit_sha", "deployment_id", "table_id", "contract_id"}.isdisjoint(registry[service.REGISTRY_TABLE].fieldNames())
+    assert {"execution_workspace_id", "pipeline_id", "pipeline_version", "snapshot_uri"} <= set(registry[service.REGISTRY_TABLE].fieldNames())
+    assert service.validate_registry([]) == []
 
 
-def test_independent_contract_candidates_are_workspace_table_scoped():
-    """No pipeline activation or global frozen-status fallback is needed."""
-    rows = [service.empty_pipeline_authority(), contract_candidate(), contract_candidate("OTHER")]
-    assert service.registry_control(rows)
-    assert rows[1]["record_id"] != rows[2]["record_id"]
+def test_contract_activation_is_independent_across_physical_workspaces():
+    """Verify contract activation is independent across physical workspaces."""
+    rows = [contract_candidate(), contract_candidate("PROD")]
+    rows[1]["contract_version"] = 2
+    assert service.validate_activations(rows) == rows
+    rows[1]["destination_json"] = rows[0]["destination_json"]
+    with pytest.raises(ValueError, match="physical|alias"):
+        service.validate_activations(rows)
 
 
-def test_governed_setup_and_forged_plan_fail_before_metadata_or_publication(monkeypatch):
-    """Self-reported Git/deployment fields cannot bypass the pending security gate."""
-    monkeypatch.setattr(service, "read_registry", lambda **kw: pytest.fail("no admission mutation permitted"))
-    with pytest.raises(RuntimeError, match="trusted deployment verification"):
-        service.build_governed_pipeline_plan(pipeline_id=PIPELINE_ID, context={})
-    forged = SimpleNamespace(execution_mode="governed", permits_persistence=True, pipeline_activation_id="fake", git_commit_sha="a" * 40, deployment_verification_status="verified")
-    with pytest.raises(RuntimeError, match="trusted deployment verification"):
-        service.verify_governed_plan(forged)
-    from fabricops_kit.pipeline.shared import persistence_permitted
-    with pytest.raises(RuntimeError, match="trusted deployment verification"):
-        persistence_permitted({"execution_plan": forged})
+@pytest.mark.parametrize("duplicate", ["version", "promotion", "notebook", "active"])
+def test_duplicate_registry_identities_fail_closed(duplicate):
+    """Verify duplicate registry identities fail closed."""
+    first, second = promotion(), promotion(2)
+    if duplicate == "version": second["pipeline_version"] = 1
+    if duplicate == "promotion": second["promotion_id"] = first["promotion_id"]
+    if duplicate == "notebook": second["governed_notebook_id"] = first["governed_notebook_id"]
+    with pytest.raises(ValueError, match="Duplicate|Multiple active"):
+        service.validate_registry([first, second])
 
 
-def test_agreement_effectiveness_is_preserved():
-    """Expired and future Agreements cannot be silently accepted."""
+def test_versions_scoped_to_destination_workspace():
+    """Verify versions scoped to destination workspace."""
+    assert service.validate_registry([promotion(), promotion(workspace="PROD")])
+    first, second = promotion(), promotion(2)
+    first["status"] = "superseded"
+    assert service.validate_registry([first, second])
+
+
+def test_markdown_and_outputs_do_not_change_executable_hash():
+    """Verify markdown and outputs do not change executable hash."""
+    original = notebook()
+    changed = json.loads(original)
+    changed["cells"][0]["source"] = "Revised Markdown"
+    changed["cells"][1]["outputs"] = []
+    changed["cells"][1]["execution_count"] = 99
+    assert service.notebook_executable_digest(original) == service.notebook_executable_digest(json.dumps(changed).encode())
+    changed["cells"][1]["source"] += "\nx = 1"
+    assert service.notebook_executable_digest(original) != service.notebook_executable_digest(json.dumps(changed).encode())
+
+
+@pytest.mark.parametrize("change", ["parameter", "metadata", "query", "tags"])
+def test_behavior_changes_affect_notebook_hash(change):
+    """Verify behavior changes affect notebook hash."""
+    original = notebook()
+    changed = json.loads(original)
+    if change == "parameter": changed["cells"][1]["source"] += "\nlimit = 5"
+    if change == "query": changed["cells"][1]["source"] += '\nsql = "SELECT * FROM other"'
+    if change == "metadata": changed["metadata"]["dependencies"] = {"lakehouse": "different"}
+    if change == "tags": changed["cells"][1]["metadata"]["tags"] = []
+    assert service.notebook_executable_digest(original) != service.notebook_executable_digest(json.dumps(changed).encode())
+
+
+def test_promotion_only_switches_literal_mode_and_retains_full_content():
+    """Verify promotion only switches literal mode and retains full content."""
+    raw = notebook()
+    promoted, parameters = service.promoted_notebook(raw, PIPELINE_ID)
+    expected = json.loads(raw)
+    expected["cells"][1]["source"] = expected["cells"][1]["source"].replace('"Dry Run"', '"Governed"')
+    assert json.loads(promoted) == expected
+    assert parameters == {"manual": False, "days": None}
+
+
+@pytest.mark.parametrize("code", ["x = 1", 'setup_pipeline(pipeline_id=ID, pipeline_mode="Dry Run")',
+    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode=MODE)',
+    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Dry Run", **params)',
+    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Ungoverned")'])
+def test_ambiguous_or_parameterized_startup_rejects(code):
+    """Verify ambiguous or parameterized startup rejects."""
+    with pytest.raises(ValueError, match="literal|exactly one|Save"):
+        service.promoted_notebook(notebook(code), PIPELINE_ID)
+
+
+def test_fabric_gate_rejects_forged_plan_and_never_reads_metadata(monkeypatch):
+    """Verify fabric gate rejects forged plan and never reads metadata."""
+    monkeypatch.setattr(service, "read_registry", lambda **kw: pytest.fail("must reject before admission"))
+    with pytest.raises(RuntimeError, match="signed-in Fabric"):
+        service.build_governed_pipeline_plan(pipeline_id=PIPELINE_ID)
+    with pytest.raises(RuntimeError, match="signed-in Fabric"):
+        service.verify_governed_plan(SimpleNamespace(promotion_id="forged"))
+
+
+def test_agreement_requires_exact_effective_period():
+    """Verify agreement requires exact effective period."""
     today = date.today()
     service.validate_agreement({"start_date": today, "expiry_date": today})
     with pytest.raises(ValueError, match="effective"):
-        service.validate_agreement({"start_date": today - timedelta(days=10), "expiry_date": today - timedelta(days=1)})
+        service.validate_agreement({"start_date": today-timedelta(days=2), "expiry_date": today-timedelta(days=1)})
 
 
-def test_ungoverned_protection_includes_reactivation_candidates(monkeypatch):
-    """Migration pauses Governed without opening former protected tables."""
-    rows = [service.empty_pipeline_authority(), contract_candidate()]
-    monkeypatch.setattr(service, "read_registry", lambda **kw: rows)
-    plan = SimpleNamespace(runtime_context={"config": {}}, workspace_id="DEV", pipeline_id=PIPELINE_ID, plan_id="run", evidence={})
-    with pytest.raises(ValueError, match="protected Table ID"):
-        service.guard_ungoverned_write(plan, "orders", operation()["destination"])
+def test_promotion_cas_preserves_old_row_and_replays_idempotently(monkeypatch):
+    """Verify promotion cas preserves old row and replays idempotently."""
+    state = []
+    def mutate(_table, mutation, **kwargs):
+        proposed, result = mutation(deepcopy(state))
+        service.validate_registry(proposed)
+        state[:] = proposed
+        return result
+    monkeypatch.setattr(service, "mutate_metadata", mutate)
+    first = service.commit_pipeline_promotion(promotion(), expected_active_version=None, context={})
+    assert first["pipeline_version"] == 1
+    second = service.commit_pipeline_promotion(promotion(2), expected_active_version=1, context={})
+    assert [row["status"] for row in state] == ["superseded", "active"]
+    assert service.commit_pipeline_promotion(promotion(2), expected_active_version=1, context={}) == second
+    assert service.commit_pipeline_promotion(promotion(), expected_active_version=None, context={})["status"] == "superseded"
+    with pytest.raises(ValueError, match="Stale"):
+        service.commit_pipeline_promotion(promotion(3), expected_active_version=1, context={})
+    assert len(state) == 2
+    assert state[0]["snapshot_uri"] == first["snapshot_uri"]
 
 
-def test_no_obsolete_lifecycle_functions_remain():
-    """The new model has no wrappers for the retired approval/rebind engine."""
-    for name in ("approve_pipeline_release", "review_pipeline_release", "tested_pipeline_run",
-                 "activation_version", "workspace_activation", "reserve_pipeline_rebind", "release_pipeline_rebind"):
-        assert not hasattr(service, name)
+def test_reused_promotion_id_with_changed_code_rejects(monkeypatch):
+    """Verify reused promotion id with changed code rejects."""
+    original = promotion()
+    monkeypatch.setattr(service, "mutate_metadata", lambda table, mutation, **kw: mutation([deepcopy(original)])[1])
+    changed = deepcopy(original); changed["executable_sha256"] = "e"*64
+    with pytest.raises(ValueError, match="reused"):
+        service.commit_pipeline_promotion(changed, expected_active_version=1, context={})
 
 
-def test_public_contract_activation_keeps_target_and_metadata_workspace_distinct(monkeypatch):
-    """Governance may select an Engineering workspace without rerouting central storage."""
+def test_ungoverned_physical_alias_is_protected_in_foreign_workspace(monkeypatch):
+    """Verify ungoverned physical alias is protected in foreign workspace."""
+    calls = []
+    monkeypatch.setattr(service, "publication_claim", lambda *a, **kw: calls.append(kw.get("release", False)))
+    monkeypatch.setattr(service, "read_activations", lambda **kw: [contract_candidate("PROD")])
+    plan = SimpleNamespace(plan_id="run", evidence={}, runtime_context={}, workspace_id="DEV")
+    with pytest.raises(ValueError, match="physical destination alias"):
+        service.guard_ungoverned_write(plan, "alias", operation(workspace="PROD")["destination"])
+    assert calls == [False, True]
+
+
+def test_contract_activation_public_scope_preserves_central_metadata(monkeypatch):
+    """Verify contract activation public scope preserves central metadata."""
     from fabricops_kit import activate_data_contract
     from fabricops_kit.config import shared as config
     captured = {}
-    monkeypatch.setattr(config, "resolve_fabric_context", lambda: ({}, "governance-workspace",
-        {"metadata_workspace_id": "central-metadata"}))
-    def save(*args, **kwargs):
-        captured.update(kwargs)
-        return {"status": "active"}
-    monkeypatch.setattr(service, "set_table_contract_activation", save)
-    assert activate_data_contract("orders", "contract", 1, workspace_id="engineering-workspace",
-        expected_token="reviewed", governance_confirmed=True)["status"] == "active"
-    assert captured["context"]["scope_workspace_id"] == "engineering-workspace"
-    assert captured["context"]["metadata_workspace_id"] == "central-metadata"
-
-
-def test_migrated_source_binding_protects_its_original_physical_alias(monkeypatch):
-    """Protected read participants cannot be overwritten under a different Table ID."""
-    row = dict(record_id=service.registry_record_id("pipeline_activation", "DEV", PIPELINE_ID),
-        record_type="pipeline_activation", schema_version=2, workspace_id="DEV", pipeline_id=PIPELINE_ID,
-        status="requires_reactivation", operations_json=json.dumps([operation("source")]))
-    rows = [service.empty_pipeline_authority(), row]
-    monkeypatch.setattr(service, "read_registry", lambda **kw: rows)
-    plan = SimpleNamespace(runtime_context={"config": {}}, workspace_id="DEV", pipeline_id=PIPELINE_ID,
-        plan_id="alias-run", evidence={})
-    with pytest.raises(ValueError, match="alias"):
-        service.guard_ungoverned_write(plan, "alias", operation()["destination"])
-
-
-@pytest.mark.parametrize("alias", [False, True])
-def test_foreign_contract_binding_needs_no_foreign_workspace_config(monkeypatch, alias):
-    """Frozen physical bindings protect aliases without foreign Catalogue/config reads."""
-    from fabricops_kit.pipeline import shared as pipeline
-    row = contract_candidate("PROD")
-    rows = [service.empty_pipeline_authority(), row]
-    monkeypatch.setattr(service, "read_registry", lambda **kw: rows)
-    monkeypatch.setattr(pipeline, "resolve_catalogue_table_identity", lambda *a, **kw: pytest.fail("do not re-resolve frozen binding"))
-    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda *a, **kw: pytest.fail("do not require foreign configuration"))
-    commits = []
-    monkeypatch.setattr(service, "commit_registry", lambda *a, **kw: commits.append(a))
-    plan = SimpleNamespace(runtime_context={"config": {}, "scope_workspace_id": "DEV"}, workspace_id="DEV",
-        pipeline_id=PIPELINE_ID, plan_id="local-run", evidence={})
-    destination = json.loads(row["destination_json"]) if alias else operation(table="unrelated")["destination"]
-    if alias:
-        with pytest.raises(ValueError, match="physical destination alias"):
-            service.guard_ungoverned_write(plan, "unrelated", destination)
-        assert not commits
-    else:
-        service.guard_ungoverned_write(plan, "unrelated", destination)
-        assert len(commits) == 1 and plan.evidence["lease_token"] == "local-run"
-
-
-@pytest.mark.parametrize("value", [None, "{}", "not-json"])
-def test_contract_activation_rejects_missing_or_invalid_frozen_binding(value):
-    """Missing physical evidence must never bypass alias protection."""
-    row = {**contract_candidate(), "destination_json": value}
-    with pytest.raises(ValueError):
-        service.registry_control([service.empty_pipeline_authority(), row])
-
-
-def test_target_lease_excludes_another_run_and_physical_alias(monkeypatch):
-    """A published hash snapshot remains protected until finalization releases the lease."""
-    rows = [service.empty_pipeline_authority()]
-    monkeypatch.setattr(service, 'read_registry', lambda **kw: rows)
-    monkeypatch.setattr(service, 'commit_registry', lambda *a, **kw: None)
-    def plan(run):
-        return SimpleNamespace(runtime_context={}, workspace_id='DEV', pipeline_id=PIPELINE_ID, plan_id=run, evidence={})
-    first = plan('first')
-    service.guard_ungoverned_write(first, 'orders', operation()['destination'])
-    service.guard_ungoverned_write(first, 'orders', operation()['destination'])
-    with pytest.raises(RuntimeError, match='publication lease'):
-        service.guard_ungoverned_write(plan('second'), 'physical-alias', operation()['destination'])
-    service.guard_ungoverned_write(plan('second'), 'other', operation(table='other')['destination'])
+    monkeypatch.setattr(config, "resolve_fabric_context", lambda: ({}, "GOV", {"metadata_workspace_id": "CENTRAL"}))
+    monkeypatch.setattr(service, "set_table_contract_activation", lambda *a, **kw: captured.update(kw) or {"status": "active"})
+    activate_data_contract("orders", "contract", 1, workspace_id="PROD", expected_activation_id=None,
+        activation_id="operation", governance_confirmed=True)
+    assert captured["context"]["scope_workspace_id"] == "PROD"
+    assert captured["context"]["metadata_workspace_id"] == "CENTRAL"

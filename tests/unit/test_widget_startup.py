@@ -52,8 +52,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         root = state["_controls"]["page"]
         assert reads == ["catalogue"]
     else:
-        from fabricops_kit.activated_pipeline.shared import empty_pipeline_authority
-        monkeypatch.setattr(module, "read_registry", read("activation", [empty_pipeline_authority()]))
+        monkeypatch.setattr(module, "read_registry", read("activation", []))
         monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
         state = module.widget_activate_pipeline()
         root = state["widget"]

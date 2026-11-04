@@ -302,7 +302,7 @@ def test_returned_token_mapping_retains_absent_identities(spark_session):
         mapping.unpersist()
 
 
-@pytest.mark.parametrize('mode', ['testing', 'live'])
+@pytest.mark.parametrize('mode', ['dry_run', 'governed'])
 @pytest.mark.parametrize('collision', [False, True])
 def test_managed_token_mapping_uses_restricted_target_without_validation_writes(monkeypatch, spark_session, mode, collision):
     """Exercise real token generation and reuse around a mocked Delta vault merge."""
@@ -370,11 +370,11 @@ def test_managed_token_mapping_uses_restricted_target_without_validation_writes(
         assert set(values) == {'known', 'new'}
         assert values['known'] == 'stable'
         assert values['new'] != 'new'
-        assert merges == ([1] if mode == 'live' else [])
-        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'live' else {'known', 'absent'})
-        if mode == 'live':
+        assert merges == ([1] if mode == 'governed' else [])
+        assert {r.original_value for r in stored.collect()} == ({'known', 'new', 'absent'} if mode == 'governed' else {'known', 'absent'})
+        if mode == 'governed':
             again = shared._build_token_mapping(frame, column_name='value', column_id='c', table_id='t',
-                existing_mapping=None, config=config, active_workspace_id='dev', context={"execution_plan": execution_plan_stub("live")})
+                existing_mapping=None, config=config, active_workspace_id='dev', context={"execution_plan": execution_plan_stub("governed")})
             try:
                 assert {r.original_value: r.token_value for r in again.collect()} == values
                 assert merges == [1]  # Reusing known assignments must not perform another Delta merge.

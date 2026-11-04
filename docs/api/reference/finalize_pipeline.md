@@ -84,8 +84,8 @@ closed sessions retain their recorded outcome for repeat finalization.
 
 Dry Run returns a session-only summary and persists no target, watermark,
 processing state, profile observation or run metadata. Ungoverned and
-Governed executions persist their real operational outcome. Governed
-finalization also releases its activation reservation. Interrupted runs
+Governed executions persist their real operational outcome. Persistent
+finalization also releases this execution's physical publication claims. Interrupted runs
 remain incomplete and are never reported as successful finalization.
 
 </div>
@@ -99,7 +99,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:159`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L159-L223">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L159-L221">View on GitHub</a>
 </div>
 
 
@@ -115,7 +115,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 70 |
+| Live-critical dependencies | 66 |
 
 ### Release history
 
@@ -127,6 +127,16 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.metadata_path</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.mutate_metadata</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.publication_claim</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
@@ -150,7 +160,6 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
@@ -158,7 +167,6 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
-<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
@@ -174,28 +182,16 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
-<li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
-<li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
-<li><code>fabricops_kit.pipeline.shared._delete_profile_snapshot</code></li>
-<li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
-<li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
-<li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
-<li><code>fabricops_kit.pipeline.shared._profile_snapshot_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
-<li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
-<li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.finalize_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
-<li><code>fabricops_kit.pipeline.shared.publish_pipeline_testing_results</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 

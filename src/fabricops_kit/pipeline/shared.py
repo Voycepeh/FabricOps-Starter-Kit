@@ -19,9 +19,6 @@ PIPELINE_MODE_NAMES = {
     "dry_run": "Dry Run",
     "ungoverned": "Ungoverned",
     "governed": "Governed",
-    # Read-only compatibility for plans and metadata created before the mode rename.
-    "testing": "Test (historical)",
-    "live": "Governed (historical)",
 }
 
 @dataclass(frozen=True)
@@ -37,10 +34,10 @@ class PipelineExecutionPlan:
     contracts_json: str
     runtime_context: Any = dataclass_field(repr=False, compare=False)
     pipeline_id: str = ""
-    pipeline_activation_id: str = ""
+    pipeline_version: int | None = None
+    promotion_id: str = ""
+    governed_notebook_id: str = ""
     activated_operations_json: str = "[]"
-    deployment_id: str = ""
-    git_commit_sha: str = ""
     lock: Any = dataclass_field(default_factory=RLock, repr=False, compare=False)
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
@@ -59,7 +56,7 @@ class PipelineExecutionPlan:
     @property
     def permits_persistence(self):
         """Whether this run permits durable mutations."""
-        return self.execution_mode in {"ungoverned", "governed", "live"}
+        return self.execution_mode in {"ungoverned", "governed"}
 
     @property
     def run_result(self):
@@ -91,7 +88,7 @@ class PipelineExecutionPlan:
 def persistence_permitted(context):
     """Apply the single execution-level policy at a durable mutation boundary."""
     plan = (context or {}).get("execution_plan")
-    if getattr(plan, "execution_mode", None) in {"governed", "live"}:
+    if getattr(plan, "execution_mode", None) in {"governed"}:
         from fabricops_kit.activated_pipeline.shared import verify_governed_plan
         verify_governed_plan(plan)
     return plan is None or plan.permits_persistence
@@ -887,14 +884,14 @@ def _progress_key(value: Any, *, timestamp: bool = False) -> tuple[int, Any]:
             if timestamp:
                 raise ValueError(
                     f"Committed timestamp watermark {text!r} is ambiguous. "
-                    "Review and explicitly migrate this source-to-target history before retrying."
+                    "Existing progress is preserved; the timestamp boundary cannot be interpreted safely."
                 )
             return (2, text)
         if parsed.tzinfo is None:
             if timestamp:
                 raise ValueError(
                     f"Committed timestamp watermark {text!r} has no timezone. "
-                    "Review and explicitly migrate this source-to-target history before retrying."
+                    "Existing progress is preserved; the timestamp boundary cannot be interpreted safely."
                 )
             return (1, text)
         return (1, parsed.astimezone(UTC))
@@ -1023,8 +1020,8 @@ def validate_target_row_hash(identity, *, context, cache_hashes=False):
             return
         raise
     if "_row_hash" not in target.columns:
-        raise ValueError("Existing target has no _row_hash. Use an explicitly validated full overwrite "
-                         "or migrate and validate historical rows before appending or SCD publication.")
+        raise ValueError("Existing target has no _row_hash. Non-overwrite publication requires valid hashes "
+                         "for every existing row; the target has been preserved.")
     from pyspark.sql import functions as F
     from pyspark.sql.types import StringType
     if not isinstance(target.schema["_row_hash"].dataType, StringType):
@@ -1424,14 +1421,14 @@ def _processing_state_rows(history):
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
     ):
-        raise RuntimeError("Unsupported legacy METADATA_PROCESSING_STATE schema; reconcile and explicitly migrate or reset the Preview table before retrying.")
+        raise RuntimeError("Incompatible METADATA_PROCESSING_STATE schema; existing progress is preserved and cannot be inferred safely.")
     rows = observation_rows(history)
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
-            raise RuntimeError("Unsupported legacy or invalid METADATA_PROCESSING_STATE record; reconcile and explicitly migrate or reset the Preview table before retrying.")
+            raise RuntimeError("Incompatible or invalid METADATA_PROCESSING_STATE record; existing progress is preserved and cannot be inferred safely.")
     return rows
 
 
@@ -1679,7 +1676,7 @@ def resolve_incremental_source_scope(
         for row in [*current, *previous]:
             value = row.get("max_change_value")
             if value is not None and datetime.fromisoformat(str(value)).tzinfo is not None:
-                raise ValueError("TimestampNTZ history contains a timezone; explicitly migrate this source-to-target history before retrying.")
+                raise ValueError("TimestampNTZ history contains a timezone; the incompatible checkpoint is preserved and execution is blocked.")
     timestamp_watermark = first.get("watermark_type") != "timestamp_ntz" and (bool(first.get("watermark_type") == "timestamp") or isinstance(
         current_max_value, datetime
     ) or str(current_max_value or "").endswith("Z") or (
@@ -1695,7 +1692,7 @@ def resolve_incremental_source_scope(
             value = row.get("max_change_value")
             if value is not None:
                 if row.get("watermark_type") != "timestamp":
-                    raise ValueError("Committed timestamp watermark has no matching explicit type; reconcile and migrate the Processing State record before retrying.")
+                    raise ValueError("Committed timestamp watermark has no matching explicit type; existing Processing State is preserved and cannot be interpreted safely.")
                 row["max_change_value"] = _watermark_timestamp(value)
         for row in current:
             value = row.get("max_change_value")
@@ -2961,10 +2958,10 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
                "_pipeline_contracts": json.loads(plan.contracts_json),
                "_pipeline_rules": {}, "_pipeline_identities": identities}
     # Isolate transient Dry Run caches without replacing persisted Fabric audit identity.
-    if plan.execution_mode in {"dry_run", "testing"}:
+    if plan.execution_mode == "dry_run":
         context["activity_id"] = plan.plan_id
     context.pop("data_contract_overrides", None)
-    if plan.execution_mode in {"governed", "live"}:
+    if plan.execution_mode == "governed":
         from fabricops_kit.activated_pipeline.shared import verify_governed_plan
         verify_governed_plan(plan, spark_session=spark_session)
     for table_id in identities:
@@ -5779,11 +5776,11 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
 
 def build_pipeline_execution_plan(*, execution_mode, sources, targets, selections=None, context=None, spark_session=None, pipeline_id=None):
     """Freeze dynamic Dry Run or Ungoverned participants under one execution."""
-    if execution_mode in {"governed", "live"}:
-        raise ValueError("Governed requires Activated Pipeline authority; use setup_pipeline to resolve it.")
+    if execution_mode == "governed":
+        raise ValueError("Governed requires Pipeline Promotion authority; use setup_pipeline to resolve it.")
     from types import MappingProxyType
 
-    if execution_mode not in {"dry_run", "ungoverned", "testing"}:
+    if execution_mode not in {"dry_run", "ungoverned"}:
         raise ValueError("execution_mode must be dry_run, ungoverned or governed.")
     from fabricops_kit.data_contract.shared import validate_contract_definitions
 
@@ -5888,13 +5885,15 @@ def pipeline_record_content(value):
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
     row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
-    provenance = ("pipeline_activation_id", "deployment_id", "git_commit_sha", "deployment_verification_status", "run_schema_version")
+    provenance = ("execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
     if row.get("run_schema_version") is None:
         if any(row.get(key) is not None for key in provenance):
             raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
         row = {key: value for key, value in row.items() if key not in provenance}
-    elif row["run_schema_version"] != 2:
+    elif row["run_schema_version"] != 3:
         raise ValueError("Unsupported Pipeline Run schema version.")
+    elif row.get("execution_mode") == "governed" and any(row.get(key) in (None, "") for key in provenance):
+        raise ValueError("Governed Run requires exact Pipeline Promotion and execution identity provenance.")
     operations = row["operations"]
     keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
     if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
@@ -5946,9 +5945,10 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
         "activation_revision": None,
-        "pipeline_activation_id": plan.pipeline_activation_id or None, "deployment_id": plan.deployment_id or None,
-        "git_commit_sha": plan.git_commit_sha or None, "deployment_verification_status": "not_required" if plan.execution_mode in {"dry_run", "ungoverned", "testing"} else "unverified",
-        "run_schema_version": 2,
+        "execution_workspace_id": plan.workspace_id, "pipeline_version": plan.pipeline_version,
+        "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
+        "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
+        "run_schema_version": 3,
         "boundary_completed": plan.evidence.get("boundary_completed", False),
         "operations": sorted(operations, key=lambda item: item["operation_key"]),
         "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
@@ -6016,11 +6016,9 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     plan.evidence["persisted_run_row"] = stored[0]
 
 
-def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None, persist_testing=False):
+def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", completed_at=None):
     """Persist one authoritative Delta snapshot; confirm lost acknowledgements by read-back."""
-    if persist_testing and (plan.execution_mode != "testing" or not plan.evidence.get("sealed")):
-        raise RuntimeError("Only explicitly finalized Test results may be committed.")
-    durable = plan.permits_persistence or persist_testing
+    durable = plan.permits_persistence
     row = None
     try:
         if plan.evidence["failures"] or any(item["status"] == "failed" for item in plan.evidence["operations"].values()) or any(
@@ -6050,61 +6048,6 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
         # Connector exception messages can contain credentials or business values.
         plan.evidence["failures"].append({"code": "evidence_persistence_failed", "exception_type": type(exc).__name__})
         raise RuntimeError("Pipeline run evidence persistence failed; create a new plan.") from exc
-
-
-def publish_pipeline_testing_results(plan, *, spark_session=None):
-    """Publish stable diagnostic IDs before the final authoritative Testing record."""
-    if plan.execution_mode != "testing" or not plan.evidence.get("sealed"):
-        raise RuntimeError("Only completed Testing sessions can publish results.")
-    if plan.evidence.get("testing_results_published"):
-        return plan.run_result
-    if plan.evidence.get("persistence_failed"):
-        raise RuntimeError("Pipeline result persistence is uncertain; inspect its committed run before retrying.")
-    observation_error = None
-    observations = plan.evidence.pop("profile_observations", [])
-    if plan.run_result["status"] in {"succeeded", "ungoverned_completed"}:
-        try:
-            for observation in observations:
-                context = {**plan.runtime_context, "scope_workspace_id": plan.workspace_id,
-                    "activity_id": plan.plan_id, "_profile_snapshot_id": observation["profile_snapshot_id"]}
-                saved = _persist_profile_observation(observation, context=context,
-                    spark_session=get_spark_session(spark_session, context=context), emit=lambda *args: None)
-                profile = saved.get("profile")
-                if profile is not None:
-                    profile.unpersist()
-                for event in plan.evidence.get("profiling", []):
-                    if (event["table_id"], event["trigger"]) == (observation["identity"]["table_id"], observation["trigger"]) and event["activity"] in observation["activities"]:
-                        empty_frequency = event["activity"] == "frequency" and (
-                            observation["frequency_profile"] is None or observation["frequency_profile"].isEmpty())
-                        event.update(results_persisted=True,
-                            profile_snapshot_id=observation["profile_snapshot_id"] if event["activity"] != "grain" and not empty_frequency else None,
-                            empty_result=empty_frequency, row_count=observation["row_count"],
-                            completed_at=datetime.now(UTC).isoformat(), reason="test_observation")
-        except Exception as exc:
-            observation_error = exc
-            plan.evidence["failures"].append({"code": "test_profile_publication_failed", "exception_type": type(exc).__name__})
-            plan.evidence["final_result"] = {**plan.run_result, "status": "failed"}
-    audit = build_runtime_audit_fields(config=plan.runtime_context["config"], active_workspace_id=plan.workspace_id,
-        runtime_context=plan.runtime_context)
-    rows = plan.evidence.get("guardrail_history", [])
-    if rows:
-        from delta.tables import DeltaTable
-        table = "METADATA_GUARDRAIL_RESULTS"
-        spark = get_spark_session(spark_session, context=plan.runtime_context)
-        frame = spark.createDataFrame([coerce_metadata_row_types(table, {**row, **audit}) for row in rows],
-            schema=metadata_table_schema_registry()[table])
-        _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
-            metadata_table_physical_schema(plan.runtime_context["config"], table), context=plan.runtime_context)
-        (DeltaTable.forPath(spark, path).alias("target")
-         .merge(frame.alias("source"), "target.guardrail_result_id = source.guardrail_result_id")
-         .whenNotMatchedInsertAll().execute())
-    final = plan.run_result
-    row = persist_pipeline_run(plan, spark_session=spark_session, status=final["status"],
-        completed_at=final["completed_at"], persist_testing=True)
-    plan.evidence.update(testing_results_published=True, final_result=row)
-    if observation_error is not None:
-        raise RuntimeError("Test profiling observations could not be published; the execution was finalized as failed.") from observation_error
-    return row
 
 
 class PipelineOperation:
@@ -6152,6 +6095,7 @@ class PipelineOperation:
             # Processing parameters and profiling policy belong to the table contract.
             self.record.update(
                 store=str(identity["store"]),
+                requested_schema=args.get("schema"),
                 read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
                 query_sha256=hashlib.sha256(args["query"].encode()).hexdigest() if args.get("query") else None,
@@ -6163,14 +6107,17 @@ class PipelineOperation:
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
                 self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
-            if plan.execution_mode in {"governed", "live"}:
+            if plan.execution_mode == "governed":
                 from fabricops_kit.activated_pipeline.shared import verify_governed_plan
                 verify_governed_plan(plan, spark_session=args.get("spark_session"))
                 activated = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
                 selected = activated.get((table_id, self.role))
                 enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
-                if not plan.pipeline_activation_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
+                if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
+                if self.role == "target":
+                    from fabricops_kit.activated_pipeline.shared import guard_governed_write
+                    guard_governed_write(plan, actual_binding, spark_session=args.get("spark_session"))
             elif plan.execution_mode == "ungoverned" and self.role == "target":
                 from fabricops_kit.activated_pipeline.shared import guard_ungoverned_write
                 guard_ungoverned_write(plan, table_id, actual_binding, spark_session=args.get("spark_session"))
@@ -6263,16 +6210,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             status = "dry_run_completed"
         elif status == "succeeded" and plan.execution_mode == "ungoverned":
             status = "ungoverned_completed"
-        elif status == "succeeded" and plan.execution_mode == "testing" and not any(json.loads(plan.contracts_json).values()):
-            status = "ungoverned_completed"
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
-        if plan.execution_mode == "testing":
-            row["guardrail_results"] = list(plan.evidence.get("guardrail_history", []))
-            row["testing_notebook_binding"] = {
-                "workspace_id": plan.runtime_context.get("workspace_id"),
-                "notebook_id": plan.notebook_id,
-                "activity_id": plan.runtime_context.get("activity_id"),
-            }
         plan.evidence.update(sealed=True, final_result=row)
         if plan.evidence.get("lease_token"):
             from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
@@ -6342,7 +6280,7 @@ class PipelineSession:
 
     def select_contract(self, table_id, contract_id=None, contract_version=None, *, no_contract=False):
         """Freeze explicit exact contract choices before data operations start."""
-        if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode not in {"dry_run", "testing"}:
+        if self.closed or self.plan.evidence["operations"] or self.plan.execution_mode not in {"dry_run"}:
             raise RuntimeError("Contract choices are locked; they are available only before a Dry Run starts.")
         if no_contract:
             if contract_id is not None or contract_version is not None:
@@ -6367,7 +6305,7 @@ class PipelineSession:
         if self.closed:
             raise RuntimeError("Pipeline execution is closed; run Setup Pipeline again.")
         with self.plan.lock:
-            if self.plan.execution_mode in {"dry_run", "ungoverned", "testing"}:
+            if self.plan.execution_mode in {"dry_run", "ungoverned"}:
                 identities = json.loads(self.plan.participants_json)
                 requested = [(role, resolve_physical_table_identity(
                     self.plan.runtime_context["config"], self.plan.workspace_id,
@@ -6397,7 +6335,7 @@ class PipelineSession:
                         logical = identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
                         identities[table_id] = {**identity, "logical_id": logical, "roles": [*roles, participant_role]}
                         choice = (self.choices.get(table_id, {"no_contract": True})
-                                  if self.plan.execution_mode in {"dry_run", "testing"} else {"no_contract": True})
+                                  if self.plan.execution_mode == "dry_run" else {"no_contract": True})
                         selections[table_id] = choice
                         if choice == {"no_contract": True}:
                             contracts[table_id] = None
@@ -6563,6 +6501,12 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
                 "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
+            if pipeline_mode == "Dry Run" and runtime.get("notebook_id"):
+                try:
+                    from fabricops_kit.activated_pipeline.shared import FabricNotebookClient
+                    plan.evidence["notebook_snapshot"] = FabricNotebookClient().definition(active_workspace_id, runtime["notebook_id"])
+                except Exception:
+                    plan.evidence["notebook_snapshot_unavailable"] = True
     session = PipelineSession(plan, spark, inspector=inspector)
     try:
         if shell is not None:
@@ -8019,9 +7963,6 @@ def execute_table_profile(
         emit("1. Identity → DataFrame only; no governed table_id")
         emit("2. Profiling backend → PySpark")
 
-    plan = (context or {}).get("execution_plan")
-    trigger = (context or {}).get("_profile_trigger")
-    retain_observation = False
     profile_metrics = {"row_count": None}
     profile_key_candidates: list[dict[str, Any]] = []
     if warehouse_physical:
@@ -8043,12 +7984,6 @@ def execute_table_profile(
             )
     else:
         statistical_profile = build_profile_dataframe(dataframe)
-        if retain_observation:
-            # Eligibility, Grain and final publication reuse this compact aggregate;
-            # none of them needs to repeat the source statistical scan.
-            rows = statistical_profile.collect()
-            statistical_profile = spark_session.createDataFrame(rows, statistical_profile.schema)
-            profile_metrics["row_count"] = int(rows[0]["ROW_COUNT"]) if rows else 0
         selected_columns = _selected_frequency_columns(
             dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
         )
@@ -8075,19 +8010,6 @@ def execute_table_profile(
               "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
         emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
         result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
-        if identity is not None and retain_observation:
-            # Detach the compact aggregates from mutable source/transform lineage.
-            # Finalization publishes these rows; it never profiles the data again.
-            if frequency_profile is not None:
-                result["frequency_profile"] = spark_session.createDataFrame(frequency_profile.collect(), frequency_profile.schema)
-            snapshot_id = str(uuid5(NAMESPACE_URL, f"fabricops-test-profile|{plan.plan_id}|{table_id}|{trigger}"))
-            plan.evidence.setdefault("profile_observations", []).append({
-                **result, "identity": dict(identity), "activities": selected_activities, "trigger": trigger,
-                "profile_snapshot_id": snapshot_id, "replace_frequency": frequency_enabled,
-                "grain_discovery_max_columns": grain_discovery_max_columns,
-                "grain_candidates": profile_key_candidates,
-                "source_fields": warehouse_fields or [(field.name, field.dataType.simpleString()) for field in dataframe.schema.fields],
-            })
         return result
 
     observation = {
