@@ -245,7 +245,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
 
 
 def _activation(state):
-    """Inspect direct activation records with the real headless service."""
+    """Inspect protected decisions and deployments with the real Governance widget."""
     module = importlib.import_module("fabricops_kit.widgets.widget_activate_pipeline")
     return call_with_spark(state.spark, module.widget_activate_pipeline, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52",
          context=state.context)
@@ -259,7 +259,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     target = _author_and_freeze(state, state.target_id, source=False)
     frozen_json = {row["contract_id"]: row["contract_payload_json"] for row in (source, schema_source, target)}
     before = _activation(state)
-    assert not before["records"] and before["ready"] is False
+    assert not before["state"]["rows"] and not before["state"]["deployments"]
+    assert before["ready"] is False
     assert "signed-in Fabric" in before["reason"]
     assert not state.metadata["METADATA_DATA_LINEAGE"]
     coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
@@ -287,7 +288,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     from fabricops_kit.pipeline.shared import finalize_pipeline_run
     assert finalize_pipeline_run(plan, spark_session=state.spark)["status"] == "failed"
     gate = _activation(state)
-    assert not gate["records"] and gate["ready"] is False
+    assert not gate["state"]["rows"] and not gate["state"]["deployments"]
+    assert gate["ready"] is False
     assert state.metadata == snapshot
     plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="dry_run", selections=choices,
         spark_session=state.spark, context=state.context)
@@ -304,7 +306,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
     widget = _activation(state)
-    assert not widget["records"] and widget["ready"] is False
+    assert not widget["state"]["rows"] and not widget["state"]["deployments"]
+    assert widget["ready"] is False
     assert state.metadata == snapshot
     from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
     with pytest.raises(RuntimeError, match="signed-in Fabric"):

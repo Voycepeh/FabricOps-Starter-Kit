@@ -2813,30 +2813,6 @@
           "signature_before": null
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -2881,18 +2857,6 @@
             "Public API added."
           ],
           "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
           "signature_before": null
         },
         {
@@ -3041,7 +3005,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
           "signature_before": null
         },
         {
@@ -3185,7 +3149,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": null
         },
         {
@@ -3197,7 +3161,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": null
         },
         {
@@ -3336,13 +3300,13 @@
         }
       ],
       "summary": {
-        "added": 19,
+        "added": 16,
         "modified": 12,
-        "nonbreaking": 19,
+        "nonbreaking": 16,
         "potentially_breaking": 12,
         "removed": 14,
         "review_required": 14,
-        "total": 45
+        "total": 42
       },
       "target": "working-tree"
     },
@@ -5556,30 +5520,6 @@
           "signature_before": null
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -5619,18 +5559,6 @@
             "Public API added."
           ],
           "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
           "signature_before": null
         },
         {
@@ -5798,7 +5726,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
           "signature_before": null
         },
         {
@@ -5908,18 +5836,12 @@
             "Parameter removed: store.",
             "Optional parameter added: workspace_id.",
             "Parameter kind changed for contract_id: keyword_only to positional_or_keyword.",
-            "Parameter became required: contract_id.",
-            "Annotation changed for contract_id: str | None to str.",
             "Parameter kind changed for contract_version: keyword_only to positional_or_keyword.",
-            "Parameter became required: contract_version.",
-            "Annotation changed for contract_version: int | None to int.",
             "Parameter kind changed for table_id: keyword_only to positional_or_keyword.",
-            "Parameter became required: table_id.",
-            "Annotation changed for table_id: str | None to str.",
             "Existing positional parameter order changed.",
             "Return annotation changed: None to dict."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)"
         },
         {
@@ -5931,7 +5853,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": null
         },
         {
@@ -6008,13 +5930,13 @@
         }
       ],
       "summary": {
-        "added": 14,
+        "added": 11,
         "modified": 15,
-        "nonbreaking": 15,
+        "nonbreaking": 12,
         "potentially_breaking": 15,
         "removed": 11,
         "review_required": 10,
-        "total": 40
+        "total": 37
       },
       "target": "working-tree"
     },
@@ -8214,30 +8136,6 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -8278,18 +8176,6 @@
           ],
           "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -8456,7 +8342,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
           "signature_before": null
         },
         {
@@ -8570,19 +8456,15 @@
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "reasons": [
             "Parameter removed: spark_session.",
-            "Required parameter added: contract_id.",
+            "Optional parameter added: contract_id.",
             "Optional parameter added: workspace_id.",
             "Annotation changed for context: Any to None.",
             "Parameter kind changed for contract_version: keyword_only to positional_or_keyword.",
-            "Parameter became required: contract_version.",
-            "Annotation changed for contract_version: int | None to int.",
             "Parameter kind changed for table_id: keyword_only to positional_or_keyword.",
-            "Parameter became required: table_id.",
-            "Annotation changed for table_id: str | None to str.",
             "Existing positional parameter order changed.",
             "Return annotation changed: dict[str, Any] to dict."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
         },
         {
@@ -8594,7 +8476,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": null
         },
         {
@@ -8659,13 +8541,13 @@
         }
       ],
       "summary": {
-        "added": 6,
+        "added": 3,
         "modified": 22,
-        "nonbreaking": 7,
+        "nonbreaking": 4,
         "potentially_breaking": 22,
         "removed": 9,
         "review_required": 8,
-        "total": 37
+        "total": 34
       },
       "target": "working-tree"
     },
@@ -10191,40 +10073,16 @@
       "baseline": "v0.3.0",
       "changes": [
         {
-          "change_type": "added",
+          "change_type": "modified",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Public API added."
+            "Optional parameter added: pipeline_id."
           ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "signature_before": null
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "modified",
@@ -10251,30 +10109,30 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": null
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Optional parameter added: dry_run."
+            "Return annotation changed: dict[str, Any] to dict."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 2,
-        "nonbreaking": 5,
+        "added": 1,
+        "modified": 3,
+        "nonbreaking": 2,
         "potentially_breaking": 1,
         "removed": 0,
-        "review_required": 0,
-        "total": 6
+        "review_required": 1,
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -11800,40 +11658,16 @@
       "baseline": "v0.3.1",
       "changes": [
         {
-          "change_type": "added",
+          "change_type": "modified",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Public API added."
+            "Optional parameter added: pipeline_id."
           ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "signature_before": null
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "modified",
@@ -11860,30 +11694,30 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": null
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Optional parameter added: dry_run."
+            "Return annotation changed: dict[str, Any] to dict."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 2,
-        "nonbreaking": 5,
+        "added": 1,
+        "modified": 3,
+        "nonbreaking": 2,
         "potentially_breaking": 1,
         "removed": 0,
-        "review_required": 0,
-        "total": 6
+        "review_required": 1,
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -13472,42 +13306,28 @@
       "baseline": "main",
       "changes": [
         {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "signature_before": null
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
           "reasons": [
-            "Parameter removed: expected_token.",
-            "Required parameter added: activation_id.",
-            "Required parameter added: expected_activation_id."
+            "Preview public API removed."
           ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_after": null,
           "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
+          "reasons": [
+            "Optional parameter added: pipeline_id."
+          ],
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "modified",
@@ -13531,30 +13351,30 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature_after": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "signature_before": null
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Optional parameter added: dry_run."
+            "Return annotation changed: dict[str, Any] to dict."
           ],
-          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 3,
+        "added": 1,
         "modified": 3,
-        "nonbreaking": 5,
-        "potentially_breaking": 1,
-        "removed": 0,
-        "review_required": 0,
-        "total": 6
+        "nonbreaking": 3,
+        "potentially_breaking": 0,
+        "removed": 1,
+        "review_required": 2,
+        "total": 5
       },
       "target": "working-tree"
     },
@@ -13610,30 +13430,6 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -13679,18 +13475,6 @@
           ],
           "signature_after": null,
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -13839,7 +13623,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "removed",
@@ -13983,7 +13767,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "removed",
@@ -13995,7 +13779,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
           "change_type": "added",
@@ -14137,9 +13921,9 @@
         "modified": 12,
         "nonbreaking": 14,
         "potentially_breaking": 20,
-        "removed": 19,
-        "review_required": 11,
-        "total": 45
+        "removed": 16,
+        "review_required": 8,
+        "total": 42
       },
       "target": "v0.1.0"
     },
@@ -14207,30 +13991,6 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -14271,18 +14031,6 @@
           ],
           "signature_after": null,
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -14450,7 +14198,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "removed",
@@ -14559,19 +14307,13 @@
             "Optional parameter added: spark_session.",
             "Optional parameter added: store.",
             "Parameter kind changed for contract_id: positional_or_keyword to keyword_only.",
-            "Parameter became optional: contract_id.",
-            "Annotation changed for contract_id: str to str | None.",
             "Parameter kind changed for contract_version: positional_or_keyword to keyword_only.",
-            "Parameter became optional: contract_version.",
-            "Annotation changed for contract_version: int to int | None.",
             "Parameter kind changed for table_id: positional_or_keyword to keyword_only.",
-            "Parameter became optional: table_id.",
-            "Annotation changed for table_id: str to str | None.",
             "Existing positional parameter order changed.",
             "Return annotation changed: dict to None."
           ],
           "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, agreement_id: str | None = None, agreement_version: str | None = None, store: str = 'Metadata', schema: str | None = None, spark_session = None, context = None)",
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "removed",
@@ -14583,7 +14325,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
           "change_type": "added",
@@ -14663,9 +14405,9 @@
         "modified": 15,
         "nonbreaking": 11,
         "potentially_breaking": 19,
-        "removed": 14,
-        "review_required": 10,
-        "total": 40
+        "removed": 11,
+        "review_required": 7,
+        "total": 37
       },
       "target": "v0.2.0"
     },
@@ -14713,30 +14455,6 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
-        },
-        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -14777,18 +14495,6 @@
           ],
           "signature_after": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, spark_session: Any = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "signature_before": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
         },
         {
           "change_type": "modified",
@@ -14956,7 +14662,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "modified",
@@ -15073,16 +14779,12 @@
             "Optional parameter added: spark_session.",
             "Annotation changed for context: None to Any.",
             "Parameter kind changed for contract_version: positional_or_keyword to keyword_only.",
-            "Parameter became optional: contract_version.",
-            "Annotation changed for contract_version: int to int | None.",
             "Parameter kind changed for table_id: positional_or_keyword to keyword_only.",
-            "Parameter became optional: table_id.",
-            "Annotation changed for table_id: str to str | None.",
             "Existing positional parameter order changed.",
             "Return annotation changed: dict to dict[str, Any]."
           ],
           "signature_after": "widget_activate_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "removed",
@@ -15094,7 +14796,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
           "change_type": "modified",
@@ -15162,9 +14864,9 @@
         "modified": 22,
         "nonbreaking": 11,
         "potentially_breaking": 22,
-        "removed": 6,
-        "review_required": 4,
-        "total": 37
+        "removed": 3,
+        "review_required": 1,
+        "total": 34
       },
       "target": "v0.2.5"
     },
@@ -15172,40 +14874,16 @@
       "baseline": "working-tree",
       "changes": [
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Parameter removed: pipeline_id."
           ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "modified",
@@ -15233,29 +14911,29 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Parameter removed: dry_run."
+            "Return annotation changed: dict to dict[str, Any]."
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 0,
         "potentially_breaking": 2,
-        "removed": 4,
-        "review_required": 4,
-        "total": 6
+        "removed": 1,
+        "review_required": 2,
+        "total": 4
       },
       "target": "v0.3.0"
     },
@@ -15263,40 +14941,16 @@
       "baseline": "working-tree",
       "changes": [
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Preview public API removed."
+            "Parameter removed: pipeline_id."
           ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "modified",
@@ -15324,29 +14978,29 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Parameter removed: dry_run."
+            "Return annotation changed: dict to dict[str, Any]."
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 0,
         "potentially_breaking": 2,
-        "removed": 4,
-        "review_required": 4,
-        "total": 6
+        "removed": 1,
+        "review_required": 2,
+        "total": 4
       },
       "target": "v0.3.1"
     },
@@ -15354,42 +15008,28 @@
       "baseline": "working-tree",
       "changes": [
         {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
           "reasons": [
-            "Preview public API removed."
+            "Public API added."
           ],
-          "signature_after": null,
-          "signature_before": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict"
+          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
+          "signature_before": null
         },
         {
           "change_type": "modified",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "reasons": [
-            "Parameter removed: activation_id.",
-            "Parameter removed: expected_activation_id.",
-            "Required parameter added: expected_token."
+            "Parameter removed: pipeline_id."
           ],
-          "signature_after": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_token: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "signature_before": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)"
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
         },
         {
           "change_type": "modified",
@@ -15414,29 +15054,29 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict"
+          "signature_before": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict"
         },
         {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "review_required",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
           "reasons": [
-            "Parameter removed: dry_run."
+            "Return annotation changed: dict to dict[str, Any]."
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
-          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]"
+          "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         }
       ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 3,
-        "nonbreaking": 0,
-        "potentially_breaking": 3,
-        "removed": 3,
-        "review_required": 3,
-        "total": 6
+        "nonbreaking": 1,
+        "potentially_breaking": 2,
+        "removed": 1,
+        "review_required": 2,
+        "total": 5
       },
       "target": "main"
     }
@@ -26092,78 +25732,6 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
-          "parameters": [
-            {
-              "annotation": "dict",
-              "default": null,
-              "has_default": false,
-              "kind": "positional_or_keyword",
-              "name": "review",
-              "required": true
-            },
-            {
-              "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "governance_confirmed",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline",
-          "return_annotation": "dict",
-          "signature": "promote_pipeline(review: dict, *, governance_confirmed: bool = False) -> dict",
-          "source_path": "src/fabricops_kit/activated_pipeline/promote_pipeline.py",
-          "source_qualified_name": "fabricops_kit.activated_pipeline.promote_pipeline.promote_pipeline"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Preview",
-          "parameters": [
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "positional_or_keyword",
-              "name": "pipeline_id",
-              "required": true
-            },
-            {
-              "annotation": "int",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "expected_active_version",
-              "required": true
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "workspace_id",
-              "required": false
-            },
-            {
-              "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "governance_confirmed",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline",
-          "return_annotation": "dict",
-          "signature": "restore_pipeline(pipeline_id: str, *, expected_active_version: int, workspace_id: str | None = None, governance_confirmed: bool = False) -> dict",
-          "source_path": "src/fabricops_kit/activated_pipeline/restore_pipeline.py",
-          "source_qualified_name": "fabricops_kit.activated_pipeline.restore_pipeline.restore_pipeline"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
             {
@@ -26356,74 +25924,6 @@
           "signature": "create_data_agent(table_id: str, target_workspace_id: str, display_name: str, *, description: str = 'FabricOps governed single-table Data Agent', config: Any = None, context: Mapping[str, Any] | None = None, token_provider: Callable[[], str] = default_token_provider, transport: Callable[[str, str, Mapping[str, Any] | None, str], FabricResponse] = http_request) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/data_agent/create_data_agent.py",
           "source_qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Preview",
-          "parameters": [
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "positional_or_keyword",
-              "name": "table_id",
-              "required": true
-            },
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "positional_or_keyword",
-              "name": "contract_id",
-              "required": true
-            },
-            {
-              "annotation": "int",
-              "default": null,
-              "has_default": false,
-              "kind": "positional_or_keyword",
-              "name": "contract_version",
-              "required": true
-            },
-            {
-              "annotation": "str | None",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "expected_activation_id",
-              "required": true
-            },
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "activation_id",
-              "required": true
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "workspace_id",
-              "required": false
-            },
-            {
-              "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "governance_confirmed",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract",
-          "return_annotation": null,
-          "signature": "activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, expected_activation_id: str | None, activation_id: str, workspace_id: str | None = None, governance_confirmed: bool = False)",
-          "source_path": "src/fabricops_kit/data_contract/activate_data_contract.py",
-          "source_qualified_name": "fabricops_kit.data_contract.activate_data_contract.activate_data_contract"
         },
         {
           "certainty": "certain",
@@ -26969,11 +26469,19 @@
               "kind": "keyword_only",
               "name": "failed",
               "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "pipeline_id",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "return_annotation": null,
-          "signature": "finalize_pipeline(pipeline = None, *, failed = False)",
+          "signature": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
           "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline"
         },
@@ -27463,28 +26971,28 @@
           "lifecycle": "Preview",
           "parameters": [
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "positional_or_keyword",
               "name": "table_id",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "positional_or_keyword",
               "name": "contract_id",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "int",
-              "default": null,
-              "has_default": false,
+              "annotation": "int | None",
+              "default": "None",
+              "has_default": true,
               "kind": "positional_or_keyword",
               "name": "contract_version",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str | None",
@@ -27505,7 +27013,7 @@
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
           "return_annotation": "dict",
-          "signature": "widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *, workspace_id: str | None = None, context = None) -> dict",
+          "signature": "widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None, contract_version: int | None = None, *, workspace_id: str | None = None, context = None) -> dict",
           "source_path": "src/fabricops_kit/widgets/widget_activate_data_contract.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
         },
@@ -27527,21 +27035,13 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "dry_run",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
               "name": "context",
               "required": false
             }
           ],
           "qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline",
-          "return_annotation": "dict[str, Any]",
-          "signature": "widget_activate_pipeline(*, pipeline_id = None, dry_run = None, context = None) -> dict[str, Any]",
+          "return_annotation": "dict",
+          "signature": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "source_path": "src/fabricops_kit/widgets/widget_activate_pipeline.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline"
         },
@@ -27628,7 +27128,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:427f16d6c012218c6f423cf437e1d91e3301796d43a6b4b8d4bf95b2ed048f6d",
+      "source_digest": "sha256:606344fd766e4b701d68d6cd8d6c05f9c4a571f87acfa1317f3bcc75b0677686",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
