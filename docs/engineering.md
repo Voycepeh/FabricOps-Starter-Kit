@@ -38,7 +38,7 @@ One execution can register multiple reads and publish multiple targets. FabricOp
 
     [`setup_pipeline()`](api/reference/setup_pipeline.md) fixes the stable Pipeline ID, execution mode and session plan. [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves and evaluates each source. [`orchestrate_write()`](api/reference/orchestrate_write.md) prepares and evaluates each target, then previews or publishes it. [`finalize_pipeline()`](api/reference/finalize_pipeline.md) records the complete outcome and releases any reservation.
 
-    Persistent pipelines require an explicit UUIDv4 Pipeline ID retained in version-controlled source across environments and notebook redeployments. The original Fabric Notebook ID establishes the logical identity; promoted notebook IDs inherit it through the Pipeline Registry.
+    The original Fabric Notebook ID establishes the logical identity. The Pipeline Registry maps every promoted physical Notebook ID back to that identity; no Pipeline ID is declared in notebook source.
 
 ## What does FabricOps add to Microsoft Fabric?
 
