@@ -396,7 +396,7 @@ def test_saved_output_changes_remain_distinct_from_executed_saved_definition():
     saved = json.loads(base64.b64decode(package["source_notebook_base64"]))
     saved["cells"][0]["source"] = "Updated review notes after the Dry Run"
     raw = json.dumps(saved).encode()
-    promoted, _ = service.promoted_notebook(raw, PIPELINE_ID)
+    promoted, _ = service.promoted_notebook(raw)
     package["source_notebook_base64"] = base64.b64encode(raw).decode()
     package["notebook_base64"] = base64.b64encode(promoted).decode()
     package["manifest"].update(source_snapshot_sha256=service.hashlib.sha256(raw).hexdigest(),
