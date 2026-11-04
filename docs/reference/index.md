@@ -35,8 +35,8 @@ Use the finder below to search 28 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 52
-    - Total callables: 781
-    - Supporting functions: 421
+    - Total callables: 782
+    - Supporting functions: 422
     - Private helpers to review: 325
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -68,9 +68,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span></p>
 </article>
-<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending signed-in Fabric validation.">
+<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending signed-in Fabric validation.</p>
+  <p class="reference-catalogue-item-purpose">Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span></p>
 </article>
 </div>

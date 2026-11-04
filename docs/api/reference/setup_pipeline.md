@@ -55,7 +55,6 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-
 | `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
 | `observe_source` | `bool` | No | `False` | Manually request a full physical Source Observation for this execution. |
 | `source_observation_days` | `int \| None` | No | `None` | Automatically observe after this many days since the last accepted full observation. None disables automatic observation. Manual requests override the interval. Incremental SQL scope does not restrict observation. Baselines are accepted only with verified target publication; failed or no-op writes do not consume the interval. Changed fingerprints are diagnostic unless a separately configured Source Drift policy blocks publication. |
@@ -75,7 +74,7 @@ Returns a context-local session exposing the Registry-resolved logical Pipeline 
 ## Raises / Errors
 
 ValueError
-    If the mode is invalid or the current Fabric Notebook ID is unavailable or malformed.
+    If the mode or observation configuration is invalid.
 RuntimeError
     If notebook setup or Spark is unavailable, or signed-in Fabric validation
     remains pending. Governed fails before admission and publication.
@@ -91,9 +90,10 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Call setup_notebook first. Spark and Fabric identity come from that setup.
-There is no permanent registration, approval, notebook rebinding or automatic
-UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
-setup closes the previous execution. Dry Run never writes Registry, Run,
+The current Fabric Notebook ID establishes the logical Pipeline ID. The
+Pipeline Registry maps promoted physical notebook IDs back to the original
+identity; no identity is declared in notebook source. Repeated setup closes
+the previous execution. Dry Run never writes Registry, Run,
 profiling results or Processing State. Completed captured Dry Runs retain
 serializable saved-definition/test claims in Engineering Files for submission.
 Finalize displays the package download and explicit deployment/recovery controls.
@@ -126,7 +126,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L214">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L207">View on GitHub</a>
 </div>
 
 
@@ -142,7 +142,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 79 |
+| Live-critical dependencies | 80 |
 
 ### Release history
 
@@ -171,6 +171,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.read_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_pipeline_identity</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.reviewed_contracts</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
