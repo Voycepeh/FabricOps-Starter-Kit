@@ -13673,9 +13673,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._ai_dq_tolerance",
-      "source_end_line": 620,
+      "source_end_line": 625,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 609,
+      "source_start_line": 614,
       "usage": "public_flow_reachable"
     },
     {
@@ -13742,9 +13742,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_dq_parameters",
-      "source_end_line": 606,
+      "source_end_line": 611,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 595,
+      "source_start_line": 600,
       "usage": "public_flow_reachable"
     },
     {
@@ -13753,7 +13753,7 @@
       "function_name": "_parse_ai_json",
       "function_type": "private_function",
       "inbound_source_references": [
-        "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules",
+        "fabricops_kit.widgets.enrichment_shared.suggest_business_rule",
         "fabricops_kit.widgets.enrichment_shared.suggest_grain_key",
         "fabricops_kit.widgets.enrichment_shared.suggest_sensitive_data"
       ],
@@ -13796,9 +13796,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
-      "source_end_line": 641,
+      "source_end_line": 646,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 623,
+      "source_start_line": 628,
       "usage": "public_flow_reachable"
     },
     {
@@ -13830,9 +13830,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.build_ai_business_rule_context",
-      "source_end_line": 697,
+      "source_end_line": 702,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 644,
+      "source_start_line": 649,
       "usage": "public_flow_reachable"
     },
     {
@@ -13952,7 +13952,7 @@
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule",
       "source_end_line": 935,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
-      "source_start_line": 700,
+      "source_start_line": 705,
       "usage": "public_flow_reachable"
     },
     {
@@ -13967,7 +13967,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules",
-      "source_end_line": 592,
+      "source_end_line": 597,
       "source_path": "src/fabricops_kit/widgets/enrichment_shared.py",
       "source_start_line": 548,
       "usage": "unused"
@@ -23890,15 +23890,15 @@
       "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule"
     },
     {
+      "callee_qualified_name": "fabricops_kit.widgets.enrichment_shared._parse_ai_json",
+      "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.widgets.enrichment_shared._validate_ai_dq_parameters",
       "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_business_rule"
     },
     {
       "callee_qualified_name": "fabricops_kit.widgets.enrichment_shared._normalize_ai_dq_parameters",
-      "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.widgets.enrichment_shared._parse_ai_json",
       "caller_qualified_name": "fabricops_kit.widgets.enrichment_shared.suggest_dq_rules"
     },
     {
