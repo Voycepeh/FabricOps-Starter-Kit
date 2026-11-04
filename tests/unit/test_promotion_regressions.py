@@ -31,7 +31,7 @@ def consumer_metadata(monkeypatch):
     contract = dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json=payload)
     activation = dict(workspace_id='DEV', table_id='orders', contract_id='contract', contract_version=1,
         payload_sha256=hashlib.sha256(payload.encode()).hexdigest(), activation_id='activation', revision=1,
-        status='active', destination_json=json.dumps(binding), activated_by='reviewer', activated_at=date.today())
+        status='active', destination_json=json.dumps(binding), _committed_by='reviewer', activated_at=date.today())
     op = operation(); op['destination'] = binding
     row = promotion(); row.update(operations_json=json.dumps([op]), bindings_sha256=authority.manifest_digest([op]))
     agreement = dict(agreement_id='agreement', agreement_version='1', start_date=date(2020,1,1), expiry_date=date(2099,1,1))
