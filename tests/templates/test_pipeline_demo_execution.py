@@ -20,7 +20,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     frame = MagicMock()
     reads, writes = [], []
     notebook_setup = Mock()
-    setup = Mock(return_value=SimpleNamespace(pipeline_id=pipeline_id))
+    setup = Mock(return_value=SimpleNamespace())
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
         assert kwargs.get('verbose') is True
