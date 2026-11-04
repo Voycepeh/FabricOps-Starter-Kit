@@ -355,7 +355,7 @@ def _parse_ai_json(raw: str, label: str) -> Any:
     try:
         return json.loads(text)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"AI {label} suggestion was not valid JSON.") from exc
+        raise ValueError(f"{label} was not valid JSON.") from exc
 
 
 def suggest_sensitive_data(
@@ -389,7 +389,7 @@ def suggest_sensitive_data(
         _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
     )
     raw = str(call(instruction)).strip()
-    candidates = _parse_ai_json(raw, "Sensitive Data")
+    candidates = _parse_ai_json(raw, "AI Sensitive Data suggestion")
     if not isinstance(candidates, list):
         raise ValueError("AI Sensitive Data suggestion must be a JSON list.")
     suggestions = []
@@ -536,7 +536,7 @@ Context:
         _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
     )
     raw = str(call(instruction)).strip()
-    candidate = _parse_ai_json(raw, "Grain")
+    candidate = _parse_ai_json(raw, "AI Grain suggestion")
     if not isinstance(candidate, dict):
         raise ValueError("AI Grain suggestion must be a JSON object.")
     return {
@@ -567,7 +567,12 @@ Pattern requires a regex only for clearly structured text. Use governed evidence
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
-    candidates = _parse_ai_json(raw, "Data Quality")
+    if raw.startswith("```"):
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        candidates = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError("AI Data Quality suggestion was not valid JSON.") from exc
     if not isinstance(candidates, list):
         raise ValueError("AI Data Quality suggestion must be a JSON list.")
     suggestions = []
@@ -764,12 +769,7 @@ Context:
         _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
     )
     raw = str(call(instruction)).strip()
-    if raw.startswith("```"):
-        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    try:
-        candidates = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError("AI DQ Rule proposal was not valid JSON.") from exc
+    candidates = _parse_ai_json(raw, "AI DQ Rule proposal")
     if not isinstance(candidates, list) or not candidates:
         raise ValueError("AI DQ Rule proposal must be a non-empty JSON array.")
 
