@@ -813,8 +813,6 @@ def validate_submission(package):
     UUID(manifest["submission_id"])
     validate_pipeline_id(manifest["pipeline_id"])
     validate_pipeline_id(manifest["source_notebook_id"])
-    if manifest["pipeline_id"] != manifest["source_notebook_id"]:
-        raise ValueError("Logical Pipeline ID must equal its original source Fabric Notebook ID.")
     for key in ("source_workspace_id", "source_notebook_id", "execution_workspace_id", "created_by", "created_at", "dry_run_id"):
         if not isinstance(manifest[key], str) or not manifest[key].strip():
             raise ValueError("Submission requires " + key)
