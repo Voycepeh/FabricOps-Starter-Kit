@@ -1908,7 +1908,7 @@ def test_provider_failure_shows_actionable_retry_and_retains_detail(widget_runti
 
     controls["rerun_column_description"].click()
 
-    assert "provider access or capacity" in controls["column_description_ai"].value
+    assert "capacity or rate limit" in controls["column_description_ai"].value
     assert "capacity limit" not in controls["column_description_ai"].value
     assert "capacity limit" in state["_ai_failure"]
     assert state["_ai_failure_category"] == "provider"
@@ -3968,7 +3968,7 @@ def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_
     assert controls["resolve_business_rule"].description == "Generate DQ Rules"
     assert not controls["resolve_business_rule"].disabled
     assert controls["apply_business_rule"].disabled
-    assert "could not be generated" in controls["business_proposal"].value
+    assert "failed response validation" in controls["business_proposal"].value
     assert "Example generation failure" in state["_ai_failure"]
     assert widget_runtime["calls"]["draft"] == []
 
@@ -4026,3 +4026,123 @@ def test_native_candidate_missing_key_counts_are_displayed_exactly(widget_runtim
     }
     state = widget_runtime['open']()
     assert expected in state['_controls']['grain_profile_evidence'].value
+
+
+@pytest.mark.parametrize("overrides,expected", [
+    ({}, ("gpt-5.1", "medium", "low")),
+    ({"ai_model": "gpt-5-mini", "ai_reasoning_effort": "high", "ai_verbosity": "medium"},
+     ("gpt-5-mini", "high", "medium")),
+])
+def test_ai_widget_overrides_and_effective_information(widget_runtime, overrides, expected):
+    """Effective configuration is visible before opt-in and in the editor."""
+    widget_runtime["ai_enrichment"].update({
+        "enabled": True, "model_deployment_name": "gpt-5.1", "reasoning_effort": "medium", "verbosity": "low",
+    })
+    state = module.widget_data_contract(table_id="orders", contract_version=1, **overrides)
+    assert tuple(state["ai_settings"].values()) == expected
+    for control in ("selector_ai_information", "editor_ai_information"):
+        text = state["_controls"][control].value
+        for value in expected:
+            assert value in text
+        assert "Fabric capacity consumption" in text and "manual authoring remains available" in text
+    assert state["ai_usage"] == []
+
+
+@pytest.mark.parametrize("override", [
+    {"ai_model": "gpt-6"}, {"ai_reasoning_effort": "extreme"}, {"ai_verbosity": "minimal"},
+])
+def test_invalid_widget_ai_override_rejected_before_editor(widget_runtime, override):
+    """A bad explicit override raises an actionable configuration error."""
+    with pytest.raises(ValueError, match="ai_enrichment"):
+        module.widget_data_contract(table_id="orders", **override)
+
+
+def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(widget_runtime, monkeypatch):
+    """Trace widget callbacks through prompt building and JSON validation to the provider boundary."""
+    enrichment = importlib.import_module("fabricops_kit.widgets.enrichment_shared")
+    settings = widget_runtime["ai_enrichment"]
+    settings.update({"enabled": True, "model_deployment_name": "gpt-5-mini", "reasoning_effort": "low"})
+    calls = []
+
+    def invoke(prompt, **kwargs):
+        calls.append((prompt, kwargs))
+        kwargs["usage"].append({"model": kwargs["ai_config"]["model_deployment_name"],
+                                "operation": kwargs["operation"], "statistics": [{"input_tokens": 12}]})
+        operation = kwargs["operation"]
+        if operation == "grain_key":
+            return '```json\n{"grain":"One order", "rationale":"Governed context"}\n```'
+        if operation == "sensitive_data":
+            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}}]'
+        if operation == "business_rule_ai":
+            return '[{"requirement":"Positive values", "rule_type":"range", "columns":["column_0"], "parameters":{"minimum":0,"minimum_inclusive":true,"maximum_inclusive":true}, "rationale":"Requested minimum"}]'
+        return "Suggested description"
+
+    monkeypatch.setattr(enrichment, "_invoke_fabric_ai", invoke)
+    state = module.widget_data_contract(
+        table_id="orders", contract_version=1,
+        ai_model="gpt-5.1", ai_reasoning_effort="high", ai_verbosity="medium",
+    )
+    assert calls == []
+    state["_controls"]["open_with_ai"].click()
+    controls = state["_controls"]
+    controls["rerun_table_description"].click()
+    controls["business_columns"].value = ()
+    controls["business_requirement"].value = "column_0 must be positive"
+    controls["resolve_business_rule"].click()
+    assert not state["_ai_failure"], state["_ai_failure"]
+    assert {kwargs["operation"] for _, kwargs in calls} == {
+        "table_enrichment", "column_enrichment", "grain_key", "sensitive_data", "business_rule_ai",
+    }
+    sessions = [kwargs["spark_session"] for _, kwargs in calls]
+    assert all(session is sessions[0] for session in sessions)
+    for _, kwargs in calls:
+        assert kwargs["ai_config"]["model_deployment_name"] == "gpt-5.1"
+        assert kwargs["ai_config"]["reasoning_effort"] == "high"
+        assert kwargs["ai_config"]["verbosity"] == "medium"
+    assert any("configured table description prompt" in prompt for prompt, _ in calls)
+    assert len(state["ai_usage"]) == len(calls)
+    assert "input_tokens" in controls["ai_usage"].value
+    assert not state["_ai_failure_diagnostic"]
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_manual_path_never_initializes_or_invokes_ai_even_when_callbacks_clicked(widget_runtime, monkeypatch, enabled):
+    """Manual authoring stays usable and guarded callbacks cannot accidentally submit AI."""
+    enrichment = importlib.import_module("fabricops_kit.widgets.enrichment_shared")
+    widget_runtime["ai_enrichment"]["enabled"] = enabled
+    monkeypatch.setattr(enrichment, "_invoke_fabric_ai", lambda *a, **k: pytest.fail("Unexpected AI request"))
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    for key in ("rerun_table_description", "rerun_column_description", "rerun_sensitive", "suggest_grain", "resolve_business_rule"):
+        controls[key].click()
+    controls["table_description"].value = "Manual business description"
+    controls["column_description"].value = "Manual column description"
+    assert not controls["table_description"].disabled
+    assert not controls["table_grain"].disabled
+    assert not controls["column_description"].disabled
+    assert state["ai_usage"] == []
+    assert state["_ai_diagnostics"] == {}
+
+
+def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtime, monkeypatch):
+    """Recovering one operation preserves another failure and never mutates a second widget."""
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    second = widget_runtime["start"]()
+    controls = state["_controls"]
+
+    def failure(*args, **kwargs):
+        raise RuntimeError("provider execution failure private context")
+
+    monkeypatch.setattr(module, "suggest_enrichment", failure)
+    controls["rerun_table_description"].click()
+    controls["rerun_column_description"].click()
+    scope = next(iter(state["_ai_diagnostics"]))
+    assert set(state["_ai_diagnostics"][scope]) == {"table_enrichment", ("col-0", "enrichment")}
+    assert second["_ai_diagnostics"] == {} and not second["_ai_failure"]
+    monkeypatch.setattr(module, "suggest_enrichment", lambda *a, **k: {"Description": "Recovered"})
+    controls["rerun_table_description"].click()
+    assert set(state["_ai_diagnostics"][scope]) == {("col-0", "enrichment")}
+    assert state["_ai_failure"]
+    controls["rerun_column_description"].click()
+    assert state["_ai_diagnostics"][scope] == {}
+    assert not state["_ai_failure"] and not state["_ai_failure_diagnostic"]

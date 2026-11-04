@@ -1738,6 +1738,7 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
         GovernanceConfig(classification_levels=["Public", "Restricted", "Restricted"])
     assert config.ai_enrichment == {
         "enabled": True,
+        "model_deployment_name": "gpt-5-mini", "reasoning_effort": "low", "verbosity": None,
         "table_description_prompt": "describe table",
         "column_description_prompt": "describe column",
         "sensitive_data_prompt": "sensitive rules",

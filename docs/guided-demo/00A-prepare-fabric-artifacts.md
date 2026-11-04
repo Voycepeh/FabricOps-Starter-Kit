@@ -132,9 +132,15 @@ After you are done publishing you can share this environment with anyone in your
 
     FabricOps does not require AI to author or enforce Data Contracts. The AI-assisted authoring controls in Step 3 are optional.
 
-    If you want to use them, ask your Fabric administrator to confirm **Users can use Copilot and other features powered by Azure OpenAI** is enabled for the relevant users or capacity. Fabric AI Functions also require a supported Fabric region, Fabric Runtime 1.3 or later, and an eligible paid capacity. Depending on the capacity region, your organisation might also need to allow cross-geo processing.
+    If you want to use them, ask your Fabric administrator to confirm **Users can use Copilot and other features powered by Azure OpenAI** is enabled for the relevant users or capacity. Fabric AI Functions also require a supported Fabric region, **Fabric Runtime 2.0** for FabricOps, and an eligible paid capacity (Microsoft documents F2 or higher, or any P edition). Depending on the capacity region, your organisation might also need to allow cross-geo processing.
 
     See [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and [Copilot and Agent tenant settings](https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot).
+
+    Use a fresh Runtime 2.0 Spark session with the built-in PySpark module `synapse.ml.spark.aifunc`.
+    FabricOps applies Microsoft's [Runtime 2.0 PySpark initialization](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/runtime-2-0-workarounds#configure-pyspark-ai-functions)
+    centrally before each request; no custom endpoint or API key is needed. Confirm the
+    [available regions and cross-geo settings](https://learn.microsoft.com/en-us/fabric/fundamentals/copilot-fabric-overview#available-regions-for-azure-openai-service)
+    with your administrator. A trial used for the manual demo does not establish eligibility for AI Functions.
 
     You will enable or disable the FabricOps authoring integration itself through `GOVERNANCE_CONFIG.ai_enrichment.enabled` in `00_env_config`.
 

@@ -11,6 +11,51 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
     Learn more: [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment).
 
+### Choose the AI settings or author manually
+
+The default is **GPT-5-mini with low reasoning** and provider-default verbosity.
+In `00_env_config`, keep existing project prompts and add these keys to the existing
+`GOVERNANCE_CONFIG = GovernanceConfig(..., ai_enrichment={...})` declaration:
+
+```python
+ai_enrichment={
+    "enabled": True,
+    "model_deployment_name": "gpt-5-mini",  # Or "gpt-5.1".
+    "reasoning_effort": "low",
+    "verbosity": None,
+    # Keep your existing table, column, Sensitive Data, Grain and Business Rule prompts.
+}
+```
+
+For a complex governance exercise, override the settings for one widget instance:
+
+```python
+contract_state = widget_data_contract(
+    ai_model="gpt-5.1",
+    ai_reasoning_effort="high",  # "medium" also supported.
+    ai_verbosity="medium",
+)
+```
+
+Explicit widget values take precedence over `00_env_config`, then package defaults.
+The selector and editor show the effective model, reasoning and verbosity before any request.
+Stronger models and higher reasoning can increase consumption and latency; see
+[AI consumption and monitoring](../governance.md#optional-ai-authoring-and-consumption).
+
+To complete the entire exercise manually, choose **Open without AI**, or set
+`ai_enrichment.enabled=False` to disable all AI actions. This makes zero AI requests
+and does not initialize AI Functions. Author Description, Grain and Row Key, Sensitive Data
+and all nine Data Quality rule types manually, then use the same Save, Freeze and
+activation steps. AI suggestions always require explicit human review before addition.
+
+??? info "Inspect a failure from the widget you actually opened"
+
+    Keep `contract_state` from the call above. Inspect `contract_state["_ai_diagnostics"]`
+    for failures keyed by contract/version and authoring operation, and `contract_state["ai_usage"]`
+    for available measured statistics. Retry the affected action to clear its failure.
+    Do not create a second widget to retrieve diagnostics. Raw exception chains can contain
+    provider context; review them before sharing. The UI only shows safe failure categories and guidance.
+
 Scheduled Refresh is operational metadata in `METADATA_DATA_CATALOGUE`, captured by the writer pipeline. If discovery is unavailable, the writer records `unavailable` and continues. Data Contract authoring and freezing do not depend on it. Freshness Guardrails retain their independently authored source-data arrival expectations.
 
 <div class="fabricops-section-banner" markdown="1">
