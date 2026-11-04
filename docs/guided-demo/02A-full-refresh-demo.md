@@ -84,11 +84,11 @@ This demo runs three governed Full Reads instead of the single example in Step 2
 
 Run all three blocks. Each should complete the governed Read stages; individual Guardrail stages are omitted when no Data Contract is selected.
 
-![Orders Full Read output](../assets/02/Read_Block_Output.png)
+![Orders Full Read output](../assets/2a/Read_Block_Output.png)
 
-![Products Full Read output](../assets/02/Read_Block_Output_2.png)
+![Products Full Read output](../assets/2a/Read_Block_Output_2.png)
 
-![Order History Full Read output](../assets/02/Read_Block_Output_3.png)
+![Order History Full Read output](../assets/2a/Read_Block_Output_3.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -113,11 +113,11 @@ The optional displays show:
 
 - one detailed row per current order in `transformed_df`:
 
-  ![Detailed order-level transformed output](../assets/02/Transform_Output.png)
+  ![Detailed order-level transformed output](../assets/2a/Transform_Output.png)
 
 - one aggregated row per customer in `customer_summary_df`:
 
-  ![Customer-level aggregated output](../assets/02/Transform_Output_2.png)
+  ![Customer-level aggregated output](../assets/2a/Transform_Output_2.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -139,13 +139,15 @@ Initialize `writes = {}`, then run both Write blocks. This demo publishes two in
 
 A **Governed** run publishes each target with contract enforcement. **Dry Run** returns `published=False`; inspect `validation_passed` and finalize to receive a session-only summary. **Ungoverned** publishes without contracts and records the initial Governance observations automatically.
 
-![Curated Orders Write output](../assets/02/Write_Block_Output.png)
+![Curated Orders Write output](../assets/2a/Write_Block_Output.png)
 
-![Customer Summary Write output](../assets/02/Write_Block_Output_2.png)
+![Customer Summary Write output](../assets/2a/Write_Block_Output_2.png)
 
 !!! note "The two Writes publish independently"
 
     WRITE 1 and WRITE 2 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; both targets use Overwrite, so a successful rerun replaces their contents.
+
+![Pipeline finalized output](../assets/2a/Finalize.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
@@ -164,13 +166,13 @@ The notebook now displays each Read and Write DataFrame in the same code cell as
 
 `demo.curated_orders` contains the detailed joined order data.
 
-![Curated Orders saved in the Silver Lakehouse](../assets/02/Silver_Table_LH.png)
+![Curated Orders saved in the Silver Lakehouse](../assets/2a/Silver_Table_LH.png)
 
 **Gold Warehouse**
 
 `demo.customer_summary` contains the customer-level aggregation.
 
-![Customer Summary saved in the Gold Warehouse](../assets/02/Gold_Table_WH.png)
+![Customer Summary saved in the Gold Warehouse](../assets/2a/Gold_Table_WH.png)
 
 ### Expected result
 
@@ -188,7 +190,7 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 
 ### Metadata saved by FabricOps
 
-![FabricOps metadata captured for the Full Refresh pipeline](../assets/02/Metadat_Captured.png)
+![FabricOps metadata captured for the Full Refresh pipeline](../assets/2a/Metadat_Captured.png)
 
 For **Ungoverned** and **Governed** executions, FabricOps writes applicable operational metadata to the Metadata Lakehouse configured by `00_env_config`. **Dry Run is session-only**: it does not write target data or persist catalogue, profile, processing-state, or pipeline-run records. The rows below describe the records this demo can produce during a persistent execution; the exact rows depend on the stages that complete and the Guardrails that are actually evaluated.
 
