@@ -99,7 +99,7 @@ def _validate_existing_metadata_schema(
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
         raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
-    provenance = {"execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version"}
+    provenance = {"pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version"}
     supported_run_addition = (table_name == "METADATA_PIPELINE_RUN" and allow_missing
         and not (set(existing) - set(expected)) and set(expected) - set(existing) <= provenance)
     if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} and set(expected) != set(existing) and not supported_run_addition:
