@@ -88,6 +88,44 @@ def test_versions_scoped_to_destination_workspace():
     first["status"] = "superseded"
     assert service.validate_registry([first, second])
 
+def test_original_and_repeatedly_promoted_notebooks_resolve_to_one_identity(monkeypatch):
+    """Every physical notebook in a promotion chain resolves to its original source ID."""
+    source_id = PIPELINE_ID
+    first = promotion(1, workspace="PROD", source_workspace_id="DEV",
+                      source_notebook_id=source_id, governed_notebook_id="00000000-0000-4000-8000-000000000002")
+    second = promotion(2, workspace="PROD", source_workspace_id="DEV",
+                       source_notebook_id=source_id, governed_notebook_id="00000000-0000-4000-8000-000000000003")
+    second["status"] = "active"
+    first["status"] = "superseded"
+    rows = [first, second]
+    monkeypatch.setattr(service, "resolve_fabric_context",
+        lambda context=None: ({}, context["scope_workspace_id"], context))
+    monkeypatch.setattr(service, "read_registry", lambda **kwargs: rows)
+
+    source_id_result, source = service.resolve_pipeline_identity(
+        context={"scope_workspace_id": "DEV", "notebook_id": source_id})
+    first_id_result, first_copy = service.resolve_pipeline_identity(
+        context={"scope_workspace_id": "PROD", "notebook_id": first["governed_notebook_id"]})
+    second_id_result, second_copy = service.resolve_pipeline_identity(
+        context={"scope_workspace_id": "PROD", "notebook_id": second["governed_notebook_id"]})
+
+    assert source_id_result == first_id_result == second_id_result == source_id
+    assert source["role"] == "source"
+    assert first_copy["role"] == second_copy["role"] == "governed"
+    assert first_copy["row"]["status"] == "superseded"
+    assert second_copy["row"]["status"] == "active"
+
+
+def test_registry_rejects_physical_notebook_reassigned_to_another_pipeline():
+    """A physical Fabric notebook cannot silently become another logical pipeline."""
+    first = promotion(1, workspace="PROD", source_workspace_id="DEV",
+                      source_notebook_id=PIPELINE_ID, governed_notebook_id="00000000-0000-4000-8000-000000000002")
+    second = promotion(1, workspace="TEST", source_workspace_id="DEV",
+                       source_notebook_id="00000000-0000-4000-8000-000000000099",
+                       governed_notebook_id="00000000-0000-4000-8000-000000000002")
+    with pytest.raises(ValueError, match="multiple logical Pipeline IDs"):
+        service.validate_registry([first, second])
+
 
 def test_markdown_and_outputs_do_not_change_executable_hash():
     """Verify markdown and outputs do not change executable hash."""
