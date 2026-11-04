@@ -110,11 +110,9 @@ def test_exact_mode_validation(runtime, mode):
 def test_setup_arguments_remove_registration_and_rebind(runtime):
     import inspect
     assert list(inspect.signature(setup_pipeline).parameters) == ["pipeline_mode", "observe_source", "source_observation_days"]
-    for removed in ("new_pipeline", "previous_workspace_id", "previous_notebook_id"):
+    for removed in ("pipeline_id", "new_pipeline", "previous_workspace_id", "previous_notebook_id"):
         with pytest.raises(TypeError):
             setup_pipeline(**{removed: True})
-    with pytest.raises(TypeError):
-        setup_pipeline()
     with pytest.raises(RuntimeError, match="signed-in Fabric"):
         setup_pipeline(pipeline_mode="Governed")
 
@@ -574,12 +572,16 @@ def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypat
     """An independent Engineering kernel needs no prior Dry Run session to deploy/recover."""
     from fabricops_kit import finalize_pipeline
     from fabricops_kit.activated_pipeline import shared as authority
-    from tests.unit.test_activated_pipeline import PIPELINE_ID
+    from tests.unit.test_setup_notebook_store_keys import _config
+    from fabricops_ops import setup_notebook
+    setup_notebook(_config(), workspace_id="dev")
+    monkeypatch.setattr(authority, "resolve_pipeline_identity", lambda **kwargs: (
+        "00000000-0000-4000-8000-000000000001", {"role": "source", "row": None}))
     ui = Mock(return_value={"widget": "persisted approvals"})
     monkeypatch.setattr(authority, "display_pipeline_handoff", ui)
     assert shared._ACTIVE_PIPELINE.get() is None
-    assert finalize_pipeline() == {"pipeline_id": PIPELINE_ID, "handoff": {"widget": "persisted approvals"}}
-    ui.assert_called_once_with(pipeline_id=PIPELINE_ID)
+    assert finalize_pipeline() == {"pipeline_id": "00000000-0000-4000-8000-000000000001", "handoff": {"widget": "persisted approvals"}}
+    ui.assert_called_once_with(pipeline_id="00000000-0000-4000-8000-000000000001", context=ANY)
     assert shared._ACTIVE_PIPELINE.get() is None
     runtime.writes.assert_not_called()
     with pytest.raises(ValueError):
