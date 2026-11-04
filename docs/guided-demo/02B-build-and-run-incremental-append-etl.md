@@ -50,8 +50,6 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-# Replace with a UUIDv4 generated once for this logical pipeline; keep it stable.
-PIPELINE_ID = "c9f14e82-3b67-4a0d-8e25-6d1f9b43c708"
 PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
     pipeline_mode=PIPELINE_MODE,
