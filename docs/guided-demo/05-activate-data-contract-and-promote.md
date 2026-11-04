@@ -49,6 +49,6 @@ Create a separate versioned notebook using destination workspace configuration.
 
 ### Expected result
 
-`METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-promotion-v3-validation.md).** Do not treat green local tests as secured Fabric execution.
+`METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-fabric-acceptance.md).** Do not treat green local tests as secured Fabric execution.
 
 **Next:** [Step 6. Run Production](06-run-production.md)

@@ -168,3 +168,22 @@ def test_contract_activation_rejects_changed_human_review_before_mutation(contra
             activation_id='reviewed-operation', governance_confirmed=True, context=r.context,
             spark_session=r.spark, **checks)
     assert service.read_activations(context=r.context, spark_session=r.spark) == []
+
+
+def test_stale_claim_release_preserves_new_owner_and_releases_other_targets(authority_delta):
+    """A retried cleanup cannot delete a successor's actual Delta claim or strand another."""
+    from tests.unit.test_activated_pipeline import operation
+    r = authority_delta
+    a, b = (operation(table=name)['destination'] for name in ('A', 'B'))
+    for target in (a, b):
+        service.publication_claim('old-run', target, context=r.context, spark_session=r.spark)
+    service.publication_claim('old-run', a, context=r.context, spark_session=r.spark, release=True)
+    service.publication_claim('new-run', a, context=r.context, spark_session=r.spark)
+    # Stale/lost-ack cleanup has both targets pending despite the transferred A.
+    from types import SimpleNamespace
+    plan = SimpleNamespace(plan_id='old-run', runtime_context=r.context,
+        evidence={'sealed': True, 'lease_token': 'old-run', 'publication_claims': [a, b]})
+    service.release_pipeline_lease(plan, spark_session=r.spark)
+    service.publication_claim('third-run', b, context=r.context, spark_session=r.spark)
+    with pytest.raises(RuntimeError, match='publication lease'):
+        service.publication_claim('third-run', a, context=r.context, spark_session=r.spark)

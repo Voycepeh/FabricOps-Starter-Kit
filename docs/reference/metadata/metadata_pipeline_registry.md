@@ -62,7 +62,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>agreement_id</code></td><td><code>string</code></td><td>Stable identifier for the agreement lifecycle.</td></tr>
 <tr class="metadata-column--engineering"><td><code>agreement_version</code></td><td><code>string</code></td><td>Canonical agreement version associated with the row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>agreement_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>agreement_sha256</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>restored_from_version</code></td><td><code>integer</code></td><td>Prior implementation version when a reviewed rollback promotion declares its lineage.</td></tr>
+<tr class="metadata-column--engineering"><td><code>restored_from_version</code></td><td><code>integer</code></td><td>Exact retained prior implementation version with matching reviewed executable content.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promoted_by</code></td><td><code>string</code></td><td>Actual runtime audit identity responsible for the promotion.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promoted_at</code></td><td><code>timestamp</code></td><td>Time the promotion was prepared for atomic activation.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>

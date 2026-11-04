@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
-    publish_pipeline_testing_results,
+    finalize_pipeline_run,
 )
 
 
@@ -169,8 +169,8 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     Dry Run returns a session-only summary and persists no target, watermark,
     processing state, profile observation or run metadata. Ungoverned and
-    Governed executions persist their real operational outcome. Governed
-    finalization also releases its activation reservation. Interrupted runs
+    Governed executions persist their real operational outcome. Persistent
+    finalization also releases this execution's physical publication claims. Interrupted runs
     remain incomplete and are never reported as successful finalization.
 
     Parameters
@@ -212,10 +212,8 @@ def finalize_pipeline(pipeline=None, *, failed=False):
             pipeline.validate_current_context()
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
-        # Historical Test plans remain finalizable so retained approvals and
-        # in-flight upgrades do not require a metadata rewrite.
-        if pipeline.plan.execution_mode == "testing":
-            publish_pipeline_testing_results(pipeline.plan, spark_session=pipeline.spark)
+        if pipeline.plan.evidence.get("lease_token"):
+            finalize_pipeline_run(pipeline.plan, spark_session=pipeline.spark)
         result = pipeline.plan.run_result
         # Render from the finalized run snapshot; do not re-read metadata or
         # trigger additional source/target actions just to build the report.

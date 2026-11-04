@@ -28,7 +28,7 @@ FABRIC_VALIDATION_PENDING = "Governed execution is unavailable: signed-in Fabric
 FABRIC_GOVERNED_VALIDATED = False
 OPERATION_FIELDS = (
     "operation_key", "table_id", "pipeline_role", "destination", "read_mode", "write_mode",
-    "query_sha256", "incremental_target_table_id", "source_table_ids",
+    "query_sha256", "incremental_target_table_id", "source_table_ids", "requested_schema",
 )
 RUN_PROVENANCE_FIELDS = (
     "execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version",
@@ -100,6 +100,9 @@ def activation_operations(value):
         keys.add(key)
         roles.add((table_id, role))
         normalized_destination(operation["destination"])
+        requested_schema = operation["requested_schema"]
+        if requested_schema is not None and (not isinstance(requested_schema, str) or not requested_schema.strip()):
+            raise ValueError("An operation schema must be an explicit nonblank name or None for its configured default.")
         read, write = operation["read_mode"], operation["write_mode"]
         if (role == "source" and (read not in {"full", "incremental"} or write is not None)
                 or role == "target" and (write not in {"append_all", "append_new_only", "overwrite", "scd1", "scd2"} or read is not None)):
@@ -142,7 +145,7 @@ def validate_registry(rows):
             "source_snapshot_uri", "source_snapshot_sha256", "executable_sha256", "operations_json",
             "bindings_sha256", "parameters_json", "promoted_by", "promoted_at")
         if any(row.get(key) in (None, "") for key in required) or "record_type" in row:
-            raise ValueError("Incomplete Pipeline Promotion Registry; explicitly reset obsolete development metadata.")
+            raise ValueError("Incompatible Pipeline Promotion Registry: complete immutable version and snapshot fields are required. Existing metadata is preserved.")
         validate_pipeline_id(row["pipeline_id"])
         if type(row["pipeline_version"]) is not int or row["pipeline_version"] < 1:
             raise ValueError("Pipeline version must be a positive integer.")
@@ -303,6 +306,8 @@ def publication_claim(owner, destination, *, context, spark_session=None, releas
         if len(matches) > 1:
             raise RuntimeError("Duplicate publication claims; reconcile before publishing.")
         if matches and matches[0]["owner"] != owner:
+            if release:
+                return rows, None
             raise RuntimeError("Another operation holds this target's publication lease; finalize or reconcile the interrupted publication.")
         if release:
             return [row for row in rows if row["target"] != target], None
@@ -330,8 +335,10 @@ def release_pipeline_lease(plan, *, spark_session=None):
     """Release only this finalized run's claims; never expire crashed writers."""
     if not plan.evidence.get("sealed"):
         raise ValueError("Finalize the execution before releasing its publication leases.")
-    for destination in plan.evidence.get("publication_claims", []):
-        publication_claim(plan.plan_id, destination, context=plan.runtime_context, spark_session=spark_session, release=True)
+    claims = plan.evidence.get("publication_claims", [])
+    while claims:
+        publication_claim(plan.plan_id, claims[0], context=plan.runtime_context, spark_session=spark_session, release=True)
+        del claims[0]
     plan.evidence.pop("lease_token", None)
     plan.evidence.pop("publication_claims", None)
 
@@ -618,22 +625,30 @@ def snapshot_file(uri, *, spark_session, content=None):
 
 
 def resolve_promoted_operations(operations, *, context, spark_session=None):
-    """Resolve logical stores only through the destination workspace configuration."""
+    """Resolve original schema choices and operation references using destination configuration."""
     from fabricops_kit.pipeline.shared import resolve_physical_table_identity, pipeline_physical_bindings
     config, workspace, _ = resolve_fabric_context(context=context)
-    resolved = []
+    resolved, table_ids = [], {}
     for op in activation_operations(operations):
         logical = op["operation_key"].split(":", 1)[1]
         if "/" not in logical:
             raise ValueError("Promotion requires a logical store/table operation key.")
         store, table = logical.split("/", 1)
         identity = resolve_physical_table_identity(config, workspace, store=store,
-            schema=op["destination"]["schema"], table_name=table)
-        # Logical IDs include schema: no inferred mapping across differently named schemas.
-        if identity["table_id"] != op["table_id"]:
-            raise ValueError("Destination config changes logical Table ID; review and rerun the destination pipeline.")
-        binding = pipeline_physical_bindings({op["table_id"]: identity}, config=config, workspace_id=workspace)[op["table_id"]]
-        resolved.append({**op, "destination": binding})
+            schema=op["requested_schema"], table_name=table)
+        destination_id = identity["table_id"]
+        previous = table_ids.setdefault(op["table_id"], destination_id)
+        if previous != destination_id:
+            raise ValueError("Different destination schema choices split one participant identity; review separate participants.")
+        binding = pipeline_physical_bindings({destination_id: identity}, config=config, workspace_id=workspace)[destination_id]
+        resolved.append({**op, "table_id": destination_id, "destination": binding})
+    for op in resolved:
+        op["source_table_ids"] = sorted(table_ids[table_id] for table_id in op["source_table_ids"])
+        target = op["incremental_target_table_id"]
+        if target is not None:
+            if target not in table_ids:
+                raise ValueError("Incremental target must be a reviewed pipeline participant.")
+            op["incremental_target_table_id"] = table_ids[target]
     return resolved
 
 
@@ -722,7 +737,13 @@ def prepare_pipeline_promotion(dry_run, *, destination_workspace_id, expected_ac
     observed = pipeline_run_row(plan, status="dry_run_completed")
     from fabricops_kit.config.metadata_schemas import decode_metadata_row
     observed = decode_metadata_row("METADATA_PIPELINE_RUN", observed)
-    operations = [{key: op[key] for key in OPERATION_FIELDS} for op in observed["operations"]]
+    operations = []
+    for op in observed["operations"]:
+        recorded = plan.evidence["operations"][op["operation_key"]]
+        if "requested_schema" not in recorded:
+            raise ValueError("Manual Dry Run is missing the original schema choice; execute the complete pipeline before review.")
+        operations.append({**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
+            "requested_schema": recorded["requested_schema"]})
     operations = resolve_promoted_operations(operations, context=destination, spark_session=spark_session)
     contracts = reviewed_contracts(operations, context=destination, spark_session=spark_session)
     rows = read_registry(context=destination, spark_session=spark_session)
@@ -791,7 +812,7 @@ def stage_pipeline_promotion(review, *, governance_confirmed=False, spark_sessio
         previous = exact_record(rows, execution_workspace_id=workspace, pipeline_id=candidate["pipeline_id"],
             pipeline_version=candidate["restored_from_version"])
         if previous["pipeline_version"] >= candidate["pipeline_version"] or previous["executable_sha256"] != candidate["executable_sha256"]:
-            raise ValueError("Rollback lineage must identify the exact retained prior implementation.")
+            raise ValueError("Implementation lineage must identify the exact retained prior implementation.")
     spark = get_spark_session(spark_session, context=context)
     root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
     root += f'/Files/fabricops/pipeline_snapshots/{workspace}/{candidate["pipeline_id"]}/v{candidate["pipeline_version"]}/{candidate["promotion_id"]}'
@@ -871,7 +892,7 @@ def build_governed_pipeline_plan(*, pipeline_id, context=None, spark_session=Non
     participants = {"source": [], "target": []}
     for op in operations:
         store, table = op["operation_key"].split(":", 1)[1].split("/", 1)
-        participants[op["pipeline_role"]].append(dict(store=store, table_name=table, schema=op["destination"]["schema"],
+        participants[op["pipeline_role"]].append(dict(store=store, table_name=table, schema=op["requested_schema"],
             logical_id=op["operation_key"].split(":", 1)[1], table_id=op["table_id"]))
     identities = resolve_pipeline_participants(config, workspace, sources=participants["source"], targets=participants["target"],
         context=context, spark_session=spark_session)
@@ -954,16 +975,24 @@ def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_vers
         "ready": FABRIC_GOVERNED_VALIDATED, "blocking_reason": None if FABRIC_GOVERNED_VALIDATED else FABRIC_VALIDATION_PENDING}
 
 
-def resolve_active_consumer_contract(config, active_workspace_id, table_id, *, spark_session=None):
-    """Resolve independently activated physical Contracts with unambiguous effective Agreements."""
+def resolve_active_consumer_contract(config, active_workspace_id, table_id, *, spark_session=None, destination=None):
+    """Require one approved physical consumer binding and its exact effective Agreement."""
+    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings
     context = {"config": config, "scope_workspace_id": active_workspace_id}
-    activation = exact_record(read_activations(context=context, spark_session=spark_session), workspace_id=active_workspace_id, table_id=table_id)
+    if destination is None:
+        identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=context, spark_session=spark_session)
+        destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
+    physical = normalized_destination(destination)
+    activation = exact_record(read_activations(context=context, spark_session=spark_session),
+        workspace_id=destination["workspace_id"], table_id=table_id)
+    if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != physical:
+        raise ValueError("Consumer physical binding differs from the activated Contract; review the configured table before provisioning.")
     contract = resolve_activation_contract(activation, context=context, spark_session=spark_session)
     agreements = {(row["agreement_id"], row["agreement_version"], row["agreement_sha256"]) for row in read_registry(context=context, spark_session=spark_session)
         if row["status"] == "active" and row.get("agreement_id") and any(op["table_id"] == table_id
-            and op["destination"]["workspace_id"] == active_workspace_id for op in activation_operations(row["operations_json"]))}
+            and normalized_destination(op["destination"]) == physical for op in activation_operations(row["operations_json"]))}
     if len(agreements) != 1:
-        raise ValueError("No unambiguous active pipeline Agreement covers this consumer table.")
+        raise ValueError("No unambiguous active pipeline Agreement covers this consumer physical binding.")
     agreement_id, version, digest = next(iter(agreements))
     check_promotion_agreement(dict(agreement_id=agreement_id, agreement_version=version, agreement_sha256=digest), context=context, spark_session=spark_session)
     return {**contract, "agreement_id": agreement_id, "agreement_version": version}

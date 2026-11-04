@@ -28,6 +28,7 @@ setup_result = setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)
 
 </div>
 
+
 <details class="reference-signature-details" markdown="1">
 <summary>Signature</summary>
 
@@ -58,38 +59,35 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | FabricOps configuration used to find the selected workspace_id and its metadata lakehouse. |
-| `workspace_id` | `str` | Yes | `—` | Workspace whose configured metadata lakehouse should be initialized or validated. |
-| `require_active_steward` | `bool` | No | `False` | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
-| `verbose` | `bool` | No | `True` | Controls whether the concise per-table setup summary is printed. |
-| `raise_on_failure` | `bool` | No | `False` | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | `—` | Configuration containing the selected workspace's central Metadata Lakehouse. Metadata must be a schema-enabled Lakehouse. |
+| `workspace_id` | `str` | Yes | `—` | Configuration scope used to resolve the Metadata store. |
+| `require_active_steward` | `bool` | No | `False` | Require an active Data Steward after table setup. No steward is created. |
+| `verbose` | `bool` | No | `True` | Print concise per-table creation, evolution and readiness results. |
+| `raise_on_failure` | `bool` | No | `False` | Raise after all tables have been processed when any table fails. |
+
+</div>
+
+## Advanced examples
+
+<div class="reference-example-usage" markdown="1">
+
+```python
+result = setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)
+result["status"]
+```
+
+```text
+'ready'
+```
 
 </div>
 
 ## Returns
 
 dict[str, Any]
-    A dictionary summarizing the completed metadata lakehouse setup,
-    including the resolved governance and engineering metadata schemas,
-    metadata tables checked,
-    tables created, additively evolved, successfully validated, failed tables,
-    per-table messages, active steward readiness, fully qualified table
-    names, and overall setup status. Key fields are ``status``,
-    ``data_agreement``, ``governance``, ``engineering``, ``tables``,
-    ``table_results``,
-    ``metadata_schemas``, ``fully_qualified_tables``, ``created_tables``,
-    ``evolved_tables``, ``validated_tables``, ``failed_tables``,
-    ``created_or_checked_tables``,
-    ``warnings``, ``active_metadata_tables``, and
-    ``active_metadata_table_count``.
-
-    ``status`` is ``"ready"`` when no table failures occur,
-    ``"partial_failure"`` when some tables succeed and some fail, and
-    ``"failed"`` when all table operations fail. ``data_agreement``
-    summarizes steward, agreement, and contract readiness. ``governance``
-    summarizes governance-authored tables, and ``engineering`` summarizes
-    engineering-written tables. Active steward readiness depends on
-    whether active steward rows already exist.
+    Overall readiness, configured ownership schemas, canonical table names,
+    created/evolved/validated/failed tables, per-table results, steward
+    readiness and advisory diagnostics for noncanonical metadata tables.
 
 ### Return interpretation
 
@@ -98,53 +96,47 @@ Use the returned status and per-table results to confirm that the physical metad
 ## Raises / Errors
 
 ValueError
-    If the configuration is invalid, the resolved ``metadata`` target is
-    not a schema-enabled lakehouse, or ``require_active_steward=True`` and
-    no active steward rows exist after setup.
+    If configuration is invalid, Metadata is not a schema-enabled Lakehouse,
+    or an explicitly required active steward is absent.
 RuntimeError
-    If ``raise_on_failure=True`` and one or more metadata tables fail
-    creation or validation after all tables have been processed.
+    If Spark is unavailable or raise_on_failure is enabled and a table fails.
 
 ### Common failure causes
 
 - Missing, invalid, or non-schema-enabled Metadata Lakehouse configuration.
 - Spark or Fabric lakehouse context is unavailable.
 - The caller lacks permission to create or inspect metadata tables.
-- An existing canonical field has an incompatible Spark field type or a known legacy schema requires explicit migration.
+- An existing canonical field has an incompatible Spark field type or an identity or processing schema is structurally incompatible.
 - Missing canonical fields are added automatically; nullability and field order are not validated.
 - One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
 
-## Behavior and scope
+## Notes
 
-<div class="reference-docstring-intro" markdown="1">
+<div class="reference-docstring-notes" markdown="1">
 
-Spark is resolved automatically from the existing execution session.
-No session is created; Spark-dependent work raises
-``RuntimeError`` when no session is available.
+Missing tables are created empty with error-if-exists semantics. Registry
+and Contract Activation use Serializable isolation. Setup never manufactures
+approvals, populates business metadata, deletes rows or replaces business
+targets. Governance definitions and activation are independent workflows.
 
-Creates missing metadata tables, additively evolves supported missing columns,
-and validates physical types at the configured Metadata Lakehouse. Catalogue's
-three structured ``*_json`` fields and Run's ``operations``, ``profiling`` and
-``failures`` are SQL-compatible JSON strings. Application interfaces retain
-validated dictionaries/lists through centralized physical serialization.
-Supported native/mixed schemas are automatically converted in one pinned,
-conflict-checked Delta schema-and-data commit per table. Historical Catalogue
-blank strings become SQL null and list-only candidates keep their order with
-null status/maximum width. Already valid JSON text is retained without a
-rewrite. Missing or ambiguous Run facts and malformed JSON fail closed.
+Compatible missing columns are added automatically. Catalogue and Pipeline
+Run collection fields are stored as validated JSON strings; supported native
+collections are converted atomically with tracked Delta reads and exact
+schema/data readback. Existing rows, audit values, extension fields, table
+identity/properties and Delta transaction identities are preserved. Run
+provenance additions are nullable and preserve retained content hashes.
+Repeated setup validates compliant tables without rewriting them.
 
-Rows, audit values, extension columns, table identity/properties and Run Delta
-transaction identities are preserved. Per-table evolved results report source
-and committed versions. Rerun setup after interruption or a reported conflict;
-never automatically restore over later valid writes. Stop old writers before
-migration and restart them with the compatible package/schema pair. Registry
-is initialized empty; obsolete development authority requires explicit reset.
-Business publication fingerprints and Processing State are unchanged.
+Processing State observations, checkpoints, accepted baselines and publication
+receipts remain intact. Missing progress is never inferred for populated
+targets. Incompatible identity layouts, incorrect types, malformed JSON and
+duplicate Run identities fail explicitly with the existing data preserved.
+A failure in one table does not prevent validation of the remaining tables.
+Physical nullability and field order are not rewritten.
 
-This function prepares the metadata table structures only. It does not
-create business metadata records such as stewards, agreements, catalogue
-rows, profiles, lineage events, enrichment records, guardrail rules, or
-guardrail results.
+Governed admission remains blocked pending signed-in Fabric acceptance.
+Retirement presence diagnostics are advisory; unsupported tables are never
+read as canonical authority or automatically deleted.
 
 </div>
 
@@ -156,149 +148,14 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:396`
+`fabricops_kit/config/setup_metadata_tables.py:393`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L396-L835">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L675">View on GitHub</a>
 </div>
 
 
 <details class="reference-implementation-details" markdown="1">
 <summary>Maintainer architecture details</summary>
-
-Setup flow:
-
-1. Validate the supplied FabricOps configuration.
-2. Find the metadata lakehouse configured for the selected workspace_id.
-3. Verify that the metadata target is a lakehouse.
-4. Resolve each table's physical schema from its canonical ownership and
-   the configured governance/engineering schema names.
-5. Load the required FabricOps table definitions.
-6. Attempt to read each required metadata table.
-7. When a table is missing, create an empty Spark DataFrame using its
-   required FabricOps table structure.
-8. Write that empty DataFrame to the metadata lakehouse using overwrite
-   mode to create the table.
-9. Read the created table again.
-10. Validate overlapping canonical column names and physical Spark data types.
-11. Add missing canonical columns with an empty Delta append using
-    ``mergeSchema=true``, then read and validate the table again.
-12. Continue processing the remaining tables when one table fails.
-13. Check whether at least one active steward record exists.
-14. Return overall, data-agreement, governance, and per-table setup
-    results.
-
-``data_agreement["active_steward_count"]`` is retained for compatibility
-and reports readiness presence: ``1`` when at least one active steward
-exists and ``0`` otherwise. It is not a complete active steward population
-count.
-
-The current metadata tables created or validated from
-``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
-``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
-``METADATA_PIPELINE_REGISTRY``, ``METADATA_PIPELINE_RUN``,
-``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
-``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
-``METADATA_GUARDRAIL_RESULTS``, and ``METADATA_PROCESSING_STATE``.
-
-Of that inventory, ``METADATA_DATA_CATALOGUE``,
-``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
-``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.
-Every other metadata schema in the registry remains Preview.
-
-Detailed table contents:
-
-- ``METADATA_DATA_STEWARD`` is a person registry storing ``steward_id``,
-  ``steward_name``, ``steward_role``, ``contact``, ``is_active``,
-  ``custom_fields_json``, and the standard audit fields. Responsibility
-  effective periods remain on ``METADATA_DATA_AGREEMENT``.
-- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,
-  ``agreement_version``, ``agreement_name``, ``domain``,
-  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
-  ``start_date``, ``expiry_date``, ``business_purpose``,
-  ``custom_fields_json``, and the standard audit fields.
-- ``METADATA_DATA_CONTRACT`` stores one table-centric lifecycle version.
-  A draft keeps its complete editable governed definition in
-  ``contract_payload_json``, including descriptive Enrichment and executable
-  Guardrails; each Save overwrites that draft JSON in place.
-  Separate definition tables are neither required nor deleted by setup.
-  Freezing changes the version to ``frozen`` and makes its JSON immutable.
-  A later version is seeded from the previous frozen JSON. Independent
-  METADATA_DATA_CONTRACT_ACTIVATION rows select exact versions in each
-  physical table workspace; frozen definitions remain unchanged.
-- ``METADATA_DATA_CATALOGUE`` stores the current structural registry through
-  ``metadata_level``, ``table_id``, ``column_id``, ``workspace_id``,
-  physical table context, ``column_name``, ``data_type``, profiling dates,
-  activation state, and the standard audit fields.
-- ``METADATA_DATA_PROFILED`` stores ``profile_id``,
-  ``profile_snapshot_id``, ``table_id``, ``column_id``,
-  ``workspace_id``, ``data_type``,
-  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,
-  ``distinct_count``, ``distinct_percent``, ``mean_value``,
-  ``stddev_value``, ``min_value``, ``percentile_25_value``,
-  ``median_value``, ``percentile_75_value``, ``max_value``,
-  and the standard audit fields.
-- ``METADATA_DATA_PROFILED_FREQUENCY`` stores frequency rows through
-  ``frequency_id``, ``profile_id``, ``profile_snapshot_id``, value, count,
-  percentage, rank, profiled row totals, and the standard audit fields.
-- ``METADATA_DATA_LINEAGE`` stores ``lineage_id``, canonical ``table_id``,
-  ``workspace_id``, ``pipeline_role``, and the
-  standard audit fields.
-- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
-  approval, expiry, table and column identity, and audit information.
-- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,
-  status, continuation decision, expected and actual values, result
-  payload, and audit information.
-
-Standard audit fields are ``_committed_by``, ``_committed_at``,
-``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
-``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
-
-The Preview Processing State table is named ``METADATA_PROCESSING_STATE``.
-Retired Preview tables, including ``METADATA_SOURCE_OBSERVATION``, may
-remain physically present. Presence checks in both configured metadata
-schemas return advisory ``warnings`` with retirement versions and cleanup
-guidance; access/storage errors return diagnostics rather than absence.
-No historical rows are collected, migrated or deleted. Alerts never affect
-canonical readiness or ``raise_on_failure``. Only ``verbose=True`` prints
-alerts and underlying I/O messages. A fresh Processing State table does not
-establish progress for populated targets; reconcile retained progress or
-deliberately rebuild/replay targets before resuming incremental work.
-
-``METADATA_PIPELINE_REGISTRY`` stores only immutable per-workspace Pipeline
-Promotion versions, with at most one active version per workspace/Pipeline ID.
-``METADATA_PIPELINE_RUN`` requires complete logical execution facts in JSON strings, with exact table/contract references, bindings and operation modes.
-Supported singleton Registry layouts migrate only after draining reservations,
-exact historical validation and durable archival. Ambiguous or unsupported
-history blocks cutover. New Run provenance columns are nullable for historical
-rows and never reinterpret old Test hashes. Governed readiness remains blocked
-pending trusted deployment verification; setup reports that separately.
-
-Existing tables are validated by canonical column name and compatible
-Spark data type. Physical Spark/Delta nullability is intentionally not
-compared or migrated. Missing canonical columns are added automatically
-through an empty append with Delta ``mergeSchema=true``; existing rows and
-unrelated extra columns are preserved. Existing canonical columns with
-incompatible physical types still fail validation. The legacy
-``frequency_json`` column specifically fails ``METADATA_DATA_PROFILED``
-validation because that normalized-frequency change requires explicit
-migration or recreation. Existing tables are never overwritten merely
-because their schema differs. Processing continues for remaining metadata
-tables, and ``raise_on_failure=True`` raises only after all tables have
-been processed when failures exist.
-
-The 13 canonical tables include Governance-owned
-METADATA_DATA_CONTRACT_ACTIVATION and a Pipeline Registry containing only
-immutable per-workspace promotion versions. Fresh tables are empty; no
-control row or activation is manufactured. Authority tables use Serializable
-isolation and error-if-exists creation. Existing obsolete development schemas
-fail with explicit reset guidance; normal setup never deletes metadata or
-business targets. A missing ordinary table is created with its canonical
-structure but
-does not populate business metadata records. The function does not
-automatically create steward records, agreements, contracts, catalogue
-records, profile records, lineage events, access assignments, enrichment
-records, guardrail rules, or guardrail results; those are populated by
-their respective FabricOps workflows.
 
 ## Contract impact
 

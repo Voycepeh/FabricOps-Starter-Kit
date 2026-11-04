@@ -76,10 +76,11 @@ def test_context_rejects_missing_table(monkeypatch):
 
 
 def test_context_rejects_missing_active_contract(monkeypatch):
+    monkeypatch.setattr(shared, "get_store", lambda *_a, **_k: SimpleNamespace(workspace_id="source-workspace", item_id="source-item", kind="lakehouse"))
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_a, **_k: {"table_id": "x", "layer": "Production", "store_type": "lakehouse", "table_name": "x"})
     monkeypatch.setattr(shared, "resolve_active_consumer_contract", lambda *_a, **_k: (_ for _ in ()).throw(ValueError("No approved pipeline contract")))
     with pytest.raises(ValueError, match="No approved pipeline contract"):
-        shared.consumer_context(_config(), "x", workspace_id="source-workspace")
+        shared.consumer_context(_config(), "x", workspace_id="prod")
 
 
 def test_context_rejects_invalid_source(monkeypatch):

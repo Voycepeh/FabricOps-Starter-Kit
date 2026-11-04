@@ -1,4 +1,4 @@
-"""Test observations stay in memory until a successful explicit finalization."""
+"""Dry Run profiling never publishes prepared business aggregates."""
 # ruff: noqa: F811
 from unittest.mock import Mock
 

@@ -296,7 +296,7 @@ def test_definition_tables_are_retired_but_results_remain():
     assert {"contract_id", "contract_version", "result_payload_json"} <= set(results)
 
 
-def test_processing_state_legacy_schema_requires_deliberate_cutover():
+def test_incompatible_processing_state_is_rejected_without_changing_progress():
     """Even an empty old table must not be evolved into accepted v2 progress."""
     import importlib
     import pytest
@@ -305,7 +305,7 @@ def test_processing_state_legacy_schema_requires_deliberate_cutover():
     schema = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]
     legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
     for allow_missing in (True, False):
-        with pytest.raises(ValueError, match="Unsupported legacy.*reconcile"):
+        with pytest.raises(ValueError, match="Incompatible.*Existing checkpoints"):
             setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", legacy, schema, allow_missing=allow_missing)
     assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
 
@@ -323,8 +323,8 @@ def test_pipeline_registry_has_no_profiling_coordination_collection():
     assert "profiling_claims" not in registry.fieldNames()
 
 
-def test_pipeline_run_old_schema_requires_offline_conversion():
-    """Old run rows cannot be additive-evolved into falsely complete typed history."""
+def test_incompatible_run_schema_is_rejected_without_changing_history():
+    """Unsupported Run facts cannot be invented by additive schema evolution."""
     import importlib
     import pytest
     from pyspark.sql.types import StructType, StructField, StringType
@@ -332,7 +332,7 @@ def test_pipeline_run_old_schema_requires_offline_conversion():
     schema = metadata_table_schema_registry()['METADATA_PIPELINE_RUN']
     legacy = StructType([StructField('run_id', StringType()), StructField('operation_summary_json', StringType())])
     for allow_missing in (True, False):
-        with pytest.raises(ValueError, match='reconcile retained history'):
+        with pytest.raises(ValueError, match='Existing data has been preserved'):
             setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', legacy, schema, allow_missing=allow_missing)
     assert setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', schema, schema) == []
 
@@ -357,12 +357,12 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
 
 
 @pytest.mark.parametrize('table', ['METADATA_PIPELINE_REGISTRY', 'METADATA_PIPELINE_RUN'])
-def test_joint_pipeline_partial_schema_never_additive_evolves(table):
-    """An empty or partial pipeline layout still needs explicit stopped cutover."""
+def test_incomplete_pipeline_identity_schema_is_rejected(table):
+    """Incomplete required identity fields are unsafe to infer for existing pipeline metadata."""
     from importlib import import_module
     from pyspark.sql.types import StructType
     setup = import_module('fabricops_kit.config.setup_metadata_tables')
     expected = metadata_table_schema_registry()[table]
     for existing in (StructType([]), StructType(expected.fields[:-1])):
-        with pytest.raises(ValueError, match='reconcile retained history'):
+        with pytest.raises(ValueError, match='Existing data has been preserved'):
             setup._validate_existing_metadata_schema(table, existing, expected, allow_missing=True)

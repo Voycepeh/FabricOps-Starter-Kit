@@ -229,7 +229,7 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
     "operations_json": "Reviewed source/target operations with exact physical bindings and execution strategies.",
     "bindings_sha256": "Canonical digest of exact approved operation bindings and execution descriptors.",
     "parameters_json": "Exact approved behavior-affecting setup parameters; runtime overrides reject.",
-    "restored_from_version": "Prior implementation version when a reviewed rollback promotion declares its lineage.",
+    "restored_from_version": "Exact retained prior implementation version with matching reviewed executable content.",
     "promoted_by": "Actual runtime audit identity responsible for the promotion.",
     "promoted_at": "Time the promotion was prepared for atomic activation.",
 }

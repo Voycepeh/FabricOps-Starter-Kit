@@ -45,13 +45,13 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
             raise RuntimeError('[PATH_NOT_FOUND]')
         assert kwargs['schema'] == ('custom_engineering' if name == TABLE else
             ('custom_governance' if name in {'METADATA_DATA_STEWARD', 'METADATA_DATA_AGREEMENT',
-                                           'METADATA_DATA_CONTRACT', 'METADATA_ACTIVATION_STATE'} else 'custom_engineering'))
+                                           'METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION'} else 'custom_engineering'))
         if name == TABLE:
             return spark_session.read.format('delta').load(path)
         return spark_session.createDataFrame([], registry[name])
     def write(frame, name, **kwargs):
         assert name == TABLE and kwargs['schema'] == 'custom_engineering'
-        frame.write.format('delta').mode(kwargs['mode']).options(**kwargs.get('options', {})).save(path)
+        frame.write.format('delta').mode(kwargs['mode']).options(**(kwargs.get('options') or {})).save(path)
     def resolve(store, name, schema_name, **kwargs):
         assert store == 'Metadata' and name == TABLE and schema_name == 'custom_engineering'
         return None, name, schema_name, path
@@ -86,7 +86,7 @@ def test_fresh_setup_uses_json_and_repeated_setup_is_noop(catalogue_delta):
     """Normal setup creates scalar JSON columns immediately and never resets data."""
     rt = catalogue_delta
     first = rt.run()
-    assert first['status'] == 'ready' and TABLE in first['created_tables']
+    assert first['status'] == 'ready' and TABLE in first['created_tables'], first['table_results']
     assert rt.read().schema.simpleString() == rt.schema.simpleString()
     rt.spark.createDataFrame([encode_metadata_row(TABLE, rt.row(load_strategy_parameters_json={'watermark_column': 'modified'}))],
                              rt.schema).write.format('delta').mode('append').save(rt.path)
@@ -140,7 +140,13 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
     # Native processing strips only absent optional fields, preserving its logical contract.
     from fabricops_kit.pipeline.shared import catalogue_authored_processing, validated_processing
     for index, (params, strategy) in enumerate(processing):
-        assert validated_processing(catalogue_authored_processing(current[f't{index}'])) == {'load_strategy': strategy, **params}
+        authored = catalogue_authored_processing(current[f't{index}'])
+        assert authored == {'load_strategy': strategy, **params}
+        if strategy == 'append':
+            with pytest.raises(ValueError, match='invalid load_strategy'):
+                validated_processing(authored)
+        else:
+            assert validated_processing(authored) == authored
 
 
 def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):

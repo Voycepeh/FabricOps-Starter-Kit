@@ -1,4 +1,4 @@
-"""Persist Test observations and final Run facts using the real Delta boundaries."""
+"""Dry Run profiling computes diagnostics without durable metadata publication."""
 # ruff: noqa: F811
 import json
 from datetime import UTC, datetime
@@ -14,14 +14,14 @@ from tests.integration.test_activation_state_delta import authority_delta  # noq
 pytestmark = pytest.mark.spark
 
 
-def test_test_profiles_publish_once_with_table_and_run_identity(authority_delta, monkeypatch):
-    """Prepared target aggregates support Governance without a physical target or reread."""
+def test_dry_run_profiles_remain_session_only(authority_delta, monkeypatch):
+    """Prepared target diagnostics neither publish snapshots nor consume the profiling schedule."""
     r = authority_delta
     frame = r.spark.createDataFrame([(10, 'masked'), (20, 'masked')], ['id', 'category'])
     identity = {'table_id': 'target', 'store': 'Silver', 'schema': 'demo', 'table_name': 'target',
                 'store_kind': 'lakehouse', 'roles': ['target'], 'logical_id': 'target'}
     binding = {'workspace_id': 'DEV', 'item_id': 'business-item', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': 'target'}
-    plan = shared.PipelineExecutionPlan('testing', 'DEV', 'notebook', str(uuid4()), json.dumps({'target': identity}),
+    plan = shared.PipelineExecutionPlan('dry_run', 'DEV', 'notebook', str(uuid4()), json.dumps({'target': identity}),
         json.dumps({'target': {'no_contract': True}}), json.dumps({'target': None}),
         {**r.context, '_pipeline_bindings': {'target': binding}}, pipeline_id=str(uuid4()))
     context = {**r.context, 'execution_plan': plan, '_pipeline_identities': {'target': identity}, '_pipeline_contracts': {'target': None}}
@@ -50,26 +50,11 @@ def test_test_profiles_publish_once_with_table_and_run_identity(authority_delta,
     session = shared.PipelineSession(plan, r.spark)
     try:
         final = finalize_pipeline(session)
-        assert final['status'] == 'ungoverned_completed' and calculate.calls == 1
-        profiles = r.spark.read.format('delta').load(r.ensure('METADATA_DATA_PROFILED')).collect()
-        assert {row.table_id for row in profiles} == {'target'}
-        assert all(row.workspace_id == 'DEV' and row.row_count == 2 for row in profiles)
-        assert {row._activity_id for row in profiles} == {plan.plan_id}
-        columns = {row.column_name: row for row in profiles}
-        assert columns['id'].min_value == '10' and columns['id'].max_value == '20'
-        catalogue = r.spark.read.format('delta').load(r.ensure('METADATA_DATA_CATALOGUE')).collect()
-        assert {row.metadata_level for row in catalogue} == {'table', 'column'}
-        assert all(row.table_id == 'target' and row.last_profiled_at is not None for row in catalogue)
-        frequency = r.spark.read.format('delta').load(r.ensure('METADATA_DATA_PROFILED_FREQUENCY')).collect()
-        assert frequency and {row.value for row in frequency} == {'masked'}
-        stored = r.spark.read.format('delta').load(r.ensure('METADATA_PIPELINE_RUN')).first()
-        assert stored.run_id == plan.plan_id and stored.status == 'ungoverned_completed'
-        assert all(event.results_persisted and event.reason == 'test_observation' for event in stored.profiling)
-        assert 'METADATA_PROCESSING_STATE' not in r.paths
-        assert set(r.paths) <= {'METADATA_PIPELINE_REGISTRY', 'METADATA_PIPELINE_RUN', 'METADATA_DATA_CATALOGUE', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY'}
+        assert final['status'] == 'dry_run_completed' and calculate.calls == 1
+        assert set(r.paths) == {'METADATA_PIPELINE_REGISTRY'}
         finalize_pipeline(session)
         assert calculate.calls == 1
-        assert r.spark.read.format('delta').load(r.ensure('METADATA_DATA_PROFILED')).count() == len(profiles)
+        assert set(r.paths) == {'METADATA_PIPELINE_REGISTRY'}
     finally:
         if not session.closed:
             session.close(failed=True)

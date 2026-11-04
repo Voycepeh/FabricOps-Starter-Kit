@@ -41,7 +41,7 @@ def write_workflow(monkeypatch):
     return evidence, later
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 @pytest.mark.parametrize("saved_action", ["Warn", "Block"])
 def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, spark_session, write_workflow, mode, saved_action):
     """A missing treatment column cannot reach DQ or publication in either mode."""
@@ -60,7 +60,7 @@ def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, sp
             frame, sources=[], store="Silver", schema="dbo", table_name="customers", write_mode="overwrite",
             plan=execution_plan_stub(mode), spark_session=spark_session, verbose=False,
         )
-    if mode == "live":
+    if mode == "governed":
         with pytest.raises(RuntimeError, match="failed during Sensitive Data"):
             run()
         for stage in later.values():
@@ -76,7 +76,7 @@ def test_treatment_failure_blocks_write_after_persisting_outcome(monkeypatch, sp
     assert "raw@example.test" not in json.dumps(evidence)
 
 
-@pytest.mark.parametrize("mode", ["testing", "live"])
+@pytest.mark.parametrize("mode", ["dry_run", "governed"])
 def test_token_mapping_reuse_and_treated_write_input(monkeypatch, spark_session, write_workflow, mode):
     """The public orchestrator retains established tokens and returns caller-owned mappings."""
     evidence, later = write_workflow
@@ -99,9 +99,9 @@ def test_token_mapping_reuse_and_treated_write_input(monkeypatch, spark_session,
     )
     assert result["dataframe"].first().email == "established-token"
     assert result["sensitive_result"]["support_mapping"].first().original_value == "raw@example.test"
-    assert result["published"] is (mode == "live")
+    assert result["published"] is (mode == "governed")
     assert later["check_dq"].call_args.args[0] is result["dataframe"]
-    if mode == "live":
+    if mode == "governed":
         assert later["pipeline_write"].call_args.args[0] is result["dataframe"]
     else:
         assert later["pipeline_write"].call_args.args[0] is result["dataframe"]
@@ -152,7 +152,7 @@ def test_later_write_failure_releases_token_mapping(monkeypatch, spark_session, 
     assert spark_session.sparkContext._jsc.getPersistentRDDs().size() == before
 
 
-@pytest.mark.parametrize('mode', ['testing', 'live'])
+@pytest.mark.parametrize('mode', ['dry_run', 'governed'])
 def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monkeypatch, spark_session, write_workflow, mode):
     """DQ and publication receive the same protected rows declared by the contract."""
     evidence, later = write_workflow
@@ -172,9 +172,9 @@ def test_simplified_mask_and_fixed_buckets_reach_the_public_write_workflow(monke
         spark_session=spark_session, verbose=False)
     assert [(r.email, r.age) for r in result['dataframe'].collect()] == [('***', '[20, 30)'), ('A***E', '[30, 40)')]
     assert later['check_dq'].call_args.args[0] is result['dataframe']
-    assert result['published'] is (mode == 'live')
+    assert result['published'] is (mode == 'governed')
     assert len(evidence) == 2 and all(item['action'] == 'Block' for item in evidence)
-    if mode == 'live':
+    if mode == 'governed':
         assert later['pipeline_write'].call_args.args[0] is result['dataframe']
     else:
         assert later['pipeline_write'].call_args.args[0] is result['dataframe']

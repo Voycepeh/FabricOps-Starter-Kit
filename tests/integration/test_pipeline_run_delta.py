@@ -33,7 +33,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         spark_session.createDataFrame(initial, registry[table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(paths[table])
     audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
     audit.update(_workspace_id='DEV', _notebook_id='notebook')
-    context = {'config': {}, 'scope_workspace_id': 'DEV', 'workspace_id': 'DEV', 'notebook_id': 'notebook'}
+    context = {'config': {}, 'scope_workspace_id': 'DEV', 'workspace_id': 'DEV', 'notebook_id': 'notebook', 'user_id': 'executor'}
     # Explicit plans isolate Delta persistence from Fabric notebook initialization.
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
@@ -54,7 +54,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
             agreement[field.name] = 'test'
     append('METADATA_DATA_AGREEMENT', [agreement])
     retained = set()
-    def make(roles=('source', 'target'), mode='testing', run_id=None):
+    def make(roles=('source', 'target'), mode='governed', run_id=None):
         participants, contracts, bindings = {}, {}, {}
         for index, role in enumerate(roles):
             table = f'table{index}'
@@ -74,8 +74,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                 retained.add(key)
         plan = shared.PipelineExecutionPlan(mode, 'DEV', 'notebook', run_id or str(uuid4()),
             shared.canonical_pipeline_json(participants), '{}', shared.canonical_pipeline_json(contracts),
-            {**context, '_pipeline_bindings': bindings}, pipeline_id=pipeline_id,
-            promotion_id='release' if mode == 'live' else '')
+            {**context, '_pipeline_bindings': bindings}, pipeline_id=pipeline_id, pipeline_version=1, governed_notebook_id='notebook',
+            promotion_id='release' if mode == 'governed' else '')
         return plan
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
@@ -98,12 +98,12 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
 
 
 @pytest.mark.parametrize('roles', [('source',), ('source', 'target'), ('source', 'source', 'target', 'target')])
-def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs_delta, roles):
-    """Finalized Test is durable and eligible only with a complete verified row set."""
+def test_finalized_run_preserves_all_typed_operations(runs_delta, roles):
+    """Finalization publishes a complete verified operation snapshot."""
     r = runs_delta
     plan = r.make(roles)
     shared.persist_pipeline_run(plan, spark_session=r.spark)
-    assert r.rows() == []  # Unfinalized Test has no persisted run evidence.
+    assert len(r.rows()) == 1 and r.rows()[0]['status'] == 'incomplete'
     r.complete(plan)
     finalize_pipeline(shared.PipelineSession(plan, r.spark))
     records = r.rows()
@@ -115,7 +115,7 @@ def test_finalized_test_is_atomic_and_activation_reads_all_typed_operations(runs
 def test_stale_writer_cannot_replace_a_newer_run_or_operation_array(runs_delta):
     """Whole-row CAS rejects stale configuration, stages and parent outcomes together."""
     r = runs_delta
-    plan = r.make(mode='live')
+    plan = r.make(mode='governed')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     stale = replace(plan, evidence=deepcopy(plan.evidence))
     r.complete(plan)
@@ -130,7 +130,7 @@ def test_stale_writer_cannot_replace_a_newer_run_or_operation_array(runs_delta):
 def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(runs_delta, monkeypatch):
     """Physical commit followed by transport failure is confirmed without replay."""
     r = runs_delta
-    plan = r.make(mode='live')
+    plan = r.make(mode='governed')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     r.complete(plan)
     plan.evidence['profiling'] = [{'context_key': 'physical-profile', 'activity': 'standard', 'status': 'passed',
@@ -156,7 +156,7 @@ def test_lost_acknowledgement_recovers_complete_snapshot_and_final_is_immutable(
 def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
     """SetTransaction fences simultaneous first publication of the same run ID."""
     r = runs_delta
-    plan = r.make(mode='live')
+    plan = r.make(mode='governed')
     other = replace(plan, evidence=deepcopy(plan.evidence))
     ready = Barrier(2)
     def write(item):
@@ -177,7 +177,7 @@ def test_competing_first_publications_cannot_duplicate_a_run(runs_delta):
 def test_simultaneous_updates_accept_one_complete_run(runs_delta):
     """Whole-row CAS rejects a stale writer when two attempts change the same run."""
     r = runs_delta
-    plan = r.make(mode='live')
+    plan = r.make(mode='governed')
     shared.persist_pipeline_run(plan, spark_session=r.spark)
     other = replace(plan, evidence=deepcopy(plan.evidence))
     plan.evidence.setdefault('warnings', []).append({'code': 'first_writer'})
@@ -197,24 +197,10 @@ def test_simultaneous_updates_accept_one_complete_run(runs_delta):
     assert shared.validate_pipeline_run(r.rows()[0])['run_id'] == plan.plan_id
 
 
-def test_guardrail_commit_without_run_authority_cannot_approve(runs_delta, monkeypatch):
-    """A failure between diagnostic and run commits leaves no approving snapshot."""
-    r = runs_delta
-    plan = r.make(roles=('source',))
-    r.complete(plan)
-    def fail_before_run(*args, **kwargs):
-        raise OSError('run transaction unavailable')
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', fail_before_run)
-    with pytest.raises(RuntimeError, match='persistence failed'):
-        finalize_pipeline(shared.PipelineSession(plan, r.spark))
-    assert r.rows() == []
-    assert r.spark.read.format('delta').load(r.paths['METADATA_GUARDRAIL_RESULTS']).count() == 1
-
-
 def test_independent_runs_update_concurrently_without_metadata_conflicts(runs_delta):
     """Unrelated runs sharing a data file both progress, without per-update DDL."""
     r = runs_delta
-    plans = [r.make(mode='live') for _ in range(2)]
+    plans = [r.make(mode='governed') for _ in range(2)]
     for plan in plans:
         shared.persist_pipeline_run(plan, spark_session=r.spark)
     # Force normal file-level contention so the bounded OCC retry is exercised.
@@ -250,3 +236,20 @@ def test_spark_decodes_json_operation_and_stage_fields(runs_delta):
     assert operations.filter(F.col('op.contract_version') == 1).count() == 2
     stages = operations.select(F.explode('op.stages').alias('stage'))
     assert stages.filter(F.col('stage.status') == 'passed').count() == 6
+
+
+def test_failed_run_publication_never_reports_success(runs_delta, monkeypatch):
+    """A failed durable final snapshot leaves prior Run data unchanged and no success result."""
+    r = runs_delta
+    existing = r.make(mode='ungoverned')
+    shared.persist_pipeline_run(existing, spark_session=r.spark)
+    before = r.rows()
+    plan = r.make(mode='ungoverned')
+    r.complete(plan)
+    def unavailable(*args, **kwargs):
+        raise OSError('Run transaction unavailable')
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', unavailable)
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        finalize_pipeline(shared.PipelineSession(plan, r.spark))
+    assert r.rows() == before
+    assert plan.evidence['persistence_failed'] and not plan.evidence.get('sealed')

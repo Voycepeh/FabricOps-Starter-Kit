@@ -33,7 +33,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
-| Setup Pipeline | Reuse notebook configuration, register or recover the Pipeline ID and start execution tracking. |
+| Setup Pipeline | Reuse notebook configuration, use the saved Pipeline ID and start execution tracking. |
 | Data Contract Configuration | Optional in Dry Run, omitted in Ungoverned, and resolved from activation in Governed. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
@@ -207,18 +207,9 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
 
-!!! note "Reset the demo to a clean data state"
+!!! note "Repeat Full Refresh"
 
-    Use these steps when you want the next run to behave like the first Full Refresh run:
-
-    1. In the Silver Lakehouse, delete `demo.curated_orders` from the table explorer.
-    2. In the Gold Warehouse query editor, drop the other demo target:
-
-        ```sql
-        DROP TABLE IF EXISTS demo.customer_summary;
-        ```
-
-    3. This notebook does not change its sources. If they have changed, rerun [Step 00C. Prepare the demo data](00C-prepare-demo-data-with-fabricops-io.md) to restore Bronze `demo.orders`, Bronze `demo.products`, and Gold `demo.order_history`.
+    Each successful Full Refresh Write replaces the target with the current prepared data. Rerun Read → Transform → Write with a fresh plan and verify the expected rows. Keep existing metadata and publication history; no manual deletion is required.
 
 **Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
 

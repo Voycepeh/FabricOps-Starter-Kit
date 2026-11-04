@@ -347,7 +347,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Preserve released content/hash semantics; an explicit development reset discards old Run history.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.</p>
 </details>
 
 <details id="pyspark">

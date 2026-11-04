@@ -34,11 +34,11 @@ Record package commit/version, date, tester, disposable workspace names and outc
 | TOCTOU experiment | Manual Run versus API preflight timing and unsaved/running-cell edits documented without claiming prevention | Pending |
 | Processing regression | `_row_hash`, append_all/new_only, overwrite, incremental, SCD1/2, profiling, lineage, observations, retries and receipts exercised in Fabric | Pending |
 
-## Scheduling and rollback
+## Scheduling and implementation integrity
 
 Promotion never moves engineer-owned schedules. The new item ID is returned in the Registry row; engineers explicitly recreate/rebind schedules and confirm their intended active version. Starts against superseded physical notebook IDs must reject. Do not silently overwrite an old notebook while it may be executing.
 
-Exact active-snapshot restoration uses `restore_pipeline`, preserving the changed copy under its promotion archive before Update Definition. Rollback to older logic requires copying the retained source notebook into development, manually Dry Running it, and reviewing a new monotonically increasing promotion; never mutate an old approval row. When the reviewed executable digest matches a retained prior version, the new promotion records its version in `restored_from_version`.
+The integrity-repair acceptance test must preserve the changed definition before restoring the exact approved snapshot, verify saved readback, and retain the same promotion identity. Different implementation content requires a newly reviewed immutable version. A matching retained executable digest is recorded as implementation lineage.
 
 ## Gate change
 

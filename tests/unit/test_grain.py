@@ -104,11 +104,11 @@ def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
         contract_guardrail_rows({**preview["contract"], "contract_payload": preview}, workspace_id="dev", table_id="t")
 
 
-@pytest.mark.parametrize("mode,action", [("testing", "Block"), ("live", "Block"), ("live", "Warn")])
+@pytest.mark.parametrize("mode,action", [("dry_run", "Block"), ("governed", "Block"), ("governed", "Warn")])
 def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session, monkeypatch, mode, action):
     """Exact Grain outcomes govern Live continuation and remain in memory in Testing."""
     make, rows, spies, _ = contract_runtime
-    rows.extend([frozen(SOURCE_ID, active=mode == "live"), frozen(TARGET_ID, active=mode == "live")])
+    rows.extend([frozen(SOURCE_ID, active=mode == "governed"), frozen(TARGET_ID, active=mode == "governed")])
     payload = json.loads(rows[1]["contract_payload_json"])
     rule = _rule(["id"], action=action)
     rule["rule_parameters"] = json.loads(rule.pop("rule_parameters_json"))
@@ -120,10 +120,10 @@ def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session,
     # Grain is the actual evaluator; isolate downstream Fabric publication after Warn.
     module = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     publish = Mock(return_value={"table_id": TARGET_ID, "strategy": "overwrite"})
-    if mode == "live":
+    if mode == "governed":
         monkeypatch.setattr(module, "pipeline_write", publish)
         monkeypatch.setattr(module, "schedule_table_profiling", Mock(return_value={"row_count": 2}))
-    if mode == "live" and action == "Block":
+    if mode == "governed" and action == "Block":
         with pytest.raises(RuntimeError, match="during Grain"):
             write(plan, source, spark_session, dataframe=frame)
         publish.assert_not_called()
@@ -131,8 +131,8 @@ def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session,
         result = write(plan, source, spark_session, dataframe=frame)
         assert result["grain_result"]["validation_scope"] == "write_prepared_input"
         assert result["grain_result"]["can_continue"] is (action == "Warn")
-        assert result["published"] is (mode == "live")
+        assert result["published"] is (mode == "governed")
     assert any(row["guardrail_type"] == "grain" for row in plan.results)
-    if mode == "testing":
+    if mode == "dry_run":
         from tests.unit.test_contract_orchestration import assert_testing_mutations_are_diagnostics_only
         assert_testing_mutations_are_diagnostics_only(spies)

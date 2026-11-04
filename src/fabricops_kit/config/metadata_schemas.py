@@ -24,14 +24,9 @@ CANONICAL_METADATA_TABLES = [
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 RETIRED_PREVIEW_METADATA_TABLES = {
-    "METADATA_ACTIVATION_STATE": {
-        "unreleased": True,
-        "retired_in": "0.3.0",
-        "guidance": "Authority is now in METADATA_PIPELINE_REGISTRY; drain and reconcile approvals and reservations before cutover. Never append old snapshots to the new Registry.",
-    },
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
-        "guidance": "Use exact Data Agreement and Testing references in METADATA_PIPELINE_REGISTRY where applicable.",
+        "guidance": "METADATA_PIPELINE_REGISTRY records exact Data Agreement references with immutable promotion versions.",
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
@@ -63,7 +58,7 @@ RETIRED_PREVIEW_METADATA_TABLES = {
     },
     "METADATA_SOURCE_OBSERVATION": {
         "retired_in": "0.3.0",
-        "guidance": "METADATA_PROCESSING_STATE is the sole runtime model; reconcile checkpoints and publication receipts before explicit migration or target rebuild/replay.",
+        "guidance": "METADATA_PROCESSING_STATE stores current source observations, checkpoints and publication receipts.",
     },
 }
 

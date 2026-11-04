@@ -30,7 +30,7 @@ def test_contract_free_completed_run_is_explicitly_ungoverned(runtime):
     assert saved[plan.plan_id]["status"] == "ungoverned_completed"
 
 
-def test_partial_contract_selection_is_valid_testing(plan_runtime):
+def test_partial_contract_selection_is_valid_in_dry_run(plan_runtime):
     rows, _, make, row = plan_runtime
     rows.append(row())
     plan = make(selections={"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"no_contract": True}})

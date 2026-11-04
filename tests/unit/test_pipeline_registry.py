@@ -34,6 +34,6 @@ def test_registration_arguments_are_removed(removed):
 
 
 def test_no_registration_runtime_helpers_remain():
-    """Registration persists only in retained migration evidence."""
+    """The current lifecycle has no registration compatibility helpers."""
     for name in ("resolve_pipeline_registration", "commit_pipeline_registration", "read_pipeline_registry", "validate_pipeline_registrations"):
         assert not hasattr(shared, name)

@@ -101,7 +101,7 @@ Guardrails remain part of the Data Contract. Engineering calls `orchestrate_read
 
     `01_governance` creates the Governance side: `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT`, and the versioned `METADATA_DATA_CONTRACT`. Engineering selects that contract, validates and enforces its Guardrails, and records the outcomes in `METADATA_GUARDRAIL_RESULTS`.
 
-    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Once the tested version is approved, Governance activates it for Production and the same `02_pipeline` resolves the approved workspace activation revision.
+    If the implementation or governed definition needs refinement, Governance creates the next contract version and Engineering validates it again. Governance activates exact physical table Contracts independently. An approved Pipeline Promotion creates the Governed notebook for the destination workspace; subsequent starts capture the active version and exact Contracts.
 
     **For the notebook-level implementation, browse the [FabricOps notebook templates](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks). For the schema, purpose, and relationships of each metadata table, see the [Metadata reference](reference/metadata.md).**
 

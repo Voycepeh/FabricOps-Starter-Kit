@@ -35,7 +35,7 @@ via `operations`
 | `operations[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Composite exact per-operation Contract identity with version and payload SHA. |
 | `operations[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Exact frozen version used by the operation. |
 
-**Implementation details:** Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Explicit development reset discards old Run history and Processing State; normal setup never deletes either.
+**Implementation details:** Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.
 
 ## Column summary
 

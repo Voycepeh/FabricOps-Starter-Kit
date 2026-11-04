@@ -6,13 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-### Breaking development redesign
+### Changed
 
-- Replace unreleased mixed Registry/deployment state with independent Governance-owned `METADATA_DATA_CONTRACT_ACTIVATION` and immutable per-workspace Pipeline Promotion versions. The canonical metadata inventory now contains 13 tables.
-- Add reviewed notebook promotion, complete write-once ipynb archives, saved-code/binding verification and exact snapshot restoration with changed-copy preservation. Promotion creates separate notebook items and never moves engineer-owned schedules.
-- Development cutover requires the explicit [metadata reset procedure](docs/maintainer/governed-pipeline-promotion-v3-reset.md); no #1774 migration or compatibility adapter is supplied. Reset discards Run audit and Processing State and can cause duplicate/wrong output if populated business targets are reused without a new baseline. Normal setup never deletes metadata or business targets.
-- Preserve released v0.3.1 processing semantics, managed `_row_hash`, append strategies, overwrite, incremental, SCD1/SCD2, profiling, lineage and publication receipts.
-- Governed admission remains blocked pending the signed-in Fabric integration checklist. Only notebook content is frozen; dependencies are not. Saved-definition verification has TOCTOU limits and does not prevent privileged direct Spark bypass.
+- Define 13 canonical metadata tables with independent physical Data Contract Activation and immutable per-workspace Pipeline Promotion versions.
+- Add reviewed notebook promotion, complete write-once ipynb archives, saved-code/binding verification and preserved-copy integrity repair. Engineers retain control of schedules.
+- Apply compatible metadata evolution directly in `setup_metadata_tables()`, preserving Catalogue values, retained Pipeline Run content/hashes and Processing State checkpoints and publication receipts. Incompatible schemas fail without deleting data.
+- Validate consumer physical bindings before Data Agent provisioning, retain retry-safe target claim cleanup and resolve default schemas through destination workspace configuration.
+- Preserve `_row_hash`, append strategies, overwrite, incremental, SCD1/SCD2, profiling, lineage and publication receipts. Governed admission remains blocked pending signed-in Fabric acceptance.
 
 ## [0.3.1] - 2026-10-31
 

@@ -769,7 +769,7 @@
     "aliases": [],
     "category": "Data Engineering concepts",
     "short_definition": "One logical pipeline execution across every declared Read and Write.",
-    "long_definition": "METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Preserve released content/hash semantics; an explicit development reset discards old Run history.",
+    "long_definition": "METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.",
     "preferred_usage": "Use pipeline run for the complete execution; distinguish it from table participation and rule-level Guardrail Results.",
     "avoid_usage": "one run per participating table"
   },

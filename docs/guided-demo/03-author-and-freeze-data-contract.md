@@ -209,6 +209,6 @@ Choose **Save Data Contract** while the version is still a draft. Close and reop
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
 !!! warning "Breaking workspace architecture"
-    This Unreleased architecture uses workspace-scoped metadata and intentionally breaks earlier layouts. Start with fresh Metadata for this design; no compatibility layer or in-place migration is supplied. Frozen release documentation retains the earlier contracts.
+    Contract definitions are global and immutable when frozen. Physical workspace/Table ID activations select exact versions independently; authoring observations and profile snapshots do not mutate frozen payloads.
 
 **Next:** [Step 4. Preview and enforce the frozen Data Contract](04-validate-frozen-data-contract.md).

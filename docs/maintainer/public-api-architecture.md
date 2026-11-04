@@ -76,48 +76,15 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 
 Commit the regenerated JSON only when the architecture contract is intentionally affected.
 
-## Execution modes and activation boundary
+## Execution modes and promotion boundary
 
-Pipeline execution now has three public modes: Dry Run, Ungoverned and Governed. The four public lifecycle functions remain `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`.
+The four lifecycle functions are `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`. Dry Run evaluates in memory without durable publication. Ungoverned publishes without Contract-dependent checks and rejects protected Table IDs and physical aliases. Governed requires the active promoted notebook and exact independently activated source and target Contracts.
 
-Dry Run evaluates reads, transformations, profiling and applicable selected-contract rules, simulates target publication, and returns an in-memory result from `finalize_pipeline()`. It never writes business data, operational state or a pipeline-run record. Ungoverned performs real writes without contract-dependent checks, but it cannot write a target already governed in the current workspace. Governed requires and revalidates an activated contract manifest.
+A completed manual Dry Run and the full saved notebook form the promotion review. Destination configuration resolves the reviewed physical bindings; explicit schema choices and configured defaults remain distinct. Promotion archives complete immutable notebook definitions, creates a separate Governed item, verifies readback and commits one immutable per-workspace Registry version using Serializable conditional mutation. Run outcomes remain in `METADATA_PIPELINE_RUN`; physical Contract selections remain in `METADATA_DATA_CONTRACT_ACTIVATION`. Publication claims live in Metadata Files and never become Registry control rows.
 
-### Required activation boundary
+Finalize records actual whole-run completion and releases the execution's physical publication claims. Failed, incomplete and uncertain outcomes cannot be represented as successful completion. Exact durable readback recovers lost acknowledgements without replaying business writes. Claims exclude competing publications and Contract protection changes; they never expire after a crash.
 
-The follow-up must make these requirements concrete before it is ready to merge:
-
-1. `finalize_pipeline()` owns the successful whole-run commit to `METADATA_PIPELINE_RUN`. Individual operations, successful notebook cells, interpreter shutdown and caller-supplied result dictionaries cannot independently authorize activation.
-2. A qualifying run identifies the permanent `pipeline_id`, registered Fabric workspace and notebook binding, execution activity, configured environment, physical source/target bindings, read/write modes, SQL hash and source associations. A run from another workspace, another environment or an earlier notebook binding cannot authorize the current candidate.
-3. Every participating source and target `table_id` has its exact frozen `METADATA_DATA_CONTRACT` version and payload hash recorded. Missing contracts, changed contracts, missing operations or changed configuration require a new complete run.
-4. Every required Read, transformation, applicable Guardrail, actual target Write and required post-write finalization completes. A simulated Write cannot qualify. Read-only pipelines may qualify when they have no declared target operations; incremental runs with no work must record their no-op outcome explicitly and must not imply that an unexercised publication path was verified.
-5. Warning Guardrails may allow continuation and remain visible in the committed results and approval review. A blocking Guardrail stops the run and prevents activation. Read, transformation, Write, profiling, checkpoint or required metadata failures prevent a successful activation result, including when the business write already committed.
-6. Activation review and approval both load the exact completed run and its rule-level `METADATA_GUARDRAIL_RESULTS` from configured metadata storage. A supplied run reference selects a committed record; an editable dictionary or human attestation cannot substitute for that record. Missing or duplicate run identities fail closed.
-7. The successful run record is committed only after its required diagnostics and completion references are durable. Interrupted publication must leave no activatable success with missing dependencies. An uncertain commit acknowledgement requires exact durable read-back; retries must preserve run and diagnostic identities and must not replay business writes blindly.
-8. `METADATA_PIPELINE_REGISTRY` continues to own atomic approval history, table mappings, writer ownership and execution reservations. Governed writes reserve their physical destinations and coordinate with activation; Ungoverned runtime checks must not create a route around existing ownership or governance controls.
-
-These records establish what the selected run completed at that time. They do not guarantee that later Governed runs will succeed after permissions, input data or infrastructure change.
-
-### Write-mode decision
-
-The public behavior is explicit: Dry Run never writes, while Ungoverned and Governed perform real writes. A Dry Run cannot be treated as end-to-end publication evidence.
-
-Governed writes require documented destination selection, execution reservations and failed-write recovery. Ungoverned writes recheck central authority before every target operation and reject governed targets. Approval itself continues to write governance metadata only; frozen release snapshots remain preserved.
-
-### Acceptance checks
-
-| Scenario | Required outcome |
-| --- | --- |
-| Complete run with all exact frozen contracts, exercised target Writes and durable finalization | Activation can review the committed run in the same workspace and environment. |
-| Warning Guardrail with every other required operation successful | Run may qualify; warning remains visible in approval. |
-| Blocking Guardrail, failed Read or transformation, failed Write or required post-write step | Pipeline stops or finalizes as failed; activation rejects it. Earlier business commits are reported for recovery. |
-| One missing table contract, missing operation or unfinalized run | Activation rejects the candidate and identifies missing coverage. |
-| Dry-run target publication or unevaluated required stage | Activation rejects the candidate as insufficient execution verification. |
-| Fabricated result dictionary, unknown run ID or reviewer attestation without a committed run | Activation rejects it. |
-| Correct environment name but different workspace, notebook binding, physical target or operation mode | Activation rejects it and requires a new run. |
-| Diagnostics or final run commit fails; commit acknowledgement is lost | No unconfirmed success is accepted. Verify exact durable state before retrying. |
-| Review becomes stale, affected Governed execution is running, or destinations are reserved | Existing atomic approval and execution reservation checks continue to block conflicting actions. |
-
-Use targeted unit tests for finalization and backend rejection, persisted Delta integration tests for commit ordering and retry behavior, and actual Microsoft Fabric execution for the workspace and publication claims. Local mocks and passing repository CI are not Fabric execution evidence. Record actual Fabric validation separately with version, date, tester, notebook and outcome; no such execution is claimed by this proposal.
+The [Pipeline Promotion architecture](governed-pipeline-promotion.md) owns the detailed invariants and failure boundaries. The [Fabric acceptance checklist](governed-pipeline-fabric-acceptance.md) owns required signed-in runtime tests. Governed admission remains blocked pending those results; local mocks and passing CI do not establish Fabric execution or permission guarantees.
 
 ## Review surfaces
 

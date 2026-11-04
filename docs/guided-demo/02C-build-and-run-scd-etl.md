@@ -187,23 +187,8 @@ Use a fresh permitted **Governed** plan for governed publication. Dry Run keeps 
 
 The Read block displays the rows returned by the source Read. After a successful persistent Write, the SCD demo template displays the persisted Silver target: SCD1 shows the current product rows, while SCD2 shows the full version history ordered by product and `_effective_from`. In Dry Run or another non-publishing execution, it labels and displays the prepared Write input instead. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing checkpoint divergence, follow the [scoped reconciliation guidance](02B-build-and-run-incremental-append-etl.md#if-silver-has-eight-rows-but-the-checkpoint-already-covers-day-2); immutable Append repairs must not be applied to SCD history.
 
-### Reset the demo
+### Repeat the demo safely
 
-Do not restart at Day 1 while either SCD target still contains later-day state. Reset the source and both targets together:
-
-1. In the Bronze Lakehouse, delete `demo.product_master_updates` from the table explorer.
-2. In the Silver Lakehouse, delete both targets:
-    - `demo.product_master_scd1`
-    - `demo.product_master_scd2`
-3. Set `DEMO_DAY = 1`.
-4. Rerun [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to restore the eight-row Day 1 Bronze snapshot. Day 1 of this notebook does not load its own CSV.
-5. Run the notebook with an existing Governed activation, then continue through both Writes.
-6. Continue with Day 2 and Day 3 in order, building a fresh plan each day.
-
-Deleting only the Bronze source is not enough: retained SCD targets still contain the previous current state and history. Conversely, deleting only the targets leaves the Bronze table on its later snapshot until the Day 1 staging cells run.
-
-!!! note "Governance and metadata history"
-
-    The steps above reset the business data. Existing Catalogue, profile, and lineage records remain as FabricOps run history. If Data Contracts or other Governance metadata were authored specifically for these demo identities and you need a completely new governance lifecycle, use a fresh Guided Demo environment or reset those records only through the normal FabricOps Governance workflow.
+Run Day 1, Day 2 and Day 3 in order. Do not restart Day 1 against targets containing later-day SCD history. Repeated Writes for the same day must preserve current rows and avoid duplicate versions; inspect the persisted target and publication receipts if those invariants fail. Keep accepted Processing State and its corresponding business targets together. Use separate demo table identities and their approved Contracts for an independent run of the scenario.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

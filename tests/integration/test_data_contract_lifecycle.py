@@ -270,7 +270,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
                for row in (source, schema_source, target)}
     snapshot = deepcopy(state.metadata)
     state.context["activity_id"] = "testing"
-    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="testing", selections=choices,
+    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="dry_run", selections=choices,
         spark_session=state.spark, context=state.context)
     def reads(plan):
         return [run_pipeline_operation(orchestrate_read, plan=plan, **coords, spark_session=state.spark, verbose=False)
@@ -288,8 +288,8 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert finalize_pipeline_run(plan, spark_session=state.spark)["status"] == "failed"
     gate = _activation(state)
     assert not gate["records"] and gate["ready"] is False
-    assert gate["token"] == before["token"]
-    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="testing", selections=choices,
+    assert state.metadata == snapshot
+    plan = runtime.build_pipeline_execution_plan(**coordinates, execution_mode="dry_run", selections=choices,
         spark_session=state.spark, context=state.context)
     with plan:
         inputs = reads(plan)
@@ -300,19 +300,18 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert tested["dataframe"].first().email == "****************"
     assert_ordinary_metadata_unchanged(state.metadata, snapshot)
     completed = plan.run_result
-    assert completed["status"] == "succeeded"
+    assert completed["status"] == "dry_run_completed"
     assert all(row["run_id"] == plan.plan_id for row in plan.results)
     assert all(row["rule_type"] != "contract_validation" for row in plan.results)
-    runtime.publish_pipeline_testing_results(plan, spark_session=state.spark)
     widget = _activation(state)
     assert not widget["records"] and widget["ready"] is False
-    assert widget["token"] == before["token"]
+    assert state.metadata == snapshot
     from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
     with pytest.raises(RuntimeError, match="signed-in Fabric"):
         build_governed_pipeline_plan(pipeline_id=coordinates["pipeline_id"], context=state.context,
             spark_session=state.spark)
-    assert len(state.metadata["METADATA_PIPELINE_RUN"]) == 1
-    assert state.metadata["METADATA_GUARDRAIL_RESULTS"]
+    assert state.metadata["METADATA_PIPELINE_RUN"] == []
+    assert state.metadata["METADATA_GUARDRAIL_RESULTS"] == []
     assert all(row["contract_payload_json"] == frozen_json[row["contract_id"]]
                for row in state.metadata["METADATA_DATA_CONTRACT"])
 

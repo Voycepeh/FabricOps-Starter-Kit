@@ -99,7 +99,7 @@ def plan_runtime(monkeypatch):
         **kw, "table_id": kw["table_name"], "store_kind": "lakehouse"})
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: RecordingFrame(rows))
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: "metadata")
-    def make(mode="testing", selections=None):
+    def make(mode="dry_run", selections=None):
         return module.build_pipeline_execution_plan(execution_mode=mode,
             sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}],
             targets=[{"store": "Silver", "schema": "demo", "table_name": "target"}],
@@ -113,7 +113,7 @@ def plan_runtime(monkeypatch):
 
 
 @pytest.mark.parametrize("workspace_id", ["dev", "test", "uat", "prod", "production", "canary-east", "sandbox42"])
-@pytest.mark.parametrize("mode", ["testing"])
+@pytest.mark.parametrize("mode", ["dry_run"])
 def test_arbitrary_environment_has_identical_explicit_bootstrap_policy(plan_runtime, workspace_id, mode):
     """Workspace identity routes execution and never decides persistence or contracts."""
     _, runtime, make, _ = plan_runtime
@@ -132,10 +132,10 @@ def test_testing_can_select_inactive_candidate_but_live_cannot(plan_runtime):
     plan = make(selections=selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
     with pytest.raises(ValueError, match="Pipeline Promotion"):
-        make("live", selections)
+        make("governed", selections)
     selections["source"]["contract_version"] = 1
     with pytest.raises(ValueError, match="Pipeline Promotion"):
-        make("live", selections)
+        make("governed", selections)
     assert json.loads(plan.contracts_json)["source"]["contract_version"] == 2
 
 
@@ -145,7 +145,7 @@ def test_testing_no_contract_is_diagnostic_only_even_when_legacy_active_flag_exi
     rows.append(row(active=True))
     assert json.loads(make().contracts_json)["source"] is None
     with pytest.raises(ValueError, match="Pipeline Promotion"):
-        make("live")
+        make("governed")
 
 
 @pytest.mark.parametrize("corruption", ["json", "contract_id", "version", "table", "columns", "duplicate"])
@@ -189,7 +189,7 @@ def test_live_builder_rejects_individual_contract_authority(plan_runtime):
     rows, _, make, row = plan_runtime
     rows.extend([row(active=True), row(table_id="target", active=True)])
     with pytest.raises(ValueError, match="Pipeline Promotion"):
-        make("live", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
+        make("governed", {"source": {"contract_id": "contract-source", "contract_version": 1}, "target": {"contract_id": "contract-target", "contract_version": 1}})
 
 
 def test_removed_bootstrap_mode_is_rejected(plan_runtime):
@@ -199,17 +199,17 @@ def test_removed_bootstrap_mode_is_rejected(plan_runtime):
         make("bootstrap")
 
 
-@pytest.mark.parametrize("mode", ["testing"])
+@pytest.mark.parametrize("mode", ["dry_run"])
 def test_read_only_headless_plan_needs_no_target(plan_runtime, mode):
     """Read-only participants use the same immutable plan without a business target."""
     from fabricops_kit.pipeline.shared import build_pipeline_execution_plan
 
     rows, runtime, _, row = plan_runtime
-    if mode == "live":
+    if mode == "governed":
         rows.append(row(active=True))
     plan = build_pipeline_execution_plan(execution_mode=mode,
         sources=[{"store": "Bronze", "schema": "demo", "table_name": "source"}], targets=[],
-        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "live" else {"no_contract": True}}, context=runtime, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        selections={"source": {"contract_id": "contract-source", "contract_version": 1} if mode == "governed" else {"no_contract": True}}, context=runtime, pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
     assert json.loads(plan.participants_json)["source"]["roles"] == ["source"]
     assert set(json.loads(plan.contracts_json)) == {"source"}
 
