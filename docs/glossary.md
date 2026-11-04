@@ -66,7 +66,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="governed">
 <summary><strong>Governed</strong> — Pipeline execution with real writes and activated Data Contracts enforced.</summary>
-<p>Governed requires a workspace pipeline activation, independently activated workspace/Table ID Data Contracts and a trusted verified deployment. Runtime admission and publication currently fail closed until deployment verification is tenant-proven and integrated; a caller-supplied Git SHA is insufficient.</p>
+<p>Governed requires independently activated workspace/Table ID Data Contracts, a Governance-approved saved submission and the exact Engineering-deployed notebook snapshot. Runtime admission and publication currently fail closed pending signed-in Fabric acceptance; saved-definition checks cannot prove the identity of code already executing, and imported dependencies are not frozen.</p>
 </details>
 
 <details id="enrichment">

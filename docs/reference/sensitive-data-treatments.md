@@ -257,8 +257,8 @@ The final target profile is also based on the successfully published treated tar
 
 ## Related documentation
 
-- [AI-assisted Data Contract Authoring](../solutions/ai-assisted-data-contract-authoring.md)
-- [Plug-and-Play Data Pipelines with Data Contract Enforcement](../solutions/plug-and-play-data-pipelines.md)
+- [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment)
+- [Plug-and-Play pipelines and orchestration](../engineering.md#plug-and-play-pipelines-and-orchestration)
 - [Read & Write Modes](read-and-load-strategies.md)
 - [Sensitive Data stage](../api/reference/orchestrate_write.md)
 - [Data Contract payload](metadata/metadata_data_contract.md)

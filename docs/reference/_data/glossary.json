@@ -69,7 +69,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Pipeline execution with real writes and activated Data Contracts enforced.",
-    "long_definition": "Governed requires a workspace pipeline activation, independently activated workspace/Table ID Data Contracts and a trusted verified deployment. Runtime admission and publication currently fail closed until deployment verification is tenant-proven and integrated; a caller-supplied Git SHA is insufficient.",
+    "long_definition": "Governed requires independently activated workspace/Table ID Data Contracts, a Governance-approved saved submission and the exact Engineering-deployed notebook snapshot. Runtime admission and publication currently fail closed pending signed-in Fabric acceptance; saved-definition checks cannot prove the identity of code already executing, and imported dependencies are not frozen.",
     "preferred_usage": "Use Governed for pipeline_mode when activated Data Contracts must be enforced.",
     "avoid_usage": "a mode inferred from the workspace name"
   },

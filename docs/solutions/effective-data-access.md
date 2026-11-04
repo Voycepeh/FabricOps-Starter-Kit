@@ -104,4 +104,4 @@ For the one-call contract, lower-level scanner behavior, and optional metadata s
 - [`scan_sql_access()`](../api/reference/scan_sql_access.md)
 - [`METADATA_DATA_ACCESS`](../reference/metadata/metadata_data_access.md)
 
-For the wider Governance and Engineering model, see [How FabricOps Works](../how-fabricops-works.md).
+For the wider Governance and Engineering model, see [Architecture](../architecture.md).

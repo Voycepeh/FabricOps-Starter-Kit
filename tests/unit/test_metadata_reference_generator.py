@@ -341,6 +341,7 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     script = (root / "docs/javascripts/metadata-explorer.js").read_text(encoding="utf-8")
     styles = (root / "docs/stylesheets/metadata-explorer.css").read_text(encoding="utf-8")
     homepage = (root / "docs/index.md").read_text(encoding="utf-8")
+    architecture = (root / "docs/architecture.md").read_text(encoding="utf-8")
     how_it_works = (root / "docs/how-fabricops-works.md").read_text(encoding="utf-8")
 
     assert 'description.textContent = model.purpose' in script
@@ -351,12 +352,15 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     assert 'width: min(430px' in styles
     assert 'class="fabricops-metadata-preview" href="reference/metadata/"' in homepage
     assert 'src="assets/fabricops-metadata-approved.svg"' in homepage
-    assert 'class="fabricops-metadata-preview fabricops-metadata-preview--compact"' in how_it_works
-    assert 'href="../reference/metadata/"' in how_it_works
-    assert 'src="../assets/fabricops-metadata-approved.svg"' in how_it_works
+    assert 'class="fabricops-metadata-preview fabricops-metadata-preview--compact"' in architecture
+    assert 'href="reference/metadata/"' in architecture
+    assert 'src="../assets/fabricops-metadata-approved.svg"' in architecture
     assert ".fabricops-metadata-preview__image" in styles
-    assert "## The Big Picture" in how_it_works
-    assert how_it_works.index('class="fabricops-metadata-preview') < how_it_works.index("## Workspace Architecture")
+    assert architecture.index('class="fabricops-metadata-preview') > architecture.index(
+        "## Governance ↔ Engineering cycle"
+    )
+    assert architecture.index('class="fabricops-metadata-preview') < architecture.index("## What's next")
+    assert 'content="0; url=../architecture/"' in how_it_works
 
 
 def test_metadata_table_summaries_remain_human_readable_and_detailed_notes_preserved() -> None:

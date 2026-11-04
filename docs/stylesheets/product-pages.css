@@ -1,0 +1,182 @@
+.fabricops-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: 1.5rem;
+  align-items: center;
+  margin: 0.8rem 0 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary-fg-color) 8%, var(--md-default-bg-color)), var(--md-default-bg-color) 72%);
+}
+
+.fabricops-hero h1,
+.fabricops-hero p { margin-top: 0; }
+.fabricops-hero img { width: 100%; max-height: 22rem; margin: 0; object-fit: contain; }
+
+.md-typeset .fabricops-product-page > h1 {
+  max-width: 50rem;
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 750;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.md-typeset .fabricops-home-page > h1 {
+  max-width: 44rem;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  line-height: 1.12;
+}
+
+.md-typeset .fabricops-product-page > h1 + p {
+  max-width: 52rem;
+  margin: 0 0 1.5rem;
+  color: var(--md-default-fg-color--light);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.md-typeset .fabricops-product-page > h2 {
+  margin: 3rem 0 0.8rem;
+  font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+  font-weight: 720;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.md-typeset .fabricops-product-page > h2 + p { margin-top: 0; }
+.md-typeset .fabricops-product-page > p { max-width: 55rem; line-height: 1.65; }
+.md-typeset .fabricops-product-page > details {
+  max-width: 55rem;
+  margin: 1rem 0;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background: transparent;
+  box-shadow: none;
+}
+
+.md-typeset .fabricops-product-page > details > summary {
+  background: color-mix(in srgb, var(--md-default-fg-color) 4%, var(--md-default-bg-color));
+}
+
+.md-typeset .fabricops-product-page > details > summary::before {
+  background-color: var(--md-primary-fg-color);
+}
+
+.fabricops-foundations,
+.fabricops-capability-grid,
+.fabricops-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.75rem;
+}
+
+.fabricops-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.65rem;
+  color: var(--md-default-fg-color) !important;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fabricops-card:hover,
+.fabricops-card:focus { border-color: var(--md-primary-fg-color); background: var(--md-accent-fg-color--transparent); }
+.fabricops-card img { width: 100%; max-height: 15rem; margin: 0 0 0.75rem; object-fit: contain; }
+.fabricops-card strong { font-size: 1rem; }
+.fabricops-card small { margin-top: 0.4rem; color: var(--md-default-fg-color--light); line-height: 1.5; }
+.md-typeset .fabricops-card--governance { border-color: #8b5cf6; background: #f4f0ff; }
+.md-typeset .fabricops-card--governance strong { color: #5b21b6; }
+.md-typeset .fabricops-card--engineering { border-color: #2583e8; background: #eef6ff; }
+.md-typeset .fabricops-card--engineering strong { color: #0759a8; }
+.md-typeset .fabricops-card--governance:hover,
+.md-typeset .fabricops-card--governance:focus { border-color: #6d28d9; background: #eee7ff; }
+.md-typeset .fabricops-card--engineering:hover,
+.md-typeset .fabricops-card--engineering:focus { border-color: #0969c5; background: #e4f1ff; }
+.md-typeset .fabricops-home-page a.fabricops-metadata-preview { cursor: pointer; }
+.md-typeset .fabricops-home-page a.fabricops-metadata-preview:hover,
+.md-typeset .fabricops-home-page a.fabricops-metadata-preview:focus-visible {
+  background: color-mix(in srgb, var(--md-primary-fg-color) 4%, var(--md-default-bg-color));
+}
+.md-typeset .fabricops-home-loop { display: block; width: min(100%, 48rem); max-height: 27rem; margin: 1rem auto 1.35rem; border: 0; object-fit: contain; }
+.fabricops-evidence-grid figure { min-width: 0; margin: 0; text-align: center; }
+.fabricops-evidence-grid img { width: 100%; max-height: 22rem; margin: 0; object-fit: contain; }
+.fabricops-evidence-grid figcaption { margin-top: 0.4rem; color: var(--md-default-fg-color--light); font-size: 0.72rem; }
+
+.fabricops-status-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.8rem 0 1.4rem; }
+.fabricops-page-video { width: 100%; aspect-ratio: 16 / 9; margin: 1rem 0 2rem; border: 0; border-radius: 0.65rem; background: #050505; }
+.fabricops-section-evidence { display: block; width: 100%; max-height: 32rem; margin: 1rem auto 1.4rem; object-fit: contain; }
+.md-typeset .fabricops-placeholder { display: block; width: min(100%, 52rem); max-height: 21rem; margin: 1rem 0 1.25rem; border: 0; object-fit: contain; }
+.md-typeset .fabricops-guided-preview {
+  margin-top: 1rem;
+  border: 2px solid var(--md-primary-fg-color);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary-fg-color) 12%, var(--md-default-bg-color)), color-mix(in srgb, var(--md-primary-fg-color) 5%, var(--md-default-bg-color)));
+  box-shadow: 0 0.25rem 0.8rem color-mix(in srgb, var(--md-primary-fg-color) 16%, transparent);
+}
+.md-typeset .fabricops-guided-preview:hover,
+.md-typeset .fabricops-guided-preview:focus-visible {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary-fg-color) 17%, var(--md-default-bg-color)), color-mix(in srgb, var(--md-primary-fg-color) 8%, var(--md-default-bg-color)));
+  box-shadow: 0 0.35rem 1rem color-mix(in srgb, var(--md-primary-fg-color) 22%, transparent);
+}
+.fabricops-guided-preview .fabricops-metadata-preview__eyebrow { color: var(--md-primary-fg-color); }
+.fabricops-guided-preview .fabricops-metadata-preview__action {
+  align-self: flex-start;
+  padding: 0.38rem 0.7rem;
+  border-radius: 0.28rem;
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+}
+.fabricops-guided-preview .fabricops-metadata-preview__image { height: 9rem; }
+.fabricops-architecture-preview .fabricops-metadata-preview__image { height: 10rem; }
+.fabricops-architecture-preview .fabricops-metadata-preview__image img { padding: 0.35rem; }
+.fabricops-resource-preview { cursor: default; }
+.fabricops-preview-menu {
+  display: grid;
+  align-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+  min-height: 8rem;
+  padding: 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--md-default-fg-color) 3%, var(--md-default-bg-color));
+}
+.md-typeset .fabricops-preview-menu a {
+  display: flex;
+  flex-direction: column;
+  padding: 0.42rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary-fg-color) 28%, var(--md-default-fg-color--lightest));
+  border-left: 0.2rem solid var(--md-primary-fg-color);
+  border-radius: 0.25rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.md-typeset .fabricops-preview-menu a:hover,
+.md-typeset .fabricops-preview-menu a:focus {
+  border-color: var(--md-primary-fg-color);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 8%, var(--md-default-bg-color));
+  color: var(--md-primary-fg-color);
+}
+.md-typeset .fabricops-preview-menu small { margin-top: 0.08rem; color: var(--md-default-fg-color--light); font-size: 0.6rem; font-weight: 400; }
+
+@media screen and (max-width: 760px) {
+  .fabricops-hero,
+  .fabricops-foundations,
+  .fabricops-capability-grid,
+  .fabricops-evidence-grid { grid-template-columns: 1fr; }
+  .fabricops-hero { padding: 1rem; }
+  .md-typeset .fabricops-product-page > h2 { margin-top: 2.4rem; }
+}
+
+@media screen and (max-width: 600px) {
+  .md-typeset .fabricops-resource-preview { grid-template-columns: 1fr; }
+  .fabricops-resource-preview .fabricops-preview-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 0; }
+}

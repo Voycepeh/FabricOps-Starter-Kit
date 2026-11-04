@@ -21,11 +21,9 @@ theme:
 
 nav:
   - Home: index.md
-  - How FabricOps Works: how-fabricops-works.md
-  - Featured Solutions:
-      - Plug-and-Play Data Pipelines with Data Contract Enforcement: solutions/plug-and-play-data-pipelines.md
-      - Direct & Indirect PII Discovery & Treatment with Built-in AI Suggestions: solutions/ai-assisted-data-contract-authoring.md
-      - Data Quality Rules from Natural Language: solutions/business-rules-to-data-quality.md
+  - Architecture: architecture.md
+  - Engineering: engineering.md
+  - Governance: governance.md
   - Guided Demo:
       - Overview: guided-demo.md
       - "0A - Prepare Fabric Artifacts": guided-demo/00A-prepare-fabric-artifacts.md
@@ -134,3 +132,4 @@ extra_css:
   - stylesheets/table-controls.css
   - stylesheets/image-borders.css
   - stylesheets/metadata-explorer.css
+  - stylesheets/product-pages.css
