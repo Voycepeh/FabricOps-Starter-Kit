@@ -114,7 +114,7 @@ def test_setup_arguments_remove_registration_and_rebind(runtime):
         with pytest.raises(TypeError):
             setup_pipeline(**{removed: True})
     with pytest.raises(TypeError):
-        setup_pipeline(pipeline_id="00000000-0000-4000-8000-000000000001", pipeline_mode="Ungoverned")
+        setup_pipeline()
     with pytest.raises(RuntimeError, match="signed-in Fabric"):
         setup_pipeline(pipeline_mode="Governed")
 
@@ -384,7 +384,7 @@ def test_setup_and_finalization_display_the_registered_uuid(runtime, capsys, mon
     output = capsys.readouterr().out
     assert f'Pipeline ID: {session.pipeline_id}' in output
     assert 'Save this Pipeline ID' not in output
-    assert 'version-controlled pipeline source' in output
+    assert 'Notebook ID:' in output
     assert 'Mode: Dry Run' in output
     assert 'Workspace:' not in output
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda *args, **kwargs: None)
@@ -403,19 +403,19 @@ def test_notebook_reload_closes_pipeline_and_uses_fresh_configuration(runtime, m
     monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
     original = _config()
     setup_notebook(original, workspace_id='dev')
-    first = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+    first = setup_pipeline()
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     fresh = _config()
     setup_notebook(fresh, workspace_id='dev')
     assert first.closed and not first.sources
-    second = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+    second = setup_pipeline()
     assert second.plan.runtime_context['config'] is fresh
     assert second.plan.plan_id != first.plan.plan_id
     with pytest.raises(ValueError):
         setup_notebook(fresh, workspace_id='dev', required_targets=['missing'])
     assert second.closed
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
 
 
 def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch, fake_notebookutils):
@@ -425,7 +425,7 @@ def test_active_session_rejects_changed_runtime_before_read(runtime, monkeypatch
     from tests.unit.test_setup_notebook_store_keys import _config
     monkeypatch.setattr(shared, 'get_default_fabric_context', get_default_fabric_context)
     setup_notebook(_config(), workspace_id='dev')
-    session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+    session = setup_pipeline()
     fake_notebookutils.context['currentWorkspaceId'] = 'different-workspace'
     with pytest.raises(RuntimeError, match='Notebook execution changed'):
         orchestrate_read(store='Bronze', schema='demo', table_name='orders')
@@ -474,7 +474,7 @@ def test_closed_finalization_remains_idempotent_after_setup_is_invalidated(runti
     committed = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kwargs: committed.append(dict(row)))
     setup_notebook(_config(), workspace_id='dev')
-    pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+    pipeline = setup_pipeline()
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     result = finalize_pipeline(pipeline)
     assert result['boundary_completed'] is True and committed[-1]['status'] == 'ungoverned_completed'
