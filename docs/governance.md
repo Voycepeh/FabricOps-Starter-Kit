@@ -151,7 +151,7 @@ The Metadata Lakehouse can feed a Power BI semantic model that answers governanc
 - Which pipelines read or write a governed table, and what was the latest complete run outcome?
 - Where are Source Drift, schema, quality or Sensitive Data failures concentrated over time?
 
-This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI project. The source evidence is available, but a maintained Governance dashboard remains a product/documentation gap rather than a Live advertised capability.
+This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI project. The source evidence is available, and the [Power BI operating report design](maintainer/power-bi-report-design.md) defines the planned shared Governance and Engineering experience, semantic model and acceptance boundary. Until that project is implemented and signed-in validation is complete, it remains a planned capability rather than a Live advertised feature.
 
 ??? info "Under the Hood — reporting sources"
 
