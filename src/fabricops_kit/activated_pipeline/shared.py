@@ -613,11 +613,12 @@ def notebook_executable_digest(raw):
     return manifest_digest({"code": code, "metadata": metadata, "nbformat": notebook["nbformat"]})
 
 
-def promoted_notebook(raw, pipeline_id):
+def promoted_notebook(raw):
     """Freeze one saved Dry Run setup call, resolving preceding literal notebook constants.
 
-    Saved constant references are replaced by exact approved literals in the
-    cloned setup call, so parameter overrides cannot switch its mode or identity.
+    The logical Pipeline ID is resolved from the original Fabric notebook ID
+    and retained Registry mapping; it is never written into notebook source.
+    The frozen copy changes only the execution mode.
     Arbitrary expressions and conditional/nested setup calls remain unsupported.
     """
     import ast
@@ -638,22 +639,19 @@ def promoted_notebook(raw, pipeline_id):
                     raise ValueError("Promotion requires one unconditional module-level setup_pipeline call.")
                 found += 1
                 values = {kw.arg: kw.value for kw in call.keywords}
-                if call.args or None in values or set(values) - {"pipeline_id", "pipeline_mode", "observe_source", "source_observation_days"}:
+                if call.args or None in values or set(values) - {"pipeline_mode", "observe_source", "source_observation_days"}:
                     raise ValueError("Promotion requires literal setup_pipeline parameters without argument overrides.")
                 try:
                     literal = {key: constants[node.id] if isinstance(node, ast.Name) else ast.literal_eval(node)
                         for key, node in values.items()}
                 except (KeyError, ValueError, TypeError):
                     raise ValueError("Promotion requires literal setup_pipeline parameters or preceding saved literal constants.") from None
-                if literal.get("pipeline_id") != pipeline_id or literal.get("pipeline_mode") != "Dry Run":
-                    raise ValueError("Save the manually tested notebook with its stable Pipeline ID and literal Dry Run mode.")
+                if literal.get("pipeline_mode") != "Dry Run":
+                    raise ValueError("Save the manually tested source notebook with literal Dry Run mode.")
                 parameters = {"manual": literal.get("observe_source", False), "days": literal.get("source_observation_days")}
                 for key, node in values.items():
-                    if key == "pipeline_mode" or isinstance(node, ast.Name):
-                        text = repr("Governed" if key == "pipeline_mode" else literal[key])
-                        if key == "pipeline_mode":
-                            text = '"Governed"'
-                        replacements.append((node, text))
+                    if key == "pipeline_mode":
+                        replacements.append((node, '"Governed"'))
             # Only preceding module-level literal assignments can resolve names.
             targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target] if isinstance(statement, ast.AnnAssign) else []
             for target in targets:
@@ -814,6 +812,9 @@ def validate_submission(package):
         raise ValueError("Unsupported submission manifest fields or version.")
     UUID(manifest["submission_id"])
     validate_pipeline_id(manifest["pipeline_id"])
+    validate_pipeline_id(manifest["source_notebook_id"])
+    if manifest["pipeline_id"] != manifest["source_notebook_id"]:
+        raise ValueError("Logical Pipeline ID must equal its original source Fabric Notebook ID.")
     for key in ("source_workspace_id", "source_notebook_id", "execution_workspace_id", "created_by", "created_at", "dry_run_id"):
         if not isinstance(manifest[key], str) or not manifest[key].strip():
             raise ValueError("Submission requires " + key)
@@ -837,7 +838,7 @@ def validate_submission(package):
             hashlib.sha256(snapshot).hexdigest() != manifest["snapshot_sha256"] or
             notebook_executable_digest(snapshot) != manifest["executable_sha256"]):
         raise ValueError("Submitted saved/executed notebook identity or digest mismatch.")
-    promoted, parameters = promoted_notebook(source, manifest["pipeline_id"])
+    promoted, parameters = promoted_notebook(source)
     if promoted != snapshot or parameters != manifest["parameters"]:
         raise ValueError("Promoted snapshot or behavior parameters differ from the saved candidate.")
     operations = activation_operations(manifest["operations"])
@@ -905,7 +906,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
     if notebook_executable_digest(current) != notebook_executable_digest(raw):
         raise ValueError("Saved executable notebook changed since execution; save and repeat the Dry Run.")
     executed, raw = raw, current
-    snapshot, parameters = promoted_notebook(raw, plan.pipeline_id)
+    snapshot, parameters = promoted_notebook(raw)
     if parameters != plan.evidence.get("source_observation_policy"):
         raise ValueError("Executed parameter overrides differ from the saved definition.")
     config, _, runtime = resolve_fabric_context(context=context or plan.runtime_context)
