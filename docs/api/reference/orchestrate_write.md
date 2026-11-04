@@ -91,10 +91,15 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 ## Returns
 
 dict
-    Prepared dataframe, selected contract, execution identity, validation results,
+    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
     write metrics, publication state and profiling outcome. Dry Run returns
     processing diagnostics without publication; persistent modes return the
-    actual publication outcome.
+    actual publication outcome. The DataFrame includes Sensitive Data treatment,
+    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.
+    Append New Only returns only rows submitted for insertion. SCD previews
+    represent processing input, not the reconstructed post-merge destination.
+    ``rows_committed`` measures this attempt; ``total_target_rows`` is the
+    destination total where profiling provides it.
 
 Raises RuntimeError when no pipeline is active or a persistent stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
@@ -134,7 +139,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:29`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L249">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L254">View on GitHub</a>
 </div>
 
 

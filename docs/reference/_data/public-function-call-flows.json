@@ -7958,9 +7958,9 @@
           "version": "0.3.1"
         }
       ],
-      "returns_documentation": "dict\n    Prepared dataframe, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
+      "returns_documentation": "dict\n    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome. The DataFrame includes Sensitive Data treatment,\n    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.\n    Append New Only returns only rows submitted for insertion. SCD previews\n    represent processing input, not the reconstructed post-merge destination.\n    ``rows_committed`` measures this attempt; ``total_target_rows`` is the\n    destination total where profiling provides it.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
       "signature": "def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, repartition_by: int | None=None, existing_mapping=None, verbose: bool=False, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 249,
+      "source_end_line": 254,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
       "source_start_line": 29,
       "summary": "Evaluate or publish a target using the active pipeline's runtime.",
@@ -8339,7 +8339,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.pipeline_write.pipeline_write",
-      "source_end_line": 834,
+      "source_end_line": 852,
       "source_path": "src/fabricops_kit/pipeline/pipeline_write.py",
       "source_start_line": 301,
       "supports_live_contract": true,

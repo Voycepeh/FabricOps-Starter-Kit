@@ -1084,3 +1084,28 @@ def test_testing_rejects_populated_incremental_bootstrap_without_writing(monkeyp
     monkeypatch.setattr(shared_module, 'commit_pipeline_write_success', lambda *a: pytest.fail('Testing committed metadata'))
     with pytest.raises(ValueError, match='bootstrap requires a new or empty target'):
         write_module.pipeline_write(object(), table_id='target', source_table_ids=['source'], verbose=False)
+
+
+@pytest.mark.parametrize("strategy", ["overwrite", "append_all", "scd1"])
+@pytest.mark.parametrize("already_applied", [False, True])
+def test_warehouse_receipt_metrics_only_after_confirmation(monkeypatch, strategy, already_applied):
+    """Confirmed append/overwrite counts never become inferred SCD change counts."""
+    identity, _ = _patch_write(monkeypatch, store_type="warehouse", strategy=strategy)
+    if strategy == "scd1":
+        monkeypatch.setattr(write_module, "resolve_table_processing_definition",
+                            lambda *a, **kw: {"load_strategy": strategy, "key_columns": ["id"]})
+    monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **kw: already_applied))
+    original_enter = BatchDouble.__enter__
+    def enter(batch):
+        batch.input_rows = 4
+        batch.receipt["input_rows"] = 4
+        return original_enter(batch)
+    monkeypatch.setattr(BatchDouble, "__enter__", enter)
+    monkeypatch.setattr(io_package, "write_warehouse_table", lambda *a, **kw: None)
+    monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda *a: None)
+    monkeypatch.setattr(io_shared, "execute_warehouse_processing", lambda *a, **kw: None)
+    result = call_with_spark(object(), write_module.pipeline_write, object(),
+                             table_id=identity["table_id"], source_table_ids=[])
+    expected = 0 if already_applied else None if strategy in {"scd1", "scd2"} else 4
+    assert result["write_metrics"]["rows_committed"] == expected
+    assert result["write_metrics"]["input_rows"] == 4

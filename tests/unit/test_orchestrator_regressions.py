@@ -169,3 +169,27 @@ def isolated_operation_journal(monkeypatch):
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
                             lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
+
+
+@pytest.mark.parametrize("mode", ["governed", "dry_run"])
+def test_write_preserves_final_preparation_after_sensitive_data(monkeypatch, mode):
+    """Return the writer's enriched frame rather than the earlier masked input."""
+    from tests.helpers import execution_context_stub, execution_plan_stub
+
+    context = execution_context_stub({"target": None}, {"target": [{"guardrail_type": "sensitive_data"}]}, mode=mode)
+    original = SimpleNamespace(columns=["secret"])
+    masked = SimpleNamespace(columns=["secret"])
+    final = SimpleNamespace(columns=["secret", "_row_hash", "_committed_at"])
+    monkeypatch.setattr(write, "prepare_pipeline_execution", lambda *a, **kw: context)
+    monkeypatch.setattr(write, "resolve_table_id", lambda **kw: "target")
+    sensitive = Mock(return_value={"dataframe": masked, "status": "passed", "can_continue": True})
+    publish = Mock(return_value={"table_id": "target", "dataframe": final, "published": mode != "dry_run"})
+    monkeypatch.setattr(write, "check_sensitive_data", sensitive)
+    monkeypatch.setattr(write, "pipeline_write", publish)
+    monkeypatch.setattr(write, "schedule_table_profiling", lambda *a, **kw: {})
+    result = run_pipeline_operation(write.orchestrate_write, original, plan=execution_plan_stub(mode),
+                                    store="Silver", schema="demo", table_name="target", write_mode="overwrite")
+    assert result["dataframe"] is final
+    assert publish.call_args.args[0] is masked
+    sensitive.assert_called_once()
+    assert result["published"] == (mode != "dry_run")
