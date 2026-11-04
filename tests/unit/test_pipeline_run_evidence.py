@@ -284,7 +284,7 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 28
+    assert len(fields) == 27
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
     assert {"operations", "approval_id", "profiling", "boundary_completed"} <= set(fields)
