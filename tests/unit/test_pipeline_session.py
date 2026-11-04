@@ -113,13 +113,15 @@ def test_setup_arguments_remove_registration_and_rebind(runtime):
     for removed in ("new_pipeline", "previous_workspace_id", "previous_notebook_id"):
         with pytest.raises(TypeError):
             setup_pipeline(**{removed: True})
-    with pytest.raises(ValueError, match="explicit stable pipeline_id"):
-        setup_pipeline(pipeline_mode="Ungoverned")
+    with pytest.raises(TypeError):
+        setup_pipeline(pipeline_id="00000000-0000-4000-8000-000000000001", pipeline_mode="Ungoverned")
     with pytest.raises(RuntimeError, match="signed-in Fabric"):
         setup_pipeline(pipeline_mode="Governed")
 
 
 def test_headless_test_without_notebook_identity_or_metadata_writes(runtime):
+    runtime_context = shared.get_default_fabric_context()
+    runtime_context['notebook_id'] = None
     session = setup_pipeline(pipeline_mode='Dry Run')
     source = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     result = orchestrate_write(source['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
@@ -171,7 +173,7 @@ def test_operation_failure_seals_run_and_clears_reads(runtime, monkeypatch):
 
 def test_contexts_isolate_same_pipeline_name(runtime):
     contexts = [Context(), Context()]
-    sessions = [context.run(setup_pipeline, pipeline_id='8f32a471-6c91-4b7e-9d13-2f0c947eab52', pipeline_mode='Dry Run') for context in contexts]
+    sessions = [context.run(setup_pipeline, pipeline_mode='Dry Run') for context in contexts]
     try:
         for index, context in enumerate(contexts):
             context.run(orchestrate_read, store='Bronze', schema='demo', table_name=f'source{index}')
