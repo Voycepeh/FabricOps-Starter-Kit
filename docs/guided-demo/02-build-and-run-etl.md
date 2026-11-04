@@ -56,10 +56,8 @@ PIPELINE_ID = "a8e20b64-1a5c-4f9e-8c37-2d7b6e91c450"
 PIPELINE_MODE = "Ungoverned"  # "Dry Run", "Ungoverned", or "Governed"
 
 pipeline = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
 )
-PIPELINE_ID = pipeline.pipeline_id
 ```
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
