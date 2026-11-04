@@ -56,7 +56,7 @@ Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs
 
 ## Saved submissions and decision state
 
-1. **Engineering:** save the development notebook with a stable `PIPELINE_ID` and `PIPELINE_MODE = "Dry Run"`. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
+1. **Engineering:** save the development notebook with `PIPELINE_MODE = "Dry Run"`; FabricOps derives its identity from Fabric. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
 2. **Governance:** run `widget_activate_pipeline()` and click **Refresh submissions**. Select the **Saved pipeline submission**, choose **Approve**, and click **Review submission**. Review the notebook and checks, enter a review note, tick the confirmation, and click **Save Governance decision**.
 3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
 4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
