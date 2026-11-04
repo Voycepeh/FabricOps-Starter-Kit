@@ -1,0 +1,104 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "profile",
+  "position": {
+    "x": 25,
+    "y": 515,
+    "z": 0,
+    "height": 170,
+    "width": 1165,
+    "tabOrder": 540
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Column"
+                    }
+                  },
+                  "Property": "Column Name"
+                }
+              },
+              "queryRef": "Catalogue Column.Column Name",
+              "nativeQueryRef": "Column Name"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Average Null Percent"
+                }
+              },
+              "queryRef": "Measures.Average Null Percent",
+              "nativeQueryRef": "Average Null Percent"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Average Distinct Percent"
+                }
+              },
+              "queryRef": "Measures.Average Distinct Percent",
+              "nativeQueryRef": "Average Distinct Percent"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Current profiling snapshot\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Current profiling snapshot visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

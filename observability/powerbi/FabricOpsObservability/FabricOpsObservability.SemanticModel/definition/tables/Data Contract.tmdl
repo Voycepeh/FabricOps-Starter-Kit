@@ -1,0 +1,66 @@
+table 'Data Contract'
+	lineageTag: ae24c1ee-6337-56cb-8b1b-d6635dda7558
+
+	column 'Contract Key'
+		dataType: string
+		lineageTag: d5137c83-af32-5f5d-9b78-f2cdb9627dc6
+		sourceColumn: contract_key
+
+	column 'Contract ID'
+		dataType: string
+		lineageTag: 6aee4db2-64a1-556f-8904-b3ba96b8b3ff
+		sourceColumn: contract_id
+
+	column 'Contract Version'
+		dataType: int64
+		lineageTag: 25872ae3-f5f6-5e56-a3db-605d1ad312a7
+		sourceColumn: contract_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Table ID'
+		dataType: string
+		lineageTag: e45528cb-b7b6-5ae4-aacb-0ed6e1d99afa
+		sourceColumn: table_id
+
+	column 'Table Name'
+		dataType: string
+		lineageTag: 684ab279-7e8c-5498-afd1-78f71a9bcb84
+		sourceColumn: table_name
+
+	column 'Evidence Workspace ID'
+		dataType: string
+		lineageTag: 2657bcb7-ae79-5719-a61c-6c37a930f177
+		sourceColumn: evidence_workspace_id
+
+	column 'Status'
+		dataType: string
+		lineageTag: 0db8e4e2-456c-5979-81e3-15dd02cf93c5
+		sourceColumn: status
+
+	column 'Processing Strategy'
+		dataType: string
+		lineageTag: 7f136a64-d714-5766-9a0b-7d4a3dc8f2fe
+		sourceColumn: processing_strategy
+
+	column 'Guardrail Count'
+		dataType: int64
+		lineageTag: d163d97b-9519-5ab7-9aad-4f893aaa0d05
+		sourceColumn: guardrail_count
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Table Description'
+		dataType: string
+		lineageTag: 85f4b890-85ab-58b3-8a97-a63d31680479
+		sourceColumn: table_description
+
+	partition 'Data Contract' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(contract_id,'|',contract_version) contract_key,contract_id,contract_version,table_id,table_name,evidence_workspace_id,status,JSON_VALUE(contract_payload_json,'$.table.processing.load_strategy') processing_strategy,(SELECT COUNT(1) FROM OPENJSON(contract_payload_json,'$.guardrails')) guardrail_count,(SELECT TOP(1) JSON_VALUE(value,'$.value') FROM OPENJSON(contract_payload_json,'$.enrichment.table') WHERE JSON_VALUE(value,'$.enrichment_type')='Description') table_description FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT]",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

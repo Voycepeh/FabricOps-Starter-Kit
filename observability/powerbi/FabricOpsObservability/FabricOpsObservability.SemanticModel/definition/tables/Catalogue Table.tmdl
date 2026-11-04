@@ -1,0 +1,69 @@
+table 'Catalogue Table'
+	lineageTag: 780aec8a-fa1a-5c78-82fe-8e67005878de
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: 6cf9fac5-ab7b-579b-9458-eec762cc30de
+		sourceColumn: table_key
+
+	column 'Table ID'
+		dataType: string
+		lineageTag: 5bdebf3e-7970-5a72-9b14-7ac80f65ce79
+		sourceColumn: table_id
+
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: 7b5e6ff0-d920-52da-ab2b-34339f7fbada
+		sourceColumn: workspace_id
+
+	column 'Store Type'
+		dataType: string
+		lineageTag: b96cb91d-a388-5c12-9bcf-2292045cd094
+		sourceColumn: store_type
+
+	column 'Layer'
+		dataType: string
+		lineageTag: 2307d40c-644e-5515-b825-e18aaefda05e
+		sourceColumn: layer
+
+	column 'Schema Name'
+		dataType: string
+		lineageTag: e49a11af-123e-5eef-a008-7affb376c3b3
+		sourceColumn: schema_name
+
+	column 'Table Name'
+		dataType: string
+		lineageTag: f34d2848-1435-5853-bd78-b46fb31ef353
+		sourceColumn: table_name
+
+	column 'Load Strategy'
+		dataType: string
+		lineageTag: 649adf71-f436-535e-9cf8-8c16adfc61fa
+		sourceColumn: load_strategy
+
+	column 'First Profiled At'
+		dataType: dateTime
+		lineageTag: 786d5e6b-3101-5521-9112-5582d7369c66
+		sourceColumn: first_profiled_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Last Profiled At'
+		dataType: dateTime
+		lineageTag: 21e71de8-c6d0-5618-8af0-111d3bfb2ae3
+		sourceColumn: last_profiled_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Is Active'
+		dataType: boolean
+		lineageTag: 15ebd620-df47-58aa-9ebf-19d1c8797d8e
+		sourceColumn: is_active
+
+	partition 'Catalogue Table' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(workspace_id,'|',table_id) table_key,table_id,workspace_id,store_type,layer,schema_name,table_name,load_strategy,first_profiled_at,last_profiled_at,is_active FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_CATALOGUE] WHERE (metadata_level='table' OR column_id IS NULL OR column_id='') AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

@@ -1,0 +1,393 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "table_detail",
+  "displayName": "Table Detail",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "table_d",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tstate",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tguard",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tstate",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tguard",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "columns",
+      "type": "DataFilter"
+    }
+  ],
+  "visibility": "HiddenInViewMode",
+  "type": "Drillthrough",
+  "pageBinding": {
+    "name": "table_detail_drillthrough",
+    "type": "Drillthrough",
+    "referenceScope": "Default",
+    "acceptsFilterContext": "Default",
+    "parameters": [
+      {
+        "name": "Table Key",
+        "fieldExpr": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Catalogue Table"
+              }
+            },
+            "Property": "Table Key"
+          }
+        }
+      }
+    ]
+  }
+}

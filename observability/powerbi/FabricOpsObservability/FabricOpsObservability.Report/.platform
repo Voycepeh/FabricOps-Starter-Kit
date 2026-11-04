@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "FabricOps Observability",
+    "description": "FabricOps operational and governance observability."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "79e82d86-1d2e-5d3c-8d2c-8dcacbab7fe1"
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "operations",
+  "position": {
+    "x": 550,
+    "y": 270,
+    "z": 0,
+    "height": 210,
+    "width": 640,
+    "tabOrder": 820
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Operation Key"
+                }
+              },
+              "queryRef": "Run Operation.Operation Key",
+              "nativeQueryRef": "Operation Key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Table ID"
+                }
+              },
+              "queryRef": "Run Operation.Table ID",
+              "nativeQueryRef": "Table ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Pipeline Role"
+                }
+              },
+              "queryRef": "Run Operation.Pipeline Role",
+              "nativeQueryRef": "Pipeline Role"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Contract ID"
+                }
+              },
+              "queryRef": "Run Operation.Contract ID",
+              "nativeQueryRef": "Contract ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Contract Version"
+                }
+              },
+              "queryRef": "Run Operation.Contract Version",
+              "nativeQueryRef": "Contract Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Run Operation.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Started At"
+                }
+              },
+              "queryRef": "Run Operation.Started At",
+              "nativeQueryRef": "Started At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Completed At"
+                }
+              },
+              "queryRef": "Run Operation.Completed At",
+              "nativeQueryRef": "Completed At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Destination Kind"
+                }
+              },
+              "queryRef": "Run Operation.Destination Kind",
+              "nativeQueryRef": "Destination Kind"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Destination Table Name"
+                }
+              },
+              "queryRef": "Run Operation.Destination Table Name",
+              "nativeQueryRef": "Destination Table Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Fabric Item URL"
+                }
+              },
+              "queryRef": "Run Operation.Fabric Item URL",
+              "nativeQueryRef": "Fabric Item URL"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Operations and affected tables\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Operations and affected tables visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

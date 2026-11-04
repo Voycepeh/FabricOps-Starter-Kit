@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "activity",
+  "position": {
+    "x": 710,
+    "y": 485,
+    "z": 0,
+    "height": 200,
+    "width": 480,
+    "tabOrder": 1195
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Pipeline ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Pipeline ID",
+              "nativeQueryRef": "Pipeline ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Run ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Run ID",
+              "nativeQueryRef": "Run ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Started At"
+                }
+              },
+              "queryRef": "Pipeline Run.Started At",
+              "nativeQueryRef": "Started At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Pipeline Role"
+                }
+              },
+              "queryRef": "Run Operation.Pipeline Role",
+              "nativeQueryRef": "Pipeline Role"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Run Operation.Status",
+              "nativeQueryRef": "Status"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Related pipeline activity\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Related pipeline activity visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

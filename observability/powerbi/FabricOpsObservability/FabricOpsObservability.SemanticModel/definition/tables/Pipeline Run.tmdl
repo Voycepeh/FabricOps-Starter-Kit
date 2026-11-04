@@ -1,0 +1,100 @@
+table 'Pipeline Run'
+	lineageTag: 82e1f5a1-db40-558e-8530-985d673ccc07
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: feea18a7-4c1d-507c-b32f-8723affa1c01
+		sourceColumn: run_id
+
+	column 'Pipeline Key'
+		dataType: string
+		lineageTag: 5b453538-cb40-5ae0-804d-3868e7ec617a
+		sourceColumn: pipeline_key
+
+	column 'Pipeline ID'
+		dataType: string
+		lineageTag: c24b6b46-127e-5853-b367-275e89850191
+		sourceColumn: pipeline_id
+
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: 9ca6554d-0c68-5d5e-8e5b-d45056f12c0b
+		sourceColumn: workspace_id
+
+	column 'Started At'
+		dataType: dateTime
+		lineageTag: e21a1361-5337-594b-88a7-d60e8960dc46
+		sourceColumn: started_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Completed At'
+		dataType: dateTime
+		lineageTag: 305e94fe-ab41-5fb8-aa78-25b1cddb03dc
+		sourceColumn: completed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Run Date'
+		dataType: dateTime
+		lineageTag: abd2160d-7c3f-5bc4-b326-4975b544dfde
+		sourceColumn: run_date
+		formatString: yyyy-MM-dd
+
+	column 'Status'
+		dataType: string
+		lineageTag: 8d3d9ff9-f7fa-5d1f-adbd-7499834cc031
+		sourceColumn: status
+
+	column 'Latest Status'
+		dataType: string
+		lineageTag: f9caafa7-a3e6-50b4-9bc4-6067deb4f298
+		sourceColumn: latest_status
+
+	column 'Boundary Completed'
+		dataType: boolean
+		lineageTag: 5fa3d060-673d-5ea1-9f76-c4e4931b6b46
+		sourceColumn: boundary_completed
+
+	column 'Pipeline Version'
+		dataType: int64
+		lineageTag: 1613093f-552a-5424-a4a1-229c1a38b687
+		sourceColumn: pipeline_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Promotion ID'
+		dataType: string
+		lineageTag: 179fb49e-8b40-5381-ac01-4b5215742f66
+		sourceColumn: promotion_id
+
+	column 'Governed Notebook ID'
+		dataType: string
+		lineageTag: 36de1310-6bd9-56e7-a059-42bfc0b7f6d5
+		sourceColumn: governed_notebook_id
+
+	column 'Execution Mode'
+		dataType: string
+		lineageTag: 1edcb524-734b-58a6-a6c2-b7332e65a6f9
+		sourceColumn: execution_mode
+
+	column 'Failure Count'
+		dataType: int64
+		lineageTag: 73ac15f2-6e3d-55bd-8cf0-536f596d8766
+		sourceColumn: failure_count
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Fabric Notebook URL'
+		dataType: string
+		lineageTag: 41c98c8e-0ae3-502b-b7fc-86e68f6507d9
+		sourceColumn: fabric_notebook_url
+		dataCategory: WebUrl
+
+	partition 'Pipeline Run' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "WITH r AS (SELECT run_id,CONCAT(workspace_id,'|',pipeline_id) pipeline_key,pipeline_id,workspace_id,started_at,completed_at,CAST(started_at AS date) run_date,status,boundary_completed,pipeline_version,promotion_id,governed_notebook_id,execution_mode,failures,ROW_NUMBER() OVER(PARTITION BY workspace_id,pipeline_id ORDER BY started_at DESC,run_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] WHERE started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT run_id,pipeline_key,pipeline_id,workspace_id,started_at,completed_at,run_date,status,CASE WHEN rn=1 THEN status END latest_status,boundary_completed,pipeline_version,promotion_id,governed_notebook_id,execution_mode,(SELECT COUNT(1) FROM OPENJSON(failures)) failure_count,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM r",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

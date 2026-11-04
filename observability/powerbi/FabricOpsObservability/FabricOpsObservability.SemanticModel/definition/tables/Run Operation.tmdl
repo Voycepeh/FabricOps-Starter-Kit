@@ -1,0 +1,97 @@
+table 'Run Operation'
+	lineageTag: ac577b62-d389-5b4b-a2dd-efd3b6b8a98f
+
+	column 'Operation Key'
+		dataType: string
+		lineageTag: 8ae9d4e7-3525-538d-958b-31172dc90378
+		sourceColumn: operation_key
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: ece29265-181b-5bb7-b1c5-cc862b690ae1
+		sourceColumn: run_id
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: 66f96445-5336-52a3-9405-122d575d5ef8
+		sourceColumn: table_key
+
+	column 'Table ID'
+		dataType: string
+		lineageTag: e76eb008-2f24-5e14-bc6d-b16471a3d6ec
+		sourceColumn: table_id
+
+	column 'Pipeline Role'
+		dataType: string
+		lineageTag: e4c9707f-ac66-536c-8388-272bb7e7ca1f
+		sourceColumn: pipeline_role
+
+	column 'Contract ID'
+		dataType: string
+		lineageTag: a725f15a-3de9-5261-9bfb-74c0a554e57a
+		sourceColumn: contract_id
+
+	column 'Contract Version'
+		dataType: int64
+		lineageTag: 86ee0c20-a638-57cd-9622-2e0030291f73
+		sourceColumn: contract_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		lineageTag: e05a6696-7b11-54c2-be7d-73f5fb0a427f
+		sourceColumn: status
+
+	column 'Started At'
+		dataType: dateTime
+		lineageTag: 6c85563f-bd03-505e-aaab-8eeb6dce73d1
+		sourceColumn: started_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Completed At'
+		dataType: dateTime
+		lineageTag: 59e4e978-f98d-5ddf-983e-928795f82098
+		sourceColumn: completed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Destination Workspace ID'
+		dataType: string
+		lineageTag: 7dfcca86-d9c4-53d0-9fc0-e2a6b734e6a7
+		sourceColumn: destination_workspace_id
+
+	column 'Destination Item ID'
+		dataType: string
+		lineageTag: c827e794-e4f7-5cfd-84ad-6d6193892cc3
+		sourceColumn: destination_item_id
+
+	column 'Destination Kind'
+		dataType: string
+		lineageTag: 54df04b0-face-5a32-a5c6-6bcb356dd409
+		sourceColumn: destination_kind
+
+	column 'Destination Schema'
+		dataType: string
+		lineageTag: ae9c59af-37e7-5868-8321-f14113b1c36b
+		sourceColumn: destination_schema
+
+	column 'Destination Table Name'
+		dataType: string
+		lineageTag: 291d13b4-5cf7-5ee3-8269-8c844dd662e0
+		sourceColumn: destination_table_name
+
+	column 'Fabric Item URL'
+		dataType: string
+		lineageTag: 078824d7-0c0e-59bf-bbc2-171c1ef4f2d0
+		sourceColumn: fabric_item_url
+		dataCategory: WebUrl
+
+	partition 'Run Operation' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT o.operation_key,r.run_id,CONCAT(COALESCE(o.destination_workspace_id,r.workspace_id),'|',o.table_id) table_key,o.table_id,o.pipeline_role,o.contract_id,o.contract_version,o.status,o.started_at,o.completed_at,o.destination_workspace_id,o.destination_item_id,o.destination_kind,o.destination_schema,o.destination_table_name,CASE WHEN o.destination_workspace_id IS NULL OR o.destination_item_id IS NULL OR LOWER(o.destination_kind) NOT IN ('lakehouse','warehouse') THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',o.destination_workspace_id,'/',LOWER(o.destination_kind),'s/',o.destination_item_id) END fabric_item_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r CROSS APPLY OPENJSON(r.operations) WITH (operation_key nvarchar(400) '$.operation_key',table_id nvarchar(400) '$.table_id',pipeline_role nvarchar(50) '$.pipeline_role',contract_id nvarchar(400) '$.contract_id',contract_version bigint '$.contract_version',status nvarchar(80) '$.status',started_at datetime2 '$.started_at',completed_at datetime2 '$.completed_at',destination_workspace_id nvarchar(400) '$.destination.workspace_id',destination_item_id nvarchar(400) '$.destination.item_id',destination_kind nvarchar(80) '$.destination.kind',destination_schema nvarchar(400) '$.destination.schema',destination_table_name nvarchar(400) '$.destination.table_name') o WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

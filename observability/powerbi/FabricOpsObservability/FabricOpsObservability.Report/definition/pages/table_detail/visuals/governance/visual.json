@@ -1,0 +1,226 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "governance",
+  "position": {
+    "x": 605,
+    "y": 270,
+    "z": 0,
+    "height": 190,
+    "width": 585,
+    "tabOrder": 875
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contract Activation"
+                    }
+                  },
+                  "Property": "Activation ID"
+                }
+              },
+              "queryRef": "Contract Activation.Activation ID",
+              "nativeQueryRef": "Activation ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contract Activation"
+                    }
+                  },
+                  "Property": "Revision"
+                }
+              },
+              "queryRef": "Contract Activation.Revision",
+              "nativeQueryRef": "Revision"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contract Activation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Contract Activation.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Contract Activation"
+                    }
+                  },
+                  "Property": "Activated At"
+                }
+              },
+              "queryRef": "Contract Activation.Activated At",
+              "nativeQueryRef": "Activated At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement ID"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement ID",
+              "nativeQueryRef": "Agreement ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement Name"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement Name",
+              "nativeQueryRef": "Agreement Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Agreement Version"
+                }
+              },
+              "queryRef": "Data Agreement.Agreement Version",
+              "nativeQueryRef": "Agreement Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Contract Version"
+                }
+              },
+              "queryRef": "Data Contract.Contract Version",
+              "nativeQueryRef": "Contract Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Evidence Workspace ID"
+                }
+              },
+              "queryRef": "Data Contract.Evidence Workspace ID",
+              "nativeQueryRef": "Evidence Workspace ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Processing Strategy"
+                }
+              },
+              "queryRef": "Data Contract.Processing Strategy",
+              "nativeQueryRef": "Processing Strategy"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Guardrail Count"
+                }
+              },
+              "queryRef": "Data Contract.Guardrail Count",
+              "nativeQueryRef": "Guardrail Count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Table Description"
+                }
+              },
+              "queryRef": "Data Contract.Table Description",
+              "nativeQueryRef": "Table Description"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Activation, agreement and contract\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Activation, agreement and contract visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

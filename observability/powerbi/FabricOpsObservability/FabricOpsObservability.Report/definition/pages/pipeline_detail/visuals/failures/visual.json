@@ -1,0 +1,86 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "failures",
+  "position": {
+    "x": 605,
+    "y": 505,
+    "z": 0,
+    "height": 180,
+    "width": 585,
+    "tabOrder": 1110
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Failure"
+                    }
+                  },
+                  "Property": "Failure Code"
+                }
+              },
+              "queryRef": "Run Failure.Failure Code",
+              "nativeQueryRef": "Failure Code"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Failure"
+                    }
+                  },
+                  "Property": "Exception Type"
+                }
+              },
+              "queryRef": "Run Failure.Exception Type",
+              "nativeQueryRef": "Exception Type"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Safe failure diagnostics\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Safe failure diagnostics visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

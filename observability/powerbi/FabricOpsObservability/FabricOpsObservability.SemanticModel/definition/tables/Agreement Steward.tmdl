@@ -1,0 +1,27 @@
+table 'Agreement Steward'
+	lineageTag: 3a4daa0d-a181-5ee8-b4ec-67049509fa94
+
+	column 'Agreement Key'
+		dataType: string
+		lineageTag: 44163507-258d-5948-90d6-98d7e1b13f3e
+		sourceColumn: agreement_key
+
+	column 'Steward ID'
+		dataType: string
+		lineageTag: a3b201b1-a043-5efa-ac3b-8c61a31465a6
+		sourceColumn: steward_id
+
+	column 'Participation Role'
+		dataType: string
+		lineageTag: a53ff73b-39fd-59b8-97ee-fd3d215da6d5
+		sourceColumn: participation_role
+
+	partition 'Agreement Steward' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(agreement_id,'|',agreement_version) agreement_key,provider_steward_id steward_id,'Provider' participation_role FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_AGREEMENT] UNION ALL SELECT CONCAT(agreement_id,'|',agreement_version),recipient_steward_id,'Recipient' FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_AGREEMENT]",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

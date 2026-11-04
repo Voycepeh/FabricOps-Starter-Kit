@@ -1,0 +1,170 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "runs",
+  "position": {
+    "x": 25,
+    "y": 525,
+    "z": 0,
+    "height": 160,
+    "width": 1165,
+    "tabOrder": 550
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Pipeline ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Pipeline ID",
+              "nativeQueryRef": "Pipeline ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Run ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Run ID",
+              "nativeQueryRef": "Run ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Execution Mode"
+                }
+              },
+              "queryRef": "Pipeline Run.Execution Mode",
+              "nativeQueryRef": "Execution Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Pipeline Version"
+                }
+              },
+              "queryRef": "Pipeline Run.Pipeline Version",
+              "nativeQueryRef": "Pipeline Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Pipeline Run.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Started At"
+                }
+              },
+              "queryRef": "Pipeline Run.Started At",
+              "nativeQueryRef": "Started At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Failure Count"
+                }
+              },
+              "queryRef": "Pipeline Run.Failure Count",
+              "nativeQueryRef": "Failure Count"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Run Duration Minutes"
+                }
+              },
+              "queryRef": "Measures.Run Duration Minutes",
+              "nativeQueryRef": "Run Duration Minutes"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Operational exceptions \\u2014 drill through to Pipeline Detail\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Operational exceptions \\u2014 drill through to Pipeline Detail visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

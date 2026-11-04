@@ -1,0 +1,95 @@
+table 'Guardrail Result'
+	lineageTag: a0750854-3bd1-52f2-982c-453b43ae0918
+
+	column 'Guardrail Result ID'
+		dataType: string
+		lineageTag: d070452b-868d-57c4-9630-4526649ba000
+		sourceColumn: guardrail_result_id
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: d0eaeca8-7a5b-5cb6-b19b-958c85361791
+		sourceColumn: run_id
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: ecb68e87-cb9d-5031-8f04-500b9f28e971
+		sourceColumn: table_key
+
+	column 'Table ID'
+		dataType: string
+		lineageTag: f1067de5-d5a9-5138-8756-f621b4991778
+		sourceColumn: table_id
+
+	column 'Table Name'
+		dataType: string
+		lineageTag: 44159885-a060-5db8-9ea3-cc0ffdab20ca
+		sourceColumn: table_name
+
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: 99edc18c-ade3-5263-8ab6-21c40544896a
+		sourceColumn: workspace_id
+
+	column 'Contract ID'
+		dataType: string
+		lineageTag: 2f2fb020-1ff4-503e-96ed-6da65bc0fffd
+		sourceColumn: contract_id
+
+	column 'Contract Version'
+		dataType: int64
+		lineageTag: dfe94f45-0192-516f-aa2d-c1de1b3beb6b
+		sourceColumn: contract_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		lineageTag: 43ae6003-a906-519c-a2d1-2b7b633873f8
+		sourceColumn: status
+
+	column 'Can Continue'
+		dataType: boolean
+		lineageTag: cacbd5b9-a535-50f4-8afb-d09884c40f39
+		sourceColumn: can_continue
+
+	column 'Severity'
+		dataType: string
+		lineageTag: b70e1c42-0755-5bb4-bfc8-f8e019d4c22a
+		sourceColumn: severity
+
+	column 'Guardrail Type'
+		dataType: string
+		lineageTag: 289accc0-0266-58b1-b9d6-b20ad94e6599
+		sourceColumn: guardrail_type
+
+	column 'Rule Type'
+		dataType: string
+		lineageTag: 9b01e5df-6ce8-5d44-913d-9613e55b0949
+		sourceColumn: rule_type
+
+	column 'Action'
+		dataType: string
+		lineageTag: 9676ed16-5f33-5c6a-ac0c-a35bee5ed64f
+		sourceColumn: action
+
+	column 'Reason'
+		dataType: string
+		lineageTag: 92a2b7c8-8919-5db5-bdfd-457622846c29
+		sourceColumn: reason
+
+	column 'Committed At'
+		dataType: dateTime
+		lineageTag: 26f258bf-5c23-5ca4-b6bf-801f902eb347
+		sourceColumn: committed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	partition 'Guardrail Result' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT guardrail_result_id,run_id,CONCAT(workspace_id,'|',table_id) table_key,table_id,table_name,workspace_id,contract_id,contract_version,status,can_continue,severity,guardrail_type,rule_type,action,reason,_committed_at committed_at FROM [" & EngineeringSchemaSql & "].[METADATA_GUARDRAIL_RESULTS] WHERE _committed_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

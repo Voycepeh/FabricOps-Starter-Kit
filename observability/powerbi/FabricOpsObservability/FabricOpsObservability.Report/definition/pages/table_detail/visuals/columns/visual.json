@@ -1,0 +1,240 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "columns",
+  "position": {
+    "x": 25,
+    "y": 485,
+    "z": 0,
+    "height": 200,
+    "width": 660,
+    "tabOrder": 510
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Column"
+                    }
+                  },
+                  "Property": "Column ID"
+                }
+              },
+              "queryRef": "Catalogue Column.Column ID",
+              "nativeQueryRef": "Column ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Column"
+                    }
+                  },
+                  "Property": "Column Name"
+                }
+              },
+              "queryRef": "Catalogue Column.Column Name",
+              "nativeQueryRef": "Column Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Column"
+                    }
+                  },
+                  "Property": "Data Type"
+                }
+              },
+              "queryRef": "Catalogue Column.Data Type",
+              "nativeQueryRef": "Data Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Profile Snapshot ID"
+                }
+              },
+              "queryRef": "Profiled Column.Profile Snapshot ID",
+              "nativeQueryRef": "Profile Snapshot ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Row Count"
+                }
+              },
+              "queryRef": "Profiled Column.Row Count",
+              "nativeQueryRef": "Row Count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Null Count"
+                }
+              },
+              "queryRef": "Profiled Column.Null Count",
+              "nativeQueryRef": "Null Count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Null Percent"
+                }
+              },
+              "queryRef": "Profiled Column.Null Percent",
+              "nativeQueryRef": "Null Percent"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Distinct Count"
+                }
+              },
+              "queryRef": "Profiled Column.Distinct Count",
+              "nativeQueryRef": "Distinct Count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Distinct Percent"
+                }
+              },
+              "queryRef": "Profiled Column.Distinct Percent",
+              "nativeQueryRef": "Distinct Percent"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Minimum Value"
+                }
+              },
+              "queryRef": "Profiled Column.Minimum Value",
+              "nativeQueryRef": "Minimum Value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Median Value"
+                }
+              },
+              "queryRef": "Profiled Column.Median Value",
+              "nativeQueryRef": "Median Value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Maximum Value"
+                }
+              },
+              "queryRef": "Profiled Column.Maximum Value",
+              "nativeQueryRef": "Maximum Value"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Profiled At"
+                }
+              },
+              "queryRef": "Profiled Column.Profiled At",
+              "nativeQueryRef": "Profiled At"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Current column profiling\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Current column profiling visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

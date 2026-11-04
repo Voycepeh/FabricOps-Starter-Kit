@@ -1,0 +1,560 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "overview",
+  "displayName": "Overview",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "workspace",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "status",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "success",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "coverage",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "attention",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "health",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "health",
+      "target": "exceptions",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "pipelines",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "success",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "coverage",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "attention",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "exceptions",
+      "target": "health",
+      "type": "DataFilter"
+    }
+  ]
+}

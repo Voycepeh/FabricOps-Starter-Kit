@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "fabric_link",
+  "position": {
+    "x": 800,
+    "y": 135,
+    "z": 0,
+    "height": 105,
+    "width": 390,
+    "tabOrder": 935
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Pipeline ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Pipeline ID",
+              "nativeQueryRef": "Pipeline ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Pipeline Version"
+                }
+              },
+              "queryRef": "Pipeline Run.Pipeline Version",
+              "nativeQueryRef": "Pipeline Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Promotion ID"
+                }
+              },
+              "queryRef": "Pipeline Run.Promotion ID",
+              "nativeQueryRef": "Promotion ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Execution Mode"
+                }
+              },
+              "queryRef": "Pipeline Run.Execution Mode",
+              "nativeQueryRef": "Execution Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Fabric Notebook URL"
+                }
+              },
+              "queryRef": "Pipeline Run.Fabric Notebook URL",
+              "nativeQueryRef": "Fabric Notebook URL"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Selected execution and governed notebook\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Selected execution and governed notebook visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

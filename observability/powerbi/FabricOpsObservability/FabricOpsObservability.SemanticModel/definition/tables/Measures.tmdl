@@ -1,0 +1,49 @@
+table Measures
+	lineageTag: 00000000-0000-0000-0000-000000000001
+	measure 'Registered Pipelines' = DISTINCTCOUNT('Pipeline Registry'[Pipeline Key])
+		formatString: #,0
+	measure 'Monitored Tables' = CALCULATE(DISTINCTCOUNT('Catalogue Table'[Table Key]), 'Catalogue Table'[Is Active] <> FALSE())
+		formatString: #,0
+	measure 'Run Count' = COUNTROWS('Pipeline Run')
+		formatString: #,0
+	measure 'Successful Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"})
+		formatString: #,0
+	measure 'Failed Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] = "failed" || 'Pipeline Run'[Boundary Completed] = FALSE())
+		formatString: #,0
+	measure 'Pipeline Success Rate' = DIVIDE([Successful Runs], [Run Count])
+		formatString: #,0.0%;-#,0.0%;#,0.0%
+	measure 'Run Duration Minutes' = AVERAGEX(FILTER('Pipeline Run', NOT ISBLANK('Pipeline Run'[Completed At])), DIVIDE(DATEDIFF('Pipeline Run'[Started At], 'Pipeline Run'[Completed At], SECOND), 60.0))
+		formatString: #,0.0
+	measure 'Historical Median Duration Minutes' = MEDIANX(FILTER(ALLSELECTED('Pipeline Run'), NOT ISBLANK('Pipeline Run'[Completed At])), DIVIDE(DATEDIFF('Pipeline Run'[Started At], 'Pipeline Run'[Completed At], SECOND), 60.0))
+		formatString: #,0.0
+	measure 'Duration Deviation Percent' = DIVIDE([Run Duration Minutes]-[Historical Median Duration Minutes],[Historical Median Duration Minutes])
+		formatString: +#,0.0%;-#,0.0%;#,0.0%
+	measure 'Active Contracts' = CALCULATE(COUNTROWS('Contract Activation'), 'Contract Activation'[Status] = "active")
+		formatString: #,0
+	measure 'Contract Coverage' = DIVIDE(CALCULATE(DISTINCTCOUNT('Contract Activation'[Table Key]), 'Contract Activation'[Status] = "active"), [Monitored Tables])
+		formatString: #,0.0%;-#,0.0%;#,0.0%
+	measure 'Current Guardrail Failures' = CALCULATE(COUNTROWS('Guardrail Result'), 'Guardrail Result'[Status] IN {"failed", "error"} || 'Guardrail Result'[Can Continue] = FALSE())
+		formatString: #,0
+	measure 'Last Successful Execution' = CALCULATE(MAX('Pipeline Run'[Completed At]), 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}, 'Pipeline Run'[Boundary Completed] = TRUE())
+		formatString: yyyy-MM-dd HH:mm
+	measure 'Latest Pipeline Status' = COALESCE(MAX('Pipeline Run'[Latest Status]), "Unevaluated")
+		formatString: @
+	measure 'Agreements' = DISTINCTCOUNT('Data Agreement'[Agreement Key])
+		formatString: #,0
+	measure 'Latest Profiled At' = MAX('Catalogue Table'[Last Profiled At])
+		formatString: yyyy-MM-dd HH:mm
+	measure 'Profiled Tables' = COUNTROWS(FILTER(VALUES('Catalogue Table'[Table Key]), NOT ISBLANK([Latest Profiled At])))
+		formatString: #,0
+	measure 'Average Null Percent' = AVERAGE('Profiled Column'[Null Percent])
+		formatString: #,0.0
+	measure 'Average Distinct Percent' = AVERAGE('Profiled Column'[Distinct Percent])
+		formatString: #,0.0
+	measure 'Selected Contract' = COALESCE(SELECTEDVALUE('Data Contract'[Contract ID]) & " v" & FORMAT(SELECTEDVALUE('Data Contract'[Contract Version]), "0"), "No active contract")
+		formatString: @
+	measure 'Table Attention State' = VAR HasRuns=CALCULATE(COUNTROWS('Run Operation'))>0 VAR HasContract=CALCULATE(COUNTROWS('Contract Activation'),'Contract Activation'[Status]="active")>0 VAR HasFailure=[Current Guardrail Failures]>0||CALCULATE([Failed Runs])>0 VAR HasIncomplete=CALCULATE(COUNTROWS('Pipeline Run'),'Pipeline Run'[Boundary Completed]=FALSE())>0 RETURN SWITCH(TRUE(),HasFailure,"Failed",NOT HasContract,"Ungoverned",HasIncomplete,"Incomplete",NOT HasRuns,"Unevaluated","Successful")
+		formatString: @
+	measure 'Tables Requiring Attention' = COUNTROWS(FILTER(VALUES('Catalogue Table'[Table Key]),[Table Attention State]<>"Successful"))
+		formatString: #,0
+	partition Measures = calculated
+		mode: import
+		source = ROW("Value",1)

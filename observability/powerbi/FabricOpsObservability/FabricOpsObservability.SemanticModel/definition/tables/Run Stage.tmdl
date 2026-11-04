@@ -1,0 +1,37 @@
+table 'Run Stage'
+	lineageTag: dd84687a-ff68-58b5-8a4a-1e365fcca819
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: ecee9178-7b10-5624-9e0d-baabb5e99f71
+		sourceColumn: run_id
+
+	column 'Operation Key'
+		dataType: string
+		lineageTag: a9b2857e-12f8-5563-8bbd-0000a5c8810c
+		sourceColumn: operation_key
+
+	column 'Stage'
+		dataType: string
+		lineageTag: 3dc71044-c827-55d3-8b92-46946dc82de4
+		sourceColumn: stage
+
+	column 'Status'
+		dataType: string
+		lineageTag: b45cba78-0050-53be-a520-82dbaceca6a6
+		sourceColumn: status
+
+	column 'Evaluation Status'
+		dataType: string
+		lineageTag: eae39898-3fce-5126-a653-1127ee23210d
+		sourceColumn: evaluation_status
+
+	partition 'Run Stage' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT r.run_id,o.operation_key,s.stage,s.status,s.evaluation_status FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r CROSS APPLY OPENJSON(r.operations) WITH (operation_key nvarchar(400) '$.operation_key',stages nvarchar(max) '$.stages' AS JSON) o CROSS APPLY OPENJSON(o.stages) WITH (stage nvarchar(200) '$.stage',status nvarchar(80) '$.status',evaluation_status nvarchar(80) '$.evaluation_status') s WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

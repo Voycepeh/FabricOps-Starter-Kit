@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "FabricOps Observability",
+    "description": "Selective FabricOps observability semantic model."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "0698afa3-dd44-5238-927f-0b15d37c8751"
+  }
+}

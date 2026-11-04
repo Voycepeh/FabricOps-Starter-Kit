@@ -1,0 +1,114 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "stages",
+  "position": {
+    "x": 25,
+    "y": 505,
+    "z": 0,
+    "height": 180,
+    "width": 555,
+    "tabOrder": 530
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Stage"
+                    }
+                  },
+                  "Property": "Operation Key"
+                }
+              },
+              "queryRef": "Run Stage.Operation Key",
+              "nativeQueryRef": "Operation Key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Stage"
+                    }
+                  },
+                  "Property": "Stage"
+                }
+              },
+              "queryRef": "Run Stage.Stage",
+              "nativeQueryRef": "Stage"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Stage"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Run Stage.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Stage"
+                    }
+                  },
+                  "Property": "Evaluation Status"
+                }
+              },
+              "queryRef": "Run Stage.Evaluation Status",
+              "nativeQueryRef": "Evaluation Status"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Recorded stages \\u2014 no independent duration\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Recorded stages \\u2014 no independent duration visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "artifacts": [
+    {
+      "report": {
+        "path": "FabricOpsObservability.Report"
+      }
+    },
+    {
+      "semanticModel": {
+        "path": "FabricOpsObservability.SemanticModel"
+      }
+    }
+  ],
+  "settings": {
+    "enableAutoRecovery": true
+  }
+}

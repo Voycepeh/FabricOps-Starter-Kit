@@ -1,0 +1,37 @@
+table 'Catalogue Column'
+	lineageTag: f6ddf828-7ef8-52f3-99ce-94c9f2860e79
+
+	column 'Column Key'
+		dataType: string
+		lineageTag: 10abb15e-383f-51a4-b11f-986b5139f57f
+		sourceColumn: column_key
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: 31d98e30-a201-5c2c-9044-2399155890fb
+		sourceColumn: table_key
+
+	column 'Column ID'
+		dataType: string
+		lineageTag: d77d3fef-6526-500c-8539-7183b206e731
+		sourceColumn: column_id
+
+	column 'Column Name'
+		dataType: string
+		lineageTag: d60d9dd0-655c-5930-86a8-ddd36bacd373
+		sourceColumn: column_name
+
+	column 'Data Type'
+		dataType: string
+		lineageTag: 126ce46c-8656-54c1-b886-9e89135a0e0c
+		sourceColumn: data_type
+
+	partition 'Catalogue Column' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,CONCAT(workspace_id,'|',table_id) table_key,column_id,column_name,data_type FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_CATALOGUE] WHERE column_id IS NOT NULL AND column_id<>'' AND is_active=1 AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows
