@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
+    _ACTIVE_PIPELINE,
     finalize_pipeline_run,
 )
 
@@ -219,7 +220,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     """
     if pipeline is None:
-        pipeline = current_pipeline_session()
+        active = _ACTIVE_PIPELINE.get()
+        if active is not None and not active.closed:
+            pipeline = current_pipeline_session()
     if pipeline is None:
         if failed:
             raise ValueError("failed=True requires an active PipelineSession.")
