@@ -866,7 +866,6 @@ def widget_data_contract(
         Initial exact lifecycle version. If omitted, the newest version is selected.
     context : object, optional
         FabricOps runtime context normally established by ``00_env_config``.
-
     ai_model : str, optional
         Built-in Fabric model: ``gpt-5-mini`` or ``gpt-5.1``. Overrides configuration.
     ai_reasoning_effort : str, optional
@@ -1951,6 +1950,8 @@ def widget_data_contract(
                     else "Choose Run with AI suggestions above."
                 )
                 table_description_ai.value = f"<p>{message}</p>"
+            elif not ai_state["table"].get("description") and str(table_description.value or "").strip():
+                table_description_ai.value = "<p>Saved description retained. Use Re-run to request a new suggestion.</p>"
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description"), show_heading=False

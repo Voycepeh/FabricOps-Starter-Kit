@@ -1433,6 +1433,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert all(not drafts for drafts in state["_column_drafts"].values())
     assert state["_ai_suggestions"]
     assert captures["grain"]
+    assert "Saved description retained" in controls["table_description_ai"].value
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
     assert controls["selector_panel"].layout.display == "none"

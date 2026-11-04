@@ -179,11 +179,14 @@ def _invoke_fabric_ai(
         raise AIConfigurationError("Could not apply Fabric Runtime 2.0 AI Functions settings.") from exc
     try:
         spark = spark_session if spark_session is not None else get_spark_session()
-        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
     except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
         raise AIConfigurationError(
             "A running Microsoft Fabric Spark session is required for AI suggestions."
         ) from exc
+    try:
+        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
+    except Exception as exc:
+        raise AIExecutionError("Could not create the Fabric AI request DataFrame.") from exc
     ai = getattr(frame, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
         raise AIConfigurationError(
@@ -248,7 +251,9 @@ def suggest_enrichment(
     """Return one transient AI Description suggestion."""
     if not str(description_prompt).strip():
         raise AIConfigurationError("An AI Enrichment description prompt is required.")
-    call = (invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation))
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
     context_json = json.dumps(context, sort_keys=True, default=str)
     guidance = ""
     if str(context.get("metadata_level") or "") == "table":
@@ -380,7 +385,10 @@ def suggest_sensitive_data(
         "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
-    raw = str((invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation))(instruction)).strip()
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
     candidates = _parse_ai_json(raw, "Sensitive Data")
     if not isinstance(candidates, list):
         raise ValueError("AI Sensitive Data suggestion must be a JSON list.")
@@ -477,8 +485,11 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = None, ai_config: dict[str, Any] | None = None,
-    spark_session: Any = None, usage: list[dict[str, Any]] | None = None, operation: str = "suggest_grain_key") -> dict[str, Any]:
+def suggest_grain_key(
+    context: dict[str, Any], *, prompt: str, invoke: Any = None,
+    ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_grain_key",
+) -> dict[str, Any]:
     """Return one transient grain wording suggestion grounded by profiled key evidence."""
     if not str(prompt).strip():
         raise AIConfigurationError("An AI Grain prompt is required.")
@@ -521,7 +532,10 @@ Profiled row-key candidate:
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation))(instruction)).strip()
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
     candidate = _parse_ai_json(raw, "Grain")
     if not isinstance(candidate, dict):
         raise ValueError("AI Grain suggestion must be a JSON object.")
@@ -746,7 +760,10 @@ Do not force a known pattern when it would weaken, broaden, or otherwise change 
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation))(instruction)).strip()
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
     if raw.startswith("```"):
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
