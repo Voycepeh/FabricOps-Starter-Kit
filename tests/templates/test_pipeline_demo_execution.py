@@ -1,7 +1,6 @@
 """Execute current demo cells with physical Fabric/Spark boundaries replaced."""
 import ast
 import inspect
-import uuid
 from pathlib import Path
 from unittest.mock import MagicMock, Mock
 from types import SimpleNamespace
@@ -13,23 +12,11 @@ ROOT = Path(__file__).resolve().parents[2]
 DEMOS = [ROOT/'templates/notebooks/02_pipeline.ipynb', *sorted((ROOT/'templates/DemoData').glob('02*.ipynb'))]
 
 
-def _stable_pipeline_id(notebook):
-    """Return and validate the literal UUIDv4 configured by a persistent template."""
-    setup_cell = next(cell for cell in notebook.cells if cell.cell_type == 'code' and 'setup_pipeline(' in cell.source)
-    tree = ast.parse(setup_cell.source)
-    assignment = next(node for node in tree.body if isinstance(node, ast.Assign)
-                       and any(isinstance(target, ast.Name) and target.id == 'PIPELINE_ID' for target in node.targets))
-    pipeline_id = ast.literal_eval(assignment.value)
-    parsed = uuid.UUID(pipeline_id)
-    assert str(parsed) == pipeline_id and parsed.version == 4
-    return pipeline_id
-
 
 @pytest.mark.parametrize('path', DEMOS, ids=lambda path: path.stem)
 def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     """Independent demo notebooks retain their ETL and avoid lifecycle plumbing."""
     notebook = nbformat.read(path, as_version=4)
-    pipeline_id = _stable_pipeline_id(notebook)
     frame = MagicMock()
     reads, writes = [], []
     notebook_setup = Mock()
@@ -55,8 +42,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
     notebook_setup.assert_called_once_with()
     observation = dict(observe_source=False, source_observation_days=None) if path.stem in {'02_pipeline', '02B_incremental_append_demo'} else {}
-    setup.assert_called_once_with(pipeline_id=pipeline_id, pipeline_mode='Ungoverned', **observation)
-    assert namespace['PIPELINE_ID'] == setup.return_value.pipeline_id
+    setup.assert_called_once_with(pipeline_mode='Ungoverned', **observation)
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
@@ -66,25 +52,6 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     count, modes = expected[path.stem]
     assert len(reads) == count and [mode for name, mode in writes] == modes
 
-
-def test_pipeline_templates_use_distinct_stable_uuidv4_ids():
-    """Each maintained pipeline template has its own stable persistent identity."""
-    pipeline_ids = [_stable_pipeline_id(nbformat.read(path, as_version=4)) for path in DEMOS]
-    assert len(pipeline_ids) == len(set(pipeline_ids))
-
-
-def test_current_pipeline_docs_do_not_omit_persistent_ids():
-    """Current documentation must not teach the removed automatic-registration flow."""
-    paths = [ROOT / 'src/README.md', ROOT / 'templates/notebooks/README.md',
-             ROOT / 'docs/guided-demo/02-build-and-run-etl.md',
-             ROOT / 'docs/guided-demo/02A-full-refresh-demo.md',
-             ROOT / 'docs/guided-demo/02B-build-and-run-incremental-append-etl.md',
-             ROOT / 'docs/guided-demo/02C-build-and-run-scd-etl.md']
-    for path in paths:
-        source = path.read_text(encoding='utf-8')
-        assert 'PIPELINE_ID = None' not in source, path
-        assert 'setup_pipeline(pipeline_mode="Ungoverned")' not in source, path
-        assert 'registers or recovers this notebook automatically' not in source, path
 
 
 @pytest.mark.parametrize('path', DEMOS, ids=lambda path: path.stem)
@@ -106,7 +73,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == 1
     assert len(calls['finalize_pipeline']) == 1
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_id','pipeline_mode'}
+    expected_setup = {'pipeline_mode'}
     if path.stem in {'02_pipeline', '02B_incremental_append_demo'}:
         expected_setup |= {'observe_source', 'source_observation_days'}
     assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == expected_setup
