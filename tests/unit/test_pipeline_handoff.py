@@ -21,7 +21,7 @@ POLICY_REVIEW = service.review_submission_policy
 def package_candidate():
     """Build a complete portable candidate with saved code and recorded operations."""
     source = notebook()
-    snapshot, parameters = service.promoted_notebook(source, PIPELINE_ID)
+    snapshot, parameters = service.promoted_notebook(source)
     op = operation()
     run_op = {key: value for key, value in op.items() if key != "requested_schema"}
     run_op.update(contract_id=None, contract_version=None, payload_sha256=None, status="succeeded",
@@ -33,7 +33,7 @@ def package_candidate():
         pipeline_version=None, promotion_id=None, governed_notebook_id=None,
         execution_identity="engineer", run_schema_version=3)
     manifest = dict(format_version=1, submission_id=str(uuid4()), pipeline_id=PIPELINE_ID,
-        source_workspace_id="DEV", source_notebook_id="development", execution_workspace_id="DEV",
+        source_workspace_id="DEV", source_notebook_id=PIPELINE_ID, execution_workspace_id="DEV",
         source_snapshot_sha256=service.hashlib.sha256(source).hexdigest(), executed_snapshot_sha256=service.hashlib.sha256(source).hexdigest(),
         source_executable_sha256=service.notebook_executable_digest(source), executed_executable_sha256=service.notebook_executable_digest(source), snapshot_sha256=service.hashlib.sha256(snapshot).hexdigest(),
         executable_sha256=service.notebook_executable_digest(snapshot), operations=[op], tested_operations=[op], parameters=parameters,
