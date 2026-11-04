@@ -54,10 +54,8 @@ context = setup_notebook(
 PIPELINE_ID = "c9f14e82-3b67-4a0d-8e25-6d1f9b43c708"
 PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
 )
-PIPELINE_ID = pipeline.pipeline_id
 ```
 
 
