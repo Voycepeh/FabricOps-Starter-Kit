@@ -219,7 +219,7 @@ def test_fabric_rejects_foreign_operation_location_before_sending_token(monkeypa
 
 def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
     """Saved literal scaffold constants become exact startup literals in the Governed copy."""
-    source = 'PIPELINE_MODE = "Dry Run"\\npipeline = setup_pipeline(pipeline_mode=PIPELINE_MODE)\\n'
+    source = 'PIPELINE_MODE = "Dry Run"\npipeline = setup_pipeline(pipeline_mode=PIPELINE_MODE)\n'
     promoted, parameters = service.promoted_notebook(notebook(source))
     saved = json.loads(promoted)["cells"][1]["source"]
     assert "pipeline_id" not in saved
