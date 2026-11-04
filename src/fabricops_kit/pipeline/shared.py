@@ -5885,7 +5885,7 @@ def pipeline_record_content(value):
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
     row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
-    provenance = ("execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
+    provenance = ("pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
     if row.get("run_schema_version") is None:
         if any(row.get(key) is not None for key in provenance):
             raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
