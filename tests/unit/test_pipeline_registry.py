@@ -1,6 +1,6 @@
 """Fabric notebook identity is resolved internally through promotion Registry rows."""
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 import pytest
 
 from fabricops_kit import setup_pipeline
@@ -16,7 +16,7 @@ def test_setup_delegates_identity_resolution_to_registry(monkeypatch):
     launch = Mock(return_value=SimpleNamespace(plan=SimpleNamespace(evidence={})))
     monkeypatch.setattr(shared, "start_pipeline_session", launch)
     setup_pipeline(pipeline_mode="Ungoverned")
-    launch.assert_called_once_with("Ungoverned", inspector=pytest.ANY)
+    launch.assert_called_once_with("Ungoverned", inspector=ANY)
 
 
 def test_fabric_notebook_guid_is_valid_identity():
