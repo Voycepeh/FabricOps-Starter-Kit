@@ -375,7 +375,6 @@ Configure this independently of each Read Mode near pipeline setup:
 
 ```python
 pipeline = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
     pipeline_mode="Ungoverned",
     observe_source=False,       # True requests observation in this execution.
     source_observation_days=7,   # None disables automatic observation.
