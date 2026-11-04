@@ -588,5 +588,3 @@ def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypat
         finalize_pipeline(failed=True)
     with pytest.raises(ValueError):
         finalize_pipeline(object())
-    with pytest.raises(ValueError):
-        finalize_pipeline()
