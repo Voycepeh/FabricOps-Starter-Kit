@@ -17,7 +17,7 @@ Record commit/version, date, tester, disposable workspace labels and outcomes. K
 | Files permissions | Engineering accesses only explicit operational Files paths; schema permissions do not confer Files access; no unrestricted parent grant | Pending |
 | Group/default-role evaluation | No indirect Contributor/Member/Admin, item-wide Write or broad default role bypasses intended restrictions; propagation delays are observed | Pending |
 | Metadata setup | Owner creates missing tables and validates Serializable properties; Engineering need not initialize Governance tables | Pending |
-| Independent handoff | Complete saved-definition and Dry Run claims persist, export/import succeeds across unrelated sessions, changed accepted content rejects | Pending |
+| Independent handoff | Finalize saves the completed captured Dry Run package and displays its download and deployment/recovery controls; repeated finalization reuses the package; Governance import works in an unrelated session and changed accepted content rejects | Pending |
 | Independent decision | Governance imports/reviews/approves under its own identity; import and approval create no Engineering notebook | Pending |
 | Engineering deployment | Only an authorized Engineering operator can create the separate item; approval and deployment preserve distinct identities | Pending |
 | Notebook Get/Create Definition | Full `.ipynb` including metadata, Markdown and code survives exact byte readback; normalization or unsupported parts fails closed | Pending |
@@ -32,10 +32,10 @@ Record commit/version, date, tester, disposable workspace labels and outcomes. K
 | Physical publication | Old/new admitted versions and Ungoverned/Contract Activation mutations use the existing exclusive target claims; interrupted claims require reconciliation | Pending |
 | Revocation racing deployment | Staged artifacts/deployment records confer no authority after revocation; subsequent admission and managed boundaries fail closed | Pending |
 | Manual/scheduled execution | Identical approval/integrity checks; superseded notebook schedules reject; Engineering explicitly rebinds schedules | Pending |
-| Parameter overrides | Changed code, Markdown, SQL, setup parameters or physical operations reject; transient outputs/counts may change during execution without changing implementation | Pending |
+| Parameter overrides | Changed code, SQL, setup parameters, behavior metadata or physical operations reject; Markdown, raw documentation cells, cell IDs, outputs, counts and transient timing/UI metadata may change during execution | Pending |
 | Captured prior authority | Already admitted superseded implementations finish under captured versions and Contracts; new starts use current authority | Pending |
 | Rollback | Separate Governance decision returns to retained code through a new version, with immutable lineage | Pending |
-| Restoration | Separate exact recovery decision required; stale target/approval rejects; modified copy retained before overwrite | Pending |
+| Restoration | Separate exact recovery decision and explicit action beneath Finalize required; Setup blocks on drift without automatic repair; stale target/approval rejects; modified copy retained before overwrite | Pending |
 | Processing regressions | Standard 02 and 02A/02B/02C, Ungoverned, released v0.3.1 metadata, row hashes, append/incremental/SCD, observations and receipts remain functional | Pending |
 | TOCTOU and direct bypass | Saved versus executing code and privileged direct Spark bypass are demonstrated and residual limits explicitly accepted | Pending |
 

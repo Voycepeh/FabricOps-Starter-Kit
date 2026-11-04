@@ -5711,7 +5711,6 @@ def main() -> None:
                 "pipeline_read",
                 "profile_table",
                 "resolve_table_id",
-                "widget_deploy_pipeline",
             },
             "open": False,
         },

@@ -4,7 +4,7 @@ Records Engineering deployment of exact independently approved notebook snapshot
 
 ## Writer functions
 
-* [`widget_deploy_pipeline`](../../api/reference/widget_deploy_pipeline.md)
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
 
 ## Used in Workflow Template
 

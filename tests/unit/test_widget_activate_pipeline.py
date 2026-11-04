@@ -54,13 +54,13 @@ def test_governance_decision_change_invalidates_review(authority, monkeypatch):
 
 def test_engineering_deployment_is_explicit_and_cannot_decide(authority, monkeypatch):
     """Engineering reviews persisted Governance authority in an independent widget session."""
-    module = importlib.import_module("fabricops_kit.widgets.widget_deploy_pipeline")
+    module = importlib.import_module("fabricops_kit.activated_pipeline.shared")
     decision = approved(authority)
     render(monkeypatch, module, authority.eng)
     deploy = Mock(return_value={"status": "active"})
     monkeypatch.setattr(module, "deploy_approved_submission", deploy)
-    ui = module.widget_deploy_pipeline(pipeline_id=decision["pipeline_id"])
-    assert ui["controls"]["export"].disabled
+    ui = module.display_pipeline_handoff(pipeline_id=decision["pipeline_id"])
+    assert "export" not in ui["controls"]
     assert ui["controls"]["deploy"].disabled
     with pytest.raises(ValueError, match="Review"):
         ui["actions"]["deploy"]()
@@ -70,3 +70,23 @@ def test_engineering_deployment_is_explicit_and_cannot_decide(authority, monkeyp
     assert ui["actions"]["deploy"]()["status"] == "active"
     assert deploy.call_args.args == (decision["approval_id"],)
     assert "decide" not in ui["actions"]
+
+
+def test_finalize_handoff_exports_once_and_reopens_same_package(authority, monkeypatch):
+    """Repeated Finalize rendering reuses submission identity without creating notebooks."""
+    from types import SimpleNamespace
+    module = importlib.import_module("fabricops_kit.activated_pipeline.shared")
+    render(monkeypatch, module, authority.eng)
+    package = package_candidate()
+    export = Mock(return_value=package)
+    deploy = Mock()
+    monkeypatch.setattr(module, "export_pipeline_submission", export)
+    monkeypatch.setattr(module, "deploy_approved_submission", deploy)
+    session = SimpleNamespace(plan=SimpleNamespace(evidence={}, pipeline_id=package["manifest"]["pipeline_id"]), spark=object())
+    first = module.display_pipeline_handoff(dry_run=session, context=authority.eng)
+    second = module.display_pipeline_handoff(dry_run=session, context=authority.eng)
+    assert first["state"]["package"] == second["state"]["package"] == package
+    assert first["controls"]["package"].value
+    assert dict(second["controls"]["intent"].options)["Restore the active notebook"] == "restore"
+    export.assert_called_once()
+    deploy.assert_not_called()

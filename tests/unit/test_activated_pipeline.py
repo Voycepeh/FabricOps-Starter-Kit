@@ -199,6 +199,6 @@ def test_redundant_public_approval_functions_are_removed():
     """Unreleased standalone approval/mutation functions have no public aliases."""
     import fabricops_kit
     from fabricops_kit.public_api import RELEASE_PUBLIC_API
-    for name in ("activate_data_contract", "promote_pipeline", "restore_pipeline"):
+    for name in ("activate_data_contract", "promote_pipeline", "restore_pipeline", "widget_deploy_pipeline"):
         assert not hasattr(fabricops_kit, name)
         assert not any(path.endswith("." + name) for path in RELEASE_PUBLIC_API)

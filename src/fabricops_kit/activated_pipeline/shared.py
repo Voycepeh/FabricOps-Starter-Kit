@@ -549,6 +549,7 @@ def notebook_executable_digest(raw):
 
     Conservatively retain all notebook and code-cell metadata except execution
     timing and output UI state. Parameter-cell source and tags remain hashed.
+    Markdown/raw documentation cells and code-cell IDs are excluded.
     Imported packages and referenced notebooks are deliberately not frozen.
     """
     notebook = _strict_package_json(raw)
@@ -571,27 +572,6 @@ def notebook_executable_digest(raw):
         raise ValueError("Notebook snapshot requires executable code.")
     metadata = {key: value for key, value in notebook.get("metadata", {}).items() if key not in {"widgets", "signature"}}
     return manifest_digest({"code": code, "metadata": metadata, "nbformat": notebook["nbformat"]})
-
-
-def notebook_implementation_digest(raw):
-    """Verify the complete saved implementation while allowing transient execution output.
-
-    Full archived bytes remain exact. Running a notebook may change code-cell
-    outputs, execution counts and execution-only UI/timing metadata without
-    changing its approved implementation. Markdown and all behavior metadata stay
-    bound; imported dependencies remain outside the notebook snapshot.
-    """
-    notebook_executable_digest(raw)
-    notebook = _strict_package_json(raw)
-    for cell in notebook["cells"]:
-        if cell["cell_type"] == "code":
-            cell.pop("outputs", None)
-            cell.pop("execution_count", None)
-            cell["metadata"] = {key: value for key, value in cell.get("metadata", {}).items()
-                if key not in {"execution", "collapsed", "scrolled", "ExecuteTime"}}
-    notebook["metadata"] = {key: value for key, value in notebook.get("metadata", {}).items()
-        if key not in {"widgets", "signature"}}
-    return manifest_digest(notebook)
 
 
 def promoted_notebook(raw, pipeline_id):
@@ -1231,7 +1211,7 @@ def verify_promotion_integrity(row, *, context, spark_session=None, captured=Fal
         saved = FabricNotebookClient().definition(row["execution_workspace_id"], row["governed_notebook_id"])
     except Exception as exc:
         raise RuntimeError("Governed notebook verifier unavailable: cannot read the saved definition.") from exc
-    if notebook_implementation_digest(saved) != notebook_implementation_digest(raw) or notebook_executable_digest(saved) != row["executable_sha256"]:
+    if notebook_executable_digest(saved) != row["executable_sha256"]:
         raise RuntimeError("Governed integrity mismatch: saved code or parameters changed. Restore the exact snapshot or Dry Run and promote a new version.")
     operations = activation_operations(row["operations_json"])
     if manifest_digest(operations) != row["bindings_sha256"] or resolve_promoted_operations(operations, context=context, spark_session=spark) != operations:
@@ -1354,7 +1334,7 @@ def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_vers
         if (receipt["restoration_approval_id"] != approval_id or receipt["promotion_id"] != row["promotion_id"] or
                 receipt["pipeline_version"] != row["pipeline_version"] or receipt["snapshot_sha256"] != row["snapshot_sha256"]):
             raise ValueError("Restoration receipt differs from the authorized implementation.")
-        if notebook_implementation_digest(changed) != notebook_implementation_digest(raw):
+        if notebook_executable_digest(changed) != notebook_executable_digest(raw):
             raise ValueError("Restoration authorization was already used; request a fresh decision for new modifications.")
         verify_promotion_integrity(row, context=context, spark_session=spark, captured=True)
         return receipt
@@ -1437,3 +1417,119 @@ def persist_engineering_dry_run(plan, *, spark_session=None):
     if snapshot_file(uri, spark_session=spark, content=None if exists else content) != content:
         raise RuntimeError("Persisted Engineering Dry Run identity changed content.")
     return uri
+
+
+def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
+    """Display Finalize's Engineering submission, deployment and recovery controls.
+
+    Persist a completed Dry Run package before rendering. Repeated finalization
+    reuses that package; only explicit deployment/recovery actions mutate notebooks.
+    """
+    import base64
+    import html
+    from fabricops_kit.widgets import shared as widget_shared
+
+    package = None
+    if dry_run is not None:
+        package = dry_run.plan.evidence.get("submission_package")
+        if package is None:
+            _, workspace, _ = resolve_fabric_context(context=context)
+            package = export_pipeline_submission(dry_run, destination_workspace_id=workspace,
+                context=context, spark_session=dry_run.spark)
+            dry_run.plan.evidence["submission_package"] = package
+        print("Dry Run submission saved. Download the JSON below for Governance activation.")
+        print("After approval, refresh these controls; deploy explicitly, then update your schedule target.")
+    startup = widget_shared.WidgetStartup("Engineering deployment", tone="engineering", reserved_height="560px")
+    config, workspace, runtime = resolve_fabric_context(context=context)
+    routed = {**runtime, "config": config, "scope_workspace_id": workspace}
+    spark = get_spark_session(context=runtime)
+    widgets = widget_shared.require_ipywidgets()
+    if pipeline_id is None and dry_run is not None:
+        pipeline_id = dry_run.plan.pipeline_id
+    approval = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
+    retained = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
+    intent = widgets.Dropdown(options=[("Rollback through a new version", "rollback"), ("Restore the active notebook", "restore")], layout=widgets.Layout(width="100%"))
+    retained_button = widgets.Button(description="Export recovery submission")
+    review_button = widgets.Button(description="Review approved deployment")
+    refresh_button = widgets.Button(description="Refresh approvals")
+    deploy_button = widgets.Button(description="Deploy approved notebook", button_style="primary", disabled=True)
+    confirm = widgets.Checkbox(description="Deploy this exact approved notebook in this workspace", indent=False)
+    report, download = widgets.HTML(), widgets.HTML()
+    exported_json = widgets.Textarea(layout=widgets.Layout(width="100%", height="120px"))
+    state = {"package": None, "approval_id": None, "result": None}
+    def invalidate(_event=None):
+        state["approval_id"] = None
+        confirm.value = False
+        deploy_button.disabled = True
+    def refresh():
+        rows = read_approvals(context=routed, spark_session=spark)
+        options = []
+        for row in rows:
+            if row["status"] != "approved" or row["execution_workspace_id"] != workspace or pipeline_id and row["pipeline_id"] != pipeline_id:
+                continue
+            try:
+                authoritative_approval(row["approval_id"], context=routed, spark_session=spark)
+            except ValueError:
+                continue
+            options.append((f'{row["pipeline_id"]} / {row["submission_id"]} · {row["decision_kind"]}', row["approval_id"]))
+        approval.options = [("Select a Governance approval", None)] + options
+        records = [row for row in read_registry(context=routed, spark_session=spark)
+            if row["execution_workspace_id"] == workspace and (not pipeline_id or row["pipeline_id"] == pipeline_id)]
+        retained.options = [(f'{row["pipeline_id"]} v{row["pipeline_version"]} · {row["status"]}', row["promotion_id"]) for row in records]
+        retained_button.disabled = not records
+        invalidate()
+        return rows
+    def show_package(package):
+        state["package"] = package
+        exported_json.value = json.dumps(package, sort_keys=True, ensure_ascii=False)
+        encoded = base64.b64encode(json.dumps(package, sort_keys=True, ensure_ascii=False).encode()).decode()
+        download.value = '<a download="fabricops-submission.json" href="data:application/json;base64,' + encoded + '">Download immutable submission package</a><p>Import this file in the Governance workspace. A digest identifies content; it does not certify testing outcomes.</p>'
+        return package
+    def export_recovery():
+        return show_package(export_retained_submission(retained.value, intent=intent.value, context=routed, spark_session=spark))
+    def review():
+        result = authoritative_approval(approval.value, context=routed, spark_session=spark)
+        if result["execution_workspace_id"] != workspace:
+            raise ValueError("Select an approval for this Engineering workspace.")
+        state["approval_id"] = result["approval_id"]
+        state["result"] = None
+        confirm.value = False
+        report.value = "<pre style='white-space:pre-wrap;max-height:480px;overflow:auto'>" + html.escape(json.dumps(result, indent=2, default=str)) + "</pre>"
+        return result
+    def deploy():
+        if not confirm.value or state["approval_id"] != approval.value or state["approval_id"] is None:
+            raise ValueError("Review and explicitly confirm an authoritative Governance approval first.")
+        result = deploy_approved_submission(state["approval_id"], context=routed, spark_session=spark)
+        state["result"] = result
+        deploy_button.disabled = True
+        report.value += "<p>Approved operation completed. Governed execution remains gated pending signed-in Fabric acceptance. Update engineer-owned schedule targets explicitly.</p>"
+        return result
+    def run(action, button):
+        button.disabled = True
+        try:
+            action()
+        except Exception as exc:
+            report.value += "<p role='alert'>" + html.escape(str(exc)) + "</p>"
+        finally:
+            button.disabled = False
+            deploy_button.disabled = not confirm.value or state["approval_id"] is None or state["result"] is not None
+    approval.observe(invalidate, names="value")
+    confirm.observe(lambda _event: setattr(deploy_button, "disabled", not confirm.value or state["approval_id"] is None or state["result"] is not None), names="value")
+    for button, action in ((retained_button, export_recovery), (review_button, review), (refresh_button, refresh), (deploy_button, deploy)):
+        button.on_click(lambda _button, action=action, button=button: run(action, button))
+    if dry_run is not None:
+        show_package(package)
+    with startup.phase("metadata_loading", "Loading read-only Governance approvals and retained Engineering deployments…"):
+        refresh()
+    root = widget_shared.form_page(widgets, title="Dry Run submission and deployment" if dry_run is not None else "Pipeline deployment and recovery", tone="engineering",
+        description="Download the completed submission for Governance. After approval, refresh and explicitly deploy the approved snapshot.", children=[
+            download,
+            widgets.HTML("<label>Copy portable submission JSON for Governance import</label>"), exported_json,
+            widgets.HTML("<label>Retained implementation</label>"), retained,
+            widgets.HTML("<label>Recovery operation to request</label>"), intent, retained_button,
+            widgets.HTML("<label>Authoritative Governance approval for this workspace</label>"), approval,
+            refresh_button, review_button, report, confirm, deploy_button])
+    startup.display(root)
+    return {"widget": root, "state": state, "controls": {"approval": approval, "retained": retained,
+        "intent": intent, "package": exported_json, "confirm": confirm, "deploy": deploy_button},
+        "actions": {"export_retained": export_recovery, "review": review, "deploy": deploy, "refresh": refresh}}

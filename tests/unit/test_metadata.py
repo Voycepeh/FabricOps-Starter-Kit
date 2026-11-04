@@ -218,7 +218,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'orchestrate_write',
         'widget_data_contract',
         'widget_activate_pipeline',
-        'widget_deploy_pipeline',
         'widget_activate_data_contract',
         'widget_render_data_steward',
         'widget_render_data_agreement',

@@ -238,10 +238,17 @@ def test_full_deployment_readback_retry_and_distinct_identities(authority, monke
     assert files[row["snapshot_uri"]] == snapshot
     assert service.deploy_approved_submission(decision["approval_id"], context=authority.eng) == row
     client.create.assert_called_once()
-    # Markdown is also part of the full readback, unlike code-only hashing.
+    # Runtime freeze ignores Markdown, outputs, execution counts and cell identities.
     import json
     changed = json.loads(snapshot)
-    changed["cells"][0]["source"] = "Unapproved Markdown edit"
+    changed["cells"][0]["source"] = "Revised Markdown"
+    changed["cells"].insert(0, {"cell_type": "markdown", "source": "More notes", "metadata": {}})
+    code = next(cell for cell in changed["cells"] if cell["cell_type"] == "code")
+    code.update(outputs=[{"output_type": "stream", "name": "stdout", "text": "New run output"}], execution_count=99, id="new-cell-id")
+    code["metadata"]["execution"] = {"duration": 999}
+    client.definition.return_value = json.dumps(changed).encode()
+    service.verify_promotion_integrity(row, context=authority.eng)
+    code["source"] += "\nx = 2"
     client.definition.return_value = json.dumps(changed).encode()
     with pytest.raises(RuntimeError, match="integrity mismatch"):
         service.verify_promotion_integrity(row, context=authority.eng)
@@ -430,7 +437,8 @@ def test_registry_commit_backend_requires_physical_readback_itself(authority, de
     assert authority.tables[service.REGISTRY_TABLE] == []
 
 
-def test_runtime_output_changes_do_not_break_the_approved_implementation(authority, deployment_io):
+@pytest.mark.parametrize("mutation", ["code", "parameters", "tags", "dependencies"])
+def test_runtime_output_changes_do_not_break_the_approved_implementation(authority, deployment_io, mutation):
     """Manual execution may save new output while static notebook and behavior integrity remain exact."""
     import json
     decision = approved(authority)
@@ -441,7 +449,14 @@ def test_runtime_output_changes_do_not_break_the_approved_implementation(authori
     saved["cells"][1]["metadata"]["execution"] = {"time": "later"}
     deployment_io.saved[row["governed_notebook_id"]] = json.dumps(saved).encode()
     assert service.verify_promotion_integrity(row, context=authority.eng)
-    saved["cells"][1]["source"] += "\nunapproved = True"
+    if mutation == "code":
+        saved["cells"][1]["source"] += "\nunapproved = True"
+    elif mutation == "parameters":
+        saved["cells"][1]["source"] = saved["cells"][1]["source"].replace('"Governed"', '"Ungoverned"')
+    elif mutation == "tags":
+        saved["cells"][1]["metadata"]["tags"] = []
+    else:
+        saved["metadata"]["dependencies"] = {"lakehouse": "unapproved"}
     deployment_io.saved[row["governed_notebook_id"]] = json.dumps(saved).encode()
     with pytest.raises(RuntimeError, match="integrity mismatch"):
         service.verify_promotion_integrity(row, context=authority.eng)

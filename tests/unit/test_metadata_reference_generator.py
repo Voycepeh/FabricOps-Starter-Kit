@@ -322,7 +322,7 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
     }
     assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_RUN"]
     assert "widget_activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_CONTRACT_ACTIVATION"]
-    assert "widget_deploy_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "orchestrate_write" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "orchestrate_read" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]

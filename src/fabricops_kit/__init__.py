@@ -90,7 +90,6 @@ PIPELINE_EXPORTS = (
 WIDGET_EXPORTS = (
     "widget_data_contract",
     "widget_activate_pipeline",
-    "widget_deploy_pipeline",
     "widget_activate_data_contract",
     "widget_render_data_steward",
     "widget_render_data_agreement",

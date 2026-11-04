@@ -28,7 +28,6 @@ SUPPORTED_PUBLIC_API = (
 # Preview public functions remain importable for evaluation, but are not part of
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
-    "fabricops_kit.widgets.widget_deploy_pipeline.widget_deploy_pipeline",
     "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract",
     "fabricops_kit.data_agent.create_data_agent.create_data_agent",
     "fabricops_kit.widgets.widget_data_contract.widget_data_contract",

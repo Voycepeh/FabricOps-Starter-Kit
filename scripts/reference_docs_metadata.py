@@ -289,7 +289,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CONTRACT_ACTIVATION": ["widget_activate_data_contract"],
     "METADATA_PIPELINE_ACTIVATION": ["widget_activate_pipeline"],
-    "METADATA_PIPELINE_REGISTRY": ["widget_deploy_pipeline"],
+    "METADATA_PIPELINE_REGISTRY": ["finalize_pipeline"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -1638,7 +1638,6 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
-{'kind': 'function', 'module': 'widgets.widget_deploy_pipeline', 'function_type': 'callable', 'symbol_name': 'widget_deploy_pipeline', 'summary_override': 'Export Engineering submissions and deploy exact independently approved snapshots.', 'template_notebook': '02_pipeline', 'template_segment': 'Engineering deployment'},
 {'kind': 'function', 'module': 'widgets.widget_activate_data_contract', 'function_type': 'callable', 'symbol_name': 'widget_activate_data_contract', 'summary_override': 'Review and activate an exact frozen Contract in its physical workspace.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Import immutable Engineering submissions and independently approve, reject or revoke them.',
@@ -1767,7 +1766,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
 
 PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipeline',
     'function_type': 'callable', 'symbol_name': 'finalize_pipeline',
-    'summary_override': 'Complete execution and return Test results or commit the Live outcome.',
+    'summary_override': 'Complete execution or reopen persisted Engineering submission, deployment and recovery controls.',
     'template_notebook': '02_pipeline', 'template_segment': 'Finalize Pipeline',
     'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
     'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})

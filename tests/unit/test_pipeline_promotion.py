@@ -75,15 +75,14 @@ def test_managed_integrity_fails_closed_for_each_unverifiable_boundary(runtime, 
         service.verify_promotion_integrity(row, context=runtime.context)
 
 
-def test_markdown_edits_reject_complete_snapshot_integrity(runtime, monkeypatch):
+def test_markdown_edits_preserve_executable_snapshot_integrity(runtime, monkeypatch):
     """Verify markdown only saved edits are allowed by integrity."""
     row = integrity_row(runtime)
     saved = json.loads(runtime.client.definition.return_value)
     saved["cells"][0]["source"] = "Updated notes"
     runtime.client.definition.return_value = json.dumps(saved).encode()
     monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: ops)
-    with pytest.raises(RuntimeError, match="integrity mismatch"):
-        service.verify_promotion_integrity(row, context=runtime.context)
+    assert service.verify_promotion_integrity(row, context=runtime.context) == [operation(workspace="PROD")]
 
 
 def test_exact_restoration_preserves_changed_copy_before_update(runtime, monkeypatch):

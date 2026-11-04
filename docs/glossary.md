@@ -31,7 +31,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-promotion">
 <summary><strong>Pipeline Promotion</strong> — A reviewed immutable notebook implementation and separate Governed item for one execution workspace.</summary>
-<p>Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_ACTIVATION, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.</p>
+<p>Finalize displays the saved Dry Run submission and explicit Engineering deployment/recovery controls. Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_ACTIVATION, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Runtime freeze binds executable code, parameter cells and behavior configuration; Markdown, outputs, execution counts and transient execution metadata may change. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.</p>
 </details>
 
 <details id="pipeline-submission">

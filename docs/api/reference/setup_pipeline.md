@@ -97,6 +97,10 @@ UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
 setup closes the previous execution. Dry Run never writes Registry, Run,
 profiling results or Processing State. Completed captured Dry Runs retain
 serializable saved-definition/test claims in Engineering Files for submission.
+Finalize displays the package download and explicit deployment/recovery controls.
+Governed setup validates the active deployed notebook and approved executable
+code/configuration; outputs, counts and Markdown may change. Setup never
+deploys, freezes an edited source, or repairs a notebook automatically.
 Persistent runs record final outcomes;
 a successful Write does not imply successful whole-notebook completion.
 
@@ -123,7 +127,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L210">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L214">View on GitHub</a>
 </div>
 
 
@@ -139,7 +143,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 80 |
+| Live-critical dependencies | 79 |
 
 ### Release history
 
@@ -162,7 +166,6 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.notebook_implementation_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.promoted_notebook</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_history</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activations</code></li>

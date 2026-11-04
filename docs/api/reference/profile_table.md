@@ -238,7 +238,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 114 |
+| Live-critical dependencies | 113 |
 
 ### Release history
 
@@ -262,7 +262,6 @@ distinct snapshot identity.
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.notebook_implementation_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.promoted_notebook</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
