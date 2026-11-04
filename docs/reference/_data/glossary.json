@@ -17,7 +17,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.",
-    "long_definition": "A Data Agreement records accountable producer/consumer stewards, purpose, approved uses and validity. An Activated Pipeline links one exact Agreement version to a complete successfully tested whole pipeline.",
+    "long_definition": "A Data Agreement records accountable provider/recipient stewards, purpose, approved uses and validity. Governance associates an exact Agreement version with each applicable physical frozen Contract selection in METADATA_DATA_CONTRACT_ACTIVATION. Engineering Registry records are deployment evidence and cannot grant policy authorization.",
     "preferred_usage": "Use data agreement for the steward-to-steward governance relationship that starts the FabricOps workflow.",
     "avoid_usage": "data contract when table-level guarantees are meant"
   },
@@ -779,8 +779,8 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "A reviewed immutable notebook implementation and separate Governed item for one execution workspace.",
-    "long_definition": "A Pipeline Promotion freezes a complete notebook implementation as one immutable version in an execution workspace. METADATA_PIPELINE_REGISTRY retains its separate Governed notebook identity, snapshot URI, executable hash, exact physical bindings and Agreement reference where applicable. Every source and target requires an independently activated frozen Contract in its physical workspace. Governed admission remains blocked pending signed-in Fabric validation. Imported dependencies are not frozen; saved-definition verification has TOCTOU limits.",
-    "preferred_usage": "Use Pipeline Promotion for the reviewed notebook implementation; distinguish independent physical Data Contract Activation.",
+    "long_definition": "Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_APPROVAL, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.",
+    "preferred_usage": "Use Pipeline Promotion for Engineering deployment of an independently approved implementation.",
     "avoid_usage": "a saved-code check as proof of execution-time identity"
   },
   {
@@ -799,8 +799,28 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Immutable per-workspace Pipeline Promotion versions with at most one active version per workspace/Pipeline ID.",
-    "long_definition": "METADATA_PIPELINE_REGISTRY stores only immutable per-workspace Pipeline Promotion versions. A Serializable conditional transaction enforces at most one active version per execution workspace/Pipeline ID and retains superseded rows. METADATA_DATA_CONTRACT_ACTIVATION independently selects frozen Contracts per physical workspace/Table ID. Publication claims remain outside Registry in Metadata Lakehouse Files.",
+    "long_definition": "METADATA_PIPELINE_REGISTRY retains Engineering deployment versions, complete snapshot references, physical operation bindings and exact Governance approval/submission identities. Registry status is not authorization. Current Contract Activations resolve independently for each new run. Governance owns all metadata and Engineering has scoped write permissions.",
     "preferred_usage": "Use Pipeline Registry for frozen notebook promotions; keep Data Contract Activation in its independent Governance table.",
     "avoid_usage": "mixed control or Contract Activation rows as Registry authority"
+  },
+  {
+    "id": "pipeline-submission",
+    "term": "Pipeline Submission",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "A complete portable saved-notebook and Dry Run package exported by Engineering.",
+    "long_definition": "A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance imports an immutable copy under its own identity.",
+    "preferred_usage": "Use Pipeline Submission for the immutable content submitted for independent Governance review.",
+    "avoid_usage": "successful execution as approval"
+  },
+  {
+    "id": "pipeline-approval",
+    "term": "Pipeline Approval",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "An independent Governance decision binding one exact Pipeline Submission.",
+    "long_definition": "METADATA_PIPELINE_APPROVAL records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.",
+    "preferred_usage": "Use Pipeline Approval for authoritative Governance decisions; distinguish deployment state.",
+    "avoid_usage": "Registry status as Governance approval"
   }
 ]

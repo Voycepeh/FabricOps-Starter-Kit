@@ -1,106 +1,202 @@
-"""Review and activate a frozen Contract in its physical table workspace."""
+"""Governance selection and conditional activation of exact physical Contracts."""
 from __future__ import annotations
 
-import html
 import hashlib
+import html
 import json
 from uuid import uuid4
 
-from fabricops_kit.activated_pipeline.shared import read_activations, set_table_contract_activation
+from fabricops_kit.activated_pipeline.shared import (
+    agreement_definition, exact_record, manifest_digest, metadata_records,
+    read_activation_history, set_table_contract_activation, validate_agreement,
+)
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 
 
-def widget_activate_data_contract(table_id: str, contract_id: str, contract_version: int, *,
+def widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None,
+                                  contract_version: int | None = None, *,
                                   workspace_id: str | None = None, context=None) -> dict:
-    """Review the frozen definition and explicitly activate it independently of pipelines.
+    """Select and review a physical table, frozen Contract and applicable Agreement.
 
     Parameters
     ----------
-    table_id, contract_id : str
-        Exact logical table and frozen Contract identity.
-    contract_version : int
-        Exact positive frozen version.
+    table_id, contract_id : str | None, optional
+        Preselect an exact logical table and frozen Contract. With no arguments,
+        select from registered physical workspaces/tables and frozen versions.
+    contract_version : int | None, optional
+        Exact positive frozen version to preselect; never a latest fallback.
     workspace_id : str | None, optional
-        Physical table workspace to review; defaults to the configured scope.
-        Use this when reviewing Engineering tables from the Governance notebook.
+        Physical table workspace. With a supplied table, defaults to the current
+        configured scope. Governance metadata stays in its central Lakehouse.
     context : dict | None, optional
-        Configured notebook context; central Metadata routing is preserved.
+        Configured Governance notebook context.
 
     Returns
     -------
     dict
-        Widget, state, confirmation control and activation action. Opening the
-        widget changes no metadata. Stale review is rejected atomically.
-
-    Raises
-    ------
-    ValueError
-        If the exact frozen Contract, workspace or activation is ambiguous.
-    RuntimeError
-        If configured metadata, Spark or widgets are unavailable.
+        Widget, selection/review state, controls and review/activate/refresh actions.
+        Opening changes no metadata. Backend mutation independently revalidates
+        exact bindings, policy hashes and the reviewed current activation ID.
 
     Notes
     -----
-    Actual storage permissions authorize activation. The confirmation checkbox
-    grants no access. Ungoverned writes to the physical table and aliases become
-    protected; Pipeline Promotion remains a separate decision.
+    Governance owns all central metadata, so selection uses Catalogue records
+    without opening Engineering workspaces. Actual Fabric permissions authorize
+    writes. Each physical activation selects one frozen Contract and at most one
+    Agreement; cross-workspace execution requires effective associated terms.
+    Retained revisions provide history independently of notebook promotion.
 
     Examples
     --------
-    >>> ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1)
+    >>> ui = widget_activate_data_contract()
+    >>> ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1,
+    ...     workspace_id=PHYSICAL_WORKSPACE_ID)
 
     """
-    from fabricops_kit.activated_pipeline.shared import metadata_records, exact_record
     from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings
     startup = shared.WidgetStartup("Data Contract Activation", tone="governance", reserved_height="560px")
-    config, workspace, runtime = resolve_fabric_context(context=context)
-    metadata_workspace = runtime.get("metadata_workspace_id") or workspace
-    workspace = workspace if workspace_id is None else str(workspace_id).strip()
-    if not workspace:
-        raise ValueError("workspace_id must be nonblank.")
-    routed = {**runtime, "config": config, "scope_workspace_id": workspace, "metadata_workspace_id": metadata_workspace}
+    config, current_workspace, runtime = resolve_fabric_context(context=context)
+    metadata_workspace = runtime.get("metadata_workspace_id") or current_workspace
+    base = {**runtime, "config": config, "scope_workspace_id": current_workspace, "metadata_workspace_id": metadata_workspace}
     spark = get_spark_session(context=runtime)
-    with startup.phase("metadata_loading", "Loading the frozen Contract and exact physical table binding…"):
-        current = [row for row in read_activations(context=routed, spark_session=spark)
-            if row["workspace_id"] == workspace and row["table_id"] == table_id]
-        expected = current[0]["activation_id"] if current else None
-        contract = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=routed, spark_session=spark),
-            table_id=table_id, contract_id=contract_id, contract_version=contract_version, status="frozen")
-        identity = resolve_catalogue_table_identity(config, workspace, table_id, context=routed, spark_session=spark)
-        destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=workspace)[table_id]
-        if str(destination["workspace_id"]).casefold() != workspace.casefold():
-            raise ValueError("Select the physical table workspace before reviewing Contract Activation.")
-        payload_sha256 = hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()
+    selected_workspace = workspace_id or (current_workspace if table_id is not None else None)
+    with startup.phase("metadata_loading", "Loading registered tables, frozen Contracts and Governance history…"):
+        catalogue = metadata_records("METADATA_DATA_CATALOGUE", context=base, spark_session=spark)
+        contracts = metadata_records("METADATA_DATA_CONTRACT", context=base, spark_session=spark)
+        agreements = metadata_records("METADATA_DATA_AGREEMENT", context=base, spark_session=spark)
+        initial_context = {**base, "scope_workspace_id": selected_workspace or current_workspace}
+        history_rows = read_activation_history(context=initial_context, spark_session=spark)
+    tables = [row for row in catalogue if row.get("metadata_level") == "table" and row.get("is_active") is not False]
+    frozen = [row for row in contracts if row.get("status") == "frozen"]
     widgets = shared.require_ipywidgets()
-    confirm = widgets.Checkbox(description="I reviewed the exact frozen Contract and physical workspace", indent=False)
-    button = widgets.Button(description="Activate Contract", button_style="primary", disabled=True)
-    report = widgets.HTML()
-    state = {"activation_id": str(uuid4()), "result": None}
+    workspaces = sorted({row["workspace_id"] for row in tables} | ({selected_workspace} if selected_workspace else set()))
+    workspace = widgets.Dropdown(options=[("Select physical workspace", None)] + [(value, value) for value in workspaces],
+        value=selected_workspace, layout=widgets.Layout(width="100%"))
+    table = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
+    contract = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
+    agreement = widgets.Dropdown(options=[("No Agreement association", None)] + [
+        (str(row["agreement_id"]) + " / " + str(row["agreement_version"]), (row["agreement_id"], row["agreement_version"]))
+        for row in agreements], layout=widgets.Layout(width="100%"))
+    confirm = widgets.Checkbox(description="I reviewed this exact physical Contract and Agreement selection", indent=False)
+    review_button = widgets.Button(description="Review selection")
+    activate_button = widgets.Button(description="Activate Contract", button_style="primary", disabled=True)
+    refresh_button = widgets.Button(description="Refresh history")
+    report, history = widgets.HTML(), widgets.HTML()
+    state = {"review": None, "result": None, "destination": None, "history": history_rows, "changing": False}
+    result = {}
+    def routed():
+        if not workspace.value:
+            raise ValueError("Select the physical table workspace.")
+        return {**base, "scope_workspace_id": workspace.value}
+    def invalidate(_event=None):
+        state["review"] = None
+        state["result"] = None
+        confirm.value = False
+        activate_button.disabled = True
+    def contract_choices(_event=None):
+        if state["changing"]:
+            return
+        invalidate()
+        options = [(f'{row["contract_id"]} / v{row["contract_version"]}', (row["contract_id"], row["contract_version"]))
+            for row in frozen if row["table_id"] == table.value]
+        contract.options = [("Select frozen Contract/version", None)] + options
+        wanted = (contract_id, contract_version)
+        if wanted in [value for _label, value in options]:
+            contract.value = wanted
+    def table_choices(_event=None):
+        state["changing"] = True
+        try:
+            values = {row["table_id"] for row in tables if row["workspace_id"] == workspace.value}
+            if table_id is not None and workspace.value == selected_workspace:
+                values.add(table_id)
+            table.options = [("Select physical Table ID", None)] + [(value, value) for value in sorted(values)]
+            if table_id in values:
+                table.value = table_id
+        finally:
+            state["changing"] = False
+        contract_choices()
+    def refresh():
+        state["history"] = read_activation_history(context=routed() if workspace.value else base, spark_session=spark)
+        return render_history()
+    def render_history():
+        scoped = [row for row in state["history"] if (not workspace.value or row["workspace_id"] == workspace.value)
+            and (not table.value or row["table_id"] == table.value)]
+        history.value = "<details><summary>Contract Activation history and current state</summary><pre style='white-space:pre-wrap'>" + html.escape(json.dumps(scoped, indent=2, default=str)) + "</pre></details>"
+        return scoped
+    def selection_binding():
+        if not table.value or not contract.value:
+            raise ValueError("Select an exact physical Table ID and frozen Contract/version.")
+        row = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=routed(), spark_session=spark),
+            table_id=table.value, contract_id=contract.value[0], contract_version=contract.value[1], status="frozen")
+        identity = resolve_catalogue_table_identity(config, workspace.value, table.value, context=routed(), spark_session=spark)
+        destination = pipeline_physical_bindings({table.value: identity}, config=config, workspace_id=workspace.value)[table.value]
+        if str(destination["workspace_id"]).casefold() != workspace.value.casefold():
+            raise ValueError("Select the physical table workspace before review.")
+        state["destination"] = destination
+        result["destination"] = destination
+        return row, destination
+    def review():
+        invalidate()
+        row, destination = selection_binding()
+        history_values = refresh()
+        current = [item for item in history_values if item["status"] == "active"]
+        reference = agreement.value
+        terms = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=routed(), spark_session=spark),
+            agreement_id=reference[0], agreement_version=reference[1]) if reference else None
+        if terms:
+            validate_agreement(terms)
+        state["review"] = {"workspace_id": workspace.value, "table_id": table.value, "contract": contract.value,
+            "reference": reference, "agreement_sha256": manifest_digest(agreement_definition(terms)) if terms else None,
+            "destination": destination, "payload_sha256": hashlib.sha256(row["contract_payload_json"].encode()).hexdigest(),
+            "expected_activation_id": current[0]["activation_id"] if current else None, "activation_id": str(uuid4())}
+        report.value = "<pre style='white-space:pre-wrap;max-height:360px;overflow:auto'>" + html.escape(json.dumps(
+            {"destination": destination, "contract": row, "agreement": terms, "previous_activation_id": state["review"]["expected_activation_id"]}, indent=2, default=str)) + "</pre>"
+        return state["review"]
     def activate():
-        if not confirm.value:
-            raise ValueError("Review and confirm the exact frozen Contract first.")
-        state["result"] = set_table_contract_activation(table_id, contract_id, contract_version,
-            expected_activation_id=expected, activation_id=state["activation_id"], governance_confirmed=True,
-            context=routed, spark_session=spark, expected_destination=destination,
-            expected_payload_sha256=payload_sha256)
-        button.disabled = True
-        report.value = "<p>Contract activated for the physical workspace and Table ID.</p>"
+        reviewed = state["review"]
+        if not reviewed or not confirm.value:
+            raise ValueError("Review and explicitly confirm the exact frozen Contract first.")
+        terms = reviewed["reference"]
+        state["result"] = set_table_contract_activation(reviewed["table_id"], *reviewed["contract"],
+            expected_activation_id=reviewed["expected_activation_id"], activation_id=reviewed["activation_id"], governance_confirmed=True,
+            context=routed(), spark_session=spark, expected_destination=reviewed["destination"],
+            expected_payload_sha256=reviewed["payload_sha256"], agreement_id=terms[0] if terms else None,
+            agreement_version=terms[1] if terms else None, expected_agreement_sha256=reviewed["agreement_sha256"])
+        activate_button.disabled = True
+        report.value += "<p>Contract selection saved independently of notebook promotion.</p>"
+        refresh()
         return state["result"]
-    def click(_button):
+    def run(action, button):
         button.disabled = True
         try:
-            activate()
+            action()
         except Exception as exc:
-            report.value = "<p role='alert'>" + html.escape(str(exc)) + "</p>"
-            button.disabled = not confirm.value
-    confirm.observe(lambda _event: setattr(button, "disabled", not confirm.value or state["result"] is not None), names="value")
-    button.on_click(click)
+            report.value += "<p role='alert'>" + html.escape(str(exc)) + "</p>"
+        finally:
+            button.disabled = False
+            activate_button.disabled = not confirm.value or state["review"] is None or state["result"] is not None
+    workspace.observe(table_choices, names="value")
+    table.observe(contract_choices, names="value")
+    contract.observe(invalidate, names="value")
+    agreement.observe(invalidate, names="value")
+    confirm.observe(lambda _event: setattr(activate_button, "disabled", not confirm.value or state["review"] is None or state["result"] is not None), names="value")
+    for button, action in ((review_button, review), (activate_button, activate), (refresh_button, refresh)):
+        button.on_click(lambda _button, action=action, button=button: run(action, button))
+    table_choices()
+    if table.value and contract.value:
+        selection_binding()
+    render_history()
     root = shared.form_page(widgets, title="Data Contract Activation", tone="governance",
-        description="Protect one physical workspace/Table ID with an exact frozen Contract.", children=[
-            widgets.HTML("<pre style='white-space:pre-wrap'>" + html.escape(json.dumps(
-                {"workspace_id": workspace, "destination": destination, "previous_activation_id": expected, "contract": contract}, indent=2, default=str)) + "</pre>"),
-            confirm, button, report])
+        description="Select an exact frozen Contract and applicable Agreement for a physical table.", children=[
+            widgets.HTML("<label>Physical table workspace</label>"), workspace,
+            widgets.HTML("<label>Physical Table ID</label>"), table,
+            widgets.HTML("<label>Frozen Contract and version</label>"), contract,
+            widgets.HTML("<label>Agreement governing this physical Contract selection</label>"), agreement,
+            review_button, report, confirm, activate_button, refresh_button, history])
     startup.display(root)
-    return {"widget": root, "destination": destination, "state": state, "controls": {"confirm": confirm, "activate": button}, "actions": {"activate": activate}}
+    result.update(widget=root, state=state, destination=state["destination"], controls={"workspace": workspace, "table": table,
+        "contract": contract, "agreement": agreement, "review": review_button, "confirm": confirm, "activate": activate_button},
+        actions={"review": review, "activate": activate, "refresh": refresh})
+    return result

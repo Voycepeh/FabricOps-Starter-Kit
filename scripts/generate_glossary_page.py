@@ -23,6 +23,8 @@ GLOSSARY_GROUPS = [
             "data-agreement",
             "data-contract",
             "pipeline-promotion",
+            "pipeline-submission",
+            "pipeline-approval",
             "pipeline-registry",
             "pipeline-execution-plan",
             "dry-run",

@@ -95,7 +95,9 @@ Call setup_notebook first. Spark and Fabric identity come from that setup.
 There is no permanent registration, approval, notebook rebinding or automatic
 UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
 setup closes the previous execution. Dry Run never writes Registry, Run,
-profiling results or Processing State. Persistent runs record final outcomes;
+profiling results or Processing State. Completed captured Dry Runs retain
+serializable saved-definition/test claims in Engineering Files for submission.
+Persistent runs record final outcomes;
 a successful Write does not imply successful whole-notebook completion.
 
 </div>
@@ -121,7 +123,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L208">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L210">View on GitHub</a>
 </div>
 
 
@@ -137,7 +139,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 71 |
+| Live-critical dependencies | 80 |
 
 ### Release history
 
@@ -149,16 +151,22 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared._strict_package_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.authoritative_approval</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.build_governed_pipeline_plan</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.check_promotion_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.check_contract_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.notebook_implementation_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.promoted_notebook</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_activation_history</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activations</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.read_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
@@ -166,8 +174,11 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_registry_approval</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>

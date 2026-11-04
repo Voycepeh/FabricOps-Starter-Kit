@@ -83,7 +83,9 @@ runtime identity, whether passed explicitly or selected implicitly. Already
 closed sessions retain their recorded outcome for repeat finalization.
 
 Dry Run returns a session-only summary and persists no target, watermark,
-processing state, profile observation or run metadata. Ungoverned and
+processing state, profile observation or run metadata. A completed captured
+Dry Run retains complete saved-definition and test claims in Engineering
+Files for independent submission; this is not Governance approval. Ungoverned and
 Governed executions persist their real operational outcome. Persistent
 finalization also releases this execution's physical publication claims. Interrupted runs
 remain incomplete and are never reported as successful finalization.
@@ -99,7 +101,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:159`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L159-L221">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L159-L223">View on GitHub</a>
 </div>
 
 
@@ -115,7 +117,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 66 |
+| Live-critical dependencies | 70 |
 
 ### Release history
 
@@ -127,14 +129,18 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared._strict_package_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_path</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.mutate_metadata</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.persist_engineering_dry_run</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.publication_claim</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>

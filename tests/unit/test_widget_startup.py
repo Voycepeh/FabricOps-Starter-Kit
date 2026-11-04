@@ -52,11 +52,12 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         root = state["_controls"]["page"]
         assert reads == ["catalogue"]
     else:
-        monkeypatch.setattr(module, "read_registry", read("activation", []))
+        monkeypatch.setattr(module, "read_registry", read("deployments", []))
+        monkeypatch.setattr(module, "read_approvals", read("approvals", []))
         monkeypatch.setattr(module, "get_spark_session", lambda *_args, **kwargs: object())
         state = module.widget_activate_pipeline()
         root = state["widget"]
-        assert reads == ["activation"]
+        assert reads == ["approvals", "deployments"]
     assert outputs[-1][1] is root
     banner_updates = [
         value.data

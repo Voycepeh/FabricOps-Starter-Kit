@@ -28,7 +28,7 @@ via Not defined in the current implementation.
 `METADATA_DATA_CATALOGUE` **(N → M)**
 via `table_id`
 
-**Implementation details:** Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Agreement linkage belongs to Pipeline Promotion.
+**Implementation details:** Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.
 
 ## Column summary
 

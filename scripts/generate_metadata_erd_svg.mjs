@@ -9,10 +9,12 @@ function renderMetadataSvg(layout, models) {
   // corridor, keeping nearer routes nested instead of crossing their stems.
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1-N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","PIPELINE_REGISTRY","1-N","physical","M725 170H815",[725,170],[815,170],"One exact Agreement version may govern multiple Pipeline Promotions, each retaining its ID, version and content hash"],
+    ["DATA_AGREEMENT","DATA_CONTRACT_ACTIVATION","1-N","physical","M575 78V62H1745V78",[575,78],[1745,78],"One exact Agreement version may govern many physical frozen Contract selections"],
+    ["PIPELINE_APPROVAL","PIPELINE_REGISTRY","1-N","physical","M965 253V310H1865V423",[965,253],[1865,423],"Exact independently approved package authorizes Engineering deployment; approval does not deploy"],
+    ["PIPELINE_REGISTRY","DATA_CONTRACT_ACTIVATION","N-N","logical","M1745 423V253",[1745,423],[1745,253],"Logical approved physical workspace/Table ID association; active Contract selection is independent"],
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M1595 170H1505",[1595,170],[1505,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M725 464H755V388H1175V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M900 253V328H575V423",[900,253],[575,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
+    ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V403H575V423",[1595,475],[575,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M425 515H335",[425,515],[335,515],"Pipeline run to recorded guardrail outcomes"],
     ["PIPELINE_RUN","PROCESSING_STATE","1-N","physical","M725 504H815",[725,504],[815,504],"Pipeline run to typed processing state"],
@@ -61,12 +63,12 @@ function renderMetadataSvg(layout, models) {
       return label+`<text x="${x+51}" y="${baseline}" fill="#243550" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
-    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Written by Engineering and Governance</text>`;
+    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering deployment evidence</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==14||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
   // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.
@@ -105,7 +107,7 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split("-") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round"/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

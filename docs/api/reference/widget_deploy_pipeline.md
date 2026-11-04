@@ -1,4 +1,4 @@
-# `promote_pipeline`
+# `widget_deploy_pipeline`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -6,7 +6,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Archive and promote one reviewed manually tested notebook into a separate Governed item.
+Export Engineering submissions and deploy exact independently approved snapshots.
 
 
 
@@ -15,7 +15,8 @@ Archive and promote one reviewed manually tested notebook into a separate Govern
 <div class="reference-example-usage" markdown="1">
 
 ```python
-result = promote_pipeline(review, governance_confirmed=True)
+ui = widget_deploy_pipeline(dry_run=preview)
+ui = widget_deploy_pipeline(pipeline_id=PIPELINE_ID)
 ```
 
 </div>
@@ -28,7 +29,7 @@ result = promote_pipeline(review, governance_confirmed=True)
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def promote_pipeline(review: dict, *, governance_confirmed: bool=False) -> dict
+def widget_deploy_pipeline(*, pipeline_id=None, dry_run=None, context=None) -> dict
 ```
 
 </div>
@@ -43,33 +44,31 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `review` | `dict` | Yes | `—` | Exact candidate returned by the Pipeline Promotion widget review action. Contains the saved notebook, destination physical bindings, exact Contracts and expected active version. Keep this object for safe lost-ack retries. |
-| `governance_confirmed` | `bool` | No | `False` | Confirm the displayed review; actual Fabric permissions authorize changes. |
+| `pipeline_id` | `str \| None` | No | `None` | Filter approvals and retained versions by logical Pipeline ID. |
+| `dry_run` | `PipelineSession \| None` | No | `None` | Completed Engineering Dry Run to export. Deployment uses persisted Governance records and does not depend on this session. |
+| `context` | `dict \| None` | No | `None` | Configured Engineering notebook context for the destination workspace. |
 
 </div>
 
 ## Returns
 
 dict
-    Frozen per-version METADATA_PIPELINE_REGISTRY row. An active row does not
-    override the pending signed-in Fabric validation gate for Governed starts.
+    Widget, state, controls and export/review/deploy actions. Portable JSON
+    can be downloaded and imported in a separate Governance session.
 
 ## Raises / Errors
 
-ValueError
-    If review, bindings, Contracts or expected version changed.
-RuntimeError
-    If notebook APIs, archive readback or atomic commit cannot be verified.
-    Staged artifacts are retained; the prior active version remains intact.
+Not documented yet
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-The complete notebook is frozen; imported dependencies are not. Same-workspace
-promotion creates a separate notebook in Governed/. Folders confer no access
-protection. Schedules are engineer-owned and never silently moved. Saved code
-checks have a TOCTOU limitation and cannot prevent privileged Spark bypass.
+Engineering cannot decide approvals through this workflow. Fabric permissions
+must deny Engineering writes to Governance tables and accepted package copies.
+Rollback exports an earlier implementation for a new approval and version.
+Restoration exports the active implementation for explicit recovery approval.
+Deployment readback verifies the complete definition, including non-code cells.
 
 </div>
 
@@ -80,9 +79,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/activated_pipeline/promote_pipeline.py:5`
+`fabricops_kit/widgets/widget_deploy_pipeline.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/activated_pipeline/promote_pipeline.py#L5-L44">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_deploy_pipeline.py#L17-L146">View on GitHub</a>
 </div>
 
 

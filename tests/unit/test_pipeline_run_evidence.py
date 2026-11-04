@@ -572,3 +572,19 @@ def test_original_schema_choice_is_retained_only_in_manual_journal(runtime, monk
     assert plan.evidence['operations']['source:asset0']['requested_schema'] == schema
     row = shared.pipeline_run_row(plan, status='dry_run_completed')
     assert 'requested_schema' not in shared.validate_pipeline_run(row)['operations'][0]
+
+
+def test_governed_run_preserves_governance_decision_and_exact_contracts(runtime):
+    """Execution records keep approval identity distinct from deployment and per-operation Contracts."""
+    make, operation, _saved, _writes, _failure = runtime
+    plan = make(roles=("source", "target"))
+    plan.evidence["promotion"] = {"approval_id": "governance-decision"}
+    plan.evidence["governance_approval"] = {"revision": 7}
+    operation(plan, 0)
+    operation(plan, 1)
+    row = shared.validate_pipeline_run(shared.pipeline_run_row(plan, status="running"))
+    assert row["approval_id"] == "governance-decision"
+    assert row["promotion_id"] == "approved-release"
+    assert row["activation_revision"] == "7"
+    assert [(op["contract_id"], op["contract_version"]) for op in row["operations"]] == [("contract-table0", 1), ("contract-table1", 1)]
+    assert all(len(op["payload_sha256"]) == 64 for op in row["operations"])

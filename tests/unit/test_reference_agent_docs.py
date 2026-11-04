@@ -746,7 +746,7 @@ def test_metadata_reference_overview_renders_interactive_explorer() -> None:
     assert '<nav class="metadata-explorer-fallback"' in text
     assert "fabricops-metadata-model.png" not in text
     assert "metadata-table-grid" not in text
-    assert len(CANONICAL_METADATA_TABLES) == 13
+    assert len(CANONICAL_METADATA_TABLES) == 14
     for name in CANONICAL_METADATA_TABLES:
         assert f'href="{name.lower()}/"' in text
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
@@ -2080,7 +2080,7 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
 
     pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
     assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
-    assert len(pages) == 13
+    assert len(pages) == 14
     for slug in ("metadata_enrichment", "metadata_guardrail", "metadata_table_profiling"):
         assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
         assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()
@@ -2098,7 +2098,7 @@ def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
     reference_dir = docs_root / "reference" / "metadata"
     overview = docs_root / "reference" / "metadata.md"
     canonical_pages = {path.resolve() for path in reference_dir.glob("metadata_*.md")}
-    assert len(canonical_pages) == 13
+    assert len(canonical_pages) == 14
 
     inspected = []
     unresolved = []

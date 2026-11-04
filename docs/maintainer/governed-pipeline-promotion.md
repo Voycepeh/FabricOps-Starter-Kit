@@ -1,50 +1,103 @@
-# Pipeline Promotion architecture — v0.3.2
+# Independent Pipeline Approval and Engineering deployment
 
-This maintainer reference defines the current metadata authority, execution invariants and concurrency guarantees. Governed admission remains blocked until the [Fabric acceptance checklist](governed-pipeline-fabric-acceptance.md) is complete.
+Engineering submits a complete immutable notebook candidate, Governance independently decides it, and Engineering deploys the exact approved snapshot. Governed execution remains blocked pending [signed-in Fabric acceptance](governed-pipeline-fabric-acceptance.md).
 
-## Canonical authority
+## Metadata ownership and permissions
 
-The canonical inventory contains 13 tables. Metadata routes through the configured Metadata Lakehouse; the attached Lakehouse is not an implicit metadata destination.
+**Governance owns the entire central Metadata Lakehouse in its workspace, including Engineering metadata.** This is the accepted ownership model. Governance's workspace role grants access to both schemas; the `engineering` schema is not a security boundary against Governance. Engineering still has no access to the Governance notebook workspace and no write access to Governance policy or approval records.
 
-| Table | Grain | Responsibility |
+| Resource | Engineering | Governance |
 | --- | --- | --- |
-| METADATA_DATA_CONTRACT | Contract ID/version | Immutable global frozen definitions; authoring workspace is evidence only |
-| METADATA_DATA_CONTRACT_ACTIVATION | Physical workspace/Table ID | Exact active Contract ID/version/payload SHA and reviewed physical binding |
-| METADATA_PIPELINE_REGISTRY | Execution workspace/Pipeline ID/version | Immutable notebook promotion, snapshot pointers/hashes, operation definitions and Agreement where applicable |
-| METADATA_PIPELINE_RUN | Run ID | Actual operation outcomes, exact Contracts and captured promotion/execution provenance |
-| METADATA_DATA_CATALOGUE | Workspace/table/column identity | Registered structures and processing definitions |
-| METADATA_PROCESSING_STATE | Typed record ID | Source observations, accepted checkpoints, baselines and verified publication receipts |
+| Metadata Lakehouse `engineering` schema | Read/write through granular OneLake permissions | Read/write as Lakehouse owner |
+| Metadata Lakehouse `governance` schema | Read-only | Read/write |
+| Engineering workspace | Read/write | No access required |
+| Governance notebook workspace | No workspace role; explicit Metadata item access only | Read/write |
+| `Files/fabricops/engineering/` | Read/write | Read/write as owner |
+| `Files/fabricops/publication_coordination/` | Read/write for existing publication claims | Read/write for Contract Activation coordination |
 
-Data Steward, Agreement, Profiled, Profiled Frequency, Lineage, Access and Guardrail Results retain their domain ownership. Contract Activation is Governance-owned. Registry contains only per-version pipeline records; coordination claims are held in Metadata Files.
+Grant Engineering basic **Read on the Metadata item**, with granular OneLake roles for its schema, Governance policy reads and the explicitly listed Files paths. Do not grant Engineering a Contributor, Member or Admin role in the Governance workspace, item-wide Write, Reshare, or unrestricted parent-folder access. Review/remove broad DefaultReader assignments where they exceed intended reads. Table/schema permissions do not grant Files permissions. The publication ledger contains physical-target claims, never submission staging or approval authority.
 
-## Setup and data preservation
+Microsoft documents [granular ReadWrite roles](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model) for Lakehouse tables/folders and Spark writes. Elevated workspace roles bypass those restrictions. Tenant availability, runtime support, inherited groups, direct paths, default roles and permission propagation must be tested under the actual two identities. If granular writes cannot be enforced in the tenant, this arrangement cannot provide the Engineering write restriction: leave Governed admission blocked. Application checks and confirmation boxes cannot substitute for Fabric permissions.
 
-`setup_metadata_tables()` creates missing tables and applies supported schema evolution directly. Compatible Catalogue and Pipeline Run collection fields are normalized to validated JSON strings in a pinned atomic Delta transaction. Missing nullable Run provenance columns are additive. Existing Run content/hash projections remain unchanged when added provenance is null. Existing Catalogue values, audit fields, extension columns, Delta identity/properties and transaction identities are retained.
+Bootstrap `setup_metadata_tables()` runs under the Metadata owner's identity. Engineering notebooks do not need permission to create Governance tables. Configuration-driven cross-workspace business source reads and target writes retain their existing authorized routing; metadata restrictions do not prohibit them.
 
-Processing State checkpoints, source observations, accepted baselines and publication receipts remain unchanged. Setup never deletes metadata or business targets, empties checkpoints or infers missing accepted progress. Structurally incompatible schemas, malformed payloads and duplicate Run identities produce explicit errors while preserving existing data. No separate operator utility is part of setup.
+## Canonical records
 
-## Promotion and exact physical routing
+The canonical inventory contains **14 tables**. The only added table is `governance.METADATA_PIPELINE_APPROVAL`; no existing table is removed.
 
-A completed manual Dry Run retains operation evidence and the complete saved notebook in memory without durable publication. Review binds the complete notebook, destination workspace, exact source/target physical bindings and effective Agreement where applicable. Every participant requires a separately activated frozen Contract in its physical workspace.
+| Table or path | Grain and responsibility |
+| --- | --- |
+| `METADATA_PIPELINE_APPROVAL` | Append-only accepted-package import and Governance decision events, exact approval identity, monotonic pipeline revision, review policy, expiration and recovery intent |
+| `METADATA_PIPELINE_REGISTRY` | Engineering deployment version, exact approval/submission identities, snapshots, operations, provenance and retained version lineage |
+| `METADATA_DATA_CONTRACT_ACTIVATION` | Retained physical workspace/Table ID revisions selecting exact frozen Contracts and applicable Agreement versions; one active selection |
+| `METADATA_DATA_CONTRACT` | Immutable global frozen Contract definitions |
+| `METADATA_PIPELINE_RUN` | Actual execution and exact Contract ID/version/payload SHA for each operation |
+| `Files/fabricops/engineering/dry_runs/` | Complete serializable saved-definition and recorded test claims retained before a captured Dry Run session ends |
+| `Files/fabricops/engineering/submissions/` | Complete canonical portable packages exported by Engineering |
+| `Files/fabricops/engineering/pipeline_snapshots/` | Write-once source/promoted snapshots and preserved modified copies during recovery |
 
-Operation definitions retain the requested schema choice separately from the resolved physical schema. `None` selects the destination store's configured default; explicit schema names stay explicit. Destination Table IDs and source/incremental target references are resolved consistently. Consumer context must match the entire activated physical workspace/item/kind/schema/table binding before a Data Agent can be provisioned.
+Catalogue, Profiled, Profiled Frequency, Lineage, Data Access, Guardrail Results and Processing State retain their processing responsibilities. Released v0.3.1 records and content/hash projections are preserved. This change adds no adapters or migration machinery for the unreleased promotion model. Incompatible Preview layouts fail explicitly while retaining their contents; normal setup never deletes metadata or business data.
 
-Promotion archives complete source and promoted ipynb files with write-once semantics and exact readback checks. It creates a separate physical Governed notebook, including within one workspace. Metadata Files snapshots are distinct from mutable notebook items. Only approved startup choices are frozen into the setup call; the remaining notebook is retained. Imported packages and referenced notebooks are not frozen.
+## Saved definition, execution claims and submission identity
 
-## Concurrency and replay
+A Dry Run captures the complete saved `.ipynb` at setup. Finalization retains available saved-definition and operation claims in Engineering Files without publishing business tables, Run rows, checkpoints, profiles or lineage. If no definition could be captured, no verifiable submission can be exported. Persistence errors surface; successful computation is not successful submission or approval.
 
-Registry mutation tracks a whole-table read under Serializable Delta isolation. Expected active version checks reject stale reviews. Superseding the old version and inserting the new active version occur in one transaction. A naive MERGE does not establish conditional uniqueness. Versions are scoped by execution workspace and Pipeline ID; superseded records remain.
+`widget_deploy_pipeline(dry_run=preview)` verifies that the current saved executable behavior still equals the definition captured before execution. The complete pre-execution definition and current submitted saved notebook remain separate package components; changed outputs or Markdown do not pretend to be executed code. It exports a JSON package containing:
 
-Promotion IDs are replay-safe: exact retries return the recorded event, while changed content cannot reuse the ID. Lost acknowledgements are recovered from the exact transaction marker and versioned readback. Staging/clone failures do not alter prior authority; staged artifacts contain their promotion ID and confer no authority independently.
+- A versioned manifest with unique submission/Pipeline IDs, source workspace/notebook, destination workspace, creator/time and reviewed expected active version.
+- Complete pre-execution, submitted source and promoted notebooks encoded as base64, distinct full SHA256 hashes and executable digests. Only the saved startup call is frozen to Governed; imported dependencies remain outside scope.
+- Recorded Dry Run ID/result, stage outcomes, tested source/target Table IDs and complete physical bindings, plus the separately resolved deployment bindings.
+- Read/write strategies, SQL hash, source/target associations, original requested schema, behavior parameters, and exact applicable recorded Contract payloads.
+- A canonical SHA256 over **all** package components except the digest itself.
 
-Ungoverned and Governed publication use the same exclusive physical-target claim protocol in `Files/fabricops/publication_coordination`. Contract Activation takes the same claim when changing table protection. Claims do not expire after a crash. Successful per-target release is recorded immediately; retries never remove another owner's claim or strand unrelated claims after a partial release.
+Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs, inconsistent parameters/operations and changed accepted submission identities. Retargeted bindings remain distinct from the physical destinations actually tested. Governance resolves the proposed destination from its own configuration and reviews that difference.
 
-New Governed starts must use the active physical notebook. Already admitted versions retain captured implementation and Contract references. The target claim prevents conflicting old/new writers from publishing concurrently. Next-run Contract resolution may adopt independently activated versions subject to validation.
+**These are untrusted Engineering claims.** A recomputed digest does not establish that claimed testing happened, nor attest kernel code identity. Governance reviews the complete notebook, recorded outcomes and independently resolved active policy. Self-approval by the claimed creator is rejected as a supplementary check; actual separation requires distinct security groups and protected Governance storage. Creator claims alone are not authentication.
 
-## Integrity and runtime boundaries
+## Manual handoff and decision state
 
-Managed Governed boundaries verify immutable archives, saved executable content, destination configuration, exact physical bindings and Agreement effectiveness. Code, SQL, approved parameter or binding changes reject; Markdown-only edits may pass the executable digest. Missing/ambiguous authority, corrupt archives, unavailable APIs and inconsistent provenance fail closed without fallback to Ungoverned.
+1. Engineering saves and completes a manual Dry Run, then exports the portable JSON using `widget_deploy_pipeline()`.
+2. The operator transfers the file explicitly. There is no shared writable submission staging area.
+3. Governance opens `widget_activate_pipeline()` in its own session and imports the JSON. The complete accepted copy is stored in `METADATA_PIPELINE_APPROVAL.package_json` under Governance's identity.
+4. Governance selects the candidate, reviews full source/promoted notebooks, recorded outcomes, physical operations and current Contract/Agreement policy. It supplies an independent review note and confirms approval, rejection or revocation, optionally with expiration.
+5. Engineering reads the decision through read-only policy access and explicitly deploys it in the approved destination workspace.
 
-A preserved-copy integrity repair verifies the approved archived definition and saved readback. Immutable approval rows are not rewritten. Engineers own schedules and explicitly select their intended active notebook; promotion never changes schedules automatically. A schedule pinned to a superseded item rejects admission.
+Opening a widget grants no authority. Import is `imported`, not approved. Each decision appends a distinct `approval_id` with a pipeline-scoped increasing revision. Conditional mutation against the reviewed revision rejects stale/conflicting decisions; accepted package content never changes. Revocation and rejection remain in history. A later approved implementation supersedes earlier deployment requests. The current deployed implementation remains valid while the replacement awaits deployment; the conditional Registry commit selects the new version for new starts. Existing admitted runs retain captured authority unless it is revoked or expires. Approval alone never creates a notebook or an active deployment.
 
-Saved-definition verification has TOCTOU limits: it cannot prove the executing kernel's code identity or prevent privileged direct Spark bypass. A Governed folder is organizational, not a permission boundary. Actual tenant permissions must restrict governance metadata and archives. These limitations and actual Fabric API behavior are mandatory acceptance evidence before enabling Governed admission.
+Governance may inspect Registry/Run metadata because it owns the Lakehouse. Its pipeline widget displays recorded deployments without opening source or deployed Engineering notebook items. Registry records remain Engineering deployment claims and do not become authoritative approval evidence.
+
+## Agreement–Contract association
+
+**Use the physical Contract Activation as the scoped association; no junction table is needed.** Each activation selects one frozen Contract and at most one exact Agreement ID/version/content SHA. One Agreement can govern many activations; the same global Contract can be reused under different terms in different physical workspaces. An Agreement is not automatically attached globally to every use of that Contract.
+
+`widget_activate_data_contract()` independently reviews and conditionally activates that selection. Agreement content and effective dates are verified at review and mutation, and again for Governed policy resolution. Cross-workspace operations require an effective associated Agreement. Consumer provisioning resolves the same exact physical activation and requires its Agreement; an Engineering Registry edit cannot authorize consumption.
+
+Registry Agreement columns are removed. Historical approval policy captures review-time Contract/Agreement selections; it does not pin runtime Contract selection forever. The conceptual link remains:
+
+`METADATA_PIPELINE_REGISTRY.operations_json → METADATA_DATA_CONTRACT_ACTIVATION → METADATA_DATA_CONTRACT`
+
+The first arrow is a logical physical workspace/Table ID association. Exact keyed references are application-enforced; Delta does not provide invented database foreign keys. Each new run resolves the active Contract independently, validates its strategy and Agreement, and records exact Contract provenance. An unchanged compatible notebook does not require promotion when Governance activates a new Contract version. In-flight runs retain their captured definitions and policy.
+
+## Engineering deployment and runtime admission
+
+The internal deployment service independently reads authoritative approval, verifies the complete accepted package, destination identity, current bindings/policy, revocation/expiration/supersession and expected active version. It never uses the latest editable source notebook for deployment.
+
+Engineering archives full source/promoted snapshots, creates a separate Governed item under its own authorized Fabric identity, retrieves the complete definition and requires exact byte equality. A deterministic promotion identity and uniquely named staged item recover retries after lost acknowledgements; duplicate staged identities reject. Serializable whole-table conditional mutation atomically supersedes the old Registry version and inserts the next monotonic version. Failed staging preserves prior authority; retained versions are never silently rewritten or reactivated.
+
+Governed admission independently checks the exact Governance decision, every authority-bearing Registry field, archived bytes, complete current saved implementation, parameters and physical operations. Runtime implementation comparison excludes transient code-cell outputs/counts and execution-only UI/timing metadata; all code, Markdown and behavior metadata remain bound. Full archived bytes and initial deployment readback remain exact. Setting Registry `status = active` cannot manufacture authority. New starts require the current active physical notebook. Managed boundaries reverify the captured immutable deployment; new implementation approval alone does not interrupt an already admitted older implementation. The existing exclusive physical-target publication claims coordinate old/new versions, Ungoverned writers and Contract Activation.
+
+There is no distributed transaction spanning a Governance decision, an Engineering notebook API call and a Registry Delta commit. Approval is rechecked immediately before conditional commit and every governed admission/managed boundary. Revocation racing staging may leave an untrusted staged item or deployment record; neither authorizes execution independently. No claim of absolute cross-service atomicity is made.
+
+## Promotion, rollback and restoration
+
+- **New promotion:** a newly approved submission produces a separate item and a new immutable Registry version.
+- **Rollback:** Engineering exports a retained implementation for a new Governance decision. After approval, deployment creates a new auditable version with `restored_from_version` lineage; it never reactivates an old row.
+- **Restoration:** Engineering exports the active implementation for a separate exact restoration authorization. Governance approves the target promotion/version/snapshot. Engineering verifies both the original deployment approval and recovery authorization, retains modified content before update, restores the exact approved snapshot and verifies complete readback. The intended implementation version stays unchanged. A write-once Engineering Files receipt binds the recovery approval, retained modified-copy URI, operator and completion timestamp. Exact retries reuse that receipt; later new modifications require a fresh recovery decision.
+
+Governance authorizes sensitive decisions; Engineering performs technical notebook operations. Neither widget visibility nor a caller-provided confirmation grants backend authorization. The standalone public `promote_pipeline()`, `restore_pipeline()` and `activate_data_contract()` functions are removed without aliases. The two Governance activation interfaces remain `widget_activate_pipeline()` and `widget_activate_data_contract()`; `widget_deploy_pipeline()` is the focused Engineering interface.
+
+## Fabric limits and release gate
+
+Engineering workspace users may have direct permission to edit Governed notebook items or invoke Spark outside FabricOps. Saved-definition verification has a TOCTOU limit: it cannot prove which code is already loaded in a kernel or prevent all intervening edits. Governed folders organize items and confer no security. Write-once archive APIs are not storage-level WORM against privileged writers; runtime compares their bytes with the accepted Governance copy. Protect the canonical Metadata routing configuration and Governance groups; caller-owned alternative stores are not trusted authority.
+
+No SPN, Workspace Identity or shared notebook kernel is required. No actual tenant permission or Fabric notebook API acceptance has been performed in this environment. Keep `FABRIC_GOVERNED_VALIDATED = False` until the signed-in checklist is completed. Local mocks verify application behavior, not Fabric access control.

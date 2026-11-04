@@ -168,7 +168,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     closed sessions retain their recorded outcome for repeat finalization.
 
     Dry Run returns a session-only summary and persists no target, watermark,
-    processing state, profile observation or run metadata. Ungoverned and
+    processing state, profile observation or run metadata. A completed captured
+    Dry Run retains complete saved-definition and test claims in Engineering
+    Files for independent submission; this is not Governance approval. Ungoverned and
     Governed executions persist their real operational outcome. Persistent
     finalization also releases this execution's physical publication claims. Interrupted runs
     remain incomplete and are never reported as successful finalization.

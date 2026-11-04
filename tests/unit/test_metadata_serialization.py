@@ -37,7 +37,7 @@ def logical_run():
 def test_six_columns_are_physically_strings_and_registry_is_scalar():
     """Physical JSON does not create a reporting table or introduce nested Registry authority."""
     physical = metadata_table_schema_registry()
-    assert len(physical) == 13
+    assert len(physical) == 14
     for table in (RUN, CATALOGUE):
         assert all(metadata_schema_type_name(field.dataType) == 'string'
                    for field in physical[table].fields if field.name in metadata_json_schema(table))

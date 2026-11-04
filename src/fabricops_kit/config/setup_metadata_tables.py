@@ -398,7 +398,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the 13 canonical metadata tables.
+    """Create, validate and safely evolve the 14 canonical metadata tables.
 
     Parameters
     ----------
@@ -507,14 +507,14 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} else None,
+                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_APPROVAL"} else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
             upgrade = None
-            if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"}:
+            if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_APPROVAL"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)
             if metadata_json_schema(table_name):
                 table, upgrade = _upgrade_json_metadata(

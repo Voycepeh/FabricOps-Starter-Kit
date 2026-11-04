@@ -168,7 +168,9 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
     There is no permanent registration, approval, notebook rebinding or automatic
     UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
     setup closes the previous execution. Dry Run never writes Registry, Run,
-    profiling results or Processing State. Persistent runs record final outcomes;
+    profiling results or Processing State. Completed captured Dry Runs retain
+    serializable saved-definition/test claims in Engineering Files for submission.
+    Persistent runs record final outcomes;
     a successful Write does not imply successful whole-notebook completion.
 
     Raises

@@ -35,7 +35,7 @@ def consumer_metadata(monkeypatch):
     op = operation(); op['destination'] = binding
     row = promotion(); row.update(operations_json=json.dumps([op]), bindings_sha256=authority.manifest_digest([op]))
     agreement = dict(agreement_id='agreement', agreement_version='1', start_date=date(2020,1,1), expiry_date=date(2099,1,1))
-    row.update(agreement_id='agreement', agreement_version='1', agreement_sha256=authority.manifest_digest(authority.agreement_definition(agreement)))
+    activation.update(agreement_id='agreement', agreement_version='1', agreement_sha256=authority.manifest_digest(authority.agreement_definition(agreement)))
     tables = {authority.ACTIVATION_TABLE: [activation], authority.REGISTRY_TABLE: [row],
         'METADATA_DATA_CONTRACT': [contract], 'METADATA_DATA_AGREEMENT': [agreement]}
     monkeypatch.setattr(authority, 'metadata_records', lambda table, **kw: deepcopy(tables[table]))
@@ -132,9 +132,12 @@ def test_schema_resolution_keeps_source_and_incremental_target_references_consis
     assert resolved[1]['source_table_ids'] == [resolved[0]['table_id']]
 
 
-def test_consumer_rejects_agreement_for_a_different_physical_item(consumer_metadata):
-    """An exact active Contract cannot borrow an Agreement covering another destination."""
+def test_consumer_cannot_borrow_agreement_from_engineering_registry(consumer_metadata):
+    """Only the exact active Governance Contract association authorizes consumption."""
     fixture = consumer_metadata
-    fixture.activation['destination_json'] = json.dumps({**fixture.binding, 'item_id': 'item-B'})
-    with pytest.raises(ValueError, match='Agreement covers this consumer physical binding'):
-        agent.consumer_context(_config(item='item-B'), 'orders', workspace_id='DEV')
+    fixture.activation.pop('agreement_id')
+    fixture.activation.pop('agreement_version')
+    fixture.activation.pop('agreement_sha256')
+    fixture.row.update(agreement_id='forged', agreement_version='1', agreement_sha256='f'*64)
+    with pytest.raises(ValueError, match='Governance-owned Agreement'):
+        agent.consumer_context(_config(item='item-A'), 'orders', workspace_id='DEV')

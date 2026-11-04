@@ -143,7 +143,7 @@ def validate_registry(rows):
         required = ("execution_workspace_id", "pipeline_id", "pipeline_version", "promotion_id", "status",
             "source_workspace_id", "source_notebook_id", "governed_notebook_id", "snapshot_uri", "snapshot_sha256",
             "source_snapshot_uri", "source_snapshot_sha256", "executable_sha256", "operations_json",
-            "bindings_sha256", "parameters_json", "promoted_by", "promoted_at")
+            "bindings_sha256", "parameters_json", "approval_id", "submission_id", "submission_sha256", "promoted_by", "promoted_at")
         if any(row.get(key) in (None, "") for key in required) or "record_type" in row:
             raise ValueError("Incompatible Pipeline Promotion Registry: complete immutable version and snapshot fields are required. Existing metadata is preserved.")
         validate_pipeline_id(row["pipeline_id"])
@@ -172,29 +172,32 @@ def validate_registry(rows):
                 raise ValueError("Invalid Pipeline Promotion digest: " + field)
         if row["source_workspace_id"] == row["execution_workspace_id"] and row["source_notebook_id"] == row["governed_notebook_id"]:
             raise ValueError("Promotion requires a separate Governed notebook.")
-        refs = [row.get(key) for key in ("agreement_id", "agreement_version", "agreement_sha256")]
-        if any(refs) and not all(refs):
-            raise ValueError("Incomplete exact Agreement reference.")
     return rows
 
 
 def validate_activations(rows):
     """Enforce one frozen Contract per physical workspace/Table ID, including aliases."""
-    identities, bindings, ids = set(), set(), set()
+    identities, bindings, ids, revisions = set(), set(), set(), set()
     for row in rows:
         identity = row.get("workspace_id"), row.get("table_id")
         destination = parse_metadata_json(row.get("destination_json"), field="destination_json")
         physical = normalized_destination(destination)
-        if (not all(identity) or row.get("status") != "active" or type(row.get("revision")) is not int
+        if (not all(identity) or row.get("status") not in {"active", "superseded"} or type(row.get("revision")) is not int
                 or row["revision"] < 1 or not row.get("activation_id") or not row.get("contract_id")
                 or type(row.get("contract_version")) is not int or row["contract_version"] < 1
                 or not row.get("payload_sha256") or not row.get("activated_by") or not row.get("activated_at")):
             raise ValueError("Incomplete active Data Contract identity.")
         if str(destination["workspace_id"]).casefold() != str(identity[0]).casefold():
             raise ValueError("Contract Activation must use the physical table workspace.")
-        if identity in identities or physical in bindings or row["activation_id"] in ids:
+        if (row["activation_id"] in ids or (*identity, row["revision"]) in revisions or
+                row["status"] == "active" and (identity in identities or physical in bindings)):
             raise ValueError("Ambiguous Data Contract Activation identity or physical alias.")
-        identities.add(identity); bindings.add(physical); ids.add(row["activation_id"])
+        refs = [row.get(key) for key in ("agreement_id", "agreement_version", "agreement_sha256")]
+        if any(refs) and not all(refs):
+            raise ValueError("Incomplete Governance-owned Agreement–Contract association.")
+        if row["status"] == "active":
+            identities.add(identity); bindings.add(physical)
+        ids.add(row["activation_id"]); revisions.add((*identity, row["revision"]))
     return rows
 
 
@@ -205,6 +208,11 @@ def read_registry(*, context, spark_session=None):
 
 def read_activations(*, context, spark_session=None):
     """Read independent Governance-owned physical Contract activations."""
+    return [row for row in read_activation_history(context=context, spark_session=spark_session) if row["status"] == "active"]
+
+
+def read_activation_history(*, context, spark_session=None):
+    """Read immutable activation identities and retained superseded selections."""
     return validate_activations(metadata_records(ACTIVATION_TABLE, context=context, spark_session=spark_session))
 
 
@@ -345,7 +353,8 @@ def release_pipeline_lease(plan, *, spark_session=None):
 
 def set_table_contract_activation(table_id, contract_id, contract_version, *, expected_activation_id, activation_id,
                                   governance_confirmed, context, spark_session=None,
-                                  expected_destination=None, expected_payload_sha256=None):
+                                  expected_destination=None, expected_payload_sha256=None,
+                                  agreement_id=None, agreement_version=None, expected_agreement_sha256=None):
     """Activate an exact frozen Contract with replay-safe CAS and physical protection."""
     if governance_confirmed is not True:
         raise ValueError("Explicit Governance confirmation is required; actual storage permissions authorize the mutation.")
@@ -375,22 +384,32 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
         payload_sha256=payload_sha256, activation_id=activation_id,
         status="active", destination_json=canonical_pipeline_json(destination), activated_by=audit["_committed_by"],
         activated_at=datetime.now(UTC).replace(tzinfo=None), **audit)
+    record.update(agreement_id=agreement_id, agreement_version=agreement_version, agreement_sha256=None)
+    if agreement_id is not None or agreement_version is not None:
+        agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session),
+            agreement_id=agreement_id, agreement_version=agreement_version)
+        validate_agreement(agreement)
+        record["agreement_sha256"] = manifest_digest(agreement_definition(agreement))
+        if record["agreement_sha256"] != expected_agreement_sha256:
+            raise ValueError("Agreement changed after Contract review; refresh before activation.")
+    check_contract_agreement(record, execution_workspace_id=workspace, context=context, spark_session=spark_session)
     owner = "activation:" + activation_id
     publication_claim(owner, destination, context=context, spark_session=spark_session)
     try:
         def mutate(rows):
-            matches = [row for row in rows if (row["workspace_id"], row["table_id"]) == (workspace, table_id)]
+            matches = [row for row in rows if (row["workspace_id"], row["table_id"]) == (workspace, table_id) and row["status"] == "active"]
             current = matches[0] if matches else None
             replay = [row for row in rows if row["activation_id"] == activation_id]
             if replay:
-                if current is None or replay[0] is not current or any(current.get(key) != record[key]
-                        for key in ("contract_id", "contract_version", "payload_sha256", "destination_json")):
+                if any(replay[0].get(key) != record[key] for key in ("workspace_id", "table_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
                     raise ValueError("Activation operation ID was reused with different content.")
-                return rows, current
+                return rows, replay[0]
             if (current["activation_id"] if current else None) != expected_activation_id:
                 raise ValueError("Stale Contract Activation; refresh and review again.")
             record["revision"] = current["revision"] + 1 if current else 1
-            result = [row for row in rows if row is not current] + [record]
+            if current:
+                current["status"] = "superseded"
+            result = rows + [record]
             validate_activations(result)
             return result, record
         return mutate_metadata(ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session, operation_id=activation_id)
@@ -463,6 +482,22 @@ class FabricNotebookClient:
         notebook_executable_digest(raw)
         return raw
 
+    def find_named(self, workspace, name):
+        """Recover a lost create acknowledgement by the unique immutable deployment name."""
+        from uuid import UUID
+        path, matches = f"/workspaces/{UUID(workspace)}/items?type=Notebook", []
+        for _ in range(100):
+            payload = self.request("GET", path)
+            matches.extend(row["id"] for row in payload.get("value", []) if row.get("displayName") == name)
+            path = payload.get("continuationUri")
+            if not path:
+                break
+        else:
+            raise RuntimeError("Notebook listing did not complete; deployment cannot safely retry.")
+        if len(matches) > 1:
+            raise RuntimeError("Duplicate staged deployment identities; reconcile before retrying.")
+        return matches[0] if matches else None
+
     def create(self, workspace, name, snapshot, *, folder_id=None):
         """Create a distinct versioned notebook, optionally under the Governed folder."""
         import base64
@@ -516,7 +551,7 @@ def notebook_executable_digest(raw):
     timing and output UI state. Parameter-cell source and tags remain hashed.
     Imported packages and referenced notebooks are deliberately not frozen.
     """
-    notebook = json.loads(raw)
+    notebook = _strict_package_json(raw)
     if notebook.get("nbformat") != 4 or not isinstance(notebook.get("cells"), list):
         raise ValueError("A complete nbformat 4 ipynb snapshot is required.")
     code = []
@@ -538,6 +573,27 @@ def notebook_executable_digest(raw):
     return manifest_digest({"code": code, "metadata": metadata, "nbformat": notebook["nbformat"]})
 
 
+def notebook_implementation_digest(raw):
+    """Verify the complete saved implementation while allowing transient execution output.
+
+    Full archived bytes remain exact. Running a notebook may change code-cell
+    outputs, execution counts and execution-only UI/timing metadata without
+    changing its approved implementation. Markdown and all behavior metadata stay
+    bound; imported dependencies remain outside the notebook snapshot.
+    """
+    notebook_executable_digest(raw)
+    notebook = _strict_package_json(raw)
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            cell.pop("outputs", None)
+            cell.pop("execution_count", None)
+            cell["metadata"] = {key: value for key, value in cell.get("metadata", {}).items()
+                if key not in {"execution", "collapsed", "scrolled", "ExecuteTime"}}
+    notebook["metadata"] = {key: value for key, value in notebook.get("metadata", {}).items()
+        if key not in {"widgets", "signature"}}
+    return manifest_digest(notebook)
+
+
 def promoted_notebook(raw, pipeline_id):
     """Freeze one saved Dry Run setup call, resolving preceding literal notebook constants.
 
@@ -546,7 +602,7 @@ def promoted_notebook(raw, pipeline_id):
     Arbitrary expressions and conditional/nested setup calls remain unsupported.
     """
     import ast
-    notebook = json.loads(raw)
+    notebook = _strict_package_json(raw)
     found, parameters, constants = 0, None, {}
     for cell in notebook["cells"]:
         if cell.get("cell_type") != "code":
@@ -667,31 +723,17 @@ def reviewed_contracts(operations, *, context, spark_session=None):
         contract_guardrail_rows(contract, workspace_id=active["workspace_id"], table_id=op["table_id"])
         if op["pipeline_role"] == "target" and validated_processing(contract["contract_payload"]["table"].get("processing") or {})["load_strategy"] != op["write_mode"]:
             raise ValueError("Active Contract write strategy differs from the promoted notebook.")
+        _, execution_workspace, _ = resolve_fabric_context(context=context)
+        check_contract_agreement(active, execution_workspace_id=execution_workspace, context=context, spark_session=spark_session)
         contracts[op["table_id"]] = contract
     return contracts
 
 
-def check_promotion_agreement(candidate, *, context, spark_session=None):
-    """Validate exact Agreement content and effectiveness when an Agreement is attached."""
-    refs = [candidate.get(key) for key in ("agreement_id", "agreement_version", "agreement_sha256")]
-    if not any(refs):
-        if candidate.get("operations_json") is not None:
-            operations = activation_operations(candidate["operations_json"])
-            if any(op["destination"]["workspace_id"] != candidate.get("execution_workspace_id") for op in operations):
-                raise ValueError("Cross-workspace data operations require an exact effective Data Agreement.")
-        return
-    if not all(refs):
-        raise ValueError("Incomplete exact Data Agreement reference.")
-    row = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session),
-        agreement_id=refs[0], agreement_version=refs[1])
-    validate_agreement(row)
-    if manifest_digest(agreement_definition(row)) != refs[2]:
-        raise ValueError("Exact Data Agreement content changed.")
-
-
 def commit_pipeline_promotion(candidate, *, expected_active_version, context, spark_session=None):
-    """Atomically supersede and insert an immutable version, rejecting racing/stale approval."""
+    """Atomically select a deployed version only under independently verified Governance approval."""
+    verify_promotion_integrity(candidate, context=context, spark_session=spark_session)
     def mutate(rows):
+        verify_registry_approval(candidate, context=context, spark_session=spark_session)
         replay = [row for row in rows if row["promotion_id"] == candidate["promotion_id"]]
         if replay:
             original = replay[0]
@@ -712,150 +754,476 @@ def commit_pipeline_promotion(candidate, *, expected_active_version, context, sp
     return mutate_metadata(REGISTRY_TABLE, mutate, context=context, spark_session=spark_session, operation_id=candidate["promotion_id"])
 
 
-def prepare_pipeline_promotion(dry_run, *, destination_workspace_id, expected_active_version, agreement_id=None,
-                               agreement_version=None, context=None, spark_session=None):
-    """Build a reviewable destination-bound candidate from a completed manual Dry Run."""
-    from fabricops_kit.pipeline.shared import PipelineSession, pipeline_run_row
+# Submission packages carry content identity, never an attestation that testing was truthful.
+APPROVAL_TABLE = "METADATA_PIPELINE_APPROVAL"
+SUBMISSION_FIELDS = {
+    "format_version", "submission_id", "pipeline_id", "source_workspace_id", "source_notebook_id",
+    "execution_workspace_id", "source_snapshot_sha256", "executed_snapshot_sha256", "source_executable_sha256",
+    "snapshot_sha256", "executable_sha256", "executed_executable_sha256", "operations", "tested_operations", "parameters", "dry_run_id",
+    "created_by", "created_at", "expected_active_version", "intent", "retained_promotion_id", "retained_version",
+}
+
+
+def _strict_package_json(raw):
+    """Reject duplicate keys and nonfinite numbers before interpreting untrusted JSON."""
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("Duplicate submission JSON key: " + key)
+            result[key] = value
+        return result
+    def invalid(value):
+        raise ValueError("Nonfinite submission number: " + value)
+    return json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid)
+
+
+def validate_submission(package):
+    """Verify the complete portable saved/executed/submitted record without remote access.
+
+    All claimed test outcomes and creator fields remain engineer-provided claims.
+    Governance separately reviews those claims and authoritative active policies.
+    """
+    import base64
+    from uuid import UUID
+    package = _strict_package_json(package) if isinstance(package, (str, bytes)) else deepcopy(package)
+    if not isinstance(package, dict) or set(package) != {
+            "manifest", "source_notebook_base64", "executed_notebook_base64", "notebook_base64", "dry_run", "contracts", "submission_sha256"}:
+        raise ValueError("Incomplete or unsupported portable submission package.")
+    manifest = package["manifest"]
+    if not isinstance(manifest, dict) or set(manifest) != SUBMISSION_FIELDS or manifest["format_version"] != 1:
+        raise ValueError("Unsupported submission manifest fields or version.")
+    UUID(manifest["submission_id"])
+    validate_pipeline_id(manifest["pipeline_id"])
+    for key in ("source_workspace_id", "source_notebook_id", "execution_workspace_id", "created_by", "created_at", "dry_run_id"):
+        if not isinstance(manifest[key], str) or not manifest[key].strip():
+            raise ValueError("Submission requires " + key)
+    datetime.fromisoformat(manifest["created_at"].replace("Z", "+00:00"))
+    if manifest["intent"] not in {"deploy", "rollback", "restore"}:
+        raise ValueError("Unsupported submission intent.")
+    expected = manifest["expected_active_version"]
+    if expected is not None and (type(expected) is not int or expected < 1):
+        raise ValueError("Invalid expected active version.")
+    if manifest["intent"] != "deploy" and (not manifest["retained_promotion_id"] or
+            type(manifest["retained_version"]) is not int or manifest["retained_version"] < 1):
+        raise ValueError("Rollback/restoration requires exact retained promotion lineage.")
+    source = base64.b64decode(package["source_notebook_base64"], validate=True)
+    snapshot = base64.b64decode(package["notebook_base64"], validate=True)
+    executed = base64.b64decode(package["executed_notebook_base64"], validate=True)
+    if (hashlib.sha256(source).hexdigest() != manifest["source_snapshot_sha256"] or
+            hashlib.sha256(executed).hexdigest() != manifest["executed_snapshot_sha256"] or
+            notebook_executable_digest(executed) != manifest["executed_executable_sha256"] or
+            manifest["executed_executable_sha256"] != manifest["source_executable_sha256"] or
+            notebook_executable_digest(source) != manifest["source_executable_sha256"] or
+            hashlib.sha256(snapshot).hexdigest() != manifest["snapshot_sha256"] or
+            notebook_executable_digest(snapshot) != manifest["executable_sha256"]):
+        raise ValueError("Submitted saved/executed notebook identity or digest mismatch.")
+    promoted, parameters = promoted_notebook(source, manifest["pipeline_id"])
+    if promoted != snapshot or parameters != manifest["parameters"]:
+        raise ValueError("Promoted snapshot or behavior parameters differ from the saved candidate.")
+    operations = activation_operations(manifest["operations"])
+    tested = activation_operations(manifest["tested_operations"])
+    if len(operations) != len(tested):
+        raise ValueError("Submitted and executed operation membership differ.")
+    mappings = {}
+    by_key = {op["operation_key"]: op for op in operations}
+    for op in tested:
+        approved = by_key.get(op["operation_key"])
+        fields = {"operation_key", "pipeline_role", "read_mode", "write_mode", "query_sha256", "requested_schema"}
+        if approved is None or any(op[key] != approved[key] for key in fields):
+            raise ValueError("Submitted behavior differs from recorded Dry Run operations.")
+        if op["table_id"] in mappings and mappings[op["table_id"]] != approved["table_id"]:
+            raise ValueError("Ambiguous destination Table ID mapping.")
+        mappings[op["table_id"]] = approved["table_id"]
+    for op in tested:
+        approved = by_key[op["operation_key"]]
+        if (sorted(mappings[t] for t in op["source_table_ids"]) != approved["source_table_ids"] or
+                (mappings.get(op["incremental_target_table_id"]) if op["incremental_target_table_id"] else None)
+                != approved["incremental_target_table_id"]):
+            raise ValueError("Submitted source/target associations differ from testing.")
+    run = validate_pipeline_run(package["dry_run"])
+    if (run["status"] != "dry_run_completed" or run["execution_mode"] != "dry_run" or
+            run["run_id"] != manifest["dry_run_id"] or run["pipeline_id"] != manifest["pipeline_id"] or
+            run["workspace_id"] != manifest["source_workspace_id"] or run["boundary_completed"] is not True or
+            not run["completed_at"] or run["failures"] or len(run["operations"]) != len(tested)):
+        raise ValueError("Submission requires a complete, consistent recorded manual Dry Run.")
+    tested_by_key = {op["operation_key"]: op for op in tested}
+    for op in run["operations"]:
+        if (op["status"] != "succeeded" or not op["stages"] or
+                any(stage["status"] not in {"passed", "warning", "skipped"} or
+                    stage.get("evaluation_status") == "not_fully_evaluated" for stage in op["stages"]) or
+                any(op[key] != tested_by_key.get(op["operation_key"], {}).get(key)
+                    for key in OPERATION_FIELDS if key != "requested_schema")):
+            raise ValueError("Dry Run contains incomplete or inconsistent operation evidence.")
+        if op["contract_id"] is not None:
+            contract = package["contracts"].get(op["table_id"])
+            if (not contract or contract["contract_id"] != op["contract_id"] or
+                    contract["contract_version"] != op["contract_version"] or
+                    hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != op["payload_sha256"]):
+                raise ValueError("Dry Run Contract evidence is missing or inconsistent.")
+    content = {key: value for key, value in package.items() if key != "submission_sha256"}
+    if manifest_digest(content) != package["submission_sha256"]:
+        raise ValueError("Complete submission canonical digest mismatch.")
+    return package
+
+
+def export_pipeline_submission(dry_run, *, destination_workspace_id, context=None, spark_session=None):
+    """Persist Engineering-owned complete evidence and return a portable JSON package."""
+    import base64
+    from fabricops_kit.pipeline.shared import PipelineSession
     if not isinstance(dry_run, PipelineSession) or dry_run.plan.execution_mode != "dry_run":
-        raise ValueError("Promotion requires the manually executed Dry Run session.")
+        raise ValueError("Engineering export requires a completed manual Dry Run.")
     plan = dry_run.plan
     if not plan.evidence.get("sealed") or plan.evidence["final_result"]["status"] != "dry_run_completed":
-        raise ValueError("Complete and finalize the manual Dry Run before promotion.")
+        raise ValueError("Complete and finalize the manual Dry Run before submission.")
+    if plan.evidence.get("submission_persistence_failed"):
+        plan.evidence["dry_run_evidence_uri"] = persist_engineering_dry_run(plan, spark_session=spark_session)
+        plan.evidence.pop("submission_persistence_failed", None)
     raw = plan.evidence.get("notebook_snapshot")
     if raw is None:
-        raise RuntimeError("Dry Run has no saved notebook verification; save and repeat the manual Dry Run in Fabric.")
-    client = FabricNotebookClient()
-    current = client.definition(plan.workspace_id, plan.notebook_id)
+        raise RuntimeError("No saved notebook was captured before execution; save and repeat the Dry Run.")
+    current = FabricNotebookClient().definition(plan.workspace_id, plan.notebook_id)
     if notebook_executable_digest(current) != notebook_executable_digest(raw):
-        raise RuntimeError("Saved notebook code changed after the manual Dry Run; rerun before promotion.")
-    promoted, parameters = promoted_notebook(current, plan.pipeline_id)
+        raise ValueError("Saved executable notebook changed since execution; save and repeat the Dry Run.")
+    executed, raw = raw, current
+    snapshot, parameters = promoted_notebook(raw, plan.pipeline_id)
     if parameters != plan.evidence.get("source_observation_policy"):
-        raise ValueError("Dry Run parameter overrides differ from the saved notebook.")
+        raise ValueError("Executed parameter overrides differ from the saved definition.")
     config, _, runtime = resolve_fabric_context(context=context or plan.runtime_context)
-    destination = {**runtime, "config": config, "scope_workspace_id": destination_workspace_id,
+    routed = {**runtime, "config": config, "scope_workspace_id": destination_workspace_id,
         "metadata_workspace_id": runtime.get("metadata_workspace_id") or plan.workspace_id}
-    observed = pipeline_run_row(plan, status="dry_run_completed")
     from fabricops_kit.config.metadata_schemas import decode_metadata_row
-    observed = decode_metadata_row("METADATA_PIPELINE_RUN", observed)
-    operations = []
-    for op in observed["operations"]:
-        recorded = plan.evidence["operations"][op["operation_key"]]
-        if "requested_schema" not in recorded:
-            raise ValueError("Manual Dry Run is missing the original schema choice; execute the complete pipeline before review.")
-        operations.append({**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
-            "requested_schema": recorded["requested_schema"]})
-    operations = resolve_promoted_operations(operations, context=destination, spark_session=spark_session)
-    contracts = reviewed_contracts(operations, context=destination, spark_session=spark_session)
-    rows = read_registry(context=destination, spark_session=spark_session)
-    scoped = [row for row in rows if (row["execution_workspace_id"], row["pipeline_id"]) == (destination_workspace_id, plan.pipeline_id)]
-    active = [row for row in scoped if row["status"] == "active"]
-    if (active[0]["pipeline_version"] if active else None) != expected_active_version:
-        raise ValueError("Stale Pipeline Promotion; refresh and review again.")
-    candidate = dict(execution_workspace_id=destination_workspace_id, pipeline_id=plan.pipeline_id,
-        pipeline_version=max((row["pipeline_version"] for row in scoped), default=0)+1, promotion_id=str(uuid4()),
-        source_workspace_id=plan.workspace_id, source_notebook_id=plan.notebook_id, status="active",
-        snapshot_sha256=hashlib.sha256(promoted).hexdigest(), source_snapshot_sha256=hashlib.sha256(current).hexdigest(),
-        executable_sha256=notebook_executable_digest(promoted), operations_json=canonical_pipeline_json(operations),
-        bindings_sha256=manifest_digest(operations), parameters_json=canonical_pipeline_json(parameters),
-        agreement_id=agreement_id, agreement_version=agreement_version, agreement_sha256=None, restored_from_version=None)
-    identical = [row["pipeline_version"] for row in scoped if row["executable_sha256"] == candidate["executable_sha256"]]
-    candidate["restored_from_version"] = max(identical) if identical else None
-    if agreement_id is not None:
-        agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=destination, spark_session=spark_session),
-            agreement_id=agreement_id, agreement_version=agreement_version)
-        candidate["agreement_sha256"] = manifest_digest(agreement_definition(agreement))
-    check_promotion_agreement(candidate, context=destination, spark_session=spark_session)
-    # Review object is hashed and revalidated before any remote mutation.
-    review = dict(candidate=candidate, source_snapshot=current, snapshot=promoted, context=destination,
-        expected_active_version=expected_active_version, contracts={key: {name: row[name] for name in
-            ("contract_id", "contract_version", "contract_payload_json")} for key, row in contracts.items()})
-    review["review_sha256"] = promotion_review_digest(review)
-    return review
+    run = decode_metadata_row("METADATA_PIPELINE_RUN", plan.evidence["final_result"])
+    tested = [{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
+        "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]]
+    rows = read_registry(context=routed, spark_session=spark_session)
+    active = [row for row in rows if row["execution_workspace_id"] == destination_workspace_id
+        and row["pipeline_id"] == plan.pipeline_id and row["status"] == "active"]
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=plan.workspace_id, runtime_context=runtime)
+    manifest = dict(format_version=1, submission_id=str(uuid4()), pipeline_id=plan.pipeline_id,
+        source_workspace_id=plan.workspace_id, source_notebook_id=plan.notebook_id,
+        execution_workspace_id=destination_workspace_id, source_snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+        executed_snapshot_sha256=hashlib.sha256(executed).hexdigest(), executed_executable_sha256=notebook_executable_digest(executed),
+        source_executable_sha256=notebook_executable_digest(raw),
+        snapshot_sha256=hashlib.sha256(snapshot).hexdigest(), executable_sha256=notebook_executable_digest(snapshot),
+        operations=resolve_promoted_operations(tested, context=routed, spark_session=spark_session), tested_operations=tested,
+        parameters=parameters, dry_run_id=plan.plan_id, created_by=audit["_committed_by"], created_at=datetime.now(UTC).isoformat(),
+        expected_active_version=active[0]["pipeline_version"] if active else None,
+        intent="deploy", retained_promotion_id=None, retained_version=None)
+    package = dict(manifest=manifest, source_notebook_base64=base64.b64encode(raw).decode(),
+        executed_notebook_base64=base64.b64encode(executed).decode(),
+        notebook_base64=base64.b64encode(snapshot).decode(), dry_run=run, contracts=json.loads(plan.contracts_json))
+    package["submission_sha256"] = manifest_digest(package)
+    package = validate_submission(canonical_pipeline_json(package))
+    persist_engineering_submission(package, context=routed, spark_session=spark_session)
+    return package
 
 
-def promotion_review_digest(review):
-    """Bind approval to the displayed code, operations, Contracts and expected active version."""
-    return manifest_digest({"candidate": review["candidate"], "expected_active_version": review["expected_active_version"],
-        "contracts": review["contracts"], "source_sha256": hashlib.sha256(review["source_snapshot"]).hexdigest(),
-        "snapshot_sha256": hashlib.sha256(review["snapshot"]).hexdigest()})
+def persist_engineering_submission(package, *, context, spark_session=None):
+    """Write once under explicitly Engineering-writable Files; never use shared staging."""
+    package = validate_submission(package)
+    root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
+    uri = root + "/Files/fabricops/engineering/submissions/" + package["manifest"]["submission_id"] + ".json"
+    spark = get_spark_session(spark_session, context=context)
+    content = canonical_pipeline_json(package).encode()
+    path = spark._jvm.org.apache.hadoop.fs.Path(uri)
+    exists = path.getFileSystem(spark._jsc.hadoopConfiguration()).exists(path)
+    if snapshot_file(uri, spark_session=spark, content=None if exists else content) != content:
+        raise ValueError("Submission identity already contains different immutable content.")
+    return uri
 
 
-def stage_pipeline_promotion(review, *, governance_confirmed=False, spark_session=None):
-    """Archive, clone, verify, then atomically switch authority; failed staging never deactivates old code."""
-    if governance_confirmed is not True or promotion_review_digest(review) != review.get("review_sha256"):
-        raise ValueError("Review the exact candidate and explicitly confirm Pipeline Promotion.")
-    context, candidate = review["context"], deepcopy(review["candidate"])
-    if (hashlib.sha256(review["snapshot"]).hexdigest() != candidate["snapshot_sha256"]
-            or hashlib.sha256(review["source_snapshot"]).hexdigest() != candidate["source_snapshot_sha256"]
-            or notebook_executable_digest(review["snapshot"]) != candidate["executable_sha256"]):
-        raise ValueError("Reviewed notebook bytes differ from the declared snapshot hashes.")
-    _, workspace, runtime = resolve_fabric_context(context=context)
-    if workspace != candidate["execution_workspace_id"]:
-        raise ValueError("Destination execution workspace changed after review.")
+def validate_approvals(rows):
+    """Reject ambiguous histories and mismatches between decisions and accepted packages."""
+    ids, revisions, submissions = set(), set(), {}
+    for row in rows:
+        package = validate_submission(row["package_json"])
+        manifest = package["manifest"]
+        key = row["execution_workspace_id"], row["pipeline_id"], row["revision"]
+        if (not row["approval_id"] or row["approval_id"] in ids or key in revisions or
+                type(row["revision"]) is not int or row["revision"] < 1 or
+                row["status"] not in {"imported", "approved", "rejected", "revoked"} or
+                row["decision_kind"] != manifest["intent"] or
+                any(row[key] != manifest[key] for key in ("submission_id", "pipeline_id", "execution_workspace_id", "expected_active_version")) or
+                row["submission_sha256"] != package["submission_sha256"] or
+                row.get("restores_promotion_id") != (manifest["retained_promotion_id"] if manifest["intent"] == "restore" else None) or
+                not row["decided_by"] or not row["decided_at"]):
+            raise ValueError("Invalid or ambiguous authoritative Governance decision history.")
+        previous = submissions.setdefault(row["submission_id"], row["submission_sha256"])
+        if previous != row["submission_sha256"]:
+            raise ValueError("Accepted submission identity changed content.")
+        policy = parse_metadata_json(row["policy_json"], field="policy_json")
+        if not isinstance(policy, dict):
+            raise ValueError("Review policy evidence must be an object.")
+        ids.add(row["approval_id"]); revisions.add(key)
+    for submission_id in submissions:
+        events = sorted((row for row in rows if row["submission_id"] == submission_id), key=lambda row: row["revision"])
+        if events[0]["status"] != "imported" or sum(row["status"] == "imported" for row in events) != 1:
+            raise ValueError("Every decision requires one prior immutable Governance import.")
+    return rows
+
+
+def read_approvals(*, context, spark_session=None):
+    """Read only Governance-controlled decisions; Registry status cannot grant approval."""
+    return validate_approvals(metadata_records(APPROVAL_TABLE, context=context, spark_session=spark_session))
+
+
+def import_pipeline_submission(package, *, context, spark_session=None):
+    """Accept an immutable review copy using Governance's storage identity, without deployment."""
+    package = validate_submission(package)
+    manifest = package["manifest"]
+    config, workspace, runtime = resolve_fabric_context(context=context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
+    def mutate(rows):
+        validate_approvals(rows)
+        matches = [row for row in rows if row["submission_id"] == manifest["submission_id"]]
+        if matches:
+            if any(row["submission_sha256"] != package["submission_sha256"] for row in matches):
+                raise ValueError("An accepted submission is immutable; export a new submission identity.")
+            return rows, min(matches, key=lambda row: row["revision"])
+        revision = max((row["revision"] for row in rows if row["execution_workspace_id"] == manifest["execution_workspace_id"]
+            and row["pipeline_id"] == manifest["pipeline_id"]), default=0) + 1
+        row = dict(approval_id=str(uuid4()), submission_id=manifest["submission_id"], submission_sha256=package["submission_sha256"],
+            execution_workspace_id=manifest["execution_workspace_id"], pipeline_id=manifest["pipeline_id"], revision=revision,
+            status="imported", decision_kind=manifest["intent"], package_json=canonical_pipeline_json(package), policy_json="{}",
+            expected_active_version=manifest["expected_active_version"],
+            restores_promotion_id=manifest["retained_promotion_id"] if manifest["intent"] == "restore" else None,
+            expires_at=None, decided_by=audit["_committed_by"], decided_at=datetime.now(UTC).replace(tzinfo=None),
+            review_note="Untrusted Engineering claims; integrity verified, testing outcomes require independent review.", **audit)
+        validate_approvals(rows + [row])
+        return rows + [row], row
+    return mutate_metadata(APPROVAL_TABLE, mutate, context=context, spark_session=spark_session)
+
+
+def review_submission_policy(package, *, context, spark_session=None):
+    """Independently verify configured bindings, frozen Contracts and Agreement associations."""
+    package = validate_submission(package)
+    manifest = package["manifest"]
+    routed = {**context, "scope_workspace_id": manifest["execution_workspace_id"]}
+    operations = manifest["operations"]
+    if resolve_promoted_operations(operations, context=routed, spark_session=spark_session) != operations:
+        raise ValueError("Submitted physical bindings differ from Governance's configured destination.")
+    if manifest["intent"] in {"rollback", "restore"}:
+        retained = exact_record(read_registry(context=routed, spark_session=spark_session),
+            execution_workspace_id=manifest["execution_workspace_id"], pipeline_id=manifest["pipeline_id"],
+            pipeline_version=manifest["retained_version"], promotion_id=manifest["retained_promotion_id"])
+        verify_registry_approval(retained, context=routed, spark_session=spark_session, captured=True)
+        if (any(retained[key] != manifest[key] for key in ("snapshot_sha256", "source_snapshot_sha256", "executable_sha256",
+                "source_workspace_id", "source_notebook_id")) or
+                activation_operations(retained["operations_json"]) != operations or
+                parse_metadata_json(retained["parameters_json"], field="parameters_json") != manifest["parameters"] or
+                manifest["intent"] == "restore" and (retained["status"] != "active" or
+                    manifest["expected_active_version"] != retained["pipeline_version"])):
+            raise ValueError("Recovery submission differs from the exact retained approved implementation.")
+    contracts = reviewed_contracts(operations, context=routed, spark_session=spark_session)
+    policy = {}
+    for operation in operations:
+        activation = exact_record(read_activations(context=routed, spark_session=spark_session),
+            workspace_id=operation["destination"]["workspace_id"], table_id=operation["table_id"])
+        check_contract_agreement(activation, execution_workspace_id=manifest["execution_workspace_id"],
+            context=routed, spark_session=spark_session)
+        contract = contracts[operation["table_id"]]
+        policy[operation["operation_key"]] = {key: activation.get(key) for key in
+            ("activation_id", "contract_id", "contract_version", "payload_sha256", "agreement_id", "agreement_version", "agreement_sha256")}
+        if contract["contract_id"] != activation["contract_id"]:
+            raise ValueError("Contract changed during policy review.")
+    return policy
+
+
+def decide_pipeline_submission(submission_id, *, status, expected_revision, policy, review_note,
+                               context, governance_confirmed=False, expires_at=None, spark_session=None):
+    """Append a conditional Governance decision; never create or update Engineering notebooks."""
+    if type(expected_revision) is not int or expected_revision < 1:
+        raise ValueError("An exact positive Governance review revision is required.")
+    if governance_confirmed is not True or status not in {"approved", "rejected", "revoked"} or not str(review_note).strip():
+        raise ValueError("Review, supply a decision note and explicitly confirm the Governance decision.")
+    rows = read_approvals(context=context, spark_session=spark_session)
+    matches = [row for row in rows if row["submission_id"] == submission_id]
+    if not matches:
+        raise ValueError("Import the submission into Governance-controlled metadata first.")
+    imported = min(matches, key=lambda row: row["revision"])
+    if status == "approved" and review_submission_policy(imported["package_json"], context=context, spark_session=spark_session) != policy:
+        raise ValueError("Policy changed after review; review the current Contracts and Agreements again.")
+    if expires_at is not None:
+        expires_at = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00")) if not isinstance(expires_at, datetime) else expires_at
+        expires_at = expires_at.astimezone(UTC).replace(tzinfo=None) if expires_at.tzinfo else expires_at
+        if expires_at <= datetime.now(UTC).replace(tzinfo=None):
+            raise ValueError("Approval expiration must be in the future.")
+    config, workspace, runtime = resolve_fabric_context(context=context)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
+    if status == "approved" and audit["_committed_by"] == validate_submission(imported["package_json"])["manifest"]["created_by"]:
+        raise ValueError("An independent Governance reviewer must approve the submission; self-approval is prohibited.")
+    def mutate(current):
+        validate_approvals(current)
+        scoped = [row for row in current if row["execution_workspace_id"] == imported["execution_workspace_id"] and row["pipeline_id"] == imported["pipeline_id"]]
+        if max(row["revision"] for row in scoped) != expected_revision:
+            raise ValueError("Stale or conflicting Governance review; refresh before deciding.")
+        latest = max((row for row in scoped if row["submission_id"] == submission_id), key=lambda row: row["revision"])
+        if status == "revoked" and latest["status"] != "approved":
+            raise ValueError("Only an approved submission can be revoked.")
+        row = {**imported, **audit, "approval_id": str(uuid4()), "revision": expected_revision + 1,
+            "status": status, "policy_json": canonical_pipeline_json(policy), "expires_at": expires_at,
+            "decided_by": audit["_committed_by"], "decided_at": datetime.now(UTC).replace(tzinfo=None), "review_note": str(review_note).strip()}
+        validate_approvals(current + [row])
+        return current + [row], row
+    return mutate_metadata(APPROVAL_TABLE, mutate, context=context, spark_session=spark_session)
+
+
+def authoritative_approval(approval_id, *, context, spark_session=None, captured=False):
+    """Resolve an exact effective Governance authority; never trust an Engineering row."""
+    rows = read_approvals(context=context, spark_session=spark_session)
+    approval = exact_record(rows, approval_id=approval_id, status="approved")
+    latest = max((row for row in rows if row["submission_id"] == approval["submission_id"]), key=lambda row: row["revision"])
+    if latest["approval_id"] != approval_id:
+        raise ValueError("Approval was revoked or replaced by a later decision.")
+    expires = approval.get("expires_at")
+    if expires is not None:
+        expires = datetime.fromisoformat(expires.replace("Z", "+00:00")) if isinstance(expires, str) else expires
+        expires = expires.astimezone(UTC).replace(tzinfo=None) if expires.tzinfo else expires
+        if expires <= datetime.now(UTC).replace(tzinfo=None):
+            raise ValueError("Governance approval has expired.")
+    if not captured and approval["decision_kind"] != "restore":
+        approved = [row for row in rows if row["execution_workspace_id"] == approval["execution_workspace_id"]
+            and row["pipeline_id"] == approval["pipeline_id"] and row["status"] == "approved" and row["decision_kind"] != "restore"]
+        if max(approved, key=lambda row: row["revision"])["approval_id"] != approval_id:
+            raise ValueError("Approval was superseded by a newer approved implementation.")
+    return approval
+
+
+def verify_registry_approval(row, *, context, spark_session=None, captured=False):
+    """Bind all deployment authority to the exact package retained by Governance."""
+    approval = authoritative_approval(row["approval_id"], context=context, spark_session=spark_session, captured=captured)
+    package = validate_submission(approval["package_json"])
+    manifest = package["manifest"]
+    if (approval["decision_kind"] == "restore" or row["submission_id"] != manifest["submission_id"] or
+            row["submission_sha256"] != package["submission_sha256"] or
+            any(row[key] != manifest[key] for key in ("pipeline_id", "execution_workspace_id", "source_workspace_id", "source_notebook_id",
+                "snapshot_sha256", "source_snapshot_sha256", "executable_sha256")) or
+            activation_operations(row["operations_json"]) != manifest["operations"] or
+            parse_metadata_json(row["parameters_json"], field="parameters_json") != manifest["parameters"] or
+            row["bindings_sha256"] != manifest_digest(manifest["operations"])):
+        raise ValueError("Engineering deployment differs from authoritative Governance approval.")
+    return approval, package
+
+
+def export_retained_submission(promotion_id, *, intent, context, spark_session=None):
+    """Submit rollback or exact restoration of a retained version for a new Governance decision."""
+    if intent not in {"rollback", "restore"}:
+        raise ValueError("Select rollback or restoration.")
+    config, workspace, runtime = resolve_fabric_context(context=context)
     rows = read_registry(context=context, spark_session=spark_session)
-    replay = [row for row in rows if row["promotion_id"] == candidate["promotion_id"]]
+    row = exact_record(rows, promotion_id=promotion_id, execution_workspace_id=workspace)
+    _, package = verify_registry_approval(row, context=context, spark_session=spark_session, captured=True)
+    active = exact_record(rows, execution_workspace_id=workspace, pipeline_id=row["pipeline_id"], status="active")
+    if intent == "restore" and active["promotion_id"] != promotion_id:
+        raise ValueError("Restoration targets the currently intended active version only.")
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
+    manifest = package["manifest"]
+    manifest.update(submission_id=str(uuid4()), created_by=audit["_committed_by"], created_at=datetime.now(UTC).isoformat(),
+        expected_active_version=active["pipeline_version"], intent=intent, retained_promotion_id=promotion_id, retained_version=row["pipeline_version"])
+    package["submission_sha256"] = manifest_digest({key: value for key, value in package.items() if key != "submission_sha256"})
+    persist_engineering_submission(package, context=context, spark_session=spark_session)
+    return package
+
+
+def deploy_approved_submission(approval_id, *, context, spark_session=None):
+    """Engineering clones the exact approved snapshot, verifies it and conditionally selects a new version."""
+    import base64
+    from uuid import NAMESPACE_URL, uuid5
+    approval = authoritative_approval(approval_id, context=context, spark_session=spark_session)
+    package = validate_submission(approval["package_json"])
+    manifest = package["manifest"]
+    _, workspace, runtime = resolve_fabric_context(context=context)
+    if workspace != manifest["execution_workspace_id"]:
+        raise ValueError("Deploy from the exact authorized Engineering execution workspace.")
+    if manifest["intent"] == "restore":
+        return restore_promoted_notebook(manifest["pipeline_id"], workspace_id=workspace,
+            expected_active_version=manifest["expected_active_version"], approval_id=approval_id,
+            context=context, spark_session=spark_session)
+    review_submission_policy(package, context=context, spark_session=spark_session)
+    rows = read_registry(context=context, spark_session=spark_session)
+    promotion_id = str(uuid5(NAMESPACE_URL, "fabricops:deployment:" + approval_id))
+    replay = [row for row in rows if row["promotion_id"] == promotion_id]
     if replay:
-        # Lost acknowledgement: only the same immutable request may recover success.
-        if any(replay[0].get(key) != value for key, value in candidate.items() if key != "status"):
-            raise ValueError("Promotion ID was reused with different content.")
+        verify_registry_approval(replay[0], context=context, spark_session=spark_session)
+        verify_promotion_integrity(replay[0], context=context, spark_session=spark_session)
         return replay[0]
-    operations = activation_operations(candidate["operations_json"])
-    resolved = resolve_promoted_operations(operations, context=context, spark_session=spark_session)
-    if resolved != operations or manifest_digest(operations) != candidate["bindings_sha256"]:
-        raise ValueError("Destination configuration drift after review.")
-    contracts = reviewed_contracts(operations, context=context, spark_session=spark_session)
-    actual = {key: {name: row[name] for name in ("contract_id", "contract_version", "contract_payload_json")} for key, row in contracts.items()}
-    if actual != review["contracts"]:
-        raise ValueError("Active Contracts changed after review; review the new versions.")
-    check_promotion_agreement(candidate, context=context, spark_session=spark_session)
-    if candidate.get("restored_from_version") is not None:
-        previous = exact_record(rows, execution_workspace_id=workspace, pipeline_id=candidate["pipeline_id"],
-            pipeline_version=candidate["restored_from_version"])
-        if previous["pipeline_version"] >= candidate["pipeline_version"] or previous["executable_sha256"] != candidate["executable_sha256"]:
-            raise ValueError("Implementation lineage must identify the exact retained prior implementation.")
+    scoped = [row for row in rows if row["pipeline_id"] == manifest["pipeline_id"] and row["execution_workspace_id"] == workspace]
+    active = [row for row in scoped if row["status"] == "active"]
+    if (active[0]["pipeline_version"] if active else None) != manifest["expected_active_version"]:
+        raise ValueError("Stale approved deployment; submit the current expected version for a new review.")
+    version = max((row["pipeline_version"] for row in scoped), default=0) + 1
+    if manifest["intent"] == "rollback":
+        retained = exact_record(rows, promotion_id=manifest["retained_promotion_id"], pipeline_version=manifest["retained_version"],
+            execution_workspace_id=workspace, pipeline_id=manifest["pipeline_id"])
+        if any(retained[key] != manifest[key] for key in ("snapshot_sha256", "executable_sha256")):
+            raise ValueError("Rollback must match the exact retained approved implementation.")
+    source = base64.b64decode(package["source_notebook_base64"], validate=True)
+    snapshot = base64.b64decode(package["notebook_base64"], validate=True)
     spark = get_spark_session(spark_session, context=context)
     root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
-    root += f'/Files/fabricops/pipeline_snapshots/{workspace}/{candidate["pipeline_id"]}/v{candidate["pipeline_version"]}/{candidate["promotion_id"]}'
-    for field, content, name in (("source_snapshot_uri", review["source_snapshot"], "source.ipynb"), ("snapshot_uri", review["snapshot"], "notebook.ipynb")):
+    root += "/Files/fabricops/engineering/pipeline_snapshots/" + promotion_id
+    candidate = {key: manifest[key] for key in ("execution_workspace_id", "pipeline_id", "source_workspace_id", "source_notebook_id",
+        "source_snapshot_sha256", "snapshot_sha256", "executable_sha256", "submission_id")}
+    candidate.update(pipeline_version=version, promotion_id=promotion_id, status="active", approval_id=approval_id,
+        submission_sha256=package["submission_sha256"], operations_json=canonical_pipeline_json(manifest["operations"]),
+        bindings_sha256=manifest_digest(manifest["operations"]), parameters_json=canonical_pipeline_json(manifest["parameters"]),
+        restored_from_version=manifest["retained_version"] if manifest["intent"] == "rollback" else None)
+    for field, content, name in (("source_snapshot_uri", source, "source.ipynb"), ("snapshot_uri", snapshot, "notebook.ipynb")):
         uri = root + "/" + name
-        # Resumable staging may read an existing identical file, never overwrite it.
-        jpath = spark._jvm.org.apache.hadoop.fs.Path(uri)
-        exists = jpath.getFileSystem(spark._jsc.hadoopConfiguration()).exists(jpath)
-        actual = snapshot_file(uri, spark_session=spark, content=None if exists else content)
-        if actual != content:
-            raise RuntimeError("Existing immutable notebook archive differs; inspect staged artifacts.")
+        path = spark._jvm.org.apache.hadoop.fs.Path(uri)
+        exists = path.getFileSystem(spark._jsc.hadoopConfiguration()).exists(path)
+        if snapshot_file(uri, spark_session=spark, content=None if exists else content) != content:
+            raise ValueError("Existing immutable Engineering snapshot changed.")
         candidate[field] = uri
     client = FabricNotebookClient()
-    # Preserve the staged item ID on lost-ack retry; no silent item replacement.
-    staged_id = review.get("staged_notebook_id")
+    name = f'Governed {manifest["pipeline_id"]} {promotion_id}'
+    staged_id = client.find_named(workspace, name)
     if not staged_id:
-        folder = client.governed_folder(workspace) if workspace == candidate["source_workspace_id"] else None
-        staged_id = client.create(workspace, f'Governed {candidate["pipeline_id"]} v{candidate["pipeline_version"]} {candidate["promotion_id"]}',
-            review["snapshot"], folder_id=folder)
-        review["staged_notebook_id"] = staged_id
+        staged_id = client.create(workspace, name, snapshot, folder_id=client.governed_folder(workspace))
     candidate["governed_notebook_id"] = staged_id
-    retrieved = client.definition(workspace, staged_id)
-    if notebook_executable_digest(retrieved) != candidate["executable_sha256"]:
-        raise RuntimeError("Cloned Governed notebook readback changed executable content; old version remains active.")
+    if client.definition(workspace, staged_id) != snapshot:
+        raise RuntimeError("Complete deployed notebook definition differs from the approved snapshot; previous version remains active.")
     audit = build_runtime_audit_fields(config=runtime["config"], active_workspace_id=workspace, runtime_context=runtime)
     candidate.update(promoted_by=audit["_committed_by"], promoted_at=datetime.now(UTC).replace(tzinfo=None), **audit)
-    return commit_pipeline_promotion(candidate, expected_active_version=review["expected_active_version"], context=context, spark_session=spark)
+    verify_registry_approval(candidate, context=context, spark_session=spark)
+    return commit_pipeline_promotion(candidate, expected_active_version=manifest["expected_active_version"], context=context, spark_session=spark)
 
 
-def verify_promotion_integrity(row, *, context, spark_session=None):
+def check_contract_agreement(activation, *, execution_workspace_id, context, spark_session=None):
+    """Enforce Governance's Agreement association for the exact active physical Contract."""
+    refs = [activation.get(key) for key in ("agreement_id", "agreement_version", "agreement_sha256")]
+    if not any(refs):
+        if activation["workspace_id"] != execution_workspace_id:
+            raise ValueError("Cross-workspace operations require an effective Agreement associated with the active Contract.")
+        return
+    if not all(refs):
+        raise ValueError("Incomplete Governance-owned Agreement–Contract association.")
+    row = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session),
+        agreement_id=refs[0], agreement_version=refs[1])
+    validate_agreement(row)
+    if manifest_digest(agreement_definition(row)) != refs[2]:
+        raise ValueError("Associated Agreement content changed.")
+
+
+def verify_promotion_integrity(row, *, context, spark_session=None, captured=False):
     """Verify archive, saved notebook, exact bindings and Agreement before managed work.
 
     Saved-definition verification is subject to TOCTOU. It cannot attest the
     executing kernel or prevent privileged direct Spark bypass. The release gate
     remains closed until the signed-in integration checklist has been completed.
     """
+    _, approved_package = verify_registry_approval(row, context=context, spark_session=spark_session, captured=captured)
+    import base64
     spark = get_spark_session(spark_session, context=context)
     try:
         raw = snapshot_file(row["snapshot_uri"], spark_session=spark)
         source = snapshot_file(row["source_snapshot_uri"], spark_session=spark)
     except Exception as exc:
         raise RuntimeError("Governed notebook archive is missing or unreadable; restore the exact retained files before retrying.") from exc
-    if (hashlib.sha256(raw).hexdigest() != row["snapshot_sha256"]
+    if (raw != base64.b64decode(approved_package["notebook_base64"], validate=True) or
+            source != base64.b64decode(approved_package["source_notebook_base64"], validate=True) or
+            hashlib.sha256(raw).hexdigest() != row["snapshot_sha256"]
             or hashlib.sha256(source).hexdigest() != row["source_snapshot_sha256"]
             or notebook_executable_digest(raw) != row["executable_sha256"]):
         raise RuntimeError("Governed integrity mismatch: immutable notebook snapshot is missing or corrupt.")
@@ -863,12 +1231,11 @@ def verify_promotion_integrity(row, *, context, spark_session=None):
         saved = FabricNotebookClient().definition(row["execution_workspace_id"], row["governed_notebook_id"])
     except Exception as exc:
         raise RuntimeError("Governed notebook verifier unavailable: cannot read the saved definition.") from exc
-    if notebook_executable_digest(saved) != row["executable_sha256"]:
+    if notebook_implementation_digest(saved) != notebook_implementation_digest(raw) or notebook_executable_digest(saved) != row["executable_sha256"]:
         raise RuntimeError("Governed integrity mismatch: saved code or parameters changed. Restore the exact snapshot or Dry Run and promote a new version.")
     operations = activation_operations(row["operations_json"])
     if manifest_digest(operations) != row["bindings_sha256"] or resolve_promoted_operations(operations, context=context, spark_session=spark) != operations:
         raise RuntimeError("Governed integrity mismatch: physical binding or destination configuration drift.")
-    check_promotion_agreement(row, context=context, spark_session=spark)
     return operations
 
 
@@ -887,7 +1254,7 @@ def build_governed_pipeline_plan(*, pipeline_id, context=None, spark_session=Non
     row = exact_record(rows, execution_workspace_id=workspace, pipeline_id=pipeline_id, status="active")
     if row["governed_notebook_id"] != runtime.get("notebook_id"):
         raise RuntimeError("Governed start rejected: stale schedule or superseded notebook version.")
-    operations = verify_promotion_integrity(row, context=context, spark_session=spark_session)
+    operations = verify_promotion_integrity(row, context=context, spark_session=spark_session, captured=True)
     contracts = reviewed_contracts(operations, context=context, spark_session=spark_session)
     participants = {"source": [], "target": []}
     for op in operations:
@@ -907,6 +1274,9 @@ def build_governed_pipeline_plan(*, pipeline_id, context=None, spark_session=Non
         pipeline_id=pipeline_id, pipeline_version=row["pipeline_version"], promotion_id=row["promotion_id"],
         governed_notebook_id=row["governed_notebook_id"], activated_operations_json=row["operations_json"])
     plan.evidence["promotion"] = deepcopy(row)
+    plan.evidence["governance_approval"] = deepcopy(verify_registry_approval(row, context=context, spark_session=spark_session, captured=True)[0])
+    plan.evidence["contract_activations"] = [exact_record(read_activations(context=context, spark_session=spark_session),
+        workspace_id=op["destination"]["workspace_id"], table_id=op["table_id"]) for op in operations]
     plan.evidence["approved_parameters"] = parse_metadata_json(row["parameters_json"], field="parameters_json")
     return plan
 
@@ -924,7 +1294,9 @@ def verify_governed_plan(plan, *, spark_session=None):
     retained = plan.evidence["promotion"]
     if row["status"] not in {"active", "superseded"} or any(row.get(key) != value for key, value in retained.items() if key != "status"):
         raise RuntimeError("Governed captured immutable approval changed or was retired.")
-    verify_promotion_integrity(row, context=plan.runtime_context, spark_session=spark_session)
+    verify_promotion_integrity(row, context=plan.runtime_context, spark_session=spark_session, captured=True)
+    for activation in plan.evidence["contract_activations"]:
+        check_contract_agreement(activation, execution_workspace_id=plan.workspace_id, context=plan.runtime_context, spark_session=spark_session)
     for contract in json.loads(plan.contracts_json).values():
         resolve_activation_contract({**contract, "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()},
             context=plan.runtime_context, spark_session=spark_session)
@@ -938,13 +1310,24 @@ def guard_governed_write(plan, destination, *, spark_session=None):
     plan.evidence["lease_token"] = plan.plan_id
 
 
-def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_version, governance_confirmed,
+def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_version, approval_id,
                               context, spark_session=None):
     """Preserve the changed copy, restore the exact active archive, and verify saved readback."""
-    if governance_confirmed is not True:
-        raise ValueError("Review and explicitly confirm exact notebook restoration.")
+    import base64
+    approval = authoritative_approval(approval_id, context=context, spark_session=spark_session)
+    package = validate_submission(approval["package_json"])
+    manifest = package["manifest"]
+    if approval["decision_kind"] != "restore":
+        raise ValueError("A separate exact Governance restoration authorization is required.")
     row = exact_record(read_registry(context=context, spark_session=spark_session), execution_workspace_id=workspace_id,
         pipeline_id=pipeline_id, pipeline_version=expected_active_version, status="active")
+    verify_registry_approval(row, context=context, spark_session=spark_session, captured=True)
+    if (manifest["retained_promotion_id"] != row["promotion_id"] or manifest["retained_version"] != row["pipeline_version"] or
+            manifest["execution_workspace_id"] != workspace_id or
+            any(row[key] != manifest[key] for key in ("snapshot_sha256", "source_snapshot_sha256", "executable_sha256")) or
+            activation_operations(row["operations_json"]) != manifest["operations"] or
+            parse_metadata_json(row["parameters_json"], field="parameters_json") != manifest["parameters"]):
+        raise ValueError("Restoration authorization does not cover this exact active deployment.")
     spark = get_spark_session(spark_session, context=context)
     try:
         raw = snapshot_file(row["snapshot_uri"], spark_session=spark)
@@ -958,21 +1341,47 @@ def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_vers
     operations = activation_operations(row["operations_json"])
     if resolve_promoted_operations(operations, context=context, spark_session=spark) != operations:
         raise RuntimeError("Resolve destination configuration drift before exact restoration.")
-    check_promotion_agreement(row, context=context, spark_session=spark)
+    review_submission_policy(package, context=context, spark_session=spark)
     client = FabricNotebookClient()
     changed = client.definition(workspace_id, row["governed_notebook_id"])
-    uri = row["snapshot_uri"].rsplit("/", 1)[0] + "/repairs/" + str(uuid4()) + ".ipynb"
-    snapshot_file(uri, spark_session=spark, content=changed)
+    uri = row["snapshot_uri"].rsplit("/", 1)[0] + "/repairs/" + approval_id + ".modified.ipynb"
+    receipt_uri = uri.removesuffix(".modified.ipynb") + ".json"
+    def exists(location):
+        path = spark._jvm.org.apache.hadoop.fs.Path(location)
+        return path.getFileSystem(spark._jsc.hadoopConfiguration()).exists(path)
+    if exists(receipt_uri):
+        receipt = _strict_package_json(snapshot_file(receipt_uri, spark_session=spark))
+        if (receipt["restoration_approval_id"] != approval_id or receipt["promotion_id"] != row["promotion_id"] or
+                receipt["pipeline_version"] != row["pipeline_version"] or receipt["snapshot_sha256"] != row["snapshot_sha256"]):
+            raise ValueError("Restoration receipt differs from the authorized implementation.")
+        if notebook_implementation_digest(changed) != notebook_implementation_digest(raw):
+            raise ValueError("Restoration authorization was already used; request a fresh decision for new modifications.")
+        verify_promotion_integrity(row, context=context, spark_session=spark, captured=True)
+        return receipt
+    if exists(uri):
+        preserved = snapshot_file(uri, spark_session=spark)
+        if changed not in (preserved, raw):
+            raise ValueError("Notebook changed after recovery staging; request a fresh restoration decision.")
+    else:
+        snapshot_file(uri, spark_session=spark, content=changed)
     # An intervening promotion cancels repair before updating any physical notebook.
     exact_record(read_registry(context=context, spark_session=spark), execution_workspace_id=workspace_id,
         pipeline_id=pipeline_id, pipeline_version=expected_active_version, status="active")
+    authoritative_approval(approval_id, context=context, spark_session=spark)
+    verify_registry_approval(row, context=context, spark_session=spark, captured=True)
     client.update(workspace_id, row["governed_notebook_id"], raw)
     actual = client.definition(workspace_id, row["governed_notebook_id"])
-    if notebook_executable_digest(actual) != row["executable_sha256"]:
+    if actual != raw or notebook_executable_digest(actual) != row["executable_sha256"]:
         raise RuntimeError("Restoration readback failed; Governed remains blocked by integrity mismatch.")
-    verify_promotion_integrity(row, context=context, spark_session=spark)
-    return {"promotion_id": row["promotion_id"], "pipeline_version": row["pipeline_version"], "preserved_copy_uri": uri,
+    verify_promotion_integrity(row, context=context, spark_session=spark, captured=True)
+    _, _, runtime = resolve_fabric_context(context=context)
+    audit = build_runtime_audit_fields(config=runtime["config"], active_workspace_id=workspace_id, runtime_context=runtime)
+    receipt = {"restoration_approval_id": approval_id, "promotion_id": row["promotion_id"], "pipeline_version": row["pipeline_version"],
+        "preserved_copy_uri": uri, "receipt_uri": receipt_uri, "snapshot_sha256": row["snapshot_sha256"],
+        "restored_by": audit["_committed_by"], "restored_at": datetime.now(UTC).isoformat(),
         "ready": FABRIC_GOVERNED_VALIDATED, "blocking_reason": None if FABRIC_GOVERNED_VALIDATED else FABRIC_VALIDATION_PENDING}
+    snapshot_file(receipt_uri, spark_session=spark, content=canonical_pipeline_json(receipt).encode())
+    return receipt
 
 
 def resolve_active_consumer_contract(config, active_workspace_id, table_id, *, spark_session=None, destination=None):
@@ -988,11 +1397,43 @@ def resolve_active_consumer_contract(config, active_workspace_id, table_id, *, s
     if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != physical:
         raise ValueError("Consumer physical binding differs from the activated Contract; review the configured table before provisioning.")
     contract = resolve_activation_contract(activation, context=context, spark_session=spark_session)
-    agreements = {(row["agreement_id"], row["agreement_version"], row["agreement_sha256"]) for row in read_registry(context=context, spark_session=spark_session)
-        if row["status"] == "active" and row.get("agreement_id") and any(op["table_id"] == table_id
-            and normalized_destination(op["destination"]) == physical for op in activation_operations(row["operations_json"]))}
-    if len(agreements) != 1:
-        raise ValueError("No unambiguous active pipeline Agreement covers this consumer physical binding.")
-    agreement_id, version, digest = next(iter(agreements))
-    check_promotion_agreement(dict(agreement_id=agreement_id, agreement_version=version, agreement_sha256=digest), context=context, spark_session=spark_session)
-    return {**contract, "agreement_id": agreement_id, "agreement_version": version}
+    check_contract_agreement(activation, execution_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
+    if not activation.get("agreement_id"):
+        raise ValueError("Consumer provisioning requires an effective Governance-owned Agreement–Contract association.")
+    return {**contract, "agreement_id": activation["agreement_id"], "agreement_version": activation["agreement_version"]}
+
+
+def persist_engineering_dry_run(plan, *, spark_session=None):
+    """Retain serializable Engineering test claims before the notebook session ends.
+
+    The saved definition is captured at plan creation. Export separately verifies
+    it still equals the current saved source; neither record attests kernel code.
+    """
+    import base64
+    from uuid import NAMESPACE_URL, uuid5
+    raw = plan.evidence.get("notebook_snapshot")
+    if raw is None:
+        raise RuntimeError("Dry Run has no saved definition; portable submission is unavailable.")
+    from fabricops_kit.config.metadata_schemas import decode_metadata_row
+    run = decode_metadata_row("METADATA_PIPELINE_RUN", plan.evidence["final_result"])
+    record = dict(format_version=1, submission_id=str(uuid5(NAMESPACE_URL, "fabricops:dry-run:" + plan.plan_id)),
+        pipeline_id=plan.pipeline_id, source_workspace_id=plan.workspace_id, source_notebook_id=plan.notebook_id,
+        source_notebook_base64=base64.b64encode(raw).decode(), source_snapshot_sha256=hashlib.sha256(raw).hexdigest(),
+        executable_sha256=notebook_executable_digest(raw), dry_run=run, contracts=json.loads(plan.contracts_json),
+        operations=[{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
+            "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]],
+        parameters=plan.evidence["source_observation_policy"],
+        created_by=plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name"),
+        created_at=run["completed_at"])
+    if not record["created_by"]:
+        raise ValueError("Persistent Dry Run evidence requires a signed-in creator identity.")
+    record["manifest_sha256"] = manifest_digest(record)
+    uri = metadata_path(REGISTRY_TABLE, context=plan.runtime_context).split("/Tables/", 1)[0]
+    uri += "/Files/fabricops/engineering/dry_runs/" + record["submission_id"] + ".json"
+    spark = get_spark_session(spark_session, context=plan.runtime_context)
+    path = spark._jvm.org.apache.hadoop.fs.Path(uri)
+    exists = path.getFileSystem(spark._jsc.hadoopConfiguration()).exists(path)
+    content = canonical_pipeline_json(record).encode()
+    if snapshot_file(uri, spark_session=spark, content=None if exists else content) != content:
+        raise RuntimeError("Persisted Engineering Dry Run identity changed content.")
+    return uri

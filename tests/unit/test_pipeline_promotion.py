@@ -36,81 +36,16 @@ def runtime(monkeypatch):
             raise FileNotFoundError(uri)
         return files[uri]
     monkeypatch.setattr(service, "snapshot_file", file)
+    from tests.unit.test_pipeline_handoff import package_candidate, resign
+    package = package_candidate()
+    manifest = package["manifest"]
+    manifest.update(execution_workspace_id="PROD", expected_active_version=1, intent="restore", retained_promotion_id="promotion-PROD-1", retained_version=1)
+    manifest["operations"] = [operation(workspace="PROD")]
+    resign(package)
+    monkeypatch.setattr(service, "verify_registry_approval", lambda *a, **kw: ({}, package))
+    monkeypatch.setattr(service, "authoritative_approval", lambda *a, **kw: {"decision_kind": "restore", "package_json": json.dumps(package)})
+    monkeypatch.setattr(service, "review_submission_policy", lambda *a, **kw: {})
     return SimpleNamespace(context=context, spark=spark, client=client, files=files, file_calls=calls)
-
-
-def staged_review(runtime):
-    """Return an exact hashed human review of a new cross-workspace promotion."""
-    raw = notebook()
-    promoted, parameters = service.promoted_notebook(raw, PIPELINE_ID)
-    row = promotion(workspace="PROD")
-    for key in ("governed_notebook_id", "snapshot_uri", "source_snapshot_uri", "promoted_by", "promoted_at"):
-        row.pop(key)
-    row.update(source_workspace_id="DEV", source_notebook_id="development", snapshot_sha256=hashlib.sha256(promoted).hexdigest(),
-        source_snapshot_sha256=hashlib.sha256(raw).hexdigest(), executable_sha256=service.notebook_executable_digest(promoted),
-        parameters_json=json.dumps(parameters), bindings_sha256=service.manifest_digest([operation(workspace="PROD")]))
-    review = dict(candidate=row, snapshot=promoted, source_snapshot=raw, context=runtime.context, expected_active_version=None, contracts={})
-    review["review_sha256"] = service.promotion_review_digest(review)
-    runtime.client.definition.return_value = promoted
-    runtime.client.create.return_value = "separate-governed-notebook"
-    return review
-
-
-def stage_services(monkeypatch, records=None):
-    """Keep review and sequencing while replacing only metadata/domain discovery."""
-    monkeypatch.setattr(service, "read_registry", lambda **kw: records or [])
-    monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: ops)
-    monkeypatch.setattr(service, "reviewed_contracts", lambda *a, **kw: {})
-
-
-def test_cross_workspace_stage_archives_full_notebooks_before_clone_and_commit(runtime, monkeypatch):
-    """Verify cross workspace stage archives full notebooks before clone and commit."""
-    review = staged_review(runtime)
-    stage_services(monkeypatch)
-    commits = []
-    monkeypatch.setattr(service, "commit_pipeline_promotion", lambda row, **kw: commits.append(deepcopy(row)) or row)
-    result = service.stage_pipeline_promotion(review, governance_confirmed=True)
-    assert result["execution_workspace_id"] == "PROD"
-    assert result["source_workspace_id"] == "DEV"
-    assert result["governed_notebook_id"] != result["source_notebook_id"]
-    assert runtime.files[result["snapshot_uri"]] == review["snapshot"]
-    assert runtime.files[result["source_snapshot_uri"]] == review["source_snapshot"]
-    runtime.client.create.assert_called_once()
-    assert runtime.client.create.call_args.args[0] == "PROD"
-    runtime.client.governed_folder.assert_not_called()
-    assert len(commits) == 1
-
-
-@pytest.mark.parametrize("failure", ["archive", "clone", "readback", "config", "contracts", "review"])
-def test_staging_failures_never_switch_previous_authority(runtime, monkeypatch, failure):
-    """Verify staging failures never switch previous authority."""
-    review = staged_review(runtime)
-    stage_services(monkeypatch)
-    commit = Mock(side_effect=AssertionError("failed staging cannot change authority"))
-    monkeypatch.setattr(service, "commit_pipeline_promotion", commit)
-    if failure == "archive": monkeypatch.setattr(service, "snapshot_file", Mock(side_effect=OSError("archive unavailable")))
-    if failure == "clone": runtime.client.create.side_effect = OSError("API unavailable")
-    if failure == "readback": runtime.client.definition.return_value = notebook("x = 1")
-    if failure == "config": monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: [operation(workspace="DEV")])
-    if failure == "contracts": monkeypatch.setattr(service, "reviewed_contracts", lambda *a, **kw: {"orders": {"contract_id": "new", "contract_version": 2, "contract_payload_json": "{}"}})
-    if failure == "review": review["snapshot"] += b" "
-    with pytest.raises((OSError, RuntimeError, ValueError)):
-        service.stage_pipeline_promotion(review, governance_confirmed=True)
-    commit.assert_not_called()
-
-
-def test_same_workspace_uses_governed_folder_and_new_item(runtime, monkeypatch):
-    """Verify same workspace uses governed folder and new item."""
-    review = staged_review(runtime)
-    review["candidate"]["source_workspace_id"] = "PROD"
-    review["review_sha256"] = service.promotion_review_digest(review)
-    stage_services(monkeypatch)
-    runtime.client.governed_folder.return_value = "folder"
-    monkeypatch.setattr(service, "commit_pipeline_promotion", lambda row, **kw: row)
-    result = service.stage_pipeline_promotion(review, governance_confirmed=True)
-    runtime.client.governed_folder.assert_called_once_with("PROD")
-    assert runtime.client.create.call_args.kwargs["folder_id"] == "folder"
-    assert result["governed_notebook_id"] != "development"
 
 
 def integrity_row(runtime):
@@ -140,14 +75,15 @@ def test_managed_integrity_fails_closed_for_each_unverifiable_boundary(runtime, 
         service.verify_promotion_integrity(row, context=runtime.context)
 
 
-def test_markdown_only_saved_edits_are_allowed_by_integrity(runtime, monkeypatch):
+def test_markdown_edits_reject_complete_snapshot_integrity(runtime, monkeypatch):
     """Verify markdown only saved edits are allowed by integrity."""
     row = integrity_row(runtime)
     saved = json.loads(runtime.client.definition.return_value)
     saved["cells"][0]["source"] = "Updated notes"
     runtime.client.definition.return_value = json.dumps(saved).encode()
     monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: ops)
-    assert service.verify_promotion_integrity(row, context=runtime.context)
+    with pytest.raises(RuntimeError, match="integrity mismatch"):
+        service.verify_promotion_integrity(row, context=runtime.context)
 
 
 def test_exact_restoration_preserves_changed_copy_before_update(runtime, monkeypatch):
@@ -163,7 +99,7 @@ def test_exact_restoration_preserves_changed_copy_before_update(runtime, monkeyp
         assert changed in runtime.files.values(), "preserve before replacing code"
     runtime.client.update.side_effect = update
     result = service.restore_promoted_notebook(PIPELINE_ID, workspace_id="PROD", expected_active_version=1,
-        governance_confirmed=True, context=runtime.context)
+        approval_id="recovery-approval", context=runtime.context)
     assert runtime.files[result["preserved_copy_uri"]] == changed
     assert result["promotion_id"] == row["promotion_id"]
     assert result["ready"] is False
@@ -178,7 +114,7 @@ def test_restoration_never_overwrites_when_changed_copy_cannot_be_retained(runti
     monkeypatch.setattr(service, "snapshot_file", lambda uri, **kw: original(uri, **kw) if kw.get("content") is None else (_ for _ in ()).throw(OSError("permission denied")))
     with pytest.raises(OSError, match="permission"):
         service.restore_promoted_notebook(PIPELINE_ID, workspace_id="PROD", expected_active_version=1,
-            governance_confirmed=True, context=runtime.context)
+            approval_id="recovery-approval", context=runtime.context)
     runtime.client.update.assert_not_called()
 
 
@@ -189,6 +125,7 @@ def test_old_admitted_run_can_finish_but_immutable_row_cannot_change(runtime, mo
     plan = pipeline.PipelineExecutionPlan("governed", "PROD", row["governed_notebook_id"], "run", "{}", "{}", "{}", runtime.context,
         pipeline_id=PIPELINE_ID, pipeline_version=1, promotion_id=row["promotion_id"], governed_notebook_id=row["governed_notebook_id"])
     plan.evidence["promotion"] = deepcopy(row)
+    plan.evidence["contract_activations"] = []
     row["status"] = "superseded"
     monkeypatch.setattr(service, "read_registry", lambda **kw: [deepcopy(row)])
     monkeypatch.setattr(service, "resolve_promoted_operations", lambda ops, **kw: ops)
@@ -293,7 +230,5 @@ def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
 
 def test_cross_workspace_data_access_requires_an_effective_agreement():
     """An omitted Agreement cannot authorize physical data access in another workspace."""
-    candidate = promotion(workspace="PROD")
-    candidate["operations_json"] = json.dumps([operation(workspace="REMOTE")])
-    with pytest.raises(ValueError, match="exact effective Data Agreement"):
-        service.check_promotion_agreement(candidate, context={})
+    with pytest.raises(ValueError, match="effective Agreement"):
+        service.check_contract_agreement({"workspace_id": "REMOTE"}, execution_workspace_id="PROD", context={})
