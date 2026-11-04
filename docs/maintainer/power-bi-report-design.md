@@ -268,126 +268,84 @@ Provide exportable detail tables for Agreements, Contract activations, access ob
 
 ## Semantic model
 
-### Modelling rules
+### Use the canonical ERD
 
-- Preserve the grain of every canonical table.
-- Use dimensions and model-only bridge tables; do not join independent facts directly.
-- Keep relationship direction single from dimension to fact.
-- Use exact composite keys where FabricOps identity is composite.
-- Parse validated JSON strings during Power Query refresh into model-only tables. Do not persist flattened reporting tables back to the Metadata Lakehouse.
-- Keep raw JSON columns hidden from report authors after the required model-only projections are created.
-- Derive “current” rows with explicit revision/version and status rules; never assume the latest commit timestamp is authoritative when a domain revision exists.
+**The reviewed FabricOps metadata ERD is the model foundation and remains the source of truth.**
 
-### Conformed dimensions
+![Canonical FabricOps metadata ERD](../assets/fabricops-metadata-approved.svg)
 
-| Model table | Key | Purpose |
+The ERD is generated from `METADATA_TABLE_MODELS` in [`scripts/reference_docs_metadata.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/reference_docs_metadata.py), validated against [`metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py), and published as [`fabricops-metadata-approved.svg`](../assets/fabricops-metadata-approved.svg). The Power BI project must use that same generated relationship definition; it must not maintain a competing hand-authored ERD.
+
+The model view should preserve the approved diagram's visual structure:
+
+- Governance tables together in purple;
+- Engineering tables together in blue;
+- `METADATA_DATA_CATALOGUE` as the central physical data-asset anchor;
+- `METADATA_DATA_CONTRACT_ACTIVATION` between Agreements, Contracts and physical tables;
+- Pipeline Activation -> Pipeline Registry -> Pipeline Run as the approval, deployment and execution chain;
+- Profile, Frequency, Lineage, Access, Guardrail and Processing State tables around their canonical parent records;
+- small report-only projections in a separate grey area on the right.
+
+### Keep the 14 canonical tables intact
+
+All canonical sources keep their implemented names and grains in the semantic model. Do not duplicate or rename every source into a parallel `Dim*` or `Fact*` table.
+
+| Canonical relationship | Power BI implementation |
+| --- | --- |
+| Data Steward -> Data Agreement | `steward_id` to provider and recipient roles. Keep one role relationship inactive where required; Steward-scope reporting uses the explicit report projection below. |
+| Data Agreement -> Data Contract Activation | Exact `agreement_id + agreement_version` model key. One Agreement version may govern many physical activations. |
+| Data Contract -> Data Contract Activation | Exact `contract_id + contract_version` model key. Never join on `contract_id` alone. |
+| Pipeline Activation -> Pipeline Registry | `approval_id`, preserving Governance decision versus Engineering deployment. |
+| Pipeline Registry -> Pipeline Run | `promotion_id`, preserving exact promoted version provenance. |
+| Pipeline Run -> Guardrail Results | `run_id`. |
+| Pipeline Run -> Processing State | `run_id`, while allowing standalone records with no Run. |
+| Data Contract -> Guardrail Results | Exact `contract_id + contract_version` model key. |
+| Data Catalogue -> Data Profiled | Physical column identity: `workspace_id + table_id + column_id`. |
+| Data Profiled -> Data Profiled Frequency | Optional `profile_id`; independent Frequency Profiling remains valid when it is null. |
+| Data Catalogue -> Frequency, Lineage and Access | Physical workspace/table or workspace/column key as appropriate. Never join a physical observation on `table_id` alone. |
+| Data Catalogue -> Processing State | Separate source and target physical-table roles; only one default relationship may be active. |
+| Pipeline Registry -> Contract Activation | Logical many-to-many association through parsed reviewed operations and physical `workspace_id + table_id`. |
+| Pipeline Run -> Data Contract | Logical many-to-many association through parsed Run operations and exact Contract versions. |
+| Data Catalogue -> Data Contract | Global logical `table_id` context only. Physical reporting flows through Contract Activation or a workspace-table projection so different workspaces cannot be mixed. |
+
+Relationship directions remain single from the one side to the many side. The implementation may use an inactive role relationship with `USERELATIONSHIP`, or an explicit report projection, where the ERD has two roles such as provider/recipient or source/target. Bidirectional filtering is not the default fix for ambiguity.
+
+### Minimal report-only projections
+
+Only the projections needed to make nested JSON and exact composite identities reportable are added. Prefix them `REPORT_`, color them grey in the model view, hide technical columns, and keep them physically separate from the canonical ERD.
+
+| Report table | Derived from | Grain and purpose |
 | --- | --- | --- |
-| `DimDate` | `date_key` | One role-playing calendar with inactive relationships for secondary dates. |
-| `DimTable` | `table_id` | Global governed table identity across Contracts and physical observations. |
-| `DimPhysicalTable` | `workspace_table_key` | One `workspace_id + table_id` physical identity, with current Catalogue labels and location. |
-| `DimColumn` | `workspace_column_key` | One `workspace_id + table_id + column_id` physical column identity. |
-| `DimWorkspace` | `workspace_id` | Workspace identity. Use a known name only when the metadata records that same ID/name pair; otherwise display a shortened ID. |
-| `DimPipeline` | `workspace_pipeline_key` | One `execution_workspace_id + pipeline_id` deployment and decision scope. |
-| `DimContractVersion` | `contract_version_key` | One `contract_id + contract_version` exact immutable or draft version. |
-| `DimAgreementVersion` | `agreement_version_key` | One `agreement_id + agreement_version` exact Agreement version. |
-| `DimSteward` | `steward_id` | Selected accountable person. It filters model-only provider/recipient role bridges rather than guessing ownership from audit fields. |
-| `DimPromotion` | `promotion_id` | Exact immutable Engineering promotion used by Pipeline Runs. |
-| `DimRun` | `run_id` | Run header used to filter operation, profiling, failure, Guardrail and Processing State facts. |
+| `REPORT_DATE` | generated calendar | One date used for primary event dates; secondary date roles remain inactive. |
+| `REPORT_PHYSICAL_TABLE` | Catalogue table-level rows | One `workspace_id + table_id` identity. This is the unique reporting side needed because Catalogue also contains column rows. |
+| `REPORT_STEWARD_SCOPE` | Steward roles + exact Agreement version + current Contract Activation | One provider or recipient Steward association to one physical table. Powers **Accountable data** and **Shared with me** without changing the ERD. |
+| `REPORT_PROMOTION_OPERATION` | parsed `METADATA_PIPELINE_REGISTRY.operations_json` | One reviewed physical source or target operation for one promotion. Connects deployment evidence to physical tables and active Contract selections. |
+| `REPORT_RUN_OPERATION` | parsed `METADATA_PIPELINE_RUN.operations` | One actual Read or Write operation for one Run, physical table and exact Contract version. Includes derived failed-stage counts needed for overview reporting. |
+| `REPORT_RUN_ISSUE` | parsed Run operation stages, profiling and safe failures | One normalized issue or profiling outcome. Keeps detail available without loading three separate public-facing helper tables. |
+| `REPORT_CONTRACT_POLICY` | parsed `contract_payload_json` | One normalized Contract detail record with `policy_type` such as column, Enrichment, Processing, profiling or Guardrail. The canonical JSON remains authoritative. |
+| `REPORT_ACTION_QUEUE` | deterministic rules over canonical tables and report projections | One Action required, Review soon, No action needed or Unknown finding with exact evidence and drill target. |
 
-`DimTable` filters `DimPhysicalTable`, and `DimWorkspace` filters `DimPhysicalTable`. Physical facts relate to `DimPhysicalTable`; global Contract facts relate to `DimTable`. This snowflake edge is intentional and prevents relationships based on `table_id` alone from mixing workspaces.
+No `DimWorkspace`, `DimPipeline`, `DimContractVersion`, `DimAgreementVersion`, `DimPromotion` or `DimRun` copies are created. Those identities already exist at a usable grain in the canonical tables. Friendly labels, shortened IDs and display folders belong on those tables rather than in duplicate wrappers.
 
-`DimSteward` filters `BridgeStewardAgreementRole` and `BridgeStewardPhysicalTable`. Those model-only tables carry an explicit `provider` or `recipient` role and the exact Agreement version. They support the personal journey without introducing bidirectional filtering across Agreement, Contract activation and physical-table facts.
+### Model view layout
 
-### Facts and bridges
+The Power BI model view should be readable in three bands:
 
-| Model table | Source | Grain |
-| --- | --- | --- |
-| `FactCatalogue` | `METADATA_DATA_CATALOGUE` | One current table or column observation in one workspace. |
-| `FactProfile` | `METADATA_DATA_PROFILED` | One column in one profiling snapshot. |
-| `FactFrequency` | `METADATA_DATA_PROFILED_FREQUENCY` | One value frequency for one column and snapshot. |
-| `FactLineageParticipation` | `METADATA_DATA_LINEAGE` | One source or target table participation observation. |
-| `FactAccessObservation` | `METADATA_DATA_ACCESS` | One observed permission in one scan. |
-| `FactContract` | `METADATA_DATA_CONTRACT` | One Draft or Frozen Contract version. |
-| `FactContractActivation` | `METADATA_DATA_CONTRACT_ACTIVATION` | One retained revision for one physical workspace-table identity. |
-| `FactAgreement` | `METADATA_DATA_AGREEMENT` | One Agreement version. |
-| `BridgeStewardAgreementRole` | derived from Agreement provider and recipient keys | One Steward role for one exact Agreement version. |
-| `BridgeStewardPhysicalTable` | Steward/Agreement role joined to current Contract activation | One explicit Steward role and exact Agreement association for one physical table. |
-| `BridgeContractColumn` | parsed `METADATA_DATA_CONTRACT.contract_payload_json` | One expected column in one exact Contract version. |
-| `FactContractGuardrailDefinition` | parsed `contract_payload_json` | One authored Guardrail definition in one exact Contract version. |
-| `FactContractProfilingPolicy` | parsed `contract_payload_json` | One profiling activity policy in one exact Contract version. |
-| `FactPipelineDecision` | `METADATA_PIPELINE_ACTIVATION` | One append-only import or decision event. |
-| `FactPromotion` | `METADATA_PIPELINE_REGISTRY` | One immutable Pipeline version in one execution workspace. |
-| `FactRun` | `METADATA_PIPELINE_RUN` | One authoritative Pipeline execution. |
-| `BridgeRunOperation` | parsed `METADATA_PIPELINE_RUN.operations` | One Read or Write operation within one run. |
-| `BridgeRunOperationSource` | expanded `source_table_ids` | One source table associated with one run operation. |
-| `FactRunStage` | expanded operation `stages` | One stage outcome within one run operation. |
-| `FactRunProfiling` | parsed `METADATA_PIPELINE_RUN.profiling` | One profiling activity outcome within one run. |
-| `FactRunFailure` | parsed `METADATA_PIPELINE_RUN.failures` | One safe failure code within one run. |
-| `BridgePromotionOperation` | parsed `METADATA_PIPELINE_REGISTRY.operations_json` | One reviewed physical operation in one promotion. |
-| `FactGuardrailResult` | `METADATA_GUARDRAIL_RESULTS` | One saved aggregate Guardrail outcome. |
-| `FactProcessingState` | `METADATA_PROCESSING_STATE` | One typed observation, checkpoint, baseline or publication receipt. |
-| `FactActionQueue` | deterministic model-only rule union | One actionable, review, healthy or unknown finding for a Steward-scoped object and reason code. |
+```text
+GOVERNANCE — canonical purple tables from the approved ERD
+  DATA_STEWARD -> DATA_AGREEMENT -> DATA_CONTRACT_ACTIVATION -> DATA_CONTRACT
+  PIPELINE_ACTIVATION -> PIPELINE_REGISTRY
 
-`METADATA_DATA_STEWARD` supplies `DimSteward`; it is not duplicated as a fact. `METADATA_DATA_AGREEMENT` can behave as an exact-version dimension for slicers while its version history remains reportable. Contract payload projections are refresh-time semantic tables only; the canonical JSON string remains authoritative.
+ENGINEERING — canonical blue tables from the approved ERD
+  DATA_CATALOGUE -> PROFILE / FREQUENCY / LINEAGE / ACCESS
+  PIPELINE_REGISTRY -> PIPELINE_RUN -> GUARDRAIL_RESULTS / PROCESSING_STATE
 
-### Relationship schematic
-
-```mermaid
-flowchart LR
-  Date[DimDate]
-  Workspace[DimWorkspace]
-  Table[DimTable]
-  Physical[DimPhysicalTable]
-  Column[DimColumn]
-  Pipeline[DimPipeline]
-  Contract[DimContractVersion]
-  Agreement[DimAgreementVersion]
-  Steward[DimSteward]
-  Promotion[DimPromotion]
-  Run[DimRun]
-
-  Workspace --> Physical
-  Table --> Physical
-  Physical --> Catalogue[FactCatalogue]
-  Physical --> Profile[FactProfile]
-  Column --> Profile
-  Column --> Frequency[FactFrequency]
-  Physical --> ContractActivation[FactContractActivation]
-  Contract --> ContractActivation
-  Agreement --> ContractActivation
-  Steward --> StewardAgreement[BridgeStewardAgreementRole]
-  Agreement --> StewardAgreement
-  Steward --> StewardTable[BridgeStewardPhysicalTable]
-  Agreement --> StewardTable
-  Physical --> StewardTable
-  Contract --> StewardTable
-  Contract --> ContractColumn[BridgeContractColumn]
-  Contract --> GuardrailDefinition[FactContractGuardrailDefinition]
-  Contract --> ProfilePolicy[FactContractProfilingPolicy]
-
-  Pipeline --> Decision[FactPipelineDecision]
-  Pipeline --> PromotionFact[FactPromotion]
-  Promotion --> Run
-  Pipeline --> Run
-  Run --> Operation[BridgeRunOperation]
-  Run --> Stage[FactRunStage]
-  Run --> RunProfile[FactRunProfiling]
-  Run --> Failure[FactRunFailure]
-  Run --> Guardrail[FactGuardrailResult]
-  Run --> State[FactProcessingState]
-  Physical --> Operation
-  Contract --> Operation
-  Physical --> Guardrail
-  Contract --> Guardrail
-  Date --> Run
-  Date --> Guardrail
-  Date --> Profile
-  Steward --> Action[FactActionQueue]
-  Physical --> Action
-  Pipeline --> Action
+REPORTING — small grey projection area
+  DATE | PHYSICAL_TABLE | STEWARD_SCOPE | PROMOTION_OPERATION
+  RUN_OPERATION | RUN_ISSUE | CONTRACT_POLICY | ACTION_QUEUE
 ```
 
-The implementation must check the final paths for ambiguity in Desktop. Where the same fact can be filtered through both a physical table and an exact Contract, keep both dimensions independent and do not add a relationship between `DimContractVersion` and `DimTable`; `table_id` remains an attribute on the Contract dimension for display and validation.
+The approved ERD owns domain meaning. The grey area only resolves Power BI constraints: composite one-side keys, role-playing relationships and validated JSON expansion.
 
 ### Model-only composite keys
 
@@ -502,4 +460,3 @@ Do not publish a metric until its allowed values and current-row rule have been 
 - [Metadata Tables](../reference/metadata.md) defines grains, keys, writers and application-enforced relationships.
 - [Governance](../governance.md) defines Contract activation and Pipeline approval boundaries.
 - [Product Definition](product-definition.md) defines the Governance and Engineering operating model.
-
