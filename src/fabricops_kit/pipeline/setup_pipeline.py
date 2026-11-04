@@ -127,9 +127,9 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungoverned",
-                   observe_source: bool = False, source_observation_days: int | None = None):
-    """Start a pipeline using a stable logical Pipeline ID and one execution mode.
+def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = False,
+                   source_observation_days: int | None = None):
+    """Start a pipeline using the current Fabric notebook identity and one execution mode.
 
     Dry Run previews transformations, optional Contract checks and profiling without
     durable mutations. Ungoverned publishes without activated Contracts, but cannot
@@ -139,10 +139,6 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
 
     Parameters
     ----------
-    pipeline_id : str | None, optional
-        Canonical lowercase UUIDv4 kept in version-controlled pipeline source,
-        stable across environments and notebook deployments. Required for
-        Ungoverned and Governed. Dry Run may allocate a session-only ID.
     pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
         Preview, publish without governance, or enforce activated governance.
 
@@ -180,7 +176,7 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
     Raises
     ------
     ValueError
-        If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
+        If the mode or observation configuration is invalid.
     RuntimeError
         If notebook setup or Spark is unavailable, or signed-in Fabric validation
         remains pending. Governed fails before admission and publication.
@@ -188,24 +184,20 @@ def setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = "Ungo
     Examples
     --------
     >>> context = setup_notebook()
-    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+    >>> pipeline = setup_pipeline(pipeline_mode="Ungoverned")
     >>> preview = setup_pipeline(pipeline_mode="Dry Run")
 
     """
-    from fabricops_kit.pipeline.shared import start_pipeline_session, validate_pipeline_id
+    from fabricops_kit.pipeline.shared import start_pipeline_session
 
     if pipeline_mode not in {"Dry Run", "Ungoverned", "Governed"}:
         raise ValueError("pipeline_mode must be exactly Dry Run, Ungoverned or Governed.")
-    if pipeline_id is not None:
-        pipeline_id = validate_pipeline_id(pipeline_id)
-    elif pipeline_mode != "Dry Run":
-        raise ValueError("Persistent pipelines require an explicit stable pipeline_id.")
     if not isinstance(observe_source, bool):
         raise ValueError("observe_source must be a boolean.")
     if source_observation_days is not None and (isinstance(source_observation_days, bool)
             or not isinstance(source_observation_days, int) or source_observation_days <= 0):
         raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
-    session = start_pipeline_session(pipeline_id, pipeline_mode, inspector=_inspector)
+    session = start_pipeline_session(pipeline_mode, inspector=_inspector)
     policy = {"manual": observe_source, "days": source_observation_days}
     if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != policy:
         session.close(failed=True)
