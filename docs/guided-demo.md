@@ -76,10 +76,23 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 | [1. Establish Governance context](guided-demo/01-establish-governance-context.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
 | [2. Understand the Pipeline Template](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Learn the reusable Environment → Data Contract → Read → Transform → Write scaffold. |
 | [2A. Run the Full Refresh Demo](guided-demo/02A-full-refresh-demo.md) | `02A_full_refresh_demo` | Run the completed Orders, Products, and Order History Full → Overwrite example. |
-| [2B. Run the Incremental Append Demo](guided-demo/02B-build-and-run-incremental-append-etl.md) | `02B_incremental_append_demo` | Run inventory Day 1, Day 2, and no-change Day 3 through Incremental → Append. |
+| [2B. Compare Append All and Append New Only](guided-demo/02B-build-and-run-incremental-append-etl.md) | `02B_incremental_append_demo` | Send one Full Read output to separate append targets: totals 8/20/32 versus 8/12/12. |
 | [2C. Run the SCD1 and SCD2 Demo](guided-demo/02C-build-and-run-scd-etl.md) | `02C_scd_demo` | Run three complete Product Master snapshots and compare current state with retained history. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Preview and enforce the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02A_full_refresh_demo` | Preview the exact frozen candidate in Dry Run, or enforce an activated version in Governed mode. |
 | [5. Activate Data Contracts and deploy](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Fabric Deployment Pipeline | Link exact contract versions to the Data Agreement, activate them for Production, then deploy the reviewed engineering artifact. |
 | [6. Run the pipeline in Production and grant access](guided-demo/06-run-production.md) | Governed 02A pipeline + native Fabric access | Run the activated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
 | [7. Consume and productize governed data](guided-demo/07-consume-production-data.md) | Native Fabric interfaces or a project-specific notebook | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |
+
+### Choose Read Mode and Write Mode
+
+Read Mode and Write Mode are independent decisions. SCD1 and SCD2 manage state by business key; append modes insert rows. Use the runnable demos above and the [Read & Write Modes reference](reference/read-and-load-strategies.md) for parameter and recovery details.
+
+| Read → Write | Choose it when | Main trade-off |
+| --- | --- | --- |
+| Full → Overwrite | Input is the complete authoritative target state. | Replaces the entire target every new execution; unsuitable for partial input. |
+| Incremental → Append All | Large append-only sources have reliable watermarks or change tracking. | Limits processing scans, but depends on correct checkpoints/replay handling; new-work replays can duplicate rows. |
+| Full → Append New Only | Duplicate prevention matters or reliable incremental extraction is unavailable. | Full scan and distributed hash comparison; inserts unseen rows, including changed hashes for existing keys. |
+| Incremental → Append New Only | Limit extraction and also prevent repeated eligible hashes. | Hash comparison covers only the extracted scope; watermark correctness still matters. |
+| Full / Incremental → SCD1 | Only latest business-key values matter. | Updates existing keys and inserts new ones without retaining historical versions. |
+| Full / Incremental → SCD2 | Audit, historical reporting or time-based analysis needs prior values. | Tracks versions using business keys, effective dates and tracked columns; unchanged tracked values do not add versions. |

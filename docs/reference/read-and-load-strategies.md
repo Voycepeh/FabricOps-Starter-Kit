@@ -26,13 +26,14 @@ The standard choices are:
 
 ## Common combinations
 
-| Read → Load | Typical use |
-| --- | --- |
-| **Full → Overwrite** | Rebuild the complete target from the complete source. |
-| **Full / Incremental → Append All** | Append every incoming row, including identical duplicates. |
-| **Full / Incremental → Append New Only** | Append hashes not already present in the target. |
-| **Full / Incremental → SCD1** | Maintain the latest state for each business key. |
-| **Full / Incremental → SCD2** | Maintain historical versions for each business key. |
+| Read → Write | Choose it when | Main trade-off |
+| --- | --- | --- |
+| Full → Overwrite | Input is the complete authoritative target state. | Replaces the entire target every new execution; unsuitable for partial input. |
+| Incremental → Append All | Large append-only sources have reliable watermarks or change tracking. | Limits processing scans, but depends on correct checkpoints/replay handling; new-work replays can duplicate rows. |
+| Full → Append New Only | Duplicate prevention matters or reliable incremental extraction is unavailable. | Full scan and distributed hash comparison; inserts unseen rows, including changed hashes for existing keys. |
+| Incremental → Append New Only | Limit extraction and also prevent repeated eligible hashes. | Hash comparison covers only the extracted scope; watermark correctness still matters. |
+| Full / Incremental → SCD1 | Only latest business-key values matter. | Updates existing keys and inserts new ones without retaining historical versions. |
+| Full / Incremental → SCD2 | Audit, historical reporting or time-based analysis needs prior values. | Tracks versions using business keys, effective dates and tracked columns; unchanged tracked values do not add versions. |
 
 ---
 
@@ -126,6 +127,7 @@ The standard choices are:
         table_name="orders",
         read_mode="incremental",
         target_table_id=TARGET_TABLE_ID,
+        read_parameters={"watermark_column": "modified_datetime"},
     )
     ```
 
@@ -157,7 +159,7 @@ The standard choices are:
     - Caller-owned Warehouse `query` SQL cannot be combined with Incremental mode because FabricOps owns the incremental predicate.
     - `has_data` / `should_process` indicate whether the resolved scope contains work.
 
-    **Try it:** [Guided Demo — Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+    **Try it:** [Guided Demo — compare append strategies](../guided-demo/02B-build-and-run-incremental-append-etl.md)
 
 ---
 
@@ -214,6 +216,8 @@ The first Incremental Read bootstraps the complete source. Append All requires a
 
 `write_mode="append_new_only"` compares incoming `_row_hash` values with hashes already published in the target. It collapses identical incoming hashes and appends only unseen hashes using a distributed Spark anti-join. No business key or extra Data Contract setting is required.
 
+Repeated unchanged data adds no rows. A newly evaluated batch with no unseen hashes returns a nonpublishing `no_unseen_hashes` result; an exact earlier publication may instead be verified as `already_applied` or `metadata_recovered`. Full Read pays for full source scanning plus distributed hash comparison; Incremental Read limits the incoming comparison scope.
+
 A changed Job ID, timestamp or other included value produces a new hash and an additional row. It does not update an old row or infer a deletion. Full Read compares the complete incoming scope; Incremental Read compares only the selected scope.
 
 For a target containing `A` and incoming rows `A, A, B`:
@@ -232,16 +236,17 @@ For a target containing `A` and incoming rows `A, A, B`:
 
     ### What it does
 
-    `load_strategy="scd1"` keeps **one current row per governed business key**.
+    `write_mode="scd1"` keeps **one current row per governed business key**.
 
-    Matching keys are updated in place; new keys are inserted.
+    Matching keys are updated in place; new keys are inserted. Previous values are not retained as historical versions. This suits current-state reference and master data.
 
     ### Required parameters
 
-    ```yaml
-    load_strategy: scd1
-    key_columns:
-      - product_id
+    ```python
+    orchestrate_write(
+        transformed_df, store="Silver", schema="demo", table_name="product_master_scd1",
+        write_mode="scd1", write_parameters={"key_columns": ["product_id"]},
+    )
     ```
 
     ### When to use it
@@ -285,20 +290,23 @@ For a target containing `A` and incoming rows `A, A, B`:
 
     ### What it does
 
-    `load_strategy="scd2"` keeps historical versions when governed values change.
+    `write_mode="scd2"` keeps historical versions when governed values change.
 
     ### Required parameters
 
-    ```yaml
-    load_strategy: scd2
-    key_columns:
-      - product_id
-    effective_column: modified_datetime
-    tracked_columns:
-      - category
+    ```python
+    orchestrate_write(
+        transformed_df, store="Silver", schema="demo", table_name="product_master_scd2",
+        write_mode="scd2",
+        write_parameters={
+            "key_columns": ["product_id"],
+            "effective_column": "modified_datetime",
+            "tracked_columns": ["category"],
+        },
+    )
     ```
 
-    `key_columns` and `effective_column` are required. `tracked_columns` is optional.
+    `key_columns` and `effective_column` are required. `tracked_columns` is optional. Business keys must be stable, unique and non-null in the incoming scope. Changed versions require an effective time later than the current version start. Unchanged tracked values do not create versions, even when snapshot timestamps change. Explicit tracked columns define which business changes warrant history; changes only to untracked business fields do not refresh those stored fields. By default, eligible non-key business columns excluding effective and technical fields are tracked.
 
     FabricOps maintains:
 
@@ -342,11 +350,22 @@ For a target containing `A` and incoming rows `A, A, B`:
 
 # Choosing the combination
 
-The two settings should be reasoned about separately.
+Read Mode and Write Mode are independent decisions: choose extraction scope per source and target behavior per target. SCD1 and SCD2 provide business-key-based state management; Append New Only compares whole-row hashes without updating keys.
+
+Incremental → Append All suits large sources with reliable watermarks or change tracking: it reads newly eligible records and avoids repeated complete processing scans. Correct checkpoint and replay handling are essential; replaying previously consumed records as new work can introduce duplicates. Due profiling or Full Source Observation may still scan the entire source. Full → Append New Only suits duplicate prevention or unavailable reliable incremental extraction, at the cost of full scanning and distributed hash comparison. Incremental → Append New Only is also valid, comparing hashes only within the eligible scope.
 
 For example, **Incremental does not automatically mean an append strategy**. If changed rows can arrive for existing business keys, Incremental + SCD1 or Incremental + SCD2 may be the correct target behavior.
 
 Likewise, Full does not automatically mean Overwrite. A Full source can still feed an SCD merge when the target needs keyed current-state or history semantics.
+
+## Practical SCD decision guide
+
+| Scenario | Recommended strategy |
+| --- | --- |
+| Only latest customer address matters | SCD1 |
+| Need to know a customer's previous address | SCD2 |
+| Product category mapping should always show latest classification | SCD1 |
+| Need historical product classifications for past reporting | SCD2 |
 
 ## Safety rules worth remembering
 
@@ -409,5 +428,5 @@ After successful publication, FabricOps persists the resolved target processing 
 - [`orchestrate_read()`](../api/reference/orchestrate_read.md)
 - [`orchestrate_write()`](../api/reference/orchestrate_write.md)
 - [Guided Demo: Full Read Pipeline](../guided-demo/02-build-and-run-etl.md)
-- [Guided Demo: Incremental → Append](../guided-demo/02B-build-and-run-incremental-append-etl.md)
+- [Guided Demo: compare append strategies](../guided-demo/02B-build-and-run-incremental-append-etl.md)
 - [Guided Demo: SCD Type 1 vs Type 2](../guided-demo/02C-build-and-run-scd-etl.md)
