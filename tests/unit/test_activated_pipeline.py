@@ -30,16 +30,17 @@ def contract_candidate(workspace="DEV"):
 
 def promotion(version=1, workspace="DEV", **overrides):
     """Return a complete immutable promotion row without runtime coordination fields."""
-    return dict(execution_workspace_id=workspace, pipeline_id=PIPELINE_ID, pipeline_version=version,
+    row = dict(execution_workspace_id=workspace, pipeline_id=PIPELINE_ID, pipeline_version=version,
         promotion_id=f"promotion-{workspace}-{version}", status="active", source_workspace_id="AUTHOR",
-        source_notebook_id=PIPELINE_ID, governed_notebook_id=f"governed-{workspace}-{version}",
+        source_notebook_id="source", governed_notebook_id=f"governed-{workspace}-{version}",
         snapshot_uri=f"snapshot-{workspace}-{version}", snapshot_sha256="a"*64,
         source_snapshot_uri="source.ipynb", source_snapshot_sha256="b"*64, executable_sha256="c"*64,
         operations_json=json.dumps([operation(workspace=workspace)]), bindings_sha256=service.manifest_digest([operation(workspace=workspace)]),
         parameters_json='{"manual":false,"days":null}', approval_id=f"approval-{workspace}-{version}",
         submission_id=f"submission-{workspace}-{version}", submission_sha256="d"*64,
-        restored_from_version=None, _committed_by="governance", promoted_at=datetime(2026, 1, 1), **overrides)
-
+        restored_from_version=None, _committed_by="governance", promoted_at=datetime(2026, 1, 1))
+    row.update(overrides)
+    return row
 
 def notebook(code=None):
     """Build complete notebook bytes, including original Markdown and outputs."""
