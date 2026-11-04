@@ -161,8 +161,9 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
+    live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    monkeypatch.setattr(live, 'read_registry', lambda **kwargs: [])
     if mode == 'Governed':
-        live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         def approved(**kwargs):
             config, active_workspace_id, runtime = resolve_fabric_context()
             plan = shared.PipelineExecutionPlan('governed', active_workspace_id, '00000000-0000-4000-8000-000000000002', 'approved-run',
