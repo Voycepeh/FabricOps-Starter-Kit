@@ -2,7 +2,6 @@
 # ruff: noqa: D103
 from types import SimpleNamespace
 from unittest.mock import ANY, Mock
-import pytest
 
 from fabricops_kit import setup_pipeline
 from fabricops_kit.pipeline import shared
