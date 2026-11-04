@@ -6504,7 +6504,7 @@ def start_pipeline_session(pipeline_mode, *, inspector=None):
             pipeline_id = str(uuid4())
         else:
             raise RuntimeError("Persistent pipeline execution requires Fabric currentNotebookId; no manual Pipeline ID is accepted.")
-        if identity_row is not None and pipeline_mode != "Governed":
+        if identity_row is not None and identity_row["role"] == "governed" and pipeline_mode != "Governed":
             raise RuntimeError("This notebook is a promoted implementation. Run it in Governed mode; do not execute a promoted snapshot as Ungoverned.")
         print(f"FabricOps Pipeline\nPipeline ID: {pipeline_id}\nNotebook ID: {notebook_id or 'Unavailable'}\nMode: {pipeline_mode}")
         if pipeline_mode == "Governed":
