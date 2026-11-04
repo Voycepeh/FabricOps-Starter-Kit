@@ -120,7 +120,8 @@ def test_registry_rejects_physical_notebook_reassigned_to_another_pipeline():
     """A physical Fabric notebook cannot silently become another logical pipeline."""
     first = promotion(1, workspace="PROD", source_workspace_id="DEV",
                       source_notebook_id=PIPELINE_ID, governed_notebook_id="00000000-0000-4000-8000-000000000002")
-    second = promotion(1, workspace="TEST", source_workspace_id="DEV",
+    second = promotion(2, workspace="PROD", source_workspace_id="DEV",
+                       pipeline_id="00000000-0000-4000-8000-000000000099",
                        source_notebook_id="00000000-0000-4000-8000-000000000099",
                        governed_notebook_id="00000000-0000-4000-8000-000000000002")
     with pytest.raises(ValueError, match="multiple logical Pipeline IDs"):
