@@ -53,3 +53,66 @@ def test_publication_identity_distinguishes_new_executions(spark_session, monkey
 def test_old_append_is_rejected():
     with pytest.raises(ValueError, match='invalid load_strategy'):
         shared.validated_processing({'load_strategy': 'append'})
+
+
+def test_02b_notebook_three_day_comparison_uses_same_dataframe(spark_session, monkeypatch):
+    """Execute demo cells with real CSVs, transforms and hash filtering, without Fabric I/O."""
+    import inspect
+    import json
+    from pathlib import Path
+    from pyspark.sql import functions as F
+    from fabricops_kit import orchestrate_read, orchestrate_write
+
+    root = Path(__file__).resolve().parents[2]
+    data = root / 'templates/DemoData'
+    notebook = json.loads((data / '02B_incremental_append_demo.ipynb').read_text())
+    cells = {cell['id']: ''.join(cell['source']) for cell in notebook['cells']}
+    bronze = spark_session.read.csv(str(data / 'inventory_day1.csv'), header=True, inferSchema=True)
+    targets, submitted, reads = {}, [], []
+
+    def read_csv(path, **kwargs):
+        return spark_session.read.csv(str(data / Path(path).name), header=True, inferSchema=True)
+
+    def read_table(*, table_name, store, schema):
+        assert (store, schema, table_name) == ('Bronze', 'demo', 'inventory_movements')
+        return bronze
+
+    def stage(frame, *, table_name, store, schema, mode):
+        nonlocal bronze
+        assert (store, schema, table_name, mode) == ('Bronze', 'demo', 'inventory_movements', 'overwrite')
+        bronze = frame
+
+    def read(**kwargs):
+        inspect.signature(orchestrate_read).bind(**kwargs)
+        assert kwargs['read_mode'] == 'full'
+        reads.append(bronze)
+        return {'dataframe': bronze}
+
+    def write(frame, **kwargs):
+        inspect.signature(orchestrate_write).bind(frame, **kwargs)
+        assert kwargs['store'] == 'Silver' and kwargs['schema'] == 'demo'
+        submitted.append(frame)
+        name = kwargs['table_name']
+        incoming = shared.add_row_hash(frame)
+        if kwargs['write_mode'] == 'append_new_only':
+            identity = dict(store_type='lakehouse', store='Silver', schema='demo', table_name=name)
+            existing = targets.get(name, incoming.limit(0))
+            monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: existing)
+            incoming = shared.filter_unpublished_rows(incoming, identity, context={})
+        else:
+            assert kwargs['write_mode'] == 'append_all'
+        targets[name] = targets[name].unionByName(incoming) if name in targets else incoming
+        return {'dataframe': frame}
+
+    namespace = dict(F=F, read_lakehouse_csv=read_csv, read_lakehouse_table=read_table,
+                     write_lakehouse_table=stage, orchestrate_read=read, orchestrate_write=write,
+                     display=lambda frame: None)
+    for day, source_count, all_count, new_count in ((1, 8, 8, 8), (2, 12, 20, 12), (3, 12, 32, 12)):
+        namespace['DEMO_DAY'] = day
+        for cell_id in ('read-csv', 'read-setup', 'read-1', 'transform', 'write-setup', 'write-1', 'write-2'):
+            exec(compile(cells[cell_id], f'02B:{cell_id}', 'exec'), namespace)
+        assert reads[-1].count() == source_count
+        assert submitted[-2] is submitted[-1] is namespace['transformed_df']
+        assert targets['inventory_movements_append_all'].count() == all_count
+        assert targets['inventory_movements_append_new_only'].count() == new_count
+    assert len(reads) == 3 and len(submitted) == 6

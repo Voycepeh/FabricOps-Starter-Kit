@@ -43,6 +43,26 @@ The notebook uses these governed tables throughout:
 
 Profiling schedules and Read/Write triggers are saved per table in Data Contract Authoring. Standard pipeline calls need no profiling options.
 
+### Decide between current truth and historical truth
+
+**SCD1 maintains current truth.** Existing business keys are updated and new keys inserted. Previous values are not retained as historical versions. Choose it for current-state reference and master data when only the latest value matters.
+
+**SCD2 preserves historical truth.** Changes to tracked values create new historical versions and close previous versions. `_is_current` identifies current rows. Choose it for audit, historical reporting and time-based analysis when users need to know what a record looked like at a particular point in time.
+
+| Scenario | Recommended strategy |
+| --- | --- |
+| Only latest customer address matters | SCD1 |
+| Need to know a customer's previous address | SCD2 |
+| Product category mapping should always show latest classification | SCD1 |
+| Need historical product classifications for past reporting | SCD2 |
+
+??? info "Business keys, effective dates and tracked columns"
+    Use stable business keys, with one non-null, unique `product_id` per incoming snapshot. Keys match the same entity across runs. A wrong key can merge unrelated entities or insert duplicates.
+
+    SCD2 uses `effective_column="modified_datetime"` to set `_effective_from` and close the prior `_effective_to`. A changed version requires an effective time later than the current version start. These are business-effective times, not merely execution times.
+
+    This demo tracks `product_category` and `list_price`. Only changes to those columns create versions; unchanged snapshots, even with a later timestamp, do not. Changes only to untracked business fields neither create versions nor refresh those stored fields. If `tracked_columns` is omitted, the implementation tracks eligible non-key business columns excluding the effective column and technical fields. Select these columns deliberately. Neither SCD mode infers deletions from missing source keys.
+
 ### Set up the pipeline
 
 Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
@@ -180,9 +200,9 @@ Run the `DEMO_DAY` cell and the **Prepare the Bronze snapshot** cell before Read
 | 2 | 44.90 | Accessories | 8 | 9 |
 | 3 | 44.90 | Travel Accessories | 8 | 10 |
 
-Use a fresh permitted **Governed** plan for governed publication. Dry Run keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. DEV publication also requires an existing Governed activation. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
+Use a fresh permitted **Governed** plan for governed publication. Dry Run keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. Governed publication requires approved activations and remains blocked pending trusted deployment verification. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
 
-The Read block displays the rows returned by the source Read. After a successful persistent Write, the SCD demo template displays the persisted Silver target: SCD1 shows the current product rows, while SCD2 shows the full version history ordered by product and `_effective_from`. In Dry Run or another non-publishing execution, it labels and displays the prepared Write input instead. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing checkpoint divergence, follow the [scoped reconciliation guidance](02B-build-and-run-incremental-append-etl.md#if-silver-has-eight-rows-but-the-checkpoint-already-covers-day-2); immutable Append repairs must not be applied to SCD history.
+The Read block displays the rows returned by the source Read. After a successful persistent Write, the SCD demo template displays the persisted Silver target: SCD1 shows the current product rows, while SCD2 shows the full version history ordered by product and `_effective_from`. In Dry Run or another non-publishing execution, it labels and displays the prepared Write input instead. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing target or receipt divergence, follow the [retry and concurrency boundaries](../reference/read-and-load-strategies.md#retry-and-concurrency-boundaries) and reconcile the exact history with its owner. Append repairs must not be applied to SCD history.
 
 ### Repeat the demo safely
 
