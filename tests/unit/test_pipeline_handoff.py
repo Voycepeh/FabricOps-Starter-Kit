@@ -54,6 +54,7 @@ def test_submission_preserves_a_registry_assigned_legacy_pipeline_id():
     """An existing Registry identity may differ from its original physical notebook ID."""
     package = package_candidate()
     package["manifest"]["pipeline_id"] = "00000000-0000-4000-8000-000000000099"
+    package["dry_run"]["pipeline_id"] = package["manifest"]["pipeline_id"]
     resign(package)
     validated = service.validate_submission(package)
     assert validated["manifest"]["pipeline_id"] == "00000000-0000-4000-8000-000000000099"
