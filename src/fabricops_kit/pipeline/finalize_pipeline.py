@@ -188,7 +188,6 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     Parameters
     ----------
-
     pipeline : PipelineSession, optional
         Execution returned by setup_pipeline. Retain it for repeat finalization.
     failed : bool, default=False
