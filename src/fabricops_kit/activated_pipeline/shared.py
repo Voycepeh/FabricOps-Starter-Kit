@@ -139,6 +139,7 @@ def metadata_path(table, *, context):
 def validate_registry(rows):
     """Reject duplicate identities, active versions and incomplete frozen provenance."""
     identities, active, promotions, notebooks = set(), set(), set(), set()
+    physical_identities = {}
     for row in rows:
         required = ("execution_workspace_id", "pipeline_id", "pipeline_version", "promotion_id", "status",
             "source_workspace_id", "source_notebook_id", "governed_notebook_id", "snapshot_uri", "snapshot_sha256",
@@ -147,6 +148,15 @@ def validate_registry(rows):
         if any(row.get(key) in (None, "") for key in required) or "record_type" in row:
             raise ValueError("Incompatible Pipeline Promotion Registry: complete immutable version and snapshot fields are required. Existing metadata is preserved.")
         validate_pipeline_id(row["pipeline_id"])
+        for workspace_key, notebook_key in (
+            ("source_workspace_id", "source_notebook_id"),
+            ("execution_workspace_id", "governed_notebook_id"),
+        ):
+            physical_key = (row[workspace_key], row[notebook_key])
+            existing_pipeline = physical_identities.get(physical_key)
+            if existing_pipeline is not None and existing_pipeline != row["pipeline_id"]:
+                raise ValueError("One Fabric notebook is mapped to multiple logical Pipeline IDs.")
+            physical_identities[physical_key] = row["pipeline_id"]
         if type(row["pipeline_version"]) is not int or row["pipeline_version"] < 1:
             raise ValueError("Pipeline version must be a positive integer.")
         key = row["execution_workspace_id"], row["pipeline_id"], row["pipeline_version"]
@@ -204,6 +214,36 @@ def validate_activations(rows):
 def read_registry(*, context, spark_session=None):
     """Read only validated per-version Pipeline Promotions; empty setup is valid."""
     return validate_registry(metadata_records(REGISTRY_TABLE, context=context, spark_session=spark_session))
+
+
+def resolve_pipeline_identity(*, context, spark_session=None):
+    """Resolve the current Fabric notebook to its original logical Pipeline ID.
+
+    A new source notebook uses its own Fabric Notebook ID. Once promoted, the
+    existing Registry source/governed notebook bindings resolve every physical
+    copy back to that same logical identity. No registration row is created.
+    """
+    _config, workspace, runtime = resolve_fabric_context(context=context)
+    notebook_id = runtime.get("notebook_id")
+    if not notebook_id:
+        raise RuntimeError("Pipeline identity requires Fabric currentNotebookId.")
+    notebook_id = validate_pipeline_id(str(notebook_id))
+    rows = read_registry(context=context, spark_session=spark_session)
+    source_rows = [row for row in rows
+        if row["source_workspace_id"] == workspace and row["source_notebook_id"] == notebook_id]
+    governed_rows = [row for row in rows
+        if row["execution_workspace_id"] == workspace and row["governed_notebook_id"] == notebook_id]
+    matches = source_rows + governed_rows
+    if not matches:
+        return notebook_id, {"role": "source", "row": None}
+    identities = {row["pipeline_id"] for row in matches}
+    if len(identities) != 1:
+        raise RuntimeError("Fabric notebook identity has conflicting Pipeline Registry mappings.")
+    if len(governed_rows) > 1:
+        raise RuntimeError("Fabric notebook is bound to multiple immutable Governed versions.")
+    if governed_rows:
+        return next(iter(identities)), {"role": "governed", "row": governed_rows[0]}
+    return next(iter(identities)), {"role": "source", "row": source_rows[0]}
 
 
 def read_activations(*, context, spark_session=None):
