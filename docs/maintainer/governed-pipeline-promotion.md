@@ -63,7 +63,7 @@ Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs
 
 There is no package download, upload or JSON paste. Governance reads the saved submission directly.
 
-To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; another Dry Run is not required just to deploy an existing approval.
+To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline()`; another Dry Run is not required just to deploy an existing approval.
 
 For recovery, select a **Retained implementation**, choose **Restore the active notebook** or **Rollback through a new version**, and click **Submit recovery request**. Governance selects that saved request in the same widget and approves it; Engineering then applies the approval using step 3.
 
