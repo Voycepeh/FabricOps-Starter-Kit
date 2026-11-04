@@ -161,9 +161,10 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     Notes
     -----
     Call setup_notebook first. Spark and Fabric identity come from that setup.
-    There is no permanent registration, approval, notebook rebinding or automatic
-    UUID recovery. A notebook may use different explicit Pipeline IDs. Repeated
-    setup closes the previous execution. Dry Run never writes Registry, Run,
+    The current Fabric Notebook ID establishes the logical Pipeline ID. The
+    Pipeline Registry maps promoted physical notebook IDs back to the original
+    identity; no identity is declared in notebook source. Repeated setup closes
+    the previous execution. Dry Run never writes Registry, Run,
     profiling results or Processing State. Completed captured Dry Runs retain
     serializable saved-definition/test claims in Engineering Files for submission.
     Finalize displays the package download and explicit deployment/recovery controls.
