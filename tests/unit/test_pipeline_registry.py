@@ -1,4 +1,5 @@
 """Fabric notebook identity is resolved internally through promotion Registry rows."""
+# ruff: noqa: D103
 from types import SimpleNamespace
 from unittest.mock import ANY, Mock
 import pytest
