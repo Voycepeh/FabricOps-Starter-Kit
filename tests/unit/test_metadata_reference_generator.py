@@ -432,8 +432,15 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert registry.find(f"{namespace}rect").get("y") == "423"
     boxes = {a.find(f"{namespace}title").text.removeprefix("Open metadata documentation: "):
         a.find(f"{namespace}rect") for a in svg_tree.findall(f".//{namespace}a")}
+    expected_rows = [
+        ["DATA_CONTRACT", "DATA_CONTRACT_ACTIVATION", "DATA_AGREEMENT", "DATA_STEWARD", "PIPELINE_ACTIVATION"],
+        ["DATA_CATALOGUE", "PROCESSING_STATE", "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
+        ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"],
+    ]
+    for names in expected_rows:
+        assert [float(boxes[name].get("x")) for name in names] == [35 + 390 * i for i in range(len(names))]
     assert boxes["PIPELINE_ACTIVATION"].get("x") == "1595"
-    assert boxes["DATA_CONTRACT_ACTIVATION"].get("x") == "815"
+    assert boxes["DATA_CONTRACT_ACTIVATION"].get("x") == "425"
     assert "Engineering deployment evidence" in svg.read_text(encoding="utf-8")
     # Keep design asset, generated output and canonical reference in sync.
     script = generator_script.read_text(encoding="utf-8")
