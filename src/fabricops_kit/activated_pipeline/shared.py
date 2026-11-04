@@ -31,7 +31,7 @@ OPERATION_FIELDS = (
     "query_sha256", "incremental_target_table_id", "source_table_ids", "requested_schema",
 )
 RUN_PROVENANCE_FIELDS = (
-    "execution_workspace_id", "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version",
+    "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version",
 )
 
 def manifest_digest(value):
@@ -143,7 +143,7 @@ def validate_registry(rows):
         required = ("execution_workspace_id", "pipeline_id", "pipeline_version", "promotion_id", "status",
             "source_workspace_id", "source_notebook_id", "governed_notebook_id", "snapshot_uri", "snapshot_sha256",
             "source_snapshot_uri", "source_snapshot_sha256", "executable_sha256", "operations_json",
-            "bindings_sha256", "parameters_json", "approval_id", "submission_id", "submission_sha256", "promoted_by", "promoted_at")
+            "bindings_sha256", "parameters_json", "approval_id", "submission_id", "submission_sha256", "_committed_by", "promoted_at")
         if any(row.get(key) in (None, "") for key in required) or "record_type" in row:
             raise ValueError("Incompatible Pipeline Promotion Registry: complete immutable version and snapshot fields are required. Existing metadata is preserved.")
         validate_pipeline_id(row["pipeline_id"])
@@ -185,7 +185,7 @@ def validate_activations(rows):
         if (not all(identity) or row.get("status") not in {"active", "superseded"} or type(row.get("revision")) is not int
                 or row["revision"] < 1 or not row.get("activation_id") or not row.get("contract_id")
                 or type(row.get("contract_version")) is not int or row["contract_version"] < 1
-                or not row.get("payload_sha256") or not row.get("activated_by") or not row.get("activated_at")):
+                or not row.get("payload_sha256") or not row.get("_committed_by") or not row.get("activated_at")):
             raise ValueError("Incomplete active Data Contract identity.")
         if str(destination["workspace_id"]).casefold() != str(identity[0]).casefold():
             raise ValueError("Contract Activation must use the physical table workspace.")
@@ -382,8 +382,7 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
     record = dict(workspace_id=workspace, table_id=table_id, contract_id=contract_id, contract_version=contract_version,
         payload_sha256=payload_sha256, activation_id=activation_id,
-        status="active", destination_json=canonical_pipeline_json(destination), activated_by=audit["_committed_by"],
-        activated_at=datetime.now(UTC).replace(tzinfo=None), **audit)
+        status="active", destination_json=canonical_pipeline_json(destination),         activated_at=datetime.now(UTC).replace(tzinfo=None), **audit)
     record.update(agreement_id=agreement_id, agreement_version=agreement_version, agreement_sha256=None)
     if agreement_id is not None or agreement_version is not None:
         agreement = exact_record(metadata_records("METADATA_DATA_AGREEMENT", context=context, spark_session=spark_session),
@@ -717,7 +716,7 @@ def commit_pipeline_promotion(candidate, *, expected_active_version, context, sp
         replay = [row for row in rows if row["promotion_id"] == candidate["promotion_id"]]
         if replay:
             original = replay[0]
-            if any(original.get(key) != value for key, value in candidate.items() if key != "status" and not key.startswith("_") and key not in {"promoted_at", "promoted_by"}):
+            if any(original.get(key) != value for key, value in candidate.items() if key != "status" and not key.startswith("_") and key != "promoted_at"):
                 raise ValueError("Promotion operation ID was reused with different content.")
             return rows, original
         scoped = [row for row in rows if (row["execution_workspace_id"], row["pipeline_id"]) ==
@@ -976,7 +975,7 @@ def validate_approvals(rows):
                 any(row[key] != manifest[key] for key in ("submission_id", "pipeline_id", "execution_workspace_id", "expected_active_version")) or
                 row["submission_sha256"] != package["submission_sha256"] or
                 row.get("restores_promotion_id") != (manifest["retained_promotion_id"] if manifest["intent"] == "restore" else None) or
-                not row["decided_by"] or not row["decided_at"]):
+                not row["_committed_by"] or not row["decided_at"]):
             raise ValueError("Invalid or ambiguous authoritative Governance decision history.")
         previous = submissions.setdefault(row["submission_id"], row["submission_sha256"])
         if previous != row["submission_sha256"]:
@@ -1017,7 +1016,7 @@ def import_pipeline_submission(package, *, context, spark_session=None):
             status="imported", decision_kind=manifest["intent"], package_json=canonical_pipeline_json(package), policy_json="{}",
             expected_active_version=manifest["expected_active_version"],
             restores_promotion_id=manifest["retained_promotion_id"] if manifest["intent"] == "restore" else None,
-            expires_at=None, decided_by=audit["_committed_by"], decided_at=datetime.now(UTC).replace(tzinfo=None),
+            expires_at=None, decided_at=datetime.now(UTC).replace(tzinfo=None),
             review_note="Untrusted Engineering claims; integrity verified, testing outcomes require independent review.", **audit)
         validate_approvals(rows + [row])
         return rows + [row], row
@@ -1092,7 +1091,7 @@ def decide_pipeline_submission(submission_id, *, status, expected_revision, poli
             raise ValueError("Only an approved submission can be revoked.")
         row = {**imported, **audit, "approval_id": str(uuid4()), "revision": expected_revision + 1,
             "status": status, "policy_json": canonical_pipeline_json(policy), "expires_at": expires_at,
-            "decided_by": audit["_committed_by"], "decided_at": datetime.now(UTC).replace(tzinfo=None), "review_note": str(review_note).strip()}
+            "decided_at": datetime.now(UTC).replace(tzinfo=None), "review_note": str(review_note).strip()}
         validate_approvals(current + [row])
         return current + [row], row
     return mutate_metadata(PIPELINE_ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session)
@@ -1214,7 +1213,7 @@ def deploy_approved_submission(approval_id, *, context, spark_session=None):
     if client.definition(workspace, staged_id) != snapshot:
         raise RuntimeError("Complete deployed notebook definition differs from the approved snapshot; previous version remains active.")
     audit = build_runtime_audit_fields(config=runtime["config"], active_workspace_id=workspace, runtime_context=runtime)
-    candidate.update(promoted_by=audit["_committed_by"], promoted_at=datetime.now(UTC).replace(tzinfo=None), **audit)
+    candidate.update(promoted_at=datetime.now(UTC).replace(tzinfo=None), **audit)
     verify_registry_approval(candidate, context=context, spark_session=spark)
     return commit_pipeline_promotion(candidate, expected_active_version=manifest["expected_active_version"], context=context, spark_session=spark)
 
