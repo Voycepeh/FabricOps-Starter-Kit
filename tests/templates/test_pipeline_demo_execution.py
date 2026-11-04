@@ -12,13 +12,15 @@ ROOT = Path(__file__).resolve().parents[2]
 DEMOS = [ROOT/'templates/notebooks/02_pipeline.ipynb', *sorted((ROOT/'templates/DemoData').glob('02*.ipynb'))]
 
 
+
 @pytest.mark.parametrize('path', DEMOS, ids=lambda path: path.stem)
 def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     """Independent demo notebooks retain their ETL and avoid lifecycle plumbing."""
+    notebook = nbformat.read(path, as_version=4)
     frame = MagicMock()
     reads, writes = [], []
     notebook_setup = Mock()
-    setup = Mock(return_value=SimpleNamespace(pipeline_id="registered-uuid"))
+    setup = Mock(return_value=SimpleNamespace())
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
         assert kwargs.get('verbose') is True
@@ -31,7 +33,6 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
                  'resolve_table_id': Mock(return_value='incremental-target'), 'display': Mock()}
-    notebook = nbformat.read(path, as_version=4)
     for cell in notebook.cells:
         if cell.cell_type != 'code':
             continue
@@ -41,8 +42,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
     notebook_setup.assert_called_once_with()
     observation = dict(observe_source=False, source_observation_days=None) if path.stem in {'02_pipeline', '02B_incremental_append_demo'} else {}
-    setup.assert_called_once_with(pipeline_id=None, pipeline_mode='Ungoverned', **observation)
-    assert namespace['PIPELINE_ID'] == setup.return_value.pipeline_id
+    setup.assert_called_once_with(pipeline_mode='Ungoverned', **observation)
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
@@ -51,6 +51,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     }
     count, modes = expected[path.stem]
     assert len(reads) == count and [mode for name, mode in writes] == modes
+
 
 
 @pytest.mark.parametrize('path', DEMOS, ids=lambda path: path.stem)
@@ -72,7 +73,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == 1
     assert len(calls['finalize_pipeline']) == 1
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_id','pipeline_mode'}
+    expected_setup = {'pipeline_mode'}
     if path.stem in {'02_pipeline', '02B_incremental_append_demo'}:
         expected_setup |= {'observe_source', 'source_observation_days'}
     assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == expected_setup

@@ -139,6 +139,7 @@ def metadata_path(table, *, context):
 def validate_registry(rows):
     """Reject duplicate identities, active versions and incomplete frozen provenance."""
     identities, active, promotions, notebooks = set(), set(), set(), set()
+    physical_identities = {}
     for row in rows:
         required = ("execution_workspace_id", "pipeline_id", "pipeline_version", "promotion_id", "status",
             "source_workspace_id", "source_notebook_id", "governed_notebook_id", "snapshot_uri", "snapshot_sha256",
@@ -147,6 +148,15 @@ def validate_registry(rows):
         if any(row.get(key) in (None, "") for key in required) or "record_type" in row:
             raise ValueError("Incompatible Pipeline Promotion Registry: complete immutable version and snapshot fields are required. Existing metadata is preserved.")
         validate_pipeline_id(row["pipeline_id"])
+        for workspace_key, notebook_key in (
+            ("source_workspace_id", "source_notebook_id"),
+            ("execution_workspace_id", "governed_notebook_id"),
+        ):
+            physical_key = (row[workspace_key], row[notebook_key])
+            existing_pipeline = physical_identities.get(physical_key)
+            if existing_pipeline is not None and existing_pipeline != row["pipeline_id"]:
+                raise ValueError("One Fabric notebook is mapped to multiple logical Pipeline IDs.")
+            physical_identities[physical_key] = row["pipeline_id"]
         if type(row["pipeline_version"]) is not int or row["pipeline_version"] < 1:
             raise ValueError("Pipeline version must be a positive integer.")
         key = row["execution_workspace_id"], row["pipeline_id"], row["pipeline_version"]
@@ -204,6 +214,36 @@ def validate_activations(rows):
 def read_registry(*, context, spark_session=None):
     """Read only validated per-version Pipeline Promotions; empty setup is valid."""
     return validate_registry(metadata_records(REGISTRY_TABLE, context=context, spark_session=spark_session))
+
+
+def resolve_pipeline_identity(*, context, spark_session=None):
+    """Resolve the current Fabric notebook to its original logical Pipeline ID.
+
+    A new source notebook uses its own Fabric Notebook ID. Once promoted, the
+    existing Registry source/governed notebook bindings resolve every physical
+    copy back to that same logical identity. No registration row is created.
+    """
+    _config, workspace, runtime = resolve_fabric_context(context=context)
+    notebook_id = runtime.get("notebook_id")
+    if not notebook_id:
+        raise RuntimeError("Pipeline identity requires Fabric currentNotebookId.")
+    notebook_id = validate_pipeline_id(str(notebook_id))
+    rows = read_registry(context=context, spark_session=spark_session)
+    source_rows = [row for row in rows
+        if row["source_workspace_id"] == workspace and row["source_notebook_id"] == notebook_id]
+    governed_rows = [row for row in rows
+        if row["execution_workspace_id"] == workspace and row["governed_notebook_id"] == notebook_id]
+    matches = source_rows + governed_rows
+    if not matches:
+        return notebook_id, {"role": "source", "row": None}
+    identities = {row["pipeline_id"] for row in matches}
+    if len(identities) != 1:
+        raise RuntimeError("Fabric notebook identity has conflicting Pipeline Registry mappings.")
+    if len(governed_rows) > 1:
+        raise RuntimeError("Fabric notebook is bound to multiple immutable Governed versions.")
+    if governed_rows:
+        return next(iter(identities)), {"role": "governed", "row": governed_rows[0]}
+    return next(iter(identities)), {"role": "source", "row": source_rows[0]}
 
 
 def read_activations(*, context, spark_session=None):
@@ -573,11 +613,12 @@ def notebook_executable_digest(raw):
     return manifest_digest({"code": code, "metadata": metadata, "nbformat": notebook["nbformat"]})
 
 
-def promoted_notebook(raw, pipeline_id):
+def promoted_notebook(raw):
     """Freeze one saved Dry Run setup call, resolving preceding literal notebook constants.
 
-    Saved constant references are replaced by exact approved literals in the
-    cloned setup call, so parameter overrides cannot switch its mode or identity.
+    The logical Pipeline ID is resolved from the original Fabric notebook ID
+    and retained Registry mapping; it is never written into notebook source.
+    The frozen copy changes only the execution mode.
     Arbitrary expressions and conditional/nested setup calls remain unsupported.
     """
     import ast
@@ -598,22 +639,19 @@ def promoted_notebook(raw, pipeline_id):
                     raise ValueError("Promotion requires one unconditional module-level setup_pipeline call.")
                 found += 1
                 values = {kw.arg: kw.value for kw in call.keywords}
-                if call.args or None in values or set(values) - {"pipeline_id", "pipeline_mode", "observe_source", "source_observation_days"}:
+                if call.args or None in values or set(values) - {"pipeline_mode", "observe_source", "source_observation_days"}:
                     raise ValueError("Promotion requires literal setup_pipeline parameters without argument overrides.")
                 try:
                     literal = {key: constants[node.id] if isinstance(node, ast.Name) else ast.literal_eval(node)
                         for key, node in values.items()}
                 except (KeyError, ValueError, TypeError):
                     raise ValueError("Promotion requires literal setup_pipeline parameters or preceding saved literal constants.") from None
-                if literal.get("pipeline_id") != pipeline_id or literal.get("pipeline_mode") != "Dry Run":
-                    raise ValueError("Save the manually tested notebook with its stable Pipeline ID and literal Dry Run mode.")
+                if literal.get("pipeline_mode") != "Dry Run":
+                    raise ValueError("Save the manually tested source notebook with literal Dry Run mode.")
                 parameters = {"manual": literal.get("observe_source", False), "days": literal.get("source_observation_days")}
                 for key, node in values.items():
-                    if key == "pipeline_mode" or isinstance(node, ast.Name):
-                        text = repr("Governed" if key == "pipeline_mode" else literal[key])
-                        if key == "pipeline_mode":
-                            text = '"Governed"'
-                        replacements.append((node, text))
+                    if key == "pipeline_mode":
+                        replacements.append((node, '"Governed"'))
             # Only preceding module-level literal assignments can resolve names.
             targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target] if isinstance(statement, ast.AnnAssign) else []
             for target in targets:
@@ -774,6 +812,7 @@ def validate_submission(package):
         raise ValueError("Unsupported submission manifest fields or version.")
     UUID(manifest["submission_id"])
     validate_pipeline_id(manifest["pipeline_id"])
+    validate_pipeline_id(manifest["source_notebook_id"])
     for key in ("source_workspace_id", "source_notebook_id", "execution_workspace_id", "created_by", "created_at", "dry_run_id"):
         if not isinstance(manifest[key], str) or not manifest[key].strip():
             raise ValueError("Submission requires " + key)
@@ -797,7 +836,7 @@ def validate_submission(package):
             hashlib.sha256(snapshot).hexdigest() != manifest["snapshot_sha256"] or
             notebook_executable_digest(snapshot) != manifest["executable_sha256"]):
         raise ValueError("Submitted saved/executed notebook identity or digest mismatch.")
-    promoted, parameters = promoted_notebook(source, manifest["pipeline_id"])
+    promoted, parameters = promoted_notebook(source)
     if promoted != snapshot or parameters != manifest["parameters"]:
         raise ValueError("Promoted snapshot or behavior parameters differ from the saved candidate.")
     operations = activation_operations(manifest["operations"])
@@ -865,7 +904,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
     if notebook_executable_digest(current) != notebook_executable_digest(raw):
         raise ValueError("Saved executable notebook changed since execution; save and repeat the Dry Run.")
     executed, raw = raw, current
-    snapshot, parameters = promoted_notebook(raw, plan.pipeline_id)
+    snapshot, parameters = promoted_notebook(raw)
     if parameters != plan.evidence.get("source_observation_policy"):
         raise ValueError("Executed parameter overrides differ from the saved definition.")
     config, _, runtime = resolve_fabric_context(context=context or plan.runtime_context)

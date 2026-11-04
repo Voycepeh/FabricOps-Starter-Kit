@@ -56,14 +56,14 @@ Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs
 
 ## Saved submissions and decision state
 
-1. **Engineering:** save the development notebook with a stable `PIPELINE_ID` and `PIPELINE_MODE = "Dry Run"`. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
+1. **Engineering:** save the development notebook with `PIPELINE_MODE = "Dry Run"`; FabricOps derives its identity from Fabric. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
 2. **Governance:** run `widget_activate_pipeline()` and click **Refresh submissions**. Select the **Saved pipeline submission**, choose **Approve**, and click **Review submission**. Review the notebook and checks, enter a review note, tick the confirmation, and click **Save Governance decision**.
 3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
 4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
 
 There is no package download, upload or JSON paste. Governance reads the saved submission directly.
 
-To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; another Dry Run is not required just to deploy an existing approval.
+To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline()`; another Dry Run is not required just to deploy an existing approval.
 
 For recovery, select a **Retained implementation**, choose **Restore the active notebook** or **Rollback through a new version**, and click **Submit recovery request**. Governance selects that saved request in the same widget and approves it; Engineering then applies the approval using step 3.
 

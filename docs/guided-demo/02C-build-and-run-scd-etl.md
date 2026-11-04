@@ -52,13 +52,10 @@ context = setup_notebook(
     # Optional shared config: config_workspace_id="<configuration-workspace-id>",
 )
 
-PIPELINE_ID = None  # Ungoverned registers or recovers this notebook automatically.
 PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
 pipeline = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
 )
-PIPELINE_ID = pipeline.pipeline_id
 ```
 
 
@@ -163,7 +160,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
 | Metadata table | What this demo records |
 | --- | --- |
-| `METADATA_PIPELINE_REGISTRY` | Persistent pipeline UUID and workspace/notebook binding used to identify and recover this notebook pipeline. Dry Run uses a session-only identity and does not register it. |
+| `METADATA_PIPELINE_REGISTRY` | Immutable per-workspace promotion versions for the explicit Pipeline ID, including the active Governed notebook snapshot. It is not an automatic registration or UUID-recovery mechanism; Dry Run does not write Registry rows. |
 | `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the Bronze source and both Silver targets, plus applicable target processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target when profiling completes. |

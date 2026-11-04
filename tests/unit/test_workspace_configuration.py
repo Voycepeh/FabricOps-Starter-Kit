@@ -38,7 +38,7 @@ def configuration_runtime(monkeypatch, request):
     monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', None, raising=False)
     runtime = ModuleType('notebookutils.runtime')
     runtime.context = {'currentWorkspaceId': 'dev-ws', 'currentNotebookName': '02_pipeline_orders',
-                       'currentRunId': 'caller-run', 'currentNotebookId': 'caller-notebook',
+                       'currentRunId': 'caller-run', 'currentNotebookId': '00000000-0000-4000-8000-000000000002',
                        'currentWorkspaceName': 'Engineering', 'environmentWorkspaceId': 'workspace_id-ws'}
     nb = ModuleType('notebookutils')
     nb.runtime = runtime
@@ -161,12 +161,13 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     shared = importlib.import_module('fabricops_kit.pipeline.shared')
     monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: configuration_runtime.spark)
     monkeypatch.setattr(shared.PipelineSession, 'refresh', lambda self: None)
+    live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
+    monkeypatch.setattr(live, 'read_registry', lambda **kwargs: [])
     if mode == 'Governed':
-        live = importlib.import_module('fabricops_kit.activated_pipeline.shared')
         def approved(**kwargs):
             config, active_workspace_id, runtime = resolve_fabric_context()
-            plan = shared.PipelineExecutionPlan('governed', active_workspace_id, 'caller-notebook', 'approved-run',
-                                               '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
+            plan = shared.PipelineExecutionPlan('governed', active_workspace_id, '00000000-0000-4000-8000-000000000002', 'approved-run',
+                                               '{}', '{}', '{}', runtime, pipeline_id='00000000-0000-4000-8000-000000000002')
             plan.evidence['approved_parameters'] = {'manual': False, 'days': None}
             return plan
         monkeypatch.setattr(live, 'build_governed_pipeline_plan', approved)
@@ -177,16 +178,16 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     try:
         notebook = setup_notebook(config_workspace_id=config_workspace)
         notebook_output = capsys.readouterr().out
-        session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode=mode)
+        session = setup_pipeline(pipeline_mode=mode)
         assert session.plan.workspace_id == 'dev-ws'
-        assert session.plan.pipeline_id == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
+        assert session.plan.pipeline_id == '00000000-0000-4000-8000-000000000002'
         assert session.plan.runtime_context['config'].path_config.paths['dev-ws']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
         assert session.plan.runtime_context['runtime_metadata']['workspace_id'] == 'dev-ws'
         if mode == 'Dry Run':
             first = session
-            session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode=mode)
+            session = setup_pipeline(pipeline_mode=mode)
             assert first.closed
             assert session.plan.plan_id != first.plan.plan_id
             assert session.plan.runtime_context['config'] is first.plan.runtime_context['config']
@@ -504,7 +505,7 @@ def test_pipeline_requires_setup_notebook_even_with_manual_config(configuration_
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', registration)
     monkeypatch.setattr(builtins, 'FABRIC_CONTEXT', {'config': _config(), 'scope_workspace_id': 'dev-ws'})
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
     configuration_runtime.notebook.run.assert_not_called()
     registration.assert_not_called()
 
@@ -518,7 +519,7 @@ def test_pipeline_rejects_context_from_a_previous_execution(configuration_runtim
     registration = Mock()
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', registration)
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\) again'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 1
     registration.assert_not_called()
 
@@ -535,7 +536,7 @@ def test_pipeline_rejects_invalid_initialized_configuration(configuration_runtim
     else:
         context[change] = 'different'
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\) successfully'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 1
 
 
@@ -546,7 +547,7 @@ def test_failed_notebook_reload_invalidates_previous_setup(configuration_runtime
     with pytest.raises(RuntimeError, match='00_env_config execution failed'):
         setup_notebook()
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 2
 
 
@@ -578,7 +579,7 @@ def test_failed_setup_output_does_not_publish_a_ready_context(configuration_runt
     with pytest.raises(RuntimeError, match='display failed'):
         setup_notebook(_config(), workspace_id='dev-ws')
     with pytest.raises(RuntimeError, match=r'Call setup_notebook\(\)'):
-        setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+        setup_pipeline()
     assert configuration_runtime.notebook.run.call_count == 1
 
 

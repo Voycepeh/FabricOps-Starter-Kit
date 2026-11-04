@@ -7,12 +7,12 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Start Dry Run or explicit-ID Ungoverned execution; Governed fails closed pending signed-in Fabric validation.
+Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.
 
 
 ## Usage notes
 
-Call after setup_notebook() and before Read, Transform and Write. Persistent execution requires an explicit saved Pipeline ID.
+Call after setup_notebook() and before Read, Transform and Write. FabricOps resolves the logical Pipeline ID internally from the current notebook and Registry.
 
 
 ## Example usage
@@ -21,7 +21,7 @@ Call after setup_notebook() and before Read, Transform and Write. Persistent exe
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 preview = setup_pipeline(pipeline_mode="Dry Run")
 ```
 
@@ -37,7 +37,6 @@ preview = setup_pipeline(pipeline_mode="Dry Run")
 ```python
 def setup_pipeline(
     *,
-    pipeline_id: str | None=None,
     pipeline_mode: str='Ungoverned',
     observe_source: bool=False,
     source_observation_days: int | None=None,
@@ -56,7 +55,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Canonical lowercase UUIDv4 kept in version-controlled pipeline source, stable across environments and notebook deployments. Required for Ungoverned and Governed. Dry Run may allocate a session-only ID. |
+
 | `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
 | `observe_source` | `bool` | No | `False` | Manually request a full physical Source Observation for this execution. |
 | `source_observation_days` | `int \| None` | No | `None` | Automatically observe after this many days since the last accepted full observation. None disables automatic observation. Manual requests override the interval. Incremental SQL scope does not restrict observation. Baselines are accepted only with verified target publication; failed or no-op writes do not consume the interval. Changed fingerprints are diagnostic unless a separately configured Source Drift policy blocks publication. |
@@ -71,12 +70,12 @@ PipelineSession
 
 ### Return interpretation
 
-Returns a context-local Dry Run/Ungoverned session exposing the explicit Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending signed-in Fabric validation.
+Returns a context-local session exposing the Registry-resolved logical Pipeline ID, optional Dry Run Contract preview and execution reporting. finalize_pipeline records completion; interrupted runs remain incomplete. Governed is blocked pending signed-in Fabric validation.
 
 ## Raises / Errors
 
 ValueError
-    If the mode or Pipeline ID is invalid, or a persistent ID is omitted.
+    If the mode is invalid or the current Fabric Notebook ID is unavailable or malformed.
 RuntimeError
     If notebook setup or Spark is unavailable, or signed-in Fabric validation
     remains pending. Governed fails before admission and publication.

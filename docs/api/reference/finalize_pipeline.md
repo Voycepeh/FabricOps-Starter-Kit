@@ -20,10 +20,10 @@ Call after all Reads, transformations and Writes, including read-only runs.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 pipeline_result = finalize_pipeline(pipeline)
-handoff = finalize_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+handoff = finalize_pipeline()
 ```
 
 </div>
@@ -36,7 +36,7 @@ handoff = finalize_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None)
+def finalize_pipeline(pipeline=None, *, failed=False)
 ```
 
 </div>
@@ -53,7 +53,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `pipeline` | `PipelineSession` | No | `None` | Execution returned by setup_pipeline. Retain it for repeat finalization. |
 | `failed` | `bool` | No | `False` | Mark a caught project failure; recorded failures cannot become success. |
-| `pipeline_id` | `str \| None` | No | `None` | Open persisted Engineering deployment/recovery controls for this logical Pipeline ID without an execution session. Do not combine with pipeline or failed=True. Call setup_notebook first to establish Engineering context. |
+
 
 </div>
 

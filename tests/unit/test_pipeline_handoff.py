@@ -21,7 +21,7 @@ POLICY_REVIEW = service.review_submission_policy
 def package_candidate():
     """Build a complete portable candidate with saved code and recorded operations."""
     source = notebook()
-    snapshot, parameters = service.promoted_notebook(source, PIPELINE_ID)
+    snapshot, parameters = service.promoted_notebook(source)
     op = operation()
     run_op = {key: value for key, value in op.items() if key != "requested_schema"}
     run_op.update(contract_id=None, contract_version=None, payload_sha256=None, status="succeeded",
@@ -33,7 +33,7 @@ def package_candidate():
         pipeline_version=None, promotion_id=None, governed_notebook_id=None,
         execution_identity="engineer", run_schema_version=3)
     manifest = dict(format_version=1, submission_id=str(uuid4()), pipeline_id=PIPELINE_ID,
-        source_workspace_id="DEV", source_notebook_id="development", execution_workspace_id="DEV",
+        source_workspace_id="DEV", source_notebook_id=PIPELINE_ID, execution_workspace_id="DEV",
         source_snapshot_sha256=service.hashlib.sha256(source).hexdigest(), executed_snapshot_sha256=service.hashlib.sha256(source).hexdigest(),
         source_executable_sha256=service.notebook_executable_digest(source), executed_executable_sha256=service.notebook_executable_digest(source), snapshot_sha256=service.hashlib.sha256(snapshot).hexdigest(),
         executable_sha256=service.notebook_executable_digest(snapshot), operations=[op], tested_operations=[op], parameters=parameters,
@@ -49,6 +49,16 @@ def resign(package):
     """Recompute only content identity, without pretending to grant approval."""
     package["submission_sha256"] = service.manifest_digest({key: value for key, value in package.items() if key != "submission_sha256"})
     return package
+
+def test_submission_preserves_a_registry_assigned_legacy_pipeline_id():
+    """An existing Registry identity may differ from its original physical notebook ID."""
+    package = package_candidate()
+    package["manifest"]["pipeline_id"] = "00000000-0000-4000-8000-000000000099"
+    package["dry_run"]["pipeline_id"] = package["manifest"]["pipeline_id"]
+    resign(package)
+    validated = service.validate_submission(package)
+    assert validated["manifest"]["pipeline_id"] == "00000000-0000-4000-8000-000000000099"
+    assert validated["manifest"]["source_notebook_id"] == PIPELINE_ID
 
 
 @pytest.fixture
@@ -396,7 +406,7 @@ def test_saved_output_changes_remain_distinct_from_executed_saved_definition():
     saved = json.loads(base64.b64decode(package["source_notebook_base64"]))
     saved["cells"][0]["source"] = "Updated review notes after the Dry Run"
     raw = json.dumps(saved).encode()
-    promoted, _ = service.promoted_notebook(raw, PIPELINE_ID)
+    promoted, _ = service.promoted_notebook(raw)
     package["source_notebook_base64"] = base64.b64encode(raw).decode()
     package["notebook_base64"] = base64.b64encode(promoted).decode()
     package["manifest"].update(source_snapshot_sha256=service.hashlib.sha256(raw).hexdigest(),

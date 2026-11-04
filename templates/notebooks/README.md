@@ -34,7 +34,6 @@ CONFIG_WORKSPACE_ID = "<configuration-workspace-id>"
 context = setup_notebook(config_workspace_id=CONFIG_WORKSPACE_ID)
 # Then, in an Engineering pipeline:
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
-PIPELINE_ID = pipeline.pipeline_id
 ```
 
 The shared deployment must register the caller workspace in `ENGINEERING_WORKSPACES`. The execution identity needs permission to run the remote notebook and access its configured stores. No process environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
@@ -49,13 +48,12 @@ context = setup_notebook()
 # 02 Pipeline
 from fabricops_kit import setup_notebook, setup_pipeline, finalize_pipeline
 context = setup_notebook()
-PIPELINE_ID = "8f32a471-6c91-4b7e-9d13-2f0c947eab52"  # Generate once and save in source.
-pipeline = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 # Read → Transform → Write
 finalize_pipeline()
 ```
 
-Save one UUIDv4 Pipeline ID in notebook source and reuse it across environments. Persistent Ungoverned and Governed execution require it. Dry Run may omit it for a session-only identity. Neither setup function requires a workspace argument.
+FabricOps derives the logical Pipeline ID from the current Fabric Notebook ID. The Pipeline Registry preserves that identity when a notebook is promoted and maps each promoted physical Notebook ID to the same logical pipeline. Engineers do not declare or manage Pipeline IDs in notebook source. Neither setup function requires a workspace argument.
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
@@ -85,21 +83,21 @@ See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn
 
 Governance has only the Metadata target. Its runtime workspace remains its audit identity. In the Data Contract widget, deliberately select a Table and Workspace to create a draft from that workspace's current observation. Contract history is global for the selected table. Workspace appears at the far right and filters bidirectionally with Table. No arbitrary workspace or table is selected.
 
-On first setup, run the complete notebook in Ungoverned mode and call `pipeline_result = finalize_pipeline(pipeline)`. Save a literal stable Pipeline ID and Dry Run mode before manually testing. Finalization persists available saved-definition and execution claims under Engineering's explicit Files permissions, without publishing business data or changing the Run table. `finalize_pipeline(pipeline)` automatically saves the complete package. Governance selects it directly with `widget_activate_pipeline()` in an independent session and records an approval. Engineering then deploys the approved snapshot through the controls beneath `finalize_pipeline(pipeline)`. **Governed execution remains blocked pending signed-in Fabric acceptance.**
+On first setup, run the complete notebook in Dry Run mode before submitting it for Governance review. FabricOps derives its logical identity from the original Fabric Notebook ID. Finalization persists available saved-definition and execution claims under Engineering's explicit Files permissions, without publishing business data or changing the Run table. `finalize_pipeline(pipeline)` automatically saves the complete package. Governance selects it directly with `widget_activate_pipeline()` in an independent session and records an approval. Engineering then deploys the approved snapshot through the controls beneath `finalize_pipeline(pipeline)`. **Governed execution remains blocked pending signed-in Fabric acceptance.**
 
 New drafts capture every current observed column once. Columns default to required presence; optional presence is distinct from nullability. Missing required columns, uncontracted extra columns and normalized datatype differences block Governed execution. New profiles never mutate contracts. Unprofiled columns remain governable and display “Not yet profiled”.
 
 Contract Activation selects an exact frozen definition and applicable Agreement per physical workspace/Table ID. Pipeline Approval reviews an immutable imported candidate; Engineering separately creates a distinct Governed notebook from that approved snapshot. A Governed folder is organizational and grants no permissions.
 
-`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline(pipeline_id=PIPELINE_ID)` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
+`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline()` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
 
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform → Write → Finalize**. `setup_notebook()` initializes configuration and displays readiness; `setup_pipeline()` reuses that configuration and displays only pipeline details. Call notebook setup first; missing, failed or outdated setup produces an actionable error. Rerunning notebook setup closes the current pipeline and invalidates its old configuration before attempting a reload. Workspace routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform → Write → Finalize**. `setup_notebook()` initializes configuration and displays readiness; `setup_pipeline()` reuses that configuration and displays only pipeline details. Call notebook setup first; missing, failed or outdated setup produces an actionable error. Rerunning notebook setup closes the current pipeline and invalidates its old configuration before attempting a reload. Workspace routing is resolved automatically from the caller workspace by the selected `00_env_config`. The original Fabric Notebook ID establishes the logical pipeline identity. The Registry maps every promoted physical Notebook ID back to that identity.
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
@@ -147,7 +145,7 @@ Promotion creates a separate saved Governed notebook and verifies its immutable 
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Governed")
+pipeline = setup_pipeline(pipeline_mode="Governed")
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
@@ -197,10 +195,10 @@ Profiling history without a confirmed physical binding and independent activity 
 
 ### Permanent pipeline identity
 
-Persistent Ungoverned and Governed calls require an explicit saved UUIDv4 Pipeline ID. Generate it once, paste it into the notebook configuration and retain it in version-controlled source across environments and notebook redeployments. Dry Run may omit it for a session-only identity. There is no registration, automatic UUID recovery, rebind or new-pipeline lifecycle.
+FabricOps derives the logical Pipeline ID from the original Fabric Notebook ID. Promoted notebook IDs resolve back to that identity through the Pipeline Registry; no notebook-level Pipeline ID is required.
 
-Notebook names do not define logical Pipeline identity. The stable Pipeline ID is shared across versions and execution workspaces; every promoted version has a separate physical Governed notebook ID. New starts against superseded items reject. Existing admitted runs retain captured versions and Contracts; the exclusive physical target publication claim prevents conflicting old/new writers. `widget_activate_data_contract()` delegates to a conditional service using the reviewed current activation ID and replay-safe operation ID, independently of Pipeline Promotion. Governed remains blocked pending signed-in Fabric validation.
+Notebook names do not define logical Pipeline identity. The Registry retains one logical Pipeline ID across versions and execution workspaces; every promoted version has a separate physical Governed notebook ID. New starts against superseded items reject. Existing admitted runs retain captured versions and Contracts; the exclusive physical target publication claim prevents conflicting old/new writers. `widget_activate_data_contract()` delegates to a conditional service using the reviewed current activation ID and replay-safe operation ID, independently of Pipeline Promotion. Governed remains blocked pending signed-in Fabric validation.
 
 `pipeline_result = finalize_pipeline(pipeline)` records the accurate completion status for persisting modes and returns a session-only summary for Dry Run. Governance selects and reviews the complete saved notebook, recorded Dry Run claims, destination bindings and current Contract/Agreement policy, then records its decision in `governance.METADATA_PIPELINE_ACTIVATION`. Engineering deploys that exact snapshot and separately records the immutable version in `engineering.METADATA_PIPELINE_REGISTRY`. Governance owns both schemas; Engineering cannot write Governance approval or activation records. Dry Run does not commit business tables; Governed execution exercises the activated publication permissions and target transaction.
 
-After an Engineering kernel restart, initialize the notebook with `setup_notebook(...)` and call `finalize_pipeline(pipeline_id=PIPELINE_ID)` to reopen persisted approval/deployment/recovery controls. This explicit form does not start or finalize a run or export another candidate. Deployment and restoration still require review and an explicit action.
+After an Engineering kernel restart, initialize the notebook with `setup_notebook(...)` and call `finalize_pipeline()` to reopen persisted approval/deployment/recovery controls. This explicit form does not start or finalize a run or export another candidate. Deployment and restoration still require review and an explicit action.

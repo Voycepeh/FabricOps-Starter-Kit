@@ -71,5 +71,5 @@ def test_old_mode_and_missing_stable_identity_are_rejected(plan_runtime):
     _, context, _, _ = plan_runtime
     with pytest.raises(ValueError, match="dry_run, ungoverned or governed"):
         build_pipeline_execution_plan(sources=[SOURCE], targets=[], pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", execution_mode="bootstrap", context=context)
-    with pytest.raises(ValueError, match="UUIDv4"):
+    with pytest.raises(ValueError, match="canonical Fabric Notebook ID GUID"):
         build_pipeline_execution_plan(execution_mode="dry_run", sources=[SOURCE], targets=[], context=context)

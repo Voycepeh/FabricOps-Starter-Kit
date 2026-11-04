@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
+    _ACTIVE_PIPELINE,
     finalize_pipeline_run,
-    validate_pipeline_id,
 )
 
 
@@ -157,15 +157,16 @@ def _print_pipeline_summary(pipeline, result):
     print("=" * 72)
 
 
-def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None):
+def finalize_pipeline(pipeline=None, *, failed=False):
     """Finalize execution or reopen persisted Engineering deployment/recovery controls.
 
     Call once after all Reads, transformations and Writes, including read-only
     runs. Pass the session returned by setup_pipeline, or omit it to use the
     current execution. Set failed=True when a project exception was caught.
     To reopen persisted approval/deployment/recovery controls after notebook setup
-    in an independent session, pass only pipeline_id. This does not start or
-    finalize a run, export a new candidate, deploy or repair automatically.
+    in an independent session, omit the session; FabricOps resolves the current
+    notebook through the Pipeline Registry. This does not start or finalize a run,
+    export a new candidate, deploy or repair automatically.
     A successful Write or cell never completes the whole pipeline by itself.
     Open sessions require the current initialized notebook configuration and
     runtime identity, whether passed explicitly or selected implicitly. Already
@@ -192,24 +193,19 @@ def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None):
         Execution returned by setup_pipeline. Retain it for repeat finalization.
     failed : bool, default=False
         Mark a caught project failure; recorded failures cannot become success.
-    pipeline_id : str | None, optional
-        Open persisted Engineering deployment/recovery controls for this logical
-        Pipeline ID without an execution session. Do not combine with pipeline
-        or failed=True. Call setup_notebook first to establish Engineering context.
 
     Returns
     -------
     dict
         Final execution summary. For persistent modes this is the
         METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
-        The explicit pipeline_id-only form returns pipeline_id and handoff (the
-        displayed controls and their state/actions), without a Run record.
+        When no session is active, returns the resolved pipeline_id and handoff
+        (the displayed controls and their state/actions), without a Run record.
 
     Raises
     ------
     ValueError
-        If pipeline is not a setup_pipeline session, audit identity is missing,
-        pipeline_id is invalid, or execution and handoff arguments are mixed.
+        If pipeline is not a setup_pipeline session or audit identity is missing.
     RuntimeError
         If notebook setup is invalid, runtime identity has changed, another task
         owns the execution, or metadata publication fails. Run and Guardrail IDs
@@ -217,19 +213,26 @@ def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None):
 
     Examples
     --------
-    >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+    >>> pipeline = setup_pipeline(pipeline_mode="Ungoverned")
     >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> pipeline_result = finalize_pipeline(pipeline)
-    >>> handoff = finalize_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
+    >>> handoff = finalize_pipeline()
 
     """
-    if pipeline_id is not None:
-        if pipeline is not None or failed:
-            raise ValueError("Pass pipeline_id alone to reopen deployment/recovery controls; use pipeline and failed only for execution finalization.")
-        validate_pipeline_id(pipeline_id)
-        from fabricops_kit.activated_pipeline.shared import display_pipeline_handoff
-        return {"pipeline_id": pipeline_id, "handoff": display_pipeline_handoff(pipeline_id=pipeline_id)}
-    pipeline = current_pipeline_session() if pipeline is None else pipeline
+    if pipeline is None:
+        active = _ACTIVE_PIPELINE.get()
+        if active is not None and not active.closed:
+            pipeline = current_pipeline_session()
+    if pipeline is None:
+        if failed:
+            raise ValueError("failed=True requires an active PipelineSession.")
+        from fabricops_kit.config.shared import get_default_fabric_context
+        from fabricops_kit.activated_pipeline.shared import resolve_pipeline_identity, display_pipeline_handoff
+        runtime = get_default_fabric_context(require_notebook_setup=True)
+        pipeline_id, identity = resolve_pipeline_identity(context=runtime)
+        if identity["role"] != "source":
+            pipeline_id = identity["row"]["pipeline_id"]
+        return {"pipeline_id": pipeline_id, "handoff": display_pipeline_handoff(pipeline_id=pipeline_id, context=runtime)}
     if not isinstance(pipeline, PipelineSession):
         raise ValueError("Pass the session returned by setup_pipeline.")
     if not pipeline.owns_current_execution():

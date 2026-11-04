@@ -102,7 +102,7 @@ def test_pipeline_loading_precedes_initialization_and_collect(monkeypatch, outpu
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = shared.start_pipeline_session("8f32a471-6c91-4b7e-9d13-2f0c947eab52", "Dry Run")
+        session = shared.start_pipeline_session("Dry Run")
         assert calls == ["reuse", "collect"]
         assert "spark_loading" in session.startup_timings
         assert session.controls == []
@@ -203,7 +203,7 @@ def test_pipeline_controls_and_report_are_populated_before_display(monkeypatch, 
     token = shared._ACTIVE_PIPELINE.set(None)
     session = None
     try:
-        session = shared.start_pipeline_session(None, "Dry Run", inspector=lambda *args: "<p>Saved contract</p>")
+        session = shared.start_pipeline_session("Dry Run", inspector=lambda *args: "<p>Saved contract</p>")
         root = outputs[-1][1]
         assert root.layout.height == "360px" and root.layout.overflow == "auto"
         assert root.children[0].layout.display == "none"

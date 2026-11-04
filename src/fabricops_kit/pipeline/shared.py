@@ -6448,7 +6448,7 @@ def current_pipeline_session():
     """Return only the execution bound to this Python context."""
     session = _ACTIVE_PIPELINE.get()
     if session is None or session.closed:
-        raise RuntimeError("Run setup_pipeline(pipeline_id=..., pipeline_mode=...) before Read or Write.")
+        raise RuntimeError("Run setup_pipeline(pipeline_mode=...) before Read or Write.")
     if not session.owns_current_execution():
         raise RuntimeError("This execution belongs to another task or thread; run setup_pipeline in this context.")
     session.validate_current_context()
@@ -6456,23 +6456,21 @@ def current_pipeline_session():
 
 
 def validate_pipeline_id(pipeline_id):
-    """Return a canonical UUIDv4, rejecting other versions and arbitrary labels."""
+    """Return a canonical Fabric GUID used as an internal logical Pipeline ID."""
     from uuid import UUID
     try:
         identity = UUID(pipeline_id) if isinstance(pipeline_id, str) else None
     except ValueError:
         identity = None
-    if identity is None or identity.version != 4 or str(identity) != pipeline_id.lower():
-        raise ValueError("pipeline_id must be a canonical UUIDv4 stored in version-controlled pipeline source.")
+    if identity is None or str(identity) != pipeline_id.lower():
+        raise ValueError("Pipeline identity must be a canonical Fabric Notebook ID GUID.")
     return str(identity)
 
 
-def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
+def start_pipeline_session(pipeline_mode, *, inspector=None):
     """Resolve runtime services and install conservative notebook lifecycle reporting."""
     import atexit
     from contextlib import nullcontext
-    if pipeline_id is None and pipeline_mode != "Dry Run":
-        raise ValueError("Persistent pipelines require an explicit stable pipeline_id.")
     try:
         from IPython import get_ipython
     except ModuleNotFoundError as exc:
@@ -6496,22 +6494,32 @@ def start_pipeline_session(pipeline_id, pipeline_mode, *, inspector=None):
     with startup.phase("spark_loading", "Resolving the Spark session…") if startup else nullcontext():
         spark = get_spark_session()
     with startup.phase("metadata_loading", "Resolving the execution plan…") if startup else nullcontext():
-        pipeline_id = validate_pipeline_id(pipeline_id) if pipeline_id is not None else str(uuid4())
-        print(f"FabricOps Pipeline\nPipeline ID: {pipeline_id}\nMode: {pipeline_mode}")
-        print("Keep the stable Pipeline ID in version-controlled pipeline source.")
+        notebook_id = runtime.get("notebook_id")
+        identity_row = None
+        if notebook_id:
+            from fabricops_kit.activated_pipeline.shared import resolve_pipeline_identity
+            pipeline_id, identity_row = resolve_pipeline_identity(context=runtime, spark_session=spark)
+        elif pipeline_mode == "Dry Run":
+            # Headless diagnostics may run without Fabric identity, but cannot be promoted.
+            pipeline_id = str(uuid4())
+        else:
+            raise RuntimeError("Persistent pipeline execution requires Fabric currentNotebookId; no manual Pipeline ID is accepted.")
+        if identity_row is not None and identity_row["role"] == "governed" and pipeline_mode != "Governed":
+            raise RuntimeError("This notebook is a promoted implementation. Run it in Governed mode; do not execute a promoted snapshot as Ungoverned.")
+        print(f"FabricOps Pipeline\nPipeline ID: {pipeline_id}\nNotebook ID: {notebook_id or 'Unavailable'}\nMode: {pipeline_mode}")
         if pipeline_mode == "Governed":
             from fabricops_kit.activated_pipeline.shared import build_governed_pipeline_plan
             plan = build_governed_pipeline_plan(pipeline_id=pipeline_id, context=runtime, spark_session=spark)
         else:
             execution_mode = "dry_run" if pipeline_mode == "Dry Run" else "ungoverned"
-            plan = PipelineExecutionPlan(execution_mode, active_workspace_id, str(runtime.get("notebook_id") or ""), str(uuid4()),
+            plan = PipelineExecutionPlan(execution_mode, active_workspace_id, str(notebook_id or ""), str(uuid4()),
                 "{}", "{}", "{}", MappingProxyType({**runtime, "_pipeline_spark": spark, "_pipeline_bindings": {}}),
                 pipeline_id=pipeline_id)
             plan.evidence["dynamic_participants"] = True
-            if pipeline_mode == "Dry Run" and runtime.get("notebook_id"):
+            if pipeline_mode == "Dry Run" and notebook_id:
                 try:
                     from fabricops_kit.activated_pipeline.shared import FabricNotebookClient
-                    plan.evidence["notebook_snapshot"] = FabricNotebookClient().definition(active_workspace_id, runtime["notebook_id"])
+                    plan.evidence["notebook_snapshot"] = FabricNotebookClient().definition(active_workspace_id, notebook_id)
                 except Exception:
                     plan.evidence["notebook_snapshot_unavailable"] = True
     session = PipelineSession(plan, spark, inspector=inspector)

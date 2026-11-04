@@ -49,17 +49,14 @@ context = setup_notebook(
 )
 ```
 
-Then run Setup Pipeline. Generate one UUIDv4 Pipeline ID, save it as `PIPELINE_ID` in notebook source and reuse it across environments. Ungoverned and Governed execution require this explicit identity; Dry Run may use a session-only identity.
+Then run Setup Pipeline. FabricOps derives the logical Pipeline ID from the current Fabric Notebook ID. When this notebook is promoted, the Pipeline Registry maps the new physical notebook back to the original logical identity.
 
 ```python
-PIPELINE_ID = None
 PIPELINE_MODE = "Ungoverned"  # "Dry Run", "Ungoverned", or "Governed"
 
 pipeline = setup_pipeline(
-    pipeline_id=PIPELINE_ID,
     pipeline_mode=PIPELINE_MODE,
 )
-PIPELINE_ID = pipeline.pipeline_id
 ```
 
 ![Notebook after loading the shared FabricOps environment](../assets/02/Setup.png)
