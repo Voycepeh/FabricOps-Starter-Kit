@@ -4,7 +4,6 @@ Selects one exact globally frozen Contract for each physical table workspace/Tab
 
 ## Writer functions
 
-* [`activate_data_contract`](../../api/reference/activate_data_contract.md)
 * [`widget_activate_data_contract`](../../api/reference/widget_activate_data_contract.md)
 
 ## Used in Workflow Template
@@ -17,11 +16,14 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `governance`
 
-**Grain:** One current activation per physical workspace_id and table_id, with an optimistic concurrency revision.
+**Grain:** One retained activation revision per physical workspace_id and table_id; one current active selection.
 
-**Primary key:** `workspace_id` + `table_id`
+**Primary key:** `workspace_id` + `table_id` + `revision`
 
 **Relationships:**
+
+`METADATA_DATA_AGREEMENT` **(N → 1)**
+via `agreement_id` + `agreement_version`
 
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
@@ -31,9 +33,9 @@ via `contract_id` + `contract_version`
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">19</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">22</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">0</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">11</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">14</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
 
@@ -54,6 +56,9 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--governance"><td><code>destination_json</code></td><td><code>string</code></td><td>Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.</td></tr>
 <tr class="metadata-column--governance"><td><code>activated_by</code></td><td><code>string</code></td><td>Actor who activated the row.</td></tr>
 <tr class="metadata-column--governance"><td><code>activated_at</code></td><td><code>timestamp</code></td><td>Timestamp captured when a rule or enrichment record becomes active.</td></tr>
+<tr class="metadata-column--governance"><td><code>agreement_id</code></td><td><code>string</code></td><td>Stable identifier for the agreement lifecycle.</td></tr>
+<tr class="metadata-column--governance"><td><code>agreement_version</code></td><td><code>string</code></td><td>Canonical agreement version associated with the row.</td></tr>
+<tr class="metadata-column--governance"><td><code>agreement_sha256</code></td><td><code>string</code></td><td>Metadata Data Contract Activation field <code>agreement_sha256</code>.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
 <tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>

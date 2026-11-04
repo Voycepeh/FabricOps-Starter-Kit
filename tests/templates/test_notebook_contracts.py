@@ -166,10 +166,12 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
     assert "**Table**, **Columns**, and **Review**" in source
     assert "Freezing creates an immutable candidate for Engineering validation" in source
     assert "Governance authoring and Engineering validation intentionally loop" in source
-    assert "Activation records exact validation, Contract and Agreement references" in source
+    assert "Accepted packages and decisions persist in `METADATA_PIPELINE_ACTIVATION`" in source
     assert "METADATA_PIPELINE_REGISTRY" in source
-    assert "committed Pipeline Run and Guardrail Results for the explicitly selected workspace" in source
-    assert "Registration and activation in another workspace are independent" in source
+    assert "no Engineering session or workspace access is required" in source
+    assert "METADATA_PIPELINE_ACTIVATION" in source
+    assert "contract_activation = widget_activate_data_contract()" in source
+    assert "Each execution workspace has independent approval and deployment versions" in source
     assert "METADATA_ACTIVATION_STATE" not in source
     for demoted_widget in (
         "widget_enrich_table_metadata",

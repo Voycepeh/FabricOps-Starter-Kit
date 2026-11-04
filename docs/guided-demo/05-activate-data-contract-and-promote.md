@@ -1,6 +1,6 @@
 # Step 5. Activate Contracts and promote the notebook
 
-Review exact physical Contract bindings and a completed manual Dry Run before creating a separate Governed notebook.
+Governance independently approves a portable notebook candidate; Engineering separately deploys the exact approved snapshot.
 
 !!! important "Fabric acceptance remains pending"
     Governed execution is blocked until signed-in Fabric validation is complete. Promotion metadata and saved-code checks alone cannot establish execution-time code identity. Only the notebook is frozen; imported dependencies are not.
@@ -18,7 +18,7 @@ Choose an exact frozen definition for every approved source and target.
 
 1. Use a Governance-authorized identity and the configured central Metadata Lakehouse.
 2. Scope the notebook context to the **physical table workspace**, including any intentional cross-workspace source or target.
-3. Open `widget_activate_data_contract(TABLE_ID, CONTRACT_ID, VERSION, workspace_id=PHYSICAL_WORKSPACE_ID)`, review the frozen payload and workspace, then explicitly confirm activation.
+3. Open `widget_activate_data_contract(TABLE_ID, CONTRACT_ID, VERSION, workspace_id=PHYSICAL_WORKSPACE_ID)`, select the applicable exact effective Agreement, review the frozen payload and physical workspace, then explicitly confirm activation.
 4. Repeat for every source and target. `METADATA_DATA_CONTRACT_ACTIVATION` stores these independent selections. The global frozen definition remains unchanged; authoring evidence workspace does not select activation scope.
 
 ??? info "Protection and independent versions"
@@ -28,27 +28,34 @@ Choose an exact frozen definition for every approved source and target.
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Review and promote the manual Dry Run
+## Submit, independently approve and deploy
 
-Create a separate versioned notebook using destination workspace configuration.
+Review saved submissions directly from the Metadata Lakehouse.
 
 </div>
 </div>
 
-1. Save the development notebook with one literal `setup_pipeline` call containing its stable Pipeline ID and `pipeline_mode="Dry Run"`. Save before execution so the verifier can retrieve the saved definition.
-2. Manually execute the complete notebook through `finalize_pipeline(preview)`. Dry Run retains its review in memory and makes no durable Run, checkpoint, profiling, lineage or Registry mutations.
-3. In the same kernel, with a Governance-authorized identity, call `widget_activate_pipeline(dry_run=preview)`. Opening it without a session is an inspection-only view.
-4. Select the destination execution workspace and exact effective Agreement where applicable. Cross-workspace data operations require an exact effective Agreement. Click **Review promotion**. Inspect the full notebook, every operation, exact physical workspace/item/kind/schema/table binding and selected frozen Contracts.
-5. Explicitly confirm the review, then click **Promote notebook**. FabricOps writes and verifies immutable full snapshots, creates a distinct Governed notebook, checks saved executable content, then atomically switches Registry authority using the reviewed expected active version. Previous versions remain.
-6. Retain the returned review object and promotion ID if a request acknowledgement is lost. Inspect staged artifacts before retrying. Staging failure never deactivates the old version.
+1. **Engineering:** save the development notebook with a stable `PIPELINE_ID` and `PIPELINE_MODE = "Dry Run"`. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
+2. **Governance:** run `widget_activate_pipeline()` and click **Refresh submissions**. Select the **Saved pipeline submission**, choose **Approve**, and click **Review submission**. Review the notebook and checks, enter a review note, tick the confirmation, and click **Save Governance decision**.
+3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
+4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
+
+There is no package download, upload or JSON paste. Governance reads the saved submission directly.
+
+To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; another Dry Run is not required just to deploy an existing approval.
+
+For recovery, select a **Retained implementation**, choose **Restore the active notebook** or **Rollback through a new version**, and click **Submit recovery request**. Governance selects that saved request in the same widget and approves it; Engineering then applies the approval using step 3.
+
+??? info "Rollback and restoration"
+    Engineering selects a retained implementation and clicks **Submit recovery request**. Governance selects the saved request and independently reviews it and authorizes the operation. Rollback deploys a new auditable version; restoration preserves modified content before repairing the intended active version. Neither silently reactivates or rewrites an old Registry row.
 
 ??? info "Schedules and security limits"
     Same-workspace copies live in an organizational `Governed/` folder; folders confer no permissions. Engineers own schedules and explicitly rebind them to the returned new notebook ID. Promotion never moves schedules. Schedules targeting superseded notebooks must fail admission. Schedule-time changes alone do not need promotion; behavior changes do.
 
-    Saved-definition checks have TOCTOU limits and cannot prove the identity of already executing code. Privileged users can bypass FabricOps and invoke Spark directly. Restrict Governance writes and immutable archives using actual tenant permissions.
+    Saved-definition checks have TOCTOU limits and cannot prove the identity of already executing code. Privileged users can bypass FabricOps and invoke Spark directly. Governance owns all central metadata. Restrict Engineering to its schema/Files writes and read-only Governance policy; schema permissions do not automatically secure Files.
 
 ### Expected result
 
-`METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-fabric-acceptance.md).** Do not treat green local tests as secured Fabric execution.
+`METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes, exact Governance approval/submission references and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-fabric-acceptance.md).** Do not treat green local tests as secured Fabric execution.
 
 **Next:** [Step 6. Run Production](06-run-production.md)

@@ -29,6 +29,10 @@ def authority_delta(monkeypatch, spark_session, tmp_path):
             paths[table] = path
         return paths[table]
     path = ensure(service.REGISTRY_TABLE)
+    # This fixture exercises Delta Registry coordination only; independent approval
+    # authorization is covered by test_pipeline_handoff_delta.
+    monkeypatch.setattr(service, "verify_registry_approval", lambda *a, **kw: None)
+    monkeypatch.setattr(service, "verify_promotion_integrity", lambda *a, **kw: None)
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["scope_workspace_id"], context))
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: dict(audit))
     monkeypatch.setattr(service, "metadata_path", lambda table, **kw: ensure(table))

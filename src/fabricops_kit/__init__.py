@@ -18,8 +18,6 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
-from .data_contract import activate_data_contract
-from .activated_pipeline import promote_pipeline, restore_pipeline
 
 from .io import (
     read_lakehouse_csv,
@@ -61,7 +59,7 @@ CONFIG_EXPORTS = (
     "setup_metadata_tables",
 )
 
-DATA_CONTRACT_EXPORTS = ("activate_data_contract", "promote_pipeline", "restore_pipeline")
+DATA_CONTRACT_EXPORTS = ()
 
 DATA_AGENT_EXPORTS = (
     "create_data_agent",

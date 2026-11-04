@@ -1,11 +1,10 @@
 # METADATA_PIPELINE_REGISTRY
 
-Retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity.
+Records Engineering deployment of exact independently approved notebook snapshots.
 
 ## Writer functions
 
-* [`promote_pipeline`](../../api/reference/promote_pipeline.md)
-* [`widget_activate_pipeline`](../../api/reference/widget_activate_pipeline.md)
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
 
 ## Used in Workflow Template
 
@@ -17,16 +16,19 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One immutable version per execution workspace/Pipeline ID/version; at most one active version per workspace/Pipeline ID.
+**Grain:** One immutable version per execution workspace/Pipeline ID/version; at most one active version.
 
 **Primary key:** `execution_workspace_id` + `pipeline_id` + `pipeline_version`
 
 **Relationships:**
 
-`METADATA_DATA_AGREEMENT` **(N → 1)**
-via `agreement_id` + `agreement_version`
+`METADATA_DATA_CONTRACT_ACTIVATION` **(N → M)**
+via `operations_json`
 
-**Implementation details:** Serializable whole-table conditional replacement rejects stale approvals and phantom inserts. Superseded versions remain. Complete ipynb snapshots are write-once Metadata Lakehouse Files; Registry stores exact URIs and full/executable hashes. Logical stores resolve through destination configuration. No Contract Activation rows, Git/deployment attestation, control rows or per-run leases belong in Registry. Imported dependencies are not frozen. Saved-definition checks have TOCTOU limits; Governed admission remains blocked pending signed-in Fabric validation.
+`METADATA_PIPELINE_ACTIVATION` **(N → 1)**
+via `approval_id`
+
+**Implementation details:** Registry is deployment evidence, not policy authority. Serializable conditional mutation preserves at most one active monotonic version. Engineering reads exact Governance approval before staging and conditionally committing a version. Runtime verifies approval and the complete saved notebook independently. Governance owns all metadata; Engineering writes only its allowed schema and Files paths. Source and promoted snapshots are write-once. Imported dependencies are not frozen. Signed-in Fabric acceptance remains required.
 
 ## Column summary
 
@@ -59,9 +61,9 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>operations_json</code></td><td><code>string</code></td><td>Reviewed source/target operations with exact physical bindings and execution strategies.</td></tr>
 <tr class="metadata-column--engineering"><td><code>bindings_sha256</code></td><td><code>string</code></td><td>Canonical digest of exact approved operation bindings and execution descriptors.</td></tr>
 <tr class="metadata-column--engineering"><td><code>parameters_json</code></td><td><code>string</code></td><td>Exact approved behavior-affecting setup parameters; runtime overrides reject.</td></tr>
-<tr class="metadata-column--engineering"><td><code>agreement_id</code></td><td><code>string</code></td><td>Stable identifier for the agreement lifecycle.</td></tr>
-<tr class="metadata-column--engineering"><td><code>agreement_version</code></td><td><code>string</code></td><td>Canonical agreement version associated with the row.</td></tr>
-<tr class="metadata-column--engineering"><td><code>agreement_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>agreement_sha256</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Nullable historical approval reference retained unchanged for audit; never new activation authority.</td></tr>
+<tr class="metadata-column--engineering"><td><code>submission_id</code></td><td><code>string</code></td><td>Identifier stored for <code>submission_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>submission_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>submission_sha256</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>restored_from_version</code></td><td><code>integer</code></td><td>Exact retained prior implementation version with matching reviewed executable content.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promoted_by</code></td><td><code>string</code></td><td>Actual runtime audit identity responsible for the promotion.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promoted_at</code></td><td><code>timestamp</code></td><td>Time the promotion was prepared for atomic activation.</td></tr>

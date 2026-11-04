@@ -15,6 +15,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
+    "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
@@ -26,7 +27,7 @@ CANONICAL_METADATA_TABLES = [
 RETIRED_PREVIEW_METADATA_TABLES = {
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
-        "guidance": "METADATA_PIPELINE_REGISTRY records exact Data Agreement references with immutable promotion versions.",
+        "guidance": "METADATA_DATA_CONTRACT_ACTIVATION records exact Agreement associations; METADATA_PIPELINE_ACTIVATION records independent decisions.",
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
@@ -67,6 +68,7 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CONTRACT_ACTIVATION",
+    "METADATA_PIPELINE_ACTIVATION",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -395,7 +397,19 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("payload_sha256", "string", False), ("activation_id", "string", False),
              ("revision", "integer", False), ("status", "string", False),
              ("destination_json", "string", False), ("activated_by", "string", False),
-             ("activated_at", "timestamp", False), *audit],
+             ("activated_at", "timestamp", False),
+             ("agreement_id", "string"), ("agreement_version", "string"), ("agreement_sha256", "string"), *audit],
+        ),
+        "METADATA_PIPELINE_ACTIVATION": build_metadata_schema(
+            "METADATA_PIPELINE_ACTIVATION",
+            [("approval_id", "string", False), ("submission_id", "string", False),
+             ("submission_sha256", "string", False), ("execution_workspace_id", "string", False),
+             ("pipeline_id", "string", False), ("revision", "integer", False),
+             ("status", "string", False), ("decision_kind", "string", False),
+             ("package_json", "string", False), ("policy_json", "string", False),
+             ("expected_active_version", "integer"), ("restores_promotion_id", "string"),
+             ("expires_at", "timestamp"), ("decided_by", "string", False),
+             ("decided_at", "timestamp", False), ("review_note", "string", False), *audit],
         ),
         "METADATA_PIPELINE_REGISTRY": build_metadata_schema(
             "METADATA_PIPELINE_REGISTRY",
@@ -407,8 +421,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("source_snapshot_uri", "string", False), ("source_snapshot_sha256", "string", False),
              ("executable_sha256", "string", False), ("operations_json", "string", False),
              ("bindings_sha256", "string", False), ("parameters_json", "string", False),
-             ("agreement_id", "string"), ("agreement_version", "string"), ("agreement_sha256", "string"),
-             ("restored_from_version", "integer"), ("promoted_by", "string", False),
+             ("approval_id", "string", False), ("submission_id", "string", False),
+             ("submission_sha256", "string", False), ("restored_from_version", "integer"), ("promoted_by", "string", False),
              ("promoted_at", "timestamp", False), *audit],
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(

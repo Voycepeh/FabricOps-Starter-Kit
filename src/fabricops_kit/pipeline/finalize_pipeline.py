@@ -6,6 +6,7 @@ from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
     finalize_pipeline_run,
+    validate_pipeline_id,
 )
 
 
@@ -156,19 +157,31 @@ def _print_pipeline_summary(pipeline, result):
     print("=" * 72)
 
 
-def finalize_pipeline(pipeline=None, *, failed=False):
-    """Finalize a Dry Run, Ungoverned or Governed execution accurately.
+def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None):
+    """Finalize execution or reopen persisted Engineering deployment/recovery controls.
 
     Call once after all Reads, transformations and Writes, including read-only
     runs. Pass the session returned by setup_pipeline, or omit it to use the
     current execution. Set failed=True when a project exception was caught.
+    To reopen persisted approval/deployment/recovery controls after notebook setup
+    in an independent session, pass only pipeline_id. This does not start or
+    finalize a run, export a new candidate, deploy or repair automatically.
     A successful Write or cell never completes the whole pipeline by itself.
     Open sessions require the current initialized notebook configuration and
     runtime identity, whether passed explicitly or selected implicitly. Already
     closed sessions retain their recorded outcome for repeat finalization.
 
     Dry Run returns a session-only summary and persists no target, watermark,
-    processing state, profile observation or run metadata. Ungoverned and
+    processing state, profile observation or run metadata. A completed captured
+    Dry Run retains complete saved-definition and test claims in Engineering
+    Files for independent submission. For a completed captured Dry Run, save a
+    saved package for direct Governance selection and display its status plus
+    approval refresh, explicit
+    deployment and recovery controls below the summary. Repeat finalization on
+    the retained session to reopen them; it reuses the package and does not
+    repeat the run or deploy automatically. Presentation/export failures are
+    reported separately and do not change the finalized outcome. This is not
+    Governance approval. Ungoverned and
     Governed executions persist their real operational outcome. Persistent
     finalization also releases this execution's physical publication claims. Interrupted runs
     remain incomplete and are never reported as successful finalization.
@@ -179,17 +192,24 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         Execution returned by setup_pipeline. Retain it for repeat finalization.
     failed : bool, default=False
         Mark a caught project failure; recorded failures cannot become success.
+    pipeline_id : str | None, optional
+        Open persisted Engineering deployment/recovery controls for this logical
+        Pipeline ID without an execution session. Do not combine with pipeline
+        or failed=True. Call setup_notebook first to establish Engineering context.
 
     Returns
     -------
     dict
         Final execution summary. For persistent modes this is the
         METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
+        The explicit pipeline_id-only form returns pipeline_id and handoff (the
+        displayed controls and their state/actions), without a Run record.
 
     Raises
     ------
     ValueError
-        If pipeline is not a setup_pipeline session or audit identity is missing.
+        If pipeline is not a setup_pipeline session, audit identity is missing,
+        pipeline_id is invalid, or execution and handoff arguments are mixed.
     RuntimeError
         If notebook setup is invalid, runtime identity has changed, another task
         owns the execution, or metadata publication fails. Run and Guardrail IDs
@@ -200,8 +220,15 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     >>> pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
     >>> source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
     >>> pipeline_result = finalize_pipeline(pipeline)
+    >>> handoff = finalize_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52")
 
     """
+    if pipeline_id is not None:
+        if pipeline is not None or failed:
+            raise ValueError("Pass pipeline_id alone to reopen deployment/recovery controls; use pipeline and failed only for execution finalization.")
+        validate_pipeline_id(pipeline_id)
+        from fabricops_kit.activated_pipeline.shared import display_pipeline_handoff
+        return {"pipeline_id": pipeline_id, "handoff": display_pipeline_handoff(pipeline_id=pipeline_id)}
     pipeline = current_pipeline_session() if pipeline is None else pipeline
     if not isinstance(pipeline, PipelineSession):
         raise ValueError("Pass the session returned by setup_pipeline.")
@@ -218,4 +245,13 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         # Render from the finalized run snapshot; do not re-read metadata or
         # trigger additional source/target actions just to build the report.
         _print_pipeline_summary(pipeline, result)
+        if (result.get("status") == "dry_run_completed" and
+                pipeline.plan.evidence.get("notebook_snapshot") is not None):
+            from fabricops_kit.activated_pipeline.shared import display_pipeline_handoff
+            try:
+                pipeline.plan.evidence["handoff"] = display_pipeline_handoff(
+                    pipeline_id=pipeline.pipeline_id, dry_run=pipeline,
+                    context=pipeline.plan.runtime_context)
+            except Exception as exc:
+                print(f"Submission/deployment controls unavailable: {exc}. Run finalize_pipeline(pipeline) again to retry; the run outcome is unchanged.")
         return result

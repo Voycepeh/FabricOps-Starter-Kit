@@ -526,3 +526,61 @@ def test_public_finalize_retries_remaining_claims_after_partial_release(runtime,
     assert released == ['A', 'B']
     committed.assert_called_once()
     assert 'lease_token' not in session.plan.evidence
+
+
+@pytest.mark.parametrize("ui_fails", [False, True])
+def test_finalize_displays_captured_submission_without_repeating_run(runtime, monkeypatch, capsys, ui_fails):
+    """Finalize preserves the summary and reopens handoff without redoing operations."""
+    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.activated_pipeline import shared as authority
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+    session.plan.evidence["notebook_snapshot"] = b"captured saved notebook"
+    persist = Mock(return_value="dry-run.json")
+    monkeypatch.setattr(authority, "persist_engineering_dry_run", persist)
+    ui = Mock(side_effect=RuntimeError("UI unavailable")) if ui_fails else Mock(return_value={"widget": "handoff"})
+    monkeypatch.setattr(authority, "display_pipeline_handoff", ui)
+    first = finalize_pipeline(session)
+    second = finalize_pipeline(session)
+    assert first == second and first["status"] == "dry_run_completed"
+    persist.assert_called_once()
+    assert ui.call_count == 2
+    assert ui.call_args.kwargs["dry_run"] is session
+    runtime.writes.assert_not_called()
+    if ui_fails:
+        assert "run outcome is unchanged" in capsys.readouterr().out
+    else:
+        assert session.plan.evidence["handoff"] == {"widget": "handoff"}
+
+
+@pytest.mark.parametrize("failed", [False, True])
+def test_finalize_without_eligible_capture_never_opens_deployment(runtime, monkeypatch, failed):
+    """Failed or uncaptured execution cannot export an approval candidate."""
+    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.activated_pipeline import shared as authority
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+    ui = Mock()
+    monkeypatch.setattr(authority, "display_pipeline_handoff", ui)
+    finalize_pipeline(session, failed=failed)
+    ui.assert_not_called()
+
+
+def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypatch):
+    """An independent Engineering kernel needs no prior Dry Run session to deploy/recover."""
+    from fabricops_kit import finalize_pipeline
+    from fabricops_kit.activated_pipeline import shared as authority
+    from tests.unit.test_activated_pipeline import PIPELINE_ID
+    ui = Mock(return_value={"widget": "persisted approvals"})
+    monkeypatch.setattr(authority, "display_pipeline_handoff", ui)
+    assert shared._ACTIVE_PIPELINE.get() is None
+    assert finalize_pipeline(pipeline_id=PIPELINE_ID) == {"pipeline_id": PIPELINE_ID, "handoff": {"widget": "persisted approvals"}}
+    ui.assert_called_once_with(pipeline_id=PIPELINE_ID)
+    assert shared._ACTIVE_PIPELINE.get() is None
+    runtime.writes.assert_not_called()
+    with pytest.raises(ValueError):
+        finalize_pipeline(pipeline_id=PIPELINE_ID, failed=True)
+    with pytest.raises(ValueError):
+        finalize_pipeline(pipeline=object(), pipeline_id=PIPELINE_ID)
+    with pytest.raises(ValueError):
+        finalize_pipeline(pipeline_id="not-a-pipeline-id")

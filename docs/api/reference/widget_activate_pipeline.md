@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Review and promote manually tested notebooks into separate Governed copies.
+Select saved Engineering submissions and independently approve, reject or revoke them.
 
 
 ## Usage notes
 
-Use to review destination bindings and promote a completed manual Dry Run.
+Use in Governance to select and review saved submissions from the Metadata Lakehouse without file transfer or Engineering notebook access.
 
 
 ## Example usage
@@ -19,8 +19,7 @@ Use to review destination bindings and promote a completed manual Dry Run.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-ui = widget_activate_pipeline(dry_run=preview)
-review = ui["actions"]["review"]()
+ui = widget_activate_pipeline()
 ```
 
 </div>
@@ -33,12 +32,7 @@ review = ui["actions"]["review"]()
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_activate_pipeline(
-    *,
-    pipeline_id=None,
-    dry_run=None,
-    context=None,
-) -> dict[str, Any]:
+def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict
 ```
 
 </div>
@@ -53,35 +47,36 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Stable Pipeline ID used to filter retained immutable version records. |
-| `dry_run` | `PipelineSession \| None` | No | `None` | Completed and finalized manual Dry Run session. Without it the widget displays retained promotions without enabling the promotion action. |
-| `context` | `dict \| None` | No | `None` | Configured notebook context; central Metadata routing is preserved. |
+| `pipeline_id` | `str \| None` | No | `None` | Filter saved submissions and decision history by logical Pipeline ID. |
+| `context` | `dict \| None` | No | `None` | Configured Governance notebook context and central Metadata routing. |
 
 </div>
 
 ## Returns
 
 dict
-    Widget, scoped version records, controls, review action and promotion
-    action. Review creates no artifacts; promotion archives and clones before
-    conditionally switching the active version.
+    Widget, controls, state and review/decide/refresh actions. Approval
+    grants deployment authority; Engineering must separately deploy it.
 
 ## Raises / Errors
 
-ValueError
-    If pipeline identity or Registry records are ambiguous or invalid.
-RuntimeError
-    If metadata, widgets or Fabric APIs are unavailable. Action errors remain
-    visible without erasing the review or previous active version.
+Not documented yet
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Only notebook code is frozen; dependencies are not. Saved-definition checks
-have TOCTOU limits. Governed remains blocked pending signed-in Fabric validation.
-Engineers manage schedules; this widget never migrates schedules. A Governed
-folder organizes same-workspace copies and confers no permissions.
+Finalize saves packages in the configured Metadata Lakehouse. This widget
+lists them directly; no file download, upload or JSON paste is needed.
+Opening the widget only reads storage. Review re-reads the selected package,
+rejects changes since refresh and persists an immutable Governance-owned copy
+before policy review. Decisions use that copy, never mutable Engineering Files.
+This widget never opens Engineering notebooks or creates deployed items.
+Integrity does not attest the truth of engineer-provided test outcomes.
+Review source code, Dry Run claims and independently resolved active policies.
+Rollback and restoration packages require separate explicit decisions here.
+Governance owns the entire Metadata Lakehouse; schema names are routing, not
+restrictions on privileged Governance workspace members.
 
 </div>
 
@@ -92,9 +87,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_pipeline.py:16`
+`fabricops_kit/widgets/widget_activate_pipeline.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L16-L130">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L17-L171">View on GitHub</a>
 </div>
 
 

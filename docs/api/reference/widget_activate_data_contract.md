@@ -1,14 +1,17 @@
 # `widget_activate_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued reference-lifecycle-chip-prominent">Discontinued</span>
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued reference-lifecycle-chip-prominent">Discontinued in 0.3.0</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 </p>
 
-> This function is no longer part of the current supported public contract. Use the release history below to identify the last supported version.
+> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
 Review and activate an exact frozen Contract in its physical workspace.
 
+
+## Usage notes
+
+Use after widget_data_contract freezes a version to activate it for a physical table and workspace.
 
 
 ## Example usage
@@ -16,7 +19,9 @@ Review and activate an exact frozen Contract in its physical workspace.
 <div class="reference-example-usage" markdown="1">
 
 ```python
-ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1)
+ui = widget_activate_data_contract()
+ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1,
+    workspace_id=PHYSICAL_WORKSPACE_ID)
 ```
 
 </div>
@@ -30,9 +35,9 @@ ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1)
 
 ```python
 def widget_activate_data_contract(
-    table_id: str,
-    contract_id: str,
-    contract_version: int,
+    table_id: str | None=None,
+    contract_id: str | None=None,
+    contract_version: int | None=None,
     *,
     workspace_id: str | None=None,
     context=None,
@@ -51,34 +56,34 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `table_id` | `str` | Yes | `—` | Exact logical table and frozen Contract identity. |
-| `contract_id` | `str` | Yes | `—` | Not documented yet |
-| `contract_version` | `int` | Yes | `—` | Exact positive frozen version. |
-| `workspace_id` | `str \| None` | No | `None` | Physical table workspace to review; defaults to the configured scope. Use this when reviewing Engineering tables from the Governance notebook. |
-| `context` | `dict \| None` | No | `None` | Configured notebook context; central Metadata routing is preserved. |
+| `table_id` | `str \| None` | No | `None` | Preselect an exact logical table and frozen Contract. With no arguments, select from registered physical workspaces/tables and frozen versions. |
+| `contract_id` | `str \| None` | No | `None` | Not documented yet |
+| `contract_version` | `int \| None` | No | `None` | Exact positive frozen version to preselect; never a latest fallback. |
+| `workspace_id` | `str \| None` | No | `None` | Physical table workspace. With a supplied table, defaults to the current configured scope. Governance metadata stays in its central Lakehouse. |
+| `context` | `dict \| None` | No | `None` | Configured Governance notebook context. |
 
 </div>
 
 ## Returns
 
 dict
-    Widget, state, confirmation control and activation action. Opening the
-    widget changes no metadata. Stale review is rejected atomically.
+    Widget, selection/review state, controls and review/activate/refresh actions.
+    Opening changes no metadata. Backend mutation independently revalidates
+    exact bindings, policy hashes and the reviewed current activation ID.
 
 ## Raises / Errors
 
-ValueError
-    If the exact frozen Contract, workspace or activation is ambiguous.
-RuntimeError
-    If configured metadata, Spark or widgets are unavailable.
+Not documented yet
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Actual storage permissions authorize activation. The confirmation checkbox
-grants no access. Ungoverned writes to the physical table and aliases become
-protected; Pipeline Promotion remains a separate decision.
+Governance owns all central metadata, so selection uses Catalogue records
+without opening Engineering workspaces. Actual Fabric permissions authorize
+writes. Each physical activation selects one frozen Contract and at most one
+Agreement; cross-workspace execution requires effective associated terms.
+Retained revisions provide history independently of notebook promotion.
 
 </div>
 
@@ -89,9 +94,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_activate_data_contract.py:15`
+`fabricops_kit/widgets/widget_activate_data_contract.py:18`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L15-L106">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L18-L202">View on GitHub</a>
 </div>
 
 
@@ -102,11 +107,11 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued">Discontinued</span> |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
 | Live since | — |
-| Discontinued in | 0.3.0 |
-| Contract classification | Discontinued public function |
-| Contract risk | Discontinued |
+| Discontinued in | — |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
 ### Release history

@@ -36,7 +36,8 @@ def promotion(version=1, workspace="DEV", **overrides):
         snapshot_uri=f"snapshot-{workspace}-{version}", snapshot_sha256="a"*64,
         source_snapshot_uri="source.ipynb", source_snapshot_sha256="b"*64, executable_sha256="c"*64,
         operations_json=json.dumps([operation(workspace=workspace)]), bindings_sha256=service.manifest_digest([operation(workspace=workspace)]),
-        parameters_json='{"manual":false,"days":null}', agreement_id=None, agreement_version=None, agreement_sha256=None,
+        parameters_json='{"manual":false,"days":null}', approval_id=f"approval-{workspace}-{version}",
+        submission_id=f"submission-{workspace}-{version}", submission_sha256="d"*64,
         restored_from_version=None, promoted_by="governance", promoted_at=datetime(2026, 1, 1), **overrides)
 
 
@@ -49,10 +50,10 @@ def notebook(code=None):
             "source": code or f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Dry Run")'}]}).encode()
 
 
-def test_canonical_13_tables_and_separate_grains():
-    """Verify canonical 13 tables and separate grains."""
+def test_canonical_14_tables_and_separate_grains():
+    """Verify canonical 14 tables and separate grains."""
     registry = metadata_table_schema_registry()
-    assert len(registry) == 13
+    assert len(registry) == 14
     assert metadata_table_owner(service.ACTIVATION_TABLE) == "governance"
     assert {"record_type", "leases_json", "git_commit_sha", "deployment_id", "table_id", "contract_id"}.isdisjoint(registry[service.REGISTRY_TABLE].fieldNames())
     assert {"execution_workspace_id", "pipeline_id", "pipeline_version", "snapshot_uri"} <= set(registry[service.REGISTRY_TABLE].fieldNames())
@@ -158,6 +159,8 @@ def test_promotion_cas_preserves_old_row_and_replays_idempotently(monkeypatch):
         state[:] = proposed
         return result
     monkeypatch.setattr(service, "mutate_metadata", mutate)
+    monkeypatch.setattr(service, "verify_registry_approval", lambda *a, **kw: None)
+    monkeypatch.setattr(service, "verify_promotion_integrity", lambda *a, **kw: None)
     first = service.commit_pipeline_promotion(promotion(), expected_active_version=None, context={})
     assert first["pipeline_version"] == 1
     second = service.commit_pipeline_promotion(promotion(2), expected_active_version=1, context={})
@@ -173,6 +176,8 @@ def test_promotion_cas_preserves_old_row_and_replays_idempotently(monkeypatch):
 def test_reused_promotion_id_with_changed_code_rejects(monkeypatch):
     """Verify reused promotion id with changed code rejects."""
     original = promotion()
+    monkeypatch.setattr(service, "verify_registry_approval", lambda *a, **kw: None)
+    monkeypatch.setattr(service, "verify_promotion_integrity", lambda *a, **kw: None)
     monkeypatch.setattr(service, "mutate_metadata", lambda table, mutation, **kw: mutation([deepcopy(original)])[1])
     changed = deepcopy(original); changed["executable_sha256"] = "e"*64
     with pytest.raises(ValueError, match="reused"):
@@ -190,14 +195,10 @@ def test_ungoverned_physical_alias_is_protected_in_foreign_workspace(monkeypatch
     assert calls == [False, True]
 
 
-def test_contract_activation_public_scope_preserves_central_metadata(monkeypatch):
-    """Verify contract activation public scope preserves central metadata."""
-    from fabricops_kit import activate_data_contract
-    from fabricops_kit.config import shared as config
-    captured = {}
-    monkeypatch.setattr(config, "resolve_fabric_context", lambda: ({}, "GOV", {"metadata_workspace_id": "CENTRAL"}))
-    monkeypatch.setattr(service, "set_table_contract_activation", lambda *a, **kw: captured.update(kw) or {"status": "active"})
-    activate_data_contract("orders", "contract", 1, workspace_id="PROD", expected_activation_id=None,
-        activation_id="operation", governance_confirmed=True)
-    assert captured["context"]["scope_workspace_id"] == "PROD"
-    assert captured["context"]["metadata_workspace_id"] == "CENTRAL"
+def test_redundant_public_approval_functions_are_removed():
+    """Unreleased standalone approval/mutation functions have no public aliases."""
+    import fabricops_kit
+    from fabricops_kit.public_api import RELEASE_PUBLIC_API
+    for name in ("activate_data_contract", "promote_pipeline", "restore_pipeline", "widget_deploy_pipeline"):
+        assert not hasattr(fabricops_kit, name)
+        assert not any(path.endswith("." + name) for path in RELEASE_PUBLIC_API)

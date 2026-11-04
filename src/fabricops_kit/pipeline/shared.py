@@ -5941,10 +5941,10 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
-    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": None,
+    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.evidence.get("promotion", {}).get("approval_id") if plan.execution_mode == "governed" else None,
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
-        "activation_revision": None,
+        "activation_revision": str(plan.evidence["governance_approval"]["revision"]) if plan.execution_mode == "governed" and plan.evidence.get("governance_approval") else None,
         "execution_workspace_id": plan.workspace_id, "pipeline_version": plan.pipeline_version,
         "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
         "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
@@ -6212,6 +6212,13 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             status = "ungoverned_completed"
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
         plan.evidence.update(sealed=True, final_result=row)
+        if plan.execution_mode == "dry_run" and status == "dry_run_completed" and plan.evidence.get("notebook_snapshot") is not None:
+            from fabricops_kit.activated_pipeline.shared import persist_engineering_dry_run
+            try:
+                plan.evidence["dry_run_evidence_uri"] = persist_engineering_dry_run(plan, spark_session=spark_session)
+            except Exception:
+                plan.evidence["submission_persistence_failed"] = True
+                raise
         if plan.evidence.get("lease_token"):
             from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
             release_pipeline_lease(plan, spark_session=spark_session)

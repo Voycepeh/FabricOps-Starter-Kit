@@ -45,7 +45,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
             raise RuntimeError('[PATH_NOT_FOUND]')
         assert kwargs['schema'] == ('custom_engineering' if name == TABLE else
             ('custom_governance' if name in {'METADATA_DATA_STEWARD', 'METADATA_DATA_AGREEMENT',
-                                           'METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION'} else 'custom_engineering'))
+                                           'METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_ACTIVATION'} else 'custom_engineering'))
         if name == TABLE:
             return spark_session.read.format('delta').load(path)
         return spark_session.createDataFrame([], registry[name])

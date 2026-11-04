@@ -134,7 +134,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert 'aria-label="Fields in registrations"' not in activated_page
     assert "<code>operations_json</code>" in activated_page
     assert "`array<struct<" not in activated_page
-    assert "via `agreement_id` + `agreement_version`" in activated_page
+    assert "via `approval_id`" in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → M)**" in contract_page
     assert "not a unique physical Catalogue foreign key" in contract_page
     assert "via `table_id`" in contract_page
@@ -201,8 +201,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 13
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
+    assert len(links) == 14
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 14
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -321,8 +321,8 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
         "orchestrate_read", "orchestrate_write", "profile_table"
     }
     assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_RUN"]
-    assert "activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_CONTRACT_ACTIVATION"]
-    assert "promote_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
+    assert "widget_activate_data_contract" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_CONTRACT_ACTIVATION"]
+    assert "finalize_pipeline" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "orchestrate_write" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "orchestrate_read" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
     assert "profile_table" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_PIPELINE_REGISTRY"]
@@ -398,7 +398,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 14
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -419,18 +419,29 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
-    assert actual[("DATA_AGREEMENT", "PIPELINE_REGISTRY")].get("data-cardinality") == "1-N"
+    assert actual[("DATA_AGREEMENT", "DATA_CONTRACT_ACTIVATION")].get("data-cardinality") == "1-N"
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-cardinality") == "1-N"
     assert actual[("DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT")].get("data-cardinality") == "N-1"
     assert actual[("PIPELINE_RUN", "DATA_CONTRACT")].get("data-cardinality") == "N-N"
     assert all(edge.get("data-cardinality") in {"1-N", "N-1"} for edge in connectors if edge.get("data-kind") == "physical")
     assert all("arrow" not in (edge.find(f"{namespace}title").text or "").lower() for edge in connectors)
-    assert "stroke-dasharray" not in svg.read_text(encoding="utf-8")
+    assert "stroke-dasharray" in svg.read_text(encoding="utf-8")
     registry = next(a for a in svg_tree.findall(f".//{namespace}a")
                     if a.find(f"{namespace}title").text.endswith("PIPELINE_REGISTRY"))
     assert registry.get("transform") is None
-    assert registry.find(f"{namespace}rect").get("y") == "78"
-    assert "Written by Engineering and Governance" in svg.read_text(encoding="utf-8")
+    assert registry.find(f"{namespace}rect").get("y") == "423"
+    boxes = {a.find(f"{namespace}title").text.removeprefix("Open metadata documentation: "):
+        a.find(f"{namespace}rect") for a in svg_tree.findall(f".//{namespace}a")}
+    expected_rows = [
+        ["DATA_CONTRACT", "DATA_CONTRACT_ACTIVATION", "DATA_AGREEMENT", "DATA_STEWARD", "PIPELINE_ACTIVATION"],
+        ["DATA_CATALOGUE", "PROCESSING_STATE", "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
+        ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"],
+    ]
+    for names in expected_rows:
+        assert [float(boxes[name].get("x")) for name in names] == [35 + 390 * i for i in range(len(names))]
+    assert boxes["PIPELINE_ACTIVATION"].get("x") == "1595"
+    assert boxes["DATA_CONTRACT_ACTIVATION"].get("x") == "425"
+    assert "Engineering deployment evidence" in svg.read_text(encoding="utf-8")
     # Keep design asset, generated output and canonical reference in sync.
     script = generator_script.read_text(encoding="utf-8")
     assert "renderMetadataSvg(layout, models)" in script

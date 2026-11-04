@@ -19,7 +19,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-agreement">
 <summary><strong>Data Agreement</strong> — A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.</summary>
-<p>A Data Agreement records accountable producer/consumer stewards, purpose, approved uses and validity. An Activated Pipeline links one exact Agreement version to a complete successfully tested whole pipeline.</p>
+<p>A Data Agreement records accountable provider/recipient stewards, purpose, approved uses and validity. Governance associates an exact Agreement version with each applicable physical frozen Contract selection in METADATA_DATA_CONTRACT_ACTIVATION. Engineering Registry records are deployment evidence and cannot grant policy authorization.</p>
 <p><strong>Also known as:</strong> data agreements</p>
 </details>
 
@@ -31,12 +31,22 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-promotion">
 <summary><strong>Pipeline Promotion</strong> — A reviewed immutable notebook implementation and separate Governed item for one execution workspace.</summary>
-<p>A Pipeline Promotion freezes a complete notebook implementation as one immutable version in an execution workspace. METADATA_PIPELINE_REGISTRY retains its separate Governed notebook identity, snapshot URI, executable hash, exact physical bindings and Agreement reference where applicable. Every source and target requires an independently activated frozen Contract in its physical workspace. Governed admission remains blocked pending signed-in Fabric validation. Imported dependencies are not frozen; saved-definition verification has TOCTOU limits.</p>
+<p>Finalize displays the saved Dry Run submission and explicit Engineering deployment/recovery controls. Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_ACTIVATION, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Runtime freeze binds executable code, parameter cells and behavior configuration; Markdown, outputs, execution counts and transient execution metadata may change. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.</p>
+</details>
+
+<details id="pipeline-submission">
+<summary><strong>Pipeline Submission</strong> — A complete saved-notebook and Dry Run package automatically saved by Engineering.</summary>
+<p>A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance selects the saved submission directly from Metadata Lakehouse Files; Review retains an immutable copy under its own identity. No file transfer is required.</p>
+</details>
+
+<details id="pipeline-approval">
+<summary><strong>Pipeline Approval</strong> — An independent Governance decision binding one exact Pipeline Submission.</summary>
+<p>METADATA_PIPELINE_ACTIVATION records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.</p>
 </details>
 
 <details id="pipeline-registry">
 <summary><strong>Pipeline Registry</strong> — Immutable per-workspace Pipeline Promotion versions with at most one active version per workspace/Pipeline ID.</summary>
-<p>METADATA_PIPELINE_REGISTRY stores only immutable per-workspace Pipeline Promotion versions. A Serializable conditional transaction enforces at most one active version per execution workspace/Pipeline ID and retains superseded rows. METADATA_DATA_CONTRACT_ACTIVATION independently selects frozen Contracts per physical workspace/Table ID. Publication claims remain outside Registry in Metadata Lakehouse Files.</p>
+<p>METADATA_PIPELINE_REGISTRY retains Engineering deployment versions, complete snapshot references, physical operation bindings and exact Governance approval/submission identities. Registry status is not authorization. Current Contract Activations resolve independently for each new run. Governance owns all metadata and Engineering has scoped write permissions.</p>
 </details>
 
 <details id="pipeline-execution-plan">
