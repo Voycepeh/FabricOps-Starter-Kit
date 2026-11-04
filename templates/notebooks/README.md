@@ -13,7 +13,7 @@ Completed learning demos are kept separately under `templates/DemoData/`:
 | Demo notebook | Purpose |
 | --- | --- |
 | `02A_full_refresh_demo.ipynb` | Orders, Products, and Order History Full → Overwrite example. |
-| `02B_incremental_append_demo.ipynb` | Multi-day inventory Incremental → Append All example. |
+| `02B_incremental_append_demo.ipynb` | Three-day Full Read comparison: one DataFrame to separate Append All and Append New Only targets (8/20/32 versus 8/12/12). |
 | `02C_scd_demo.ipynb` | Multi-day Product Master SCD1 and SCD2 example. |
 
 > **Multiple Write blocks:** each `orchestrate_write()` publishes independently. If an earlier Write succeeds and a later Write fails, the pipeline is partially published. A retry runs the earlier Write again, which can duplicate or otherwise repeat non-idempotent writes such as Append All in a new Full Read execution. If partial publication or duplicate writes are unacceptable, use separate pipeline executions for each governed target.

@@ -102,7 +102,7 @@ sources["source"] = source
 display(sources["source"]["dataframe"].limit(10))
 ```
 
-Change `store`, `schema`, and `table_name` to match the source. Use `read_mode="full"` for a complete read or `read_mode="incremental"` when implementing a watermark-based flow; the Incremental demo shows the required source-to-target configuration.
+Change `store`, `schema`, and `table_name` to match the source. Use `read_mode="full"` for a complete read or `read_mode="incremental"` when implementing a watermark-based flow; the reference shows the required source-to-target configuration.
 
 The result is a dictionary rather than just a DataFrame. Use the contained DataFrame in the transform:
 
@@ -114,7 +114,7 @@ For another input, add a second Read block, save it under a distinct key such as
 
 `dq_diagnostics` controls Data Quality failure detail: `"sample"` returns a sample, `"none"` keeps metrics only, and `"full"` returns all failed rows as a lazy DataFrame. Other strategy-specific settings are demonstrated in the relevant examples.
 
-See the [Read and Load Strategies](../reference/read-and-load-strategies.md) reference and [Step 2B: Incremental Append](02B-build-and-run-incremental-append-etl.md).
+See the [Read & Write Modes](../reference/read-and-load-strategies.md) reference and [Step 2B: Compare append modes](02B-build-and-run-incremental-append-etl.md).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
@@ -229,5 +229,5 @@ You can now identify the reusable notebook sections and know which values to cus
 | Demo | What you will learn |
 | --- | --- |
 | [Step 2A. Full Refresh](02A-full-refresh-demo.md) | Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
-| [Step 2B. Incremental Append](02B-build-and-run-incremental-append-etl.md) | Use a watermark to process newly eligible inventory movements across three runs. |
+| [Step 2B. Compare append modes](02B-build-and-run-incremental-append-etl.md) | Compare one Full Read output in separate Append All and Append New Only targets across three runs. |
 | [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Compare SCD1 current-state updates with SCD2 historical versioning. |

@@ -1,19 +1,20 @@
-# Step 2B. Run the Incremental Append Demo
+# Step 2B. Compare Append All and Append New Only
+
+Run the same Full Read output through two Write Modes and observe which rows each target retains.
 
 ### Before you begin
 
-1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) and import it into the Engineering Development workspace.
-2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
-3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
-
-4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first to stage Day 1. For Day 2, the notebook reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `incremental_inventory` subfolder.
+1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) into Engineering Development. The existing filename is retained; the notebook now compares both append modes.
+2. Keep `00_env_config.ipynb` beside it and attach the Fabric Environment from [Step 00B](00B-configure-environment-and-load-assets.md).
+3. Upload the demo CSVs from Step 00B and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to stage Day 1. Day 2 reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`.
+4. Start with fresh targets and run Day 1, Day 2 and Day 3 in order. Do not rerun 00C after advancing Bronze.
 
 ![File upload](../assets/2b/File%20Upload.png)
 
-!!! note "First run: Observe for Governance"
-    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+!!! note "Publication and Governance"
+    Use Ungoverned for the initial observation run against targets that are not already governed. Read and Write calculate due profiles automatically; finalize with `pipeline_result = finalize_pipeline(pipeline)`. Dry Run evaluates the prepared input without persisting target data, observations or run records; it does not demonstrate the persisted counts or target hash filtering below.
 
-    Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed. In Governance, set the target Contract Processing strategy to **Append** before freezing. The Incremental Read continues to use `modified_datetime` as its watermark.
+    After observation, author and freeze separate target Contracts with Processing strategies **Append All** and **Append New Only** in `01_governance`. Governed requires approved activations and remains blocked pending trusted deployment verification. See the [execution boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -21,233 +22,166 @@
 
 ## The big picture
 
-Change the Step 2 scaffold to an Incremental Read and Append Write, then compare its state across three runs.
+One Bronze source, one Full Read, one transformed DataFrame and two separate Silver targets.
 
 </div>
 </div>
 
-| Run | What changes | Expected Silver rows |
-| --- | --- | ---: |
-| Day 1 | Use the eight movements staged by 00C and bootstrap the Incremental Read. | 8 |
-| Day 2 | Add four movements and append only the newly eligible rows. | 12 |
-| Day 3 | Add no source rows and observe an empty incremental scope. | 12 |
-
-The notebook uses these governed tables throughout:
-
-| Role | Location | Processing |
+| Role | Location | Mode |
 | --- | --- | --- |
-| Source | Bronze Lakehouse · `demo.inventory_movements` | Incremental on `modified_datetime` |
-| Target | Silver Lakehouse · `demo.inventory_movements_incremental` | Append |
+| Source | Bronze · `demo.inventory_movements` | `read_mode="full"` |
+| Target A | Silver · `demo.inventory_movements_append_all` | `write_mode="append_all"` |
+| Target B | Silver · `demo.inventory_movements_append_new_only` | `write_mode="append_new_only"` |
 
-Profiling schedules and Read/Write triggers are saved per table in Data Contract Authoring. Standard pipeline calls need no profiling options.
+| Day | Source rows | Append All total | Append New Only total |
+| --- | ---: | ---: | ---: |
+| 1 | 8 | 8 | 8 |
+| 2 | 12 | 20 | 12 |
+| 3 | 12 | 32 | 12 |
 
-### Set up the pipeline
+Counts assume exactly one complete persistent execution per day, fresh Silver targets and unchanged transformation/schema. Both Write blocks receive exactly the same `transformed_df` object. Full Read needs no watermark or target checkpoint.
 
-Run Environment, choose `DEMO_DAY`, and run the explicit Bronze source-preparation cell. That setup can change Bronze before pipeline selection. The default pipeline setup is:
+### Configure Read → Transform → Write
+
+Run Environment, the demo-day and Bronze preparation cells, then Setup Pipeline. Setup Pipeline discovers notebook identity automatically in persistent modes; pipeline source participation is automatic.
 
 ```python
-context = setup_notebook(
-    # Optional shared config: config_workspace_id="<configuration-workspace-id>",
+source = orchestrate_read(
+    store="Bronze", schema="demo", table_name="inventory_movements",
+    read_mode="full", verbose=True,
+)
+sources["inventory_movements"] = source
+
+transformed_df = (
+    sources["inventory_movements"]["dataframe"]
+    .withColumn("movement_date", F.to_date("modified_datetime"))
+    .withColumn("quantity_in", F.greatest(F.col("quantity_change"), F.lit(0)))
+    .withColumn("quantity_out", F.greatest(-F.col("quantity_change"), F.lit(0)))
 )
 
-PIPELINE_MODE = "Ungoverned"  # Dry Run, Ungoverned, Governed
-pipeline = setup_pipeline(
-    pipeline_mode=PIPELINE_MODE,
+writes["inventory_movements_append_all"] = orchestrate_write(
+    transformed_df,
+    store="Silver", schema="demo", table_name="inventory_movements_append_all",
+    write_mode="append_all", verbose=True,
+)
+writes["inventory_movements_append_new_only"] = orchestrate_write(
+    transformed_df,
+    store="Silver", schema="demo", table_name="inventory_movements_append_new_only",
+    write_mode="append_new_only", verbose=True,
 )
 ```
 
+The notebook retains separate Read, Transform and Write cells. `F`, `sources` and `writes` are initialized there. Inline previews show prepared input; read persisted Silver separately to assess publication.
 
-
-After Governance freezes contracts, use Dry Run to select exact frozen versions for preview validation. Dry Run never publishes business data or operational observations, and finalization returns only a session summary. Governed activations remain subject to activation and destination checks. See the [execution boundary and activation limits](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
-
-Individual Guardrail stages are omitted when no Data Contract is selected; skipped check fields remain in the returned dictionaries. Persisted row counts and saved-data screenshots below require persistent publication. Advance the demo day only after publication succeeds.
-
-<div class="fabricops-section-banner" markdown="1">
-<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
-<div class="fabricops-section-content" markdown="1">
-
-## Run Day 1 in Fabric with persistent publication
-
-For Day 1 , we load 8 rows of data from 
-Bronze Lakehouse "demo.inventory_movements" table and load all 8 rows into
-Silver Lakehouse "demo.inventory_movements_incremental" and set "modified_datetime" column as our watermark column
-
-</div>
-</div>
-
-
-![Day 1 demo day selection](../assets/2b/Day%201.png)
-
-Ocestrate Read: 
-Set a target table a read mode (incremental/full) and a Watermark Column
-
-![Incremental Read configuration](../assets/2b/Incremental_Read.png)
-
-The inline Read preview displays the eligible rows directly below `orchestrate_read()`. The initial Day 1 run should read 8 rows.
-
-![Incremental Read DataFrame preview](../assets/2b/Incremental_Read_inspect.png)
-
-Ocestrate Write: 
-Set a single or multiple source table and Write mode = "Append"
-
-![Incremental Write configuration](../assets/2b/Incremental_Write.png)
-
-The inline Write preview displays the submitted rows directly below `orchestrate_write()`. Verify committed rows in the Silver target separately.
-
-![Incremental Write DataFrame preview](../assets/2b/Incremental_Write_Inspect.png)
-
-## Info How Does Incremental Load Work in FabricOps?
-
-### FabricOps handles incremental loading through two orchestrators:
-
-Each Read and Write block displays its actual DataFrame directly after orchestration; there is no separate Inspect selector. The Read preview shows the eligible incremental batch, not the full persisted target.
-
-1. orchestrate_read() identifies and reads only new or modified records using a watermark.
-
-2. orchestrate_write() applies the selected write strategy, such as Append, and commits watermark progress only after a successful publication.
-
-### How It Works
-
-1. Identify the source: Bronze Lakehouse demo.inventory_movements.
-2. Identify the target: Silver Lakehouse demo.inventory_movements_incremental.
-3. Retrieve the committed watermark for this source-to-target relationship.
-4. Check Bronze for records where:modified_datetime > last_committed_watermark
-5. Read only newer records, transform them, and append them to Silver.
-6. Advance the watermark only after successful write.
+!!! warning "Independent publications"
+    The two Writes are not atomic together. If Target A succeeds and Target B fails, inspect publication results and recover the failed publication before starting another execution. A new full execution adds the complete input to Append All again. Exact publication retries use verified receipts; they are different from new executions.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Restart the session and repeat Day 1 with a fresh Dry Run
+## Run Day 1
 
-Run through setup again with persistent publication, then continue. Since Day 1 already committed its watermark, the Read and Write have an empty incremental scope.
+Read all eight staged movements and publish eight rows to each fresh target.
 
 </div>
 </div>
 
-No new data so its empty read
-
-![Incremental Read preview after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
-
-No new data so its empty write
-
-![Incremental Write preview after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
+Set `DEMO_DAY = 1`, then run the notebook from the top through Finalize. The preparation cell leaves the Day 1 source staged by 00C unchanged. Both targets should contain eight rows.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 2 and select a fresh plan
+## Run Day 2
 
-For Day 2 , our underlying data has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movements" table of which 8 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 4 rows of data was read and appended
+Add four Bronze movements, then send all 12 source rows to both targets.
 
 </div>
 </div>
 
-![Day 2](../assets/2b/Day 2.png)
+Set `DEMO_DAY = 2` and start a fresh execution from the top. The preparation cell unions the Day 2 CSV with Bronze and deduplicates `movement_id`, so repeating preparation does not add extra source movements. This source preparation happens before pipeline selection and can change Bronze even when the later pipeline uses Dry Run.
 
-4 new rows are read based on the watermark column
-
-![Day 2 incremental Read preview](../assets/2b/Incremental_Read_Day2.png)
-
-Only this 4 rows are appended
-
-![Day 2 incremental Write preview](../assets/2b/Incremental_Write_Day2.png)
+Append All adds 12 rows to the existing eight, reaching **20**. Append New Only collapses incoming identical hashes and compares them with published `_row_hash` values using a distributed anti-join. Only the four unseen rows are inserted, reaching **12**.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Change the demo day to 3 and select a fresh plan
+## Run Day 3
 
-For Day 3, our underlying data still has 12 rows of data in 
-Bronze Lakehouse "demo.inventory_movements" table of which 12 were already loaded into Silver Lakehouse "demo.inventory_movements_incremental" in day 1 , hence only 0 rows of data was read and appended
+Leave Bronze unchanged and submit the same 12-row Full Read again.
 
 </div>
 </div>
 
-![Day 3 demo run](../assets/2b/Day%203.png)
+Set `DEMO_DAY = 3` and start a fresh execution from the top. Append All adds 12 more rows, reaching **32**. Append New Only stays at **12**. The Read is still full and nonempty.
 
-No new data so its empty read
+??? info "Unchanged data, no-op and publication receipts"
+    A newly evaluated Append New Only batch with no unseen hashes returns `published=False` and `publication_status="no_unseen_hashes"`: a nonpublishing no-op. An unchanged exact batch may instead recover a verified earlier receipt as `already_applied` (or `metadata_recovered`); that also inserts no additional rows. Do not confuse either result with `empty_incremental_scope`.
 
-![Incremental Read inspection after rerunning Day 1](../assets/2b/Incremental_Read_Day1_again.png)
+    `METADATA_PROCESSING_STATE` stores target-specific publication receipts and accepted Source Observation baselines. Physical target markers and commits verify recovery before progress is accepted. A nonpublishing no-op does not accept a newer full observation baseline or consume its interval. Receipts do not make a new Append All full execution deduplicate its input.
 
-No new data so its empty write
+### Inspect the persisted counts
 
-![Incremental Write inspection after rerunning Day 1](../assets/2b/Incremental_Write_Day1_again.png)
+After both Writes, inspect the actual targets in a persistent run, then run Finalize:
 
+```python
+for target in ("inventory_movements_append_all", "inventory_movements_append_new_only"):
+    saved = read_lakehouse_table(store="Silver", schema="demo", table_name=target)
+    print(target, saved.count())
+
+pipeline_result = finalize_pipeline(pipeline)
+```
+
+Do not read nonexistent targets after a Dry Run. Day 3 should retain 12 distinct movement IDs in each target, but Append All has 32 rows and Append New Only has 12 rows.
+
+<div class="fabricops-section-banner" markdown="1">
+<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
+<div class="fabricops-section-content" markdown="1">
+
+## Choose the processing strategy
+
+Choose extraction scope and target behavior independently.
+
+</div>
+</div>
+
+| Combination | Choose it when | Cost or responsibility |
+| --- | --- | --- |
+| Incremental Read + Append All | Large sources have reliable watermarks or change tracking and append-only events. | Reads newly eligible records and avoids repeated complete processing scans; requires correct checkpoints and replay handling. Replaying consumed records as new work can duplicate them. |
+| Full Read + Append New Only | Duplicate prevention matters, or reliable incremental extraction is unavailable. | Reads the complete source each time and inserts only unseen `_row_hash` values; pays for full scanning and distributed hash comparison. |
+| Incremental Read + Append New Only | Reliable incremental extraction can limit scope and hash comparison should also prevent replay duplicates. | Compares only eligible records; cannot recover late or changed rows excluded by the watermark. |
+
+??? info "Watermarks and hash boundaries"
+    Incremental extraction requires a target-specific identity and a reliable advancing watermark. Use `read_mode="incremental"`, `target_table_id=resolve_table_id(...)` and `read_parameters={"watermark_column": "modified_datetime"}`; see the [reference example](../reference/read-and-load-strategies.md#incremental). This is an alternative experiment, not the configuration used for the count comparison. Due profiling or Full Source Observation may still scan the full source.
+
+    Hashes describe final values and logical types after transformation and Sensitive Data treatment. Source Job IDs and timestamps participate; FabricOps audit and SCD lifecycle fields are excluded. Adding a volatile input field can make unchanged business rows hash differently. Existing targets must have valid historical hashes. See the [hash contract](../reference/read-and-load-strategies.md#mandatory-row-hashes).
+
+    Append New Only inserts changed hashes as **new records**, even for the same business key. It does not update existing business keys, infer deletions or remove pre-existing duplicates. Use [SCD1 or SCD2](02C-build-and-run-scd-etl.md) for business-key-based state management.
 
 ### Expected result
 
-Day 1 publishes the eight-row baseline, Day 2 appends four newly eligible rows, and Day 3 leaves the 12-row target unchanged because its incremental scope is empty.
-
-Complete Read → Transform → Write for each pending batch before reading a newer source state for this target. If a newer Read reports that another state is awaiting publication, publish or retry the existing prepared DataFrame first, then repeat the newer Read. If that DataFrame was discarded, create a fresh pipeline plan/run and rerun Read → Transform → Write in the same notebook session; do not reset the checkpoint. Re-reading unchanged state remains allowed.
-
-### Data saved by the demo
-
-| Location | Table | Final state after Day 3 |
-| --- | --- | --- |
-| Bronze Lakehouse | `demo.inventory_movements` | 12 unique source movements from Days 1 and 2. |
-| Silver Lakehouse | `demo.inventory_movements_incremental` | 12 transformed movements appended across the successful incremental runs. |
+Bronze ends at 12 movements; Silver Target A has 32 rows and Target B has 12. You can explain why Full Read + Append All repeats rows and why Full Read + Append New Only retains only unseen row hashes.
 
 ### Metadata saved by FabricOps
 
-For **Ungoverned** and **Governed** executions, FabricOps writes applicable operational metadata to the Metadata Lakehouse configured by `00_env_config`. **Dry Run is session-only**: it does not write target data or persist catalogue, profile, processing-state, or pipeline-run records. The rows below describe the records this demo can produce during a persistent execution; the exact rows depend on the stages that complete and the Guardrails that are actually evaluated.
+Persistent executions use the Metadata Lakehouse configured by `00_env_config`. Dry Run keeps its summary in session only.
 
-| Metadata table or governed record | What this demo records |
+| Table | Purpose in this demo |
 | --- | --- |
-| `METADATA_PIPELINE_REGISTRY` | Immutable per-workspace promotion versions for the explicit Pipeline ID, including the active Governed notebook snapshot. It is not an automatic registration or UUID-recovery mechanism; Dry Run does not write Registry rows. |
-| `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
-| `METADATA_DATA_CATALOGUE` | Canonical source and target table and column identities, plus applicable target processing and profile metadata. |
-| `METADATA_DATA_PROFILED` | Profile snapshots of the published Silver target when profiling completes. Incremental Read batches themselves are not profiled. |
-| `METADATA_DATA_PROFILED_FREQUENCY` | Target frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Bronze source and Silver target participation recorded for this notebook pipeline. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, accepted incremental checkpoints, Source Drift baselines and target publication receipts, when applicable. |
-| Governed target publication markers | Physical activity/timestamp markers used to verify a publication receipt before accepting the exact Bronze-to-Silver checkpoint. These are target-side markers, not a separate canonical metadata table. |
-| `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
+| `METADATA_PIPELINE_RUN` | Finalized execution outcome and operations. |
+| `METADATA_DATA_CATALOGUE` | Source and separate target identities, columns and processing definitions. |
+| `METADATA_DATA_PROFILED` | Due source/target profile snapshots; a nonpublishing no-op does not profile a newly published target. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to applicable profiles. |
+| `METADATA_DATA_LINEAGE` | Source and both targets' pipeline participation. |
+| `METADATA_PROCESSING_STATE` | Captured source observations, accepted baselines and target-specific publication receipts when applicable; this Full Read comparison does not consume incremental checkpoints. |
+| `METADATA_GUARDRAIL_RESULTS` | Results of applicable selected Contract Guardrails when evaluated. |
 
+### Repeat and recover safely
 
-### If Silver has eight rows but the checkpoint already covers Day 2
+Repeated Day 2 staging keeps Bronze unique, but a new Append All execution repeats its full input. Extra executions change the expected totals. For an independent replay, use a fresh demo environment or separate table identities and approved Contracts. Preserve the target, its markers and scoped Processing State together.
 
-Pause this target's scheduled and interactive writers. Keep the existing tables and `METADATA_PROCESSING_STATE` history. An empty Incremental Read cannot repair a previously accepted checkpoint that is ahead of Silver, and the package never automatically lowers that checkpoint.
+If counts differ, check whether Bronze was staged, whether a Write failed, whether the execution published, and whether extra full executions ran. Inspect the targets and returned publication statuses before retrying. Do not empty checkpoints, delete only a target, or overwrite to hide a mismatch. Reconcile the exact target and receipt history with its owner; this comparison is not a production repair procedure.
 
-1. Run `setup_metadata_tables()` to validate the configured metadata without deleting execution history or accepted Processing State. Incompatible schemas stop setup explicitly; do not empty checkpoints to make an incremental batch appear again.
-2. Read Bronze and Silver explicitly with `read_lakehouse_table()`. Verify Bronze contains exactly M001–M012, Silver has unique, non-null movement keys, and every existing Silver business row equals the corresponding transformed Bronze row. Use the notebook's Transform expression, including `movement_date`, `quantity_in` and `quantity_out`. Compare all business columns, excluding FabricOps audit columns. **Stop if any existing key has conflicting values, unexpected rows, or duplicates.** This repair applies to this immutable Append demo; it is not a general repair for mutable source history.
-3. Build a fresh **Governed** plan in the same owning notebook, with the activated source and target contracts. Select Full Read for the repair, then run the existing Transform against that complete source. Dry Run can validate the repair input. Publication to a Governed destination requires the approved Governed configuration; if the repair changes Read strategy, complete validation and coordinated approval of that repair configuration first.
-4. Construct and inspect only the missing keys before choosing to publish:
-
-    ```python
-    existing = read_lakehouse_table(
-        "inventory_movements_incremental", store="Silver", schema="demo",
-
-    )
-    # transformed_df comes from the Full Read and the unchanged demo Transform.
-    business_columns = [
-        "movement_id", "product_id", "movement_type", "quantity_change",
-        "modified_datetime", "movement_date", "quantity_in", "quantity_out",
-    ]
-    expected = transformed_df.select(*business_columns)
-    existing_business = existing.select(*business_columns)
-    for frame in (expected, existing_business):
-        if frame.where(F.col("movement_id").isNull()).limit(1).count() or frame.groupBy("movement_id").count().where("count > 1").limit(1).count():
-            raise ValueError("Null or duplicate movement keys; stop reconciliation.")
-    if existing_business.exceptAll(expected).limit(1).count():
-        raise ValueError("Existing Silver rows conflict with the transformed source; stop reconciliation.")
-    missing = expected.join(existing.select("movement_id"), "movement_id", "left_anti")
-    display(missing)
-    ```
-
-    For the reported mismatch, the missing set must be exactly M009–M012. Review that set and explicitly choose to execute the existing `orchestrate_write()` call with `missing` as its DataFrame, the Full Read result in `sources`, `write_mode="append_all"`, and the fresh Governed plan. Do not execute the ordinary incremental write in this repair run. Do not bypass Guardrails or notebook ownership.
-6. Restore Incremental Read, build a fresh plan, and run Day 3. It should return an empty scope and keep Silver at 12 rows. Repeat Day 2 and Day 3 to verify stable results.
-
-`METADATA_PROCESSING_STATE` records use the same `run_id` as `METADATA_PIPELINE_RUN`; multiple runs may retain the same real `_activity_id`. New runs isolate pending source state, while typed publication receipts allow recovery across run IDs. Exact Write retries recover the original persisted source members even when pending in-memory snapshots were lost.
-
-New writes stage an exact batch receipt before publication. Recovery verifies its Delta commit and target marker; unverified staged observations never advance accepted progress. A fresh target with a populated Silver table and no accepted baseline still fails safely. If the subset checks above do not hold, reconcile the exact source-to-target relationship with its owner rather than resetting production metadata.
-
-The Write result distinguishes `published`, `already_applied`, and `empty_incremental_scope`; Dry Run reports no publication. `already_applied` means the exact batch was verified. SCD row metrics remain `Not available` when the runtime cannot measure business changes reliably.
-
-### Repeat the demo safely
-
-Repeating unchanged Day 2 or Day 3 demonstrates idempotence and retains the accepted checkpoint. Use separate demo source/target identities for an independent experiment. The Bronze source, Silver target markers, and scoped Processing State checkpoints/receipts describe one publication history; deleting only a target or emptying checkpoints cannot establish a safe new baseline.
+**Next:** [Step 2C. Compare SCD1 and SCD2](02C-build-and-run-scd-etl.md)

@@ -30,6 +30,8 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 </div>
 </div>
 
+**Choose Full Read → Overwrite when the prepared dataset is the complete authoritative target state.** Every new execution replaces the target, including unchanged content. Partial incremental input is unsuitable because it would discard unaffected target rows; FabricOps rejects whole-table Overwrite with incremental source scope.
+
 | Notebook section | What happens |
 | --- | --- |
 | Environment | Calls `setup_notebook()` to load configuration, resolve the environment and display readiness. |
@@ -210,7 +212,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
     Each successful Full Refresh Write replaces the target with the current prepared data. Rerun Read → Transform → Write with a fresh plan and verify the expected rows. Keep existing metadata and publication history; no manual deletion is required.
 
-**Next optional processing mode:** [Step 2B. Run the Incremental Append Demo](02B-build-and-run-incremental-append-etl.md)
+**Next optional processing mode:** [Step 2B. Compare Append All and Append New Only](02B-build-and-run-incremental-append-etl.md)
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 

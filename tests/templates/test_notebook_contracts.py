@@ -409,34 +409,40 @@ def test_02a_preserves_the_full_refresh_pipeline():
     assert code_source.count('display(write_result["dataframe"].limit(10))') == 2
 
 
-def test_02b_has_ordered_repeat_safe_incremental_append_flow():
-    """02B stages unique movements and always calls both orchestrators in notebook order."""
-    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / "02B_incremental_append_demo.ipynb")
-    source = _demo_source("02B_incremental_append_demo.ipynb")
+def test_02b_has_ordered_full_read_and_two_independent_append_targets():
+    """02B compares the same Full Read output with distinct append destinations."""
+    name = "02B_incremental_append_demo.ipynb"
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / name)
+    source = _demo_source(name)
     ids = [cell.get("id") for cell in notebook.cells]
-    ordered = [
-        "imports",
-        "demo-day",
-        "read-csv",
-        "contracts",
-        "read-1",
-        "transform",
-        "write-1",
-    ]
+    ordered = ["imports", "demo-day", "read-csv", "contracts", "read-1", "transform", "write-1", "write-2"]
     assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
-    assert "DEMO_DAY = 1" in _demo_cell("02B_incremental_append_demo.ipynb", "demo-day").source
+    assert "DEMO_DAY = 1" in _demo_cell(name, "demo-day").source
     assert "inventory_day2.csv" in source and "inventory_day1.csv" not in source
     assert '.dropDuplicates(["movement_id"])' in source
-    assert 'table_name="inventory_movements"' in source
-    assert 'mode="overwrite"' in _demo_cell("02B_incremental_append_demo.ipynb", "read-csv").source
-    assert 'read_mode="incremental"' in source
-    assert 'read_parameters={"watermark_column": "modified_datetime"}' in source
-    assert 'table_name="inventory_movements_incremental"' in source
-    assert 'write_mode="append_all"' in source
-    assert 'sources=' not in _demo_cell('02B_incremental_append_demo.ipynb', 'write-1').source
-    assert "should_process" not in source
-    write = _demo_cell("02B_incremental_append_demo.ipynb", "write-1").source
-    assert 'display(writes["inventory_movements_incremental"]["dataframe"].limit(10))' in write
+    assert 'mode="overwrite"' in _demo_cell(name, "read-csv").source
+    assert source.count("orchestrate_read(") == 1
+    assert source.count('read_mode="full"') == 1
+    assert 'read_mode="incremental"' not in source
+    assert "target_table_id=" not in source
+    calls = []
+    for cell_id in ("write-1", "write-2"):
+        tree = ast.parse(_demo_cell(name, cell_id).source)
+        calls.extend(node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                     and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_write")
+    assert len(calls) == 2
+    destinations = []
+    for call, mode in zip(calls, ("append_all", "append_new_only"), strict=True):
+        assert len(call.args) == 1 and isinstance(call.args[0], ast.Name)
+        assert call.args[0].id == "transformed_df"
+        keywords = {keyword.arg: ast.literal_eval(keyword.value) for keyword in call.keywords}
+        assert keywords["store"] == "Silver" and keywords["schema"] == "demo"
+        assert keywords["write_mode"] == mode
+        destinations.append(keywords["table_name"])
+    assert destinations == ["inventory_movements_append_all", "inventory_movements_append_new_only"]
+    assert "| 1 | 8 | 8 | 8 |" in source
+    assert "| 2 | 12 | 20 | 12 |" in source
+    assert "| 3 | 12 | 32 | 12 |" in source
 
 
 def test_02c_has_ordered_full_read_and_two_scd_writes():

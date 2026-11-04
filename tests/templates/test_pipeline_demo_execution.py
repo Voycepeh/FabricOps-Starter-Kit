@@ -46,7 +46,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
-        '02B_incremental_append_demo': (1, ['append_all']),
+        '02B_incremental_append_demo': (1, ['append_all','append_new_only']),
         '02C_scd_demo': (1, ['scd1','scd2']),
     }
     count, modes = expected[path.stem]

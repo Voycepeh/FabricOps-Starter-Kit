@@ -173,9 +173,9 @@ Prepare the history source used for the governed retail reads.
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Prepare Day 1 for Incremental and SCD Demos
+## Prepare Day 1 for Append and SCD Demos
 
-Initialize the Day 1 Bronze source tables for the Incremental Append (02B) and SCD1/SCD2 (02C) demos.
+Initialize the Day 1 Bronze source tables for the Append All vs Append New Only (02B) and SCD1/SCD2 (02C) demos.
 
 </div>
 </div>
@@ -184,12 +184,12 @@ This step prepares two dedicated Bronze tables using the sample CSV files:
 
 | Source file | Bronze table | Used by |
 |---|---|---|
-| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B Incremental Append |
+| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B append comparison |
 | `Demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
 
-### Run the **5. Prepare Day 1 for incremental and SCD demos** block in `00C_demo_setup`.
+### Run the **5. Prepare Day 1 for append and SCD demos** block in `00C_demo_setup`.
 
-![Step 5: Prepare Day 1 for incremental and SCD demos](../assets/00C/step5.png)
+![Step 5: Prepare Day 1 for append and SCD demos](../assets/00C/step5.png)
 
 The notebook reads each CSV file using `read_lakehouse_csv()` and writes it to the Bronze Lakehouse using `write_lakehouse_table()` with `mode="overwrite"`.
 
@@ -204,7 +204,7 @@ After the notebook finishes, Engineering Development should contain the starting
 bronze Lakehouse
   demo.orders
   demo.products
-  demo.inventory_movements      # 02B incremental Day 1 baseline
+  demo.inventory_movements      # 02B append Day 1 baseline
   demo.product_master_updates   # 02C SCD Day 1 baseline
 
 gold Warehouse
