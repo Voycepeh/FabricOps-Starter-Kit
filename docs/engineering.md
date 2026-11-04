@@ -46,8 +46,8 @@ Microsoft Fabric provides notebooks, Spark, Lakehouses, Warehouses and deploymen
 
 | Daily engineering concern | FabricOps support |
 | --- | --- |
-| Read several tables in one notebook | Call `orchestrate_read()` for each configured table; each result carries its DataFrame and stable table identity. |
-| Write several targets | Call `orchestrate_write()` independently for each prepared DataFrame and destination. |
+| Read several tables in one notebook | Call [`orchestrate_read()`](api/reference/orchestrate_read.md) for each configured table; each result carries its DataFrame and stable table identity. |
+| Write several targets | Call [`orchestrate_write()`](api/reference/orchestrate_write.md) independently for each prepared DataFrame and destination. |
 | Move between Lakehouses and Warehouses | Use logical store keys; FabricOps selects the configured OneLake or Warehouse connector path. |
 | Run Full or Incremental | Choose `read_mode` per source. |
 | Overwrite, append or retain history | Choose `write_mode` per target: Overwrite, Append All, Append New Only, SCD1 or SCD2. |
@@ -64,13 +64,13 @@ For registered table pipelines, the same [`orchestrate_read()`](api/reference/or
 - Warehouse tables use the Fabric Spark connector.
 - Full Warehouse reads can use a read-only `query`; Incremental Warehouse reads use a framework-built bounded predicate.
 
-Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use `read_lakehouse_csv()`, `read_lakehouse_excel()`, `read_lakehouse_json()` or `read_lakehouse_parquet()`. FabricOps does **not** currently expose one orchestrated file/table function for every format.
+Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
 
 ??? info "Under the Hood — store and file routing"
 
-    `00_env_config` maps logical aliases to workspace IDs, item IDs, physical names and store types. Internal `resolve_fabric_context()`, `get_store()` and `resolve_store()` select the location. Table callers do not choose a Lakehouse versus Warehouse reader.
+    `00_env_config` maps logical aliases to workspace IDs, item IDs, physical names and store types. Internal [`resolve_fabric_context()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L108), [`get_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L823) and [`resolve_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L155) select the location. Table callers do not choose a Lakehouse versus Warehouse reader.
 
-    File helpers resolve the same logical Lakehouse store but operate under its `Files` area. Table publication supports configured Lakehouse and Warehouse tables; there is no generic governed file writer in the current pipeline orchestrator.
+    File helpers resolve the same logical Lakehouse store but operate under its `Files` area. Internal [`pipeline_read()`](api/reference/pipeline_read.md) selects [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md) or [`read_warehouse_query()`](api/reference/read_warehouse_query.md). Table publication ultimately uses [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md); there is no generic governed file writer in the current pipeline orchestrator.
 
 ## How do Full, Incremental, Append and SCD processing work?
 
@@ -92,7 +92,7 @@ Use the [Read & Write Modes reference](reference/read-and-load-strategies.md) fo
 
 ??? info "Under the Hood — accepted checkpoints and SCD state"
 
-    `pipeline_read()` resolves the last accepted source-to-target watermark and captures the upper bound for the current batch. `pipeline_write()` accepts that progress only after it can verify publication.
+    [`pipeline_read()`](api/reference/pipeline_read.md) resolves the last accepted source-to-target watermark and captures the upper bound for the current batch. Internal [`pipeline_write()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py) accepts that progress only after it can verify publication in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
 
     SCD2 maintains `_effective_from`, `_effective_to` and `_is_current`. FabricOps also recalculates `_row_hash` from final incoming business values after transformation and Sensitive Data treatment. Incorrect business keys still produce incorrect SCD semantics; the framework cannot infer business identity for you.
 
@@ -103,13 +103,13 @@ There are two protections for different failure modes:
 1. **Append New Only** removes duplicate hashes inside the incoming batch and anti-joins them against target `_row_hash` values. Unchanged content is not appended again.
 2. **Publication receipts and checkpoints** identify the exact prepared batch and accept incremental progress only after physical publication can be verified. A retry can finalize metadata without publishing the same verified batch again.
 
-Every managed output receives a lowercase SHA256 `_row_hash`. Append All intentionally does not de-duplicate. A changed row hash is new content in Append New Only; it is not an update. Existing managed targets without valid historical hashes fail before non-overwrite publication and require a reviewed overwrite or migration.
+Every managed output receives a lowercase SHA256 `_row_hash` through internal [`add_row_hash()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1005). Append New Only uses [`filter_unpublished_rows()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1046). Append All intentionally does not de-duplicate. A changed row hash is new content in Append New Only; it is not an update. Existing managed targets without valid historical hashes fail before non-overwrite publication and require a reviewed overwrite or migration.
 
 ??? info "Under the Hood — retry recovery"
 
     The publication identity includes the prepared business-row multiset, Processing definition, source membership, workspace and target. Lakehouse recovery verifies Delta commit evidence. Warehouse recovery requires the exact audit-marker row count. Partial or unverifiable publication fails closed instead of advancing the checkpoint.
 
-    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records. A target lease coordinates competing FabricOps writers, but it cannot stop an external writer that bypasses FabricOps.
+    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). A target lease in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) coordinates competing FabricOps writers, but it cannot stop an external writer that bypasses FabricOps.
 
 ## How does FabricOps detect Source Drift?
 
@@ -121,7 +121,7 @@ The new baseline is accepted only after verified target publication. Observation
 
 ??? info "Under the Hood — full-source observation cost and limitations"
 
-    `observe_full_source()` performs the independent full scan and `check_source_drift()` evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan.
+    Internal [`observe_full_source()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1077) performs the independent full scan and [`check_source_drift()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L15) evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan. Accepted baselines are stored in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
 
     A changed fingerprint is evidence, not an automatic delete or update instruction. The configured Write strategy still determines target behaviour.
 
@@ -138,7 +138,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
 | Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
 
-Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, lineage, profile snapshots, Guardrail Results or processing progress.
+Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) progress.
 
 Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode is designed to resolve only activated contracts and approved operations; it currently fails closed until trusted deployment verification is integrated.
 
@@ -151,9 +151,9 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
 | Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
-| Finalization | `finalize_pipeline(pipeline)` after all Reads, transformations and Writes, or `failed=True` after a caught project failure |
+| Finalization | [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md) after all Reads, transformations and Writes, or `failed=True` after a caught project failure |
 
-Call `setup_notebook()` before pipeline setup. A successful Write does not prove that the rest of the notebook completed; finalization records the whole execution outcome. A killed notebook can remain incomplete and require reviewed operator reconciliation.
+Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeline()`](api/reference/setup_pipeline.md). A successful Write does not prove that the rest of the notebook completed; finalization records the whole execution outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md). A killed notebook can remain incomplete and require reviewed operator reconciliation.
 
 ## How do I move the same pipeline between Development and Production?
 
@@ -171,18 +171,18 @@ Governed admission and publication remain blocked until FabricOps can verify the
 
 ??? info "Under the Hood — what activation can and cannot prove"
 
-    The Pipeline Registry can retain workspace revisions, table contract activations, readers/writers, reviewed operation settings and execution reservations. It can reject conflicting ownership or destination bindings.
+    [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) can retain workspace revisions, table contract activations, readers/writers, reviewed operation settings and execution reservations. It can reject conflicting ownership or destination bindings.
 
     [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) is currently an inspection surface for retained evidence and the pending deployment gate. It does not authenticate or attest the deployed notebook. Deployment and business-table publication remain separate failure boundaries.
 
 ## What evidence do I get after a run?
 
-- technical table and column identity plus resolved Processing;
-- Standard, Grain and Frequency profile outcomes when due;
-- registered source/target pipeline participation;
-- aggregate Guardrail results and continuation decisions;
-- publication metrics, receipts and accepted processing state;
-- the authoritative complete, failed or incomplete Pipeline Run outcome.
+- technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
+- Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
+- registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
+- aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
+- publication receipts, accepted checkpoints and Source Drift baselines in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md);
+- the authoritative complete, failed or incomplete outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md).
 
 ??? info "Under the Hood — persistence and trade-offs"
 

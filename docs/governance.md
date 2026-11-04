@@ -24,9 +24,9 @@ Saving keeps a draft editable. **Freezing creates an immutable version.** Engine
 
 ??? info "Under the Hood — contract identity and immutable payload"
 
-    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing, profiling policy and Guardrails. `freeze_contract()` validates the saved payload and changes the version to an immutable frozen candidate.
+    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing, profiling policy and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
 
-    `METADATA_DATA_CONTRACT` stores the `contract_id`, `contract_version`, globally stable `table_id`, authoring provenance and exact JSON payload. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
+    [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, globally stable `table_id`, authoring provenance and exact JSON payload. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
 ## Is it one contract per workspace, pipeline or table?
 
@@ -49,13 +49,13 @@ An independently activated table contract protects that Table ID and physical de
 
 ## How do I author, freeze and activate one? { #data-contract-lifecycle }
 
-1. **Record accountability.** Use the Data Steward widget, then create the versioned Data Agreement that explains ownership, purpose and approved use.
+1. **Record accountability.** Use [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), then create the versioned Data Agreement with [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) to explain ownership, purpose and approved use.
 2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue, profiles, processing definition and pipeline participation describe the real table.
-3. **Author the draft.** In the Data Contract widget, deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing, profiling and Guardrails.
+3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing, profiling and Guardrails.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
 6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data outcomes allow continuation.
-7. **Activate deliberately.** Activate the exact table contract for the intended workspace. Review pipeline readiness separately in the activation widget.
+7. **Activate deliberately.** Use [`activate_data_contract()`](api/reference/activate_data_contract.md) for the intended workspace. Review pipeline readiness separately in [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md).
 8. **Deploy through Engineering controls.** Git, CI/CD and Microsoft Fabric Deployment Pipelines move notebook source. FabricOps activation does not deploy code.
 
 !!! warning "Current Governed execution boundary"
@@ -77,7 +77,7 @@ Each profiling activity independently supports `every`, `first` or `interval` wi
 
     The frozen payload contains `table`, `enrichment`, `guardrails` and `profiling`. Processing lives under `table.processing`; profiling remains separate from Guardrails and cannot enable, disable or change enforcement.
 
-    [`orchestrate_read()`](api/reference/orchestrate_read.md) and [`orchestrate_write()`](api/reference/orchestrate_write.md) call the profiling scheduler. Standard and Frequency results are stored as snapshots; independent activity events in the Pipeline Run record when each table, workspace, physical destination, activity and trigger completed. Concurrent runs can both find profiling due, so duplicate snapshots are possible; only a successfully journaled completion advances the schedule.
+    [`orchestrate_read()`](api/reference/orchestrate_read.md) and [`orchestrate_write()`](api/reference/orchestrate_write.md) call the profiling scheduler. Standard results are stored in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), and independent activity events in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) record when each table, workspace, physical destination, activity and trigger completed. Concurrent runs can both find profiling due, so duplicate snapshots are possible; only a successfully journaled completion advances the schedule.
 
 ## How do Guardrails protect pipeline data?
 
@@ -89,7 +89,7 @@ FabricOps applies the checks at the boundary where the decision matters:
 | Before Write | Target Schema, Sensitive Data treatment, Source Drift for contributing sources, target Grain and Data Quality |
 | After successful publication | Accepted checkpoints, Source Drift baselines, profiles, lineage and run evidence |
 
-Warn/Block is authored policy. Guardrail Results record aggregate outcomes and whether execution can continue; full failing business rows are not automatically copied into governance storage.
+Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) records aggregate outcomes and whether execution can continue; full failing business rows are not automatically copied into governance storage.
 
 ### Sensitive data decisions { #sensitive-data-discovery-classification-and-treatment }
 
@@ -99,9 +99,9 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
 ??? info "Under the Hood — sensitive-data authoring and enforcement"
 
-    The AI authoring path sends a compact single-row `fabricops_prompt` DataFrame to Fabric AI Functions with `ai.generate_response()`. It does not send the full business table. Returned structured JSON is checked against supported values before it can be staged.
+    The AI authoring path sends a compact single-row `fabricops_prompt` DataFrame to Fabric AI Functions with [`ai.generate_response()`](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/generate-response). It does not send the full business table. Returned structured JSON is checked against supported values before it can be staged.
 
-    The approved rule is stored in the frozen contract. During Write orchestration, `check_sensitive_data()` prepares the DataFrame before `_row_hash` calculation and publication. Treatment failures always block. Token support mappings remain caller-owned unless a restricted mapping store is configured.
+    The approved rule is stored in [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md). During Write orchestration, internal [`check_sensitive_data()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L20) prepares the DataFrame before `_row_hash` calculation and publication. Treatment failures always block. Token support mappings remain caller-owned unless a restricted mapping store is configured.
 
     Use the [Sensitive Data Treatments reference](reference/sensitive-data-treatments.md) for exact parameters.
 
@@ -109,7 +109,7 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
 ![Natural-language business rules converted into reviewable Data Quality rules](assets/BusinessRuletoDQ.png){ .fabricops-section-evidence }
 
-Governance can author supported Data Quality rules directly or ask AI to translate a business requirement into explicit proposals. A person reviews every proposal. Approved rules run deterministically through `check_dq()`; AI is not involved during pipeline execution.
+Governance can author supported Data Quality rules directly or ask AI to translate a business requirement into explicit proposals. A person reviews every proposal. Approved rules run deterministically through internal [`check_dq()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13); AI is not involved during pipeline execution.
 
 ??? info "Under the Hood — rule grammar and results"
 
@@ -123,11 +123,11 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 
 | Tool | What you decide | What it records |
 | --- | --- | --- |
-| [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned Data Steward records |
-| [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned Data Agreement records |
-| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing, profiling and Guardrails | Editable drafts and immutable frozen Data Contract versions |
-| [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review direct table activations, retained validation evidence and the pending deployment gate | Inspection state; the widget does not authenticate or attest a deployment |
-| [`activate_data_contract()`](api/reference/activate_data_contract.md) | Approve one frozen table contract for one workspace | Immutable workspace/table activation authority |
+| [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
+| [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
+| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing, profiling and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
+| [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review direct table activations, retained validation evidence and the pending deployment gate | Inspection state sourced from [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md); the widget does not authenticate or attest a deployment |
+| [`activate_data_contract()`](api/reference/activate_data_contract.md) | Approve one frozen table contract for one workspace | Immutable workspace/table activation authority in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
 
 ## How does this govern Engineering pipelines?
 
@@ -154,7 +154,20 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
 
 ??? info "Under the Hood — reporting sources"
 
-    Stable IDs connect Stewards, Agreements, Contracts, Catalogue identities, profile snapshots, pipeline participation, Pipeline Runs and Guardrail Results. A Power BI model should use those documented relationships and timestamps rather than parse widget screenshots.
+    A report developer can model the exact documented sources:
+
+    | Governance question | Exact source |
+    | --- | --- |
+    | Accountability and approved use | [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md), [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) |
+    | Frozen contract coverage and content | [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) |
+    | Active versions and pipeline authority | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
+    | Table identity and processing | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
+    | Profiling trends | [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
+    | Pipeline participation and outcomes | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
+    | Guardrail status and continuation | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
+    | Accepted checkpoints and Source Drift baselines | [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) |
+
+    A Power BI model should use those stable relationships and timestamps rather than parse widget screenshots.
 
     The [Metadata Tables reference](reference/metadata.md) exists for the report developer who needs exact fields. Governance users do not need to understand the physical table architecture to author or approve a Data Contract.
 
