@@ -166,7 +166,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
         def approved(**kwargs):
             config, active_workspace_id, runtime = resolve_fabric_context()
             plan = shared.PipelineExecutionPlan('governed', active_workspace_id, 'caller-notebook', 'approved-run',
-                                               '{}', '{}', '{}', runtime, pipeline_id=kwargs['pipeline_id'])
+                                               '{}', '{}', '{}', runtime, pipeline_id='caller-notebook')
             plan.evidence['approved_parameters'] = {'manual': False, 'days': None}
             return plan
         monkeypatch.setattr(live, 'build_governed_pipeline_plan', approved)
@@ -177,9 +177,9 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
     try:
         notebook = setup_notebook(config_workspace_id=config_workspace)
         notebook_output = capsys.readouterr().out
-        session = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode=mode)
+        session = setup_pipeline(pipeline_mode=mode)
         assert session.plan.workspace_id == 'dev-ws'
-        assert session.plan.pipeline_id == '8f32a471-6c91-4b7e-9d13-2f0c947eab52'
+        assert session.plan.pipeline_id == 'caller-notebook'
         assert session.plan.runtime_context['config'].path_config.paths['dev-ws']['Metadata'].workspace_id == 'metadata-ws'
         configuration_runtime.notebook.run.assert_called_once_with(
             '00_env_config', 120, {'caller_workspace_id': 'dev-ws'}, workspace=config_workspace or 'dev-ws')
