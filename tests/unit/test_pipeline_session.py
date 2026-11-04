@@ -3,7 +3,7 @@
 from contextvars import Context
 from dataclasses import replace
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 import importlib
 import json
 
@@ -573,7 +573,7 @@ def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypat
     from fabricops_kit import finalize_pipeline
     from fabricops_kit.activated_pipeline import shared as authority
     from tests.unit.test_setup_notebook_store_keys import _config
-    from fabricops_ops import setup_notebook
+    from fabricops_kit import setup_notebook
     setup_notebook(_config(), workspace_id="dev")
     monkeypatch.setattr(authority, "resolve_pipeline_identity", lambda **kwargs: (
         "00000000-0000-4000-8000-000000000001", {"role": "source", "row": None}))
