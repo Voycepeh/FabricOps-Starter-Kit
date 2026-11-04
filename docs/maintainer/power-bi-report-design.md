@@ -4,9 +4,11 @@ This blueprint defines the report experience and semantic model for a shared Gov
 
 ## Outcome
 
-**The report should answer one question first: is governed data operating as intended?**
+**The report should answer one question first: as a Data Steward, do I need to act?**
 
-Governance and Engineering should start from the same portfolio view, use the same definitions, and move from a visible exception to the exact Data Contract, approval, deployment, run, table, or Guardrail record that explains it. The report is an operational lens over the Metadata Lakehouse; it is not a second governance system and must not create reporting copies of canonical metadata.
+The selected Data Steward should see their Agreements, accountable tables, active Data Contracts, observed access, physical storage, pipeline use and operational failures as one connected story. A visible exception must lead to the exact Agreement, Contract activation, access observation, Pipeline Run, table, or Guardrail Result that explains it and to a clear recommended next action.
+
+Governance and Engineering should use the same definitions and underlying evidence. The report is an observability and decision-support lens over the Metadata Lakehouse; it is not a second governance system, it does not perform remediation, and it must not create reporting copies of canonical metadata.
 
 The first implementation should ship as a Power BI Desktop Project (`.pbip`) with a PBIR report definition and a TMDL semantic model. It should connect to the configured Governance and Engineering schemas through the Fabric Lakehouse SQL analytics endpoint and use Import mode.
 
@@ -14,6 +16,7 @@ The first implementation should ship as a Power BI Desktop Project (`.pbip`) wit
 
 | Audience | Start with | Decisions supported |
 | --- | --- | --- |
+| Data Steward | Personal action state, Agreements and accountable tables | Who the Steward has Agreements with, which tables they provide or receive, whether those tables are protected, who has observed access, how they are used, and what needs attention. |
 | Governance | Coverage, approvals, policy outcomes and exceptions | Which physical tables are protected, which exact Contract and Agreement apply, which submissions need a decision, and where Guardrails are blocking or warning. |
 | Engineering | Deployments, runs, operations and processing health | Which approved implementation is active, whether the expected version ran, where a run or operation failed, and which table or processing record needs attention. |
 | Shared review | Portfolio status and hand-off gaps | Whether Governance approval, Engineering promotion and runtime execution describe one consistent operating state. |
@@ -28,9 +31,66 @@ Saved pipeline submission -> Governance decision -> Engineering promotion -> Pip
                                approved package     deployed version   operations and results
 ```
 
+## Data Steward decision journey
+
+**The default report path follows the questions a Data Steward asks, not the physical metadata-table layout.**
+
+The user selects a Data Steward at the top of the report. If `METADATA_DATA_STEWARD.contact` exactly matches Power BI `USERPRINCIPALNAME()`, the report may preselect that Steward; it must still show the selected identity and allow an authorized user to change it. A contact value is not guaranteed to be a sign-in name, so a failed match must show an explicit selection prompt rather than an empty or misleading personal view.
+
+| Steward question | Answer shown | Authoritative metadata path | Possible decision or action |
+| --- | --- | --- | --- |
+| What Agreements do I have, and with whom? | Provider and recipient Agreements, counterparty Steward, purpose, approved use, validity and versions. | Selected `METADATA_DATA_STEWARD` -> provider/recipient keys in `METADATA_DATA_AGREEMENT`. | Review an Agreement that is expired, approaching expiry, inactive at either party, or not linked to an active table selection. |
+| Which tables belong to me, and what do they look like? | Provider-side physical tables, schema, columns, Processing, profile statistics and frequent values. Recipient-side tables appear separately as **Shared with me**. | Provider Steward -> exact Agreement version -> `METADATA_DATA_CONTRACT_ACTIVATION` -> physical `workspace_id + table_id` -> Catalogue and Profile tables. | Add or update Catalogue/profile evidence, investigate material profile change, or resolve an Agreement/activation gap. |
+| Which active Data Contract protects each table? | Exact active Contract ID/version, Agreement version, Enrichment, schema, Processing, profiling policy and Guardrails. | Current active `METADATA_DATA_CONTRACT_ACTIVATION` -> exact `METADATA_DATA_CONTRACT`; parse the validated `contract_payload_json` in the model. | Author a new version, freeze it, activate the correct version, or resolve an expired/missing Agreement link. |
+| Who has access to my data? | Latest observed principals, user type, role, permission source, access level/state and observation age. | Physical table -> latest relevant `METADATA_DATA_ACCESS` snapshot. | Review a new, unexpected, stale or elevated access observation in the native Fabric control plane. The report does not grant or revoke access. |
+| Where is the table stored, and which Pipelines read or write it? | Workspace, store type, schema, table, layer, writer notebook, source/target participation and actual run operations. | Catalogue physical fields; `METADATA_DATA_LINEAGE`; parsed Registry and Run operations. | Confirm an unexpected reader/writer, stale writer identity, or physical binding mismatch with Engineering. |
+| Did any related Pipeline fail or degrade? | Latest completed run, incomplete runs, operation/stage failures, safe failure codes, blocking Guardrails and Processing State exceptions. | Table -> parsed Run operations -> Run header, Guardrail Results and Processing State. | Ask Engineering to investigate a failed/incomplete run, or ask Governance to review a blocking policy outcome. |
+
+### What “belongs to me” means
+
+FabricOps does not currently store a direct `steward_id` on `METADATA_DATA_CATALOGUE`. The dashboard must therefore use the implemented governance chain:
+
+```text
+selected provider Steward
+  -> exact Data Agreement version
+  -> current active Contract Activation
+  -> physical workspace_id + table_id
+```
+
+This is **accountability through an activated Agreement**, not inferred ownership from `_committed_by`, notebook author, access observation or table name. Tables connected through a recipient Agreement are labelled **Shared with me**, not **Owned by me**. A table with no exact Agreement link is **Unassigned / unknown**, never silently attributed to a Steward.
+
+## Action-state contract
+
+**Every summary item must end in one of four decision states.**
+
+| State | Meaning | Presentation |
+| --- | --- | --- |
+| **Action required** | Persisted evidence shows a failed, blocked, expired, missing-authority or conflicting state. | Red label, reason, affected object, evidence timestamp, responsible role and recommended next step. |
+| **Review soon** | Evidence is valid but approaching a threshold, unusually changed, stale, or requires human judgement. | Amber label with due date or reason and the review owner. |
+| **No action needed** | All evidence required by the metric is present and currently healthy. | Green label with the checks evaluated and latest evidence time. |
+| **Unknown** | Required evidence is absent, too old, unparsable or not supported by the metadata. | Grey label explaining what is missing. Unknown must never be counted as healthy. |
+
+The Action Center is a model-only union of deterministic rules. Each action row contains severity, state, Steward, workspace/table or Pipeline key, reason code, human explanation, evidence source, evidence time, responsible role, recommended next step and drill-through target. It writes nothing back to FabricOps.
+
+Initial action rules should include:
+
+- active provider-side table without a current active Contract selection;
+- active Contract selection with a missing, expired or mismatched exact Agreement version;
+- Agreement or Pipeline approval approaching expiry within a configurable warning window;
+- current approved Pipeline with no active promotion, or active promotion that does not match its approval/submission identity;
+- latest related run failed, remained incomplete, or did not complete its explicit boundary;
+- related operation or stage failed;
+- blocking Guardrail Result or `can_continue = false`;
+- profile evidence overdue according to the exact active Contract profiling policy;
+- access snapshot older than the configured observation threshold;
+- newly observed or elevated access, shown as **Review soon** unless a separately authored policy establishes that it is prohibited;
+- JSON parse failure, orphaned key or duplicate one-side key detected by Model QA.
+
+“No action needed” is allowed only after all rules applicable to the selected scope have enough evidence to evaluate. The report must show which checks contributed to that conclusion.
+
 ## Experience principles
 
-1. **Shared overview, role-specific depth.** Both audiences land on the same Command Center. Governance and Engineering bookmarks may change emphasis, but they must not change metric definitions.
+1. **Steward-first overview, shared definitions.** The default landing page is the Steward Action Center. Governance and Engineering bookmarks may broaden scope or change emphasis, but they must not change metric definitions.
 2. **Exceptions before inventory.** Lead with missing coverage, expired decisions, blocked Guardrails, failed runs, incomplete completion boundaries and stale evidence. Keep full inventories behind drill-through or detail pages.
 3. **Exact identities everywhere.** Tooltips and detail tables expose `table_id`, workspace ID, Contract ID/version, Agreement ID/version, approval ID, promotion ID, Pipeline ID/version and run ID as applicable.
 4. **State and time are explicit.** Labels distinguish current selections from history, event time from commit time, and latest observations from authoritative decisions.
@@ -55,8 +115,9 @@ Saved pipeline submission -> Governance decision -> Engineering promotion -> Pip
 Use a consistent page header:
 
 - page title and a one-sentence question the page answers;
+- selected Data Steward and whether the view matched the signed-in principal or was chosen manually;
 - last successful semantic-model refresh time;
-- synced filters for date, workspace, table/domain and Pipeline;
+- synced filters for date, Agreement, workspace, table/domain and Pipeline;
 - a clear **Reset filters** control;
 - a compact Governance / Shared / Engineering bookmark switch when it improves emphasis.
 
@@ -64,118 +125,146 @@ Do not rely on pie charts for operational status. Prefer horizontal bars for ran
 
 ## Report pages
 
-### 01 — Command Center
+### 01 — Steward Action Center
 
-**Give both roles one portfolio-level operating picture.**
+**Answer “Do I need to act?” before showing inventories or charts.**
 
-Top KPIs:
+The page header shows the selected Data Steward, role/contact, last semantic-model refresh and evidence completeness. The first row contains four cards:
 
-- active physical tables;
-- physical tables with an active Contract selection;
-- current approved Pipelines;
-- active Pipeline Promotions;
-- completed-run success rate for the selected period;
-- blocking Guardrail Results.
+- action required;
+- review soon;
+- no action needed;
+- unknown because evidence is missing or stale.
 
-Primary visuals:
+The primary visual is a ranked action queue grouped by responsibility: **Data Steward**, **Governance** or **Engineering**. Each item shows the affected Agreement, table or Pipeline; why it was raised; when the evidence was recorded; the recommended next step; and an **Investigate** drill-through action.
 
-- a Governance-to-Engineering hand-off matrix showing Contract activation, pipeline approval, active promotion and latest complete run by Pipeline or physical table;
-- a seven- or thirty-day trend of completed runs split by outcome;
-- ranked exception queues for missing Contract coverage, approved-not-promoted Pipelines, failed/incomplete runs and blocking Guardrails.
+Supporting visuals summarize:
 
-Selecting any exception drills through to Asset 360 or Pipeline 360.
+- active and expiring Agreements;
+- accountable provider tables and tables shared with the Steward;
+- Contract activation coverage;
+- observed access requiring review;
+- failed/incomplete related Pipelines and blocking Guardrails.
 
-### 02 — Governed Assets
+If all applicable checks have sufficient healthy evidence, the page states **No action needed** and lists the checks and timestamps supporting that conclusion. An empty action queue alone is not enough.
 
-**Show whether each physical table has enough current Governance context and Engineering evidence to be operated safely.**
+### 02 — My Agreements
 
-Use a matrix at `workspace_id + table_id` grain with:
-
-- current Catalogue identity and active state;
-- latest Frozen Contract version for the global `table_id`;
-- current physical Contract activation and its exact Agreement;
-- accountable provider and recipient Data Stewards;
-- latest profile observation;
-- latest Guardrail outcome;
-- source/target pipeline participation;
-- latest access-observation timestamp.
-
-Supporting visuals show coverage by workspace, store type, layer and domain. A tooltip explains every coverage state and never labels a table “governed” from Frozen status alone.
-
-### 03 — Approval to Deployment
-
-**Make the independent Governance decision and Engineering deployment comparable without conflating them.**
-
-Show the lifecycle:
-
-```text
-Submission -> decision revision -> approved package -> promotion version -> active notebook -> latest run
-```
+**Show every relationship the selected Data Steward participates in and the tables governed through it.**
 
 Required views:
 
-- current decision by execution workspace and Pipeline ID;
-- approval expiry and decision history;
-- approved submissions with no active promotion;
-- active promotions whose approval, submission or hashes do not align;
-- superseded, retired and restored Pipeline versions;
-- time from approval to promotion and promotion to first completed run.
+- Agreements where the Steward is provider versus recipient;
+- counterparty Steward name and contact;
+- business purpose, approved use, domain, start date and expiry date;
+- current, upcoming and expired versions;
+- physical tables linked through current Contract activations;
+- Agreements with no linked active table selection and active selections with a missing Agreement.
 
-The page must label `METADATA_PIPELINE_ACTIVATION` as Governance authority and `METADATA_PIPELINE_REGISTRY` as Engineering deployment evidence.
+Selecting an Agreement filters the rest of the report to the exact `agreement_id + agreement_version`. Do not roll different Agreement versions into one apparently current record.
 
-### 04 — Operations and Quality
+### 03 — My Data
 
-**Connect run health, operation outcomes, Guardrail outcomes, profiling and Processing State.**
+**Show what provider-side tables look like and separate them clearly from data shared with the Steward.**
+
+Use two explicit scopes:
+
+- **Accountable data** — physical tables reached through the provider side of an exact Agreement linked by current Contract activation;
+- **Shared with me** — physical tables reached through the recipient side.
+
+For each physical table show:
+
+- workspace, store type, layer, schema and table name;
+- active Catalogue state and writer notebook;
+- columns, data types and required/current schema context;
+- latest row, null, distinct and distribution statistics;
+- profile age and profiling-policy status;
+- latest Guardrail state and related Pipeline health.
+
+Profile change visuals compare like-for-like column snapshots and surface material changes for review. Thresholds must be defined by an implemented rule or labelled as configurable report heuristics.
+
+### 04 — Contracts and Access
+
+**Explain what currently protects each selected physical table and who has been observed with access.**
+
+Contract section:
+
+- exact active Contract ID/version and payload hash;
+- linked exact Agreement version;
+- Enrichment and information classifications;
+- expected schema and Processing definition;
+- profiling policy;
+- Guardrail definitions and their latest outcomes;
+- activation revision, destination, actor and timestamp.
+
+Access section:
+
+- principal, user type, role, permission source, access level/value/state;
+- database, schema, object and object type;
+- latest snapshot and observation age;
+- new, removed or elevated observations between comparable snapshots where the source supports the comparison.
+
+The page must say **Observed access**, not **Effective access** or **Authorized users**. A suspicious observation produces a recommended review in the native Fabric control plane; the report cannot determine policy compliance unless an explicit policy source exists.
+
+### 05 — Storage and Pipelines
+
+**Show where the selected table physically lives and how Engineering uses it.**
 
 Required views:
 
-- run status and duration trend by execution mode;
-- incomplete completion boundaries and safe failure codes;
-- Read/Write operation outcomes by table and Pipeline role;
-- Guardrail pass, warn and block trend by type and severity;
-- profiling activity completion and result persistence;
+- workspace, store type, layer, schema, table, current writer workspace/notebook and Processing strategy;
+- source/target participation from `METADATA_DATA_LINEAGE`;
+- reviewed physical bindings parsed from active Pipeline Promotions;
+- actual Read/Write operations parsed from Pipeline Runs;
+- Pipeline, version, notebook, operation role, mode and most recent use;
+- mismatches between approved/promoted bindings and observed run operations.
+
+`METADATA_DATA_LINEAGE` does not store canonical `pipeline_id`. Its audit notebook fields may be shown as recorded context, but the report must use parsed Registry/Run operations for a reliable Pipeline-to-table relationship and must not manufacture a Pipeline ID from a notebook name.
+
+### 06 — Reliability and Quality
+
+**Show whether the Pipelines serving the Steward's tables are healthy and what needs intervention.**
+
+Required views:
+
+- latest completed run and trend by Pipeline and execution mode;
+- failed and incomplete runs, including explicit completion boundary;
+- failed Read/Write operations and stages;
+- safe failure codes and exception types;
+- Guardrail pass, warn and block outcomes by table, type and severity;
+- profiling completion/result persistence;
 - Processing State observations, accepted checkpoints, Source Drift baselines and publication receipts.
 
-Guardrail visuals count aggregate rule outcomes only. They must not imply that failed business rows are stored. “Freshness Guardrail outcome” and “metadata last updated” must remain separate metrics.
+Every failure row identifies the recommended owner: Engineering for execution/deployment failures, Governance for policy/activation decisions, and the Data Steward for Agreement or access review. Guardrail visuals count aggregate outcomes only and never imply that failed business rows are stored.
 
-### 05 — Asset 360
+### 07 — Asset 360
 
-**Provide one table-centred drill-through page.**
+**Provide one physical-table drill-through page containing the complete Steward story.**
 
-The selected global `table_id` anchors:
+The page follows this order: Agreement and parties, active Contract, table shape and profile, observed access, physical location, Pipeline use, latest failures and action history. It exposes full IDs and timestamps in tooltips and detail tables.
 
-- physical observations by workspace;
-- Catalogue columns and processing definition;
-- Contract version history and current physical activations;
-- linked Agreement and Steward accountability;
-- profile trends and frequent values;
-- Guardrail Result history;
-- source/target participation;
-- observed access;
-- related run operations and Processing State.
+The header shows both the global `table_id` and selected `workspace_id + table_id`. If no workspace is selected, physical sections show all workspaces rather than choosing one silently.
 
-The header shows both the global table identity and the selected physical workspace-table identity. If no workspace is selected, physical sections show all workspaces rather than choosing one silently.
+### 08 — Pipeline 360
 
-### 06 — Pipeline 360
-
-**Provide one Pipeline-centred drill-through page.**
+**Provide the Engineering drill-through behind a Steward's Pipeline question.**
 
 The selected execution workspace and `pipeline_id` anchor:
 
-- decision history and the current Governance state;
-- promotion history and the active Engineering version;
+- decision history and current Governance state;
+- promotion history and active Engineering version;
 - approved versus deployed content hashes;
 - source and target operations;
 - Contract versions used by each run operation;
 - run duration, status, failures and stages;
 - related Guardrail Results and Processing State;
-- the governed notebook and actual execution identity.
+- governed notebook and actual execution identity.
 
-### 07 — Audit Explorer
+### 09 — Audit Explorer
 
-**Keep exact records available without turning every page into a data dump.**
+**Keep exact raw records available without making raw metadata the primary user experience.**
 
-Provide exportable detail tables for Contract activations, Pipeline decisions, promotions, runs, operations, Guardrail Results and access observations. Default identifiers may be shortened for readability, but tooltips and exports must retain the complete value.
+Provide exportable detail tables for Agreements, Contract activations, access observations, Pipeline decisions, promotions, runs, operations, Guardrail Results and Processing State. Default identifiers may be shortened for readability, but tooltips and exports retain the complete value. This page explains the action state; it does not replace the Action Center.
 
 ## Semantic model
 
@@ -201,11 +290,13 @@ Provide exportable detail tables for Contract activations, Pipeline decisions, p
 | `DimPipeline` | `workspace_pipeline_key` | One `execution_workspace_id + pipeline_id` deployment and decision scope. |
 | `DimContractVersion` | `contract_version_key` | One `contract_id + contract_version` exact immutable or draft version. |
 | `DimAgreementVersion` | `agreement_version_key` | One `agreement_id + agreement_version` exact Agreement version. |
-| `DimSteward` | `steward_id` | Accountable provider or recipient, with one inactive role relationship. |
+| `DimSteward` | `steward_id` | Selected accountable person. It filters model-only provider/recipient role bridges rather than guessing ownership from audit fields. |
 | `DimPromotion` | `promotion_id` | Exact immutable Engineering promotion used by Pipeline Runs. |
 | `DimRun` | `run_id` | Run header used to filter operation, profiling, failure, Guardrail and Processing State facts. |
 
 `DimTable` filters `DimPhysicalTable`, and `DimWorkspace` filters `DimPhysicalTable`. Physical facts relate to `DimPhysicalTable`; global Contract facts relate to `DimTable`. This snowflake edge is intentional and prevents relationships based on `table_id` alone from mixing workspaces.
+
+`DimSteward` filters `BridgeStewardAgreementRole` and `BridgeStewardPhysicalTable`. Those model-only tables carry an explicit `provider` or `recipient` role and the exact Agreement version. They support the personal journey without introducing bidirectional filtering across Agreement, Contract activation and physical-table facts.
 
 ### Facts and bridges
 
@@ -219,6 +310,11 @@ Provide exportable detail tables for Contract activations, Pipeline decisions, p
 | `FactContract` | `METADATA_DATA_CONTRACT` | One Draft or Frozen Contract version. |
 | `FactContractActivation` | `METADATA_DATA_CONTRACT_ACTIVATION` | One retained revision for one physical workspace-table identity. |
 | `FactAgreement` | `METADATA_DATA_AGREEMENT` | One Agreement version. |
+| `BridgeStewardAgreementRole` | derived from Agreement provider and recipient keys | One Steward role for one exact Agreement version. |
+| `BridgeStewardPhysicalTable` | Steward/Agreement role joined to current Contract activation | One explicit Steward role and exact Agreement association for one physical table. |
+| `BridgeContractColumn` | parsed `METADATA_DATA_CONTRACT.contract_payload_json` | One expected column in one exact Contract version. |
+| `FactContractGuardrailDefinition` | parsed `contract_payload_json` | One authored Guardrail definition in one exact Contract version. |
+| `FactContractProfilingPolicy` | parsed `contract_payload_json` | One profiling activity policy in one exact Contract version. |
 | `FactPipelineDecision` | `METADATA_PIPELINE_ACTIVATION` | One append-only import or decision event. |
 | `FactPromotion` | `METADATA_PIPELINE_REGISTRY` | One immutable Pipeline version in one execution workspace. |
 | `FactRun` | `METADATA_PIPELINE_RUN` | One authoritative Pipeline execution. |
@@ -230,8 +326,9 @@ Provide exportable detail tables for Contract activations, Pipeline decisions, p
 | `BridgePromotionOperation` | parsed `METADATA_PIPELINE_REGISTRY.operations_json` | One reviewed physical operation in one promotion. |
 | `FactGuardrailResult` | `METADATA_GUARDRAIL_RESULTS` | One saved aggregate Guardrail outcome. |
 | `FactProcessingState` | `METADATA_PROCESSING_STATE` | One typed observation, checkpoint, baseline or publication receipt. |
+| `FactActionQueue` | deterministic model-only rule union | One actionable, review, healthy or unknown finding for a Steward-scoped object and reason code. |
 
-`METADATA_DATA_STEWARD` supplies `DimSteward`; it is not duplicated as a fact. `METADATA_DATA_AGREEMENT` can behave as an exact-version dimension for slicers while its version history remains reportable.
+`METADATA_DATA_STEWARD` supplies `DimSteward`; it is not duplicated as a fact. `METADATA_DATA_AGREEMENT` can behave as an exact-version dimension for slicers while its version history remains reportable. Contract payload projections are refresh-time semantic tables only; the canonical JSON string remains authoritative.
 
 ### Relationship schematic
 
@@ -258,7 +355,15 @@ flowchart LR
   Physical --> ContractActivation[FactContractActivation]
   Contract --> ContractActivation
   Agreement --> ContractActivation
-  Steward --> AgreementFact[FactAgreement]
+  Steward --> StewardAgreement[BridgeStewardAgreementRole]
+  Agreement --> StewardAgreement
+  Steward --> StewardTable[BridgeStewardPhysicalTable]
+  Agreement --> StewardTable
+  Physical --> StewardTable
+  Contract --> StewardTable
+  Contract --> ContractColumn[BridgeContractColumn]
+  Contract --> GuardrailDefinition[FactContractGuardrailDefinition]
+  Contract --> ProfilePolicy[FactContractProfilingPolicy]
 
   Pipeline --> Decision[FactPipelineDecision]
   Pipeline --> PromotionFact[FactPromotion]
@@ -277,6 +382,9 @@ flowchart LR
   Date --> Run
   Date --> Guardrail
   Date --> Profile
+  Steward --> Action[FactActionQueue]
+  Physical --> Action
+  Pipeline --> Action
 ```
 
 The implementation must check the final paths for ambiguity in Desktop. Where the same fact can be filtered through both a physical table and an exact Contract, keep both dimensions independent and do not add a relationship between `DimContractVersion` and `DimTable`; `table_id` remains an attribute on the Contract dimension for display and validation.
@@ -321,13 +429,20 @@ Define measures centrally and include the definition in a report tooltip.
 
 | Measure | Definition |
 | --- | --- |
+| My active Agreements | Exact Agreement versions where the selected Steward is provider or recipient and the selected date falls from `start_date` through `expiry_date`. Show provider and recipient counts separately. |
+| My accountable physical tables | Distinct `workspace_table_key` reached through selected Steward -> provider Agreement role -> exact current Contract activation. |
+| Tables shared with me | Distinct `workspace_table_key` reached through selected Steward -> recipient Agreement role -> exact current Contract activation. |
 | Active physical tables | Distinct `workspace_table_key` at Catalogue table level where `is_active = true`. |
 | Contract activation coverage | Active physical tables with a current active `METADATA_DATA_CONTRACT_ACTIVATION` divided by active physical tables. |
+| Active Contract for my table | Exact Contract ID/version on the current active Contract activation for the selected `workspace_table_key`; never the latest Frozen version by itself. |
+| Observed principals | Distinct principals in the latest comparable access snapshot for the selected physical table. Label the snapshot time and never call this effective or approved access. |
+| Related Pipelines | Distinct `workspace_pipeline_key` found through parsed Promotion or Run operations for the selected table. Lineage audit notebook context is supplementary. |
 | Current approved Pipelines | Latest decision revision per `workspace_pipeline_key` whose decision/status is approved and not expired. |
 | Active Pipeline Promotions | Registry rows with `status = active`, counted at `workspace_pipeline_key`. Validate that at most one is active. |
 | Completed-run success rate | Completed successful runs divided by runs whose explicit completion boundary finished in the selected period. Incomplete runs remain a separate exception count. |
 | Blocking Guardrails | Guardrail Results where the persisted outcome cannot continue or the supported blocking status applies. Do not derive this from color or severity alone. |
 | Profile evidence age | Time since the latest applicable successful profile observation. “Overdue” additionally requires the exact Contract profiling policy to be parsed and evaluated. |
+| Steward action state | Highest-priority applicable deterministic action state after evidence-completeness evaluation. Unknown outranks No action needed when a required check cannot be evaluated. |
 
 Do not publish a metric until its allowed values and current-row rule have been verified against the implementation that writes the source.
 
@@ -346,28 +461,34 @@ Do not publish a metric until its allowed values and current-row rule have been 
 
 1. Create the PBIP/PBIR/TMDL project from current `main`.
 2. Import all 14 canonical tables with explicit scalar projections.
-3. Add conformed dimensions, collision-safe keys and JSON-derived run/promotion tables.
+3. Add conformed dimensions, Steward/Agreement/physical-table role bridges, collision-safe keys and JSON-derived Contract, run and promotion tables.
 4. Add a structural validator that compares model source columns with `metadata_schemas.py`, validates relationship cardinality and rejects missing canonical tables.
-5. Build a hidden Model QA page with row counts, orphan-key counts, duplicate one-side keys, active-promotion conflicts and JSON parse failures.
+5. Build a hidden Model QA page with row counts, orphan-key counts, duplicate one-side keys, active-promotion conflicts, Steward attribution gaps and JSON parse failures.
+6. Implement the deterministic Action Queue with reason-code tests for healthy, actionable and missing-evidence scenarios.
 
 ### Phase 2 — shared operating view
 
-1. Implement Command Center, Governed Assets and Approval to Deployment.
-2. Define and test central measures against representative synthetic metadata covering history, missing links and conflicting states.
-3. Add Asset 360 and Pipeline 360 drill-through paths.
-4. Add Operations and Quality only after run JSON detail is validated in Power BI Desktop.
+1. Implement Steward Action Center, My Agreements and My Data first.
+2. Add Contracts and Access, then Storage and Pipelines.
+3. Define and test central measures against representative synthetic metadata covering provider/recipient roles, version history, missing links and conflicting states.
+4. Add Asset 360 and Pipeline 360 drill-through paths.
+5. Add Reliability and Quality only after run JSON detail is validated in Power BI Desktop.
 
 ### Phase 3 — signed-in acceptance
 
 1. Refresh against a non-production Fabric Metadata Lakehouse.
 2. Validate SQL endpoint exposure, folding, JSON expansion, DAX results and representative cross-filter paths.
-3. Review every page with one Governance user and one Engineering user using the same exception scenarios.
+3. Review every page with at least one Data Steward, one Governance user and one Engineering user using the same exception scenarios.
 4. Test keyboard navigation, contrast, alt text, focus order, mobile layout where supported, export behavior and empty/error states.
 5. Publish to a test workspace, bind Organizational Account credentials and verify scheduled refresh.
 
 ## Acceptance criteria
 
 - The project starts from the current `main` schema and includes exactly the 14 canonical metadata tables.
+- A selected Data Steward can answer all six journey questions from the Action Center and reach exact evidence in no more than two interactions.
+- Provider-side accountable tables and recipient-side Shared with me tables are visibly separate and traceable to an exact Agreement version and current Contract activation.
+- The dashboard distinguishes Action required, Review soon, No action needed and Unknown; missing evidence can never produce a healthy conclusion.
+- Every action identifies the reason, evidence timestamp, affected object, responsible role and recommended next step.
 - Governance approval, Contract activation, Engineering promotion and runtime execution remain visibly distinct.
 - A reviewer can trace a portfolio exception to exact source identifiers in no more than two interactions.
 - Asset 360 and Pipeline 360 reconcile the same records shown in portfolio KPIs.
