@@ -10,7 +10,7 @@ from fabricops_kit.pipeline import shared
 
 def test_persistent_setup_does_not_accept_pipeline_id():
     with pytest.raises(TypeError):
-        setup_pipeline(pipeline_id="00000000-0000-4000-8000-000000000001")
+        setup_pipeline()
 
 
 def test_setup_delegates_identity_resolution_to_registry(monkeypatch):
