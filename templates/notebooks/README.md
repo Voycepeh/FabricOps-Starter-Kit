@@ -53,7 +53,7 @@ pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 finalize_pipeline()
 ```
 
-Save one UUIDv4 Pipeline ID in notebook source and reuse it across environments. Persistent Ungoverned and Governed execution require it. Dry Run may omit it for a session-only identity. Neither setup function requires a workspace argument.
+FabricOps derives the logical Pipeline ID from the current Fabric Notebook ID. The Pipeline Registry preserves that identity when a notebook is promoted and maps each promoted physical Notebook ID to the same logical pipeline. Engineers do not declare or manage Pipeline IDs in notebook source. Neither setup function requires a workspace argument.
 
 Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
 
@@ -83,21 +83,21 @@ See the [Microsoft Fabric Spark Warehouse connector documentation](https://learn
 
 Governance has only the Metadata target. Its runtime workspace remains its audit identity. In the Data Contract widget, deliberately select a Table and Workspace to create a draft from that workspace's current observation. Contract history is global for the selected table. Workspace appears at the far right and filters bidirectionally with Table. No arbitrary workspace or table is selected.
 
-On first setup, run the complete notebook in Ungoverned mode and call `pipeline_result = finalize_pipeline(pipeline)`. Save a literal stable Pipeline ID and Dry Run mode before manually testing. Finalization persists available saved-definition and execution claims under Engineering's explicit Files permissions, without publishing business data or changing the Run table. `finalize_pipeline(pipeline)` automatically saves the complete package. Governance selects it directly with `widget_activate_pipeline()` in an independent session and records an approval. Engineering then deploys the approved snapshot through the controls beneath `finalize_pipeline(pipeline)`. **Governed execution remains blocked pending signed-in Fabric acceptance.**
+On first setup, run the complete notebook in Dry Run mode before submitting it for Governance review. FabricOps derives its logical identity from the original Fabric Notebook ID. Finalization persists available saved-definition and execution claims under Engineering's explicit Files permissions, without publishing business data or changing the Run table. `finalize_pipeline(pipeline)` automatically saves the complete package. Governance selects it directly with `widget_activate_pipeline()` in an independent session and records an approval. Engineering then deploys the approved snapshot through the controls beneath `finalize_pipeline(pipeline)`. **Governed execution remains blocked pending signed-in Fabric acceptance.**
 
 New drafts capture every current observed column once. Columns default to required presence; optional presence is distinct from nullability. Missing required columns, uncontracted extra columns and normalized datatype differences block Governed execution. New profiles never mutate contracts. Unprofiled columns remain governable and display “Not yet profiled”.
 
 Contract Activation selects an exact frozen definition and applicable Agreement per physical workspace/Table ID. Pipeline Approval reviews an immutable imported candidate; Engineering separately creates a distinct Governed notebook from that approved snapshot. A Governed folder is organizational and grants no permissions.
 
-`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline(pipeline_id=PIPELINE_ID)` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
+`01_governance` uses `setup_notebook(required_targets=["Metadata"])`. Ordinary Engineering notebooks use `setup_notebook()` and `setup_pipeline()` without workspace arguments. Explicit local setup supplies `workspace_id`; the returned setup object exposes `workspace_id`.
 
 ## Pipeline execution mode
 
-The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform → Write → Finalize**. `setup_notebook()` initializes configuration and displays readiness; `setup_pipeline()` reuses that configuration and displays only pipeline details. Call notebook setup first; missing, failed or outdated setup produces an actionable error. Rerunning notebook setup closes the current pipeline and invalidates its old configuration before attempting a reload. Workspace routing is resolved automatically from the caller workspace by the selected `00_env_config`. A stable `pipeline_id` identifies the logical pipeline independently of notebook names and paths.
+The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform → Write → Finalize**. `setup_notebook()` initializes configuration and displays readiness; `setup_pipeline()` reuses that configuration and displays only pipeline details. Call notebook setup first; missing, failed or outdated setup produces an actionable error. Rerunning notebook setup closes the current pipeline and invalidates its old configuration before attempting a reload. Workspace routing is resolved automatically from the caller workspace by the selected `00_env_config`. The original Fabric Notebook ID establishes the logical pipeline identity. The Registry maps every promoted physical Notebook ID back to that identity.
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Ungoverned")
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
@@ -145,7 +145,7 @@ Promotion creates a separate saved Governed notebook and verifies its immutable 
 
 ```python
 context = setup_notebook()
-pipeline = setup_pipeline(pipeline_id="8f32a471-6c91-4b7e-9d13-2f0c947eab52", pipeline_mode="Governed")
+pipeline = setup_pipeline(pipeline_mode="Governed")
 # Read → Transform → Write; approved authority is resolved internally.
 ```
 
