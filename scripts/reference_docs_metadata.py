@@ -1638,7 +1638,7 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The table_id has no active Catalogue row.',
                             'The metadata target cannot be read or written.',
                             'A subtype-specific Guardrail value is invalid.']},
-{'kind': 'function', 'module': 'widgets.widget_activate_data_contract', 'function_type': 'callable', 'symbol_name': 'widget_activate_data_contract', 'summary_override': 'Review and activate an exact frozen Contract in its physical workspace.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
+{'kind': 'function', 'module': 'widgets.widget_activate_data_contract', 'function_type': 'callable', 'symbol_name': 'widget_activate_data_contract', 'summary_override': 'Review and activate an exact frozen Contract in its physical workspace.', 'template_notebook': '01_governance', 'template_segment': 'Governance review', 'use_when': 'Use after widget_data_contract freezes a version to activate it for a physical table and workspace.', 'related_functions': ['widget_data_contract']},
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
   'summary_override': 'Select saved Engineering submissions and independently approve, reject or revoke them.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',

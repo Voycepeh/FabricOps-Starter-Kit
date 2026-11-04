@@ -1,14 +1,17 @@
 # `widget_activate_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued reference-lifecycle-chip-prominent">Discontinued</span>
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued reference-lifecycle-chip-prominent">Discontinued in 0.3.0</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 </p>
 
-> This function is no longer part of the current supported public contract. Use the release history below to identify the last supported version.
+> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
 Review and activate an exact frozen Contract in its physical workspace.
 
+
+## Usage notes
+
+Use after widget_data_contract freezes a version to activate it for a physical table and workspace.
 
 
 ## Example usage
@@ -104,11 +107,11 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued">Discontinued</span> |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
 | Live since | — |
-| Discontinued in | 0.3.0 |
-| Contract classification | Discontinued public function |
-| Contract risk | Discontinued |
+| Discontinued in | — |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
 ### Release history

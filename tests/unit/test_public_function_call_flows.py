@@ -412,6 +412,29 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
     assert payload["release_contract"]["live_public_function_count"] == expected_live
 
 
+
+def test_reintroduced_activation_widget_is_preview_with_unchanged_history(repository_call_flow_payload) -> None:
+    """Current registration restores the widget while released retirement stays historical."""
+    qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
+    history, _ = flows.read_function_lifecycle()
+    assert history[qn].lifecycle_status == "discontinued"
+    current = flows.public_lifecycle(qn, "widget_activate_data_contract", history)
+    assert current.lifecycle_status == "preview"
+    assert current.discontinued_in is None
+    assert current.release_history == history[qn].release_history
+    assert any(row["status"] == "discontinued" for row in current.release_history)
+    assert history[qn].lifecycle_status == "discontinued"
+    row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
+    assert row["lifecycle_status"] == "preview"
+    assert row["contract_classification"] == "preview_public_function"
+
+
+def test_unregistered_retired_callable_stays_discontinued() -> None:
+    """An old implementation remains retired unless explicitly reintroduced in current API."""
+    retired = flows.ReleaseFunctionLifecycle("discontinued", "0.1.0", "0.3.0", ({"version": "0.3.0", "status": "discontinued"},), ("0.3.0",))
+    assert flows.public_lifecycle("fabricops_kit.retired.retired", "retired", {"retired": retired}) == retired
+
+
 def test_large_width_or_depth_thresholds_are_strict() -> None:
     """Validate deterministic large width/depth thresholds."""
     root = info("public_root", "src/fabricops_kit/root.py")

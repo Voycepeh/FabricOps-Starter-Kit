@@ -2313,7 +2313,7 @@
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "internal_function",
+      "contract_classification": "preview_only_internal",
       "function_name": "set_table_contract_activation",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -2321,7 +2321,7 @@
         "fabricops_kit.widgets.widget_activate_data_contract::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "none",
+      "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.activated_pipeline.shared.set_table_contract_activation",
       "source_end_line": 417,
       "source_path": "src/fabricops_kit/activated_pipeline/shared.py",
@@ -15016,14 +15016,13 @@
     },
     {
       "architecture_classification": "capability",
-      "contract_classification": "discontinued_public_function",
-      "contract_risk": "discontinued",
-      "discontinued_in": "0.3.0",
+      "contract_classification": "preview_public_function",
+      "contract_risk": "preview",
       "examples": ">>> ui = widget_activate_data_contract()\n>>> ui = widget_activate_data_contract(TABLE_ID, CONTRACT_ID, 1,\n...     workspace_id=PHYSICAL_WORKSPACE_ID)",
       "function_name": "widget_activate_data_contract",
       "function_type": "widget_function",
-      "lifecycle_status": "discontinued",
-      "live_impact_level": "none",
+      "lifecycle_status": "preview",
+      "live_impact_level": "preview_only",
       "parameters": [
         {
           "description": "Preselect an exact logical table and frozen Contract. With no arguments, select from registered physical workspaces/tables and frozen versions.",

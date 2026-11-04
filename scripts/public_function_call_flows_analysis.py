@@ -613,8 +613,14 @@ def enrich_flow_candidates(flow: list[dict[str, Any]]) -> None:
 
 
 def public_lifecycle(qn: str, function_name: str, lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle]) -> ReleaseFunctionLifecycle:
-    """Return manifest lifecycle metadata for a public callable."""
-    return lifecycle_by_qn.get(qn) or lifecycle_by_qn.get(function_name) or ReleaseFunctionLifecycle("preview", None, None, tuple(), tuple())
+    """Resolve current Preview reintroductions without rewriting release history."""
+    lifecycle = lifecycle_by_qn.get(qn) or lifecycle_by_qn.get(function_name) or ReleaseFunctionLifecycle("preview", None, None, tuple(), tuple())
+    if lifecycle.lifecycle_status == "discontinued":
+        from fabricops_kit.public_api import PREVIEW_PUBLIC_API
+
+        if qn in PREVIEW_PUBLIC_API:
+            return ReleaseFunctionLifecycle("preview", None, None, lifecycle.release_history, lifecycle.release_versions)
+    return lifecycle
 
 
 def lifecycle_fields(lifecycle: ReleaseFunctionLifecycle) -> dict[str, Any]:
