@@ -33,8 +33,8 @@ For advanced cross-workspace use, deploy a shared `00_env_config` in Central Eng
 CONFIG_WORKSPACE_ID = "<configuration-workspace-id>"
 context = setup_notebook(config_workspace_id=CONFIG_WORKSPACE_ID)
 # Then, in an Engineering pipeline:
-pipeline = setup_pipeline(pipeline_mode="Ungoverned")
-PIPELINE_ID = pipeline.pipeline_id
+PIPELINE_ID = "8f32a471-6c91-4b7e-9d13-2f0c947eab52"  # Generate once and save in source.
+pipeline = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode="Ungoverned")
 ```
 
 The shared deployment must register the caller workspace in `ENGINEERING_WORKSPACES`. The execution identity needs permission to run the remote notebook and access its configured stores. No process environment variable or separate configuration file is required. Omitting `config_workspace_id` always uses the caller workspace.
