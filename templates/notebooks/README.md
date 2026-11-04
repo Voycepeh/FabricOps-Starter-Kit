@@ -48,7 +48,6 @@ context = setup_notebook()
 # 02 Pipeline
 from fabricops_kit import setup_notebook, setup_pipeline, finalize_pipeline
 context = setup_notebook()
-PIPELINE_ID = "8f32a471-6c91-4b7e-9d13-2f0c947eab52"  # Generate once and save in source.
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 # Read → Transform → Write
 finalize_pipeline()
@@ -198,7 +197,7 @@ Profiling history without a confirmed physical binding and independent activity 
 
 FabricOps derives the logical Pipeline ID from the original Fabric Notebook ID. Promoted notebook IDs resolve back to that identity through the Pipeline Registry; no notebook-level Pipeline ID is required.
 
-Notebook names do not define logical Pipeline identity. The stable Pipeline ID is shared across versions and execution workspaces; every promoted version has a separate physical Governed notebook ID. New starts against superseded items reject. Existing admitted runs retain captured versions and Contracts; the exclusive physical target publication claim prevents conflicting old/new writers. `widget_activate_data_contract()` delegates to a conditional service using the reviewed current activation ID and replay-safe operation ID, independently of Pipeline Promotion. Governed remains blocked pending signed-in Fabric validation.
+Notebook names do not define logical Pipeline identity. The Registry retains one logical Pipeline ID across versions and execution workspaces; every promoted version has a separate physical Governed notebook ID. New starts against superseded items reject. Existing admitted runs retain captured versions and Contracts; the exclusive physical target publication claim prevents conflicting old/new writers. `widget_activate_data_contract()` delegates to a conditional service using the reviewed current activation ID and replay-safe operation ID, independently of Pipeline Promotion. Governed remains blocked pending signed-in Fabric validation.
 
 `pipeline_result = finalize_pipeline(pipeline)` records the accurate completion status for persisting modes and returns a session-only summary for Dry Run. Governance selects and reviews the complete saved notebook, recorded Dry Run claims, destination bindings and current Contract/Agreement policy, then records its decision in `governance.METADATA_PIPELINE_ACTIVATION`. Engineering deploys that exact snapshot and separately records the immutable version in `engineering.METADATA_PIPELINE_REGISTRY`. Governance owns both schemas; Engineering cannot write Governance approval or activation records. Dry Run does not commit business tables; Governed execution exercises the activated publication permissions and target transaction.
 
