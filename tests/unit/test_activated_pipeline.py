@@ -47,7 +47,7 @@ def notebook(code=None):
         {"cell_type": "markdown", "metadata": {}, "source": "Notes"},
         {"cell_type": "code", "metadata": {"tags": ["parameters"]}, "execution_count": 1,
             "outputs": [{"output_type": "stream", "name": "stdout", "text": "output"}],
-            "source": code or f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Dry Run")'}]}).encode()
+            "source": code or 'setup_pipeline(pipeline_mode="Dry Run")'}]}).encode()
 
 
 def test_canonical_14_tables_and_separate_grains():
@@ -116,7 +116,7 @@ def test_behavior_changes_affect_notebook_hash(change):
 def test_promotion_only_switches_literal_mode_and_retains_full_content():
     """Verify promotion only switches literal mode and retains full content."""
     raw = notebook()
-    promoted, parameters = service.promoted_notebook(raw, PIPELINE_ID)
+    promoted, parameters = service.promoted_notebook(raw)
     expected = json.loads(raw)
     expected["cells"][1]["source"] = expected["cells"][1]["source"].replace('"Dry Run"', '"Governed"')
     assert json.loads(promoted) == expected
@@ -124,13 +124,13 @@ def test_promotion_only_switches_literal_mode_and_retains_full_content():
 
 
 @pytest.mark.parametrize("code", ["x = 1", 'setup_pipeline(pipeline_id=ID, pipeline_mode="Dry Run")',
-    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode=MODE)',
-    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Dry Run", **params)',
-    f'setup_pipeline(pipeline_id="{PIPELINE_ID}", pipeline_mode="Ungoverned")'])
+    'setup_pipeline(pipeline_mode=MODE)',
+    'setup_pipeline(pipeline_mode="Dry Run", **params)',
+    'setup_pipeline(pipeline_mode="Ungoverned")'])
 def test_ambiguous_or_parameterized_startup_rejects(code):
     """Verify ambiguous or parameterized startup rejects."""
     with pytest.raises(ValueError, match="literal|exactly one|Save"):
-        service.promoted_notebook(notebook(code), PIPELINE_ID)
+        service.promoted_notebook(notebook(code))
 
 
 def test_fabric_gate_rejects_forged_plan_and_never_reads_metadata(monkeypatch):
