@@ -35,8 +35,8 @@ Use the finder below to search 28 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 52
-    - Total callables: 779
-    - Supporting functions: 419
+    - Total callables: 781
+    - Supporting functions: 421
     - Private helpers to review: 325
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -117,9 +117,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Review and activate an exact frozen Contract in its physical workspace.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued reference-lifecycle-chip-prominent">Discontinued</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-discontinued">Discontinued in 0.3.0</span></p>
 </article>
-<article id="widgets.widget_activate_pipeline-widget_activate_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_pipeline" data-callable-module="widgets.widget_activate_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Import immutable Engineering submissions and independently approve, reject or revoke them.">
+<article id="widgets.widget_activate_pipeline-widget_activate_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_pipeline" data-callable-module="widgets.widget_activate_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Select saved Engineering submissions and independently approve, reject or revoke them.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_pipeline/"><code>widget_activate_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Import immutable Engineering submissions and independently approve, reject or revoke them.</p>
+  <p class="reference-catalogue-item-purpose">Select saved Engineering submissions and independently approve, reject or revoke them.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 <article id="widgets.widget_data_contract-widget_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_contract" data-callable-module="widgets.widget_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Create or reopen and author one agreement-free, table-centric Data Contract draft.">

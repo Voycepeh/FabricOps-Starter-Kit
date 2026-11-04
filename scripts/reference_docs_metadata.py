@@ -138,7 +138,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_ACTIVATION": {
         "purpose": "Retains immutable accepted submission packages and independent Governance decision history.",
         "grain": "One append-only import or decision event; revision is monotonic per execution workspace/Pipeline ID.",
-        "implementation_notes": "Governance imports complete JSON packages under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, parameters, physical bindings and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.",
+        "implementation_notes": "Governance selects saved Engineering packages directly from configured Metadata Files; Review saves an immutable copy under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, parameters, physical bindings and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.",
         "primary_key": ["approval_id"],
         "foreign_keys": [],
         "relationships": [],
@@ -1640,9 +1640,9 @@ PUBLIC_SYMBOL_DOCS = [
                             'A subtype-specific Guardrail value is invalid.']},
 {'kind': 'function', 'module': 'widgets.widget_activate_data_contract', 'function_type': 'callable', 'symbol_name': 'widget_activate_data_contract', 'summary_override': 'Review and activate an exact frozen Contract in its physical workspace.', 'template_notebook': '01_governance', 'template_segment': 'Governance review'},
  {'kind': 'function', 'module': 'widgets.widget_activate_pipeline', 'function_type': 'callable',
-  'summary_override': 'Import immutable Engineering submissions and independently approve, reject or revoke them.',
+  'summary_override': 'Select saved Engineering submissions and independently approve, reject or revoke them.',
   'symbol_name': 'widget_activate_pipeline', 'template_notebook': '01_governance', 'template_segment': 'Pipeline activation',
-  'use_when': 'Use in Governance to import and review portable submissions without Engineering workspace access.',
+  'use_when': 'Use in Governance to select and review saved submissions from the Metadata Lakehouse without file transfer or Engineering notebook access.',
   'expanded_purpose': 'Shows retained immutable Pipeline Promotion versions and reviews the exact notebook, physical bindings and Contracts. Governed admission remains blocked pending signed-in Fabric validation.',
   'related_functions': ['setup_pipeline']},
 

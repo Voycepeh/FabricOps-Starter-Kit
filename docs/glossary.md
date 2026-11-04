@@ -35,8 +35,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="pipeline-submission">
-<summary><strong>Pipeline Submission</strong> — A complete portable saved-notebook and Dry Run package exported by Engineering.</summary>
-<p>A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance imports an immutable copy under its own identity.</p>
+<summary><strong>Pipeline Submission</strong> — A complete saved-notebook and Dry Run package automatically saved by Engineering.</summary>
+<p>A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance selects the saved submission directly from Metadata Lakehouse Files; Review retains an immutable copy under its own identity. No file transfer is required.</p>
 </details>
 
 <details id="pipeline-approval">

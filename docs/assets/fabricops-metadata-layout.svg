@@ -3,7 +3,7 @@
 <rect x="17" y="16" width="1896" height="270" rx="9" fill="#F8F3FE" stroke="#B69CE2" stroke-width="1.5"/>
 <rect x="17" y="303" width="1896" height="638" rx="9" fill="#EEF7FF" stroke="#83B8EA" stroke-width="1.5"/>
 <text x="36" y="52" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#7144AE">Governance policy and approval</text>
-<text x="815" y="346" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering records · Governance-owned metadata</text>
+<text x="36" y="934" font-size="23" font-family="Arial, sans-serif" font-weight="700" fill="#1168B6">Engineering records · Governance-owned metadata</text>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
 <rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M1209 78H1501Q1505 78 1505 82V115H1205V82Q1205 78 1209 78Z" fill="#7144AE"/>

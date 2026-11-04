@@ -808,8 +808,8 @@
     "term": "Pipeline Submission",
     "aliases": [],
     "category": "FabricOps concepts",
-    "short_definition": "A complete portable saved-notebook and Dry Run package exported by Engineering.",
-    "long_definition": "A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance imports an immutable copy under its own identity.",
+    "short_definition": "A complete saved-notebook and Dry Run package automatically saved by Engineering.",
+    "long_definition": "A canonical digest binds the source notebook, exact promoted snapshot, tested and approved physical operations, setup parameters, Contract evidence and recorded Dry Run. A digest establishes identity, not the truth of testing claims. Governance selects the saved submission directly from Metadata Lakehouse Files; Review retains an immutable copy under its own identity. No file transfer is required.",
     "preferred_usage": "Use Pipeline Submission for the immutable content submitted for independent Governance review.",
     "avoid_usage": "successful execution as approval"
   },

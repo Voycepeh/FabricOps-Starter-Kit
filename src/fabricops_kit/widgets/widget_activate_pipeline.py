@@ -1,4 +1,4 @@
-"""Governance review of portable submissions, independent of Engineering sessions."""
+"""Governance review of saved submissions from the central Metadata Lakehouse."""
 from __future__ import annotations
 
 import base64
@@ -7,34 +7,36 @@ import json
 
 from fabricops_kit.activated_pipeline.shared import (
     FABRIC_VALIDATION_PENDING, decide_pipeline_submission, import_pipeline_submission,
-    read_approvals, read_registry, review_submission_policy, validate_submission,
+    list_pipeline_submissions, read_pipeline_submission, read_approvals, read_registry, review_submission_policy, validate_submission,
 )
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.widgets import shared
 
 
-def widget_activate_pipeline(*, pipeline_id=None, package=None, context=None) -> dict:
-    """Import, review and decide an immutable notebook submission in Governance.
+def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict:
+    """Select, review and decide a saved Engineering submission in Governance.
 
     Parameters
     ----------
     pipeline_id : str | None, optional
-        Filter imported candidates and decision history by logical Pipeline ID.
-    package : str | bytes | dict | None, optional
-        Portable Engineering submission. The import action persists a verified
-        immutable copy under Governance's identity; opening the widget does not.
+        Filter saved submissions and decision history by logical Pipeline ID.
     context : dict | None, optional
         Configured Governance notebook context and central Metadata routing.
 
     Returns
     -------
     dict
-        Widget, controls, state and import/review/decide/refresh actions. Approval
+        Widget, controls, state and review/decide/refresh actions. Approval
         grants deployment authority; Engineering must separately deploy it.
 
     Notes
     -----
+    Finalize saves packages in the configured Metadata Lakehouse. This widget
+    lists them directly; no file download, upload or JSON paste is needed.
+    Opening the widget only reads storage. Review re-reads the selected package,
+    rejects changes since refresh and persists an immutable Governance-owned copy
+    before policy review. Decisions use that copy, never mutable Engineering Files.
     This widget never opens Engineering notebooks or creates deployed items.
     Integrity does not attest the truth of engineer-provided test outcomes.
     Review source code, Dry Run claims and independently resolved active policies.
@@ -54,34 +56,37 @@ def widget_activate_pipeline(*, pipeline_id=None, package=None, context=None) ->
     widgets = shared.require_ipywidgets()
     workspace_control = widgets.Text(description="", layout=widgets.Layout(width="100%"))
     pipeline_control = widgets.Text(value=pipeline_id or "", layout=widgets.Layout(width="100%"))
-    payload = widgets.Textarea(value=json.dumps(package) if isinstance(package, dict) else (package.decode() if isinstance(package, bytes) else package or ""),
-        layout=widgets.Layout(width="100%", height="120px"))
     selection = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
     decision = widgets.Dropdown(options=[("Approve", "approved"), ("Reject", "rejected"), ("Revoke", "revoked")], layout=widgets.Layout(width="100%"))
     note = widgets.Textarea(layout=widgets.Layout(width="100%", height="80px"))
     expires = widgets.Text(placeholder="Optional UTC ISO timestamp", layout=widgets.Layout(width="100%"))
     confirm = widgets.Checkbox(description="I independently reviewed this exact submission and policy", indent=False)
-    import_button = widgets.Button(description="Import submission")
-    refresh_button = widgets.Button(description="Refresh history")
-    review_button = widgets.Button(description="Review candidate")
+    refresh_button = widgets.Button(description="Refresh submissions")
+    review_button = widgets.Button(description="Review submission")
     decide_button = widgets.Button(description="Save Governance decision", button_style="primary", disabled=True)
     report, history = widgets.HTML(), widgets.HTML()
-    state = {"review": None, "result": None, "rows": [], "deployments": []}
+    state = {"review": None, "result": None, "rows": [], "deployments": [], "pending": {}, "submission_errors": []}
     def invalidated(_event=None):
         state["review"] = None
         state["result"] = None
         confirm.value = False
         decide_button.disabled = True
     def refresh():
+        invalidated()
         rows = read_approvals(context=routed, spark_session=spark)
         state["rows"] = rows
         scoped = [row for row in rows if (not pipeline_control.value.strip() or row["pipeline_id"] == pipeline_control.value.strip())
             and (not workspace_control.value.strip() or row["execution_workspace_id"] == workspace_control.value.strip())]
-        candidates = {}
+        discovery = list_pipeline_submissions(context=routed, spark_session=spark)
+        state["pending"] = {package["manifest"]["submission_id"]: package for package in discovery["submissions"]
+            if (not pipeline_control.value.strip() or package["manifest"]["pipeline_id"] == pipeline_control.value.strip())
+            and (not workspace_control.value.strip() or package["manifest"]["execution_workspace_id"] == workspace_control.value.strip())}
+        state["submission_errors"] = discovery["errors"]
+        candidates = {identity: {**package["manifest"], "status": "pending review"} for identity, package in state["pending"].items()}
         for row in sorted(scoped, key=lambda row: row["revision"]):
             candidates[row["submission_id"]] = row
         selected = selection.value
-        selection.options = [(f'{row["execution_workspace_id"]} / {row["pipeline_id"]} / {key} · {row["status"]}', key)
+        selection.options = [("Select a saved submission", None)] + [(f'{row["execution_workspace_id"]} / {row["pipeline_id"]} / {key} · {row["status"]}', key)
             for key, row in candidates.items()]
         if selected in candidates:
             selection.value = selected
@@ -91,23 +96,22 @@ def widget_activate_pipeline(*, pipeline_id=None, package=None, context=None) ->
             and (not workspace_control.value.strip() or row["execution_workspace_id"] == workspace_control.value.strip())]
         history.value = "<details><summary>Approval history and recorded deployments</summary><pre style='white-space:pre-wrap'>" + html.escape(
             json.dumps({"decisions": [{key: value for key, value in row.items() if key != "package_json"} for row in scoped],
-                "deployments": state["deployments"]}, indent=2, default=str)) + "</pre></details>"
-        invalidated()
+                "deployments": state["deployments"], "unavailable_submissions": state["submission_errors"]}, indent=2, default=str)) + "</pre></details>"
+        if state["submission_errors"]:
+            report.value = "<p role='alert'>Some saved submissions could not be loaded. See unavailable submissions in the history below.</p>"
         return scoped
-    def import_candidate():
-        raw = payload.value
-        accepted = import_pipeline_submission(raw, context=routed, spark_session=spark)
-        workspace_control.value = accepted["execution_workspace_id"]
-        pipeline_control.value = accepted["pipeline_id"]
-        refresh()
-        selection.value = accepted["submission_id"]
-        report.value = "<p>Immutable review copy imported. Test outcomes remain untrusted claims until reviewed.</p>"
-        return accepted
     def review():
+        invalidated()
         rows = read_approvals(context=routed, spark_session=spark)
         matches = [row for row in rows if row["submission_id"] == selection.value]
         if not matches:
-            raise ValueError("Import and select a submission first.")
+            listed = state["pending"].get(selection.value)
+            if listed is None:
+                raise ValueError("Refresh and select a saved submission first.")
+            package = read_pipeline_submission(selection.value, expected_sha256=listed["submission_sha256"], context=routed, spark_session=spark)
+            accepted = import_pipeline_submission(package, context=routed, spark_session=spark)
+            rows = read_approvals(context=routed, spark_session=spark)
+            matches = [accepted]
         row = max(matches, key=lambda item: item["revision"])
         package_value = validate_submission(row["package_json"])
         manifest = package_value["manifest"]
@@ -146,23 +150,22 @@ def widget_activate_pipeline(*, pipeline_id=None, package=None, context=None) ->
     for control in (selection, decision, workspace_control, pipeline_control):
         control.observe(invalidated, names="value")
     confirm.observe(lambda _event: setattr(decide_button, "disabled", not state["review"] or not confirm.value), names="value")
-    for button, action in ((import_button, import_candidate), (refresh_button, refresh), (review_button, review), (decide_button, decide)):
+    for button, action in ((refresh_button, refresh), (review_button, review), (decide_button, decide)):
         button.on_click(lambda _button, action=action, button=button: run(action, button))
     with startup.phase("metadata_loading", "Loading Governance decisions and recorded deployments…"):
         refresh()
     root = shared.form_page(widgets, title="Pipeline approval", tone="governance",
-        description="Import an Engineering package, review it independently and record a decision.", children=[
+        description="Select a saved Engineering submission, review it independently and record a decision.", children=[
             widgets.HTML("<p>" + html.escape(FABRIC_VALIDATION_PENDING) + "</p>"),
             widgets.HTML("<label>Execution workspace ID filter</label>"), workspace_control,
             widgets.HTML("<label>Pipeline ID filter</label>"), pipeline_control,
-            widgets.HTML("<label>Paste portable submission JSON</label>"), payload, import_button,
-            widgets.HTML("<label>Imported submission</label>"), selection, refresh_button,
+            widgets.HTML("<label>Saved pipeline submission</label>"), selection, refresh_button,
             widgets.HTML("<label>Decision</label>"), decision, review_button, report,
             widgets.HTML("<label>Independent review note</label>"), note,
             widgets.HTML("<label>Approval expiration</label>"), expires, confirm, decide_button, history])
     startup.display(root)
     return {"widget": root, "state": state, "ready": False, "reason": FABRIC_VALIDATION_PENDING,
-        "controls": {"workspace": workspace_control, "pipeline": pipeline_control, "package": payload,
+        "controls": {"workspace": workspace_control, "pipeline": pipeline_control,
             "submission": selection, "decision": decision, "note": note, "expires": expires, "confirm": confirm,
-            "import": import_button, "review": review_button, "decide": decide_button},
-        "actions": {"import": import_candidate, "review": review, "decide": decide, "refresh": refresh}}
+            "review": review_button, "decide": decide_button},
+        "actions": {"review": review, "decide": decide, "refresh": refresh}}

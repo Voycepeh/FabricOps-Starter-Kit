@@ -33,7 +33,7 @@ The canonical inventory contains **14 tables**. The only added table is `governa
 | `METADATA_DATA_CONTRACT` | Immutable global frozen Contract definitions |
 | `METADATA_PIPELINE_RUN` | Actual execution and exact Contract ID/version/payload SHA for each operation |
 | `Files/fabricops/engineering/dry_runs/` | Complete serializable saved-definition and recorded test claims retained before a captured Dry Run session ends |
-| `Files/fabricops/engineering/submissions/` | Complete canonical portable packages exported by Engineering |
+| `Files/fabricops/engineering/submissions/` | Complete canonical packages saved automatically by Engineering Finalize; Governance reads them directly |
 | `Files/fabricops/engineering/pipeline_snapshots/` | Write-once source/promoted snapshots and preserved modified copies during recovery |
 
 Catalogue, Profiled, Profiled Frequency, Lineage, Data Access, Guardrail Results and Processing State retain their processing responsibilities. Released v0.3.1 records and content/hash projections are preserved. This change adds no adapters or migration machinery for the unreleased promotion model. Incompatible Preview layouts fail explicitly while retaining their contents; normal setup never deletes metadata or business data.
@@ -42,7 +42,7 @@ Catalogue, Profiled, Profiled Frequency, Lineage, Data Access, Guardrail Results
 
 A Dry Run captures the complete saved `.ipynb` at setup. Finalization retains available saved-definition and operation claims in Engineering Files without publishing business tables, Run rows, checkpoints, profiles or lineage. If no definition could be captured, no verifiable submission can be exported. Persistence errors surface; successful computation is not successful submission or approval.
 
-`finalize_pipeline(preview)` verifies that the current saved executable behavior still equals the definition captured before execution. The complete pre-execution definition and current submitted saved notebook remain separate package components; changed outputs or Markdown do not pretend to be executed code. It exports a JSON package containing:
+`finalize_pipeline(preview)` verifies that the current saved executable behavior still equals the definition captured before execution. The complete pre-execution definition and current submitted saved notebook remain separate package components; changed outputs or Markdown do not pretend to be executed code. It automatically saves a JSON package containing:
 
 - A versioned manifest with unique submission/Pipeline IDs, source workspace/notebook, destination workspace, creator/time and reviewed expected active version.
 - Complete pre-execution, submitted source and promoted notebooks encoded as base64, distinct full SHA256 hashes and executable digests. Only the saved startup call is frozen to Governed; imported dependencies remain outside scope.
@@ -54,14 +54,20 @@ Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs
 
 **These are untrusted Engineering claims.** A recomputed digest does not establish that claimed testing happened, nor attest kernel code identity. Governance reviews the complete notebook, recorded outcomes and independently resolved active policy. Self-approval by the claimed creator is rejected as a supplementary check; actual separation requires distinct security groups and protected Governance storage. Creator claims alone are not authentication.
 
-## Manual handoff and decision state
+## Saved submissions and decision state
 
-1. Engineering saves and completes a manual Dry Run, then exports the portable JSON using `finalize_pipeline()`.
-2. The operator transfers the file explicitly. There is no shared writable submission staging area.
-3. Governance opens `widget_activate_pipeline()` in its own session and imports the JSON. The complete accepted copy is stored in `METADATA_PIPELINE_ACTIVATION.package_json` under Governance's identity.
-4. Governance selects the candidate, reviews full source/promoted notebooks, recorded outcomes, physical operations and current Contract/Agreement policy. It supplies an independent review note and confirms approval, rejection or revocation, optionally with expiration.
-5. Engineering returns to the controls beneath the completed Dry Run's Finalize output, refreshes approvals, reviews the exact decision and explicitly confirms deployment. Rerun only `finalize_pipeline(pipeline)` on the retained session to reopen these controls; the submission identity is reused. After a kernel restart, call `setup_notebook(...)` for the Engineering workspace and then `finalize_pipeline(pipeline_id=PIPELINE_ID)` to reopen persisted approval/deployment/recovery controls without a Dry Run session or new submission. This explicit form returns the Pipeline ID and handoff controls; ordinary finalization still returns its execution summary. Opening or rerendering controls never deploys or repairs automatically.
-6. Deployment creates a distinct `Governed <pipeline_id> <promotion_id>` notebook under the `Governed` folder in the Engineering execution workspace. It leaves the source notebook in place, archives `source.ipynb` and `notebook.ipynb` under the configured Metadata Lakehouse's Engineering Files, and commits their URIs, hashes, the new notebook ID and exact `approval_id` in Registry. Update Engineering schedules explicitly.
+1. **Engineering:** save the development notebook with a stable `PIPELINE_ID` and `PIPELINE_MODE = "Dry Run"`. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
+2. **Governance:** run `widget_activate_pipeline()` and click **Refresh submissions**. Select the **Saved pipeline submission**, choose **Approve**, and click **Review submission**. Review the notebook and checks, enter a review note, tick the confirmation, and click **Save Governance decision**.
+3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
+4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
+
+There is no package download, upload or JSON paste. Governance reads the saved submission directly.
+
+To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; another Dry Run is not required just to deploy an existing approval.
+
+For recovery, select a **Retained implementation**, choose **Restore the active notebook** or **Rollback through a new version**, and click **Submit recovery request**. Governance selects that saved request in the same widget and approves it; Engineering then applies the approval using step 3.
+
+Governance discovery reads `Files/fabricops/engineering/submissions/` in the configured Metadata Lakehouse. Opening or refreshing the widget does not import, approve or deploy. Review re-reads the selected package and rejects a changed digest since refresh, then saves the complete protected copy in `METADATA_PIPELINE_ACTIVATION.package_json` under Governance's identity. Decisions and deployments use that copy; changed or deleted Engineering files cannot replace it. Invalid individual submissions are reported without hiding valid packages or accepted history. No pending rows are added to Registry and no additional table is needed.
 
 `setup_pipeline(..., pipeline_mode="Governed")` validates active notebook identity, approval, executable definition, parameters and physical bindings before managed work. Changing the source notebook's mode does not approve, freeze or deploy it. Setup blocks on drift and never overwrites edited notebooks. Finalize preserves its existing summary return value; export/UI errors are reported separately and may be retried without rerunning a completed execution.
 
@@ -94,8 +100,8 @@ There is no distributed transaction spanning a Governance decision, an Engineeri
 ## Promotion, rollback and restoration
 
 - **New promotion:** a newly approved submission produces a separate item and a new immutable Registry version.
-- **Rollback:** Engineering exports a retained implementation for a new Governance decision. After approval, deployment creates a new auditable version with `restored_from_version` lineage; it never reactivates an old row.
-- **Restoration:** Engineering exports the active implementation for a separate exact restoration authorization. Governance approves the target promotion/version/snapshot. Engineering verifies both the original deployment approval and recovery authorization, retains modified content before update, restores the exact approved snapshot and verifies complete readback. The intended implementation version stays unchanged. A write-once Engineering Files receipt binds the recovery approval, retained modified-copy URI, operator and completion timestamp. Exact retries reuse that receipt; later new modifications require a fresh recovery decision.
+- **Rollback:** Engineering submits a retained implementation for a new Governance decision. After approval, deployment creates a new auditable version with `restored_from_version` lineage; it never reactivates an old row.
+- **Restoration:** Engineering submits the active implementation for a separate exact restoration authorization. Governance approves the target promotion/version/snapshot. Engineering verifies both the original deployment approval and recovery authorization, retains modified content before update, restores the exact approved snapshot and verifies complete readback. The intended implementation version stays unchanged. A write-once Engineering Files receipt binds the recovery approval, retained modified-copy URI, operator and completion timestamp. Exact retries reuse that receipt; later executable modifications require a fresh recovery decision.
 
 Governance authorizes sensitive decisions; Engineering performs technical notebook operations. Neither widget visibility nor a caller-provided confirmation grants backend authorization. The standalone public `promote_pipeline()`, `restore_pipeline()` and `activate_data_contract()` functions are removed without aliases. The two Governance activation interfaces remain `widget_activate_pipeline()` and `widget_activate_data_contract()`; `finalize_pipeline()` displays the Engineering submission, deployment and recovery controls; no separate public deployment or restore function is exposed.
 

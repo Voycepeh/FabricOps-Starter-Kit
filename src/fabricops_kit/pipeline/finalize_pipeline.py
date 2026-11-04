@@ -175,7 +175,8 @@ def finalize_pipeline(pipeline=None, *, failed=False, pipeline_id=None):
     processing state, profile observation or run metadata. A completed captured
     Dry Run retains complete saved-definition and test claims in Engineering
     Files for independent submission. For a completed captured Dry Run, save a
-    portable package and display its download plus approval refresh, explicit
+    saved package for direct Governance selection and display its status plus
+    approval refresh, explicit
     deployment and recovery controls below the summary. Repeat finalization on
     the retained session to reopen them; it reuses the package and does not
     repeat the run or deploy automatically. Presentation/export failures are

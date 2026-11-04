@@ -30,22 +30,24 @@ Choose an exact frozen definition for every approved source and target.
 
 ## Submit, independently approve and deploy
 
-Transfer a complete immutable package across independent notebook sessions.
+Review saved submissions directly from the Metadata Lakehouse.
 
 </div>
 </div>
 
-1. In Engineering, save the development notebook with one literal `setup_pipeline` call containing its stable Pipeline ID and `pipeline_mode="Dry Run"`. Save before execution so the verifier can capture the complete definition.
-2. Execute the complete notebook through `finalize_pipeline(preview)`. Available saved-definition and execution claims persist in Engineering Files without publishing business data, Run rows, checkpoints, profiling or lineage.
-3. Finalize saves the complete JSON package for the current Engineering workspace and displays a download beneath the summary. Code or behavior changes require another Dry Run. Download the file for Governance review.
-4. In a separate Governance session, open `widget_activate_pipeline()`, paste the package JSON and import it. Inspect complete source/promoted notebooks, recorded Dry Run claims, tested versus proposed bindings, and independently resolved active Contract/Agreement policy. A digest identifies content; it does not prove claimed testing occurred.
-5. Supply an independent review note and explicitly approve or reject. Decisions and accepted packages persist in `METADATA_PIPELINE_ACTIVATION`. Approval creates no Engineering notebook and changes no Registry deployment.
-6. In Engineering, return to the controls beneath Finalize, refresh approvals, select the authoritative approval, review and explicitly deploy. Rerun only `finalize_pipeline(preview)` on the retained completed session if the controls need reopening. FabricOps verifies exact approved bytes, creates a separate notebook, verifies full saved readback and conditionally commits a new active Registry version. Previous versions remain immutable. Exact retries recover the same promotion identity.
+1. **Engineering:** save the development notebook with a stable `PIPELINE_ID` and `PIPELINE_MODE = "Dry Run"`. Run it through `finalize_pipeline(pipeline)`. FabricOps automatically saves the submission in the Metadata Lakehouse.
+2. **Governance:** run `widget_activate_pipeline()` and click **Refresh submissions**. Select the **Saved pipeline submission**, choose **Approve**, and click **Review submission**. Review the notebook and checks, enter a review note, tick the confirmation, and click **Save Governance decision**.
+3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
+4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
 
-After an Engineering kernel restart, initialize the notebook with `setup_notebook(...)` and call `finalize_pipeline(pipeline_id=PIPELINE_ID)` to reopen persisted approval/deployment/recovery controls. This explicit form does not start or finalize a run or export another candidate. Deployment and restoration still require review and an explicit action.
+There is no package download, upload or JSON paste. Governance reads the saved submission directly.
+
+To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline(pipeline_id=PIPELINE_ID)`; another Dry Run is not required just to deploy an existing approval.
+
+For recovery, select a **Retained implementation**, choose **Restore the active notebook** or **Rollback through a new version**, and click **Submit recovery request**. Governance selects that saved request in the same widget and approves it; Engineering then applies the approval using step 3.
 
 ??? info "Rollback and restoration"
-    Engineering can select a retained implementation and export a rollback or restoration request. Governance independently reviews that package and authorizes the operation. Rollback deploys a new auditable version; restoration preserves modified content before repairing the intended active version. Neither silently reactivates or rewrites an old Registry row.
+    Engineering selects a retained implementation and clicks **Submit recovery request**. Governance selects the saved request and independently reviews it and authorizes the operation. Rollback deploys a new auditable version; restoration preserves modified content before repairing the intended active version. Neither silently reactivates or rewrites an old Registry row.
 
 ??? info "Schedules and security limits"
     Same-workspace copies live in an organizational `Governed/` folder; folders confer no permissions. Engineers own schedules and explicitly rebind them to the returned new notebook ID. Promotion never moves schedules. Schedules targeting superseded notebooks must fail admission. Schedule-time changes alone do not need promotion; behavior changes do.

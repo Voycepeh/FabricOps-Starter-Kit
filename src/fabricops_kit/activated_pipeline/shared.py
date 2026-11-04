@@ -900,7 +900,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
 
 
 def persist_engineering_submission(package, *, context, spark_session=None):
-    """Write once under explicitly Engineering-writable Files; never use shared staging."""
+    """Save once in Engineering Files for Governance discovery; this grants no approval."""
     package = validate_submission(package)
     root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
     uri = root + "/Files/fabricops/engineering/submissions/" + package["manifest"]["submission_id"] + ".json"
@@ -911,6 +911,55 @@ def persist_engineering_submission(package, *, context, spark_session=None):
     if snapshot_file(uri, spark_session=spark, content=None if exists else content) != content:
         raise ValueError("Submission identity already contains different immutable content.")
     return uri
+
+
+
+def read_pipeline_submission(submission_id, *, expected_sha256=None, context, spark_session=None):
+    """Read a saved Engineering package; reject changed content after selection."""
+    from uuid import UUID
+    if str(UUID(submission_id)) != submission_id:
+        raise ValueError("Select a canonical saved submission identity.")
+    root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
+    uri = root + "/Files/fabricops/engineering/submissions/" + submission_id + ".json"
+    package = validate_submission(snapshot_file(uri, spark_session=get_spark_session(spark_session, context=context)))
+    if package["manifest"]["submission_id"] != submission_id:
+        raise ValueError("Saved submission filename and package identity differ.")
+    if expected_sha256 is not None and package["submission_sha256"] != expected_sha256:
+        raise ValueError("Saved submission changed after refresh; refresh and review it again.")
+    return package
+
+
+def list_pipeline_submissions(*, context, spark_session=None):
+    """Discover saved packages in configured Metadata Files without importing/approving.
+
+    Malformed individual packages are reported separately; they cannot become
+    candidates or hide other valid packages and retained Governance decisions.
+    """
+    root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
+    uri = root + "/Files/fabricops/engineering/submissions"
+    spark = get_spark_session(spark_session, context=context)
+    result = {"submissions": [], "errors": []}
+    try:
+        directory = spark._jvm.org.apache.hadoop.fs.Path(uri)
+        filesystem = directory.getFileSystem(spark._jsc.hadoopConfiguration())
+        if not filesystem.exists(directory):
+            return result
+        statuses = filesystem.listStatus(directory)
+    except Exception as exc:
+        result["errors"].append({"file": "submission store", "error": type(exc).__name__,
+            "message": "Saved submissions are unavailable; retained Governance decisions remain accessible."})
+        return result
+    for status in statuses:
+        name = str(status.getPath().getName())
+        if not status.isFile() or not name.endswith(".json"):
+            continue
+        try:
+            result["submissions"].append(read_pipeline_submission(name[:-5], context=context, spark_session=spark))
+        except Exception as exc:
+            result["errors"].append({"file": name, "error": type(exc).__name__,
+                "message": "Saved submission could not be read or validated; Engineering must correct it."})
+    result["submissions"].sort(key=lambda package: (package["manifest"]["created_at"], package["manifest"]["submission_id"]))
+    return result
 
 
 def validate_approvals(rows):
@@ -1425,7 +1474,6 @@ def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
     Persist a completed Dry Run package before rendering. Repeated finalization
     reuses that package; only explicit deployment/recovery actions mutate notebooks.
     """
-    import base64
     import html
     from fabricops_kit.widgets import shared as widget_shared
 
@@ -1437,7 +1485,7 @@ def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
             package = export_pipeline_submission(dry_run, destination_workspace_id=workspace,
                 context=context, spark_session=dry_run.spark)
             dry_run.plan.evidence["submission_package"] = package
-        print("Dry Run submission saved. Download the JSON below for Governance activation.")
+        print("Dry Run submission saved. Governance can select it directly in widget_activate_pipeline().")
         print("After approval, refresh these controls; deploy explicitly, then update your schedule target.")
     startup = widget_shared.WidgetStartup("Engineering deployment", tone="engineering", reserved_height="560px")
     config, workspace, runtime = resolve_fabric_context(context=context)
@@ -1449,13 +1497,12 @@ def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
     approval = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
     retained = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
     intent = widgets.Dropdown(options=[("Rollback through a new version", "rollback"), ("Restore the active notebook", "restore")], layout=widgets.Layout(width="100%"))
-    retained_button = widgets.Button(description="Export recovery submission")
+    retained_button = widgets.Button(description="Submit recovery request")
     review_button = widgets.Button(description="Review approved deployment")
     refresh_button = widgets.Button(description="Refresh approvals")
     deploy_button = widgets.Button(description="Deploy approved notebook", button_style="primary", disabled=True)
     confirm = widgets.Checkbox(description="Deploy this exact approved notebook in this workspace", indent=False)
-    report, download = widgets.HTML(), widgets.HTML()
-    exported_json = widgets.Textarea(layout=widgets.Layout(width="100%", height="120px"))
+    report, submission_status = widgets.HTML(), widgets.HTML()
     state = {"package": None, "approval_id": None, "result": None}
     def invalidate(_event=None):
         state["approval_id"] = None
@@ -1481,9 +1528,8 @@ def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
         return rows
     def show_package(package):
         state["package"] = package
-        exported_json.value = json.dumps(package, sort_keys=True, ensure_ascii=False)
-        encoded = base64.b64encode(json.dumps(package, sort_keys=True, ensure_ascii=False).encode()).decode()
-        download.value = '<a download="fabricops-submission.json" href="data:application/json;base64,' + encoded + '">Download immutable submission package</a><p>Import this file in the Governance workspace. A digest identifies content; it does not certify testing outcomes.</p>'
+        identity = html.escape(package["manifest"]["submission_id"])
+        submission_status.value = f"<p>Submission <code>{identity}</code> saved in the Metadata Lakehouse. Governance can select it in Pipeline activation. No download or file transfer is needed.</p>"
         return package
     def export_recovery():
         return show_package(export_retained_submission(retained.value, intent=intent.value, context=routed, spark_session=spark))
@@ -1521,15 +1567,14 @@ def display_pipeline_handoff(*, pipeline_id=None, dry_run=None, context=None):
         show_package(package)
     with startup.phase("metadata_loading", "Loading read-only Governance approvals and retained Engineering deployments…"):
         refresh()
-    root = widget_shared.form_page(widgets, title="Dry Run submission and deployment" if dry_run is not None else "Pipeline deployment and recovery", tone="engineering",
-        description="Download the completed submission for Governance. After approval, refresh and explicitly deploy the approved snapshot.", children=[
-            download,
-            widgets.HTML("<label>Copy portable submission JSON for Governance import</label>"), exported_json,
+    root = widget_shared.form_page(widgets, title="Pipeline submission and deployment" if dry_run is not None else "Pipeline deployment and recovery", tone="engineering",
+        description="Governance reviews saved submissions directly. After approval, refresh and deploy the approved snapshot.", children=[
+            submission_status,
             widgets.HTML("<label>Retained implementation</label>"), retained,
             widgets.HTML("<label>Recovery operation to request</label>"), intent, retained_button,
             widgets.HTML("<label>Authoritative Governance approval for this workspace</label>"), approval,
             refresh_button, review_button, report, confirm, deploy_button])
     startup.display(root)
     return {"widget": root, "state": state, "controls": {"approval": approval, "retained": retained,
-        "intent": intent, "package": exported_json, "confirm": confirm, "deploy": deploy_button},
+        "intent": intent, "submission": submission_status, "confirm": confirm, "deploy": deploy_button},
         "actions": {"export_retained": export_recovery, "review": review, "deploy": deploy, "refresh": refresh}}

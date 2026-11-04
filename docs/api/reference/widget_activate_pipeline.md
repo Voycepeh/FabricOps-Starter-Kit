@@ -6,12 +6,12 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Import immutable Engineering submissions and independently approve, reject or revoke them.
+Select saved Engineering submissions and independently approve, reject or revoke them.
 
 
 ## Usage notes
 
-Use in Governance to import and review portable submissions without Engineering workspace access.
+Use in Governance to select and review saved submissions from the Metadata Lakehouse without file transfer or Engineering notebook access.
 
 
 ## Example usage
@@ -32,7 +32,7 @@ ui = widget_activate_pipeline()
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_activate_pipeline(*, pipeline_id=None, package=None, context=None) -> dict
+def widget_activate_pipeline(*, pipeline_id=None, context=None) -> dict
 ```
 
 </div>
@@ -47,8 +47,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `pipeline_id` | `str \| None` | No | `None` | Filter imported candidates and decision history by logical Pipeline ID. |
-| `package` | `str \| bytes \| dict \| None` | No | `None` | Portable Engineering submission. The import action persists a verified immutable copy under Governance's identity; opening the widget does not. |
+| `pipeline_id` | `str \| None` | No | `None` | Filter saved submissions and decision history by logical Pipeline ID. |
 | `context` | `dict \| None` | No | `None` | Configured Governance notebook context and central Metadata routing. |
 
 </div>
@@ -56,7 +55,7 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 dict
-    Widget, controls, state and import/review/decide/refresh actions. Approval
+    Widget, controls, state and review/decide/refresh actions. Approval
     grants deployment authority; Engineering must separately deploy it.
 
 ## Raises / Errors
@@ -67,6 +66,11 @@ Not documented yet
 
 <div class="reference-docstring-notes" markdown="1">
 
+Finalize saves packages in the configured Metadata Lakehouse. This widget
+lists them directly; no file download, upload or JSON paste is needed.
+Opening the widget only reads storage. Review re-reads the selected package,
+rejects changes since refresh and persists an immutable Governance-owned copy
+before policy review. Decisions use that copy, never mutable Engineering Files.
 This widget never opens Engineering notebooks or creates deployed items.
 Integrity does not attest the truth of engineer-provided test outcomes.
 Review source code, Dry Run claims and independently resolved active policies.
@@ -85,7 +89,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_pipeline.py:17`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L17-L168">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_pipeline.py#L17-L171">View on GitHub</a>
 </div>
 
 

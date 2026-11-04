@@ -220,7 +220,14 @@ def test_full_deployment_readback_retry_and_distinct_identities(authority, monke
     files = {}
     class Path:
         def __init__(self, uri): self.uri = uri
-        def getFileSystem(self, _config): return SimpleNamespace(exists=lambda path: path.uri in files)
+        def getName(self): return self.uri.rsplit("/", 1)[-1]
+        def getFileSystem(self, _config):
+            def list_status(directory):
+                prefix = directory.uri.rstrip("/") + "/"
+                return [SimpleNamespace(isFile=lambda: True, getPath=lambda uri=uri: Path(uri))
+                    for uri in files if uri.startswith(prefix) and "/" not in uri[len(prefix):]]
+            return SimpleNamespace(exists=lambda path: path.uri in files or any(uri.startswith(path.uri.rstrip("/") + "/") for uri in files),
+                listStatus=list_status)
     spark = SimpleNamespace(_jvm=SimpleNamespace(org=SimpleNamespace(apache=SimpleNamespace(hadoop=SimpleNamespace(fs=SimpleNamespace(Path=Path))))),
         _jsc=SimpleNamespace(hadoopConfiguration=lambda: None))
     monkeypatch.setattr(service, "get_spark_session", lambda *a, **kw: spark)
@@ -275,7 +282,14 @@ def deployment_io(authority, monkeypatch):
     files, saved, names = {}, {}, {}
     class Path:
         def __init__(self, uri): self.uri = uri
-        def getFileSystem(self, _config): return SimpleNamespace(exists=lambda path: path.uri in files)
+        def getName(self): return self.uri.rsplit("/", 1)[-1]
+        def getFileSystem(self, _config):
+            def list_status(directory):
+                prefix = directory.uri.rstrip("/") + "/"
+                return [SimpleNamespace(isFile=lambda: True, getPath=lambda uri=uri: Path(uri))
+                    for uri in files if uri.startswith(prefix) and "/" not in uri[len(prefix):]]
+            return SimpleNamespace(exists=lambda path: path.uri in files or any(uri.startswith(path.uri.rstrip("/") + "/") for uri in files),
+                listStatus=list_status)
     spark = SimpleNamespace(_jvm=SimpleNamespace(org=SimpleNamespace(apache=SimpleNamespace(hadoop=SimpleNamespace(fs=SimpleNamespace(Path=Path))))),
         _jsc=SimpleNamespace(hadoopConfiguration=lambda: None))
     monkeypatch.setattr(service, "get_spark_session", lambda *a, **kw: spark)

@@ -17,8 +17,8 @@ Record commit/version, date, tester, disposable workspace labels and outcomes. K
 | Files permissions | Engineering accesses only explicit operational Files paths; schema permissions do not confer Files access; no unrestricted parent grant | Pending |
 | Group/default-role evaluation | No indirect Contributor/Member/Admin, item-wide Write or broad default role bypasses intended restrictions; propagation delays are observed | Pending |
 | Metadata setup | Owner creates missing tables and validates Serializable properties; Engineering need not initialize Governance tables | Pending |
-| Independent handoff | Finalize saves the completed captured Dry Run package and displays its download and deployment/recovery controls; repeated finalization reuses the package; Governance import works in an unrelated session and changed accepted content rejects | Pending |
-| Independent decision | Governance imports/reviews/approves under its own identity; import and approval create no Engineering notebook | Pending |
+| Independent handoff | Finalize saves the completed captured Dry Run package; Governance lists and selects it directly in an unrelated session without download/paste; changed/deleted pending files reject review; decisions bind the protected review copy | Pending |
+| Independent decision | Governance selects/reviews/approves saved submissions under its own identity; opening/refreshing reads only; review retains the protected copy and approval creates no Engineering notebook | Pending |
 | Engineering deployment | Only an authorized Engineering operator can create the separate item; approval and deployment preserve distinct identities | Pending |
 | Notebook Get/Create Definition | Full `.ipynb` including metadata, Markdown and code survives exact byte readback; normalization or unsupported parts fails closed | Pending |
 | Notebook Update Definition | Separately authorized restoration preserves modified content first, retains intended version and verifies full saved bytes | Pending |
