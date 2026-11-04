@@ -12,23 +12,23 @@
 </g>
 <g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="DATA_CONTRACT_ACTIVATION" data-cardinality="1-N" data-kind="physical">
 <title>One exact Agreement version may govern many physical frozen Contract selections (1-N; keyed reference; application-enforced)</title>
-<path d="M575 78V62H1745V78" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="564" y="42" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="575" y="57.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1734" y="42" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1745" y="57.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
+<path d="M725 170H815" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="739" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="779" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_APPROVAL" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="physical">
+<g class="metadata-er-relationship" data-from="PIPELINE_ACTIVATION" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="physical">
 <title>Exact independently approved package authorizes Engineering deployment; approval does not deploy (1-N; keyed reference; application-enforced)</title>
-<path d="M965 253V310H1865V423" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="954" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="965" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1854" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1865" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
+<path d="M1745 253V423" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="1734" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1745" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text><rect x="1734" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1745" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT_ACTIVATION" data-cardinality="N-N" data-kind="logical">
 <title>Logical approved physical workspace/Table ID association; active Contract selection is independent (N-N; logical identity reference)</title>
-<path d="M1745 423V253" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="1734" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1745" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text><rect x="1734" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1745" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
+<path d="M1630 423V300H1363Q1355 292 1347 300H1183Q1175 292 1167 300H965V253" fill="none" stroke="#7144AE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
+<rect x="1619" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="1630" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text><rect x="954" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7144AE" stroke-width="1.4"/><text x="965" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#7144AE">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT_ACTIVATION" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
 <title>Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion (N-1; keyed reference; application-enforced)</title>
-<path d="M1595 170H1505" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="1559" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1570" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1519" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1530" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text>
+<path d="M1115 170H1205" fill="none" stroke="#1168B6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">N</text><rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#1168B6" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="#1168B6">1</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
 <title>Run operations reference exact table contract versions (N-N; exact nested reference; application-enforced)</title>
@@ -113,13 +113,21 @@
 <text x="476" y="207" fill="#243550" font-size="14" font-family="Arial, sans-serif">recipient_steward_id</text>
 <title>Open metadata documentation: DATA_AGREEMENT</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_approval/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
 <rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
-<text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_APPROVAL</text>
+<text x="965" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
 <text x="828" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">approval_id</text>
-<title>Open metadata documentation: PIPELINE_APPROVAL</title>
+<text x="866" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">workspace_id</text>
+<text x="828" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="866" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
+<text x="828" y="183" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
+<text x="866" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">revision</text>
+<text x="828" y="207" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
+<text x="866" y="207" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id/version</text>
+<text x="828" y="231" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
+<text x="866" y="231" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id/version</text>
+<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
 <rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
@@ -226,21 +234,13 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_activation/" target="_blank">
 <rect x="1595" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M1599 78H1891Q1895 78 1895 82V115H1595V82Q1595 78 1599 78Z" fill="#7144AE"/>
-<text x="1745" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
+<text x="1745" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_ACTIVATION</text>
 <text x="1608" y="135" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1646" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">workspace_id</text>
-<text x="1608" y="159" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1646" y="159" fill="#243550" font-size="14" font-family="Arial, sans-serif">table_id</text>
-<text x="1608" y="183" fill="#008064" font-weight="700" font-size="14" font-family="Arial, sans-serif">PK</text>
-<text x="1646" y="183" fill="#243550" font-size="14" font-family="Arial, sans-serif">revision</text>
-<text x="1608" y="207" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="1646" y="207" fill="#243550" font-size="14" font-family="Arial, sans-serif">agreement_id/version</text>
-<text x="1608" y="231" fill="#0574C5" font-weight="700" font-size="14" font-family="Arial, sans-serif">FK</text>
-<text x="1646" y="231" fill="#243550" font-size="14" font-family="Arial, sans-serif">contract_id/version</text>
-<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
+<text x="1646" y="135" fill="#243550" font-size="14" font-family="Arial, sans-serif">approval_id</text>
+<title>Open metadata documentation: PIPELINE_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
 <rect x="1595" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>

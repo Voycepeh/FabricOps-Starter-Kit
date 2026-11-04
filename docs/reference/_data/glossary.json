@@ -779,7 +779,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "A reviewed immutable notebook implementation and separate Governed item for one execution workspace.",
-    "long_definition": "Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_APPROVAL, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.",
+    "long_definition": "Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_ACTIVATION, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.",
     "preferred_usage": "Use Pipeline Promotion for Engineering deployment of an independently approved implementation.",
     "avoid_usage": "a saved-code check as proof of execution-time identity"
   },
@@ -819,7 +819,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "An independent Governance decision binding one exact Pipeline Submission.",
-    "long_definition": "METADATA_PIPELINE_APPROVAL records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.",
+    "long_definition": "METADATA_PIPELINE_ACTIVATION records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.",
     "preferred_usage": "Use Pipeline Approval for authoritative Governance decisions; distinguish deployment state.",
     "avoid_usage": "Registry status as Governance approval"
   }

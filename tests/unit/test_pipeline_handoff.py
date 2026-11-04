@@ -54,14 +54,14 @@ def resign(package):
 @pytest.fixture
 def authority(monkeypatch):
     """Simulate separate identities and I/O, leaving approval logic real."""
-    tables = {service.APPROVAL_TABLE: [], service.REGISTRY_TABLE: []}
+    tables = {service.PIPELINE_ACTIVATION_TABLE: [], service.REGISTRY_TABLE: []}
     gov = {"config": {}, "scope_workspace_id": "GOV", "user_id": "reviewer"}
     eng = {"config": {}, "scope_workspace_id": "DEV", "user_id": "engineer"}
     monkeypatch.setattr(service, "resolve_fabric_context", lambda context=None: (context["config"], context["scope_workspace_id"], context))
     monkeypatch.setattr(service, "build_runtime_audit_fields", lambda **kw: {"_committed_by": kw["runtime_context"]["user_id"]})
     monkeypatch.setattr(service, "metadata_records", lambda table, **kw: deepcopy(tables.get(table, [])))
     def mutate(table, action, *, context, **kw):
-        if table == service.APPROVAL_TABLE and context["user_id"] != "reviewer":
+        if table == service.PIPELINE_ACTIVATION_TABLE and context["user_id"] != "reviewer":
             raise PermissionError("Fabric ACL simulation: Engineering has no Governance write access")
         proposed, result = action(deepcopy(tables[table]))
         tables[table] = deepcopy(proposed)
@@ -75,7 +75,7 @@ def approved(authority, package=None):
     """Import in Governance's independent session and append an explicit decision."""
     package = package or package_candidate()
     imported = service.import_pipeline_submission(canonical_pipeline_json(package), context=authority.gov)
-    rows = authority.tables[service.APPROVAL_TABLE]
+    rows = authority.tables[service.PIPELINE_ACTIVATION_TABLE]
     return service.decide_pipeline_submission(imported["submission_id"], status="approved",
         expected_revision=max(row["revision"] for row in rows), policy={"policy": "independently reviewed"},
         review_note="Reviewed saved code and test claims independently", governance_confirmed=True, context=authority.gov)
@@ -189,7 +189,7 @@ def test_stale_review_revocation_and_supersession_reject(authority):
         policy={}, review_note="Policy revoked", governance_confirmed=True, context=authority.gov)
     with pytest.raises(ValueError, match="revoked"):
         service.authoritative_approval(newer["approval_id"], context=authority.eng)
-    assert len(authority.tables[service.APPROVAL_TABLE]) == 5
+    assert len(authority.tables[service.PIPELINE_ACTIVATION_TABLE]) == 5
 
 
 def test_unknown_and_unapproved_candidate_cannot_deploy(authority, monkeypatch):
@@ -357,7 +357,7 @@ def test_approval_alone_does_not_deactivate_current_deployment(authority, deploy
 def test_expired_and_rejected_authority_fail_closed(authority):
     """Persisted status or elapsed approval lifetime independently blocks deployment."""
     decision = approved(authority)
-    authority.tables[service.APPROVAL_TABLE][-1]["expires_at"] = datetime(2000, 1, 1)
+    authority.tables[service.PIPELINE_ACTIVATION_TABLE][-1]["expires_at"] = datetime(2000, 1, 1)
     with pytest.raises(ValueError, match="expired"):
         service.deploy_approved_submission(decision["approval_id"], context=authority.eng)
     package = package_candidate()

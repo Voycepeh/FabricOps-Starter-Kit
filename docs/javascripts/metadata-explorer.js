@@ -8,7 +8,7 @@
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
     ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id", "revision"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
-    ["PIPELINE_APPROVAL", "governance", ["approval_id"], [], "metadata_pipeline_approval/"],
+    ["PIPELINE_ACTIVATION", "governance", ["approval_id"], [], "metadata_pipeline_activation/"],
     ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["approval_id"], "metadata_pipeline_registry/"],
     ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
@@ -26,7 +26,7 @@
   const links = [
     ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
     ["DATA_AGREEMENT", "DATA_CONTRACT_ACTIVATION", "1-N", "Exact Agreement governing a physical frozen Contract selection"],
-    ["PIPELINE_APPROVAL", "PIPELINE_REGISTRY", "1-N", "Independent approval authorizes Engineering deployment"],
+    ["PIPELINE_ACTIVATION", "PIPELINE_REGISTRY", "1-N", "Independent approval authorizes Engineering deployment"],
     ["PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION", "N-N", "Logical physical workspace/Table ID association"],
     ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],

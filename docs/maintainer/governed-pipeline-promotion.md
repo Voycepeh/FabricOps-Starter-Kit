@@ -23,11 +23,11 @@ Bootstrap `setup_metadata_tables()` runs under the Metadata owner's identity. En
 
 ## Canonical records
 
-The canonical inventory contains **14 tables**. The only added table is `governance.METADATA_PIPELINE_APPROVAL`; no existing table is removed.
+The canonical inventory contains **14 tables**. The only added table is `governance.METADATA_PIPELINE_ACTIVATION`; no existing table is removed.
 
 | Table or path | Grain and responsibility |
 | --- | --- |
-| `METADATA_PIPELINE_APPROVAL` | Append-only accepted-package import and Governance decision events, exact approval identity, monotonic pipeline revision, review policy, expiration and recovery intent |
+| `METADATA_PIPELINE_ACTIVATION` | Append-only accepted-package import and Governance decision events, exact approval identity, monotonic pipeline revision, review policy, expiration and recovery intent |
 | `METADATA_PIPELINE_REGISTRY` | Engineering deployment version, exact approval/submission identities, snapshots, operations, provenance and retained version lineage |
 | `METADATA_DATA_CONTRACT_ACTIVATION` | Retained physical workspace/Table ID revisions selecting exact frozen Contracts and applicable Agreement versions; one active selection |
 | `METADATA_DATA_CONTRACT` | Immutable global frozen Contract definitions |
@@ -58,7 +58,7 @@ Validation rejects missing/duplicate JSON fields, altered bytes, incomplete runs
 
 1. Engineering saves and completes a manual Dry Run, then exports the portable JSON using `widget_deploy_pipeline()`.
 2. The operator transfers the file explicitly. There is no shared writable submission staging area.
-3. Governance opens `widget_activate_pipeline()` in its own session and imports the JSON. The complete accepted copy is stored in `METADATA_PIPELINE_APPROVAL.package_json` under Governance's identity.
+3. Governance opens `widget_activate_pipeline()` in its own session and imports the JSON. The complete accepted copy is stored in `METADATA_PIPELINE_ACTIVATION.package_json` under Governance's identity.
 4. Governance selects the candidate, reviews full source/promoted notebooks, recorded outcomes, physical operations and current Contract/Agreement policy. It supplies an independent review note and confirms approval, rejection or revocation, optionally with expiration.
 5. Engineering reads the decision through read-only policy access and explicitly deploys it in the approved destination workspace.
 

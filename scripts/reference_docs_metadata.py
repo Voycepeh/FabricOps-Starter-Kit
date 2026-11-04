@@ -135,7 +135,7 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [{"related_table": "METADATA_DATA_CONTRACT", "fields": ["contract_id", "contract_version"], "cardinality": "N:1", "statement": "Independent per-physical-workspace activation of global definitions."}],
     },
-    "METADATA_PIPELINE_APPROVAL": {
+    "METADATA_PIPELINE_ACTIVATION": {
         "purpose": "Retains immutable accepted submission packages and independent Governance decision history.",
         "grain": "One append-only import or decision event; revision is monotonic per execution workspace/Pipeline ID.",
         "implementation_notes": "Governance imports complete JSON packages under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, parameters, physical bindings and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.",
@@ -148,9 +148,9 @@ METADATA_TABLE_MODELS = {
         "grain": "One immutable version per execution workspace/Pipeline ID/version; at most one active version.",
         "implementation_notes": "Registry is deployment evidence, not policy authority. Serializable conditional mutation preserves at most one active monotonic version. Engineering reads exact Governance approval before staging and conditionally committing a version. Runtime verifies approval and the complete saved notebook independently. Governance owns all metadata; Engineering writes only its allowed schema and Files paths. Source and promoted snapshots are write-once. Imported dependencies are not frozen. Signed-in Fabric acceptance remains required.",
         "primary_key": ["execution_workspace_id", "pipeline_id", "pipeline_version"],
-        "foreign_keys": [{"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_APPROVAL", "referenced_field": "approval_id", "cardinality": "N:1", "statement": "Exact authoritative Governance decision; application-enforced reference, not a database constraint."}],
+        "foreign_keys": [{"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_ACTIVATION", "referenced_field": "approval_id", "cardinality": "N:1", "statement": "Exact authoritative Governance decision; application-enforced reference, not a database constraint."}],
         "relationships": [
-            {"related_table": "METADATA_PIPELINE_APPROVAL", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Exact independent Governance approval."},
+            {"related_table": "METADATA_PIPELINE_ACTIVATION", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Exact independent Governance approval."},
             {"related_table": "METADATA_DATA_CONTRACT_ACTIVATION", "fields": ["operations_json"], "cardinality": "N:M", "statement": "Logical physical workspace/Table ID association; current Contracts resolve independently on each new run."},
         ],
     },
@@ -288,7 +288,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CONTRACT_ACTIVATION": ["widget_activate_data_contract"],
-    "METADATA_PIPELINE_APPROVAL": ["widget_activate_pipeline"],
+    "METADATA_PIPELINE_ACTIVATION": ["widget_activate_pipeline"],
     "METADATA_PIPELINE_REGISTRY": ["widget_deploy_pipeline"],
     "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
@@ -301,7 +301,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
 }
 
 METADATA_REFERENCE_ORDER = [
-    "METADATA_PIPELINE_APPROVAL",
+    "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_DATA_STEWARD",
@@ -2146,7 +2146,7 @@ METADATA_COLUMN_OWNERS["METADATA_DATA_CONTRACT_ACTIVATION"] = {
 }
 METADATA_COLUMN_CATEGORIES = {}
 
-METADATA_COLUMN_OWNERS["METADATA_PIPELINE_APPROVAL"] = {
+METADATA_COLUMN_OWNERS["METADATA_PIPELINE_ACTIVATION"] = {
     "__default__": ["fabricops_kit.activated_pipeline.shared.import_pipeline_submission", "fabricops_kit.activated_pipeline.shared.decide_pipeline_submission"],
     "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
 }

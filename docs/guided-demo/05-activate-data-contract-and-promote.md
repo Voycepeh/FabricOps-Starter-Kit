@@ -39,7 +39,7 @@ Transfer a complete immutable package across independent notebook sessions.
 2. Execute the complete notebook through `finalize_pipeline(preview)`. Available saved-definition and execution claims persist in Engineering Files without publishing business data, Run rows, checkpoints, profiling or lineage.
 3. Open `widget_deploy_pipeline(dry_run=preview)`, select the execution destination and export the complete JSON package. Saved source changes require another Dry Run. Download the file for explicit handoff.
 4. In a separate Governance session, open `widget_activate_pipeline()`, paste the package JSON and import it. Inspect complete source/promoted notebooks, recorded Dry Run claims, tested versus proposed bindings, and independently resolved active Contract/Agreement policy. A digest identifies content; it does not prove claimed testing occurred.
-5. Supply an independent review note and explicitly approve or reject. Decisions and accepted packages persist in `METADATA_PIPELINE_APPROVAL`. Approval creates no Engineering notebook and changes no Registry deployment.
+5. Supply an independent review note and explicitly approve or reject. Decisions and accepted packages persist in `METADATA_PIPELINE_ACTIVATION`. Approval creates no Engineering notebook and changes no Registry deployment.
 6. In Engineering, open `widget_deploy_pipeline(pipeline_id=PIPELINE_ID)`, select the authoritative approval, review and explicitly deploy. FabricOps verifies exact approved bytes, creates a separate notebook, verifies full saved readback and conditionally commits a new active Registry version. Previous versions remain immutable. Exact retries recover the same promotion identity.
 
 ??? info "Rollback and restoration"

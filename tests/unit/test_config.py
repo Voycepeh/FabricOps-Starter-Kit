@@ -441,7 +441,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
         assert schema == ("governance" if table_name in {
-            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_APPROVAL",
+            "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION",
         } else "engineering")
         assert context["scope_workspace_id"] == "dev"
         if table_name not in spark.tables:
@@ -454,7 +454,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_APPROVAL"} else None)
+        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None)
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns

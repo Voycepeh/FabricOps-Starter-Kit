@@ -22,7 +22,7 @@ VERIFY_PROMOTION_INTEGRITY = service.verify_promotion_integrity
 def handoff_delta(authority_delta, monkeypatch):
     """Use actual Governance/Engineering Delta paths with local identity/audit fixtures."""
     runtime = authority_delta
-    runtime.ensure(service.APPROVAL_TABLE)
+    runtime.ensure(service.PIPELINE_ACTIVATION_TABLE)
     monkeypatch.setattr(service, "verify_registry_approval", VERIFY_REGISTRY_APPROVAL)
     monkeypatch.setattr(service, "verify_promotion_integrity", VERIFY_PROMOTION_INTEGRITY)
     monkeypatch.setattr(service, "review_submission_policy", lambda *a, **kw: {"current": "reviewed policy"})

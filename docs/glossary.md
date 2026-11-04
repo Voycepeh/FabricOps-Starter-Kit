@@ -31,7 +31,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-promotion">
 <summary><strong>Pipeline Promotion</strong> — A reviewed immutable notebook implementation and separate Governed item for one execution workspace.</summary>
-<p>Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_APPROVAL, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.</p>
+<p>Engineering deploys a complete notebook snapshot independently approved in METADATA_PIPELINE_ACTIVATION, then conditionally selects a new immutable version in METADATA_PIPELINE_REGISTRY. Rollback creates a newly approved version; restoration repairs the active implementation after explicit Governance authorization and preservation of modified content. Active Contracts resolve independently per physical operation. Governed admission remains blocked pending signed-in Fabric acceptance.</p>
 </details>
 
 <details id="pipeline-submission">
@@ -41,7 +41,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-approval">
 <summary><strong>Pipeline Approval</strong> — An independent Governance decision binding one exact Pipeline Submission.</summary>
-<p>METADATA_PIPELINE_APPROVAL records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.</p>
+<p>METADATA_PIPELINE_ACTIVATION records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.</p>
 </details>
 
 <details id="pipeline-registry">

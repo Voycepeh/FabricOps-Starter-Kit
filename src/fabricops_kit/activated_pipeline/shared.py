@@ -755,7 +755,7 @@ def commit_pipeline_promotion(candidate, *, expected_active_version, context, sp
 
 
 # Submission packages carry content identity, never an attestation that testing was truthful.
-APPROVAL_TABLE = "METADATA_PIPELINE_APPROVAL"
+PIPELINE_ACTIVATION_TABLE = "METADATA_PIPELINE_ACTIVATION"
 SUBMISSION_FIELDS = {
     "format_version", "submission_id", "pipeline_id", "source_workspace_id", "source_notebook_id",
     "execution_workspace_id", "source_snapshot_sha256", "executed_snapshot_sha256", "source_executable_sha256",
@@ -965,7 +965,7 @@ def validate_approvals(rows):
 
 def read_approvals(*, context, spark_session=None):
     """Read only Governance-controlled decisions; Registry status cannot grant approval."""
-    return validate_approvals(metadata_records(APPROVAL_TABLE, context=context, spark_session=spark_session))
+    return validate_approvals(metadata_records(PIPELINE_ACTIVATION_TABLE, context=context, spark_session=spark_session))
 
 
 def import_pipeline_submission(package, *, context, spark_session=None):
@@ -992,7 +992,7 @@ def import_pipeline_submission(package, *, context, spark_session=None):
             review_note="Untrusted Engineering claims; integrity verified, testing outcomes require independent review.", **audit)
         validate_approvals(rows + [row])
         return rows + [row], row
-    return mutate_metadata(APPROVAL_TABLE, mutate, context=context, spark_session=spark_session)
+    return mutate_metadata(PIPELINE_ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session)
 
 
 def review_submission_policy(package, *, context, spark_session=None):
@@ -1066,7 +1066,7 @@ def decide_pipeline_submission(submission_id, *, status, expected_revision, poli
             "decided_by": audit["_committed_by"], "decided_at": datetime.now(UTC).replace(tzinfo=None), "review_note": str(review_note).strip()}
         validate_approvals(current + [row])
         return current + [row], row
-    return mutate_metadata(APPROVAL_TABLE, mutate, context=context, spark_session=spark_session)
+    return mutate_metadata(PIPELINE_ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session)
 
 
 def authoritative_approval(approval_id, *, context, spark_session=None, captured=False):

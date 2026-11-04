@@ -1,4 +1,4 @@
-# METADATA_PIPELINE_APPROVAL
+# METADATA_PIPELINE_ACTIVATION
 
 Retains immutable accepted submission packages and independent Governance decision history.
 
@@ -43,20 +43,20 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--governance"><td><code>approval_id</code></td><td><code>string</code></td><td>Identifier stored for <code>approval_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>submission_id</code></td><td><code>string</code></td><td>Identifier stored for <code>submission_id</code>.</td></tr>
-<tr class="metadata-column--governance"><td><code>submission_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Approval field <code>submission_sha256</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>submission_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>submission_sha256</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>Identifier stored for <code>execution_workspace_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>pipeline_id</code></td><td><code>string</code></td><td>Identifier stored for <code>pipeline_id</code>.</td></tr>
-<tr class="metadata-column--governance"><td><code>revision</code></td><td><code>integer</code></td><td>Metadata Pipeline Approval field <code>revision</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>revision</code></td><td><code>integer</code></td><td>Metadata Pipeline Activation field <code>revision</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
-<tr class="metadata-column--governance"><td><code>decision_kind</code></td><td><code>string</code></td><td>Metadata Pipeline Approval field <code>decision_kind</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>decision_kind</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>decision_kind</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>package_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>package_json</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>policy_json</code></td><td><code>string</code></td><td>JSON payload stored for <code>policy_json</code>.</td></tr>
-<tr class="metadata-column--governance"><td><code>expected_active_version</code></td><td><code>integer</code></td><td>Metadata Pipeline Approval field <code>expected_active_version</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>expected_active_version</code></td><td><code>integer</code></td><td>Metadata Pipeline Activation field <code>expected_active_version</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>restores_promotion_id</code></td><td><code>string</code></td><td>Identifier stored for <code>restores_promotion_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>expires_at</code></td><td><code>timestamp</code></td><td>Timestamp when access expires.</td></tr>
-<tr class="metadata-column--governance"><td><code>decided_by</code></td><td><code>string</code></td><td>Metadata Pipeline Approval field <code>decided_by</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>decided_by</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>decided_by</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>decided_at</code></td><td><code>timestamp</code></td><td>Timestamp stored for <code>decided_at</code>.</td></tr>
-<tr class="metadata-column--governance"><td><code>review_note</code></td><td><code>string</code></td><td>Metadata Pipeline Approval field <code>review_note</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>review_note</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>review_note</code>.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
 <tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>

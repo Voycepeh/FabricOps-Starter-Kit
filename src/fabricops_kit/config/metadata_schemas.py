@@ -15,7 +15,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
-    "METADATA_PIPELINE_APPROVAL",
+    "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
@@ -27,7 +27,7 @@ CANONICAL_METADATA_TABLES = [
 RETIRED_PREVIEW_METADATA_TABLES = {
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
-        "guidance": "METADATA_DATA_CONTRACT_ACTIVATION records exact Agreement associations; METADATA_PIPELINE_APPROVAL records independent decisions.",
+        "guidance": "METADATA_DATA_CONTRACT_ACTIVATION records exact Agreement associations; METADATA_PIPELINE_ACTIVATION records independent decisions.",
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
@@ -68,7 +68,7 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_DATA_AGREEMENT",
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CONTRACT_ACTIVATION",
-    "METADATA_PIPELINE_APPROVAL",
+    "METADATA_PIPELINE_ACTIVATION",
 )
 
 ENGINEERING_METADATA_TABLES = tuple(
@@ -400,8 +400,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("activated_at", "timestamp", False),
              ("agreement_id", "string"), ("agreement_version", "string"), ("agreement_sha256", "string"), *audit],
         ),
-        "METADATA_PIPELINE_APPROVAL": build_metadata_schema(
-            "METADATA_PIPELINE_APPROVAL",
+        "METADATA_PIPELINE_ACTIVATION": build_metadata_schema(
+            "METADATA_PIPELINE_ACTIVATION",
             [("approval_id", "string", False), ("submission_id", "string", False),
              ("submission_sha256", "string", False), ("execution_workspace_id", "string", False),
              ("pipeline_id", "string", False), ("revision", "integer", False),

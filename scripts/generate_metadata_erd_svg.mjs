@@ -9,10 +9,10 @@ function renderMetadataSvg(layout, models) {
   // corridor, keeping nearer routes nested instead of crossing their stems.
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1-N","physical","M335 170H425",[335,170],[425,170],"One steward may participate in many agreements"],
-    ["DATA_AGREEMENT","DATA_CONTRACT_ACTIVATION","1-N","physical","M575 78V62H1745V78",[575,78],[1745,78],"One exact Agreement version may govern many physical frozen Contract selections"],
-    ["PIPELINE_APPROVAL","PIPELINE_REGISTRY","1-N","physical","M965 253V310H1865V423",[965,253],[1865,423],"Exact independently approved package authorizes Engineering deployment; approval does not deploy"],
-    ["PIPELINE_REGISTRY","DATA_CONTRACT_ACTIVATION","N-N","logical","M1745 423V253",[1745,423],[1745,253],"Logical approved physical workspace/Table ID association; active Contract selection is independent"],
-    ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M1595 170H1505",[1595,170],[1505,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
+    ["DATA_AGREEMENT","DATA_CONTRACT_ACTIVATION","1-N","physical","M725 170H815",[725,170],[815,170],"One exact Agreement version may govern many physical frozen Contract selections"],
+    ["PIPELINE_ACTIVATION","PIPELINE_REGISTRY","1-N","physical","M1745 253V423",[1745,253],[1745,423],"Exact independently approved package authorizes Engineering deployment; approval does not deploy"],
+    ["PIPELINE_REGISTRY","DATA_CONTRACT_ACTIVATION","N-N","logical","M1630 423V300H1363Q1355 292 1347 300H1183Q1175 292 1167 300H965V253",[1630,423],[965,253],"Logical approved physical workspace/Table ID association; active Contract selection is independent"],
+    ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M1115 170H1205",[1115,170],[1205,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M725 464H755V388H1175V218H1205",[725,464],[1205,218],"Run operations reference exact table contract versions"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V403H575V423",[1595,475],[575,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M1355 423V253",[1355,423],[1355,253],"Catalogue table to contract versions"],

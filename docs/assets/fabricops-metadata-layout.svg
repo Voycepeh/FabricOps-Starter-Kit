@@ -16,11 +16,11 @@
 <text x="575.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_AGREEMENT</text>
 <title>Open metadata documentation: DATA_AGREEMENT</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_approval/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
 <rect x="815" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M819 78H1111Q1115 78 1115 82V115H815V82Q815 78 819 78Z" fill="#7144AE"/>
-<text x="965.0" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_APPROVAL</text>
-<title>Open metadata documentation: PIPELINE_APPROVAL</title>
+<text x="965" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
+<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
 <rect x="1205" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
@@ -77,11 +77,11 @@
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract_activation/" target="_blank">
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_activation/" target="_blank">
 <rect x="1595" y="78" width="300" height="175" rx="4" fill="white" stroke="#7144AE" stroke-width="1.65"/>
 <path d="M1599 78H1891Q1895 78 1895 82V115H1595V82Q1595 78 1599 78Z" fill="#7144AE"/>
-<text x="1745" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
-<title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
+<text x="1745" y="102" text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, sans-serif" fill="white">PIPELINE_ACTIVATION</text>
+<title>Open metadata documentation: PIPELINE_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_registry/" target="_blank">
 <rect x="1595" y="423" width="300" height="175" rx="4" fill="white" stroke="#1168B6" stroke-width="1.65"/>

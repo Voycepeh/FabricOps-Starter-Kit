@@ -25,7 +25,7 @@ No starter template or solution is traced for the public writer functions.
 `METADATA_DATA_CONTRACT_ACTIVATION` **(N → M)**
 via `operations_json`
 
-`METADATA_PIPELINE_APPROVAL` **(N → 1)**
+`METADATA_PIPELINE_ACTIVATION` **(N → 1)**
 via `approval_id`
 
 **Implementation details:** Registry is deployment evidence, not policy authority. Serializable conditional mutation preserves at most one active monotonic version. Engineering reads exact Governance approval before staging and conditionally committing a version. Runtime verifies approval and the complete saved notebook independently. Governance owns all metadata; Engineering writes only its allowed schema and Files paths. Source and promoted snapshots are write-once. Imported dependencies are not frozen. Signed-in Fabric acceptance remains required.
