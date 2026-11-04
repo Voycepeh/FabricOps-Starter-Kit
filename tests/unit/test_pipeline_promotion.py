@@ -50,7 +50,7 @@ def runtime(monkeypatch):
 
 def integrity_row(runtime):
     """Seed an archived promoted notebook and the physically saved equivalent."""
-    raw, parameters = service.promoted_notebook(notebook(), PIPELINE_ID)
+    raw, parameters = service.promoted_notebook(notebook())
     row = promotion(workspace="PROD")
     row.update(snapshot_sha256=hashlib.sha256(raw).hexdigest(), executable_sha256=service.notebook_executable_digest(raw),
         bindings_sha256=service.manifest_digest([operation(workspace="PROD")]), parameters_json=json.dumps(parameters))
@@ -219,10 +219,10 @@ def test_fabric_rejects_foreign_operation_location_before_sending_token(monkeypa
 
 def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
     """Saved literal scaffold constants become exact startup literals in the Governed copy."""
-    source = f'PIPELINE_ID = "{PIPELINE_ID}"\nPIPELINE_MODE = "Dry Run"\npipeline = setup_pipeline(pipeline_id=PIPELINE_ID, pipeline_mode=PIPELINE_MODE)\nPIPELINE_ID = pipeline.pipeline_id\n'
-    promoted, parameters = service.promoted_notebook(notebook(source), PIPELINE_ID)
+    source = 'PIPELINE_MODE = "Dry Run"\\npipeline = setup_pipeline(pipeline_mode=PIPELINE_MODE)\\n'
+    promoted, parameters = service.promoted_notebook(notebook(source))
     saved = json.loads(promoted)["cells"][1]["source"]
-    assert f"pipeline_id='{PIPELINE_ID}'" in saved
+    assert "pipeline_id" not in saved
     assert 'pipeline_mode="Governed"' in saved
     assert parameters == {"manual": False, "days": None}
 
