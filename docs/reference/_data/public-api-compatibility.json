@@ -3005,7 +3005,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -3113,7 +3113,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -5726,7 +5726,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -5819,7 +5819,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -8342,7 +8342,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
           "signature_before": null
         },
         {
@@ -8445,7 +8445,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": null
         },
         {
@@ -10074,30 +10074,19 @@
       "changes": [
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Optional parameter added: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
-        },
-        {
-          "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
             "Parameter removed: new_pipeline.",
+            "Parameter removed: pipeline_id.",
             "Parameter removed: previous_notebook_id.",
             "Parameter removed: previous_workspace_id.",
             "Optional parameter added: observe_source.",
             "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
@@ -10127,12 +10116,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 3,
-        "nonbreaking": 2,
+        "modified": 2,
+        "nonbreaking": 1,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 4
+        "total": 3
       },
       "target": "working-tree"
     },
@@ -11659,30 +11648,19 @@
       "changes": [
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Optional parameter added: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
-        },
-        {
-          "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
             "Parameter removed: new_pipeline.",
+            "Parameter removed: pipeline_id.",
             "Parameter removed: previous_notebook_id.",
             "Parameter removed: previous_workspace_id.",
             "Optional parameter added: observe_source.",
             "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
@@ -11712,12 +11690,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 3,
-        "nonbreaking": 2,
+        "modified": 2,
+        "nonbreaking": 1,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 4
+        "total": 3
       },
       "target": "working-tree"
     },
@@ -13319,27 +13297,16 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Optional parameter added: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: pipeline_id.",
             "Optional parameter added: observe_source.",
             "Optional parameter added: source_observation_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')"
         },
         {
@@ -13369,12 +13336,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 3,
-        "nonbreaking": 3,
-        "potentially_breaking": 0,
+        "modified": 2,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 2,
-        "total": 5
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -13623,7 +13590,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
@@ -13731,7 +13698,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "added",
@@ -14198,7 +14165,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "removed",
@@ -14291,7 +14258,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "modified",
@@ -14662,7 +14629,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
+          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False)"
         },
         {
           "change_type": "modified",
@@ -14765,7 +14732,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "modified",
@@ -14878,28 +14845,17 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Parameter removed: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
             "Parameter removed: observe_source.",
             "Parameter removed: source_observation_days.",
             "Optional parameter added: new_pipeline.",
+            "Optional parameter added: pipeline_id.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "removed",
@@ -14928,12 +14884,12 @@
       ],
       "summary": {
         "added": 0,
-        "modified": 3,
+        "modified": 2,
         "nonbreaking": 0,
-        "potentially_breaking": 2,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 2,
-        "total": 4
+        "total": 3
       },
       "target": "v0.3.0"
     },
@@ -14945,28 +14901,17 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Parameter removed: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
             "Parameter removed: observe_source.",
             "Parameter removed: source_observation_days.",
             "Optional parameter added: new_pipeline.",
+            "Optional parameter added: pipeline_id.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "removed",
@@ -14995,12 +14940,12 @@
       ],
       "summary": {
         "added": 0,
-        "modified": 3,
+        "modified": 2,
         "nonbreaking": 0,
-        "potentially_breaking": 2,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 2,
-        "total": 4
+        "total": 3
       },
       "target": "v0.3.1"
     },
@@ -15024,25 +14969,14 @@
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-          "reasons": [
-            "Parameter removed: pipeline_id."
-          ],
-          "signature_after": "finalize_pipeline(pipeline = None, *, failed = False)",
-          "signature_before": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
             "Parameter removed: observe_source.",
-            "Parameter removed: source_observation_days."
+            "Parameter removed: source_observation_days.",
+            "Optional parameter added: pipeline_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned')",
-          "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         },
         {
           "change_type": "removed",
@@ -15071,12 +15005,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 3,
+        "modified": 2,
         "nonbreaking": 1,
-        "potentially_breaking": 2,
+        "potentially_breaking": 1,
         "removed": 1,
         "review_required": 2,
-        "total": 5
+        "total": 4
       },
       "target": "main"
     }
@@ -26469,19 +26403,11 @@
               "kind": "keyword_only",
               "name": "failed",
               "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "pipeline_id",
-              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
           "return_annotation": null,
-          "signature": "finalize_pipeline(pipeline = None, *, failed = False, pipeline_id = None)",
+          "signature": "finalize_pipeline(pipeline = None, *, failed = False)",
           "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline"
         },
@@ -26927,14 +26853,6 @@
           "lifecycle": "Live",
           "parameters": [
             {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "pipeline_id",
-              "required": false
-            },
-            {
               "annotation": "str",
               "default": "'Ungoverned'",
               "has_default": true,
@@ -26961,7 +26879,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
+          "signature": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -27128,7 +27046,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:55124dd5b5c26caa036c8279216b3cb93e53b50201ddc665f65f157a1167f72a",
+      "source_digest": "sha256:505004862ac40ebaa3ff2d271b5567deb4b42938c4182d3e9524d53cc7355df3",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
