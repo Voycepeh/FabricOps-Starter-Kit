@@ -49,10 +49,10 @@ context = setup_notebook(
 )
 ```
 
-Then run Setup Pipeline. Generate one UUIDv4 Pipeline ID, save it as `PIPELINE_ID` in notebook source and reuse it across environments. Ungoverned and Governed execution require this explicit identity; Dry Run may use a session-only identity.
+Then run Setup Pipeline. Each persistent logical pipeline needs one explicit UUIDv4. Replace the example below with a UUIDv4 generated once, save it in notebook source, and reuse it across environments and redeployments. Ungoverned and Governed require this stable identity; Dry Run may omit it for a session-only identity.
 
 ```python
-PIPELINE_ID = None
+PIPELINE_ID = "a8e20b64-1a5c-4f9e-8c37-2d7b6e91c450"
 PIPELINE_MODE = "Ungoverned"  # "Dry Run", "Ungoverned", or "Governed"
 
 pipeline = setup_pipeline(
