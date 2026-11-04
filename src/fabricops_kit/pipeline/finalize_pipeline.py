@@ -205,8 +205,7 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     Raises
     ------
     ValueError
-        If pipeline is not a setup_pipeline session, audit identity is missing,
-        If execution and handoff arguments are mixed.
+        If pipeline is not a setup_pipeline session or audit identity is missing.
     RuntimeError
         If notebook setup is invalid, runtime identity has changed, another task
         owns the execution, or metadata publication fails. Run and Guardrail IDs
@@ -221,6 +220,10 @@ def finalize_pipeline(pipeline=None, *, failed=False):
 
     """
     if pipeline is None:
+        pipeline = current_pipeline_session()
+    if pipeline is None:
+        if failed:
+            raise ValueError("failed=True requires an active PipelineSession.")
         from fabricops_kit.config.shared import get_default_fabric_context
         from fabricops_kit.activated_pipeline.shared import resolve_pipeline_identity, display_pipeline_handoff
         runtime = get_default_fabric_context(require_notebook_setup=True)
@@ -228,7 +231,6 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         if identity["role"] != "source":
             pipeline_id = identity["row"]["pipeline_id"]
         return {"pipeline_id": pipeline_id, "handoff": display_pipeline_handoff(pipeline_id=pipeline_id, context=runtime)}
-    pipeline = pipeline
     if not isinstance(pipeline, PipelineSession):
         raise ValueError("Pass the session returned by setup_pipeline.")
     if not pipeline.owns_current_execution():
