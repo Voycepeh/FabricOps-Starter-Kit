@@ -29,9 +29,9 @@ No immediate table relationship is defined in the current implementation.
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">24</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">23</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">0</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">16</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">15</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
 
@@ -54,7 +54,6 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--governance"><td><code>expected_active_version</code></td><td><code>integer</code></td><td>Metadata Pipeline Activation field <code>expected_active_version</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>restores_promotion_id</code></td><td><code>string</code></td><td>Identifier stored for <code>restores_promotion_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>expires_at</code></td><td><code>timestamp</code></td><td>Timestamp when access expires.</td></tr>
-<tr class="metadata-column--governance"><td><code>decided_by</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>decided_by</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>decided_at</code></td><td><code>timestamp</code></td><td>Timestamp stored for <code>decided_at</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>review_note</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>review_note</code>.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
