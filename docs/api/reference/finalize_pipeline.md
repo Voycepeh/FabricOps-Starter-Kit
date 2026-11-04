@@ -54,7 +54,6 @@ Required describes the Python signature. An optional parameter may still be need
 | `pipeline` | `PipelineSession` | No | `None` | Execution returned by setup_pipeline. Retain it for repeat finalization. |
 | `failed` | `bool` | No | `False` | Mark a caught project failure; recorded failures cannot become success. |
 
-
 </div>
 
 ## Returns
@@ -62,14 +61,13 @@ Required describes the Python signature. An optional parameter may still be need
 dict
     Final execution summary. For persistent modes this is the
     METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
-    The explicit pipeline_id-only form returns pipeline_id and handoff (the
-    displayed controls and their state/actions), without a Run record.
+    When no session is active, returns the resolved pipeline_id and handoff
+    (the displayed controls and their state/actions), without a Run record.
 
 ## Raises / Errors
 
 ValueError
-    If pipeline is not a setup_pipeline session, audit identity is missing,
-    pipeline_id is invalid, or execution and handoff arguments are mixed.
+    If pipeline is not a setup_pipeline session or audit identity is missing.
 RuntimeError
     If notebook setup is invalid, runtime identity has changed, another task
     owns the execution, or metadata publication fails. Run and Guardrail IDs
@@ -83,8 +81,9 @@ Call once after all Reads, transformations and Writes, including read-only
 runs. Pass the session returned by setup_pipeline, or omit it to use the
 current execution. Set failed=True when a project exception was caught.
 To reopen persisted approval/deployment/recovery controls after notebook setup
-in an independent session, pass only pipeline_id. This does not start or
-finalize a run, export a new candidate, deploy or repair automatically.
+in an independent session, omit the session; FabricOps resolves the current
+notebook through the Pipeline Registry. This does not start or finalize a run,
+export a new candidate, deploy or repair automatically.
 A successful Write or cell never completes the whole pipeline by itself.
 Open sessions require the current initialized notebook configuration and
 runtime identity, whether passed explicitly or selected implicitly. Already
@@ -116,7 +115,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:160`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L160-L257">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L160-L260">View on GitHub</a>
 </div>
 
 
@@ -132,7 +131,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 112 |
+| Live-critical dependencies | 113 |
 
 ### Release history
 
@@ -172,6 +171,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.resolve_pipeline_identity</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.restore_promoted_notebook</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.review_submission_policy</code></li>
