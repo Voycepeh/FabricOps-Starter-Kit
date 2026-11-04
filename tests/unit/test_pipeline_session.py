@@ -578,13 +578,13 @@ def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypat
     ui = Mock(return_value={"widget": "persisted approvals"})
     monkeypatch.setattr(authority, "display_pipeline_handoff", ui)
     assert shared._ACTIVE_PIPELINE.get() is None
-    assert finalize_pipeline(pipeline_id=PIPELINE_ID) == {"pipeline_id": PIPELINE_ID, "handoff": {"widget": "persisted approvals"}}
+    assert finalize_pipeline() == {"pipeline_id": PIPELINE_ID, "handoff": {"widget": "persisted approvals"}}
     ui.assert_called_once_with(pipeline_id=PIPELINE_ID)
     assert shared._ACTIVE_PIPELINE.get() is None
     runtime.writes.assert_not_called()
     with pytest.raises(ValueError):
-        finalize_pipeline(pipeline_id=PIPELINE_ID, failed=True)
+        finalize_pipeline(failed=True)
     with pytest.raises(ValueError):
-        finalize_pipeline(pipeline=object(), pipeline_id=PIPELINE_ID)
+        finalize_pipeline(object())
     with pytest.raises(ValueError):
-        finalize_pipeline(pipeline_id="not-a-pipeline-id")
+        finalize_pipeline()
