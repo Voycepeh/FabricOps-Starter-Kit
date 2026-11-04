@@ -230,12 +230,10 @@ PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
     "bindings_sha256": "Canonical digest of exact approved operation bindings and execution descriptors.",
     "parameters_json": "Exact approved behavior-affecting setup parameters; runtime overrides reject.",
     "restored_from_version": "Exact retained prior implementation version with matching reviewed executable content.",
-    "promoted_by": "Actual runtime audit identity responsible for the promotion.",
     "promoted_at": "Time the promotion was prepared for atomic activation.",
 }
 
 PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
-    "execution_workspace_id": "Actual execution workspace captured for this Run.",
     "pipeline_version": "Frozen per-workspace Pipeline version captured at Governed admission.",
     "promotion_id": "Exact immutable promotion ID captured at admission; superseded versions remain retained.",
     "governed_notebook_id": "Physical Governed notebook item that started this Run.",
