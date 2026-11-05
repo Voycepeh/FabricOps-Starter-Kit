@@ -1,77 +1,79 @@
 :root {
-  --md-primary-fg-color: #0f8f83;
-  --md-primary-fg-color--light: #5ee6c5;
-  --md-primary-fg-color--dark: #075f59;
+  --md-text-font: "Segoe UI";
+  --md-code-font: "Cascadia Code";
+  --md-primary-fg-color: var(--fabricops-blue);
+  --md-primary-fg-color--light: #93C5FD;
+  --md-primary-fg-color--dark: var(--fabricops-blue-deep);
 
-  --md-accent-fg-color: #47d7ac;
-  --md-accent-fg-color--transparent: rgba(71, 215, 172, 0.14);
+  --md-accent-fg-color: var(--fabricops-purple);
+  --md-accent-fg-color--transparent: color-mix(in srgb, var(--fabricops-purple) 14%, transparent);
 }
 
 /* Clean Fabric-inspired top bar */
 .md-header {
-  background-color: #0f8f83;
+  background: var(--fabricops-brand-gradient);
 }
 
 /* Slightly deeper navigation tabs */
 .md-tabs {
-  background-color: #08756f;
+  background: linear-gradient(110deg, var(--fabricops-blue-deep), var(--fabricops-purple-deep));
 }
 
 /* Primary CTA buttons */
 .md-button--primary {
-  background-color: #0f8f83;
-  border-color: #0f8f83;
+  background-color: var(--fabricops-blue);
+  border-color: var(--fabricops-blue);
   color: #ffffff;
 }
 
 .md-button--primary:hover {
-  background-color: #075f59;
-  border-color: #075f59;
+  background-color: var(--fabricops-blue-deep);
+  border-color: var(--fabricops-blue-deep);
   color: #ffffff;
 }
 
 /* Secondary buttons */
 .md-button {
-  border-color: #0f8f83;
-  color: #0f8f83;
+  border-color: var(--fabricops-blue);
+  color: var(--fabricops-blue);
 }
 
 .md-button:hover {
-  background-color: rgba(71, 215, 172, 0.12);
-  border-color: #47d7ac;
-  color: #075f59;
+  background-color: color-mix(in srgb, var(--fabricops-purple) 12%, transparent);
+  border-color: var(--fabricops-purple);
+  color: var(--fabricops-blue-deep);
 }
 
 /* Links */
 .md-typeset a {
-  color: #0f8f83;
+  color: var(--fabricops-blue);
 }
 
 .md-typeset a:hover {
-  color: #075f59;
+  color: var(--fabricops-blue-deep);
 }
 
 /* Active and hovered navigation links */
 .md-nav__link--active,
 .md-nav__link:focus,
 .md-nav__link:hover {
-  color: #0f8f83;
+  color: var(--fabricops-blue);
 }
 
 /* Table headers */
 .md-typeset table:not([class]) th {
-  background-color: rgba(71, 215, 172, 0.12);
+  background-color: color-mix(in srgb, var(--fabricops-purple) 12%, transparent);
 }
 
 /* Admonitions */
 .md-typeset .admonition,
 .md-typeset details {
-  border-color: #47d7ac;
+  border-color: var(--fabricops-purple);
 }
 
 .md-typeset .admonition-title,
 .md-typeset summary {
-  background-color: rgba(71, 215, 172, 0.12);
+  background-color: color-mix(in srgb, var(--fabricops-purple) 12%, transparent);
 }
 
 
@@ -152,7 +154,7 @@
 .md-typeset .fabricops-landing-card:focus {
   border-color: var(--md-primary-fg-color);
   background-color: var(--md-accent-fg-color--transparent);
-  box-shadow: 0 0.25rem 0.8rem rgba(15, 143, 131, 0.16);
+  box-shadow: 0 0.25rem 0.8rem color-mix(in srgb, var(--fabricops-blue) 16%, transparent);
   color: var(--md-default-fg-color);
   transform: translateY(-0.05rem);
 }
@@ -284,8 +286,8 @@
 }
 
 .md-typeset .demo-hero {
-  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
-  border-color: rgba(15, 143, 131, 0.35);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fabricops-blue) 12%, transparent), color-mix(in srgb, var(--fabricops-purple) 8%, transparent));
+  border-color: color-mix(in srgb, var(--fabricops-blue) 35%, transparent);
   margin: 0.5rem 0 1.25rem;
 }
 
@@ -297,7 +299,7 @@
 }
 
 .md-typeset .demo-learning-outcomes {
-  background-color: rgba(71, 215, 172, 0.08);
+  background-color: color-mix(in srgb, var(--fabricops-purple) 8%, transparent);
   margin: 1rem 0;
 }
 
@@ -329,13 +331,13 @@
 }
 
 .md-typeset .demo-expected-output {
-  background-color: rgba(15, 143, 131, 0.08);
-  border-color: rgba(15, 143, 131, 0.24);
+  background-color: color-mix(in srgb, var(--fabricops-blue) 8%, transparent);
+  border-color: color-mix(in srgb, var(--fabricops-blue) 24%, transparent);
 }
 
 .md-typeset .demo-evidence {
-  background-color: rgba(71, 215, 172, 0.08);
-  border-color: rgba(71, 215, 172, 0.28);
+  background-color: color-mix(in srgb, var(--fabricops-purple) 8%, transparent);
+  border-color: color-mix(in srgb, var(--fabricops-purple) 28%, transparent);
 }
 
 .md-typeset .demo-next-step {
@@ -391,9 +393,9 @@
 .md-typeset .template-download-hero {
   margin: 1rem 0 1.5rem;
   padding: 1.1rem 1.25rem;
-  border: 1px solid rgba(15, 143, 131, 0.35);
+  border: 1px solid color-mix(in srgb, var(--fabricops-blue) 35%, transparent);
   border-radius: 0.4rem;
-  background: linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(71, 215, 172, 0.08));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fabricops-blue) 12%, transparent), color-mix(in srgb, var(--fabricops-purple) 8%, transparent));
   font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.25;
@@ -584,3 +586,8 @@
     padding-left: 0.9rem;
   }
 }
+
+/* Unified typography and gradients. Brand gradients are for high-level surfaces only. */
+.md-typeset, .md-header, .md-tabs, .md-nav { font-family: var(--fabricops-font-ui); }
+.md-typeset code, .md-typeset pre, .md-typeset kbd { font-family: var(--fabricops-font-code); }
+.md-header__button:focus-visible, .md-tabs__link:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
