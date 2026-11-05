@@ -3209,7 +3209,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -5877,7 +5877,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -8486,9 +8486,12 @@
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
           "reasons": [
-            "Parameter removed: spark_session."
+            "Parameter removed: spark_session.",
+            "Optional parameter added: ai_model.",
+            "Optional parameter added: ai_reasoning_effort.",
+            "Optional parameter added: ai_verbosity."
           ],
-          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
         },
         {
@@ -10112,16 +10115,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Optional parameter added: ai_model.",
+            "Optional parameter added: ai_reasoning_effort.",
+            "Optional parameter added: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
-        "nonbreaking": 1,
+        "modified": 3,
+        "nonbreaking": 2,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 3
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -11686,16 +11703,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Optional parameter added: ai_model.",
+            "Optional parameter added: ai_reasoning_effort.",
+            "Optional parameter added: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
-        "nonbreaking": 1,
+        "modified": 3,
+        "nonbreaking": 2,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 3
+        "total": 4
       },
       "target": "working-tree"
     },
@@ -13332,16 +13363,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Optional parameter added: ai_model.",
+            "Optional parameter added: ai_reasoning_effort.",
+            "Optional parameter added: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
-        "nonbreaking": 1,
+        "modified": 3,
+        "nonbreaking": 2,
         "potentially_breaking": 1,
         "removed": 1,
         "review_required": 2,
-        "total": 4
+        "total": 5
       },
       "target": "working-tree"
     },
@@ -13794,7 +13839,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -14316,7 +14361,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -14767,15 +14812,18 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
           "reasons": [
+            "Parameter removed: ai_model.",
+            "Parameter removed: ai_reasoning_effort.",
+            "Parameter removed: ai_verbosity.",
             "Optional parameter added: spark_session."
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]",
-          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -14829,8 +14877,8 @@
       "summary": {
         "added": 9,
         "modified": 22,
-        "nonbreaking": 11,
-        "potentially_breaking": 22,
+        "nonbreaking": 10,
+        "potentially_breaking": 23,
         "removed": 3,
         "review_required": 1,
         "total": 34
@@ -14880,16 +14928,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Parameter removed: ai_model.",
+            "Parameter removed: ai_reasoning_effort.",
+            "Parameter removed: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "potentially_breaking": 2,
         "removed": 1,
         "review_required": 2,
-        "total": 3
+        "total": 4
       },
       "target": "v0.3.0"
     },
@@ -14936,16 +14998,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Parameter removed: ai_model.",
+            "Parameter removed: ai_reasoning_effort.",
+            "Parameter removed: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "potentially_breaking": 2,
         "removed": 1,
         "review_required": 2,
-        "total": 3
+        "total": 4
       },
       "target": "v0.3.1"
     },
@@ -15001,16 +15077,30 @@
           ],
           "signature_after": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]",
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
+          "reasons": [
+            "Parameter removed: ai_model.",
+            "Parameter removed: ai_reasoning_effort.",
+            "Parameter removed: ai_verbosity."
+          ],
+          "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 1,
-        "potentially_breaking": 1,
+        "potentially_breaking": 2,
         "removed": 1,
         "review_required": 2,
-        "total": 4
+        "total": 5
       },
       "target": "main"
     }
@@ -26991,11 +27081,35 @@
               "kind": "keyword_only",
               "name": "context",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "ai_model",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "ai_reasoning_effort",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "ai_verbosity",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
+          "signature": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
           "source_qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract"
         },
@@ -27046,7 +27160,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:505004862ac40ebaa3ff2d271b5567deb4b42938c4182d3e9524d53cc7355df3",
+      "source_digest": "sha256:91df31981b2a2b324c59cecd38d015b1bd98ef610f51653b8af6d9894162b827",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
