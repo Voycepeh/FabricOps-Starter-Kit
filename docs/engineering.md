@@ -13,6 +13,8 @@
 
 A FabricOps pipeline is the standard notebook flow **Setup → Read → Transform → Write → Finalize**. FabricOps owns the repeatable boundaries; the PySpark transformation remains project code.
 
+![Setup, Read, Transform, Write, and Finalize with project-owned PySpark.](assets/engineering/pipeline-lifecycle.svg){ .fabricops-section-evidence }
+
 ```python
 context = setup_notebook()
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
@@ -60,6 +62,8 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
+![Logical store resolution and distinct Lakehouse file helper APIs.](assets/engineering/fabric-sources.svg){ .fabricops-section-evidence }
+
 - Lakehouse tables use OneLake Delta paths.
 - Warehouse tables use the Fabric Spark connector.
 - Full Warehouse reads can use a read-only `query`; Incremental Warehouse reads use a framework-built bounded predicate.
@@ -75,6 +79,8 @@ Lakehouse files are a separate foundational I/O surface because they need a rela
 ## How do Full, Incremental, Append and SCD processing work?
 
 Read Mode controls which source rows enter this run. Write Mode controls how prepared rows change the target. They are independent.
+
+![Independent Read modes and Write strategies.](assets/engineering/read-write-modes.svg){ .fabricops-section-evidence }
 
 | Side | Mode | Use it when |
 | --- | --- | --- |
@@ -100,6 +106,8 @@ Use the [Read & Write Modes reference](reference/read-and-load-strategies.md) fo
 
 There are two protections for different failure modes:
 
+![Append New Only hashing and independent retry publication receipts.](assets/engineering/duplicate-prevention.svg){ .fabricops-section-evidence }
+
 1. **Append New Only** removes duplicate hashes inside the incoming batch and anti-joins them against target `_row_hash` values. Unchanged content is not appended again.
 2. **Publication receipts and checkpoints** identify the exact prepared batch and accept incremental progress only after physical publication can be verified. A retry can finalize metadata without publishing the same verified batch again.
 
@@ -115,7 +123,9 @@ Every managed output receives a lowercase SHA256 `_row_hash` through internal [`
 
 Source Drift is **not the same mechanism as target `_row_hash` de-duplication**.
 
-Set `observe_source=True` for a manual complete observation, or set `source_observation_days` to a positive interval. FabricOps fingerprints the complete physical source independently of an Incremental predicate. At Write time, the Source Drift Guardrail compares the current source-to-target relationship with the last accepted baseline and reports inserted, updated and deleted change counts according to the source Processing definition.
+![Full source observation, prior accepted content fingerprint, and change detection.](assets/engineering/source-drift.svg){ .fabricops-section-evidence }
+
+Set `observe_source=True` for a manual complete observation, or set `source_observation_days` to a positive interval. FabricOps fingerprints the complete physical source independently of an Incremental predicate. At Write time, an applicable Source Drift Guardrail compares the current source observation with the last accepted source-to-target baseline using partition presence, row counts, change-value bounds and content fingerprints. Its result identifies new, changed, removed or reappeared partitions, not exact updated, inserted or deleted business rows.
 
 The new baseline is accepted only after verified target publication. Observation alone is diagnostic; publication blocks only when the selected Data Contract contains a blocking Source Drift policy.
 
@@ -128,6 +138,8 @@ The new baseline is accepted only after verified target publication. Observation
 ## How does a Governance Data Contract affect my ETL?
 
 Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract affects both the allowed operation and the checks around it:
+
+![Contract checks at pipeline boundaries and execution-mode distinctions.](assets/engineering/data-contract-boundaries.svg){ .fabricops-section-evidence }
 
 | Pipeline boundary | Contract effect |
 | --- | --- |
@@ -157,9 +169,11 @@ Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeli
 
 ## How do I move the same pipeline between Development and Production?
 
-![The same FabricOps pipeline resolving Development and Production stores through environment configuration](assets/05/PipelinesDeploymentOverview.png){ .fabricops-section-evidence }
+
 
 Keep the same notebook flow and stable Pipeline ID, but give each workspace its own `00_env_config` mapping. The logical names—such as Bronze, Silver and Gold—stay in the notebook while each workspace resolves its own Fabric items.
+
+![Preview notebook promotion and independent review/deployment.](assets/engineering/pipeline-promotion.svg){ .fabricops-section-evidence }
 
 For the Preview promotion path, save the Development notebook with `PIPELINE_MODE = "Dry Run"` and run through [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md). FabricOps saves the complete submission in the Metadata Lakehouse. Governance reviews that exact package in [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md); after approval, Engineering uses the controls below Finalize to deploy the accepted snapshot as a separate Governed notebook.
 
@@ -182,6 +196,8 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 ## What evidence do I get after a run?
 
 - technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
+
+![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
