@@ -1,80 +1,128 @@
-# Step 2B. Compare Append All and Append New Only
+# Step 2B. Compare Incremental Append and Full Hash Append
 
-Run the same Full Read output through two Write Modes and observe which rows each target retains.
+Run two independent paths to see how extraction scope and target duplicate handling solve different problems.
 
 ### Before you begin
 
-1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) into Engineering Development. The existing filename is retained; the notebook now compares both append modes.
+1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) into Engineering Development.
 2. Keep `00_env_config.ipynb` beside it and attach the Fabric Environment from [Step 00B](00B-configure-environment-and-load-assets.md).
-3. Upload the demo CSVs from Step 00B and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) to stage Day 1. Day 2 reads `Demo/inventory_day2.csv` directly from Bronze Lakehouse `Files/Demo`.
-4. Start with fresh targets and run Day 1, Day 2 and Day 3 in order. Do not rerun 00C after advancing Bronze.
+3. Upload the demo CSVs and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) once to stage Day 1. Day 2 reads `Demo/inventory_day2.csv` from Bronze Lakehouse `Files/Demo`.
+4. Start with fresh Silver targets. Run Day 1, Day 2, and Day 3 in order; do not rerun 00C after advancing Bronze.
 
-![File upload](../assets/2b/File%20Upload.png)
+![The inventory demo CSV files uploaded to the Bronze Lakehouse](../assets/2b/File%20Upload.png)
+
+*The original 02B file-upload step: both inventory day files must be available before the three-day walkthrough.*
 
 !!! note "Publication and Governance"
-    Use Ungoverned for the initial observation run against targets that are not already governed. Read and Write calculate due profiles automatically; finalize with `pipeline_result = finalize_pipeline(pipeline)`. Dry Run evaluates the prepared input without persisting target data, observations or run records; it does not demonstrate the persisted counts or target hash filtering below.
+    Use Ungoverned for the first persistent observation against targets that are not already governed. Dry Run evaluates prepared input but does not publish target data, accept incremental progress, or produce the persisted counts below.
 
-    After observation, author and freeze separate target Contracts with Processing strategies **Append All** and **Append New Only** in `01_governance`. Governed requires approved activations and remains blocked pending trusted deployment verification. See the [execution boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
+    After observation, author and freeze separate target Contracts with Processing strategies **Append All** and **Append New Only**. Governed runs require the corresponding approved activations. See the [execution boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#source-participation-and-execution-boundaries).
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## The big picture
+## The two-path architecture
 
-One Bronze source, one Full Read, one transformed DataFrame and two separate Silver targets.
+Hold the business transformation constant while changing the Read and Write decisions independently.
 
 </div>
 </div>
 
-| Role | Location | Mode |
-| --- | --- | --- |
-| Source | Bronze · `demo.inventory_movements` | `read_mode="full"` |
-| Target A | Silver · `demo.inventory_movements_append_all` | `write_mode="append_all"` |
-| Target B | Silver · `demo.inventory_movements_append_new_only` | `write_mode="append_new_only"` |
+| Path | Source Read | Target Write | Target |
+| --- | --- | --- | --- |
+| A | Incremental on `modified_datetime` | Append All | Silver · `demo.inventory_movements_append_all` |
+| B | Full | Append New Only by `_row_hash` | Silver · `demo.inventory_movements_append_new_only` |
 
-| Day | Source rows | Append All total | Append New Only total |
-| --- | ---: | ---: | ---: |
-| 1 | 8 | 8 | 8 |
-| 2 | 12 | 20 | 12 |
-| 3 | 12 | 32 | 12 |
+| Day | Incremental rows read | Full rows read | Append All target total | Append New Only target total |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 8 | 8 | 8 | 8 |
+| 2 | 4 | 12 | 12 | 12 |
+| 3 | 0 | 12 | 12 | 12 |
 
-Counts assume exactly one complete persistent execution per day, fresh Silver targets and unchanged transformation/schema. Both Write blocks receive exactly the same `transformed_df` object. Full Read needs no watermark or target checkpoint.
+**Read scope and Write behavior are separate choices.** Incremental extraction limits source processing for large tables when a reliable watermark exists. Append New Only instead makes repeated full submissions content-aware by comparing final row hashes, but it pays for a complete source scan and distributed hash comparison every time.
 
-### Configure Read → Transform → Write
+### Why the paths use separate executions
 
-Run Environment, the demo-day and Bronze preparation cells, then Setup Pipeline. Setup Pipeline discovers notebook identity automatically in persistent modes; pipeline source participation is automatic.
+The execution session registers one operation for each logical source. A second Read of the same physical source in that session would replace or ambiguously share source evidence. The notebook therefore completes and finalizes Path A before it starts Path B. Each Write receives only the Read registered in its own execution:
+
+```text
+Path A: setup → incremental Read → transform → Append All → finalize
+Path B: setup → full Read        → transform → Append New Only → finalize
+```
+
+This separation prevents Path B's full-source scope from being associated with Path A's incremental checkpoint or publication.
+
+### Configure Path A
+
+Resolve the Append All target's canonical Table ID before the Incremental Read. The checkpoint belongs to this exact source-to-target relationship, not just to the Bronze table or watermark column.
 
 ```python
-source = orchestrate_read(
-    store="Bronze", schema="demo", table_name="inventory_movements",
-    read_mode="full", verbose=True,
-)
-sources["inventory_movements"] = source
-
-transformed_df = (
-    sources["inventory_movements"]["dataframe"]
-    .withColumn("movement_date", F.to_date("modified_datetime"))
-    .withColumn("quantity_in", F.greatest(F.col("quantity_change"), F.lit(0)))
-    .withColumn("quantity_out", F.greatest(-F.col("quantity_change"), F.lit(0)))
+pipelines["incremental_append_all"] = setup_pipeline(
+    pipeline_mode=PIPELINE_MODE,
+    observe_source=False,
+    source_observation_days=None,
 )
 
-writes["inventory_movements_append_all"] = orchestrate_write(
-    transformed_df,
-    store="Silver", schema="demo", table_name="inventory_movements_append_all",
-    write_mode="append_all", verbose=True,
+append_all_target_id = resolve_table_id(
+    store="Silver",
+    schema="demo",
+    table_name="inventory_movements_append_all",
 )
-writes["inventory_movements_append_new_only"] = orchestrate_write(
-    transformed_df,
-    store="Silver", schema="demo", table_name="inventory_movements_append_new_only",
-    write_mode="append_new_only", verbose=True,
+
+sources["incremental_append_all"] = orchestrate_read(
+    store="Bronze",
+    schema="demo",
+    table_name="inventory_movements",
+    read_mode="incremental",
+    read_parameters={"watermark_column": "modified_datetime"},
+    target_table_id=append_all_target_id,
+    verbose=True,
 )
 ```
 
-The notebook retains separate Read, Transform and Write cells. `F`, `sources` and `writes` are initialized there. Inline previews show prepared input; read persisted Silver separately to assess publication.
+Apply the shared deterministic transformation to that returned DataFrame, write it to `inventory_movements_append_all` with `write_mode="append_all"`, and finalize the execution. Accepted progress advances only after publication is verified.
 
-!!! warning "Independent publications"
-    The two Writes are not atomic together. If Target A succeeds and Target B fails, inspect publication results and recover the failed publication before starting another execution. A new full execution adds the complete input to Append All again. Exact publication retries use verified receipts; they are different from new executions.
+!!! warning "Append All relies on correct progress"
+    Append All does not deduplicate. If previously consumed business rows are presented as new work in a later execution, it appends them again. FabricOps publication receipts make exact publication recovery safe; they do not turn an unrelated replay into a content-aware Write.
+
+### Configure Path B
+
+After Path A finalizes, create a fresh pipeline execution. Perform a separate Full Read and apply the same transformation function to that separate DataFrame—do not reuse Path A's incremental DataFrame.
+
+```python
+pipelines["full_append_new_only"] = setup_pipeline(
+    pipeline_mode=PIPELINE_MODE,
+    observe_source=False,
+    source_observation_days=None,
+)
+
+sources["full_append_new_only"] = orchestrate_read(
+    store="Bronze",
+    schema="demo",
+    table_name="inventory_movements",
+    read_mode="full",
+    verbose=True,
+)
+
+full_append_new_only_df = transform_inventory(
+    sources["full_append_new_only"]["dataframe"]
+)
+
+writes["inventory_movements_append_new_only"] = orchestrate_write(
+    full_append_new_only_df,
+    store="Silver",
+    schema="demo",
+    table_name="inventory_movements_append_new_only",
+    write_mode="append_new_only",
+    verbose=True,
+)
+```
+
+Append New Only collapses identical incoming hashes and anti-joins them with published target `_row_hash` values. A changed hash is a new record; this strategy does not update by business key, infer deletions, or repair pre-existing duplicates.
+
+??? info "Processing Read versus physical scans"
+    The row counts in this walkthrough describe the DataFrame returned for business processing. Scheduled profiling and Full Source Observation may still scan the complete physical source even when the processing Read is incremental. Those scans do not change Path A into a Full Read and must not be counted as rows submitted to its Write.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -82,12 +130,26 @@ The notebook retains separate Read, Transform and Write cells. `F`, `sources` an
 
 ## Run Day 1
 
-Read all eight staged movements and publish eight rows to each fresh target.
+Bootstrap Path A from eight movements, then submit the same eight business rows through Path B.
 
 </div>
 </div>
 
-Set `DEMO_DAY = 1`, then run the notebook from the top through Finalize. The preparation cell leaves the Day 1 source staged by 00C unchanged. Both targets should contain eight rows.
+Set `DEMO_DAY = 1` and run the notebook from the top. With no accepted checkpoint, Incremental Read intentionally performs a full bootstrap.
+
+![Day 1 selected in the 02B notebook](../assets/2b/Day%201.png)
+
+*Day 1 starts the source-to-target checkpoint history.*
+
+![Eight Day 1 movements returned by the bootstrap Incremental Read](../assets/2b/Incremental_Read_inspect.png)
+
+*The bootstrap scope contains all eight staged movements. The scope details identify this as the first run.*
+
+![Eight transformed Day 1 movements prepared for the append Write](../assets/2b/Incremental_Write_Inspect.png)
+
+*The Write preview shows submitted rows, not cumulative target state. Read the Silver target separately for its persisted total.*
+
+Both Writes commit eight business rows. Each target ends Day 1 at **8**.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -95,14 +157,26 @@ Set `DEMO_DAY = 1`, then run the notebook from the top through Finalize. The pre
 
 ## Run Day 2
 
-Add four Bronze movements, then send all 12 source rows to both targets.
+Add four movements; compare a four-row incremental scope with a 12-row full scope.
 
 </div>
 </div>
 
-Set `DEMO_DAY = 2` and start a fresh execution from the top. The preparation cell unions the Day 2 CSV with Bronze and deduplicates `movement_id`, so repeating preparation does not add extra source movements. This source preparation happens before pipeline selection and can change Bronze even when the later pipeline uses Dry Run.
+Set `DEMO_DAY = 2` and start from the top. The preparation cell unions the Day 2 CSV with Bronze and deduplicates `movement_id`, leaving 12 physical source rows.
 
-Append All adds 12 rows to the existing eight, reaching **20**. Append New Only collapses incoming identical hashes and compares them with published `_row_hash` values using a distributed anti-join. Only the four unseen rows are inserted, reaching **12**.
+![Day 2 selected in the 02B notebook](../assets/2b/Day%202.png)
+
+*Day 2 stages four new movements before either pipeline execution begins.*
+
+![Four newly eligible rows returned by the Day 2 Incremental Read](../assets/2b/Incremental_Read_Day2.png)
+
+*Path A reads only M009–M012 because their `modified_datetime` values are newer than the accepted Path A checkpoint.*
+
+![Four transformed Day 2 rows submitted to Append All](../assets/2b/Incremental_Write_Day2.png)
+
+*Path A submits and commits four rows, so its persisted total reaches 12.*
+
+Path B independently reads and submits all 12 source rows. Append New Only finds eight published hashes and commits only the four unseen hashes, so its target also reaches **12**.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -110,78 +184,62 @@ Append All adds 12 rows to the existing eight, reaching **20**. Append New Only 
 
 ## Run Day 3
 
-Leave Bronze unchanged and submit the same 12-row Full Read again.
+Leave Bronze unchanged and observe two different kinds of no-op.
 
 </div>
 </div>
 
-Set `DEMO_DAY = 3` and start a fresh execution from the top. Append All adds 12 more rows, reaching **32**. Append New Only stays at **12**. The Read is still full and nonempty.
+Set `DEMO_DAY = 3` and run from the top. The preparation cell makes no source change.
 
-??? info "Unchanged data, no-op and publication receipts"
-    A newly evaluated Append New Only batch with no unseen hashes returns `published=False` and `publication_status="no_unseen_hashes"`: a nonpublishing no-op. An unchanged exact batch may instead recover a verified earlier receipt as `already_applied` (or `metadata_recovered`); that also inserts no additional rows. Do not confuse either result with `empty_incremental_scope`.
+![Day 3 selected in the 02B notebook](../assets/2b/Day%203.png)
 
-    `METADATA_PROCESSING_STATE` stores target-specific publication receipts and accepted Source Observation baselines. Physical target markers and commits verify recovery before progress is accepted. A nonpublishing no-op does not accept a newer full observation baseline or consume its interval. Receipts do not make a new Append All full execution deduplicate its input.
+*Day 3 deliberately leaves the 12-row Bronze source unchanged.*
 
-### Inspect the persisted counts
+![An empty incremental scope after all watermark values were accepted](../assets/2b/Incremental_Read_Day1_again.png)
 
-After both Writes, inspect the actual targets in a persistent run, then run Finalize:
+*Path A reads, submits, and commits zero business rows. Append All remains at 12.*
 
-```python
-for target in ("inventory_movements_append_all", "inventory_movements_append_new_only"):
-    saved = read_lakehouse_table(store="Silver", schema="demo", table_name=target)
-    print(target, saved.count())
+![An empty append input for the unchanged incremental scope](../assets/2b/Incremental_Write_Day1_again.png)
 
-pipeline_result = finalize_pipeline(pipeline)
-```
+*Always call the Path A Write: FabricOps owns empty-scope handling and finalization.*
 
-Do not read nonexistent targets after a Dry Run. Day 3 should retain 12 distinct movement IDs in each target, but Append All has 32 rows and Append New Only has 12 rows.
+Path B still reads and submits all 12 source rows. Append New Only finds no unseen hashes and commits zero new business rows, leaving its target at **12**. `empty_incremental_scope` and `no_unseen_hashes` are different outcomes even though neither adds rows.
 
-<div class="fabricops-section-banner" markdown="1">
-<img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
-<div class="fabricops-section-content" markdown="1">
+### Inspect the four row-count concepts
 
-## Choose the processing strategy
+| Day | Path | Rows read | Rows submitted to Write | Rows committed | Persisted target total |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1 | Incremental + Append All | 8 | 8 | 8 | 8 |
+| 1 | Full + Append New Only | 8 | 8 | 8 | 8 |
+| 2 | Incremental + Append All | 4 | 4 | 4 | 12 |
+| 2 | Full + Append New Only | 12 | 12 | 4 | 12 |
+| 3 | Incremental + Append All | 0 | 0 | 0 | 12 |
+| 3 | Full + Append New Only | 12 | 12 | 0 | 12 |
 
-Choose extraction scope and target behavior independently.
-
-</div>
-</div>
-
-| Combination | Choose it when | Cost or responsibility |
-| --- | --- | --- |
-| Incremental Read + Append All | Large sources have reliable watermarks or change tracking and append-only events. | Reads newly eligible records and avoids repeated complete processing scans; requires correct checkpoints and replay handling. Replaying consumed records as new work can duplicate them. |
-| Full Read + Append New Only | Duplicate prevention matters, or reliable incremental extraction is unavailable. | Reads the complete source each time and inserts only unseen `_row_hash` values; pays for full scanning and distributed hash comparison. |
-| Incremental Read + Append New Only | Reliable incremental extraction can limit scope and hash comparison should also prevent replay duplicates. | Compares only eligible records; cannot recover late or changed rows excluded by the watermark. |
-
-??? info "Watermarks and hash boundaries"
-    Incremental extraction requires a target-specific identity and a reliable advancing watermark. Use `read_mode="incremental"`, `target_table_id=resolve_table_id(...)` and `read_parameters={"watermark_column": "modified_datetime"}`; see the [reference example](../reference/read-and-load-strategies.md#incremental). This is an alternative experiment, not the configuration used for the count comparison. Due profiling or Full Source Observation may still scan the full source.
-
-    Hashes describe final values and logical types after transformation and Sensitive Data treatment. Source Job IDs and timestamps participate; FabricOps audit and SCD lifecycle fields are excluded. Adding a volatile input field can make unchanged business rows hash differently. Existing targets must have valid historical hashes. See the [hash contract](../reference/read-and-load-strategies.md#mandatory-row-hashes).
-
-    Append New Only inserts changed hashes as **new records**, even for the same business key. It does not update existing business keys, infer deletions or remove pre-existing duplicates. Use [SCD1 or SCD2](02C-build-and-run-scd-etl.md) for business-key-based state management.
+The Read preview shows processing scope. The Write result's metrics describe submitted/prepared input and committed rows. A separate `read_lakehouse_table()` count confirms cumulative persisted target state.
 
 ### Expected result
 
-Bronze ends at 12 movements; Silver Target A has 32 rows and Target B has 12. You can explain why Full Read + Append All repeats rows and why Full Read + Append New Only retains only unseen row hashes.
+Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows, but they get there differently: Path A processes 8 + 4 + 0 rows, while Path B processes 8 + 12 + 12 rows and filters already-seen hashes at Write time.
 
 ### Metadata saved by FabricOps
 
-Persistent executions use the Metadata Lakehouse configured by `00_env_config`. Dry Run keeps its summary in session only.
-
 | Table | Purpose in this demo |
 | --- | --- |
-| `METADATA_PIPELINE_RUN` | Finalized execution outcome and operations. |
-| `METADATA_DATA_CATALOGUE` | Source and separate target identities, columns and processing definitions. |
-| `METADATA_DATA_PROFILED` | Due source/target profile snapshots; a nonpublishing no-op does not profile a newly published target. |
+| `METADATA_PIPELINE_RUN` | Separate finalized outcomes for Path A and Path B on each day. |
+| `METADATA_DATA_CATALOGUE` | Canonical Bronze source and both Silver target identities and processing definitions. |
+| `METADATA_DATA_PROFILED` | Due source or published-target profile snapshots. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to applicable profiles. |
-| `METADATA_DATA_LINEAGE` | Source and both targets' pipeline participation. |
-| `METADATA_PROCESSING_STATE` | Captured source observations, accepted baselines and target-specific publication receipts when applicable; this Full Read comparison does not consume incremental checkpoints. |
-| `METADATA_GUARDRAIL_RESULTS` | Results of applicable selected Contract Guardrails when evaluated. |
+| `METADATA_DATA_LINEAGE` | Source and target participation for each independently finalized execution. |
+| `METADATA_PROCESSING_STATE` | Path A's target-specific source observations and accepted incremental checkpoints, plus target-specific publication receipts and applicable accepted baselines. |
+| `METADATA_GUARDRAIL_RESULTS` | Results of applicable selected Contract Guardrails. |
 
 ### Repeat and recover safely
 
-Repeated Day 2 staging keeps Bronze unique, but a new Append All execution repeats its full input. Extra executions change the expected totals. For an independent replay, use a fresh demo environment or separate table identities and approved Contracts. Preserve the target, its markers and scoped Processing State together.
+A failed Path A publication must not advance its accepted incremental checkpoint. Retry or recover that exact publication before starting later work for the same target. Verified target markers and receipts distinguish a completed publication from an unverified attempt.
 
-If counts differ, check whether Bronze was staged, whether a Write failed, whether the execution published, and whether extra full executions ran. Inspect the targets and returned publication statuses before retrying. Do not empty checkpoints, delete only a target, or overwrite to hide a mismatch. Reconcile the exact target and receipt history with its owner; this comparison is not a production repair procedure.
+Repeated Day 2 staging keeps Bronze unique, but this does not authorize resetting target or Processing State history. For an independent replay, use a fresh demo environment or separate table identities and approved Contracts. Keep each target, its physical markers, and its scoped `METADATA_PROCESSING_STATE` history together.
+
+If counts differ, inspect the two finalized results, Read scopes, Write metrics, publication statuses, and persisted targets. Do not delete a checkpoint or overwrite a target merely to force the expected demonstration counts.
 
 **Next:** [Step 2C. Compare SCD1 and SCD2](02C-build-and-run-scd-etl.md)
