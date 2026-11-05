@@ -782,7 +782,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["load_strategy"].value == "append_all"
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
-    assert controls["business_saved"].value == ""
+    assert controls["business_saved"].value == "__new_rule__"
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "On failure"
@@ -1115,8 +1115,8 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert controls["left_pane"].children[-1] is controls["column_select"]
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
-    assert controls["column_select"].layout.height == "220px"
-    assert controls["column_select"].layout.max_height == "280px"
+    assert controls["column_select"].layout.height == "660px"
+    assert controls["column_select"].layout.max_height == "840px"
     assert "fabricops-contract-list" in controls["column_select"]._dom_classes
 
 
@@ -1478,10 +1478,14 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["business_rule_controls"].layout.display == "none"
     assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
     assert "Data Quality Rules" in controls["left_pane"].children[0].children[0].value
-    assert controls["add_manual_mode"] in controls["left_pane"].children[0].children[-1].children
-    assert controls["add_ai_mode"] in controls["left_pane"].children[0].children[-1].children
-    controls["add_ai_mode"].click()
-    assert controls["rule_workspace_body"].children == (controls["ai_rule_editor"],)
+    assert controls["business_saved"].options[0] == (
+        "Select a rule to edit, or click here to create a new rule",
+        "__new_rule__",
+    )
+    assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
+    assert controls["ai_rule_editor"] in controls["new_rule_editor"].children
+    assert controls["manual_rule_editor"] in controls["new_rule_editor"].children
+    assert "fabricops-dq-ai-create" in controls["ai_rule_editor"]._dom_classes
     for label in ("Table", "Column", "Data Quality", "Review", "AI settings"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
@@ -1511,7 +1515,7 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert "scrollbar-gutter:stable; overscroll-behavior:contain" in style
     assert "overflow:visible; overscroll-behavior:auto" in style
     assert "height:auto; max-height:none; overflow:visible !important" in style
-    assert ".fabricops-contract-columns { height:540px !important; }" in style
+    assert ".fabricops-contract-columns { height:660px !important; }" in style
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
     assert ".fabricops-business-body {\n    flex:0 1 auto" in style
     assert "overflow-x:hidden; overflow-y:auto" in style
@@ -1523,8 +1527,8 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
         assert panel.layout.height == "auto"
         assert panel.layout.overflow == "visible"
     assert getattr(controls["business_saved"].layout, "height", None) is None
-    controls["add_ai_mode"].click()
-    assert controls["rule_workspace_body"].children == (controls["ai_rule_editor"],)
+    assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
+    assert controls["ai_rule_editor"] in controls["new_rule_editor"].children
     assert controls["resolve_business_rule"] in controls["ai_rule_editor"].children[-1].children
     controls["business_saved"].value = "advanced"
     assert controls["rule_workspace_body"].children[0].children[0] is not None
@@ -1755,7 +1759,10 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
 
     controls["confirm_delete_business_rule"].click()
 
-    assert controls["business_saved"].value == ""
+    assert controls["business_saved"].value == "__new_rule__"
+    assert controls["rule_workspace_body"].children == (
+        controls["new_rule_editor"],
+    )
     assert controls["delete_business_rule"].disabled is True
     assert not any(
         row.get("guardrail_rule_id") == "advanced"
@@ -2579,9 +2586,9 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
 
     controls["top_nav"].value = "Data Quality"
     assert controls["current_dq_rules_section"] in controls["left_pane"].children
-    assert controls["add_ai_mode"].disabled is True
-    controls["add_manual_mode"].click()
-    assert controls["rule_workspace_body"].children == (controls["manual_rule_editor"],)
+    assert controls["business_saved"].value == "__new_rule__"
+    assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
+    assert controls["new_rule_editor"].children == (controls["manual_rule_editor"],)
     assert controls["add_manual_rule"].disabled is False
 
 
