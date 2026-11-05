@@ -282,6 +282,6 @@ Look for expensive exchanges or shuffles, large joins, repeated scans, and wheth
 
 ## Related FabricOps documentation
 
-- [Step 2: Build and run the ETL](../guided-demo/02-build-and-run-etl.md)
+- [Plug-and-Play 02: Pipeline Template](../guided-demo/02-build-and-run-etl.md)
 - [Plug-and-Play pipelines and orchestration](../engineering.md#plug-and-play-pipelines-and-orchestration)
 - [Read & Write Modes](read-and-load-strategies.md)

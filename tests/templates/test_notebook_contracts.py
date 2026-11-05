@@ -601,14 +601,14 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
 
 
 def test_guided_demo_pages_match_the_notebook_split():
-    """Step 2 is reusable guidance and Steps 2A-2C point to ready-to-run assets."""
+    """Plug-and-Play 02 is reusable guidance and Steps 2A-2C point to ready-to-run assets."""
     step_2 = (ROOT / "docs/guided-demo/02-build-and-run-etl.md").read_text(encoding="utf-8")
     step_2a = (ROOT / "docs/guided-demo/02A-full-refresh-demo.md").read_text(encoding="utf-8")
     step_2b = (ROOT / "docs/guided-demo/02B-build-and-run-incremental-append-etl.md").read_text(encoding="utf-8")
     step_2c = (ROOT / "docs/guided-demo/02C-build-and-run-scd-etl.md").read_text(encoding="utf-8")
     step_3 = (ROOT / "docs/guided-demo/03-author-and-freeze-data-contract.md").read_text(encoding="utf-8")
 
-    assert "# Step 2. Build a Pipeline" in step_2
+    assert "# Plug-and-Play 02: Pipeline Template" in step_2
     assert "02_pipeline.ipynb" in step_2
     assert "orders" not in step_2.casefold()
     assert "# Step 2A. Run the Full Refresh Demo" in step_2a

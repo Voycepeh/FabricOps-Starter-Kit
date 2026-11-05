@@ -7,4 +7,4 @@ Plug-and-Play pipeline capabilities and implementation details now live on [Engi
 
 - [Open Engineering](../engineering.md)
 - [Inspect Read & Write Modes](../reference/read-and-load-strategies.md)
-- [Run Guided Demo Step 2](../guided-demo/02-build-and-run-etl.md)
+- [Watch and explore Plug-and-Play 02: Pipeline Template](../guided-demo/02-build-and-run-etl.md)
