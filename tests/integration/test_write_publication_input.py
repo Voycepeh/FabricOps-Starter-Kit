@@ -14,6 +14,15 @@ io = import_module("fabricops_kit.io")
 pytestmark = pytest.mark.spark
 
 
+def _persistent_rdd_ids(spark):
+    """Track cache identities without relying on unrelated RDDs surviving JVM GC."""
+    iterator = spark.sparkContext._jsc.sc().getPersistentRDDs().keysIterator()
+    identities = set()
+    while iterator.hasNext():
+        identities.add(int(iterator.next()))
+    return identities
+
+
 @pytest.fixture
 def publication_input_runtime(monkeypatch, spark_session):
     """Exercise batch materialization while isolating Fabric transport and metadata."""
@@ -75,7 +84,7 @@ def publication_input_runtime(monkeypatch, spark_session):
 def test_final_input_is_writer_input_and_usable_after_cleanup(publication_input_runtime, spark_session, store_type, strategy):
     state, _, incoming, run = publication_input_runtime
     state.store_type, state.strategy = store_type, strategy
-    caches = spark_session.sparkContext._jsc.sc().getPersistentRDDs().size()
+    caches = _persistent_rdd_ids(spark_session)
     result = run()
     frame = result["dataframe"]
     assert frame is state.received
@@ -85,7 +94,7 @@ def test_final_input_is_writer_input_and_usable_after_cleanup(publication_input_
     if strategy == "scd2":
         assert {"_effective_from", "_effective_to", "_is_current"} <= set(frame.columns)
         assert all(r._effective_from == r.modified and r._effective_to is None and r._is_current for r in frame.collect())
-    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() > caches
+    assert _persistent_rdd_ids(spark_session) - caches
     metrics = result["write_metrics"]
     assert metrics["input_rows"] == 2
     assert metrics["total_target_rows"] is None
@@ -94,7 +103,7 @@ def test_final_input_is_writer_input_and_usable_after_cleanup(publication_input_
     if strategy.startswith("scd"):
         assert all(metrics[k] is None for k in ("rows_inserted", "rows_updated", "versions_inserted", "versions_expired"))
     frame.unpersist(blocking=True)
-    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
+    assert _persistent_rdd_ids(spark_session) <= caches
 
 
 def test_append_new_only_snapshot_survives_target_change(publication_input_runtime, spark_session):
@@ -126,14 +135,14 @@ def test_failure_never_finalizes_and_cleans_caches(publication_input_runtime, mo
     from unittest.mock import Mock
     finalize = Mock()
     monkeypatch.setattr(shared, "commit_pipeline_write_success", finalize)
-    caches = spark_session.sparkContext._jsc.sc().getPersistentRDDs().size()
+    caches = _persistent_rdd_ids(spark_session)
     with pytest.raises(RuntimeError) as raised:
         run()
     assert not getattr(raised.value, "published", False)
     assert getattr(raised.value, "write_metrics", {}).get("rows_committed") is None
     assert state.metrics["rows_committed"] is None
     finalize.assert_not_called()
-    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
+    assert _persistent_rdd_ids(spark_session) <= caches
 
 
 @pytest.mark.parametrize("store_type", ["lakehouse", "warehouse"])
@@ -159,7 +168,7 @@ def test_dry_run_returns_prepared_input_without_publication(publication_input_ru
 def test_no_unseen_hashes_returns_empty_input_and_zero_commits(publication_input_runtime, spark_session):
     state, _, incoming, run = publication_input_runtime
     state.strategy = "append_new_only"
-    caches = spark_session.sparkContext._jsc.sc().getPersistentRDDs().size()
+    caches = _persistent_rdd_ids(spark_session)
     result = run(incoming.where("id = 1"))
     assert result["published"] is False
     assert result["publication_status"] == "no_unseen_hashes"
@@ -167,7 +176,7 @@ def test_no_unseen_hashes_returns_empty_input_and_zero_commits(publication_input
     assert result["write_metrics"]["rows_committed"] == 0
     assert state.received is None
     result["dataframe"].unpersist(blocking=True)
-    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
+    assert _persistent_rdd_ids(spark_session) <= caches
 
 
 def test_empty_incremental_scope_returns_usable_prepared_input(publication_input_runtime, monkeypatch):

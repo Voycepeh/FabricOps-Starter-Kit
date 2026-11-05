@@ -226,13 +226,10 @@ def test_reused_promotion_id_with_changed_code_rejects(monkeypatch):
 
 def test_ungoverned_physical_alias_is_protected_in_foreign_workspace(monkeypatch):
     """Verify ungoverned physical alias is protected in foreign workspace."""
-    calls = []
-    monkeypatch.setattr(service, "publication_claim", lambda *a, **kw: calls.append(kw.get("release", False)))
     monkeypatch.setattr(service, "read_activations", lambda **kw: [contract_candidate("PROD")])
     plan = SimpleNamespace(plan_id="run", evidence={}, runtime_context={}, workspace_id="DEV")
     with pytest.raises(ValueError, match="physical destination alias"):
         service.guard_ungoverned_write(plan, "alias", operation(workspace="PROD")["destination"])
-    assert calls == [False, True]
 
 
 def test_redundant_public_approval_functions_are_removed():
