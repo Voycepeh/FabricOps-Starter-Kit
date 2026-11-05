@@ -280,7 +280,9 @@ Errors and edge cases
     commits, empty DataFrames, small-file risk, and Spark shuffle failures
     are handled by Spark/Delta or the configured Fabric runtime. The
     function does not make simultaneous independent writes to the same
-    table safe.
+    business table safe. Canonical Metadata appends retry only confirmed
+    aborted Delta concurrency transactions with bounded jittered backoff.
+    Permission errors and unknown commit outcomes propagate without replay.
 
 Side effects
     This function performs a physical Delta table write and triggers Spark
@@ -325,7 +327,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:18`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L18-L322">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L18-L329">View on GitHub</a>
 </div>
 
 
@@ -341,7 +343,7 @@ make one write faster.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 22 |
+| Live-critical dependencies | 23 |
 
 ### Release history
 
@@ -377,6 +379,7 @@ make one write faster.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 </ul>

@@ -18,7 +18,6 @@ def runtime(monkeypatch):
     """Keep the real journal and persistence logic; simulate only Fabric/Delta I/O."""
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
-    monkeypatch.setattr(activation, "publication_claim", lambda *a, **kw: None)
     from importlib import metadata
     installed_version = metadata.version
     monkeypatch.setattr(metadata, "version", lambda name: "test-delta-runtime" if name == "delta-spark" else installed_version(name))

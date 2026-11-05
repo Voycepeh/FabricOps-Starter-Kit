@@ -104,8 +104,9 @@ repeat the run or deploy automatically. Presentation/export failures are
 reported separately and do not change the finalized outcome. This is not
 Governance approval. Ungoverned and
 Governed executions persist their real operational outcome. Persistent
-finalization also releases this execution's physical publication claims. Interrupted runs
-remain incomplete and are never reported as successful finalization.
+finalization records whole-run completion. Interrupted runs remain incomplete
+and are never reported as successful finalization. Each target has one owning
+pipeline; schedules must prevent overlapping writes to the same target.
 
 </div>
 
@@ -118,7 +119,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L295">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L294">View on GitHub</a>
 </div>
 
 
@@ -134,7 +135,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 113 |
+| Live-critical dependencies | 105 |
 
 ### Release history
 
@@ -167,12 +168,10 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.persist_engineering_dry_run</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.persist_engineering_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.promoted_notebook</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.publication_claim</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_history</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_registry</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.release_pipeline_lease</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_pipeline_identity</code></li>
@@ -199,7 +198,6 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
@@ -238,22 +236,17 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._elapsed_seconds</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
-<li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
-<li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.finalize_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>

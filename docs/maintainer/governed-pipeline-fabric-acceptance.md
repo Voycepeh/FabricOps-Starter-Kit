@@ -29,7 +29,7 @@ Record commit/version, date, tester, disposable workspace labels and outcomes. K
 | Agreement authorization | Review and execution independently verify the active physical Contract's exact effective Agreement; consumer provisioning uses the same association | Pending |
 | Contract replacement | Next run adopts a compatible newly activated Contract without notebook promotion; Run retains exact per-operation Contract ID/version/hash | Pending |
 | Delta concurrency | Simultaneous first promotions, phantom inserts, stale versions and lost acknowledgements preserve at most one active monotonic version | Pending |
-| Physical publication | Old/new admitted versions and Ungoverned/Contract Activation mutations use the existing exclusive target claims; interrupted claims require reconciliation | Pending |
+| Physical publication | Each target has one owning pipeline; old/new schedules do not overlap; Contract Activation runs while its owning pipeline is stopped | Pending |
 | Revocation racing deployment | Staged artifacts/deployment records confer no authority after revocation; subsequent admission and managed boundaries fail closed | Pending |
 | Manual/scheduled execution | Identical approval/integrity checks; superseded notebook schedules reject; Engineering explicitly rebinds schedules | Pending |
 | Parameter overrides | Changed code, SQL, setup parameters, behavior metadata or physical operations reject; Markdown, raw documentation cells, cell IDs, outputs, counts and transient timing/UI metadata may change during execution | Pending |

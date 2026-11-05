@@ -41,7 +41,7 @@ Governed uses the **same pipeline workflow in the Production workspace**, with c
 
 Run the **separate promoted Governed notebook** returned by Step 5, after tenant validation is complete. Do not switch the development notebook to Governed manually. Its frozen setup mode and exact behavior parameters are verified; ordinary parameter overrides cannot change approved behavior.
 
-Use the same public calls: `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`. A new start must use the currently active notebook version. Already admitted older versions may finish with their captured version and Contracts; physical target publication claims exclude conflicting writers. Engineers explicitly rebind their schedules to the intended active item. Schedule timing alone may change without promotion.
+Use the same public calls: `setup_pipeline()`, `orchestrate_read()`, `orchestrate_write()` and `finalize_pipeline()`. A new start must use the currently active notebook version. Already admitted older versions may finish with their captured version and Contracts; each target table has one owning pipeline, and schedules must prevent overlapping runs. Stop that pipeline before changing its Contract Activation. Engineers explicitly rebind their schedules to the intended active item. Schedule timing alone may change without promotion.
 
 ### Check the two independent publications
 

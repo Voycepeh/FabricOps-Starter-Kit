@@ -16,17 +16,6 @@ def test_fresh_registry_is_empty_and_does_not_manufacture_control(authority_delt
     assert service.read_registry(context=r.context, spark_session=r.spark) == []
 
 
-def test_target_claims_exclude_other_writers_and_can_release(authority_delta):
-    """Verify target claims exclude other writers and can release."""
-    r = authority_delta
-    target = operation()["destination"]
-    service.publication_claim("first", target, context=r.context, spark_session=r.spark)
-    service.publication_claim("first", target, context=r.context, spark_session=r.spark)
-    with pytest.raises(RuntimeError, match="publication lease"):
-        service.publication_claim("second", target, context=r.context, spark_session=r.spark)
-    service.publication_claim("first", target, context=r.context, spark_session=r.spark, release=True)
-    service.publication_claim("second", target, context=r.context, spark_session=r.spark)
-    assert service.read_registry(context=r.context, spark_session=r.spark) == []
 
 
 def test_complete_notebook_archive_is_write_once_and_exact(authority_delta, tmp_path):
@@ -42,24 +31,27 @@ def test_complete_notebook_archive_is_write_once_and_exact(authority_delta, tmp_
     assert service.snapshot_file(uri, spark_session=r.spark) == original
 
 
-def test_old_and_new_version_writers_cannot_claim_one_target_concurrently(authority_delta, monkeypatch):
-    """Actual concurrent claims admit one version's writer and reject the conflicting publisher."""
-    from threading import Barrier
+@pytest.mark.parametrize('parallelism', [5, 10, 20])
+def test_independent_workspace_promotions_survive_shared_snapshot_conflicts(authority_delta, monkeypatch, parallelism):
+    """All workspace-specific approvals survive collisions in one shared Registry."""
+    from threading import Barrier, local
     r = authority_delta
-    target = operation()['destination']
-    service.publication_claim('seed', target, context=r.context, spark_session=r.spark)
-    service.publication_claim('seed', target, context=r.context, spark_session=r.spark, release=True)
-    barrier, original = Barrier(2), service.replace_metadata_transaction
-    def synchronized(*args, **kwargs):
-        barrier.wait(timeout=60)
+    ready, state = Barrier(parallelism), local()
+    original = service.replace_metadata_transaction
+    def collide_first_attempt(*args, **kwargs):
+        if not getattr(state, 'started', False):
+            state.started = True
+            ready.wait(timeout=120)
         return original(*args, **kwargs)
-    monkeypatch.setattr(service, 'replace_metadata_transaction', synchronized)
-    def claim(owner):
-        try:
-            service.publication_claim(owner, target, context=r.context, spark_session=r.spark)
-            return True
-        except Exception:
-            return False
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        assert sum(pool.map(claim, ('old-version-run', 'new-version-run'))) == 1
-    assert service.read_registry(context=r.context, spark_session=r.spark) == []
+    monkeypatch.setattr(service, 'replace_metadata_transaction', collide_first_attempt)
+    def promote(index):
+        candidate = r.candidate(workspace=f'workspace-{index}')
+        candidate['_committed_by'] = f'engineer-{index}'
+        return service.commit_pipeline_promotion(candidate, expected_active_version=None,
+            context=r.context, spark_session=r.spark)
+    with ThreadPoolExecutor(parallelism) as pool:
+        results = list(pool.map(promote, range(parallelism)))
+    rows = service.read_registry(context=r.context, spark_session=r.spark)
+    assert len(rows) == len(results) == parallelism
+    assert len({row['execution_workspace_id'] for row in rows}) == parallelism
+    assert len({row['_committed_by'] for row in rows}) == parallelism
