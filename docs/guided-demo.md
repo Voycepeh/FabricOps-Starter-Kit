@@ -76,7 +76,7 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 | [1. Establish Governance context](guided-demo/01-establish-governance-context.md) | `01_governance` | Create Data Stewards and a Data Agreement. |
 | [2. Understand the Pipeline Template](guided-demo/02-build-and-run-etl.md) | `02_pipeline` | Learn the reusable Environment → Data Contract → Read → Transform → Write scaffold. |
 | [2A. Run the Full Refresh Demo](guided-demo/02A-full-refresh-demo.md) | `02A_full_refresh_demo` | Run the completed Orders, Products, and Order History Full → Overwrite example. |
-| [2B. Compare Append All and Append New Only](guided-demo/02B-build-and-run-incremental-append-etl.md) | `02B_incremental_append_demo` | Send one Full Read output to separate append targets: totals 8/20/32 versus 8/12/12. |
+| [2B. Compare Incremental Append and Full Hash Append](guided-demo/02B-build-and-run-incremental-append-etl.md) | `02B_incremental_append_demo` | Compare Incremental Read + Append All with Full Read + Append New Only; both targets finish at 12 rows. |
 | [2C. Run the SCD1 and SCD2 Demo](guided-demo/02C-build-and-run-scd-etl.md) | `02C_scd_demo` | Run three complete Product Master snapshots and compare current state with retained history. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Preview and enforce the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02A_full_refresh_demo` | Preview the exact frozen candidate in Dry Run, or enforce an activated version in Governed mode. |

@@ -10,8 +10,10 @@ the authoritative integration test for runtime behaviour.
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Iterable
 from pathlib import Path
+from urllib.parse import unquote
 
 import nbformat
 import pytest
@@ -403,40 +405,86 @@ def test_02a_preserves_the_full_refresh_pipeline():
     assert code_source.count('display(write_result["dataframe"].limit(10))') == 2
 
 
-def test_02b_has_ordered_full_read_and_two_independent_append_targets():
-    """02B compares the same Full Read output with distinct append destinations."""
+def test_02b_has_ordered_independent_incremental_and_full_append_paths():
+    """02B binds each independent Read to its intended transformation and target."""
     name = "02B_incremental_append_demo.ipynb"
     notebook = _load_notebook(DEMO_NOTEBOOK_DIR / name)
     source = _demo_source(name)
     ids = [cell.get("id") for cell in notebook.cells]
-    ordered = ["imports", "demo-day", "read-csv", "contracts", "read-1", "transform", "write-1", "write-2"]
+    ordered = [
+        "imports", "demo-day", "read-csv", "contracts", "read-setup", "read-1",
+        "transform", "write-1", "finalize-incremental", "setup-full", "read-2",
+        "transform-full", "write-2", "finalize-full",
+    ]
     assert [ids.index(cell_id) for cell_id in ordered] == sorted(ids.index(cell_id) for cell_id in ordered)
     assert "DEMO_DAY = 1" in _demo_cell(name, "demo-day").source
     assert "inventory_day2.csv" in source and "inventory_day1.csv" not in source
     assert '.dropDuplicates(["movement_id"])' in source
     assert 'mode="overwrite"' in _demo_cell(name, "read-csv").source
-    assert source.count("orchestrate_read(") == 1
+    assert source.count("orchestrate_read(") == 2
     assert source.count('read_mode="full"') == 1
-    assert 'read_mode="incremental"' not in source
-    assert "target_table_id=" not in source
-    calls = []
-    for cell_id in ("write-1", "write-2"):
-        tree = ast.parse(_demo_cell(name, cell_id).source)
-        calls.extend(node for node in ast.walk(tree) if isinstance(node, ast.Call)
-                     and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_write")
-    assert len(calls) == 2
+    assert source.count('read_mode="incremental"') == 1
+
+    incremental_tree = ast.parse(_demo_cell(name, "read-1").source)
+    resolve_call = next(node for node in ast.walk(incremental_tree) if isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Name) and node.func.id == "resolve_table_id")
+    resolve_keywords = {keyword.arg: ast.literal_eval(keyword.value) for keyword in resolve_call.keywords}
+    assert resolve_keywords == {
+        "store": "Silver", "schema": "demo", "table_name": "inventory_movements_append_all",
+    }
+    incremental_call = next(node for node in ast.walk(incremental_tree) if isinstance(node, ast.Call)
+                            and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_read")
+    incremental_keywords = {keyword.arg: keyword.value for keyword in incremental_call.keywords}
+    assert ast.literal_eval(incremental_keywords["read_mode"]) == "incremental"
+    assert ast.literal_eval(incremental_keywords["read_parameters"]) == {"watermark_column": "modified_datetime"}
+    assert isinstance(incremental_keywords["target_table_id"], ast.Name)
+    assert incremental_keywords["target_table_id"].id == "append_all_target_id"
+
+    full_tree = ast.parse(_demo_cell(name, "read-2").source)
+    full_call = next(node for node in ast.walk(full_tree) if isinstance(node, ast.Call)
+                     and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_read")
+    full_keywords = {keyword.arg: keyword.value for keyword in full_call.keywords}
+    assert ast.literal_eval(full_keywords["read_mode"]) == "full"
+    assert "target_table_id" not in full_keywords and "read_parameters" not in full_keywords
+
     destinations = []
-    for call, mode in zip(calls, ("append_all", "append_new_only"), strict=True):
+    expected_inputs = ("incremental_append_all_df", "full_append_new_only_df")
+    for cell_id, mode, expected_input in zip(
+        ("write-1", "write-2"), ("append_all", "append_new_only"), expected_inputs, strict=True
+    ):
+        tree = ast.parse(_demo_cell(name, cell_id).source)
+        call = next(node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_write")
         assert len(call.args) == 1 and isinstance(call.args[0], ast.Name)
-        assert call.args[0].id == "transformed_df"
+        assert call.args[0].id == expected_input
         keywords = {keyword.arg: ast.literal_eval(keyword.value) for keyword in call.keywords}
         assert keywords["store"] == "Silver" and keywords["schema"] == "demo"
         assert keywords["write_mode"] == mode
         destinations.append(keywords["table_name"])
     assert destinations == ["inventory_movements_append_all", "inventory_movements_append_new_only"]
-    assert "| 1 | 8 | 8 | 8 |" in source
-    assert "| 2 | 12 | 20 | 12 |" in source
-    assert "| 3 | 12 | 32 | 12 |" in source
+    assert 'incremental_append_all_df = transform_inventory(' in source
+    assert 'full_append_new_only_df = transform_inventory(' in source
+    assert source.count("finalize_pipeline(") == 2
+    assert "| 1 | 8 / 8 / 8 | 8 / 8 / 8 | 8 | 8 |" in source
+    assert "| 2 | 4 / 4 / 4 | 12 / 12 / 4 | 12 | 12 |" in source
+    assert "| 3 | 0 / 0 / 0 | 12 / 12 / 0 | 12 | 12 |" in source
+
+
+def test_02b_guided_demo_restores_and_resolves_instructional_images():
+    """The visual walkthrough remains a tested part of the 02B teaching contract."""
+    page = ROOT / "docs/guided-demo/02B-build-and-run-incremental-append-etl.md"
+    content = page.read_text(encoding="utf-8")
+    references = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", content)
+    local_references = [reference for reference in references if not reference.startswith(("http://", "https://", "/"))]
+    assert local_references
+    missing = [reference for reference in local_references if not (page.parent / unquote(reference)).resolve().is_file()]
+    assert not missing
+    required = {
+        "File Upload.png", "Day 1.png", "Incremental_Read_inspect.png", "Incremental_Write_Inspect.png",
+        "Day 2.png", "Incremental_Read_Day2.png", "Incremental_Write_Day2.png",
+        "Day 3.png", "Incremental_Read_Day1_again.png", "Incremental_Write_Day1_again.png",
+    }
+    assert required <= {Path(unquote(reference)).name for reference in local_references}
 
 
 def test_02c_has_ordered_full_read_and_two_scd_writes():
@@ -557,6 +605,20 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
 def test_finalization_is_one_call_without_manual_observation_profiling(notebook_path):
     """Every maintained 02 variant delegates observation publication to finalization."""
     notebook = _load_notebook(notebook_path)
+    if notebook_path.name == "02B_incremental_append_demo.ipynb":
+        finalize_calls = []
+        for code_cell in (cell for cell in notebook.cells if cell.cell_type == "code"):
+            tree = ast.parse(code_cell.source)
+            finalize_calls.extend(
+                node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name) and node.func.id == "finalize_pipeline"
+            )
+        assert len(finalize_calls) == 2
+        assert all(len(call.args) == 1 for call in finalize_calls)
+        source = "\n".join(cell.source for cell in notebook.cells)
+        assert "persist_source_observations" not in source
+        assert "profile_table" not in source
+        return
     cell = next(cell for cell in notebook.cells if cell.get("id") == "finalize-run")
     pipeline, result = object(), {"status": "ungoverned_completed"}
     calls = []

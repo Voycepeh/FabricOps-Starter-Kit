@@ -212,7 +212,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
     Each successful Full Refresh Write replaces the target with the current prepared data. Rerun Read → Transform → Write with a fresh plan and verify the expected rows. Keep existing metadata and publication history; no manual deletion is required.
 
-**Next optional processing mode:** [Step 2B. Compare Append All and Append New Only](02B-build-and-run-incremental-append-etl.md)
+**Next optional processing mode:** [Step 2B. Compare Incremental Append and Full Hash Append](02B-build-and-run-incremental-append-etl.md)
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 

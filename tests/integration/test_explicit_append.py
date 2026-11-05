@@ -55,8 +55,8 @@ def test_old_append_is_rejected():
         shared.validated_processing({'load_strategy': 'append'})
 
 
-def test_02b_notebook_three_day_comparison_uses_same_dataframe(spark_session, monkeypatch):
-    """Execute demo cells with real CSVs, transforms and hash filtering, without Fabric I/O."""
+def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session, monkeypatch):
+    """Execute both 02B paths with real CSVs, incremental scopes, transforms, and hash filtering."""
     import inspect
     import json
     from pathlib import Path
@@ -68,14 +68,18 @@ def test_02b_notebook_three_day_comparison_uses_same_dataframe(spark_session, mo
     notebook = json.loads((data / '02B_incremental_append_demo.ipynb').read_text())
     cells = {cell['id']: ''.join(cell['source']) for cell in notebook['cells']}
     bronze = spark_session.read.csv(str(data / 'inventory_day1.csv'), header=True, inferSchema=True)
-    targets, submitted, reads = {}, [], []
+    targets, submitted, reads, finalized = {}, [], [], []
+    checkpoint = None
+    pending_checkpoint = None
 
     def read_csv(path, **kwargs):
         return spark_session.read.csv(str(data / Path(path).name), header=True, inferSchema=True)
 
     def read_table(*, table_name, store, schema):
-        assert (store, schema, table_name) == ('Bronze', 'demo', 'inventory_movements')
-        return bronze
+        if (store, schema, table_name) == ('Bronze', 'demo', 'inventory_movements'):
+            return bronze
+        assert store == 'Silver' and schema == 'demo' and table_name in targets
+        return targets[table_name]
 
     def stage(frame, *, table_name, store, schema, mode):
         nonlocal bronze
@@ -83,12 +87,24 @@ def test_02b_notebook_three_day_comparison_uses_same_dataframe(spark_session, mo
         bronze = frame
 
     def read(**kwargs):
+        nonlocal pending_checkpoint
         inspect.signature(orchestrate_read).bind(**kwargs)
-        assert kwargs['read_mode'] == 'full'
-        reads.append(bronze)
-        return {'dataframe': bronze}
+        assert (kwargs['store'], kwargs['schema'], kwargs['table_name']) == ('Bronze', 'demo', 'inventory_movements')
+        if kwargs['read_mode'] == 'incremental':
+            assert kwargs['read_parameters'] == {'watermark_column': 'modified_datetime'}
+            assert kwargs['target_table_id'] == 'canonical-append-all-target'
+            frame = bronze if checkpoint is None else bronze.where(F.col('modified_datetime') > F.lit(checkpoint))
+            values = [row.modified_datetime for row in frame.select('modified_datetime').collect()]
+            pending_checkpoint = max(values) if values else checkpoint
+        else:
+            assert kwargs['read_mode'] == 'full'
+            assert 'target_table_id' not in kwargs and 'read_parameters' not in kwargs
+            frame = bronze
+        reads.append((kwargs['read_mode'], frame))
+        return {'dataframe': frame}
 
     def write(frame, **kwargs):
+        nonlocal checkpoint
         inspect.signature(orchestrate_write).bind(frame, **kwargs)
         assert kwargs['store'] == 'Silver' and kwargs['schema'] == 'demo'
         submitted.append(frame)
@@ -99,20 +115,44 @@ def test_02b_notebook_three_day_comparison_uses_same_dataframe(spark_session, mo
             existing = targets.get(name, incoming.limit(0))
             monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: existing)
             incoming = shared.filter_unpublished_rows(incoming, identity, context={})
+            commit_checkpoint = False
         else:
             assert kwargs['write_mode'] == 'append_all'
-        targets[name] = targets[name].unionByName(incoming) if name in targets else incoming
-        return {'dataframe': frame}
+            commit_checkpoint = True
+        has_rows = bool(incoming.limit(1).count())
+        if has_rows:
+            targets[name] = targets[name].unionByName(incoming) if name in targets else incoming
+        if commit_checkpoint:
+            checkpoint = pending_checkpoint
+        return {'dataframe': frame, 'published': has_rows}
 
-    namespace = dict(F=F, read_lakehouse_csv=read_csv, read_lakehouse_table=read_table,
+    def setup_pipeline(**kwargs):
+        assert kwargs == {'pipeline_mode': 'Ungoverned', 'observe_source': False, 'source_observation_days': None}
+        return object()
+
+    def finalize_pipeline(pipeline):
+        finalized.append(pipeline)
+        return {'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}
+
+    namespace = dict(F=F, PIPELINE_MODE='Ungoverned', pipelines={}, pipeline_results={}, sources={}, writes={},
+                     read_lakehouse_csv=read_csv, read_lakehouse_table=read_table,
                      write_lakehouse_table=stage, orchestrate_read=read, orchestrate_write=write,
+                     resolve_table_id=lambda **kwargs: 'canonical-append-all-target',
+                     setup_pipeline=setup_pipeline, finalize_pipeline=finalize_pipeline,
                      display=lambda frame: None)
-    for day, source_count, all_count, new_count in ((1, 8, 8, 8), (2, 12, 20, 12), (3, 12, 32, 12)):
+    for day, incremental_count, full_count in ((1, 8, 8), (2, 4, 12), (3, 0, 12)):
         namespace['DEMO_DAY'] = day
-        for cell_id in ('read-csv', 'read-setup', 'read-1', 'transform', 'write-setup', 'write-1', 'write-2'):
+        for cell_id in (
+            'read-csv', 'read-setup', 'read-1', 'transform', 'write-setup', 'write-1',
+            'finalize-incremental', 'setup-full', 'read-2', 'transform-full', 'write-2', 'finalize-full',
+        ):
             exec(compile(cells[cell_id], f'02B:{cell_id}', 'exec'), namespace)
-        assert reads[-1].count() == source_count
-        assert submitted[-2] is submitted[-1] is namespace['transformed_df']
-        assert targets['inventory_movements_append_all'].count() == all_count
-        assert targets['inventory_movements_append_new_only'].count() == new_count
-    assert len(reads) == 3 and len(submitted) == 6
+        assert reads[-2][0] == 'incremental' and reads[-2][1].count() == incremental_count
+        assert reads[-1][0] == 'full' and reads[-1][1].count() == full_count
+        assert submitted[-2] is namespace['incremental_append_all_df']
+        assert submitted[-1] is namespace['full_append_new_only_df']
+        assert submitted[-2] is not submitted[-1]
+        expected_total = 8 if day == 1 else 12
+        assert targets['inventory_movements_append_all'].count() == expected_total
+        assert targets['inventory_movements_append_new_only'].count() == expected_total
+    assert len(reads) == 6 and len(submitted) == 6 and len(finalized) == 6
