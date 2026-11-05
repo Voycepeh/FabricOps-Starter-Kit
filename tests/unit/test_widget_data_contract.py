@@ -1502,10 +1502,13 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert "height:500px" not in style
     assert "max-height:500px" not in style
     assert "height:clamp(520px, calc(100vh - 220px), 720px)" in style
+    assert ".fabricops-data-contract * { overflow-anchor:none !important; }" in style
     assert "align-items:stretch !important; overflow:hidden !important" in style
     assert "height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto" in style
     assert "gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable" in style
     assert "align-content:start; overflow-x:hidden !important; overflow-y:auto !important" in style
+    assert "scrollbar-gutter:stable; overscroll-behavior:contain" in style
+    assert "overflow:visible; overscroll-behavior:auto" in style
     assert "height:auto; max-height:none; overflow:visible !important" in style
     assert ".fabricops-contract-columns { height:540px !important; }" in style
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes

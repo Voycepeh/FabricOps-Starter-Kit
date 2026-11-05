@@ -114,6 +114,8 @@ _CONTRACT_STYLE = """<style>
     height:auto !important; max-height:none !important; overflow:visible !important;
     scrollbar-gutter:auto;
 }
+.fabricops-data-contract,
+.fabricops-data-contract * { overflow-anchor:none !important; }
 .fabricops-data-contract .fabricops-contract-nav { width:100%; margin:0; }
 .fabricops-data-contract .fabricops-contract-nav-row {
     position:sticky; top:0; z-index:4; padding:4px 0 6px; background:var(--form-canvas, #f6f8fb);
@@ -133,7 +135,7 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-contract-sidebar {
     height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto;
-    scrollbar-gutter:stable;
+    scrollbar-gutter:stable; overscroll-behavior:contain;
 }
 .fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:8px; }
 .fabricops-data-contract .fabricops-contract-workspace {
@@ -143,6 +145,7 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-contract-detail {
     height:100%; min-height:0; max-height:100%; border:0 !important; padding:0 !important;
     gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable;
+    overscroll-behavior:contain;
 }
 .fabricops-data-contract .fabricops-contract-detail > .widget-vbox {
     background:#fff; border:1px solid var(--form-border); border-radius:8px;
@@ -214,7 +217,8 @@ _CONTRACT_STYLE = """<style>
     padding:0 !important; border:0 !important; background:transparent;
 }
 .fabricops-data-contract .fabricops-data-quality-workspace {
-    align-content:start; overflow-x:hidden !important; overflow-y:auto !important; scrollbar-gutter:stable;
+    align-content:start; overflow-x:hidden !important; overflow-y:auto !important;
+    scrollbar-gutter:stable; overscroll-behavior:contain;
 }
 .fabricops-data-contract .fabricops-data-quality-workspace > .widget-vbox > .fabricops-section {
     height:auto !important; max-height:none !important; min-height:0; overflow:visible !important;
@@ -292,8 +296,9 @@ _CONTRACT_STYLE = """<style>
     }
     .fabricops-data-contract .fabricops-contract-sidebar,
     .fabricops-data-contract .fabricops-contract-detail {
-        height:auto; max-height:none; overflow:visible;
+        height:auto; max-height:none; overflow:visible; overscroll-behavior:auto;
     }
+    .fabricops-data-contract .fabricops-data-quality-workspace { overscroll-behavior:auto; }
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
     .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
