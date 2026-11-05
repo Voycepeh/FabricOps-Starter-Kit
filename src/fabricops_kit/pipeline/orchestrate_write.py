@@ -82,6 +82,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         row hash and target audit columns, plus SCD2 lifecycle columns where applicable.
         Append New Only returns only rows submitted for insertion. SCD previews
         represent processing input, not the reconstructed post-merge destination.
+        Persistent modes return an eagerly materialized, caller-owned snapshot of
+        the exact physical writer input. It remains inspectable after publication;
+        call ``result["dataframe"].unpersist()`` when inspection is complete.
         ``rows_committed`` measures this attempt; ``total_target_rows`` is the
         destination total where profiling provides it.
 

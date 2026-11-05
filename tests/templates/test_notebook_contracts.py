@@ -382,7 +382,13 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                             and node.value.func.id == "display"]
                 assert len(displays) == 1, (path.name, cell.id)
                 preview = ast.unparse(displays[0])
-                assert "['dataframe'].limit(10)" in preview
+                if preview == "display(write_input.limit(10))":
+                    assert path.name == "02B_incremental_append_demo.ipynb"
+                    assert 'write_input = writes[' in cell.source
+                    assert '["dataframe"]' in cell.source
+                    assert "write_input.unpersist()" in cell.source
+                else:
+                    assert "['dataframe'].limit(10)" in preview
                 calls = [node.func.id for node in ast.walk(tree)
                          if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
                 assert "read_lakehouse_table" not in calls

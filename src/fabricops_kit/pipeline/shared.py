@@ -1159,6 +1159,7 @@ class PublicationBatch:
         self.finalization_recovery = False
         self.receipt = {}
         self.publication_snapshot = []
+        self._pending_caller_snapshot = None
         self._owns_cache = True
 
     def __enter__(self):
@@ -1304,12 +1305,40 @@ class PublicationBatch:
                 "Source Observation was not committed. Inspect the target before retrying."
             )
 
+    def materialize_caller_snapshot(self, dataframe):
+        """Detach the exact writer input and retain it until caller hand-off."""
+        snapshot = dataframe.localCheckpoint(eager=True)
+        checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
+        dataframe_unpersist = snapshot.unpersist
+
+        def release_snapshot(blocking=False):
+            dataframe_unpersist(blocking)
+            checkpoint_rdd.unpersist(blocking)
+            return snapshot
+
+        # DataFrame.unpersist() only addresses SQL cache-manager entries; a local
+        # checkpoint owns a separate persisted RDD. Keep the native caller-facing
+        # cleanup method while extending this snapshot instance to release both.
+        snapshot.unpersist = release_snapshot
+        self._pending_caller_snapshot = snapshot
+        return self._pending_caller_snapshot
+
+    def transfer_caller_snapshot(self):
+        """Transfer cleanup ownership of the detached writer input to the caller."""
+        snapshot = self._pending_caller_snapshot
+        if snapshot is None:
+            raise RuntimeError("The publication input snapshot has not been materialized.")
+        self._pending_caller_snapshot = None
+        return snapshot
+
     def __exit__(self, *_exc):
-        """Release only the cache owned by this publication attempt."""
+        """Release internal caches and any snapshot not transferred to the caller."""
         if getattr(self, "target_hashes", None) is not None:
             self.target_hashes.unpersist()
         if hasattr(self, "filtered_dataframe"):
             self.filtered_dataframe.unpersist()
+        if self._pending_caller_snapshot is not None:
+            self._pending_caller_snapshot.unpersist()
         for key, captured in self._active_sources.items():
             if _ACTIVE_PUBLICATION_SOURCES.get(key) == captured:
                 _ACTIVE_PUBLICATION_SOURCES.pop(key, None)

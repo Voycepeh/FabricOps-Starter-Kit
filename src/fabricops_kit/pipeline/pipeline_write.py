@@ -375,6 +375,10 @@ def pipeline_write(
         and target audit columns. Append New Only returns the filtered rows
         submitted for insertion. SCD1/SCD2 return prepared processing input
         (including SCD2 lifecycle columns), not the post-merge destination.
+        Persistent modes eagerly detach this exact writer input before publication,
+        so it remains inspectable after destination changes and internal cache cleanup.
+        The returned snapshot is caller-owned; call ``dataframe.unpersist()`` after
+        inspection to release its Spark cache.
         Dry Run returns the prepared input available before publication.
         Metrics use integers when reliably measured and None otherwise:
         ``input_rows``, ``input_columns``, ``rows_committed``, ``total_target_rows``,
@@ -657,9 +661,10 @@ def pipeline_write(
             write_metrics.update(rows_committed=0, measurement_source="empty_incremental_scope")
             if verbose:
                 print("FabricOps Write → empty incremental scope; no publication or checkpoint commit")
+            prepared_df = batch.materialize_caller_snapshot(add_target_audit_fields(batch.dataframe, audit))
             return {"table_id": target_table_id, "strategy": strategy, "published": False,
                     "publication_status": "empty_incremental_scope", "write_metrics": write_metrics,
-                    "dataframe": add_target_audit_fields(batch.dataframe, audit)}
+                    "dataframe": batch.transfer_caller_snapshot()}
         success_context["publication"] = batch.receipt
         success_context["publication_snapshot"] = batch.publication_snapshot
         if batch.already_applied:
@@ -699,9 +704,10 @@ def pipeline_write(
             output_rows = prepared_df.count()
             if output_rows == 0:
                 write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="no_unseen_hashes")
+                prepared_df = batch.materialize_caller_snapshot(prepared_df)
                 return {"table_id": target_table_id, "strategy": strategy, "published": False,
                         "publication_status": "no_unseen_hashes", "write_metrics": write_metrics,
-                        "dataframe": prepared_df}
+                        "dataframe": batch.transfer_caller_snapshot()}
             batch.receipt["input_rows"] = output_rows
             success_context["publication"] = batch.receipt
             if store_kind == "lakehouse":
@@ -716,6 +722,12 @@ def pipeline_write(
                 .withColumn("_effective_to", F.lit(None).cast(effective_type))
                 .withColumn("_is_current", F.lit(True))
             )
+
+        # Eagerly detach the exact physical writer input before publication can
+        # change a destination referenced by its logical plan. The batch releases
+        # this snapshot on failure; a successful return transfers cleanup ownership
+        # to the caller through DataFrame.unpersist().
+        prepared_df = batch.materialize_caller_snapshot(prepared_df)
 
         stage_pipeline_write_observations(success_context)
 
@@ -873,4 +885,4 @@ def pipeline_write(
             write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
             write_metrics["rows_unchanged"] = 0
         return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics,
-                "dataframe": prepared_df, "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}
+                "dataframe": batch.transfer_caller_snapshot(), "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}

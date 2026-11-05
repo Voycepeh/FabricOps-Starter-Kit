@@ -18,7 +18,8 @@ pytestmark = pytest.mark.spark
 def publication_input_runtime(monkeypatch, spark_session):
     """Exercise batch materialization while isolating Fabric transport and metadata."""
     state = SimpleNamespace(strategy="overwrite", store_type="warehouse",
-                            confirmed=False, fail=None, native=None, received=None)
+                            confirmed=False, fail=None, native=None, received=None,
+                            incoming=None, target=None)
     context = {"config": object(), "scope_workspace_id": "dev"}
     audit = dict(_committed_at=datetime.now(UTC), _committed_by="tester", _activity_id="activity",
                  _workspace_id="workspace", _workspace_name="workspace", _notebook_id="notebook",
@@ -35,6 +36,8 @@ def publication_input_runtime(monkeypatch, spark_session):
         assert state.metrics.get("rows_committed") is None
         if state.fail == "physical":
             raise RuntimeError("physical publication failed")
+        if state.strategy == "append_new_only":
+            state.target = state.incoming
         state.confirmed = True
         metrics = (context or {}).get("_fabricops_write_metrics", {})
         if state.native is not None:
@@ -55,11 +58,13 @@ def publication_input_runtime(monkeypatch, spark_session):
     monkeypatch.setattr(shared, "execute_lakehouse_processing", publish)
     monkeypatch.setattr(import_module("fabricops_kit.io.shared"), "execute_warehouse_processing", publish)
     incoming = spark_session.createDataFrame([(1, "masked", 1), (2, "masked", 2)], "id int, value string, modified int")
-    hashes = shared.add_row_hash(incoming.where("id = 1")).select("_row_hash")
+    state.target = incoming.where("id = 1")
     def target_hashes(*a, cache_hashes=False, **kw):
+        hashes = shared.add_row_hash(state.target).select("_row_hash")
         return hashes.persist() if cache_hashes else hashes
     monkeypatch.setattr(writer, "validate_target_row_hash", target_hashes)
     def run(frame=incoming):
+        state.incoming = frame
         return writer.pipeline_write(frame, store="Silver", schema="demo", table_name="target",
                                      source_table_ids=[], verbose=False, context=context)
     return state, context, incoming, run
@@ -80,7 +85,7 @@ def test_final_input_is_writer_input_and_usable_after_cleanup(publication_input_
     if strategy == "scd2":
         assert {"_effective_from", "_effective_to", "_is_current"} <= set(frame.columns)
         assert all(r._effective_from == r.modified and r._effective_to is None and r._is_current for r in frame.collect())
-    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
+    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() > caches
     metrics = result["write_metrics"]
     assert metrics["input_rows"] == 2
     assert metrics["total_target_rows"] is None
@@ -88,6 +93,30 @@ def test_final_input_is_writer_input_and_usable_after_cleanup(publication_input_
     assert metrics["rows_committed"] == expected
     if strategy.startswith("scd"):
         assert all(metrics[k] is None for k in ("rows_inserted", "rows_updated", "versions_inserted", "versions_expired"))
+    frame.unpersist(blocking=True)
+    assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
+
+
+def test_append_new_only_snapshot_survives_target_change(publication_input_runtime, spark_session):
+    state, _, _, run = publication_input_runtime
+    incoming = spark_session.createDataFrame(
+        [(value, f"value-{value}", value) for value in range(12)],
+        "id int, value string, modified int",
+    )
+    state.strategy = "append_new_only"
+    state.target = incoming.where("id < 8")
+
+    result = run(incoming)
+    state.target = incoming
+    submitted = result["dataframe"]
+
+    assert submitted.count() == 4
+    assert sorted(row.id for row in submitted.collect()) == [8, 9, 10, 11]
+    assert submitted.count() == 4
+    assert result["write_metrics"]["input_rows"] == 12
+    assert result["write_metrics"]["rows_inserted"] == 4
+    assert result["write_metrics"]["rows_committed"] == 4
+    submitted.unpersist(blocking=True)
 
 
 @pytest.mark.parametrize("failure", ["physical", "confirmation"])
@@ -137,6 +166,7 @@ def test_no_unseen_hashes_returns_empty_input_and_zero_commits(publication_input
     assert result["dataframe"].collect() == []
     assert result["write_metrics"]["rows_committed"] == 0
     assert state.received is None
+    result["dataframe"].unpersist(blocking=True)
     assert spark_session.sparkContext._jsc.sc().getPersistentRDDs().size() == caches
 
 
@@ -149,6 +179,7 @@ def test_empty_incremental_scope_returns_usable_prepared_input(publication_input
     assert result["dataframe"].collect() == []
     assert {"_row_hash", "_committed_at"} <= set(result["dataframe"].columns)
     assert result["write_metrics"]["rows_committed"] == 0
+    result["dataframe"].unpersist(blocking=True)
 
 
 def test_metadata_failure_preserves_confirmed_warehouse_metrics(publication_input_runtime, monkeypatch):
@@ -177,3 +208,4 @@ def test_already_loaded_append_returns_no_new_insertions(publication_input_runti
     assert result["dataframe"].collect() == []
     assert result["write_metrics"]["rows_committed"] == 0
     assert state.received is None
+    result["dataframe"].unpersist(blocking=True)
