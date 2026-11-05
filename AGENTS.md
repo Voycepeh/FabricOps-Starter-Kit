@@ -67,6 +67,7 @@ Inspect and reuse current implementations before creating parallel paths. Avoid 
 | Change | Skill |
 | --- | --- |
 | Public callable or function-level package source | `.agents/skills/fabricops-public-api-change/SKILL.md` |
+| Any SVG, diagram, illustration, visual asset, website brand/style, typography, colour, or screenshot | `.agents/skills/fabricops-visual-design/SKILL.md` (requires Diagram Design skill) |
 | Widget UI, form layout, visual styling, or interaction polish | `.agents/skills/fabricops-widget-ui/SKILL.md` (uses `.agents/skills/frontend-design/SKILL.md`) |
 | Notebook templates under `templates/notebooks/` | `.agents/skills/fabricops-notebook-template/SKILL.md` |
 | Documentation cleanup, structure, or presentation | `.agents/skills/fabricops-docs-maintenance/SKILL.md` |
@@ -220,6 +221,16 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
 ```
 
 Validation builds do not make generated files on `main` current unless those files are intentionally committed in a scoped PR.
+
+## Repository visual identity
+
+- Canonical colors, gradient, typography, and semantic visual roles live in `design/brand.json`.
+- The website uses a blue-to-purple gradient, with Engineering blue and Governance purple; status colors remain semantic. Teal is no longer a general brand accent.
+- Load `.agents/skills/fabricops-visual-design/SKILL.md` before creating or editing any diagram, architecture/workflow SVG, illustration, or site-wide visual treatment. The skill requires the external Diagram Design guidelines and explicit code-grounding for all technical labels and arrows.
+- No fabricated FabricOps logo, icon posing as a logo, watermarks or fictional product branding in any output.
+- All future generated SVG graphics must match shared colors and Segoe UI / code font stacks and pass browser rendering/overflow checks; `docs/stylesheets/brand-tokens.css` is generated from JSON.
+- Run `python scripts/sync_brand_tokens.py --check` for design-system changes. Do not edit generated CSS directly.
+- Preserve existing semantic widget layout/formatting and historical release graphics unless specifically in scope; avoid mass decorative restyling.
 
 ## Documentation and API reference
 
