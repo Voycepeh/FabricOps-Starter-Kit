@@ -107,6 +107,62 @@
                       "Entity": "Run Operation"
                     }
                   },
+                  "Property": "Rows Read"
+                }
+              },
+              "queryRef": "Run Operation.Rows Read",
+              "nativeQueryRef": "Rows Read"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Input Rows"
+                }
+              },
+              "queryRef": "Run Operation.Input Rows",
+              "nativeQueryRef": "Input Rows"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Committed"
+                }
+              },
+              "queryRef": "Run Operation.Rows Committed",
+              "nativeQueryRef": "Rows Committed"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Measurement Source"
+                }
+              },
+              "queryRef": "Run Operation.Measurement Source",
+              "nativeQueryRef": "Measurement Source"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
                   "Property": "Status"
                 }
               },
@@ -131,7 +187,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Related recorded pipeline activity\""
+                  "Value": "\"Related recorded pipeline activity and execution metrics\""
                 }
               }
             }
@@ -144,7 +200,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Related recorded pipeline activity visual\""
+                  "Value": "\"Related recorded pipeline activity and execution metrics visual\""
                 }
               }
             }

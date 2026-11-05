@@ -41,7 +41,7 @@ check('HistoryWindowDays = 180' in (MODEL/'expressions.tmdl').read_text(),'histo
 check(all_tmdl.count('DATEADD(day,-')>=5,'history filter missing from run/diagnostic queries')
 for forbidden in ['result_payload_json','warnings_json','supporting_documents_json','approved_usage_json','custom_fields_json']:
  check(forbidden not in all_tmdl,f'unneeded payload loaded: {forbidden}')
-for path in ['$.operation_key','$.read_mode','$.write_mode','$.stages','$.code','$.table.processing.load_strategy','$.guardrails','$.enrichment.table','$.dry_run.run_id','$.dry_run.status','$.dry_run.boundary_completed','$.dry_run.operations']:
+for path in ['$.operation_key','$.read_mode','$.write_mode','$.rows_read','$.rows_written','$.metrics.rows_read','$.metrics.columns','$.metrics.input_rows','$.metrics.input_columns','$.metrics.rows_committed','$.metrics.rows_inserted','$.metrics.rows_updated','$.metrics.rows_unchanged','$.metrics.versions_inserted','$.metrics.versions_expired','$.metrics.total_target_rows','$.metrics.measurement_source','$.stages','$.code','$.table.processing.load_strategy','$.guardrails','$.enrichment.table','$.dry_run.run_id','$.dry_run.status','$.dry_run.boundary_completed','$.dry_run.operations']:
  check(path in all_tmdl,f'selective JSON path absent: {path}')
 
 # Compare every intentionally selected physical field with the authoritative registry.
@@ -61,6 +61,34 @@ selected={
 'METADATA_DATA_STEWARD':{'steward_id','steward_name','contact','is_active'}}
 for table,cols in selected.items():
  actual={f.name for f in schemas[table].fields}; check(cols<=actual,f'{table}: invented fields {sorted(cols-actual)}')
+ owner=mod.metadata_table_owner(table)
+ schema_expression='GovernanceSchemaSql' if owner=='governance' else 'EngineeringSchemaSql'
+ check(f'[" & {schema_expression} & "].[{table}]' in all_tmdl,f'{table}: query does not use its canonical {owner} schema')
+
+# Validate every selected Pipeline Run JSON metric against the current typed
+# logical contract, not only against a copied list of expected path strings.
+def logical_type(table,*path):
+ current=schemas[table]
+ for name in path:
+  if hasattr(current,'elementType'): current=current.elementType
+  fields={field.name:field.dataType for field in current.fields}
+  if name not in fields: return None
+  current=fields[name]
+ if hasattr(current,'elementType'): current=current.elementType
+ return type(current).__name__
+
+operation_paths={
+ ('rows_read',):'LongType',('rows_written',):'LongType',
+ ('metrics','rows_read'):'LongType',('metrics','columns'):'LongType',
+ ('metrics','input_rows'):'LongType',('metrics','input_columns'):'LongType',
+ ('metrics','rows_committed'):'LongType',('metrics','rows_inserted'):'LongType',
+ ('metrics','rows_updated'):'LongType',('metrics','rows_unchanged'):'LongType',
+ ('metrics','versions_inserted'):'LongType',('metrics','versions_expired'):'LongType',
+ ('metrics','total_target_rows'):'LongType',('metrics','measurement_source'):'StringType',
+}
+for path,expected in operation_paths.items():
+ actual=logical_type('METADATA_PIPELINE_RUN','operations',*path)
+ check(actual==expected,f'METADATA_PIPELINE_RUN.operations.{".".join(path)}: expected {expected}, found {actual}')
 
 # Ensure every report semantic reference resolves to a committed table column or measure.
 columns={}; measures=set(); used_columns=set()

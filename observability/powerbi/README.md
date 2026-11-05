@@ -6,7 +6,7 @@ This directory contains a source-controlled Power BI Project (PBIP), not a desig
 
 - Four visible pages: **Overview**, **Engineering — Pipelines**, **Governance — Tables**, and **Data Owner — Tables**.
 - Two hidden native drillthrough pages: **Pipeline Detail** (workspace-aware Pipeline Key, with an on-page Run selector) and **Table Detail** (workspace-aware Table Key).
-- An Import semantic model in TMDL with explicit SQL projection, selective JSON extraction, DAX diagnostics, and workspace-aware composite keys.
+- An Import semantic model in TMDL with explicit SQL projection, selective JSON extraction, current per-operation read/write metrics, DAX diagnostics, and workspace-aware composite keys.
 - Explicit `DataFilter` interactions for every data-bearing visual pair. This forces cross-filtering rather than relying on a report default.
 - A light, teal-accented report theme, an [all-page static preview](assets/all-pages-preview.svg), and a [semantic-model preview](assets/semantic-model-preview.svg). Preview values are explicitly illustrative.
 
@@ -37,6 +37,8 @@ Right-click a pipeline/run row on Engineering and choose **Drill through > Pipel
 Governance shows all registered physical workspace/Table IDs. Data Owner uses the same table foundation; selecting a Steward filters provider/recipient Agreement participation through the exact Agreement version and latest physical Contract Activation. The model never treats Agreement participation as definitive table ownership.
 
 Run outcomes remain descriptive and mutually distinguish **Successful**, **Failed**, and **Incomplete** records. Sequential stage output shows only what was recorded; an absent later stage is not inferred to have passed or failed. Duration is compared with the historical median without predicting a regression. There is no composite health score, automated recommendation, or RLS.
+
+Pipeline Detail reads the current unified execution metrics from `METADATA_PIPELINE_RUN.operations[].metrics`. Values remain blank when FabricOps did not reliably capture them, and `measurement_source` is shown so native commit metrics, receipts, Dry Run observations, and retry outcomes are not conflated. The legacy top-level `rows_read` and `rows_written` fields are used only as fallbacks for retained Run records that predate the nested metrics payload.
 
 FabricOps supports `governed`, `ungoverned`, and `dry_run` modes. Ordinary Dry Run is session-only and is not guaranteed to be present in durable `METADATA_PIPELINE_RUN` history. Activation is different: every accepted submission carries a complete Dry Run inside `METADATA_PIPELINE_ACTIVATION.package_json`, and Governance appends its independent import/decision records. Engineering and Pipeline Detail show a selective summary of the submitted evidence alongside its decision status and review note. It is never added to Run Count because activation decisions and production runs have different grains; an imported record is not labelled as independently approved.
 

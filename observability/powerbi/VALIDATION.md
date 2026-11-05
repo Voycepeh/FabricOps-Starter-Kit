@@ -8,7 +8,7 @@ python observability/powerbi/tools/validate_pbip.py
 uv run pytest -q tests/unit/test_pipeline_handoff.py tests/unit/test_metadata_schemas.py
 ```
 
-The PBIP validator passes across 193 generated paths. The two repository suites pass with 61 tests. The automated checks cover PBIP/PBIR references, JSON parseability, six-page visibility, native drillthrough bindings, explicit all-pair `DataFilter` interactions, semantic field references, relationship endpoints, source table/column mappings against `metadata_schemas.py`, absence of `SELECT *`, bounded history predicates, selective JSON paths, absence of unused loaded model columns, required DAX measures, activation package invariants, and representative mutually exclusive mock run outcomes.
+The PBIP validator passes across 193 generated paths. The two repository suites pass with 62 tests. The automated checks cover PBIP/PBIR references, JSON parseability, six-page visibility, native drillthrough bindings, explicit all-pair `DataFilter` interactions, semantic field references, relationship endpoints, source table/column mappings and Governance/Engineering schema ownership against `metadata_schemas.py`, typed Pipeline Run execution-metric paths, absence of `SELECT *`, bounded history predicates, selective JSON paths, absence of unused loaded model columns, required DAX measures, activation package invariants, and representative mutually exclusive mock run outcomes.
 
 Additional implementation-time checks:
 
@@ -20,12 +20,13 @@ Additional implementation-time checks:
 - Metadata names and physical columns: `src/fabricops_kit/config/metadata_schemas.py`.
 - Grains and supported relationships: `docs/reference/metadata.md` and generated per-table metadata pages.
 - Pipeline operation/stage/failure JSON: canonical logical schema in `metadata_schemas.py` and pipeline-run tests.
+- Unified operation metrics: nullable read/write metric fields and `measurement_source` in the current `METADATA_PIPELINE_RUN.operations[].metrics` logical contract. Retained top-level row counts are fallback-only.
 - Steward participation: provider/recipient IDs on Agreement; participation is not table ownership.
 - Agreement association: exact Agreement version is selected by `METADATA_DATA_CONTRACT_ACTIVATION` for a physical workspace/Table ID.
 - Dry Run persistence: repository tests confirm ordinary Dry Run is session-only, while every accepted Pipeline Activation package requires a complete, boundary-complete `dry_run`. The report presents that submitted evidence and Governance decision status separately from persisted Run counts.
 - Access wording: `METADATA_DATA_ACCESS` contains observed permissions; the report does not claim effective access or initiate scans.
 
-## Not verified in this Linux environment
+## Not verified by offline repository checks
 
 - Opening/saving the PBIP with Power BI Desktop.
 - Live Fabric SQL authentication, refresh, and `OPENJSON` execution against a customer endpoint.
