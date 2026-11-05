@@ -41,37 +41,7 @@ One Bronze source, one Full Read, one transformed DataFrame and two separate Sil
 
 Counts assume exactly one complete persistent execution per day, fresh Silver targets and unchanged transformation/schema. Both Write blocks receive exactly the same `transformed_df` object. Full Read needs no watermark or target checkpoint.
 
-### Configure Read → Transform → Write
 
-Run Environment, the demo-day and Bronze preparation cells, then Setup Pipeline. Setup Pipeline discovers notebook identity automatically in persistent modes; pipeline source participation is automatic.
-
-```python
-source = orchestrate_read(
-    store="Bronze", schema="demo", table_name="inventory_movements",
-    read_mode="full", verbose=True,
-)
-sources["inventory_movements"] = source
-
-transformed_df = (
-    sources["inventory_movements"]["dataframe"]
-    .withColumn("movement_date", F.to_date("modified_datetime"))
-    .withColumn("quantity_in", F.greatest(F.col("quantity_change"), F.lit(0)))
-    .withColumn("quantity_out", F.greatest(-F.col("quantity_change"), F.lit(0)))
-)
-
-writes["inventory_movements_append_all"] = orchestrate_write(
-    transformed_df,
-    store="Silver", schema="demo", table_name="inventory_movements_append_all",
-    write_mode="append_all", verbose=True,
-)
-writes["inventory_movements_append_new_only"] = orchestrate_write(
-    transformed_df,
-    store="Silver", schema="demo", table_name="inventory_movements_append_new_only",
-    write_mode="append_new_only", verbose=True,
-)
-```
-
-The notebook retains separate Read, Transform and Write cells. `F`, `sources` and `writes` are initialized there. Inline previews show prepared input; read persisted Silver separately to assess publication.
 
 !!! warning "Independent publications"
     The two Writes are not atomic together. If Target A succeeds and Target B fails, inspect publication results and recover the failed publication before starting another execution. A new full execution adds the complete input to Append All again. Exact publication retries use verified receipts; they are different from new executions.
