@@ -28,7 +28,7 @@ For ANY new/changed diagram, architecture, flow, workflow, data/processing illus
 3. Sketch the semantic layout using the external Diagram Design skill. Respect the density limit and flow direction. For platform-specific icons use official licensed assets or neutral system icons, not invented branding.
 4. Build SVG with readable text, coherent scale, intentional whitespace, orthogonal connectors, meaningful shapes and properly routed arrows. Prefer SVG source that is maintainable in Git. Author an accessible `<title>` or `aria-label`.
 5. Render and inspect the actual SVG at page width and narrow width. Check clipping, collisions, alignment, arrows, font substitution, text contrast, and absence of unauthorized logos. Never claim visual QA without rendering.
-6. Run `python scripts/sync_brand_tokens.py --check`, site build and focused tests where applicable. Document explicit limitations and unresolved acceptance gates.
+6. Run `python scripts/sync_brand_tokens.py --check` and `python scripts/check_svg_text_bounds.py`. Fix every overflow warning before PR review. The checker uses conservative font metrics, so also render at 100% and narrow widths to catch browser-dependent overflow and arrow/text collisions. The SVG is not approved until **no text crosses its containing panel**. Run the site build and focused tests where applicable. Document explicit limitations and unresolved acceptance gates.
 
 ## Scope
 
