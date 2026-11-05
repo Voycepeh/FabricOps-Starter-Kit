@@ -1023,7 +1023,7 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     ]
     assert "pattern" not in controls["dq_family_controls"]
     assert any(
-        label == "Pattern · column_0"
+        "Pattern · column_0" in label
         for label, _value in controls["business_saved"].options
     )
     assert "save_column" not in controls
@@ -1477,10 +1477,11 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert controls["business_columns"].description == ""
     assert controls["business_rule_controls"].layout.display == "none"
     assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
-    assert "Current Data Quality Rules" in controls["left_pane"].children[0].children[0].value
-    authoring_grid = controls["right_pane"].children[0]
-    assert "Add Rule Manually" in authoring_grid.children[0].children[0].value
-    assert "Generate Rules with AI" in authoring_grid.children[1].children[0].value
+    assert "Data Quality Rules" in controls["left_pane"].children[0].children[0].value
+    assert controls["add_manual_mode"] in controls["left_pane"].children[0].children[-1].children
+    assert controls["add_ai_mode"] in controls["left_pane"].children[0].children[-1].children
+    controls["add_ai_mode"].click()
+    assert controls["rule_workspace_body"].children == (controls["ai_rule_editor"],)
     for label in ("Table", "Column", "Data Quality", "Review", "AI settings"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
@@ -1517,15 +1518,17 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
 
     controls["top_nav"].value = "Data Quality"
     current_panel = controls["left_pane"].children[0]
-    manual_panel, ai_panel = controls["right_pane"].children[0].children
-    for panel in (current_panel, manual_panel, ai_panel):
+    workspace_panel = controls["right_pane"].children[0]
+    for panel in (current_panel, workspace_panel):
         assert panel.layout.height == "auto"
         assert panel.layout.overflow == "visible"
     assert getattr(controls["business_saved"].layout, "height", None) is None
-    assert getattr(controls["business_proposal_select"].layout, "height", None) is None
-    assert controls["resolve_business_rule"] in ai_panel.children[-1].children
-    reviewer_panel = controls["left_pane"].children[1]
-    assert controls["apply_business_rule"] in reviewer_panel.children[-1].children[1].children
+    controls["add_ai_mode"].click()
+    assert controls["rule_workspace_body"].children == (controls["ai_rule_editor"],)
+    assert controls["resolve_business_rule"] in controls["ai_rule_editor"].children[-1].children
+    controls["business_saved"].value = "advanced"
+    assert controls["rule_workspace_body"].children[0].children[0] is not None
+    assert controls["apply_business_rule"] in controls["business_review_actions"].children[-1].children
 
     for control_name in (
         "row_key_columns", "key_columns", "tracked_columns",
@@ -2383,9 +2386,10 @@ def test_pattern_is_owned_by_dq_rules_not_columns(widget_runtime):
     pattern_options = [
         (label, value)
         for label, value in controls["business_saved"].options
-        if label == "Pattern · column_0"
+        if "Pattern · column_0" in label
     ]
-    assert pattern_options == [("Pattern · column_0", "dq-pattern")]
+    assert len(pattern_options) == 1
+    assert pattern_options[0][1] == "dq-pattern"
 
 
 def test_review_sections_render_column_contract_table_with_profile_and_governance():
@@ -2496,8 +2500,8 @@ def test_manually_authored_dq_rule_appears_in_current_rules(widget_runtime):
     labels = [label for label, _value in controls["business_saved"].options]
 
     assert any("Completeness" in label and "column_0" in label for label in labels)
-    assert "fabricops-dq-rule-table" in controls["current_rules_table"].value
-    assert "Completeness" in controls["current_rules_table"].value
+    assert "fabricops-dq-rule-list" in controls["business_saved"]._dom_classes
+    assert controls["rule_workspace_body"].children[0].children[0] is not None
     assert controls["manual_batch_columns"].value == ()
 
 
@@ -2575,10 +2579,9 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
 
     controls["top_nav"].value = "Data Quality"
     assert controls["current_dq_rules_section"] in controls["left_pane"].children
-    authoring_sections = controls["right_pane"].children[0].children
-    assert controls["manual_dq_rule_section"] in authoring_sections
-    assert controls["ai_dq_rule_section"] in authoring_sections
-    assert "AI generation is unavailable" in controls["ai_dq_rule_section"].children[1].value
+    assert controls["add_ai_mode"].disabled is True
+    controls["add_manual_mode"].click()
+    assert controls["rule_workspace_body"].children == (controls["manual_rule_editor"],)
     assert controls["add_manual_rule"].disabled is False
 
 
@@ -2821,7 +2824,7 @@ def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch)
     assert staged["column_id"] == ""
     assert module._parameters(staged)["pattern"] == "^ORD-[0-9]+$"
     assert any(
-        label == "Pattern · column_0"
+        "Pattern · column_0" in label
         for label, _value in controls["business_saved"].options
     )
 
@@ -3071,9 +3074,9 @@ def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, m
     edited["pattern"] = "^[A-Z][0-9]+$"
     controls["business_parameters"].value = json.dumps(edited)
     controls["business_tolerance"].value = "3"
-    controls["business_proposal_select"].value = 1
+    controls["business_saved"].value = "__ai_draft__:1"
     assert controls["business_tolerance"].layout.display == "none"
-    controls["business_proposal_select"].value = 0
+    controls["business_saved"].value = "__ai_draft__:0"
     assert float(controls["business_tolerance"].value) == 3
     controls["apply_business_rule"].click()
     staged = [row for records in state["_pending_guardrails"].values() for row in records.values()]
@@ -3993,8 +3996,8 @@ def test_saved_incompatible_treatment_requires_explicit_repair(widget_runtime):
     assert widget_runtime['calls']['guardrails']
 
 
-def test_business_review_switches_sources_without_persisting_or_losing_candidates(widget_runtime, monkeypatch):
-    """Generated proposals and draft rules share one reviewer while settings stay staged."""
+def test_business_rule_list_selects_ai_drafts_for_review_without_persisting(widget_runtime, monkeypatch):
+    """AI drafts enter the shared rule list and use the same staged editor as saved rules."""
     state, _ = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     monkeypatch.setattr(module, "suggest_business_rule", lambda *a, **kw: [{
@@ -4004,17 +4007,21 @@ def test_business_review_switches_sources_without_persisting_or_losing_candidate
     }])
     controls["business_requirement"].value = "Identifiers must be positive."
     controls["resolve_business_rule"].click()
-    choices = controls["business_proposal_select"].options
+    ai_drafts = [
+        (label, value) for label, value in controls["business_saved"].options
+        if str(value).startswith("__ai_draft__:")
+    ]
+    assert len(ai_drafts) == 1
+    assert "AI draft" in ai_drafts[0][0]
+    assert controls["business_saved"].value == ai_drafts[0][1]
+    assert getattr(controls["business_saved"].layout, "display", "") == ""
+    assert controls["rule_workspace_body"].children == (controls["rule_reviewer"],)
     controls["business_block"].value = True
-    controls["business_review_source"].value = "Current draft rules"
-    assert controls["business_proposal_select"].layout.display == "none"
-    assert controls["business_saved"].layout.display == ""
-    controls["business_review_source"].value = "Generated proposals"
-    assert controls["business_proposal_select"].options == choices
-    assert controls["business_block"].value is True
-    assert controls["business_saved"].layout.display == "none"
     controls["apply_business_rule"].click()
-    assert controls["business_review_source"].value == "Current draft rules"
+    assert all(
+        not str(value).startswith("__ai_draft__:")
+        for _label, value in controls["business_saved"].options
+    )
     assert controls["apply_business_rule"].description == "Update DQ Rule"
     assert widget_runtime["calls"]["draft"] == []
 

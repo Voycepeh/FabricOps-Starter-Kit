@@ -230,27 +230,6 @@ _CONTRACT_STYLE = """<style>
     border-top:1px solid var(--form-border); padding-top:12px;
 }
 .fabricops-data-contract .fabricops-dq-parameter-box { gap:8px; }
-.fabricops-data-contract .fabricops-dq-rule-table {
-    width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;
-    color:var(--form-text);
-}
-.fabricops-data-contract .fabricops-dq-rule-table th {
-    padding:8px 10px; text-align:left; font-weight:600; background:#f1edf8;
-    border-bottom:1px solid #d8cfea;
-}
-.fabricops-data-contract .fabricops-dq-rule-table td {
-    padding:9px 10px; vertical-align:top; border-bottom:1px solid var(--form-border);
-    overflow-wrap:anywhere;
-}
-.fabricops-data-contract .fabricops-dq-rule-table tr:last-child td { border-bottom:0; }
-.fabricops-data-contract .fabricops-dq-rule-table-wrap {
-    width:100%; overflow-x:auto; border:1px solid var(--form-border); border-radius:6px;
-}
-.fabricops-data-contract .fabricops-dq-status {
-    display:inline-block; padding:2px 7px; border-radius:10px; white-space:nowrap;
-    background:#eaf6ec; color:#107c10; font-weight:600;
-}
-.fabricops-data-contract .fabricops-dq-status.is-disabled { background:#eef1f4; color:#667085; }
 .fabricops-data-contract .fabricops-lineage-table {
     width:100%; min-width:340px; table-layout:fixed; border-collapse:collapse; font-size:11px;
 }
@@ -264,16 +243,19 @@ _CONTRACT_STYLE = """<style>
     margin-top:4px; padding-top:12px; border-top:1px solid var(--form-border);
     color:var(--form-text); font-size:14px; font-weight:600;
 }
-.fabricops-data-contract .fabricops-dq-authoring-grid > .widget-vbox { min-width:0; }
 .fabricops-data-contract .fabricops-delete-request {
     color:#a4262c; background:#fff; border:1px solid #a4262c;
 }
 .fabricops-data-contract .fabricops-authoring-footer {
     width:100%; height:auto; max-height:none; overflow:visible;
 }
-.fabricops-data-contract .fabricops-business-source > div { gap:4px; }
-.fabricops-data-contract .fabricops-business-source button { flex:1; min-width:0; }
 .fabricops-data-contract .fabricops-business-chooser select { height:36px; }
+.fabricops-data-contract .fabricops-dq-rule-list select {
+    height:220px; min-height:160px; padding:0; border-radius:6px;
+}
+.fabricops-data-contract .fabricops-dq-rule-list option {
+    padding:9px 10px; border-bottom:1px solid var(--form-border);
+}
 .fabricops-data-contract .fabricops-contract-list { overflow:visible !important; }
 .fabricops-data-contract .fabricops-contract-list select {
     width:100%; min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto;
@@ -302,7 +284,6 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
     .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
-    .fabricops-data-contract .fabricops-dq-authoring-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -4978,10 +4959,10 @@ def widget_data_contract(
                 prepare_column_ai(str(column_select.value))
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
-        business_saved = widgets.Dropdown(
-            **shared.widget_common(widgets, "Select rule to edit")
+        business_saved = widgets.Select(
+            rows=7,
+            **shared.widget_common(widgets, "Rules")
         )
-        current_rules_table = widgets.HTML()
         business_editor_heading = widgets.HTML(
             "<div class='fabricops-dq-editor-heading'>Rule editor</div>"
         )
@@ -5123,29 +5104,13 @@ def widget_data_contract(
         ])
         business_validation = widgets.HTML()
         business_rule_controls.layout.display = "none"
-        business_examples = widgets.HTML(
-            "<div style='color:#667085;font-size:12px;line-height:1.6;'>"
-            "<b>Examples</b><br>"
-            "• End date must be after start date<br>"
-            "• When status is Approved, approved date is required<br>"
-            "• Total amount must be positive and status must be Approved, Rejected, or Pending"
-            "</div>"
-        )
         business_proposal_select = widgets.Dropdown(
             options=[("Generated rules will appear here", -1)],
             value=-1,
             **shared.widget_common(widgets, "Resolved DQ Rules"),
         )
-        business_review_source = widgets.ToggleButtons(
-            options=(
-                ["Current draft rules", "Generated proposals"]
-                if ai_visible else ["Current draft rules"]
-            ),
-            value="Current draft rules",
-            layout=widgets.Layout(width="100%"),
-        )
-        business_review_source.add_class("fabricops-business-source")
         business_saved.add_class("fabricops-business-chooser")
+        business_saved.add_class("fabricops-dq-rule-list")
         business_proposal_select.add_class("fabricops-business-chooser")
         business_proposal_select.layout.display = "none"
         business_proposal = widgets.HTML(
@@ -5682,48 +5647,6 @@ def widget_data_contract(
             names = rule_column_names(rule)
             return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
 
-        def render_current_rules_table() -> None:
-            rows: list[str] = []
-            for rule in business_lookup.values():
-                active = bool(rule.get("is_active", True))
-                status_class = "" if active else " is-disabled"
-                status = "Enabled" if active else "Disabled"
-                rule_type = str(rule.get("rule_type") or "").replace("_", " ").title()
-                names = ", ".join(rule_column_names(rule)) or "—"
-                action = str(rule.get("action") or "Warn")
-                params = _parameters(rule)
-                tolerance_field = dq_tolerance_parameter(
-                    str(rule.get("rule_type") or ""), str(params.get("mode") or "")
-                )
-                tolerance = (
-                    f"{params.get(tolerance_field, 0):g}%"
-                    if tolerance_field and isinstance(params.get(tolerance_field, 0), (int, float))
-                    else "Strict"
-                )
-                rows.append(
-                    "<tr>"
-                    f"<td><span class='fabricops-dq-status{status_class}'>{status}</span></td>"
-                    f"<td><b>{html.escape(rule_type)}</b></td>"
-                    f"<td>{html.escape(names)}</td>"
-                    f"<td>{html.escape(action)}</td>"
-                    f"<td>{html.escape(tolerance)}</td>"
-                    "</tr>"
-                )
-            if not rows:
-                current_rules_table.value = (
-                    "<div style='padding:16px;border:1px solid #dce4ed;border-radius:6px;"
-                    "color:#667085;'>No Data Quality rules yet. Create one manually or "
-                    "generate proposals with AI.</div>"
-                )
-                return
-            current_rules_table.value = (
-                "<div class='fabricops-dq-rule-table-wrap'><table class='fabricops-dq-rule-table'>"
-                "<thead><tr><th style='width:14%'>Status</th><th style='width:22%'>Rule</th>"
-                "<th>Column(s)</th><th style='width:12%'>Action</th>"
-                "<th style='width:16%'>Failure limit</th></tr></thead><tbody>"
-                + "".join(rows) + "</tbody></table></div>"
-            )
-
         def proposal_label(proposal: Mapping[str, Any]) -> str:
             kind = str(proposal.get("rule_type") or "").replace("_", " ").title()
             names = [
@@ -5733,8 +5656,9 @@ def widget_data_contract(
             return f"{kind} · {', '.join(names)}" if names else (kind or "DQ Rule")
 
         def refresh_business_saved_options(selected: str | None = None) -> None:
+            previous = str(business_saved.value or "")
             business_lookup.clear()
-            options: list[tuple[str, str]] = [("Select a DQ Rule", "")]
+            options: list[tuple[str, str]] = [("Select a rule to edit", "")]
             for rule in session_guardrails():
                 if str(rule.get("guardrail_type") or "").lower() not in {
                     "data_quality", "dq"
@@ -5750,13 +5674,25 @@ def widget_data_contract(
                 if not key:
                     continue
                 business_lookup[key] = rule
-                options.append((business_rule_label(rule), key))
+                status = "Enabled" if rule.get("is_active", True) else "Disabled"
+                action = str(rule.get("action") or "Warn")
+                options.append((
+                    f"{status}  |  {business_rule_label(rule)}  |  {action}",
+                    key,
+                ))
+            options.extend(
+                (
+                    f"AI draft  |  {proposal_label(proposal)}  |  Review required",
+                    f"__ai_draft__:{index}",
+                )
+                for index, proposal in enumerate(business_resolved)
+            )
             if len(options) == 1:
-                options[0] = ("No DQ Rules in this draft", "")
+                options[0] = ("No DQ Rules yet — use an action below", "")
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
-            business_saved.value = selected if selected in option_values else ""
-            render_current_rules_table()
+            requested = selected if selected is not None else previous
+            business_saved.value = requested if requested in option_values else ""
 
         def refresh_resolved_options(selected: int = 0) -> None:
             if not business_resolved:
@@ -5764,6 +5700,7 @@ def widget_data_contract(
                     ("Generated rules will appear here", -1)
                 ]
                 business_proposal_select.value = -1
+                refresh_business_saved_options()
                 return
             business_proposal_select.options = [
                 ("Select a resolved DQ Rule", -1),
@@ -5774,6 +5711,9 @@ def widget_data_contract(
             ]
             business_proposal_select.value = min(
                 max(selected, 0), len(business_resolved) - 1
+            )
+            refresh_business_saved_options(
+                f"__ai_draft__:{business_proposal_select.value}"
             )
 
         def hide_business_delete_confirmation() -> None:
@@ -5921,18 +5861,30 @@ def widget_data_contract(
         ) -> None:
             if business_hydrating["active"]:
                 return
+            key = str(business_saved.value or "")
+            if key.startswith("__ai_draft__:"):
+                try:
+                    index = int(key.rsplit(":", 1)[1])
+                except ValueError:
+                    render_business_proposal()
+                    return
+                business_proposal_select.value = index
+                hydrate_resolved_business()
+                return
             business_hydrating["active"] = True
             try:
                 hide_business_delete_confirmation()
-                key = str(business_saved.value or "")
                 rule = business_lookup.get(key, {})
                 business_active_saved["rule_id"] = key if rule else ""
                 delete_business_rule.disabled = not editable or not bool(rule)
+                delete_business_rule.layout.display = "" if rule else "none"
                 if not rule:
                     if int(business_proposal_select.value) if business_proposal_select.value is not None else -1 < 0:
                         render_business_proposal()
                     return
-                business_review_source.value = "Current draft rules"
+                business_editor_heading.value = (
+                    "<div class='fabricops-dq-editor-heading'>Edit current rule</div>"
+                )
                 business_proposal_select.value = -1
                 business_enabled.value = bool(rule.get("is_active", True))
                 business_block.value = str(rule.get("action") or "Warn") == "Block"
@@ -5952,10 +5904,12 @@ def widget_data_contract(
                 return
             business_hydrating["active"] = True
             try:
-                business_review_source.value = "Generated proposals"
-                business_saved.value = ""
+                business_editor_heading.value = (
+                    "<div class='fabricops-dq-editor-heading'>Review AI draft</div>"
+                )
                 business_active_saved["rule_id"] = ""
                 delete_business_rule.disabled = True
+                delete_business_rule.layout.display = "none"
                 proposal = business_resolved[index]
                 business_enabled.value = bool(proposal.get("_enabled", True))
                 business_block.value = bool(proposal.get("_block", False))
@@ -6016,7 +5970,9 @@ def widget_data_contract(
             resolve_business_rule.disabled = True
             resolve_business_rule.description = "Generating DQ Rules…"
             business_active_saved["rule_id"] = ""
-            business_review_source.value = "Generated proposals"
+            business_editor_heading.value = (
+                "<div class='fabricops-dq-editor-heading'>Review AI draft</div>"
+            )
             render_business_proposal()
             retrying = "business_rule_ai" in state["_validation_errors"]
             business_proposal.value = "<p role='status'>Generating proposals for review…</p>"
@@ -6249,7 +6205,9 @@ def widget_data_contract(
                 refresh_business_saved_options(
                     str(records[-1]["guardrail_rule_id"])
                 )
-                business_review_source.value = "Current draft rules"
+                business_editor_heading.value = (
+                    "<div class='fabricops-dq-editor-heading'>Edit current rule</div>"
+                )
                 render_table_summary()
                 set_validation_error("manual_dq_rule")
                 manual_validation.value = ""
@@ -6521,28 +6479,6 @@ def widget_data_contract(
                 set_validation_error("business_rule.engineering_review", exc)
                 set_status(str(exc), error=True)
 
-        def switch_business_review_source(change: dict[str, Any]) -> None:
-            generated = change["new"] == "Generated proposals"
-            business_editor_heading.value = (
-                "<div class='fabricops-dq-editor-heading'>Review generated proposal</div>"
-                if generated
-                else "<div class='fabricops-dq-editor-heading'>Edit current rule</div>"
-            )
-            business_proposal_select.layout.display = "" if generated else "none"
-            business_saved.layout.display = "none" if generated else ""
-            delete_business_rule.layout.display = "none" if generated else ""
-            hide_business_delete_confirmation()
-            if business_hydrating["active"]:
-                return
-            business_active_saved["rule_id"] = ""
-            if generated:
-                hydrate_resolved_business()
-            elif business_saved.value:
-                hydrate_business_saved()
-            else:
-                render_business_proposal()
-
-        business_review_source.observe(switch_business_review_source, names="value")
         delete_business_rule.layout.display = "none"
         business_saved.observe(hydrate_business_saved, names="value")
         business_proposal_select.observe(
@@ -6582,23 +6518,11 @@ def widget_data_contract(
             [
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Describe the business requirement in plain language. "
-                    "FabricOps uses the governed table definition, column metadata, "
-                    "profile evidence, and existing DQ Rules to resolve one or more "
-                    "atomic enforceable rules.</div>"
+                    "Describe the outcome in plain language. AI drafts deterministic "
+                    "rules into the list for review; it does not add them to the "
+                    "contract automatically.</div>"
                 ),
-                widgets.HTML("<b>Describe your requirement</b>"),
                 business_requirement,
-                widgets.HTML(
-                    "<div style='margin-top:6px;'><b>Limit to columns "
-                    "(optional)</b></div>"
-                    "<div style='color:#667085;font-size:12px;line-height:1.45;'>"
-                    "Leave blank to let FabricOps resolve columns from the table. "
-                    "To constrain generation, hold <b>Ctrl</b> on Windows or "
-                    "<b>Cmd</b> on macOS while selecting multiple columns.</div>"
-                ),
-                business_columns,
-                business_examples,
             ],
             layout=widgets.Layout(
                 width="100%", min_width="0", gap="8px"
@@ -6618,38 +6542,42 @@ def widget_data_contract(
             shared.action_row(widgets, [delete_business_rule, apply_business_rule]),
         ], layout=widgets.Layout(width="100%"))
         business_review_actions.add_class("fabricops-business-footer")
+        add_manual_mode = widgets.Button(
+            description="Add manually", disabled=not editable
+        )
+        add_ai_mode = widgets.Button(
+            description="Draft with AI",
+            disabled=not (editable and ai_visible and ai_available()),
+        )
         current_rules_section = shared.form_section(
             widgets,
-            title="Current Data Quality Rules",
+            title="Data Quality Rules",
             children=[
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Inspect every rule in the current contract, edit its parameters, "
-                    "change Warn or Block behavior, disable it, or delete it.</div>"
+                    "Select a current rule or AI draft to open it in the workspace. "
+                    "AI drafts remain proposals until you review and add them.</div>"
                 ),
-                current_rules_table,
+                widgets.HTML(
+                    "<div style='display:grid;grid-template-columns:100px 1fr 130px;"
+                    "gap:10px;padding:6px 10px;background:#f1edf8;color:#526477;"
+                    "font-size:11px;font-weight:700;border:1px solid #d8cfea;"
+                    "border-radius:6px 6px 0 0;'>"
+                    "<span>Status</span><span>Rule and columns</span><span>Action</span></div>"
+                ),
+                business_saved,
+                shared.action_row(widgets, [add_manual_mode, add_ai_mode]),
             ],
         )
-        rule_reviewer_section = shared.form_section(
-            widgets,
-            title="Review and Edit",
-            children=[
-                widgets.HTML(
-                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Select a current rule or generated proposal. Both use the same "
-                    "guided editor and deterministic rule model.</div>"
-                ),
-                business_review_source, business_saved, business_proposal_select,
-                business_editor_heading, business_primary, business_review_actions,
-            ],
+        rule_reviewer = widgets.VBox(
+            [business_editor_heading, business_primary, business_review_actions],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
-        manual_rule_section = shared.form_section(
-            widgets,
-            title="Add Rule Manually",
-            children=[
+        manual_rule_editor = widgets.VBox(
+            [
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Create a deterministic rule directly. AI is not required.</div>"
+                    "Choose a deterministic rule type and configure it here.</div>"
                 ),
                 manual_rule_type,
                 manual_rule_hint,
@@ -6662,31 +6590,54 @@ def widget_data_contract(
                 ),
                 shared.action_row(widgets, [add_manual_rule]),
             ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
-        ai_rule_section = shared.form_section(
-            widgets,
-            title="Generate Rules with AI",
-            children=(
-                [business_ai_panel, business_generate_actions]
-                if ai_visible
-                else [widgets.HTML(
-                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "AI generation is unavailable for this session. Manual rule "
-                    "creation and current-rule editing remain available.</div>"
-                )]
-            ),
+        ai_rule_editor = widgets.VBox(
+            [business_ai_panel, business_generate_actions],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
-        dq_authoring_grid = widgets.GridBox(
-            [manual_rule_section, ai_rule_section],
-            layout=widgets.Layout(
-                width="100%", min_width="0",
-                grid_template_columns="minmax(0, 1fr) minmax(0, 1fr)",
-                grid_gap="12px", align_items="flex-start",
-            ),
+        workspace_intro = widgets.HTML(
+            "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+            "Select a rule to edit, or start a new rule from the list controls.</div>"
         )
-        dq_authoring_grid.add_class("fabricops-dq-authoring-grid")
-        business_left = (current_rules_section, rule_reviewer_section)
-        business_right = (dq_authoring_grid,)
+        rule_workspace_body = widgets.VBox(
+            [workspace_intro],
+            layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+        )
+        rule_workspace_section = shared.form_section(
+            widgets, title="Rule workspace", children=[rule_workspace_body]
+        )
+
+        def set_rule_workspace(mode: str) -> None:
+            if mode == "manual":
+                rule_workspace_body.children = (manual_rule_editor,)
+            elif mode == "ai":
+                rule_workspace_body.children = (ai_rule_editor,)
+            elif mode == "review":
+                rule_workspace_body.children = (rule_reviewer,)
+            else:
+                rule_workspace_body.children = (workspace_intro,)
+
+        def open_manual_rule_editor(_button: Any) -> None:
+            business_saved.value = ""
+            set_rule_workspace("manual")
+
+        def open_ai_rule_editor(_button: Any) -> None:
+            business_saved.value = ""
+            set_rule_workspace("ai")
+
+        def open_selected_rule(change: dict[str, Any]) -> None:
+            if str(change.get("new") or ""):
+                set_rule_workspace("review")
+
+        add_manual_mode.on_click(open_manual_rule_editor)
+        add_ai_mode.on_click(open_ai_rule_editor)
+        business_saved.observe(open_selected_rule, names="value")
+        if business_saved.value:
+            set_rule_workspace("review")
+
+        business_left = (current_rules_section,)
+        business_right = (rule_workspace_section,)
         view_content["Data Quality"] = (business_left, business_right)
 
 
@@ -7105,16 +7056,14 @@ def widget_data_contract(
             "business_columns": business_columns,
             "business_ai_panel": business_ai_panel,
             "business_primary": business_primary,
-            "business_review_source": business_review_source,
-            "current_rules_table": current_rules_table,
-            "rule_reviewer_section": rule_reviewer_section,
+            "business_review_actions": business_review_actions,
+            "rule_reviewer": rule_reviewer,
             "business_enabled": business_enabled,
             "business_parameters": business_parameters,
             "business_tolerance": business_tolerance, "business_tolerance_hint": business_tolerance_hint,
             "business_block": business_block,
             "business_rule_controls": business_rule_controls,
             "business_proposal": business_proposal,
-            "business_proposal_select": business_proposal_select,
             "resolve_business_rule": resolve_business_rule,
             "apply_business_rule": apply_business_rule,
             "delete_business_rule": delete_business_rule,
@@ -7127,8 +7076,11 @@ def widget_data_contract(
             "engineering_review_note": engineering_review_note,
             "approve_engineering_review": approve_engineering_review,
             "current_dq_rules_section": current_rules_section,
-            "manual_dq_rule_section": manual_rule_section,
-            "ai_dq_rule_section": ai_rule_section,
+            "rule_workspace_body": rule_workspace_body,
+            "add_manual_mode": add_manual_mode,
+            "add_ai_mode": add_ai_mode,
+            "manual_rule_editor": manual_rule_editor,
+            "ai_rule_editor": ai_rule_editor,
             "manual_rule_type": manual_rule_type,
             "manual_apply_mode": manual_apply_mode,
             "manual_batch_columns": manual_batch_columns,
