@@ -146,7 +146,7 @@ def test_freshness_baseline_skips_before_observation_or_catalogue(monkeypatch):
         lambda *_a, **_k: pytest.fail("baseline freshness must not require Catalogue"),
     )
 
-    result = freshness_module.check_freshness("source-id", verbose=False)
+    result = call_with_spark(object(), freshness_module.check_freshness, "source-id", verbose=False)
 
     assert result["status"] == "skipped"
     assert result["reason"] == "Explicit No Contract selected."
@@ -177,7 +177,7 @@ def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
     _patch_read(monkeypatch, identity)
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
 
-    read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
+    call_with_spark(object(), read_module.pipeline_read, table_id=identity["table_id"], verbose=False)
 
     assert capsys.readouterr().out == ""
 
@@ -189,7 +189,7 @@ def test_pipeline_read_captures_transient_observation_for_governed_source(monkey
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
     captured = []
     monkeypatch.setattr(read_module, "capture_source_observation", lambda **kwargs: captured.append(kwargs))
-    read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
+    call_with_spark(object(), read_module.pipeline_read, table_id=identity["table_id"], verbose=False)
     assert captured == [{"table_id": identity["table_id"], "dataframe": "frame",
                          "source_identity": identity, "context": {"_pipeline_spark": captured[0]["spark_session"]}, "spark_session": captured[0]["spark_session"]}]
 
@@ -207,7 +207,7 @@ def test_pipeline_read_does_not_require_source_drift(monkeypatch, guardrail_type
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **k: "frame")
     monkeypatch.setattr(read_module, "capture_source_observation", lambda **_k: None)
 
-    result = read_module.pipeline_read(table_id=identity["table_id"], verbose=False)
+    result = call_with_spark(object(), read_module.pipeline_read, table_id=identity["table_id"], verbose=False)
 
     assert result["dataframe"] == "frame"
     assert result["has_contract"] is True
@@ -447,7 +447,7 @@ def test_pipeline_write_does_not_run_source_drift(monkeypatch):
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
 
-    write_module.pipeline_write(object(), table_id="target", source_table_ids=["source"])
+    call_with_spark(object(), write_module.pipeline_write, object(), table_id="target", source_table_ids=["source"])
 
     assert not hasattr(write_module, "check_source_drift_for_target")
     assert not hasattr(write_module, "check_source_drift")
@@ -468,7 +468,7 @@ def test_pipeline_write_rejects_incremental_whole_table_overwrite(monkeypatch):
     )
 
     with pytest.raises(ValueError, match="whole-table overwrite"):
-        write_module.pipeline_write(
+        call_with_spark(object(), write_module.pipeline_write,
             object(), table_id="target", source_table_ids=["source-a"]
         )
 
@@ -493,12 +493,12 @@ def test_incremental_append_bootstrap_requires_new_or_empty_target(
 
     if target_has_rows:
         with pytest.raises(ValueError, match="requires a new or empty target"):
-            write_module.pipeline_write(
+            call_with_spark(object(), write_module.pipeline_write,
                 object(), table_id="target", source_table_ids=["source-a"]
             )
         assert writes == []
     else:
-        write_module.pipeline_write(
+        call_with_spark(object(), write_module.pipeline_write,
             object(), table_id="target", source_table_ids=["source-a"], verbose=False
         )
         assert len(writes) == 1

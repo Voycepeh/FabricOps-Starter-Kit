@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
+from functools import partial
 import importlib
 import json
 from typing import Any
@@ -12,7 +13,7 @@ import warnings
 
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
-from fabricops_kit.config.shared import metadata_timestamp_sort_key
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, validate_ai_enrichment
 from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
@@ -105,12 +106,32 @@ def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
             "detail": " <- ".join(details),
         }
     if isinstance(exc, AIProviderError):
+        # Only known categories are shown. Never echo arbitrary provider text:
+        # it may contain prompts, identifiers, tokens, URLs or sampled values.
+        raw = str(exc).lower()
+        reason = "Provider rejected the request or returned no usable response."
+        for markers, explanation in (
+            (("temperature", "unsupported_parameter", "invalid_parameter"), "Provider rejected a request parameter; verify Runtime 2.0 settings."),
+            (("capacity", "429", "rate_limit"), "Provider capacity or rate limit was reached; wait and retry."),
+            (("401", "403", "unauthorized", "forbidden", "permission"), "Provider access was denied; check tenant permissions and region eligibility."),
+            (("content_filter", "content filter"), "Provider content filtering blocked the request."),
+            (("empty response", "no result row"), "Provider returned an empty response; retry."),
+        ):
+            if any(marker in raw for marker in markers):
+                reason = explanation
+                break
         return {
             "category": "provider",
-            "message": "The AI provider could not return a suggestion. Review the provider access or capacity, then retry.",
+            "message": "The AI provider could not return a suggestion. " + reason,
             "recoverable": True,
             "exception_type": type(exc).__name__,
             "detail": " <- ".join(details),
+        }
+    if isinstance(exc, ValueError):
+        return {
+            "category": "validation",
+            "message": "AI returned a suggestion that failed response validation. Retry or edit manually.",
+            "recoverable": True, "exception_type": type(exc).__name__, "detail": " <- ".join(details),
         }
     return {
         "category": "execution",
@@ -121,8 +142,12 @@ def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
     }
 
 
-def _invoke_fabric_ai(prompt: str) -> str:
+def _invoke_fabric_ai(
+    prompt: str, *, ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "authoring",
+) -> str:
     """Invoke Microsoft Fabric PySpark AI Functions without nesting notebook event loops."""
+    settings = validate_ai_enrichment(ai_config)
     # SynapseML imports legacy generated protobuf services while registering the
     # Spark AI accessor. Keep this suppression local so other dependency warnings
     # and import failures remain visible.
@@ -133,34 +158,77 @@ def _invoke_fabric_ai(prompt: str) -> str:
             category=UserWarning,
         )
         try:
-            importlib.import_module("synapse.ml.spark.aifunc")
+            aifunc = importlib.import_module("synapse.ml.spark.aifunc")
         except (ImportError, ModuleNotFoundError) as exc:
             raise AIConfigurationError(
                 "Microsoft Fabric PySpark AI Functions are unavailable in this runtime."
             ) from exc
     try:
-        spark = get_spark_session()
-        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
+        # Reapply before every request: other notebook cells can mutate defaults.
+        conf = aifunc.default_conf
+        conf.reset_URL()
+        conf.reset_subscription_key()
+        conf.set_deployment_name(settings["model_deployment_name"])
+        conf.set_reasoning_effort(settings["reasoning_effort"])
+        if settings["verbosity"] is None:
+            conf.reset_verbosity()
+        else:
+            conf.set_verbosity(settings["verbosity"])
+        conf.reset_temperature()
+    except Exception as exc:
+        raise AIConfigurationError("Could not apply Fabric Runtime 2.0 AI Functions settings.") from exc
+    try:
+        spark = spark_session if spark_session is not None else get_spark_session()
     except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
         raise AIConfigurationError(
             "A running Microsoft Fabric Spark session is required for AI suggestions."
         ) from exc
+    try:
+        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
+    except Exception as exc:
+        raise AIExecutionError("Could not create the Fabric AI request DataFrame.") from exc
     ai = getattr(frame, "ai", None)
     if ai is None or not hasattr(ai, "generate_response"):
         raise AIConfigurationError(
             "Microsoft Fabric PySpark AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
         )
-    stdout = StringIO()
-    stderr = StringIO()
+    # Persist the one-row result before reading response and stats, so statistics
+    # cannot trigger another billable model execution through Spark lazy evaluation.
+    record = {"operation": operation, "model": settings["model_deployment_name"],
+              "reasoning_effort": settings["reasoning_effort"], "verbosity": settings["verbosity"],
+              "statistics": None, "statistics_status": "unavailable"}
+    if usage is not None:
+        usage.append(record)
+    result = None
     try:
-        with redirect_stdout(stdout), redirect_stderr(stderr):
+        with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
             result = ai.generate_response(
                 prompt="{fabricops_prompt}", is_prompt_template=True,
                 output_col="fabricops_response", error_col="fabricops_ai_error",
-            )
-            row = result.select("fabricops_response", "fabricops_ai_error").first()
+            ).persist()
+            rows = result.collect()
+            row = rows[0] if rows else None
+            if usage is not None:
+                try:
+                    stats = result.ai.stats.collect()
+                    fields = {"num_successful", "num_exceptions", "num_unevaluated", "num_harmful",
+                              "cached_tokens", "input_tokens", "output_tokens", "reasoning_tokens", "model"}
+                    record["statistics"] = [
+                        {key: value for key, value in item.asDict().items() if key in fields}
+                        for item in stats
+                    ]
+                    record["statistics_status"] = "available" if record["statistics"] else "unavailable"
+                except Exception:
+                    # Telemetry is optional; never hide a successful authoring response.
+                    pass
     except Exception as exc:
         raise AIExecutionError("Fabric AI Functions execution failed.") from exc
+    finally:
+        if result is not None:
+            try:
+                result.unpersist()
+            except Exception:
+                pass
     if row is None:
         raise AIProviderError("Fabric AI Functions returned no result row.")
     error = row["fabricops_ai_error"]
@@ -177,11 +245,15 @@ def suggest_enrichment(
     *,
     description_prompt: str,
     invoke: Any = None,
+    ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_enrichment",
 ) -> dict[str, str]:
     """Return one transient AI Description suggestion."""
     if not str(description_prompt).strip():
         raise AIConfigurationError("An AI Enrichment description prompt is required.")
-    call = invoke or _invoke_fabric_ai
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
     context_json = json.dumps(context, sort_keys=True, default=str)
     guidance = ""
     if str(context.get("metadata_level") or "") == "table":
@@ -275,8 +347,20 @@ def _normalize_ai_column_reference(
     return ""
 
 
+def _parse_ai_json(raw: str, label: str) -> Any:
+    """Decode structured suggestions consistently without exposing response content."""
+    text = str(raw).strip()
+    if text.startswith("```"):
+        text = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{label} was not valid JSON.") from exc
+
+
 def suggest_sensitive_data(
-    context: dict[str, Any], *, prompt: str, invoke: Any = None
+    context: dict[str, Any], *, prompt: str, invoke: Any = None, ai_config: dict[str, Any] | None = None,
+    spark_session: Any = None, usage: list[dict[str, Any]] | None = None, operation: str = "suggest_sensitive_data"
 ) -> list[dict[str, Any]]:
     """Return validated transient Sensitive Data rule suggestions."""
     if not str(prompt).strip():
@@ -301,13 +385,11 @@ def suggest_sensitive_data(
         "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
-    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
-    if raw.startswith("```"):
-        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    try:
-        candidates = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError("AI Sensitive Data suggestion was not valid JSON.") from exc
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
+    candidates = _parse_ai_json(raw, "AI Sensitive Data suggestion")
     if not isinstance(candidates, list):
         raise ValueError("AI Sensitive Data suggestion must be a JSON list.")
     suggestions = []
@@ -403,7 +485,11 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def suggest_grain_key(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> dict[str, Any]:
+def suggest_grain_key(
+    context: dict[str, Any], *, prompt: str, invoke: Any = None,
+    ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_grain_key",
+) -> dict[str, Any]:
     """Return one transient grain wording suggestion grounded by profiled key evidence."""
     if not str(prompt).strip():
         raise AIConfigurationError("An AI Grain prompt is required.")
@@ -446,13 +532,11 @@ Profiled row-key candidate:
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
-    if raw.startswith("```"):
-        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    try:
-        candidate = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError("AI Grain suggestion was not valid JSON.") from exc
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
+    candidate = _parse_ai_json(raw, "AI Grain suggestion")
     if not isinstance(candidate, dict):
         raise ValueError("AI Grain suggestion must be a JSON object.")
     return {
@@ -625,6 +709,8 @@ def suggest_business_rule(
     relevant_columns: list[str] | tuple[str, ...] = (),
     prompt: str,
     invoke: Any = None,
+    ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_business_rule",
 ) -> list[dict[str, Any]]:
     """Resolve natural-language business intent into one or more atomic Guardrails."""
     business_requirement = str(requirement or "").strip()
@@ -679,13 +765,11 @@ Do not force a known pattern when it would weaken, broaden, or otherwise change 
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
-    if raw.startswith("```"):
-        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    try:
-        candidates = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ValueError("AI DQ Rule proposal was not valid JSON.") from exc
+    call = invoke or partial(
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+    )
+    raw = str(call(instruction)).strip()
+    candidates = _parse_ai_json(raw, "AI DQ Rule proposal")
     if not isinstance(candidates, list) or not candidates:
         raise ValueError("AI DQ Rule proposal must be a non-empty JSON array.")
 

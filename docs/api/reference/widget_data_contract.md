@@ -22,7 +22,7 @@ Use as the primary UX for preparing and freezing one governed table’s next Dat
 <div class="reference-example-usage" markdown="1">
 
 ```python
-state = widget_data_contract(table_id="table-orders")
+state = widget_data_contract(table_id="table-orders", ai_model="gpt-5.1", ai_reasoning_effort="high")
 state["refresh_manifest"]()
 ```
 
@@ -41,6 +41,9 @@ def widget_data_contract(
     table_id: str | None=None,
     contract_version: int | None=None,
     context: Any=None,
+    ai_model: str | None=None,
+    ai_reasoning_effort: str | None=None,
+    ai_verbosity: str | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -59,6 +62,9 @@ Required describes the Python signature. An optional parameter may still be need
 | `table_id` | `str \| None` | No | `None` | Initial canonical governed table identity. If omitted, select it in the widget. |
 | `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, the newest version is selected. |
 | `context` | `Any` | No | `None` | FabricOps runtime context normally established by ``00_env_config``. |
+| `ai_model` | `str \| None` | No | `None` | Built-in Fabric model: ``gpt-5-mini`` or ``gpt-5.1``. Overrides configuration. |
+| `ai_reasoning_effort` | `str \| None` | No | `None` | ``minimal``, ``low``, ``medium``, or ``high``. Overrides configuration. |
+| `ai_verbosity` | `str \| None` | No | `None` | ``low``, ``medium``, or ``high``. Overrides configuration. None uses configuration. Omitted overrides use ``GOVERNANCE_CONFIG.ai_enrichment``, then package defaults. |
 
 </div>
 
@@ -66,6 +72,10 @@ Required describes the Python signature. An optional parameter may still be need
 
 dict
     Current selector, editor, lifecycle state, and callable authoring actions.
+    Retain this exact instance for ``ai_settings``, ``ai_usage``, and
+    ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception
+    chains in diagnostics are for maintainers and can include provider context;
+    review before sharing. Opening without AI makes no AI requests.
 
 ### Return interpretation
 
@@ -161,7 +171,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:849`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L849-L7272">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L849-L7383">View on GitHub</a>
 </div>
 
 

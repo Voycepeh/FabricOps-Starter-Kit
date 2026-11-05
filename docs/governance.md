@@ -92,6 +92,61 @@ FabricOps applies the checks at the boundary where the decision matters:
 
 Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) records aggregate outcomes and whether execution can continue; full failing business rows are not automatically copied into governance storage.
 
+### Optional AI authoring and consumption
+
+| Party | Responsibility |
+| --- | --- |
+| Human Governance | Makes and approves governance decisions |
+| Fabric AI Functions | Suggests descriptions, assessments and Data Quality rules |
+| FabricOps | Validates suggestions, stages changes and deterministically enforces approved Guardrails |
+
+AI is optional. **Open without AI** makes no AI requests and does not initialize AI Functions.
+Description, Grain and Row Key, Sensitive Data, Data Quality and all deterministic lifecycle
+and Guardrail controls remain available. `GOVERNANCE_CONFIG.ai_enrichment.enabled=False`
+disables AI actions. Opening the selector never invokes AI. See the
+[configuration exercise](guided-demo/03-author-and-freeze-data-contract.md#choose-the-ai-settings-or-author-manually).
+
+??? info "Built-in models, reasoning, billing and usage monitoring"
+
+    FabricOps supports `gpt-5-mini` (default) and `gpt-5.1` through the built-in
+    Microsoft Fabric AI Functions endpoint on Runtime 2.0. Availability depends on
+    Microsoft's supported regions, tenant configuration and eligible paid capacity.
+    The selector and editor show the effective configuration before opt-in.
+
+    Microsoft's [PySpark configuration](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/pyspark/configuration)
+    documents reasoning `None`, `minimal`, `low`, `medium`, `high` and verbosity
+    `None`, `low`, `medium`, `high`. FabricOps defaults to low reasoning and
+    provider-default verbosity. Widget arguments override configured values; omitted
+    arguments use configuration, then package defaults. Stronger models and higher
+    reasoning can increase consumption and latency; service support remains authoritative.
+
+    Built-in model calls consume Fabric capacity under the **Copilot and AI** meter,
+    reported as the **AI Functions** operation. **Spark execution is billed separately**
+    through the Spark meter. The separate Copilot capacity allocation feature should
+    not be confused with AI Functions billing. Azure AI Foundry is a future advanced
+    integration with separate Azure billing; this widget does not support custom
+    endpoints, API keys or Foundry credentials.
+
+    Microsoft documents `result.ai.stats` for measured row and token statistics:
+    successful, exception, unevaluated and harmful counts; input, output, cached and
+    reasoning tokens; and model. FabricOps captures these per authoring request where
+    available and shows them in the editor's usage disclosure. The one-row AI result
+    is persisted while reading response and stats to avoid re-running inference for telemetry.
+    Missing statistics are marked unavailable, never replaced with fabricated counts.
+
+    The documented PySpark statistics do not expose measured per-request CU consumption.
+    Token counts are displayed under their own names, without conversion to CU or pricing
+    estimates. For exact consumption, open the [Fabric Capacity Metrics app](https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app),
+    filter by capacity, workspace and time, and inspect **AI Functions** separately from Spark.
+    See [Microsoft's AI Functions billing guidance](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing)
+    for current rates; no pricing figures are pinned here.
+
+    Sources checked on **5 November 2026**: Microsoft's [overview](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview),
+    [PySpark generate_response](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/pyspark/generate-response),
+    [Runtime 2.0 setup](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/runtime-2-0-workarounds),
+    configuration and billing pages. The MicrosoftDocs source was inspected; local mocked
+    tests do not establish actual Fabric service compatibility.
+
 ### Sensitive data decisions { #sensitive-data-discovery-classification-and-treatment }
 
 ![AI-assisted Direct and Indirect PII review and treatment](assets/AiDatacontract.png){ .fabricops-section-evidence }
@@ -100,7 +155,7 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
 ??? info "Under the Hood — sensitive-data authoring and enforcement"
 
-    The AI authoring path sends a compact single-row `fabricops_prompt` DataFrame to Fabric AI Functions with [`ai.generate_response()`](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/generate-response). It does not send the full business table. Returned structured JSON is checked against supported values before it can be staged.
+    The AI authoring path sends a compact single-row `fabricops_prompt` DataFrame to Fabric AI Functions with [`ai.generate_response()`](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/pyspark/generate-response). It does not send the full business table. Returned structured JSON is checked against supported values before it can be staged.
 
     The approved rule is stored in [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md). During Write orchestration, internal [`check_sensitive_data()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_sensitive_data.py#L20) prepares the DataFrame before `_row_hash` calculation and publication. Treatment failures always block. Token support mappings remain caller-owned unless a restricted mapping store is configured.
 

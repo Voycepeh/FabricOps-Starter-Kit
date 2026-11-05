@@ -203,11 +203,26 @@ def test_configured_prompt_and_metadata_only_context_are_sent():
     assert "Do not include raw values" in prompts[0]
 
 
+def _aifunc():
+    """Provide the documented Runtime 2.0 configuration boundary."""
+    from unittest.mock import Mock
+    return Mock()
+
+
 def _spark_ai_runtime(calls, *, response=" generated response ", error=None):
     """Return a small Spark AI Functions boundary for invocation tests."""
     row = {"fabricops_response": response, "fabricops_ai_error": error}
 
     class Result:
+        def persist(self):
+            return self
+
+        def unpersist(self):
+            pass
+
+        def collect(self):
+            return [row]
+
         def select(self, *columns):
             calls.append(("select", columns))
             return self
@@ -241,7 +256,7 @@ def test_fabric_ai_invocation_uses_spark_accessor_and_returns_response(monkeypat
     def fake_import(name):
         calls.append(("import", name))
         if name == "synapse.ml.spark.aifunc":
-            return object()
+            return _aifunc()
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
@@ -267,7 +282,7 @@ def test_fabric_ai_suppresses_only_synapseml_protobuf_service_warning(monkeypatc
         if name == "synapse.ml.spark.aifunc":
             warnings.warn("google.protobuf.service module is deprecated", UserWarning)
             warnings.warn("another SynapseML dependency warning", UserWarning)
-            return object()
+            return _aifunc()
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
@@ -300,7 +315,7 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
 
     def fake_import(name):
         if name == "synapse.ml.spark.aifunc":
-            return object()
+            return _aifunc()
         raise AssertionError(name)
 
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
@@ -315,7 +330,7 @@ def test_fabric_ai_invocation_works_while_notebook_event_loop_is_running(monkeyp
     import asyncio
 
     calls = []
-    monkeypatch.setattr(module.importlib, "import_module", lambda _name: object())
+    monkeypatch.setattr(module.importlib, "import_module", lambda _name: _aifunc())
     monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
 
     async def invoke_from_notebook_loop():
@@ -328,7 +343,7 @@ def test_fabric_ai_invocation_works_while_notebook_event_loop_is_running(monkeyp
 def test_fabric_ai_provider_error_retains_diagnostic(monkeypatch):
     """Provider failures remain debuggable while the user receives safe guidance."""
     calls = []
-    monkeypatch.setattr(module.importlib, "import_module", lambda _name: object())
+    monkeypatch.setattr(module.importlib, "import_module", lambda _name: _aifunc())
     monkeypatch.setattr(
         module, "get_spark_session",
         lambda: _spark_ai_runtime(calls, response=None, error="capacity unavailable"),

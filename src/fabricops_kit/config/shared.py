@@ -395,6 +395,9 @@ class PathConfig:
 
 DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
+    "model_deployment_name": "gpt-5-mini",
+    "reasoning_effort": "low",
+    "verbosity": None,
     "table_description_prompt": (
         "Write a concise business description of what the selected table represents and supports using only "
         "the supplied FabricOps context. Use the table name, grain, classification, and meaningful business "
@@ -445,6 +448,36 @@ DEFAULT_AI_ENRICHMENT = {
 }
 
 
+def validate_ai_enrichment(settings: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Validate built-in Fabric AI settings without importing or initializing AI Functions.
+
+    Microsoft documents reasoning values None/minimal/low/medium/high and verbosity
+    None/low/medium/high. Explicit None selects the provider default, not a fallback.
+    """
+    if settings is not None and not isinstance(settings, dict):
+        raise ValueError("ai_enrichment must be a dictionary.")
+    values = {**DEFAULT_AI_ENRICHMENT, **(settings or {})}
+    unknown = set(values) - set(DEFAULT_AI_ENRICHMENT)
+    if unknown:
+        raise ValueError("Unsupported ai_enrichment settings: " + ", ".join(sorted(unknown)))
+    if not isinstance(values["enabled"], bool):
+        raise ValueError("ai_enrichment.enabled must be True or False.")
+    choices = {
+        "model_deployment_name": ("gpt-5-mini", "gpt-5.1"),
+        "reasoning_effort": (None, "minimal", "low", "medium", "high"),
+        "verbosity": (None, "low", "medium", "high"),
+    }
+    for key, options in choices.items():
+        if values[key] not in options:
+            raise ValueError(f"ai_enrichment.{key} must be one of {options!r}; update 00_env_config or the widget override.")
+    for key in DEFAULT_AI_ENRICHMENT:
+        if key.endswith("_prompt"):
+            if not isinstance(values[key], str) or not values[key].strip():
+                raise ValueError(f"ai_enrichment.{key} must be a non-empty string.")
+            values[key] = values[key].strip()
+    return values
+
+
 @dataclass(frozen=True)
 class GovernanceConfig:
     """Default governance-policy options for metadata/classification checks.
@@ -461,7 +494,9 @@ class GovernanceConfig:
         column metadata enrichment widgets.
     ai_enrichment : dict[str, Any]
         Optional AI Enrichment authoring settings. ``enabled`` controls the
-        assistant and the prompt fields provide project instructions.
+        assistant and the prompt fields provide project instructions. Built-in models
+        are ``gpt-5-mini`` (default) and ``gpt-5.1``; reasoning defaults to ``low``
+        and verbosity to None (provider default).
     sensitive_data_token_mapping : dict[str, Any], optional
         Engineering-managed token vault target with ``store``, ``schema`` and
         ``table_name``. Provision a restricted Delta table before use. The store
@@ -504,23 +539,7 @@ class GovernanceConfig:
         if len(labels) != len(set(labels)):
             raise ValueError("classification_levels must contain unique ranked values.")
         object.__setattr__(self, "classification_levels", labels)
-        ai_enrichment = {**DEFAULT_AI_ENRICHMENT, **dict(self.ai_enrichment or {})}
-        object.__setattr__(self, "ai_enrichment", {
-            "enabled": bool(ai_enrichment.get("enabled", False)),
-            "table_description_prompt": str(
-                ai_enrichment.get("table_description_prompt") or ""
-            ).strip(),
-            "column_description_prompt": str(
-                ai_enrichment.get("column_description_prompt") or ""
-            ).strip(),
-            "sensitive_data_prompt": str(
-                ai_enrichment.get("sensitive_data_prompt") or ""
-            ).strip(),
-            "grain_prompt": str(ai_enrichment.get("grain_prompt") or "").strip(),
-            "business_rule_prompt": str(
-                ai_enrichment.get("business_rule_prompt") or ""
-            ).strip(),
-        })
+        object.__setattr__(self, "ai_enrichment", validate_ai_enrichment(self.ai_enrichment))
         object.__setattr__(
             self,
             "enrichment_context_widget",

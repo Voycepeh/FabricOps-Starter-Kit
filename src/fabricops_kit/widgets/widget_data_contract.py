@@ -10,7 +10,7 @@ from decimal import Decimal, InvalidOperation
 from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context, validate_ai_enrichment
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
@@ -849,6 +849,8 @@ def _profile_html(context: dict[str, Any]) -> str:
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
     context: Any = None,
+    ai_model: str | None = None, ai_reasoning_effort: str | None = None,
+    ai_verbosity: str | None = None,
 ) -> dict[str, Any]:
     """Open the unified governance authoring and lifecycle experience for Data Contracts.
 
@@ -864,11 +866,22 @@ def widget_data_contract(
         Initial exact lifecycle version. If omitted, the newest version is selected.
     context : object, optional
         FabricOps runtime context normally established by ``00_env_config``.
+    ai_model : str, optional
+        Built-in Fabric model: ``gpt-5-mini`` or ``gpt-5.1``. Overrides configuration.
+    ai_reasoning_effort : str, optional
+        ``minimal``, ``low``, ``medium``, or ``high``. Overrides configuration.
+    ai_verbosity : str, optional
+        ``low``, ``medium``, or ``high``. Overrides configuration. None uses configuration.
+        Omitted overrides use ``GOVERNANCE_CONFIG.ai_enrichment``, then package defaults.
 
     Returns
     -------
     dict
         Current selector, editor, lifecycle state, and callable authoring actions.
+        Retain this exact instance for ``ai_settings``, ``ai_usage``, and
+        ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception
+        chains in diagnostics are for maintainers and can include provider context;
+        review before sharing. Opening without AI makes no AI requests.
 
     Raises
     ------
@@ -933,7 +946,7 @@ def widget_data_contract(
 
     Examples
     --------
-    >>> state = widget_data_contract(table_id="table-orders")
+    >>> state = widget_data_contract(table_id="table-orders", ai_model="gpt-5.1", ai_reasoning_effort="high")
     >>> state["refresh_manifest"]()
 
     See Also
@@ -966,7 +979,12 @@ def widget_data_contract(
             raise ValueError("FabricOps Metadata Lakehouse is not configured for any workspace.")
         active_workspace_id = routing_workspace_id
     governance_config = getattr(config, "governance_config", None)
-    ai_enrichment = dict(getattr(governance_config, "ai_enrichment", {}) or {})
+    configured_ai = dict(getattr(governance_config, "ai_enrichment", {}) or {})
+    for key, override in (("model_deployment_name", ai_model),
+                          ("reasoning_effort", ai_reasoning_effort), ("verbosity", ai_verbosity)):
+        if override is not None:
+            configured_ai[key] = override
+    ai_enrichment = validate_ai_enrichment(configured_ai)
     classification_levels = [
         str(value).strip()
         for value in (getattr(governance_config, "classification_levels", []) or [])
@@ -990,7 +1008,9 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
-        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {},
+        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {}, "_ai_diagnostics": {},
+        "ai_settings": {key: ai_enrichment[key] for key in ("model_deployment_name", "reasoning_effort", "verbosity")},
+        "ai_usage": [],
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
         "_ai_unavailable": "", "_ai_failure": "", "_ai_failure_category": "",
@@ -1344,9 +1364,12 @@ def widget_data_contract(
         """Allow AI actions only while configuration and the notebook runtime permit them."""
         return bool(ai_enrichment.get("enabled")) and not state["_ai_unavailable"]
 
-    def ai_failure_message(exc: Exception) -> str:
+    def ai_failure_message(exc: Exception, operation: Any) -> str:
         """Show an actionable AI error and retain its diagnostic for debugging."""
         diagnostic = ai_failure_diagnostic(exc)
+        current = state.get("current") or {}
+        scope = (str(current.get("contract_id") or ""), int(current.get("contract_version") or 0))
+        state["_ai_diagnostics"].setdefault(scope, {})[operation] = diagnostic
         state["_ai_failure"] = diagnostic["detail"]
         state["_ai_failure_category"] = diagnostic["category"]
         state["_ai_failure_diagnostic"] = diagnostic
@@ -1356,14 +1379,19 @@ def widget_data_contract(
             for button in state["_ai_buttons"]:
                 button.disabled = True
             open_with_ai_button.disabled = True
-            ai_availability.value = f"<p>{state['_ai_unavailable']}</p>"
+            ai_availability.value = f"<p>{html.escape(state['_ai_unavailable'])}</p>"
         return str(diagnostic["message"])
 
-    def ai_recovered(message: str, *, remaining_errors: bool = False) -> None:
+    def ai_recovered(message: str, *, operation: Any, remaining_errors: bool = False) -> None:
         """Clear the current recoverable failure after its operation succeeds."""
-        state["_ai_failure"] = ""
-        state["_ai_failure_category"] = ""
-        state["_ai_failure_diagnostic"] = {}
+        current = state.get("current") or {}
+        scope = (str(current.get("contract_id") or ""), int(current.get("contract_version") or 0))
+        diagnostics = state["_ai_diagnostics"].get(scope, {})
+        diagnostics.pop(operation, None)
+        latest = next(reversed(diagnostics.values()), {}) if diagnostics else {}
+        state["_ai_failure"] = latest.get("detail", "")
+        state["_ai_failure_category"] = latest.get("category", "")
+        state["_ai_failure_diagnostic"] = latest
         if remaining_errors:
             set_status(
                 "Another AI suggestion still needs attention. Review the highlighted AI panels.",
@@ -1612,6 +1640,11 @@ def widget_data_contract(
         )
         state["_ai_buttons"] = []
         ai_errors = state["_ai_errors"].setdefault(suggestion_scope, {})
+        diagnostics = state["_ai_diagnostics"].get(suggestion_scope, {})
+        latest = next(reversed(diagnostics.values()), {}) if diagnostics else {}
+        state["_ai_failure"] = latest.get("detail", "")
+        state["_ai_failure_category"] = latest.get("category", "")
+        state["_ai_failure_diagnostic"] = latest
         ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [str(column.get("column_name") or "") for column in columns]
         from fabricops_kit.config.metadata_schemas import decode_metadata_row
@@ -1777,12 +1810,15 @@ def widget_data_contract(
                         "columns": profile_rows,
                     },
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="grain_key",
                 )
                 ai_state["table"]["grain_key"] = suggestion
+                refresh_ai_usage()
                 ai_errors.pop("grain_key", None)
                 if retrying:
                     ai_recovered(
                         "Grain AI suggestion generated after retry.",
+                        operation="grain_key",
                         remaining_errors=bool(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
                         ),
@@ -1805,7 +1841,8 @@ def widget_data_contract(
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 ai_state["table"].pop("grain_key", None)
                 accept_grain.disabled = True
-                message = ai_failure_message(exc)
+                refresh_ai_usage()
+                message = ai_failure_message(exc, "grain_key")
                 ai_errors["grain_key"] = message
                 grain_ai.value = f"<p>{html.escape(message)}</p>"
 
@@ -1913,6 +1950,8 @@ def widget_data_contract(
                     else "Choose Run with AI suggestions above."
                 )
                 table_description_ai.value = f"<p>{message}</p>"
+            elif not ai_state["table"].get("description") and str(table_description.value or "").strip():
+                table_description_ai.value = "<p>Saved description retained. Use Re-run to request a new suggestion.</p>"
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description"), show_heading=False
@@ -1955,22 +1994,26 @@ def widget_data_contract(
                 result = suggest_enrichment(
                     description_context,
                     description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="table_enrichment",
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
                 ai_state["table"]["description"] = {"value": new_value, "stale": False}
                 if previous_value and new_value != previous_value:
                     mark_all_sensitive_stale()
+                refresh_ai_usage()
                 ai_errors.pop("table_enrichment", None)
                 if retrying:
                     ai_recovered(
                         "Table AI suggestion generated after retry.",
+                        operation="table_enrichment",
                         remaining_errors=bool(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
                         ),
                     )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
-                message = ai_failure_message(exc)
+                refresh_ai_usage()
+                message = ai_failure_message(exc, "table_enrichment")
                 ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
                 set_status(f"Table AI suggestions unavailable: {message}", warning=True)
@@ -3937,7 +3980,7 @@ def widget_data_contract(
 
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not ai_available():
+            if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
                 return
             if not force and suggestions.get("description"):
@@ -3963,22 +4006,26 @@ def widget_data_contract(
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
                     description_prompt=str(ai_enrichment.get("column_description_prompt") or ""),
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="column_enrichment",
                 )
                 previous_value = str(suggestions.get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
                 suggestions["description"] = {"value": new_value, "stale": False}
                 if previous_value and new_value != previous_value:
                     mark_sensitive_stale(column_id)
+                refresh_ai_usage()
                 ai_errors.pop(error_key, None)
                 if retrying:
                     ai_recovered(
                         "Column AI suggestion generated after retry.",
+                        operation=error_key,
                         remaining_errors=bool(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
                         ),
                     )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
-                message = ai_failure_message(exc)
+                refresh_ai_usage()
+                message = ai_failure_message(exc, error_key)
                 suggestions["description"] = {"error": message, "stale": False}
                 ai_errors[error_key] = message
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
@@ -3988,7 +4035,7 @@ def widget_data_contract(
             column_id: str, *, force: bool = False, use_description_suggestion: bool = False
         ) -> None:
             suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not ai_available():
+            if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
                 return
             if not force and suggestions.get("sensitive_data"):
@@ -4035,7 +4082,8 @@ def widget_data_contract(
                     }],
                 })
                 result = suggest_sensitive_data(
-                    context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or "")
+                    context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or ""),
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="sensitive_data",
                 )
                 if len(result) != 1:
                     selected_name = str(selected.get("column_name") or column_id)
@@ -4043,16 +4091,19 @@ def widget_data_contract(
                         f"No Sensitive Data assessment matched {selected_name!r}."
                     )
                 suggestions["sensitive_data"] = {**result[0], "stale": False}
+                refresh_ai_usage()
                 ai_errors.pop(error_key, None)
                 if retrying:
                     ai_recovered(
                         "Sensitive Data AI suggestion generated after retry.",
+                        operation=error_key,
                         remaining_errors=bool(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
                         ),
                     )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
-                message = ai_failure_message(exc)
+                refresh_ai_usage()
+                message = ai_failure_message(exc, error_key)
                 suggestions["sensitive_data"] = {"error": message, "stale": False}
                 ai_errors[error_key] = message
                 selected_name = str(selected.get("column_name") or column_id)
@@ -5828,7 +5879,7 @@ def widget_data_contract(
             ]
 
         def resolve_business_rule_clicked(_button: Any) -> None:
-            if not ai_available():
+            if not editable or not ai_available() or ai_mode != "with_ai":
                 return
             resolve_business_rule.disabled = True
             resolve_business_rule.description = "Generating DQ Rules…"
@@ -5867,6 +5918,7 @@ def widget_data_contract(
                     requirement=str(business_requirement.value or ""),
                     relevant_columns=list(business_columns.value),
                     prompt=str(ai_enrichment.get("business_rule_prompt") or ""),
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="business_rule_ai",
                 )
                 business_resolved.clear()
                 business_resolved.extend(
@@ -5881,16 +5933,19 @@ def widget_data_contract(
                 refresh_resolved_options()
                 hydrate_resolved_business()
                 set_validation_error("business_rule_ai")
+                refresh_ai_usage()
                 if retrying:
                     ai_recovered(
                         "DQ Rule suggestions generated after retry.",
+                        operation="business_rule_ai",
                         remaining_errors=bool(ai_errors),
                     )
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 business_resolved.clear()
                 refresh_resolved_options()
                 apply_business_rule.disabled = True
-                message = ai_failure_message(exc)
+                refresh_ai_usage()
+                message = ai_failure_message(exc, "business_rule_ai")
                 business_proposal.value = f"<p>{html.escape(message)}</p>"
                 if not state["_ai_unavailable"]:
                     set_validation_error("business_rule_ai", exc)
@@ -6980,6 +7035,55 @@ def widget_data_contract(
             "freeze_confirm": freeze_confirm_button if editable else None,
         })
 
+    def ai_information() -> Any:
+        """Show effective settings before opt-in and inside the editor."""
+        settings = state["ai_settings"]
+        return widgets.HTML(
+            "<div style='font:13px Segoe UI,system-ui,sans-serif;color:#243449;max-width:100%;overflow-wrap:anywhere;'>"
+            "<strong>AI-assisted authoring</strong><br>Provider: Microsoft Fabric AI Functions<br>"
+            f"Model: {html.escape(settings['model_deployment_name'])}; "
+            f"Reasoning effort: {html.escape(settings['reasoning_effort'] or 'provider/model default')}; "
+            f"Verbosity: {html.escape(settings['verbosity'] or 'provider/model default')}<br>"
+            "Billing: Fabric capacity consumption. AI is optional; manual authoring remains available.<br>"
+            "Availability depends on Microsoft's supported regions, tenant settings and eligible paid capacity. "
+            "Stronger models and higher reasoning may increase consumption and latency."
+            "<details><summary>Setup, consumption and stronger model example</summary>"
+            "<p>Requires Runtime 2.0 and the tenant setting ‘Users can use Copilot and other features powered by Azure OpenAI’. "
+            "Review all suggestions before accepting them. Open without AI makes zero AI requests.</p>"
+            "<pre style='white-space:pre-wrap;'>widget_data_contract(\n"
+            '    ai_model="gpt-5.1",\n    ai_reasoning_effort="high",\n    ai_verbosity="medium",\n)</pre>'
+            "<p>Model calls use the Copilot and AI meter, reported as the AI Functions operation. "
+            "Spark execution consumes capacity separately. Token statistics below are measured usage, not CU estimates. "
+            "Per-request CU consumption is not exposed by the documented PySpark stats interface; inspect exact consumption in the "
+            "<a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Fabric Capacity Metrics app</a>. "
+            "See <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing'>Microsoft billing guidance</a> "
+            "and <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview#prerequisites'>prerequisites</a>. "
+            "The separate Copilot capacity allocation feature is distinct from AI Functions billing. "
+            "Azure AI Foundry is a future option with separate Azure billing; this widget does not support it.</p>"
+            "</details></div>", layout=widgets.Layout(width="100%", min_width="0"),
+        )
+
+    ai_usage_view = widgets.HTML()
+
+    def refresh_ai_usage() -> None:
+        """Display supported measured token/request statistics without inventing CU values."""
+        records = state["ai_usage"]
+        rows = []
+        for record in records:
+            stats = record.get("statistics")
+            text = json.dumps(stats, ensure_ascii=False) if stats else "Statistics unavailable"
+            rows.append("<li>" + html.escape(f"{record['operation']} / {record['model']}: {text}") + "</li>")
+        ai_usage_view.value = (
+            "<details><summary>AI usage for this widget instance</summary>"
+            + ("<ul>" + "".join(rows) + "</ul>" if rows else "<p>No AI requests made by this widget.</p>")
+            + "<p>Token and row counts are measured statistics, not CU consumption. "
+            "Exact consumption: <a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Capacity Metrics</a>.</p></details>"
+        )
+
+    refresh_ai_usage()
+    selector_ai_information = ai_information()
+    editor_ai_information = ai_information()
+
     open_with_ai_button = widgets.Button(
         description="Open with AI suggestions",
         button_style="info",
@@ -7051,12 +7155,13 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
     )
     selector_panel = widgets.VBox(
-        [selector, selector_actions],
+        [selector, selector_ai_information, selector_actions],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     selector_panel.add_class("fabricops-contract-selector")
     editor_shell = widgets.VBox(
         [
+            editor_ai_information, ai_usage_view,
             widgets.HBox(
                 [top_nav],
                 layout=widgets.Layout(
@@ -7160,6 +7265,9 @@ def widget_data_contract(
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
     def open_selected(*, with_ai: bool) -> None:
+        if with_ai and not ai_available():
+            set_status("AI is disabled in configuration or unavailable. Choose Open without AI.", warning=True)
+            return
         selected_table = str(state.get("pending_table_id") or "")
         selected_contract = contract_control.value
         if not selected_table or not selected_contract:
@@ -7195,9 +7303,10 @@ def widget_data_contract(
                 f"Opened Data Contract v{state['contract_version']} for {state['table_id']}"
                 + (
                     f". {state['_ai_unavailable']}" if state["_ai_unavailable"]
+                    else f". {state['_ai_failure_diagnostic']['message']}" if state["_ai_failure"]
                     else " with AI suggestions." if with_ai else " without AI."
                 ),
-                warning=bool(state["_ai_unavailable"]),
+                warning=bool(state["_ai_unavailable"] or state["_ai_failure"]),
             )
         except Exception as exc:
             open_progress.value = ""
@@ -7262,6 +7371,8 @@ def widget_data_contract(
         "contract": contract_control, "contract_search": contract_selector["search"],
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
+        "selector_ai_information": selector_ai_information, "editor_ai_information": editor_ai_information,
+        "ai_usage": ai_usage_view,
         "change_table": change_table_button,
         "table_exit_row": table_exit_row,
         "table_exit_confirm": table_exit_confirm,
