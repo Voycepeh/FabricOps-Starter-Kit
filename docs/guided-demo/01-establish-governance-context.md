@@ -61,4 +61,4 @@ At the end of Step 1 you should have:
 - one Data Agreement between them,
 - visible persisted rows in the metadata tables.
 
-**Next:** [Step 2. Build and run the ETL](02-build-and-run-etl.md)
+**Next:** [Plug-and-Play 02: Pipeline Template](02-build-and-run-etl.md)
