@@ -28,7 +28,7 @@ Mappings are documented in `SOURCE_PROJECTION_MATRIX.md` and automatically compa
 
 Power BI Desktop and a live Fabric endpoint were unavailable in the implementation environment. Structural and repository-contract validation passed, but Desktop open/save, DAX/TMDL compilation, live refresh, interaction UI, rendered overflow, native Back rendering, and capacity performance remain manual checks listed in `VALIDATION.md`.
 
-Offline evidence: the PBIP validator passes across 193 generated paths, deterministic regeneration and Ruff pass, and the expanded metadata/Pipeline execution suites pass 130 tests. The updated GitHub FabricOps CI workflow is running.
+Offline evidence: the PBIP validator passes across 194 generated paths, all four project entry files pass Microsoft’s published JSON schemas, deterministic regeneration and Ruff pass, and the expanded metadata/Pipeline execution suites pass 130 tests.
 
 ## Manual setup
 
