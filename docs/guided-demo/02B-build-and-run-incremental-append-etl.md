@@ -73,15 +73,17 @@ Set `DEMO_DAY = 1` and run the notebook from the top. With no accepted checkpoin
 
 ![Day 1 selected in the 02B notebook](../assets/2b/Day%201.png)
 
-*Day 1 starts the source-to-target checkpoint history.*
+**Path A Incremental Read + Append All**
 
-![Eight Day 1 movements returned by the bootstrap Incremental Read](../assets/2b/Incremental_Read_inspect.png)
+![Day 1 Incremental Read bootstraps Path A with eight rows](../assets/2b/Incremental_Read_Day1.png)
 
-*The bootstrap scope contains all eight staged movements. The scope details identify this as the first run.*
+![Day 1 Append All commits eight rows to the Path A target](../assets/2b/AppendAll_Day1.png)
 
-![Eight transformed Day 1 movements prepared for the append Write](../assets/2b/Incremental_Write_Inspect.png)
+**Path B Full Read + Append New**
 
-*The Write preview shows submitted rows, not cumulative target state. Read the Silver target separately for its persisted total.*
+![Day 1 Full Read returns all eight rows for Path B](../assets/2b/Full_Read_Day1.png)
+
+![Day 1 Append New Only commits the eight previously unseen rows](../assets/2b/AppendNew_Day1.png)
 
 Both Writes commit eight business rows. Each target ends Day 1 at **8**.
 
@@ -100,17 +102,17 @@ Set `DEMO_DAY = 2` and start from the top. The preparation cell unions the Day 2
 
 ![Day 2 selected in the 02B notebook](../assets/2b/Day%202.png)
 
-*Day 2 stages four new movements before either pipeline execution begins.*
+**Path A Incremental Read + Append All**
 
-![Four newly eligible rows returned by the Day 2 Incremental Read](../assets/2b/Incremental_Read_Day2.png)
+![Day 1 Incremental Read bootstraps Path A with eight rows](../assets/2b/Incremental_Read_Day2.png)
 
-*Path A reads only M009–M012 because their `modified_datetime` values are newer than the accepted Path A checkpoint.*
+![Day 1 Append All commits eight rows to the Path A target](../assets/2b/AppendAll_Day2.png)
 
-![Four transformed Day 2 rows submitted to Append All](../assets/2b/Incremental_Write_Day2.png)
+**Path B Full Read + Append New**
 
-*Path A submits and commits four rows, so its persisted total reaches 12.*
+![Day 1 Full Read returns all eight rows for Path B](../assets/2b/Full_Read_Day2.png)
 
-Path B independently reads and submits all 12 source rows. Append New Only finds eight published hashes and commits only the four unseen hashes, so its target also reaches **12**.
+![Day 1 Append New Only commits the eight previously unseen rows](../assets/2b/AppendNew_Day2.png)
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
@@ -128,16 +130,17 @@ Set `DEMO_DAY = 3` and run from the top. The preparation cell makes no source ch
 ![Day 3 selected in the 02B notebook](../assets/2b/Day%203.png)
 
 *Day 3 deliberately leaves the 12-row Bronze source unchanged.*
+**Path A Incremental Read + Append All**
 
-![An empty incremental scope after all watermark values were accepted](../assets/2b/Incremental_Read_Day1_again.png)
+![Day 3 Incremental Read bootstraps Path A with eight rows](../assets/2b/Incremental_Read_Day3.png)
 
-*Path A reads, submits, and commits zero business rows. Append All remains at 12.*
+![Day 3 Append All commits eight rows to the Path A target](../assets/2b/AppendAll_Day3.png)
 
-![An empty append input for the unchanged incremental scope](../assets/2b/Incremental_Write_Day1_again.png)
+**Path B Full Read + Append New**
 
-*Always call the Path A Write: FabricOps owns empty-scope handling and finalization.*
+![Day 3 Full Read returns all eight rows for Path B](../assets/2b/Full_Read_Day3.png)
 
-Path B still reads and submits all 12 source rows. Append New Only finds no unseen hashes and commits zero new business rows, leaving its target at **12**. `empty_incremental_scope` and `no_unseen_hashes` are different outcomes even though neither adds rows.
+![Day 3 Append New Only commits the eight previously unseen rows](../assets/2b/AppendNew_Day3.png)
 
 ### Inspect the four row-count concepts
 
