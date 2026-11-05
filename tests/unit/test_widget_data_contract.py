@@ -1507,6 +1507,7 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert "gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable" in style
     assert "align-content:start; overflow-x:hidden !important; overflow-y:auto !important" in style
     assert "height:auto; max-height:none; overflow:visible !important" in style
+    assert ".fabricops-contract-columns { height:540px !important; }" in style
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
     assert ".fabricops-business-body {\n    flex:0 1 auto" in style
     assert "overflow-x:hidden; overflow-y:auto" in style
@@ -1535,6 +1536,28 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert controls["business_columns"].layout.max_height == "220px"
     assert controls["profile_context"].layout.height == "auto"
     assert controls["profile_context"].layout.overflow == "visible"
+
+
+def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
+    """FabricOps-managed underscore columns stay out of governance authoring controls."""
+    widget_runtime["catalogue"].append({
+        "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
+        "column_id": "col-technical", "column_name": "_row_hash",
+        "data_type": "string", "is_active": True,
+    })
+    _capture_fixture_columns(widget_runtime)
+
+    controls = widget_runtime["open"]()["_controls"]
+
+    assert "_row_hash" not in [
+        label.removesuffix(" *") for label, _value in controls["column_select"].options
+    ]
+    assert "_row_hash" not in controls["row_key_columns"].options
+    assert "_row_hash" not in controls["key_columns"].options
+    assert "_row_hash" not in controls["tracked_columns"].options
+    assert "_row_hash" not in [
+        value for _label, value in controls["business_columns"].options
+    ]
 
     controls["top_nav"].value = "Review"
     exact_json = controls["right_pane"].children[1].children[1]

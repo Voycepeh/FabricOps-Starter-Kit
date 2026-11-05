@@ -277,7 +277,7 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-contract-detail {
         height:auto; max-height:none; overflow:visible;
     }
-    .fabricops-data-contract .fabricops-contract-columns { height:180px !important; }
+    .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
     .fabricops-data-contract .fabricops-dq-authoring-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>"""
@@ -1618,6 +1618,11 @@ def widget_data_contract(
                 str(column.get("column_name") or "").casefold(),
             ),
         )
+        authoring_columns = [
+            column
+            for column in columns
+            if not str(column.get("column_name") or "").startswith("_")
+        ]
         resolution_controls = ()
         available_ids = {str(column.get("column_id") or "") for column in columns}
         unresolved = [
@@ -1682,7 +1687,9 @@ def widget_data_contract(
         state["_ai_failure_category"] = latest.get("category", "")
         state["_ai_failure_diagnostic"] = latest
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        column_names = [str(column.get("column_name") or "") for column in columns]
+        column_names = [
+            str(column.get("column_name") or "") for column in authoring_columns
+        ]
         from fabricops_kit.config.metadata_schemas import decode_metadata_row
         discovery = decode_metadata_row("METADATA_DATA_CATALOGUE", {
             "profile_key_candidates_json": table.get("profile_key_candidates_json"),
@@ -1701,7 +1708,7 @@ def widget_data_contract(
         )
         temporal_column_names = [
             str(column.get("column_name") or "")
-            for column in columns
+            for column in authoring_columns
             if any(
                 marker in str(column.get("data_type") or "").lower()
                 for marker in ("date", "timestamp", "datetime")
@@ -1819,7 +1826,7 @@ def widget_data_contract(
             try:
                 render_grain_profile_evidence()
                 profile_rows = []
-                for column in columns:
+                for column in authoring_columns:
                     cid = str(column.get("column_id") or "")
                     profile_value = load_profile_context(cid)
                     profile = dict(profile_value.get("profile") or {})
@@ -2030,7 +2037,7 @@ def widget_data_contract(
                     table,
                     metadata_level="table",
                     existing_description=str(table_description.value or ""),
-                    column_rows=columns,
+                    column_rows=authoring_columns,
                 )
                 grain_suggestion = ai_state["table"].get("grain_key") or {}
                 description_context["grain"] = str(
@@ -2354,7 +2361,7 @@ def widget_data_contract(
                 return
             column_labels = {
                 str(column.get("column_id") or ""): str(column.get("column_name") or "")
-                for column in columns
+                for column in authoring_columns
             }
             removed = {
                 str(rule.get("column_id") or "")
@@ -4485,7 +4492,7 @@ def widget_data_contract(
                     f"{str(column.get('column_name') or '')}{' *' if str(column.get('column_id') or '') in required_columns or str(column.get('column_name') or '') in required_columns else ''}",
                     str(column.get("column_id") or ""),
                 )
-                for column in columns
+                for column in authoring_columns
             ]
 
         def refresh_column_options(*_args: Any) -> None:
@@ -4858,7 +4865,7 @@ def widget_data_contract(
         business_columns = widgets.SelectMultiple(
             options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
-                for column in columns
+                for column in authoring_columns
             ],
             disabled=not editable,
             **shared.widget_common(widgets, "Limit to columns (optional)"),
@@ -4867,7 +4874,7 @@ def widget_data_contract(
         business_columns.add_class("fabricops-contract-list")
         dq_column_options = [
             (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
-            for column in columns
+            for column in authoring_columns
         ]
         dq_column_options_with_blank = [("Select a column", ""), *dq_column_options]
         business_enabled = widgets.Checkbox(
@@ -5902,7 +5909,7 @@ def widget_data_contract(
                                 str(column.get("column_id") or ""), {}
                             ),
                         }
-                        for column in columns
+                        for column in authoring_columns
                     ],
                     "existing_dq_rules": current_rule_context(),
                 })
