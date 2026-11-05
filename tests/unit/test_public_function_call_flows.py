@@ -413,20 +413,21 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
 
 
 
-def test_reintroduced_activation_widget_is_preview_with_unchanged_history(repository_call_flow_payload) -> None:
-    """Current registration restores the widget while released retirement stays historical."""
+def test_reintroduced_activation_widget_is_live_with_unchanged_history(repository_call_flow_payload) -> None:
+    """The v0.4.0 promotion restores Live support without rewriting retirement history."""
     qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
     history, _ = flows.read_function_lifecycle()
-    assert history[qn].lifecycle_status == "discontinued"
+    assert history[qn].lifecycle_status == "live"
     current = flows.public_lifecycle(qn, "widget_activate_data_contract", history)
-    assert current.lifecycle_status == "preview"
-    assert current.discontinued_in is None
+    assert current.lifecycle_status == "live"
+    assert current.live_since == "0.4.0"
+    assert current.discontinued_in == "0.3.0"
     assert current.release_history == history[qn].release_history
     assert any(row["status"] == "discontinued" for row in current.release_history)
-    assert history[qn].lifecycle_status == "discontinued"
+    assert current.release_history[-1] == {"version": "0.4.0", "status": "live"}
     row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
-    assert row["lifecycle_status"] == "preview"
-    assert row["contract_classification"] == "preview_public_function"
+    assert row["lifecycle_status"] == "live"
+    assert row["contract_classification"] == "live_public_function"
 
 
 def test_unregistered_retired_callable_stays_discontinued() -> None:
