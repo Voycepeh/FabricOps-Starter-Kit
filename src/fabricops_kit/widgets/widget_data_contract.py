@@ -229,6 +229,10 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-business-footer {
     border-top:1px solid var(--form-border); padding-top:12px;
 }
+.fabricops-data-contract .fabricops-dq-ai-create {
+    background:#f1edf8; border:1px solid #d8cfea; border-left:4px solid #6750a4;
+    border-radius:6px; padding:12px;
+}
 .fabricops-data-contract .fabricops-dq-parameter-box { gap:8px; }
 .fabricops-data-contract .fabricops-lineage-table {
     width:100%; min-width:340px; table-layout:fixed; border-collapse:collapse; font-size:11px;
@@ -283,7 +287,7 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-data-quality-workspace { overscroll-behavior:auto; }
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
-    .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
+    .fabricops-data-contract .fabricops-contract-columns { height:660px !important; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -3233,10 +3237,10 @@ def widget_data_contract(
         column_option_style = widgets.HTML()
         column_search = widgets.Text(placeholder="Search columns", layout=widgets.Layout(width="100%", min_width="0", max_width="100%"))
         column_select = widgets.Select(
-            options=(), rows=8,
+            options=(), rows=24,
             layout=widgets.Layout(
                 width="100%", min_width="0", max_width="100%",
-                height="220px", max_height="280px",
+                height="660px", max_height="840px",
             ),
         )
         column_select.add_class("fabricops-contract-columns")
@@ -4959,6 +4963,7 @@ def widget_data_contract(
                 prepare_column_ai(str(column_select.value))
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
+        new_rule_option = "__new_rule__"
         business_saved = widgets.Select(
             rows=7,
             **shared.widget_common(widgets, "Rules")
@@ -5658,7 +5663,10 @@ def widget_data_contract(
         def refresh_business_saved_options(selected: str | None = None) -> None:
             previous = str(business_saved.value or "")
             business_lookup.clear()
-            options: list[tuple[str, str]] = [("Select a rule to edit", "")]
+            options: list[tuple[str, str]] = [(
+                "Select a rule to edit, or click here to create a new rule",
+                new_rule_option,
+            )]
             for rule in session_guardrails():
                 if str(rule.get("guardrail_type") or "").lower() not in {
                     "data_quality", "dq"
@@ -5687,12 +5695,12 @@ def widget_data_contract(
                 )
                 for index, proposal in enumerate(business_resolved)
             )
-            if len(options) == 1:
-                options[0] = ("No DQ Rules yet — use an action below", "")
             business_saved.options = options
             option_values = {str(value) for _label, value in options}
             requested = selected if selected is not None else previous
-            business_saved.value = requested if requested in option_values else ""
+            business_saved.value = (
+                requested if requested in option_values else new_rule_option
+            )
 
         def refresh_resolved_options(selected: int = 0) -> None:
             if not business_resolved:
@@ -6517,7 +6525,10 @@ def widget_data_contract(
         business_ai_panel = widgets.VBox(
             [
                 widgets.HTML(
-                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "<div style='color:#6750a4;font-size:13px;font-weight:700;'>"
+                    "Draft with AI (optional)</div>"
+                    "<div style='color:#526477;font-size:12px;line-height:1.5;"
+                    "margin-top:4px;'>"
                     "Describe the outcome in plain language. AI drafts deterministic "
                     "rules into the list for review; it does not add them to the "
                     "contract automatically.</div>"
@@ -6542,20 +6553,14 @@ def widget_data_contract(
             shared.action_row(widgets, [delete_business_rule, apply_business_rule]),
         ], layout=widgets.Layout(width="100%"))
         business_review_actions.add_class("fabricops-business-footer")
-        add_manual_mode = widgets.Button(
-            description="Add manually", disabled=not editable
-        )
-        add_ai_mode = widgets.Button(
-            description="Draft with AI",
-            disabled=not (editable and ai_visible and ai_available()),
-        )
         current_rules_section = shared.form_section(
             widgets,
             title="Data Quality Rules",
             children=[
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-                    "Select a current rule or AI draft to open it in the workspace. "
+                    "Select a current rule or AI draft to edit it, or select the first "
+                    "row to create a new rule. "
                     "AI drafts remain proposals until you review and add them.</div>"
                 ),
                 widgets.HTML(
@@ -6566,7 +6571,6 @@ def widget_data_contract(
                     "<span>Status</span><span>Rule and columns</span><span>Action</span></div>"
                 ),
                 business_saved,
-                shared.action_row(widgets, [add_manual_mode, add_ai_mode]),
             ],
         )
         rule_reviewer = widgets.VBox(
@@ -6576,7 +6580,10 @@ def widget_data_contract(
         manual_rule_editor = widgets.VBox(
             [
                 widgets.HTML(
-                    "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
+                    "<div style='color:#243449;font-size:13px;font-weight:700;'>"
+                    "Configure manually</div>"
+                    "<div style='color:#667085;font-size:12px;line-height:1.5;"
+                    "margin-top:4px;'>"
                     "Choose a deterministic rule type and configure it here.</div>"
                 ),
                 manual_rule_type,
@@ -6596,12 +6603,16 @@ def widget_data_contract(
             [business_ai_panel, business_generate_actions],
             layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
-        workspace_intro = widgets.HTML(
-            "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
-            "Select a rule to edit, or start a new rule from the list controls.</div>"
+        ai_rule_editor.add_class("fabricops-dq-ai-create")
+        new_rule_editor = widgets.VBox(
+            [
+                *([ai_rule_editor] if ai_visible and ai_available() else []),
+                manual_rule_editor,
+            ],
+            layout=widgets.Layout(width="100%", min_width="0", gap="16px"),
         )
         rule_workspace_body = widgets.VBox(
-            [workspace_intro],
+            [new_rule_editor],
             layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
         rule_workspace_section = shared.form_section(
@@ -6609,31 +6620,21 @@ def widget_data_contract(
         )
 
         def set_rule_workspace(mode: str) -> None:
-            if mode == "manual":
-                rule_workspace_body.children = (manual_rule_editor,)
-            elif mode == "ai":
-                rule_workspace_body.children = (ai_rule_editor,)
-            elif mode == "review":
+            if mode == "review":
                 rule_workspace_body.children = (rule_reviewer,)
             else:
-                rule_workspace_body.children = (workspace_intro,)
-
-        def open_manual_rule_editor(_button: Any) -> None:
-            business_saved.value = ""
-            set_rule_workspace("manual")
-
-        def open_ai_rule_editor(_button: Any) -> None:
-            business_saved.value = ""
-            set_rule_workspace("ai")
+                rule_workspace_body.children = (new_rule_editor,)
 
         def open_selected_rule(change: dict[str, Any]) -> None:
-            if str(change.get("new") or ""):
+            if str(change.get("new") or "") == new_rule_option:
+                set_rule_workspace("create")
+            elif str(change.get("new") or ""):
                 set_rule_workspace("review")
 
-        add_manual_mode.on_click(open_manual_rule_editor)
-        add_ai_mode.on_click(open_ai_rule_editor)
         business_saved.observe(open_selected_rule, names="value")
-        if business_saved.value:
+        if str(business_saved.value or "") == new_rule_option:
+            set_rule_workspace("create")
+        elif business_saved.value:
             set_rule_workspace("review")
 
         business_left = (current_rules_section,)
@@ -7077,8 +7078,7 @@ def widget_data_contract(
             "approve_engineering_review": approve_engineering_review,
             "current_dq_rules_section": current_rules_section,
             "rule_workspace_body": rule_workspace_body,
-            "add_manual_mode": add_manual_mode,
-            "add_ai_mode": add_ai_mode,
+            "new_rule_editor": new_rule_editor,
             "manual_rule_editor": manual_rule_editor,
             "ai_rule_editor": ai_rule_editor,
             "manual_rule_type": manual_rule_type,
