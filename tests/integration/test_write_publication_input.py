@@ -121,7 +121,7 @@ def test_dry_run_returns_prepared_input_without_publication(publication_input_ru
     context["execution_plan"] = SimpleNamespace(permits_persistence=False)
     result = run()
     assert result["published"] is False
-    assert result["write_metrics"]["rows_committed"] == 0
+    assert result["write_metrics"]["rows_committed"] is None
     assert state.received is None
     assert {"_row_hash", "_committed_at"} <= set(result["dataframe"].columns)
     assert len(result["dataframe"].limit(10).collect()) == 2

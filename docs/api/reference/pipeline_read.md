@@ -135,9 +135,12 @@ complete physical ``demo.order_history`` source table.
 ## Returns
 
 dict
-    ``read_metrics`` contains ``rows_read`` (zero for a known empty
-    incremental scope, otherwise None) and ``columns`` from schema metadata.
-    No count is triggered for reporting.
+    ``read_metrics`` contains the rows actually returned by this full,
+    query, bootstrap, or target-specific incremental scope, plus ``columns``
+    from schema metadata. A known empty incremental scope is exactly zero;
+    an unavailable runtime measurement remains None. It never substitutes
+    the complete physical source's observation count for a smaller
+    incremental batch.
     A deliberately small result with these fields:
 
     - ``dataframe``: the Spark DataFrame returned by the selected
@@ -149,7 +152,7 @@ dict
       Contract applies. The contract record itself is not exposed.
     - ``read_mode``: the explicit source read mode.
     - ``has_data`` and ``should_process``: whether this read contributes
-      unconsumed work. Full reads return ``True`` without triggering a count.
+      unconsumed work. Full reads return ``True``.
     - ``scope``: a compact summary of the resolved full, bootstrap, or
       watermark scope; no metadata rows are exposed.
 
@@ -190,9 +193,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:112`
+`fabricops_kit/pipeline/pipeline_read.py:135`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L112-L493">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L135-L546">View on GitHub</a>
 </div>
 
 
@@ -215,6 +218,13 @@ The governed orchestration performs these mechanical steps:
    accepted progress. Only successful target publication commits it.
 7. Return the DataFrame, explicit ``table_id``, and small source metadata
    required by the notebook.
+
+Exact row measurement reuses a matching Source Observation aggregate when
+it describes the same Lakehouse bootstrap/full scope. Other returned scopes
+are materialized once and cached for downstream checks and transformations;
+the pipeline lifecycle releases that cache. Warehouse query and incremental
+counts therefore scan only their pushed-down result scope, not the complete
+physical table. Finalization performs no count.
 
 Higher-level governed pipeline code normally uses ``pipeline_read``.
 Foundational readers remain available for direct lower-level or
@@ -251,7 +261,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 131 |
+| Live-critical dependencies | 132 |
 
 ### Release history
 
@@ -336,6 +346,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._measure_returned_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_watermark_literal</code></li>

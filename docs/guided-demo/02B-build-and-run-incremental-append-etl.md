@@ -150,7 +150,7 @@ Path B still reads and submits all 12 source rows. Append New Only finds no unse
 | 3 | Incremental + Append All | 0 | 0 | 0 | 12 |
 | 3 | Full + Append New Only | 12 | 12 | 0 | 12 |
 
-The Read preview shows processing scope. The Write result's metrics describe submitted/prepared input and committed rows. A separate `read_lakehouse_table()` count confirms cumulative persisted target state.
+`Rows read` is the number of rows returned by that exact Read scope. For Path A it is the target-specific watermark batch (8, then 4, then 0), not the Bronze table's overall row count. For Path B it is the complete returned source (8, then 12, then 12). The Write result separately describes prepared input and rows actually committed. A separate `read_lakehouse_table()` count confirms cumulative persisted target state.
 
 ### Expected result
 

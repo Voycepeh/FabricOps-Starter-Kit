@@ -145,6 +145,7 @@ def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypa
     assert captured[0]["incremental_columns"] == ("processed_at", "processed_at")
     assert result["dataframe"] == "empty-frame"
     assert result["should_process"] is False
+    assert result["read_metrics"]["rows_read"] == 0
 
 
 def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
@@ -157,6 +158,7 @@ def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
     assert result["type"] == "full"
     assert result["first_run"] is True
     assert result["has_data"] is True
+    assert result["observed_row_count"] == 1
 
 
 def test_incremental_columns_come_from_processing_without_source_drift():

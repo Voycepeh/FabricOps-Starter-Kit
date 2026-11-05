@@ -153,7 +153,7 @@ def test_testing_all_strategies_have_only_diagnostic_mutations(runtime, spark_se
     source = read(plan, spark_session)
     result = write(plan, source, spark_session, strategy=strategy, parameters=parameters)
     assert source["execution_mode"] == result["execution_mode"] == "dry_run"
-    assert not result["published"] and result["write_metrics"]["rows_committed"] == 0
+    assert not result["published"] and result["write_metrics"]["rows_committed"] is None
     assert result["dry_run"]["status"] == "passed" and result["checks_not_exercised"]
     assert ("SCD business keys" in result["dry_run"]["fully_evaluated"]) is (strategy in {"scd1", "scd2"})
     assert_testing_mutations_are_diagnostics_only(spies)

@@ -19,6 +19,29 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
+def _measure_returned_rows(dataframe: Any, *, context: dict[str, Any]) -> int | None:
+    """Materialize one returned scope once and retain its cache for downstream work."""
+    count = getattr(dataframe, "count", None)
+    if not callable(count):
+        return None
+    owned_cache = False
+    plan = context.get("execution_plan")
+    try:
+        if plan is not None and not bool(getattr(dataframe, "is_cached", False)) and hasattr(dataframe, "persist"):
+            from pyspark import StorageLevel
+
+            dataframe.persist(StorageLevel.MEMORY_AND_DISK)
+            owned_cache = True
+        rows = int(count())
+    except Exception:
+        if owned_cache and hasattr(dataframe, "unpersist"):
+            dataframe.unpersist()
+        return None
+    if owned_cache:
+        plan.evidence.setdefault("source_observation_caches", []).append(dataframe)
+    return rows
+
+
 def _warehouse_incremental_query(identity: dict[str, Any], scope: dict[str, Any]) -> str:
     """Build framework-owned SQL pushdown for one resolved incremental scope."""
     schema = str(identity["schema"]).replace("]", "]]")
@@ -185,9 +208,12 @@ def pipeline_read(
     Returns
     -------
     dict
-        ``read_metrics`` contains ``rows_read`` (zero for a known empty
-        incremental scope, otherwise None) and ``columns`` from schema metadata.
-        No count is triggered for reporting.
+        ``read_metrics`` contains the rows actually returned by this full,
+        query, bootstrap, or target-specific incremental scope, plus ``columns``
+        from schema metadata. A known empty incremental scope is exactly zero;
+        an unavailable runtime measurement remains None. It never substitutes
+        the complete physical source's observation count for a smaller
+        incremental batch.
         A deliberately small result with these fields:
 
         - ``dataframe``: the Spark DataFrame returned by the selected
@@ -199,7 +225,7 @@ def pipeline_read(
           Contract applies. The contract record itself is not exposed.
         - ``read_mode``: the explicit source read mode.
         - ``has_data`` and ``should_process``: whether this read contributes
-          unconsumed work. Full reads return ``True`` without triggering a count.
+          unconsumed work. Full reads return ``True``.
         - ``scope``: a compact summary of the resolved full, bootstrap, or
           watermark scope; no metadata rows are exposed.
 
@@ -233,6 +259,13 @@ def pipeline_read(
        accepted progress. Only successful target publication commits it.
     7. Return the DataFrame, explicit ``table_id``, and small source metadata
        required by the notebook.
+
+    Exact row measurement reuses a matching Source Observation aggregate when
+    it describes the same Lakehouse bootstrap/full scope. Other returned scopes
+    are materialized once and cached for downstream checks and transformations;
+    the pipeline lifecycle releases that cache. Warehouse query and incremental
+    counts therefore scan only their pushed-down result scope, not the complete
+    physical table. Finalization performs no count.
 
     Higher-level governed pipeline code normally uses ``pipeline_read``.
     Foundational readers remain available for direct lower-level or
@@ -462,12 +495,32 @@ def pipeline_read(
             print("   Scope → empty incremental scope; no new source records")
         print("Result → DataFrame returned; checks, profiling, transformations, and writes remain explicit.")
 
+    rows_read = None
+    measurement_source = None
+    if scope.get("has_data") is False:
+        rows_read, measurement_source = 0, "empty_incremental_scope"
+    elif full_observation.get("row_count") is not None and read_mode == "full" and query is None:
+        rows_read, measurement_source = int(full_observation["row_count"]), "full_source_observation"
+    elif (
+        read_mode == "incremental"
+        and store_kind == "lakehouse"
+        and scope.get("first_run")
+        and scope.get("observed_row_count") is not None
+    ):
+        rows_read = int(scope["observed_row_count"])
+        measurement_source = "incremental_observation"
+    else:
+        rows_read = _measure_returned_rows(dataframe, context=context)
+        if rows_read is not None:
+            measurement_source = "returned_dataframe"
+
     return {
         "source_observation_recovery": recovery,
         "full_source_observation": full_observation,
         "read_metrics": {
-            "rows_read": 0 if scope.get("has_data") is False else None,
+            "rows_read": rows_read,
             "columns": len(dataframe.columns) if hasattr(dataframe, "columns") else None,
+            "measurement_source": measurement_source,
         },
         "dataframe": dataframe,
         "_reader_name": reader_name,

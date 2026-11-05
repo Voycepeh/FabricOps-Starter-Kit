@@ -61,6 +61,9 @@ Required describes the Python signature. An optional parameter may still be need
 dict
     Final execution summary. For persistent modes this is the
     METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
+    Each operation retains legacy rows_read/rows_written plus its available
+    detailed Read or strategy-specific Write metrics. Missing fields on
+    historical records remain valid and display as not captured.
     When no session is active, returns the resolved pipeline_id and handoff
     (the displayed controls and their state/actions), without a Run record.
 
@@ -113,9 +116,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:160`
+`fabricops_kit/pipeline/finalize_pipeline.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L160-L260">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L295">View on GitHub</a>
 </div>
 
 

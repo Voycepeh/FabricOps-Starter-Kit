@@ -67,3 +67,21 @@ def test_native_run_preserves_profiling_without_configuration_join(runtime):
     logical = shared.finalize_pipeline_run(plan)
     assert logical['profiling'][0]['activity'] == 'grain'
     assert 'definition_id' not in logical
+
+
+def test_operation_metrics_round_trip_inside_existing_operations_json(runtime):
+    """Detailed metrics remain operation-local through Run serialization."""
+    make, operation, _, _, _ = runtime
+    plan = make(mode='dry_run', roles=('source', 'target'))
+    operation(plan, 0, metrics={'rows_read': 125, 'columns': 5, 'measurement_source': 'returned_dataframe'})
+    operation(plan, 1, metrics={'input_rows': 125, 'rows_committed': 100,
+                                'rows_inserted': 15, 'rows_updated': 70,
+                                'rows_unchanged': 15, 'measurement_source': 'delta_merge'})
+    plan.evidence['boundary_completed'] = True
+
+    record = shared.finalize_pipeline_run(plan)
+    read, write = record['operations']
+    assert read['rows_read'] == 125
+    assert read['metrics']['rows_read'] == 125
+    assert write['rows_written'] == 100
+    assert write['metrics']['rows_updated'] == 70

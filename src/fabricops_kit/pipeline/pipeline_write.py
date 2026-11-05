@@ -380,15 +380,19 @@ def pipeline_write(
         ``input_rows``, ``input_columns``, ``rows_committed``, ``total_target_rows``,
         ``rows_inserted``, ``rows_updated``, ``rows_unchanged``,
         ``versions_inserted``, and ``versions_expired``. ``measurement_source``
-        identifies Delta commit metadata, a confirmed Warehouse publication receipt,
-        or an already-applied retry.
+        identifies Delta WRITE/MERGE commit metadata, Warehouse transaction metrics,
+        a confirmed Warehouse publication receipt, or an already-applied retry.
         Committed rows describe this invocation's physical publication only.
         An already-applied append/overwrite retry reports zero new commits.
         Warehouse overwrite/append metrics fall back to confirmed receipt input rows.
-        SCD merge metrics remain unavailable unless reliably measured: audit-only
-        updates cannot be interpreted as business changes. Metrics add no reporting
-        counts or Spark jobs. Batch identity and publication verification perform
-        the separate actions required for retry safety.
+        Warehouse SCD transactions report business inserts/updates or inserted/
+        expired versions separately. Delta MERGE reports exact inserted rows or
+        versions and total physically committed rows; detailed updates, expirations,
+        and unchanged counts remain unavailable when native totals also include
+        audit-only refreshes. They are never relabelled as business changes.
+        Metrics add no reporting-only target scans or Spark jobs.
+        Batch identity and publication verification perform the separate actions
+        required for retry safety.
         Profile the persisted target through an explicit read-back rather than
         treating the input DataFrame as persisted state.
 
@@ -626,7 +630,7 @@ def pipeline_write(
         from fabricops_kit.io.shared import repartition_dataframe_for_write
         prepared_df = repartition_dataframe_for_write(prepared_df, repartition_by)
         validate_processing_input(prepared_df, _physical_processing_definition(processing))
-        write_metrics.update(rows_committed=0, measurement_source="dry_run")
+        write_metrics.update(rows_committed=None, measurement_source="dry_run")
         return {
             "table_id": target_table_id, "strategy": strategy, "published": False,
             "write_metrics": write_metrics, "dataframe": prepared_df,
@@ -740,7 +744,13 @@ def pipeline_write(
         )
 
         if batch.already_applied:
-            write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
+            write_metrics.update(rows_committed=0, measurement_source="already_applied")
+            if strategy == "scd1":
+                write_metrics.update(rows_inserted=0, rows_updated=0)
+            elif strategy == "scd2":
+                write_metrics.update(versions_inserted=0, versions_expired=0)
+            else:
+                write_metrics["rows_inserted"] = 0
             if verbose:
                 label = "metadata-finalization recovery" if batch.finalization_recovery else "already-applied exact batch"
                 print(f"5. Physical publication → {label}; exact batch verified")
@@ -788,7 +798,7 @@ def pipeline_write(
                     table_name=str(identity["table_name"]),
                     store=str(identity["store"]),
                     processing=physical_processing,
-                    context=context,
+                    context=io_context,
                     options=physical_options,
                 )
             else:
@@ -806,7 +816,13 @@ def pipeline_write(
             for captured in success_context["observation_snapshot"].values():
                 captured["full"] = []
             stage_pipeline_write_observations(success_context)
-            write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="already_applied")
+            write_metrics.update(rows_committed=0, measurement_source="already_applied")
+            if strategy == "scd1":
+                write_metrics.update(rows_inserted=0, rows_updated=0)
+            elif strategy == "scd2":
+                write_metrics.update(versions_inserted=0, versions_expired=0)
+            else:
+                write_metrics["rows_inserted"] = 0
         # Receipt counts become committed metrics only after physical confirmation.
         # Keyed merges cannot infer business changes from their input cardinality.
         if (store_kind == "warehouse" and strategy in {"overwrite", "append_all", "append_new_only"}
@@ -845,11 +861,16 @@ def pipeline_write(
             exc.persistence_status = "incomplete"
             raise
 
-        if strategy in {"scd1", "scd2"} and write_metrics["rows_committed"] is not None:
+        if (
+            strategy in {"scd1", "scd2"}
+            and write_metrics["rows_committed"] is not None
+            and write_metrics.get("measurement_source") == "delta_commit"
+        ):
             if strategy == "scd1":
                 write_metrics["rows_inserted"] = write_metrics["rows_committed"]
             else:
                 write_metrics["versions_inserted"] = write_metrics["rows_committed"]
             write_metrics["rows_updated" if strategy == "scd1" else "versions_expired"] = 0
+            write_metrics["rows_unchanged"] = 0
         return {"table_id": str(identity["table_id"]), "strategy": strategy, "write_metrics": write_metrics,
                 "dataframe": prepared_df, "published": True, "publication_status": ("metadata_recovered" if batch.finalization_recovery else "already_applied") if batch.already_applied else "published"}

@@ -33,8 +33,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
     Profiling uses the complete source with frozen contract policies and shared
-    persisted completion history. Dry Run reuses an unfiltered full Read DataFrame; query
-    and incremental Reads still profile the complete physical source. Successful
+    persisted completion history. Full table reads reuse the exact returned DataFrame;
+    query and incremental Reads still profile the complete physical source. Successful
     Dry Run retains calculated observations only in the session without consuming
     persisted schedules. Guardrail
     checks run regardless of profiling eligibility.
@@ -64,8 +64,9 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     -------
     dict
         Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
-        The notebook summary omits a row count because Spark reads are lazy; it
-        does not materialize the returned DataFrame merely to count it.
+        ``read_metrics.rows_read`` and the notebook summary describe the exact
+        returned scope. For incremental reads this is the target-specific batch,
+        never the complete physical Source Observation count.
 
     Raises RuntimeError when no pipeline is active or a persistent stage fails, and
     ValueError for an invalid operation or inconsistent approved configuration.
@@ -119,8 +120,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         reader_name = source.pop("_reader_name", None)
         metrics = dict(source.get("read_metrics") or {})
         metrics.setdefault("rows_read", None)
+        metrics.setdefault("measurement_source", None)
         columns = getattr(source["dataframe"], "columns", None)
         metrics.setdefault("columns", len(columns) if columns is not None else None)
+        operation.capture_metrics(metrics)
         # Spark reads are lazy, so the orchestration display must not imply that
         # row materialization happened at the physical Read boundary.
         summary.details([("Physical reader", reader_name), ("Columns", metrics["columns"])])
@@ -138,13 +141,15 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
         profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session,
-            **({"dataframe": dataframe} if not execution_plan.permits_persistence and read_mode == "full" and query is None and not source.get("is_query") else {})))
+            **({"dataframe": dataframe} if read_mode == "full" and query is None and not source.get("is_query") else {})))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
             metrics["rows_read"] = profile.get("row_count")
         duration = summary.finish([
             ("Source", ".".join(str(part) for part in (store, schema, table_name) if part)),
+            ("Read mode", read_mode.title()),
+            ("Rows read", metrics["rows_read"]),
             ("Columns", metrics["columns"]),
         ])
-        operation.complete(stages, rows_read=metrics.get("rows_read"))
+        operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
         return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

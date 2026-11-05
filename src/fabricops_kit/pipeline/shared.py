@@ -1736,6 +1736,7 @@ def resolve_incremental_source_scope(
             "type": "full",
             "first_run": True,
             "has_data": has_rows,
+            "observed_row_count": sum(int(row.get("row_count") or 0) for row in current),
             "column": change_column,
             "through": current_max,
         }
@@ -3577,16 +3578,48 @@ def execute_lakehouse_processing(
         merge_session.conf.set("spark.databricks.delta.commitInfo.userMetadata", json.dumps(receipt, sort_keys=True))
     delta = DeltaTable.forPath(merge_session, path)
     condition = " AND ".join(f"target.`{key}` <=> source.`{key}`" for key in keys)
+    metrics = (context or {}).get("_fabricops_write_metrics")
+
+    def capture_merge_metrics() -> None:
+        """Decode the tagged MERGE commit without starting another Spark job."""
+        if not isinstance(metrics, dict) or not receipt:
+            return
+        from fabricops_kit.io.shared import DeltaCommitMetrics
+
+        native = DeltaCommitMetrics(token=json.dumps(receipt, sort_keys=True)).read_metrics(
+            merge_session, path, operation="MERGE"
+        )
+        if native is None:
+            return
+        inserted = native.get("numTargetRowsInserted")
+        updated = native.get("numTargetRowsUpdated")
+        if inserted is None:
+            return
+        if strategy == "scd1":
+            metrics.update(
+                rows_inserted=inserted,
+                measurement_source="delta_merge",
+            )
+        else:
+            metrics.update(
+                versions_inserted=inserted,
+                measurement_source="delta_merge",
+            )
+        if updated is not None:
+            metrics["rows_committed"] = inserted + updated
+
     if strategy == "scd1":
         business_columns = resolve_scd1_business_columns(list(df.columns), keys)
         change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in business_columns) or "FALSE"
         technical_updates = {
-            name: f"source.`{name}`" for name in persisted_df.columns if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
+            name: f"source.`{name}`" for name in persisted_df.columns
+            if name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)
         }
         merge = delta.alias("target").merge(persisted_df.alias("source"), condition).whenMatchedUpdateAll(condition=change)
         if technical_updates:
             merge = merge.whenMatchedUpdate(set=technical_updates)
         merge.whenNotMatchedInsertAll().execute()
+        capture_merge_metrics()
         return
 
     effective = str(processing["effective_column"])
@@ -3598,13 +3631,19 @@ def execute_lakehouse_processing(
     change = " OR ".join(f"NOT (target.`{name}` <=> source.`{name}`)" for name in tracked) or "FALSE"
     technical_updates = {
         name: f"source.`{name}`" for name in persisted_df.columns
-        if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES)) and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+        if (name in _TARGET_TECHNICAL_COLUMNS or name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
+        and name not in {*_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
     }
     if "_row_hash" in persisted_df.columns:
         # Only technical fields are refreshed on an unchanged version. In particular,
         # effective/untracked business values remain from the stored version.
-        values = {name: F.col(("source." if name in technical_updates else "target.")
-                             + "`" + name.replace("`", "``") + "`") for name in persisted_df.columns}
+        values = {
+            name: F.col(
+                ("source." if name in technical_updates else "target.")
+                + "`" + name.replace("`", "``") + "`"
+            )
+            for name in persisted_df.columns
+        }
         technical_updates["_row_hash"] = row_hash_expression(persisted_df, values=values)
     merge_keys = [f"_fabricops_merge_key_{index}" for index, _key in enumerate(keys)]
     reserved = sorted(set(merge_keys) & set(persisted_df.columns))
@@ -3655,6 +3694,7 @@ def execute_lakehouse_processing(
     merge.whenNotMatchedInsert(
         values={name: f"source.`{name}`" for name in persisted_df.columns}
     ).execute()
+    capture_merge_metrics()
 
 
 def load_table_guardrail_rules(
@@ -5752,15 +5792,19 @@ class ExecutionSummary:
         """Print aligned, explicit unavailable values to notebook stdout."""
         if self.verbose:
             for label, value in fields:
-                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")
+                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")
 
     def finish(self, fields):
         """Print a concise successful summary; expand it when verbose output is enabled."""
         elapsed = round(max(0.01, time.perf_counter() - self.started), 2)
+        total = int(round(elapsed))
+        hours, remainder = divmod(total, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         if self.verbose:
             print(f"\nFabricOps {self.operation} Summary")
-            for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not available'}")  # noqa: E701
-        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not available'}" for label, value in [*fields, ("Total duration", f"{elapsed:.2f}s")]))  # noqa: E701, E501
+            for label, value in [*fields, ("Total duration", duration)]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")  # noqa: E701
+        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not captured'}" for label, value in [*fields, ("Total duration", duration)]))  # noqa: E701, E501
         return elapsed
 
 
@@ -5937,7 +5981,8 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
                 **{name: actual.get(name) for name in ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
-                    "started_at", "completed_at")},
+                    "started_at", "completed_at", "rows_read", "rows_written")},
+                "metrics": dict(actual.get("metrics") or {}),
                 "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
@@ -6102,6 +6147,7 @@ class PipelineOperation:
                 incremental_target_table_id=args.get("target_table_id"),
                 rows_read=None,
                 rows_written=None,
+                metrics={},
                 source_table_ids=[],
             )
             if self.role == "target":
@@ -6138,8 +6184,21 @@ class PipelineOperation:
                     session.close(failed=True)
             raise
 
-    def complete(self, stages, *, rows_read=None, rows_written=None):
+    def capture_metrics(self, metrics):
+        """Retain already-measured operation facts without evaluating data."""
+        self.record["metrics"] = {
+            str(name): (int(value) if isinstance(value, int) and not isinstance(value, bool) else value)
+            for name, value in dict(metrics or {}).items()
+        }
+        if self.role == "source" and self.record["metrics"].get("rows_read") is not None:
+            self.record["rows_read"] = int(self.record["metrics"]["rows_read"])
+        if self.role == "target" and self.record["metrics"].get("rows_committed") is not None:
+            self.record["rows_written"] = int(self.record["metrics"]["rows_committed"])
+
+    def complete(self, stages, *, rows_read=None, rows_written=None, metrics=None):
         """Keep safe stage outcomes and actual row metrics; never trigger Spark actions."""
+        if metrics is not None:
+            self.capture_metrics(metrics)
         if rows_read is not None:
             self.record["rows_read"] = int(rows_read)
         if rows_written is not None:
@@ -6160,7 +6219,7 @@ class PipelineOperation:
                 self.record["completed_at"] = datetime.now(UTC).isoformat()
                 if self.role == "target" and getattr(exc, "published", False):
                     write_metrics = getattr(exc, "write_metrics", {}) or {}
-                    self.record["rows_written"] = write_metrics.get("rows_committed")
+                    self.capture_metrics(write_metrics)
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))

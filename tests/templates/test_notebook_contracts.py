@@ -140,6 +140,11 @@ def test_official_governance_workflow_inventory():
 def test_01_governance_supports_the_complete_governance_lifecycle():
     """Governance uses one unified Data Contract workspace without a separate Catalogue picker."""
     source = _notebook_source("01_governance.ipynb")
+    trees = tuple(
+        tree
+        for index, cell_source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
+        if (tree := _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, cell_source)) is not None
+    )
     required_functions = {
         "widget_render_data_steward",
         "widget_render_data_agreement",
@@ -149,20 +154,22 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
 
     assert required_functions <= {
         node.id
-        for tree in (
-            _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, source)
-            for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
-        )
-        if tree is not None
+        for tree in trees
         for node in ast.walk(tree)
         if isinstance(node, ast.Name)
     }
+    direct_calls = [
+        node.func.id
+        for tree in trees
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    ]
     assert "widget_view_catalogue" not in source
     assert 'mode="explore"' not in source
     assert 'store="Metadata"' not in source
     assert 'TABLE_ID = table_selection["table_id"]' not in source
-    assert source.count("widget_data_contract()") == 1
-    assert source.count("widget_activate_pipeline()") == 1
+    assert direct_calls.count("widget_data_contract") == 1
+    assert direct_calls.count("widget_activate_pipeline") == 1
     assert "Data Steward" in source
     assert "Data Agreement" in source
     assert "**Table**, **Columns**, and **Review**" in source
