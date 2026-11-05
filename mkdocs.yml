@@ -120,6 +120,7 @@ extra_javascript:
   - javascripts/table-controls.js
 
 extra_css:
+  - stylesheets/brand-tokens.css
   - stylesheets/breadcrumbs.css
   - stylesheets/api-chips.css
   - stylesheets/release-status.css
