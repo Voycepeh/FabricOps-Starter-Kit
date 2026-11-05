@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+# ruff: noqa: D103, E731
 """Generate the committed FabricOps Observability PBIP sources."""
 from __future__ import annotations
-import json, shutil, uuid
+import json
+import shutil
+import uuid
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]; PROJECT=ROOT/'FabricOpsObservability'

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
+# ruff: noqa: D103
 """Offline structural and repository-contract checks for the PBIP."""
 from __future__ import annotations
-import importlib.util, json, re, sys
+import importlib.util
+import json
+import re
+import sys
 from pathlib import Path
 
 HERE=Path(__file__).resolve(); ROOT=HERE.parents[3]; PRODUCT=HERE.parents[1]; PBIP=PRODUCT/'FabricOpsObservability'
@@ -23,7 +27,7 @@ pages=json.loads((REPORT/'pages/pages.json').read_text()); check(pages['pageOrde
 for pid in pages['pageOrder']:
  page=json.loads((REPORT/f'pages/{pid}/page.json').read_text()); visuals=[]
  for p in (REPORT/f'pages/{pid}/visuals').glob('*/visual.json'):
-  v=json.loads(p.read_text());
+  v=json.loads(p.read_text())
   if v.get('visual',{}).get('query'): visuals.append(v['name'])
  expected={(a,b,'DataFilter') for a in visuals for b in visuals if a!=b}; actual={(x['source'],x['target'],x['type']) for x in page.get('visualInteractions',[])}
  check(expected==actual,f'{pid}: interactions are not explicit all-pair DataFilter')
@@ -61,7 +65,8 @@ for table,cols in selected.items():
 # Ensure every report semantic reference resolves to a committed table column or measure.
 columns={}; measures=set(); used_columns=set()
 for p in (MODEL/'tables').glob('*.tmdl'):
- text=p.read_text(); match=re.search(r"^table '?([^'\n]+)'?",text)
+ text=p.read_text()
+ match=re.search(r"^table '?([^'\n]+)'?",text)
  if not match: continue
  table=match.group(1); columns[table]=set(re.findall(r"^\s*column '([^']+)'",text,re.M)); measures|={(table,m) for m in re.findall(r"^\s*measure '?([^'=\n]+)'?\s*=",text,re.M)}
 for p in REPORT.glob('pages/*/visuals/*/visual.json'):
