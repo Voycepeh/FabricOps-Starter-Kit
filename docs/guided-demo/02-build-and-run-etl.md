@@ -233,5 +233,5 @@ You can now identify the reusable notebook sections and know which values to cus
 | Demo | What you will learn |
 | --- | --- |
 | [Step 2A. Full Refresh](02A-full-refresh-demo.md) | Read three retail sources, transform them with PySpark, and publish two targets using Full reads and Overwrite. |
-| [Step 2B. Compare append modes](02B-build-and-run-incremental-append-etl.md) | Compare one Full Read output in separate Append All and Append New Only targets across three runs. |
+| [Step 2B. Compare incremental and full append paths](02B-build-and-run-incremental-append-etl.md) | Compare independently finalized Incremental Read + Append All and Full Read + Append New Only paths across three days. |
 | [Step 2C. SCD1 and SCD2](02C-build-and-run-scd-etl.md) | Compare SCD1 current-state updates with SCD2 historical versioning. |
