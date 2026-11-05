@@ -12,6 +12,7 @@ TARGET = ROOT / "docs" / "stylesheets" / "brand-tokens.css"
 
 
 def render(tokens: dict) -> str:
+    """Render CSS custom properties from canonical brand tokens."""
     lines = ["/* Generated from design/brand.json by scripts/sync_brand_tokens.py. Do not edit by hand. */", ":root {"]
     for name, value in tokens["palette"].items():
         lines.append(f'  --fabricops-{name.replace("_", "-")}: {value};')
@@ -24,6 +25,7 @@ def render(tokens: dict) -> str:
 
 
 def main() -> None:
+    """Generate or verify the committed brand token stylesheet."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="fail when committed CSS differs from source tokens")
     args = parser.parse_args()
