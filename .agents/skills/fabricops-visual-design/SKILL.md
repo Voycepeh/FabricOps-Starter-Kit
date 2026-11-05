@@ -31,6 +31,18 @@ For ANY new/changed diagram, architecture, flow, workflow, data/processing illus
 5. Render and inspect the actual SVG at page width and narrow width. Check clipping, collisions, alignment, arrows, font substitution, text contrast, and absence of unauthorized logos. Never claim visual QA without rendering.
 6. Run `python scripts/sync_brand_tokens.py --check` and `python scripts/check_svg_text_bounds.py`. Fix every overflow warning before PR review. The checker uses conservative font metrics, so also render at 100% and narrow widths to catch browser-dependent overflow and arrow/text collisions. The SVG is not approved until **no text crosses its containing panel**. Run the site build and focused tests where applicable. Document explicit limitations and unresolved acceptance gates.
 
+
+## Cross-page visual consistency gate
+
+When adding or revising diagrams for Engineering, Governance, or any other product page, **first fetch and inspect at least one approved SVG already used on the adjacent product page**. Treat it as the concrete visual-system reference, not merely a palette suggestion. Match its canvas/viewBox scale (currently the Engineering examples use 1440 × 790), typographic hierarchy, icon scale, panel geometry, spacing rhythm, strokes, corner radii, connector style, and caption treatment. Different diagram semantics may require a different layout, but the resulting images must clearly belong to the same family.
+
+* **Do not substitute a compressed row of generic cards** for the established illustrated diagram style. Prefer purposeful pictograms or concrete visual structure where helpful. Avoid dense text and repeated decorative panels.
+* Use the same base black/slate and neutral surface treatment throughout. Purple signifies a real Governance responsibility or approval; blue signifies Engineering. Do not recolour every successive stage. Reserve green, amber and red for actual success, warning and failure semantics.
+* Match readable text sizes to the established reference. Keep short labels in the SVG; place explanations and caveats in page prose where possible. Check every text element against its actual container, not just the SVG viewBox.
+* For PNG-to-SVG replacements, create **genuine editable vector artwork**, not an embedded PNG, and replace the page reference without silently deleting archival media. Verify all new references and links.
+* **Before committing**, render the new SVG alongside its Engineering or Governance reference at the same displayed width and at a narrow/mobile width. Compare visually for hierarchy, density, geometry, alignment, typography, overflow and colour semantics. Run the SVG bounds checker and site build. If actual rendering cannot be performed, explicitly report that QA is incomplete and do not present the visuals as design-approved.
+* In a PR touching multiple diagrams, review them together as a visual set. A diagram passing syntax and static bounds checks does **not** establish cross-page design consistency.
+
 ## Scope
 
 Applies to documentation website, homepage, Engineering, Governance, promotion, marketing illustrations, infographics, screenshots, release graphics, notebook/widget visuals and future slide assets. Existing independent notebook widget tokens may keep the native Segoe UI sizing and separate functional semantics, but all newly created UI should reference the shared brand roles rather than invent new colors. Do not mass-rewrite archived/release snapshots or historical media unless requested.
