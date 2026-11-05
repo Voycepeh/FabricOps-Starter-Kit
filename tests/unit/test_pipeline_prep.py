@@ -277,6 +277,17 @@ class BatchDouble:
     def confirm(self):
         """Physical proof is exercised by persisted Delta regression tests."""
 
+    def materialize_caller_snapshot(self, dataframe):
+        """Keep non-Spark preparation tests focused on routing."""
+        self.caller_snapshot = dataframe
+        return dataframe
+
+    def transfer_caller_snapshot(self):
+        """Return the test double's prepared frame."""
+        snapshot = self.caller_snapshot
+        self.caller_snapshot = None
+        return snapshot
+
     def __exit__(self, *_args):
         """Leave cleanup to the test fixture."""
         pass
