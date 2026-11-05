@@ -20,7 +20,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     frame = MagicMock()
     reads, writes = [], []
     notebook_setup = Mock()
-    setup = Mock(return_value=SimpleNamespace())
+    sessions = [SimpleNamespace(), SimpleNamespace()]
+    setup = Mock(side_effect=sessions)
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
         assert kwargs.get('verbose') is True
@@ -32,21 +33,25 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         return {'dataframe': dataframe, 'published': False}
     namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
-                 'resolve_table_id': Mock(return_value='incremental-target'), 'display': Mock()}
+                 'resolve_table_id': Mock(return_value='incremental-target'), 'read_lakehouse_table': Mock(return_value=MagicMock()),
+                 'display': Mock()}
     for cell in notebook.cells:
         if cell.cell_type != 'code':
             continue
         tree = ast.parse(cell.source)
         tree.body = [node for node in tree.body if not isinstance(node, (ast.Import, ast.ImportFrom))]
         exec(compile(tree, f'{path.name}:{cell.id}', 'exec'), namespace)
-    namespace['finalize_pipeline'].assert_called_once_with(setup.return_value)
+    expected_sessions = 2 if path.stem == '02B_incremental_append_demo' else 1
+    assert namespace['finalize_pipeline'].call_count == expected_sessions
+    assert [call.args[0] for call in namespace['finalize_pipeline'].call_args_list] == sessions[:expected_sessions]
     notebook_setup.assert_called_once_with()
-    observation = dict(observe_source=False, source_observation_days=None) if path.stem in {'02_pipeline', '02B_incremental_append_demo'} else {}
-    setup.assert_called_once_with(pipeline_mode='Ungoverned', **observation)
+    observation = dict(observe_source=False, source_observation_days=None)
+    assert setup.call_count == expected_sessions
+    assert all(call.kwargs == {'pipeline_mode': 'Ungoverned', **observation} for call in setup.call_args_list)
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
-        '02B_incremental_append_demo': (1, ['append_all','append_new_only']),
+        '02B_incremental_append_demo': (2, ['append_all','append_new_only']),
         '02C_scd_demo': (1, ['scd1','scd2']),
     }
     count, modes = expected[path.stem]
@@ -70,13 +75,12 @@ def test_notebooks_keep_user_owned_transform_surface(path):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                 calls.setdefault(node.func.id, []).append(node)
     assert len(calls['setup_notebook']) == 1
-    assert len(calls['setup_pipeline']) == 1
-    assert len(calls['finalize_pipeline']) == 1
+    expected_executions = 2 if path.stem == '02B_incremental_append_demo' else 1
+    assert len(calls['setup_pipeline']) == expected_executions
+    assert len(calls['finalize_pipeline']) == expected_executions
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_mode'}
-    if path.stem in {'02_pipeline', '02B_incremental_append_demo'}:
-        expected_setup |= {'observe_source', 'source_observation_days'}
-    assert {arg.arg for arg in calls['setup_pipeline'][0].keywords} == expected_setup
+    expected_setup = {'pipeline_mode', 'observe_source', 'source_observation_days'}
+    assert all({arg.arg for arg in call.keywords} == expected_setup for call in calls['setup_pipeline'])
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform
 

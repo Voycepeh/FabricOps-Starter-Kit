@@ -110,8 +110,8 @@ or manually saved processing remains editable until the draft is frozen.
 Profile context remains read-only and is never added
 to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
-The sidebar shows the shared configured rules for Read and Write; it does
-not execute validation. Rule buttons open the existing authoring controls.
+The sidebar shows a read-only summary of configured rules for Read and Write;
+it does not execute validation or navigate the authoring controls.
 The Data Quality tab is the single DQ authoring surface. Governance can add
 any supported deterministic rule manually, or generate transient proposals
 from business language when AI is enabled. Proposals require explicit review
@@ -128,7 +128,7 @@ Allowed values, range, pattern, relationship, and custom row rules can use
 maximum failure percent. Conditional rules use matching applicable rows;
 null values ignored by value checks are not counted as passing rows.
 Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
-Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
+Data and Freshness do not gain a DQ row-percentage setting.
 Actual violation counts remain visible even when within the authored limit.
 Missing AI configuration disables AI actions for the widget session while
 manual authoring remains available. Execution and provider failures show a
@@ -169,9 +169,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:849`
+`fabricops_kit/widgets/widget_data_contract.py:890`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L849-L7383">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L890-L7474">View on GitHub</a>
 </div>
 
 

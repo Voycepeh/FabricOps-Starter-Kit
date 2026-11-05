@@ -175,7 +175,7 @@ Prepare the history source used for the governed retail reads.
 
 ## Prepare Day 1 for Append and SCD Demos
 
-Initialize the Day 1 Bronze source tables for the Append All vs Append New Only (02B) and SCD1/SCD2 (02C) demos.
+Initialize the Day 1 Bronze source tables for the Incremental Append vs Full Hash Append (02B) and SCD1/SCD2 (02C) demos.
 
 </div>
 </div>
@@ -184,7 +184,7 @@ This step prepares two dedicated Bronze tables using the sample CSV files:
 
 | Source file | Bronze table | Used by |
 |---|---|---|
-| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B append comparison |
+| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B incremental/full append comparison |
 | `Demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
 
 ### Run the **5. Prepare Day 1 for append and SCD demos** block in `00C_demo_setup`.
