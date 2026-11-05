@@ -53,76 +53,10 @@ Path B: setup → full Read        → transform → Append New Only → finaliz
 
 This separation prevents Path B's full-source scope from being associated with Path A's incremental checkpoint or publication.
 
-### Configure Path A
 
-Resolve the Append All target's canonical Table ID before the Incremental Read. The checkpoint belongs to this exact source-to-target relationship, not just to the Bronze table or watermark column.
 
-```python
-pipelines["incremental_append_all"] = setup_pipeline(
-    pipeline_mode=PIPELINE_MODE,
-    observe_source=False,
-    source_observation_days=None,
-)
-
-append_all_target_id = resolve_table_id(
-    store="Silver",
-    schema="demo",
-    table_name="inventory_movements_append_all",
-)
-
-sources["incremental_append_all"] = orchestrate_read(
-    store="Bronze",
-    schema="demo",
-    table_name="inventory_movements",
-    read_mode="incremental",
-    read_parameters={"watermark_column": "modified_datetime"},
-    target_table_id=append_all_target_id,
-    verbose=True,
-)
-```
-
-Apply the shared deterministic transformation to that returned DataFrame, write it to `inventory_movements_append_all` with `write_mode="append_all"`, and finalize the execution. Accepted progress advances only after publication is verified.
-
-!!! warning "Append All relies on correct progress"
-    Append All does not deduplicate. If previously consumed business rows are presented as new work in a later execution, it appends them again. FabricOps publication receipts make exact publication recovery safe; they do not turn an unrelated replay into a content-aware Write.
-
-### Configure Path B
-
-After Path A finalizes, create a fresh pipeline execution. Perform a separate Full Read and apply the same transformation function to that separate DataFrame—do not reuse Path A's incremental DataFrame.
-
-```python
-pipelines["full_append_new_only"] = setup_pipeline(
-    pipeline_mode=PIPELINE_MODE,
-    observe_source=False,
-    source_observation_days=None,
-)
-
-sources["full_append_new_only"] = orchestrate_read(
-    store="Bronze",
-    schema="demo",
-    table_name="inventory_movements",
-    read_mode="full",
-    verbose=True,
-)
-
-full_append_new_only_df = transform_inventory(
-    sources["full_append_new_only"]["dataframe"]
-)
-
-writes["inventory_movements_append_new_only"] = orchestrate_write(
-    full_append_new_only_df,
-    store="Silver",
-    schema="demo",
-    table_name="inventory_movements_append_new_only",
-    write_mode="append_new_only",
-    verbose=True,
-)
-```
-
-Append New Only collapses identical incoming hashes and anti-joins them with published target `_row_hash` values. A changed hash is a new record; this strategy does not update by business key, infer deletions, or repair pre-existing duplicates.
-
-??? info "Processing Read versus physical scans"
-    The row counts in this walkthrough describe the DataFrame returned for business processing. Scheduled profiling and Full Source Observation may still scan the complete physical source even when the processing Read is incremental. Those scans do not change Path A into a Full Read and must not be counted as rows submitted to its Write.
+!!! warning "Independent publications"
+    The two Writes are not atomic together. If Target A succeeds and Target B fails, inspect publication results and recover the failed publication before starting another execution. A new full execution adds the complete input to Append All again. Exact publication retries use verified receipts; they are different from new executions.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
