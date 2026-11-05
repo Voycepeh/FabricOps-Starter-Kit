@@ -29,5 +29,16 @@
     "governance": "purple",
     "accent": "blue",
     "success": "success"
+  },
+  "diagram_semantics": {
+    "default": "ink",
+    "background": "canvas",
+    "engineering_focus": "blue",
+    "governance_handoff": "purple",
+    "success": "success",
+    "warning": "warning",
+    "failure": "danger",
+    "instruction": "Do not alternate Engineering stages between colours. Neutral first; semantic colour only.",
+    "gradient_usage": "Website header/hero, not ordinary diagram stages."
   }
 }
