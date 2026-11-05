@@ -13,8 +13,9 @@ For ANY new/changed diagram, architecture, flow, workflow, data/processing illus
 
 ## Brand and typography
 
-* Brand gradient: blue `#2563EB` to purple `#7C3AED`, reserved for website hero/header and selective focal accents. Never use a gradient as running text or fill every box.
-* Blue denotes Engineering, purple Governance. Retain green/amber/red for meaningful success/warning/danger ONLY, not decorative pipeline stages.
+* Brand gradient: blue `#2563EB` to purple `#7C3AED`, reserved for website hero/header, not for ordinary process nodes or every diagram. Never use a gradient as running text or fill every box.
+* **Default all diagrams to black/slate text and strokes on white/light neutral backgrounds.** Use blue only to emphasise an Engineering concern, and purple only for a distinct Governance actor, decision or Engineering ↔ Governance handoff. Setup → Read → Transform → Write → Finalize is one Engineering flow, not alternating blue/purple stages. Use conventional green for real success, amber for warnings, and red for errors/failures/blocked paths. Never encode meaning only by colour.
+* When an icon is actually useful or a logo concept is explicitly requested, also load `.agents/skills/fabricops-svg-icons/SKILL.md`, which consults the upstream SVG Icon Generator. Icons are not logos; do not auto-brand every diagram.
 * White canvas, restrained pale surfaces, dark ink and thin borders. No fake/unapproved logo, synthetic watermark or decorative 'FabricOps' icon.
 * Website and diagrams: Segoe UI with Arial fallback. Code/API labels: Cascadia Code with Consolas fallback. Avoid bundling font files or relying on network fonts.
 * One memorable focal point per visual. No 'cards everywhere', rainbow stage coloring, irrelevant icons, large callout strip, duplicate title or unnecessary glossary copy. Prefer one compact diagram per section.
