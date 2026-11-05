@@ -85,13 +85,17 @@ def runtime(monkeypatch):
 
     def operation(plan, index, *, stages=None, **kwargs):
         identity = json.loads(plan.participants_json)[f"table{index}"]
+        metrics = kwargs.pop("metrics", None)
         kwargs.setdefault("read_mode" if identity["roles"] == ["source"] else "write_mode", "full" if identity["roles"] == ["source"] else "overwrite")
         args = {"store": identity["store"], "schema": identity["schema"], "table_name": identity["table_name"], **kwargs}
         if identity["roles"] == ["target"]:
             args.setdefault("sources", [{"table_id": key} for key, item in json.loads(plan.participants_json).items()
                                         if "source" in item["roles"]])
         with shared.PipelineOperation(plan, identity["roles"][0], args) as journal:
-            journal.complete(stages or ([{"stage": "Read", "status": "passed"}] if identity["roles"] == ["source"] else [{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}]))
+            journal.complete(
+                stages or ([{"stage": "Read", "status": "passed"}] if identity["roles"] == ["source"] else [{"stage": "Write", "status": "passed"}, {"stage": "Profile", "status": "passed"}]),
+                metrics=metrics,
+            )
 
     return make, operation, saved, writes, failure
 

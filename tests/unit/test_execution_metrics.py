@@ -111,9 +111,9 @@ def test_summary_duration_is_wall_clock_and_unknown_values_are_explicit(capsys):
         assert summary.finish([("Rows committed", None), ("Rows inserted", 0)]) == 88.55
     output = capsys.readouterr().out
     assert "FabricOps WRITE Summary" in output
-    assert "Rows committed  → Not available" in output
+    assert "Rows committed  → Not captured" in output
     assert "Rows inserted   → 0" in output
-    assert "Total duration  → 88.55s" in output
+    assert "Total duration  → 00:01:29" in output
 
 
 @pytest.mark.parametrize("mode", ["overwrite", "append_all", "append_new_only", "scd1", "scd2"])
@@ -137,9 +137,9 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
     assert "FabricOps WRITE Summary" in output
     assert "Load status     → Loaded" in output
     if mode == "scd1":
-        assert "Rows updated    → Not available" in output
+        assert "Rows updated    → Not captured" in output
     if mode == "scd2":
-        assert "Versions expired → Not available" in output
+        assert "Versions expired → Not captured" in output
 
 
 @pytest.mark.parametrize(
@@ -214,7 +214,11 @@ def test_read_summary_reuses_profile_only_for_full_scope(incremental, rows, is_q
             stack.enter_context(patch.object(module, name, return_value={"status": "passed"}))
         profile = stack.enter_context(patch.object(module, "schedule_table_profiling", return_value={"row_count": 8}))
         result = run_pipeline_operation(module.orchestrate_read, plan=PLAN, store="Gold", schema="demo", table_name="orders", read_mode="incremental" if incremental else "full")
-    assert result["read_metrics"] == {"rows_read": None if is_query and not incremental else rows, "columns": 1}
+    assert result["read_metrics"] == {
+        "rows_read": None if is_query and not incremental else rows,
+        "columns": 1,
+        "measurement_source": None,
+    }
     assert "FabricOps READ Summary" in capsys.readouterr().out
     assert profile.call_count == 1
 
@@ -285,6 +289,100 @@ def test_exact_publication_receipt_preserves_attributable_append_metrics():
     assert write.call_args.kwargs['options'] == options
     assert metrics['rows_committed'] == 4
     assert metrics['measurement_source'] == 'delta_commit'
+
+
+def test_delta_merge_metrics_preserve_native_business_counts():
+    attempt = DeltaCommitMetrics(token="exact-merge")
+    spark, _reader = _metadata_runtime([json.dumps({"commitInfo": {
+        "userMetadata": attempt.token,
+        "operation": "MERGE",
+        "operationMetrics": {
+            "numSourceRows": "100",
+            "numTargetRowsInserted": "15",
+            "numTargetRowsUpdated": "70",
+        },
+    }})])
+    assert attempt.read_metrics(spark, "/table", operation="MERGE") == {
+        "numSourceRows": 100,
+        "numTargetRowsInserted": 15,
+        "numTargetRowsUpdated": 70,
+    }
+
+
+def test_returned_read_scope_is_counted_once_and_cached_for_lifecycle_reuse():
+    module = import_module("fabricops_kit.pipeline.pipeline_read")
+    plan = SimpleNamespace(evidence={})
+    frame = Mock(is_cached=False)
+    frame.count.return_value = 125
+
+    assert module._measure_returned_rows(frame, context={"execution_plan": plan}) == 125
+    frame.persist.assert_called_once()
+    frame.count.assert_called_once()
+    assert plan.evidence["source_observation_caches"] == [frame]
+
+
+@pytest.mark.parametrize(
+    "store_kind,query,reader_name,rows",
+    [
+        ("lakehouse", None, "read_lakehouse_table", 11),
+        ("warehouse", None, "read_warehouse_table", 12),
+        ("warehouse", "SELECT id FROM demo.orders WHERE active = 1", "read_warehouse_query", 3),
+    ],
+)
+def test_full_and_query_reads_count_the_exact_returned_dataframe(
+    monkeypatch, store_kind, query, reader_name, rows
+):
+    module = import_module("fabricops_kit.pipeline.pipeline_read")
+    frame = Mock(columns=["id"], is_cached=False)
+    frame.count.return_value = rows
+    identity = {
+        "table_id": "source", "store_type": store_kind, "store": "Bronze",
+        "schema": "demo", "table_name": "orders",
+    }
+    monkeypatch.setattr(module, "get_spark_session", lambda **_kwargs: object())
+    monkeypatch.setattr(module, "resolve_physical_table_identity", lambda *_args, **_kwargs: identity)
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module, "observe_full_source", lambda *_args, **_kwargs: {"status": "skipped"})
+    monkeypatch.setattr(module, reader_name, lambda *_args, **_kwargs: frame)
+
+    result = module.pipeline_read(
+        store="Bronze", schema="demo", table_name="orders", query=query,
+        context={"config": object(), "scope_workspace_id": "dev"}, verbose=False,
+    )
+
+    assert result["read_metrics"]["rows_read"] == rows
+    assert result["read_metrics"]["measurement_source"] == "returned_dataframe"
+    frame.count.assert_called_once()
+
+
+def test_incremental_read_never_reports_physical_source_observation_total(monkeypatch):
+    module = import_module("fabricops_kit.pipeline.pipeline_read")
+    batch = Mock(columns=["id", "modified_at"], is_cached=False)
+    batch.count.return_value = 125
+    identity = {
+        "table_id": "source", "store_type": "warehouse", "store": "Bronze",
+        "schema": "demo", "table_name": "orders",
+    }
+    monkeypatch.setattr(module, "get_spark_session", lambda **_kwargs: object())
+    monkeypatch.setattr(module, "resolve_physical_table_identity", lambda *_args, **_kwargs: identity)
+    monkeypatch.setattr(module, "resolve_pipeline_data_contract", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module, "capture_source_observation", lambda **_kwargs: {"row_count": 10_000_000})
+    monkeypatch.setattr(module, "resolve_incremental_source_scope", lambda **_kwargs: {
+        "type": "watermark", "first_run": False, "has_data": True,
+        "column": "modified_at", "after": "2026-11-01", "through": "2026-11-05",
+    })
+    monkeypatch.setattr(module, "read_warehouse_query", lambda *_args, **_kwargs: batch)
+    monkeypatch.setattr(module, "observe_full_source", lambda *_args, **_kwargs: {"status": "skipped"})
+
+    result = module.pipeline_read(
+        store="Bronze", schema="demo", table_name="orders",
+        read_mode="incremental", read_parameters={"watermark_column": "modified_at"},
+        target_table_id="target", context={"config": object(), "scope_workspace_id": "dev"},
+        verbose=False,
+    )
+
+    assert result["read_metrics"]["rows_read"] == 125
+    assert result["read_metrics"]["rows_read"] != 10_000_000
 
 
 @pytest.fixture(autouse=True)

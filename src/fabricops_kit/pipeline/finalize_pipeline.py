@@ -59,8 +59,17 @@ def _operation_summary_rows(result, *, pipeline=None):
         role = str(operation.get("pipeline_role") or "").lower()
         is_read = role == "source"
         is_write = role == "target"
-        rows_read = runtime.get("rows_read")
-        rows_written = runtime.get("rows_written")
+        metrics = operation.get("metrics") or runtime.get("metrics") or {}
+        rows_read = operation.get("rows_read")
+        if rows_read is None:
+            rows_read = runtime.get("rows_read")
+        if rows_read is None:
+            rows_read = metrics.get("rows_read")
+        rows_written = operation.get("rows_written")
+        if rows_written is None:
+            rows_written = runtime.get("rows_written")
+        if rows_written is None:
+            rows_written = metrics.get("rows_committed")
         table_name = (
             identity.get("table_name")
             or destination.get("table_name")
@@ -79,6 +88,28 @@ def _operation_summary_rows(result, *, pipeline=None):
             if is_write
             else "—"
         )
+        def measured(label, name):
+            value = metrics.get(name)
+            return f"{value:,} {label}" if value is not None else None
+
+        mode = str(operation.get("write_mode") or "").lower()
+        if is_read:
+            metric_parts = ["Batch returned"] if rows_read is not None else []
+        elif mode == "scd1":
+            metric_parts = [value for value in (
+                measured("processed", "input_rows"), measured("inserted", "rows_inserted"),
+                measured("updated", "rows_updated"), measured("unchanged", "rows_unchanged"),
+            ) if value]
+        elif mode == "scd2":
+            metric_parts = [value for value in (
+                measured("processed", "input_rows"), measured("versions inserted", "versions_inserted"),
+                measured("versions expired", "versions_expired"), measured("unchanged", "rows_unchanged"),
+            ) if value]
+        else:
+            metric_parts = [value for value in (
+                measured("processed", "input_rows"), measured("inserted", "rows_inserted"),
+            ) if value]
+        metrics_display = ", ".join(metric_parts) or ("Not captured" if is_read or is_write else "—")
         rows.append((
             "Read" if is_read else "Write" if is_write else role.title() or "Operation",
             str(identity.get("store") or "Not captured"),
@@ -93,6 +124,7 @@ def _operation_summary_rows(result, *, pipeline=None):
             ),
             rows_read_display,
             rows_written_display,
+            metrics_display,
             str(operation.get("status") or "Not captured").replace("_", " ").title(),
             _format_duration(_elapsed_seconds(operation.get("started_at"), operation.get("completed_at"))),
             "; ".join(
@@ -134,7 +166,7 @@ def _print_pipeline_summary(pipeline, result):
 
     columns = [
         "Operation", "Store", "Schema", "Table", "Mode",
-        "Rows read", "Rows written", "Status", "Duration", "Stages",
+        "Rows read", "Rows written", "Metrics", "Status", "Duration", "Stages",
     ]
     try:
         operations_frame = pipeline.spark.createDataFrame(rows, schema=columns)
@@ -199,6 +231,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     dict
         Final execution summary. For persistent modes this is the
         METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
+        Each operation retains legacy rows_read/rows_written plus its available
+        detailed Read or strategy-specific Write metrics. Missing fields on
+        historical records remain valid and display as not captured.
         When no session is active, returns the resolved pipeline_id and handoff
         (the displayed controls and their state/actions), without a Run record.
 

@@ -68,7 +68,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
     output = capsys.readouterr().out
     assert output.startswith("FabricOps READ Summary · ")
     assert "Source: Bronze.demo.orders" in output
-    assert "Rows read" not in output
+    assert "Rows read: Not captured" in output
     assert "\n" not in output.strip()
     assert "[1/" not in output
 
@@ -168,7 +168,7 @@ def test_orchestrate_read_reports_selected_physical_reader(capsys):
     assert profile.call_args.kwargs["context"]["_fabricops_suppress_io_log"] is True
     output = capsys.readouterr().out
     assert "Physical reader → read_warehouse_table" in output
-    assert "Rows read" not in output
+    assert "Rows read       → Not captured" in output
 
 
 def test_orchestrate_read_attributes_failure_and_stops_later_stages():
@@ -214,8 +214,8 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
     assert "FabricOps WRITE · physical_target" in output
     assert "Strategy        → Overwrite" in output
     assert "Target          → Silver.demo.physical_target" in output
-    assert "Rows loaded" in output
-    assert "Rows committed" not in output
+    assert "Rows processed" in output
+    assert "Rows committed  → Not captured" in output
     assert "Columns" not in output
 
 

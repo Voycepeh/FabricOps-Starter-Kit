@@ -421,6 +421,11 @@ class DeltaCommitMetrics:
 
     def read(self, spark, path):
         """Return exact WRITE output rows or None when attribution is unavailable."""
+        metrics = self.read_metrics(spark, path, operation="WRITE")
+        return metrics.get("numOutputRows") if metrics is not None else None
+
+    def read_metrics(self, spark, path, *, operation):
+        """Return exact native metrics for one attributable WRITE or MERGE commit."""
         reader = None
         try:
             jvm = spark._jvm
@@ -475,12 +480,16 @@ class DeltaCommitMetrics:
                 info = json.loads(str(line)).get("commitInfo")
                 if info is None:
                     continue
-                if info.get("userMetadata") != self.token or info.get("operation") != "WRITE":
+                if info.get("userMetadata") != self.token or info.get("operation") != operation:
                     return None
-                value = (info.get("operationMetrics") or {}).get("numOutputRows")
-                if isinstance(value, bool) or not re.fullmatch(r"[0-9]+", str(value)):
-                    return None
-                return int(value)
+                native = info.get("operationMetrics") or {}
+                parsed = {}
+                for name, value in native.items():
+                    if isinstance(value, bool) or not re.fullmatch(r"[0-9]+", str(value)):
+                        continue
+                    parsed[str(name)] = int(value)
+                required = "numOutputRows" if operation == "WRITE" else "numTargetRowsInserted"
+                return parsed if required in parsed else None
         except Exception:
             # Observability must never turn a successful publication into failure.
             return None
@@ -535,9 +544,11 @@ def write_warehouse_synapsesql(
 
 def execute_warehouse_sql(
     spark_obj, store: FabricStore, sql: str, *, database_name: str, options: dict[str, Any] | None = None
-) -> None:
+) -> list[Any]:
     """Execute a Warehouse T-SQL mutation batch through the configured connector."""
-    read_warehouse_synapsesql(spark_obj, store, sql, database_name=database_name, options=options).collect()
+    return read_warehouse_synapsesql(
+        spark_obj, store, sql, database_name=database_name, options=options
+    ).collect()
 
 
 def _quoted_warehouse_identifier(value: str) -> str:
@@ -692,22 +703,37 @@ AND (EXISTS (SELECT name, system_type_id, max_length, precision, scale, is_nulla
             f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
             for column in update_columns
         )
+        differences = _warehouse_null_safe_difference(business, "target", "source")
+        matched = f"WHEN MATCHED AND ({differences}) THEN UPDATE SET {updates}" if business else ""
         technical = [column for column in update_columns if column not in business]
-        differences = [
-            value for value in (
-                _warehouse_null_safe_difference(business, "target", "source") if business else "",
-                _warehouse_null_safe_difference(technical, "target", "source") if technical else "",
-            ) if value
-        ]
-        matched = f"WHEN MATCHED AND ({' OR '.join(differences)}) THEN UPDATE SET {updates}" if differences else ""
+        technical_updates = ", ".join(
+            f"target.{_quoted_warehouse_identifier(column)} = source.{_quoted_warehouse_identifier(column)}"
+            for column in technical
+        )
+        unchanged_update = f"""
+    UPDATE target SET {technical_updates}
+    FROM {qtarget} target JOIN {qstage} source ON {join}
+    WHERE NOT ({differences});
+""" if technical and business else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
+BEGIN
     SELECT {create_columns} INTO {qtarget} FROM {qstage};
+    SET @rows_inserted = @@ROWCOUNT;
+END
 ELSE
+BEGIN
+    DECLARE @actions TABLE ([action] nvarchar(10));
     MERGE {qtarget} AS target
     USING {qstage} AS source ON {join}
     {matched}
-    WHEN NOT MATCHED BY TARGET THEN INSERT ({incoming_columns}) VALUES ({source_columns});
+    WHEN NOT MATCHED BY TARGET THEN INSERT ({incoming_columns}) VALUES ({source_columns})
+    OUTPUT $action INTO @actions;
+    SELECT @rows_inserted = COUNT_BIG(CASE WHEN [action] = 'INSERT' THEN 1 END),
+           @rows_updated = COUNT_BIG(CASE WHEN [action] = 'UPDATE' THEN 1 END)
+    FROM @actions;
+{unchanged_update}
+END;
 """
     else:
         effective = _quoted_warehouse_identifier(str(definition["effective_column"]))
@@ -728,7 +754,10 @@ ELSE
 """ if technical_updates else ""
         mutation = f"""
 IF OBJECT_ID(N'{schema_value}.{table_value}', N'U') IS NULL
+BEGIN
     SELECT {create_columns} INTO {qtarget} FROM {qstage};
+    SET @rows_inserted = @@ROWCOUNT;
+END
 ELSE
 BEGIN
     IF EXISTS (SELECT 1 FROM {qtarget} GROUP BY {_warehouse_column_list(keys)}
@@ -741,6 +770,7 @@ BEGIN
     UPDATE target SET target.[_effective_to] = source.{effective}, target.[_is_current] = 0
     FROM {qtarget} target JOIN {qstage} source ON {join}
     WHERE target.[_is_current] = 1 AND ({changed});
+    SET @versions_expired = @@ROWCOUNT;
 {unchanged_update}
 
     INSERT INTO {qtarget} ({incoming_columns})
@@ -749,16 +779,24 @@ BEGIN
         SELECT 1 FROM {qtarget} target WHERE {join} AND target.[_is_current] = 1
           AND NOT ({changed})
     );
+    SET @rows_inserted = @@ROWCOUNT;
 END;
 """
     sql = f"""SET XACT_ABORT ON;
+DECLARE @rows_processed bigint = (SELECT COUNT_BIG(*) FROM {qstage});
+DECLARE @rows_inserted bigint = 0;
+DECLARE @rows_updated bigint = 0;
+DECLARE @versions_expired bigint = 0;
 BEGIN TRY
 BEGIN TRANSACTION;
 {schema_checks}
 {mutation}
 DROP TABLE {qstage};
 COMMIT TRANSACTION;
-SELECT CAST(1 AS int) AS fabricops_scd_committed;
+SELECT @rows_processed AS input_rows,
+       @rows_inserted AS rows_inserted,
+       @rows_updated AS rows_updated,
+       @versions_expired AS versions_expired;
 END TRY
 BEGIN CATCH
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -767,7 +805,45 @@ THROW;
 END CATCH;"""
     try:
         write_warehouse_synapsesql(staged_df, configured_store, stage_object, mode="overwrite", options=options)
-        execute_warehouse_sql(df.sparkSession, configured_store, sql, database_name=database_name, options=options)
+        result = execute_warehouse_sql(
+            df.sparkSession, configured_store, sql,
+            database_name=database_name, options=options,
+        )
+        try:
+            row = result[0] if isinstance(result, (list, tuple)) and result else None
+            values = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) if isinstance(row, Mapping) else {}
+            metrics = (context or {}).get("_fabricops_write_metrics")
+            if isinstance(metrics, dict) and values:
+                processed = int(values["input_rows"])
+                inserted = int(values["rows_inserted"])
+                if strategy == "scd1":
+                    updated = int(values["rows_updated"])
+                    if min(processed, inserted, updated, processed - inserted - updated) < 0:
+                        raise ValueError("Invalid Warehouse SCD1 transaction metrics.")
+                    metrics.update(
+                        input_rows=processed,
+                        rows_inserted=inserted,
+                        rows_updated=updated,
+                        rows_unchanged=processed - inserted - updated,
+                        rows_committed=inserted + updated,
+                        measurement_source="warehouse_transaction",
+                    )
+                else:
+                    expired = int(values["versions_expired"])
+                    if min(processed, inserted, expired, processed - inserted) < 0:
+                        raise ValueError("Invalid Warehouse SCD2 transaction metrics.")
+                    metrics.update(
+                        input_rows=processed,
+                        versions_inserted=inserted,
+                        versions_expired=expired,
+                        rows_unchanged=processed - inserted,
+                        rows_committed=inserted + expired,
+                        measurement_source="warehouse_transaction",
+                    )
+        except (KeyError, TypeError, ValueError, OverflowError):
+            # A successful target transaction remains authoritative when the
+            # connector cannot return its optional metrics result set.
+            pass
     except Exception:
         _drop_warehouse_stage_best_effort(
             df.sparkSession,

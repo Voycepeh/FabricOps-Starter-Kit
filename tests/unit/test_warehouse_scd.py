@@ -15,7 +15,7 @@ def _store():
     return SimpleNamespace(name="product", workspace_id="workspace", item_id="warehouse")
 
 
-def _capture_sql(monkeypatch, frame, processing):
+def _capture_sql(monkeypatch, frame, processing, *, context=None, metrics_result=None):
     observed = {"writes": []}
     monkeypatch.setattr(
         io_shared,
@@ -30,15 +30,54 @@ def _capture_sql(monkeypatch, frame, processing):
     monkeypatch.setattr(
         io_shared,
         "execute_warehouse_sql",
-        lambda _spark, _store, sql, **_kwargs: observed.setdefault("sql", sql),
+        lambda _spark, _store, sql, **_kwargs: (
+            observed.setdefault("sql", sql) if metrics_result is None
+            else observed.setdefault("sql", sql) and metrics_result
+        ),
     )
     io_shared.execute_warehouse_processing(
-        frame, schema="dbo", table_name="customers", store="warehouse", processing=processing
+        frame, schema="dbo", table_name="customers", store="warehouse",
+        processing=processing, context=context,
     )
     import sqlglot
     predicate = observed["sql"].split("IF ", 1)[1].split("THROW 50001", 1)[0].strip()
     sqlglot.parse_one("SELECT 1 WHERE " + predicate, read="tsql")
     return observed
+
+
+@pytest.mark.parametrize(
+    "processing,result,expected",
+    [
+        (
+            {"load_strategy": "scd1", "key_columns": ["customer_id"]},
+            {"input_rows": 100, "rows_inserted": 15, "rows_updated": 70, "versions_expired": 0},
+            {"rows_committed": 85, "rows_inserted": 15, "rows_updated": 70, "rows_unchanged": 15},
+        ),
+        (
+            {"load_strategy": "scd2", "key_columns": ["customer_id"], "effective_column": "effective_at"},
+            {"input_rows": 100, "rows_inserted": 85, "rows_updated": 0, "versions_expired": 70},
+            {"rows_committed": 155, "versions_inserted": 85, "versions_expired": 70, "rows_unchanged": 15},
+        ),
+    ],
+)
+def test_warehouse_transaction_reports_exact_scd_business_metrics(
+    monkeypatch, spark_session, processing, result, expected
+):
+    """The committed SQL transaction returns strategy-specific exact counts."""
+    columns = ["customer_id", "name"]
+    values = [(1, "Ada")]
+    if processing["load_strategy"] == "scd2":
+        columns += ["effective_at", "_effective_from", "_effective_to", "_is_current"]
+        values = [(1, "Ada", 2, 2, 999, True)]
+    frame = spark_session.createDataFrame(values, columns)
+    metrics = {}
+    _capture_sql(
+        monkeypatch, frame, processing,
+        context={"_fabricops_write_metrics": metrics}, metrics_result=[result],
+    )
+    assert metrics["input_rows"] == 100
+    assert metrics["measurement_source"] == "warehouse_transaction"
+    assert {name: metrics[name] for name in expected} == expected
 
 
 def test_scd1_generates_transactional_create_upsert_and_replay_safe_merge(monkeypatch, spark_session):

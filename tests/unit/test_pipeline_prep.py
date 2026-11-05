@@ -1054,7 +1054,7 @@ def test_scd_bootstrap_reports_only_measured_insertions(monkeypatch, spark_sessi
     assert metrics["rows_committed"] == 8
     assert metrics["rows_inserted" if strategy == "scd1" else "versions_inserted"] == 8
     assert metrics["rows_updated" if strategy == "scd1" else "versions_expired"] == 0
-    assert metrics["rows_unchanged"] is None
+    assert metrics["rows_unchanged"] == 0
 
 
 def test_publication_outcome_survives_metadata_finalization_failure(monkeypatch):

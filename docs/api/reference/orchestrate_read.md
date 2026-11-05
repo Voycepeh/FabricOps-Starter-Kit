@@ -89,8 +89,9 @@ orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 
 dict
     Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
-    The notebook summary omits a row count because Spark reads are lazy; it
-    does not materialize the returned DataFrame merely to count it.
+    ``read_metrics.rows_read`` and the notebook summary describe the exact
+    returned scope. For incremental reads this is the target-specific batch,
+    never the complete physical Source Observation count.
 
 Raises RuntimeError when no pipeline is active or a persistent stage fails, and
 ValueError for an invalid operation or inconsistent approved configuration.
@@ -112,8 +113,8 @@ target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
 Profiling uses the complete source with frozen contract policies and shared
-persisted completion history. Dry Run reuses an unfiltered full Read DataFrame; query
-and incremental Reads still profile the complete physical source. Successful
+persisted completion history. Full table reads reuse the exact returned DataFrame;
+query and incremental Reads still profile the complete physical source. Successful
 Dry Run retains calculated observations only in the session without consuming
 persisted schedules. Guardrail
 checks run regardless of profiling eligibility.
@@ -129,7 +130,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L150">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L155">View on GitHub</a>
 </div>
 
 
@@ -145,7 +146,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 228 |
+| Live-critical dependencies | 229 |
 
 ### Release history
 
@@ -236,6 +237,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._measure_returned_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_watermark_literal</code></li>

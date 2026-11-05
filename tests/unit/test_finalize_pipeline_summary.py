@@ -25,6 +25,8 @@ def _result():
                 "read_mode": "full",
                 "table_id": "source-id",
                 "destination": {"schema": "dbo", "table_name": "orders"},
+                "rows_read": 125,
+                "metrics": {"rows_read": 125, "measurement_source": "returned_dataframe"},
                 "status": "succeeded",
                 "started_at": started,
                 "completed_at": started + timedelta(seconds=12),
@@ -36,6 +38,10 @@ def _result():
                 "write_mode": "scd2",
                 "table_id": "target-id",
                 "destination": {"schema": "dbo", "table_name": "orders"},
+                "rows_written": 170,
+                "metrics": {"input_rows": 100, "versions_inserted": 100,
+                            "versions_expired": 70, "rows_unchanged": 0,
+                            "rows_committed": 170},
                 "status": "succeeded",
                 "started_at": started,
                 "completed_at": started + timedelta(seconds=45),
@@ -82,9 +88,10 @@ def test_operation_summary_rows_use_native_operation_metadata():
     )
 
     assert rows == [
-        ("Read", "wh_Bronze", "dbo", "orders", "full", "25,000", "—",
-         "Succeeded", "00:00:12", "Read: passed"),
-        ("Write", "Lakehouse_Silver", "dbo", "orders", "scd2", "—", "24,850",
+        ("Read", "wh_Bronze", "dbo", "orders", "full", "125", "—",
+         "Batch returned", "Succeeded", "00:00:12", "Read: passed"),
+        ("Write", "Lakehouse_Silver", "dbo", "orders", "scd2", "—", "170",
+         "100 processed, 100 versions inserted, 70 versions expired, 0 unchanged",
          "Succeeded", "00:00:45", "Write: passed; Profile: passed"),
     ]
 
@@ -93,6 +100,10 @@ def test_missing_read_count_and_dry_run_write_are_not_reported_as_zero():
     """Unknown lazy read counts and non-published Dry Run targets stay explicit."""
     result = _result()
     result["execution_mode"] = "dry_run"
+    result["operations"][0].pop("rows_read")
+    result["operations"][0].pop("metrics")
+    result["operations"][1].pop("rows_written")
+    result["operations"][1].pop("metrics")
     pipeline = _pipeline(spark=None)
     pipeline.plan.evidence["operations"]["source:logical-orders"]["rows_read"] = None
     pipeline.plan.evidence["operations"]["target:logical-orders"].pop("rows_written")
@@ -131,7 +142,7 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
     assert captured["displayed"] is frame
     assert captured["schema"] == [
         "Operation", "Store", "Schema", "Table", "Mode",
-        "Rows read", "Rows written", "Status", "Duration", "Stages",
+        "Rows read", "Rows written", "Metrics", "Status", "Duration", "Stages",
     ]
     assert len(captured["rows"]) == 2
 
