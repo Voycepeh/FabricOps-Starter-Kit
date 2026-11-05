@@ -6,6 +6,7 @@
 - Configurable SQL endpoint, database, metadata schemas, workspace scope, and 180-day default history window.
 - Explicit source projection and selective JSON extraction; no `SELECT *`, reporting views, persisted tables, or pipeline/metadata-writer changes.
 - Descriptive pipeline activity and outcomes, activation decisions and submitted Dry Run evidence, duration versus historical median, all-table Governance exploration, Steward-filtered Data Owner tables, latest profiling/access observations, and per-run diagnostics.
+- Current unified read/write execution metrics from `METADATA_PIPELINE_RUN.operations[].metrics`, with `measurement_source` retained and released top-level row counts used only as fallbacks for older Run records.
 
 ## Preview
 
@@ -13,7 +14,7 @@ See `observability/powerbi/assets/report-preview.svg`, `all-pages-preview.svg`, 
 
 ## Verified repository metadata mappings
 
-Mappings are documented in `SOURCE_PROJECTION_MATRIX.md` and automatically compared with `metadata_schemas.py`. Workspace/Table, workspace/Pipeline, Contract/version, and Agreement/version composite identities are retained. Steward relationships use provider/recipient participation and do not assert ownership.
+Mappings are documented in `SOURCE_PROJECTION_MATRIX.md` and automatically compared with `metadata_schemas.py`. The validator also checks canonical Governance/Engineering schema routing and typed nested execution-metric paths. Workspace/Table, workspace/Pipeline, Contract/version, and Agreement/version composite identities are retained. Steward relationships use provider/recipient participation and do not assert ownership.
 
 ## Design assumptions
 
@@ -27,7 +28,7 @@ Mappings are documented in `SOURCE_PROJECTION_MATRIX.md` and automatically compa
 
 Power BI Desktop and a live Fabric endpoint were unavailable in the implementation environment. Structural and repository-contract validation passed, but Desktop open/save, DAX/TMDL compilation, live refresh, interaction UI, rendered overflow, native Back rendering, and capacity performance remain manual checks listed in `VALIDATION.md`.
 
-Offline evidence: the PBIP validator passes across 193 generated paths, and the focused Pipeline handoff/metadata-schema suites pass 61 tests.
+Offline evidence: the PBIP validator passes across 193 generated paths, deterministic regeneration and Ruff pass, and the expanded metadata/Pipeline execution suites pass 130 tests. The updated GitHub FabricOps CI workflow is running.
 
 ## Manual setup
 
