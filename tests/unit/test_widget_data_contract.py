@@ -3115,8 +3115,13 @@ def test_column_selector_marks_required_columns_and_aligns_checkbox(widget_runti
     assert label == "column_1 *"
     assert "option:nth-child(2)" in controls["column_option_style"].value
     assert "color:var(--form-accent)" in controls["column_option_style"].value
-    assert controls["column_header"].children[1] is controls["required"]
-    assert controls["column_header"].layout.align_items == "flex-start"
+    assert controls["column_header"].children[1] is controls["column_required_controls"]
+    assert controls["column_required_controls"].children[0] is controls["required"]
+    assert controls["column_header"].layout.align_items == "center"
+    assert "fabricops-column-header" in controls["column_header"]._dom_classes
+    assert "fabricops-column-required-controls" in (
+        controls["column_required_controls"]._dom_classes
+    )
     assert "fabricops-column-required" in controls["required"]._dom_classes
     assert controls["required"].layout.width == "auto"
     assert widget_runtime["calls"]["guardrails"] == []
@@ -3218,7 +3223,13 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
         "column_0 *",
         "column_1",
     ]
-    assert "color:var(--form-accent);font-size:20px" in controls["column_context"].value
+    assert "class='fabricops-column-name'" in controls["column_context"].value
+    assert "class='fabricops-column-status'" in controls["column_context"].value
+    page_style = controls["page"].children[0].value
+    assert ".fabricops-column-header {" in page_style
+    assert "padding:11px 16px" in page_style
+    assert ".fabricops-column-name {" in page_style
+    assert "font-size:16px" in page_style
     assert "Required:" not in controls["column_context"].value
 
 
@@ -3276,7 +3287,7 @@ def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
 
     assert state["dirty"] is True
     assert "Datatype drift detected" not in controls["column_context"].value
-    assert ">string</div>" in controls["column_context"].value
+    assert "class='fabricops-column-status'>string</span>" in controls["column_context"].value
     assert controls["datatype_choice"].layout.display == "none"
     payload = json.loads(state["current"]["contract"]["contract_payload_json"])
     selected = next(item for item in payload["table"]["columns"] if item["column_id"] == "col-0")

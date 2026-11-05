@@ -148,6 +148,23 @@ _CONTRACT_STYLE = """<style>
     background:#fff; border:1px solid var(--form-border); border-radius:8px;
     padding:20px; gap:16px; overflow:visible;
 }
+.fabricops-data-contract .fabricops-column-header {
+    display:flex; flex-flow:row wrap; align-items:center; justify-content:space-between;
+    gap:10px 20px; width:100%; min-width:0; padding:11px 16px;
+    background:#fff; border:1px solid var(--form-border); border-radius:8px;
+}
+.fabricops-data-contract .fabricops-column-identity { flex:1 1 420px; min-width:0; gap:4px; }
+.fabricops-data-contract .fabricops-column-context { min-width:0; line-height:1.35; }
+.fabricops-data-contract .fabricops-column-name {
+    color:var(--form-accent); font-size:16px; font-weight:700; overflow-wrap:anywhere;
+}
+.fabricops-data-contract .fabricops-column-meta,
+.fabricops-data-contract .fabricops-column-status { font-size:12px; color:#667085; }
+.fabricops-data-contract .fabricops-column-status { margin-left:10px; color:var(--form-accent); }
+.fabricops-data-contract .fabricops-column-status.is-drift { color:#a4262c; font-weight:700; }
+.fabricops-data-contract .fabricops-column-required-controls {
+    flex:0 1 auto; min-width:170px; gap:2px; align-items:flex-start;
+}
 .fabricops-data-contract .fabricops-contract-labeled-grid { grid-template-columns:minmax(0,1fr) !important; gap:8px; }
 .fabricops-data-contract .fabricops-contract-compound-field {
     display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;
@@ -277,6 +294,8 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-contract-detail {
         height:auto; max-height:none; overflow:visible;
     }
+    .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
+    .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
     .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
     .fabricops-data-contract .fabricops-dq-authoring-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
@@ -3179,16 +3198,29 @@ def widget_data_contract(
         required = widgets.Checkbox(description="Required presence", tooltip="Controls whether the column must exist; null values are a separate concern.", disabled=not editable, layout=widgets.Layout(width="auto", min_width="0", margin="0"))
         required.add_class("fabricops-column-required")
         required_hint = widgets.HTML()
-        column_header = widgets.VBox(
-            [column_context, required, required_hint],
-            layout=widgets.Layout(width="100%", min_width="0", gap="4px", align_items="flex-start"),
+        column_required_controls = widgets.VBox(
+            [required, required_hint],
+            layout=widgets.Layout(width="auto", min_width="170px", gap="2px"),
         )
+        column_required_controls.add_class("fabricops-column-required-controls")
         datatype_choice = widgets.Dropdown(
             options=(), disabled=not editable,
             **shared.widget_common(widgets, "Contract datatype"),
         )
         datatype_choice.layout.display = "none"
-        column_header.children = (*column_header.children, datatype_choice)
+        column_identity = widgets.VBox(
+            [column_context, datatype_choice],
+            layout=widgets.Layout(width="100%", min_width="0", gap="4px"),
+        )
+        column_identity.add_class("fabricops-column-identity")
+        column_header = widgets.HBox(
+            [column_identity, column_required_controls],
+            layout=widgets.Layout(
+                width="100%", min_width="0", align_items="center",
+                justify_content="space-between", flex_flow="row wrap",
+            ),
+        )
+        column_header.add_class("fabricops-column-header")
         sensitive_enabled = widgets.Checkbox(description="Enabled", disabled=not editable)
         pii_type = widgets.Dropdown(
             options=[(label, value) for value, label in PII_LABELS.items()],
@@ -3465,11 +3497,10 @@ def widget_data_contract(
                 column_name = html.escape(str(selected.get("column_name") or ""))
                 if mismatch:
                     column_context.value = (
-                        "<div style='min-height:54px;'>"
-                        f"<div style='color:var(--form-accent);font-size:20px;font-weight:700;'>{column_name}</div>"
-                        "<div style='color:#a4262c;font-size:12px;font-weight:700;margin-top:3px;'>"
-                        "Datatype drift detected</div>"
-                        f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
+                        "<div class='fabricops-column-context'>"
+                        f"<span class='fabricops-column-name'>{column_name}</span>"
+                        "<span class='fabricops-column-status is-drift'>Datatype drift detected</span>"
+                        f"<div class='fabricops-column-meta'>"
                         f"Contract: <b>{html.escape(contract_type)}</b> · "
                         f"Observed: <b style='color:#a4262c'>{html.escape(observed_type)}</b></div>"
                         "</div>"
@@ -3488,10 +3519,10 @@ def widget_data_contract(
                     datatype_choice.layout.display = ""
                 else:
                     column_context.value = (
-                        "<div style='min-height:54px;'>"
-                        f"<div style='color:var(--form-accent);font-size:20px;font-weight:700;'>{column_name}</div>"
-                        f"<div style='color:#667085;font-size:12px;margin-top:3px;'>"
-                        f"{html.escape(contract_type or observed_type)}</div></div>"
+                        "<div class='fabricops-column-context'>"
+                        f"<span class='fabricops-column-name'>{column_name}</span>"
+                        f"<span class='fabricops-column-status'>"
+                        f"{html.escape(contract_type or observed_type)}</span></div>"
                     )
                     datatype_choice.options = ((contract_type or observed_type, contract_type or observed_type),)
                     _set_selection_value(
@@ -3504,9 +3535,15 @@ def widget_data_contract(
                     datatype_choice.layout.display = "none"
                 if editable and selected.get("review_status") in {"unreviewed", "changed"}:
                     label = "New column" if selected["review_status"] == "unreviewed" else "Changed datatype"
-                    column_context.value += f"<div style='color:var(--form-accent);font-size:12px;'>{label} · Review before freezing</div>"
+                    column_context.value += (
+                        "<div class='fabricops-column-meta'>"
+                        f"{label} · Review before freezing</div>"
+                    )
                 if state.get("workspace_id") and not observed_type:
-                    column_context.value += "<div style='font-size:12px;'>Missing from the selected current observation</div>"
+                    column_context.value += (
+                        "<div class='fabricops-column-meta'>"
+                        "Missing from the selected current observation</div>"
+                    )
                 column_description.value = enrichment_value(live_enrichments, "column", "Description", column_id)
                 _set_selection_value(
                     column_classification,
@@ -6937,7 +6974,9 @@ def widget_data_contract(
             "rerun_table_description": rerun_table_description,
             "column_search": column_search,
             "column_select": column_select, "column_context": column_context,
-            "column_header": column_header, "column_definition": column_definition,
+            "column_header": column_header,
+            "column_required_controls": column_required_controls,
+            "column_definition": column_definition,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
