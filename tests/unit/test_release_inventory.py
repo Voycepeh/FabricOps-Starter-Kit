@@ -323,10 +323,10 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "pipeline Reads and Writes" in notes
-    assert "Fabric workspaces other than the execution workspace" in notes
-    assert "frozen physical binding" in notes
-    assert "accepts an explicit workspace ID" in notes
+    assert "native Microsoft Fabric viewers" in notes
+    assert "METADATA_DATA_CONTRACT_ACTIVATION" in notes
+    assert "METADATA_PIPELINE_ACTIVATION" in notes
+    assert "setup_metadata_tables()" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -338,16 +338,17 @@ def test_missing_release_notes_fail_generation_clearly(tmp_path):
 
 
 def test_release_manifest_lifecycle_counts_include_live_orchestrators():
-    """Verify v0.3.0 Live inventory includes its pipeline lifecycle entry points."""
+    """Verify the current Live inventory includes its lifecycle entry points."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     live_functions = {item["name"] for item in manifest["functions"] if item["status"] == "live"}
-    assert len(live_functions) == 20
+    assert len(live_functions) == 21
     assert {"setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"} <= live_functions
+    assert "widget_activate_data_contract" in live_functions
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 11
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 13
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
