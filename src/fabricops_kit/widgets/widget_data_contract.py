@@ -107,7 +107,7 @@ def _set_selection_value(
             f"control={control_name!r}, value={value!r}, {location}, "
             f"valid_options={valid_options!r}"
         ) from exc
-_TABS = ("Table", "Column", "Data Quality", "Review")
+_TABS = ("Table", "Column", "Data Quality", "Review", "AI settings")
 _CONTRACT_STYLE = """<style>
 .fabricops-data-contract {
     --contract-accent:var(--form-accent); --contract-border:var(--form-border);
@@ -115,6 +115,9 @@ _CONTRACT_STYLE = """<style>
     scrollbar-gutter:auto;
 }
 .fabricops-data-contract .fabricops-contract-nav { width:100%; margin:0; }
+.fabricops-data-contract .fabricops-contract-nav-row {
+    position:sticky; top:0; z-index:4; padding:4px 0 6px; background:var(--form-canvas, #f6f8fb);
+}
 .fabricops-data-contract .fabricops-contract-nav > div {
     display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
     border:1px solid var(--form-border); border-radius:7px; width:fit-content;
@@ -129,11 +132,18 @@ _CONTRACT_STYLE = """<style>
     background:#fff; border:1px solid var(--form-border); border-radius:8px; padding:20px; gap:16px;
 }
 .fabricops-data-contract .fabricops-contract-sidebar {
-    max-height:none; overflow:visible; scrollbar-gutter:auto;
+    height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto;
+    scrollbar-gutter:stable;
 }
 .fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:8px; }
-.fabricops-data-contract .fabricops-contract-workspace { gap:20px; }
-.fabricops-data-contract .fabricops-contract-detail { border:0 !important; padding:0 !important; gap:16px; }
+.fabricops-data-contract .fabricops-contract-workspace {
+    gap:20px; height:clamp(520px, calc(100vh - 220px), 720px); min-height:0;
+    align-items:stretch !important; overflow:hidden !important;
+}
+.fabricops-data-contract .fabricops-contract-detail {
+    height:100%; min-height:0; max-height:100%; border:0 !important; padding:0 !important;
+    gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable;
+}
 .fabricops-data-contract .fabricops-contract-detail > .widget-vbox {
     background:#fff; border:1px solid var(--form-border); border-radius:8px;
     padding:20px; gap:16px; overflow:visible;
@@ -148,6 +158,12 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-contract-options {
     width:100%; flex-wrap:wrap; padding:8px 10px; background:#f6f8fb;
     border:1px solid var(--form-border); border-radius:5px;
+}
+.fabricops-data-contract .fabricops-grain-controls {
+    display:flex; flex-flow:row wrap; align-items:flex-end; gap:18px; width:100%;
+}
+.fabricops-data-contract .fabricops-grain-controls > .fabricops-grain-policy {
+    flex:0 1 220px; width:220px !important; max-width:100%;
 }
 .fabricops-data-contract .fabricops-treatment-guide {
     background:#f8f6fc; border:1px solid #ded7ef; border-left:3px solid #6750a4;
@@ -171,7 +187,7 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-guardrail-toggle::before { content:'▸'; display:inline-block; width:14px; }
 .fabricops-data-contract .fabricops-guardrail-toggle.mod-active::before { content:'▾'; }
 .fabricops-data-contract .fabricops-guardrail-toggle .fa { display:none; }
-.fabricops-data-contract .fabricops-guardrail-sidebar .fabricops-guardrail-rule {
+.fabricops-data-contract .fabricops-guardrail-sidebar .fabricops-guardrail-summary {
     background:#fff; border:1px solid var(--form-border); padding:9px 10px;
     color:var(--form-text); white-space:normal; text-align:left; overflow-wrap:anywhere;
 }
@@ -179,6 +195,9 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-data-quality-workspace > .widget-vbox {
     align-self:start; height:auto; max-height:none !important; min-height:0; overflow:visible;
     padding:0 !important; border:0 !important; background:transparent;
+}
+.fabricops-data-contract .fabricops-data-quality-workspace {
+    align-content:start; overflow-x:hidden !important; overflow-y:auto !important; scrollbar-gutter:stable;
 }
 .fabricops-data-contract .fabricops-data-quality-workspace > .widget-vbox > .fabricops-section {
     height:auto !important; max-height:none !important; min-height:0; overflow:visible !important;
@@ -211,6 +230,15 @@ _CONTRACT_STYLE = """<style>
     background:#eaf6ec; color:#107c10; font-weight:600;
 }
 .fabricops-data-contract .fabricops-dq-status.is-disabled { background:#eef1f4; color:#667085; }
+.fabricops-data-contract .fabricops-lineage-table {
+    width:100%; min-width:340px; table-layout:fixed; border-collapse:collapse; font-size:11px;
+}
+.fabricops-data-contract .fabricops-lineage-table th {
+    white-space:nowrap; overflow-wrap:normal; overflow:hidden; text-overflow:ellipsis;
+}
+.fabricops-data-contract .fabricops-lineage-table td {
+    white-space:nowrap; overflow-wrap:normal; overflow:hidden; text-overflow:ellipsis;
+}
 .fabricops-data-contract .fabricops-dq-editor-heading {
     margin-top:4px; padding-top:12px; border-top:1px solid var(--form-border);
     color:var(--form-text); font-size:14px; font-weight:600;
@@ -241,7 +269,15 @@ _CONTRACT_STYLE = """<style>
     }
     .fabricops-data-contract .fabricops-contract-nav > div { width:100%; }
     .fabricops-data-contract .fabricops-contract-nav button { flex:1 1 0; min-width:0; width:auto; }
-    .fabricops-data-contract .fabricops-contract-columns { height:180px !important; }
+    .fabricops-data-contract .fabricops-contract-nav-row { position:static; }
+    .fabricops-data-contract .fabricops-contract-workspace {
+        height:auto; max-height:none; overflow:visible !important;
+    }
+    .fabricops-data-contract .fabricops-contract-sidebar,
+    .fabricops-data-contract .fabricops-contract-detail {
+        height:auto; max-height:none; overflow:visible;
+    }
+    .fabricops-data-contract .fabricops-contract-columns { height:540px !important; }
     .fabricops-data-contract .fabricops-dq-authoring-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>"""
@@ -904,8 +940,8 @@ def widget_data_contract(
     Profile context remains read-only and is never added
     to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
     optional enforcement are independent. Enabling Grain defaults to Block.
-    The sidebar shows the shared configured rules for Read and Write; it does
-    not execute validation. Rule buttons open the existing authoring controls.
+    The sidebar shows a read-only summary of configured rules for Read and Write;
+    it does not execute validation or navigate the authoring controls.
     The Data Quality tab is the single DQ authoring surface. Governance can add
     any supported deterministic rule manually, or generate transient proposals
     from business language when AI is enabled. Proposals require explicit review
@@ -922,7 +958,7 @@ def widget_data_contract(
     maximum failure percent. Conditional rules use matching applicable rows;
     null values ignored by value checks are not counted as passing rows.
     Prohibited-value lists remain strict. Required/Schema, Grain, Sensitive
-    Data, Freshness, and Source Drift do not gain a DQ row-percentage setting.
+    Data and Freshness do not gain a DQ row-percentage setting.
     Actual violation counts remain visible even when within the authored limit.
     Missing AI configuration disables AI actions for the widget session while
     manual authoring remains available. Execution and provider failures show a
@@ -1582,6 +1618,11 @@ def widget_data_contract(
                 str(column.get("column_name") or "").casefold(),
             ),
         )
+        authoring_columns = [
+            column
+            for column in columns
+            if not str(column.get("column_name") or "").startswith("_")
+        ]
         resolution_controls = ()
         available_ids = {str(column.get("column_id") or "") for column in columns}
         unresolved = [
@@ -1646,7 +1687,9 @@ def widget_data_contract(
         state["_ai_failure_category"] = latest.get("category", "")
         state["_ai_failure_diagnostic"] = latest
         ai_mode = state["_ai_mode"].get(suggestion_scope)
-        column_names = [str(column.get("column_name") or "") for column in columns]
+        column_names = [
+            str(column.get("column_name") or "") for column in authoring_columns
+        ]
         from fabricops_kit.config.metadata_schemas import decode_metadata_row
         discovery = decode_metadata_row("METADATA_DATA_CATALOGUE", {
             "profile_key_candidates_json": table.get("profile_key_candidates_json"),
@@ -1665,7 +1708,7 @@ def widget_data_contract(
         )
         temporal_column_names = [
             str(column.get("column_name") or "")
-            for column in columns
+            for column in authoring_columns
             if any(
                 marker in str(column.get("data_type") or "").lower()
                 for marker in ("date", "timestamp", "datetime")
@@ -1744,7 +1787,9 @@ def widget_data_contract(
                 not editable or not ai_available() or ai_mode != "with_ai"
             ),
         )
-        accept_grain = widgets.Button(description="Apply", disabled=True, button_style="info")
+        accept_grain = widgets.Button(
+            description="Use grain wording", disabled=True, button_style="info"
+        )
         state["_ai_buttons"].extend([suggest_grain, accept_grain])
 
         def render_grain_profile_evidence() -> None:
@@ -1781,7 +1826,7 @@ def widget_data_contract(
             try:
                 render_grain_profile_evidence()
                 profile_rows = []
-                for column in columns:
+                for column in authoring_columns:
                     cid = str(column.get("column_id") or "")
                     profile_value = load_profile_context(cid)
                     profile = dict(profile_value.get("profile") or {})
@@ -1850,6 +1895,14 @@ def widget_data_contract(
             suggestion = ai_state["table"].get("grain_key") or {}
             table_grain.value = str(suggestion.get("grain") or "")
             render_table_summary()
+            if grain_enabled.value:
+                set_status("Suggested Grain wording applied.")
+            else:
+                set_status(
+                    "Suggested Grain wording applied. Turn on Enforce Grain to activate "
+                    "the selected row key.",
+                    warning=True,
+                )
 
         suggest_grain.on_click(run_grain_ai)
         accept_grain.on_click(accept_grain_ai)
@@ -1984,7 +2037,7 @@ def widget_data_contract(
                     table,
                     metadata_level="table",
                     existing_description=str(table_description.value or ""),
-                    column_rows=columns,
+                    column_rows=authoring_columns,
                 )
                 grain_suggestion = ai_state["table"].get("grain_key") or {}
                 description_context["grain"] = str(
@@ -2028,7 +2081,7 @@ def widget_data_contract(
         rerun_table_description.on_click(lambda _button: run_table_ai(force=True))
 
         table_rules: dict[str, Any] = {}
-        for kind, title in (("freshness", "Freshness"), ("source_drift", "Source Drift")):
+        for kind, title in (("freshness", "Freshness"),):
             existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == kind), {})
             existing_parameters = _parameters(existing)
             enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
@@ -2153,8 +2206,7 @@ def widget_data_contract(
                             "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
                             "<b>ⓘ Source expectation</b><br>"
                             "No refresh is expected for this source. Freshness age checks are skipped."
-                            "<br><span style='color:#667085;'>Use Source Drift separately if an unexpected "
-                            "change to this static source should be detected.</span></div>"
+                            "</div>"
                         )
                         return
                     if not temporal_column_names:
@@ -2225,75 +2277,6 @@ def widget_data_contract(
                     freshness_grid,
                     freshness_rule_preview,
                 ]
-            else:
-                partition_column = widgets.Dropdown(
-                    options=column_names,
-                    value=_valid_dropdown_value(column_names, existing_parameters.get("partition_column")),
-                    disabled=not editable,
-                    **shared.widget_common(widgets, "Partition column"),
-                )
-                partition_column.description = ""
-                partition_column.layout = field_layout
-                change_column = widgets.Dropdown(
-                    options=column_names,
-                    value=_valid_dropdown_value(column_names, existing_parameters.get("change_column")),
-                    disabled=not editable,
-                    **shared.widget_common(widgets, "Change tracking column"),
-                )
-                change_column.description = ""
-                change_column.layout = field_layout
-                source_drift_rule_preview = widgets.HTML()
-
-                def refresh_source_drift_rule_preview(
-                    _change: dict[str, Any] | None = None,
-                    *,
-                    enabled_control: Any = enabled,
-                ) -> None:
-                    partition = str(partition_column.value or "").strip()
-                    change = str(change_column.value or "").strip()
-                    if not enabled_control.value or not partition or not change:
-                        source_drift_rule_preview.value = ""
-                        return
-                    source_drift_rule_preview.value = (
-                        "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
-                        "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>ⓘ Rule</b><br>"
-                        "When this table is consumed as a source, FabricOps compares each "
-                        f"<code>{html.escape(partition)}</code> partition with the last "
-                        "successfully consumed state for that downstream target. "
-                        "Changes are detected from row count, "
-                        f"<code>{html.escape(change)}</code> values, and a content fingerprint."
-                        "<br><span style='color:#667085;'>Example: if a previously consumed "
-                        f"<code>{html.escape(partition)}</code> partition is different when read "
-                        "again today, Source Drift is detected.</span></div>"
-                    )
-
-                for source_drift_control in (enabled, partition_column, change_column):
-                    source_drift_control.observe(
-                        refresh_source_drift_rule_preview, names="value"
-                    )
-                refresh_source_drift_rule_preview()
-                source_drift_grid = widgets.GridBox(
-                    [
-                        widgets.HTML("<div style='padding-top:7px;'>Partition column</div>"),
-                        partition_column,
-                        widgets.HTML("<div style='padding-top:7px;'>Change tracking column</div>"),
-                        change_column,
-                    ],
-                    layout=widgets.Layout(
-                        width="100%",
-                        grid_template_columns="180px minmax(180px, 1fr)",
-                        grid_gap="8px 10px",
-                        align_items="flex-start",
-                    ),
-                )
-                source_drift_grid.add_class("fabricops-contract-labeled-grid")
-                parameter_controls = [partition_column, change_column]
-                display_controls = [
-                    source_drift_grid,
-                    source_drift_rule_preview,
-                ]
-
             def build_table_rule_record(
                 *, rule_kind: str = kind,
                 enabled_control: Any = enabled, block_control: Any = block,
@@ -2308,7 +2291,7 @@ def widget_data_contract(
                     return None
                 if not enabled_control.value:
                     parameters = _parameters(old)
-                elif rule_kind == "freshness":
+                else:
                     expectation = str(controls[0].value or "recurring")
                     if expectation == "static":
                         parameters = {"refresh_expectation": "static"}
@@ -2327,11 +2310,6 @@ def widget_data_contract(
                             "maximum_age": float(raw_age),
                             "maximum_age_unit": str(controls[5].value or "days"),
                         }
-                else:
-                    parameters = {
-                        "partition_column": str(controls[0].value or "").strip(),
-                        "change_column": str(controls[1].value or "").strip(),
-                    }
                 if enabled_control.value and any(value in {"", None} for value in parameters.values()):
                     raise ValueError(f"{rule_title} requires all governed configuration fields.")
                 return guardrail_record(
@@ -2383,7 +2361,7 @@ def widget_data_contract(
                 return
             column_labels = {
                 str(column.get("column_id") or ""): str(column.get("column_name") or "")
-                for column in columns
+                for column in authoring_columns
             }
             removed = {
                 str(rule.get("column_id") or "")
@@ -2553,20 +2531,36 @@ def widget_data_contract(
             reader_label = "read" if reader_count == 1 else "reads"
             lineage_rows = list(runtime_context.get("lineage") or [])
             if lineage_rows:
-                rows_html = "".join(
-                    "<tr>"
-                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('workspace_id') or ''))}</td>"
-                    f"<td style='padding:5px 8px;'>{html.escape(str(item.get('pipeline_name') or ''))}</td>"
-                    f"<td style='padding:5px 8px;'>{html.escape(('Read' if str(item.get('relationship') or '').lower() in {'reader', 'read'} else 'Write' if str(item.get('relationship') or '').lower() in {'writer', 'write'} else str(item.get('relationship') or '')))}</td>"
-                    f"<td style='padding:5px 8px;white-space:nowrap;'>{html.escape(context_timestamp(item.get('last_seen')))}</td>"
-                    "</tr>"
-                    for item in lineage_rows
-                )
+                lineage_cells = []
+                for item in lineage_rows:
+                    workspace_value = str(item.get("workspace_id") or "")
+                    pipeline_value = str(item.get("pipeline_name") or "")
+                    relationship = str(item.get("relationship") or "")
+                    relationship_key = relationship.lower()
+                    role_value = (
+                        "Read" if relationship_key in {"reader", "read"}
+                        else "Write" if relationship_key in {"writer", "write"}
+                        else relationship
+                    )
+                    last_seen_value = context_timestamp(item.get("last_seen"))
+                    values = (
+                        workspace_value, pipeline_value, role_value, last_seen_value,
+                    )
+                    lineage_cells.append(
+                        "<tr>" + "".join(
+                            f"<td style='padding:5px 8px;' title='{html.escape(value, quote=True)}'>"
+                            f"{html.escape(value)}</td>"
+                            for value in values
+                        ) + "</tr>"
+                    )
+                rows_html = "".join(lineage_cells)
                 detail_html = (
                     "<details style='margin-top:5px;'>"
                     "<summary style='cursor:pointer;color:var(--form-accent);font-size:12px;'>View lineage</summary>"
                     "<div style='overflow-x:auto;margin-top:6px;'>"
-                    "<table style='border-collapse:collapse;width:100%;font-size:11px;'>"
+                    "<table class='fabricops-lineage-table'>"
+                    "<colgroup><col style='width:31%'><col style='width:25%'>"
+                    "<col style='width:12%'><col style='width:32%'></colgroup>"
                     "<thead><tr><th style='text-align:left;padding:5px 8px;'>Env</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Role</th>"
@@ -2612,31 +2606,8 @@ def widget_data_contract(
         table_left = (*resolution_controls, table_summary, sidebar_style, guardrail_sidebar, table_exit_row, table_exit_confirm)
 
         sidebar_groups = {}
-        sidebar_rule_buttons = {}
         expanded_guardrails = {}
         sidebar_snapshot = {"signature": None}
-
-        def navigate_guardrail(kind, rule=None):
-            rule = rule or {}
-            cid = str(rule.get("column_id") or "")
-            if kind in {"schema", "sensitive_data"}:
-                top_nav.value = "Column"
-                required_ids = _parameters(rule).get("required_columns", [])
-                if not cid and required_ids:
-                    cid = next((str(c.get("column_id")) for c in columns if c.get("column_id") in required_ids or c.get("column_name") in required_ids), "")
-                if not cid and columns:
-                    cid = str(columns[0].get("column_id") or "")
-                if cid:
-                    column_select.value = cid
-            elif kind == "data_quality":
-                top_nav.value = "Data Quality"
-                refresh_business_saved_options(str(rule.get("guardrail_rule_id") or ""))
-            else:
-                top_nav.value = "Table"
-                apply_view()
-                section = grain_definition if kind == "grain" else table_right[3 if kind == "freshness" else 4]
-                right.children = (section,)
-            state["_guardrail_editor_target"] = kind
 
         def close_sidebar_widgets(nodes):
             seen = set()
@@ -2682,7 +2653,13 @@ def widget_data_contract(
             return disclosure
 
         def render_guardrail_sidebar():
-            active = list(session_guardrails())
+            visible_types = {
+                "freshness", "schema", "grain", "data_quality", "sensitive_data",
+            }
+            active = [
+                rule for rule in session_guardrails()
+                if str(rule.get("guardrail_type") or "") in visible_types
+            ]
             names_by_id = {str(c.get("column_id")): str(c.get("column_name")) for c in columns}
             payload_columns = json.loads(str(current["contract"].get("contract_payload_json") or "{}")).get("table", {}).get("columns", [])
             types = {str(c.get("column_name")): str(c.get("data_type")) for c in payload_columns}
@@ -2690,12 +2667,13 @@ def widget_data_contract(
             signature = json.dumps({
                 "rules": active, "types": types,
                 "grain_description": table_grain.value if any(rule.get("guardrail_type") == "grain" for rule in active) else "",
+                "grain_enabled": grain_enabled.value,
+                "grain_policy": grain_policy.value,
             }, sort_keys=True, default=str)
             if signature == sidebar_snapshot["signature"]:
                 return
             previous = guardrail_sidebar.children
-            labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "sensitive_data": "Sensitive Data", "freshness": "Freshness", "source_drift": "Source Drift"}
-            sidebar_rule_buttons.clear()
+            labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "sensitive_data": "Sensitive Data", "freshness": "Freshness"}
 
             def affected(rule):
                 params = _parameters(rule)
@@ -2706,7 +2684,7 @@ def widget_data_contract(
                     value = ", ".join(str(v) for v in value)
                 return html.escape(str(value))
 
-            def rule_content(kind, rule):
+            def rule_content(kind, rule, *, role, show_summary):
                 params = _parameters(rule)
                 policy = "Block" if kind in {"schema", "sensitive_data"} else str(rule.get("action") or ("Block" if kind == "grain" else "Warn"))
                 affected_names = affected(rule)
@@ -2716,22 +2694,45 @@ def widget_data_contract(
                     required_names = list(dict.fromkeys(names_by_id.get(str(name), str(name)) for name in params.get("required_columns", [])))
                     detail = [("Required columns", required_names or "None"), ("Frozen type expectations", ", ".join(f"{name}: {dtype}" for name, dtype in types.items()) or "None"), ("Policy", "Block missing required columns, extra columns and contracted datatype mismatches")]
                 elif kind == "grain":
-                    detail = [("Description", table_grain.value or "Not defined"), ("Key combination", affected_names), ("Policy", policy), ("Scope", "Read: returned rows, including incremental batches. Write: prepared input after Sensitive Data treatment. No resulting-table uniqueness guarantee for Append or SCD."), ("Null and missing keys", "Null in any component fails. Blank strings are values. Missing columns or invalid configuration block."), ("SCD2 history", "Use a version-aware row key, such as business key + effective timestamp; business keys can repeat across history.")]
+                    enabled = bool(grain_enabled.value)
+                    policy = str(grain_policy.value or "Block")
+                    affected_names = [
+                        names_by_id.get(str(name), str(name))
+                        for name in row_key_columns.value
+                    ]
+                    detail = [
+                        ("State", "Enabled" if enabled else "Not enforced"),
+                        ("Key", affected_names or "Not selected"),
+                        (
+                            "Checks",
+                            "Returned rows before downstream processing."
+                            if role == "read"
+                            else "Prepared input before publication.",
+                        ),
+                    ]
+                    if not enabled:
+                        detail.append((
+                            "Next step",
+                            "Turn on Enforce Grain in the Table tab to activate this check.",
+                        ))
                 else:
                     detail = [("Scope", "Column" if rule.get("column_id") else "Table-level"), ("Columns", affected_names or "Table-level"), ("Rule", str(rule.get("rule_type") or "").replace("_", " ")), ("Policy", "Block · treatment must succeed" if kind == "sensitive_data" else policy)]
                     if kind == "freshness":
                         detail.append(("Scope", "Source Read · no refresh expected; no age validation" if rule.get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else "Source returned by orchestrate_read(); latest timestamp relative to run time"))
-                    if kind == "source_drift":
-                        detail.append(("Scope", str(table.get("table_name") or "This source") + " → consuming target; compared with the target's accepted Source Observation"))
                     detail.extend((("Accepted failure rate %" if key in {"maximum_missing_percent", "maximum_failure_percent"} else key.replace("_", " ").capitalize()), value) for key, value in params.items() if key not in {"columns", "engineering_reviewed_by", "engineering_review_note"})
-                detail.insert(0, ("State", "Enabled" if enabled else "Disabled · intentionally not executed"))
+                if kind != "grain":
+                    detail.insert(0, ("State", "Enabled" if enabled else "Disabled · intentionally not executed"))
                 text = "".join(f"<div><b>{escaped(key)}:</b> {escaped(value)}</div>" for key, value in detail)
-                description = (", ".join(affected_names) + " · " if affected_names else "Table · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + policy
-                button = widgets.Button(description=description, tooltip="Edit " + description, layout=widgets.Layout(width="100%", min_width="0", height="auto"))
-                button.add_class("fabricops-guardrail-rule")
-                button.on_click(lambda _button, k=kind, r=rule: navigate_guardrail(k, r))
-                sidebar_rule_buttons.setdefault(kind, []).append(button)
-                return widgets.VBox([button, widgets.HTML("<div class='fabricops-guardrail-detail'>" + text + "</div>")], layout=widgets.Layout(min_width="0", gap="4px"))
+                state_label = policy if enabled else "Not enforced"
+                description = (", ".join(affected_names) + " · " if affected_names else "Table · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + state_label
+                children = [widgets.HTML("<div class='fabricops-guardrail-detail'>" + text + "</div>")]
+                if show_summary:
+                    children.insert(0, widgets.HTML(
+                        "<div class='fabricops-guardrail-summary'><b>"
+                        + html.escape(description)
+                        + "</b></div>"
+                    ))
+                return widgets.VBox(children, layout=widgets.Layout(min_width="0", gap="4px"))
 
             def group(role, title, subtitle, kinds):
                 sections = []
@@ -2743,20 +2744,31 @@ def widget_data_contract(
                         count = len({names_by_id.get(str(name), str(name)) for r in rules for name in _parameters(r).get("required_columns", [])})
                         summary = f"{count} required column{'s' if count != 1 else ''}"
                     elif kind == "grain":
-                        summary = (" + ".join(affected(rules[0])) or "Key required") + " · " + str(rules[0].get("action") or "Block")
+                        grain_keys = [
+                            names_by_id.get(str(name), str(name))
+                            for name in row_key_columns.value
+                        ]
+                        grain_state = str(grain_policy.value or "Block") if grain_enabled.value else "Not enforced"
+                        summary = (" + ".join(grain_keys) or "Key required") + " · " + grain_state
                     elif kind == "data_quality":
                         count = len(set(name for r in rules for name in affected(r)))
                         summary = f"{len(rules)} rule{'s' if len(rules) != 1 else ''} across {count} column{'s' if count != 1 else ''}"
                     elif kind == "sensitive_data":
                         summary = f"{len(rules)} treatment{'s' if len(rules) != 1 else ''}"
-                    elif kind == "source_drift":
-                        summary = str(table.get("table_name") or "Source") + " → consuming target"
                     else:
                         params = _parameters(rules[0])
                         expectation = "No refresh expected" if rules[0].get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else f"{params.get('freshness_column', 'Timestamp')} · ≤ {params.get('maximum_age', '?')} {params.get('maximum_age_unit', '')}"
                         summary = expectation + " · " + str(rules[0].get("action") or "Warn")
                     key = (role, kind)
-                    content = widgets.VBox([rule_content(kind, rule) for rule in rules], layout=widgets.Layout(min_width="0", gap="10px", padding="4px 8px"))
+                    content = widgets.VBox(
+                        [
+                            rule_content(
+                                kind, rule, role=role, show_summary=len(rules) > 1,
+                            )
+                            for rule in rules
+                        ],
+                        layout=widgets.Layout(min_width="0", gap="10px", padding="4px 8px"),
+                    )
                     section = expandable_guardrail(labels[kind] + " · " + summary, content, key)
                     sections.append(section)
                 content = widgets.VBox([widgets.HTML(f"<code>{subtitle}</code>"), *sections, *([] if sections else [widgets.HTML("<span style='color:#667085'>No configured Guardrails for this path.</span>")])], layout=widgets.Layout(min_width="0", gap="6px"))
@@ -2766,7 +2778,7 @@ def widget_data_contract(
 
             guardrail_sidebar.children = (
                 group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "grain", "data_quality")),
-                group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "source_drift", "grain", "data_quality")),
+                group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "grain", "data_quality")),
             )
             sidebar_snapshot["signature"] = signature
             close_sidebar_widgets(previous)
@@ -3003,7 +3015,13 @@ def widget_data_contract(
             widgets,
             title="Grain & Row Key",
                 children=[
-                    widgets.VBox([grain_enabled, grain_policy], layout=widgets.Layout(width="100%", gap="12px")),
+                    widgets.HBox(
+                        [grain_enabled, grain_policy],
+                        layout=widgets.Layout(
+                            width="100%", min_width="0",
+                            align_items="flex-end", flex_flow="row wrap",
+                        ),
+                    ),
                     widgets.HTML(
                         "<div style='color:#667085;font-size:12px;line-height:1.5;"
                         "margin-bottom:4px;'>Define what one row represents, then "
@@ -3056,6 +3074,7 @@ def widget_data_contract(
                     ),
                 ],
             )
+        grain_definition.children[1].add_class("fabricops-grain-controls")
         grain_definition.children[3].add_class("fabricops-grain-fields")
         grain_definition.children[3].add_class("fabricops-contract-assistant-grid")
         def profiling_changed(policy):
@@ -3099,25 +3118,6 @@ def widget_data_contract(
                 ],
                 primary_children=[
                     *table_rules["freshness"]["display"],
-                ],
-            ),
-            guardrail_section(
-                "Source Drift",
-                banner_title="Applies when this table is used as a source in a downstream pipeline.",
-                banner_detail=(
-                    "This rule is checked when the table is consumed as an input, "
-                    "not when this table itself is written."
-                ),
-                description=(
-                    "Check whether data that was previously consumed from this table has "
-                    "changed when the same source data is read again."
-                ),
-                header_controls=[
-                    table_rules["source_drift"]["enabled"],
-                    table_rules["source_drift"]["block"],
-                ],
-                primary_children=[
-                    *table_rules["source_drift"]["display"],
                 ],
             ),
         )
@@ -4492,7 +4492,7 @@ def widget_data_contract(
                     f"{str(column.get('column_name') or '')}{' *' if str(column.get('column_id') or '') in required_columns or str(column.get('column_name') or '') in required_columns else ''}",
                     str(column.get("column_id") or ""),
                 )
-                for column in columns
+                for column in authoring_columns
             ]
 
         def refresh_column_options(*_args: Any) -> None:
@@ -4865,7 +4865,7 @@ def widget_data_contract(
         business_columns = widgets.SelectMultiple(
             options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
-                for column in columns
+                for column in authoring_columns
             ],
             disabled=not editable,
             **shared.widget_common(widgets, "Limit to columns (optional)"),
@@ -4874,7 +4874,7 @@ def widget_data_contract(
         business_columns.add_class("fabricops-contract-list")
         dq_column_options = [
             (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
-            for column in columns
+            for column in authoring_columns
         ]
         dq_column_options_with_blank = [("Select a column", ""), *dq_column_options]
         business_enabled = widgets.Checkbox(
@@ -5909,7 +5909,7 @@ def widget_data_contract(
                                 str(column.get("column_id") or ""), {}
                             ),
                         }
-                        for column in columns
+                        for column in authoring_columns
                     ],
                     "existing_dq_rules": current_rule_context(),
                 })
@@ -6907,6 +6907,10 @@ def widget_data_contract(
             *review_actions,
         )
         view_content["Review"] = (review_left, review_right)
+        view_content["AI settings"] = (
+            (editor_ai_information,),
+            (ai_usage_view,),
+        )
         apply_view()
 
 
@@ -6919,7 +6923,6 @@ def widget_data_contract(
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "guardrail_sidebar": guardrail_sidebar, "sidebar_groups": sidebar_groups,
-            "sidebar_rule_buttons": sidebar_rule_buttons,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
@@ -7159,15 +7162,16 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     selector_panel.add_class("fabricops-contract-selector")
+    contract_nav_row = widgets.HBox(
+        [top_nav],
+        layout=widgets.Layout(
+            width="100%", justify_content="flex-start", margin="4px 0 6px 0",
+        ),
+    )
+    contract_nav_row.add_class("fabricops-contract-nav-row")
     editor_shell = widgets.VBox(
         [
-            editor_ai_information, ai_usage_view,
-            widgets.HBox(
-                [top_nav],
-                layout=widgets.Layout(
-                    width="100%", justify_content="flex-start", margin="4px 0 6px 0",
-                ),
-            ),
+            contract_nav_row,
             workspace,
             authoring_footer,
         ],
@@ -7366,6 +7370,7 @@ def widget_data_contract(
     page.children[0].value += _CONTRACT_STYLE
     state["_controls"].update({
         "page": page, "selector_panel": selector_panel, "editor_shell": editor_shell,
+        "contract_nav_row": contract_nav_row,
         "table": table_control, "table_search": table_selector["search"],
         "workspace_select": workspace_control, "workspace_search": workspace_selector["search"],
         "contract": contract_control, "contract_search": contract_selector["search"],
