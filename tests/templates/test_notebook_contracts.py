@@ -388,6 +388,64 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                     assert "pipeline_read" not in cell.source
 
 
+def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_inspection():
+    """Demo variants retain the standard scaffold and its inspection choices."""
+    paths = [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS]
+    required_order = [
+        "environment-heading",
+        "imports",
+        "setup-heading",
+        "contracts",
+        "read-heading",
+        "read-setup",
+        "read-1-heading",
+        "transform-heading",
+        "transform",
+        "write-heading",
+        "write-setup",
+        "write-1-heading",
+        "finalize-heading",
+        "finalize-run",
+    ]
+
+    for path in paths:
+        notebook = _load_notebook(path)
+        cells = {cell.id: cell for cell in notebook.cells}
+        positions = [next(i for i, cell in enumerate(notebook.cells) if cell.id == cell_id)
+                     for cell_id in required_order]
+        assert positions == sorted(positions), path.name
+        assert cells["environment-heading"].source.startswith("# 0. Workspace — Setup Notebook")
+        setup_cells = [cell for cell in notebook.cells
+                       if cell.cell_type == "code" and "setup_pipeline(" in cell.source]
+        for cell in setup_cells:
+            assert "observe_source=False" in cell.source
+            assert "source_observation_days=None" in cell.source
+
+        transform_cells = [cell for cell in notebook.cells
+                           if cell.cell_type == "code" and cell.id.startswith("transform")]
+        for cell in transform_cells:
+            transform_tree = ast.parse(cell.source)
+            active_transform_displays = [
+                node for node in ast.walk(transform_tree)
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "display"
+            ]
+            assert not active_transform_displays, (path.name, cell.id)
+            assert "# display(" in cell.source
+
+        write_cells = [cell for cell in notebook.cells
+                       if cell.cell_type == "code" and "orchestrate_write(" in cell.source]
+        for cell in write_cells:
+            assert cell.source.lstrip().startswith('writes["')
+            assert "# Optional: inspect Data Quality diagnostics and caller-managed token mapping." in cell.source
+            assert '.get("dq_result")' in cell.source
+            assert '.get("sensitive_result")' in cell.source
+            assert '.get("support_mapping")' in cell.source
+            assert "# Optional: read the final published target after a successful persistent execution." in cell.source
+            assert "# from fabricops_kit import read_" in cell.source
+
+        assert all(cell.id != "check-target-counts" for cell in notebook.cells)
+
+
 def test_02a_preserves_the_full_refresh_pipeline():
     """02A retains the former retail reads, transformation, writes, and inspections."""
     source = _demo_source("02A_full_refresh_demo.ipynb")
@@ -397,12 +455,14 @@ def test_02a_preserves_the_full_refresh_pipeline():
     )
     assert code_source.count("orchestrate_read(") == 3
     assert code_source.count('read_mode="full"') == 3
-    assert code_source.count("write_result = orchestrate_write(") == 2
+    assert code_source.count("= orchestrate_write(") == 2
     assert code_source.count('write_mode="overwrite"') == 2
     assert 'sources=' not in code_source
     assert "FROM demo.order_history" in source
     assert "customer_summary_df" in source
-    assert code_source.count('display(write_result["dataframe"].limit(10))') == 2
+    assert 'display(writes["curated_orders_lakehouse"]["dataframe"].limit(10))' in code_source
+    assert 'display(writes["customer_summary_warehouse"]["dataframe"].limit(10))' in code_source
+    assert "write_result" not in code_source
 
 
 def test_02b_has_ordered_independent_incremental_and_full_append_paths():
@@ -465,6 +525,10 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     assert 'incremental_append_all_df = transform_inventory(' in source
     assert 'full_append_new_only_df = transform_inventory(' in source
     assert source.count("finalize_pipeline(") == 2
+    for cell_id, target in (("write-1", destinations[0]), ("write-2", destinations[1])):
+        write = _demo_cell(name, cell_id).source
+        assert f'table_name="{target}"' in write
+        assert '.orderBy("movement_id").limit(10)' in write
     assert "| 1 | 8 / 8 / 8 | 8 / 8 / 8 | 8 | 8 |" in source
     assert "| 2 | 4 / 4 / 4 | 12 / 12 / 4 | 12 | 12 |" in source
     assert "| 3 | 0 / 0 / 0 | 12 / 12 / 0 | 12 | 12 |" in source
@@ -518,8 +582,12 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     for cell_id, target in (("write-1", "product_master_scd1"), ("write-2", "product_master_scd2")):
         write = _demo_cell("02C_scd_demo.ipynb", cell_id).source
         assert f'display(writes["{target}"]["dataframe"].limit(10))' in write
-        assert "read_lakehouse_table(" not in write
-        assert "post-merge destination" in write
+        assert "final prepared Write input" in write
+        assert "# Optional: read the final published target after a successful persistent execution." in write
+        expected_order = '.orderBy("product_id").limit(10)' if cell_id == "write-1" else (
+            '.orderBy("product_id", "_effective_from").limit(10)'
+        )
+        assert expected_order in write
     assert "| 1 | 8 | 8 |" in source
     assert "| 2 | 8 | 9 |" in source
     assert "| 3 | 8 | 10 |" in source
