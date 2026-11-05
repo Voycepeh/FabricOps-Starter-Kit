@@ -766,7 +766,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Column", "Data Quality", "Review"
+        "Table", "Column", "Data Quality", "Review", "AI settings"
     )
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
     assert len(controls["workspace"].children) == 2
@@ -778,8 +778,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["column_classification"].value == "Confidential"
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
-    assert controls["table_guardrails"]["source_drift"]["enabled"].value is True
-    assert len(controls["table_guardrails"]["source_drift"]["parameters"]) == 2
+    assert "source_drift" not in controls["table_guardrails"]
     assert controls["load_strategy"].value == "append_all"
     assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
@@ -816,8 +815,16 @@ def test_grain_changes_reuse_one_rule_and_never_enable_implicitly(widget_runtime
     assert len(grains()) == 1
     rule_id = grains()[0]["guardrail_rule_id"]
     assert grains()[0]["is_active"] is False
+    read_summary = _sidebar_text(controls["sidebar_groups"]["read"])
+    assert "Grain · column_0 · Not enforced" in read_summary
+    assert "State:</b> Not enforced" in read_summary
+    assert "Turn on Enforce Grain" in read_summary
     controls["grain_enabled"].value = True
     assert controls["grain_policy"].value == "Block"
+    read_summary = _sidebar_text(controls["sidebar_groups"]["read"])
+    assert "Grain · column_0 · Block" in read_summary
+    assert "State:</b> Enabled" in read_summary
+    assert "Turn on Enforce Grain" not in read_summary
     controls["grain_policy"].value = "Warn"
     controls["row_key_columns"].value = ("column_0", "column_1")
     controls["grain_enabled"].value = False
@@ -874,12 +881,6 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     freshness["parameters"][4].value = "3"
     freshness["parameters"][5].value = "days"
 
-    drift = controls["table_guardrails"]["source_drift"]
-    drift["enabled"].value = True
-    drift["block"].value = True
-    drift["parameters"][0].value = "column_0"
-    drift["parameters"][1].value = "column_1"
-
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Persisted identifier"
     controls["column_classification"].value = "Restricted"
@@ -900,6 +901,10 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
 
     controls["save_data_contract"].click()
     assert widget_runtime["calls"]["draft"]
+    assert any(
+        rule["guardrail_type"] == "source_drift"
+        for rule in widget_runtime["calls"]["guardrails"][-1]
+    )
 
     reopened = widget_runtime["open"]()
     hydrated = reopened["_controls"]
@@ -916,11 +921,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     assert reopened_freshness["parameters"][2].value == "2.0"
     assert reopened_freshness["parameters"][4].value == "3.0"
 
-    reopened_drift = hydrated["table_guardrails"]["source_drift"]
-    assert reopened_drift["enabled"].value is True
-    assert reopened_drift["block"].value is True
-    assert reopened_drift["parameters"][0].value == "column_0"
-    assert reopened_drift["parameters"][1].value == "column_1"
+    assert "source_drift" not in hydrated["table_guardrails"]
 
     hydrated["column_select"].value = "col-0"
     assert hydrated["column_description"].value == "Persisted identifier"
@@ -968,6 +969,10 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Pipeline usage" in table_summary
     assert "1 write · 2 reads" in table_summary
     assert "View lineage" in table_summary
+    assert "class='fabricops-lineage-table'" in table_summary
+    assert "<colgroup><col style='width:31%'><col style='width:25%'>" in table_summary
+    assert "<col style='width:12%'><col style='width:32%'></colgroup>" in table_summary
+    assert "title='04_reporting'" in table_summary
     assert ">Env</th>" in table_summary
     assert ">Pipeline</th>" in table_summary
     assert ">Role</th>" in table_summary
@@ -980,23 +985,33 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Load strategy" in table_summary
     assert "Scheduled refresh" not in table_summary
     assert "Guardrails" in table_summary
+    page_style = controls["page"].children[0].value
+    assert ".fabricops-lineage-table th" in page_style
+    assert "white-space:nowrap; overflow-wrap:normal" in page_style
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
     assert table_summary.index("Row Key") < table_summary.index("Load strategy")
     assert table_summary.index("Load strategy") < table_summary.index("Guardrails")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children
-    assert [section.children[0].value for section in table_sections[:6]] == [
+    assert [section.children[0].value for section in table_sections[:5]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
         "<div class=\"fabricops-section-heading\">Profiling</div>",
         "<div class=\"fabricops-section-heading\">Processing</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
-        "<div class=\"fabricops-section-heading\">Source Drift</div>",
     ]
 
     grain_section = controls["right_pane"].children[0]
-    assert grain_section.children[1].children == (controls["grain_enabled"], controls["grain_policy"])
+    grain_controls = grain_section.children[1]
+    assert grain_controls.children == (controls["grain_enabled"], controls["grain_policy"])
+    assert "fabricops-grain-controls" in grain_controls._dom_classes
+    assert grain_controls.layout.align_items == "flex-end"
+    assert grain_controls.layout.flex_flow == "row wrap"
+    assert controls["grain_policy"].layout.width == "220px"
+    page_style = controls["page"].children[0].value
+    assert ".fabricops-grain-controls > .fabricops-grain-policy" in page_style
+    assert "width:220px !important" in page_style
     assert len(grain_section.children[3].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
@@ -1255,7 +1270,9 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
     assert "discarded" in state["message"]
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
+@pytest.mark.parametrize(
+    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+)
 def test_shared_footer_saves_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
 ):
@@ -1279,7 +1296,9 @@ def test_shared_footer_saves_and_clears_from_every_tab(
     assert controls["editor_shell"].layout.display == "none"
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
+@pytest.mark.parametrize(
+    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+)
 def test_shared_footer_preserves_state_when_save_fails(
     widget_runtime, monkeypatch, tab
 ):
@@ -1303,7 +1322,9 @@ def test_shared_footer_preserves_state_when_save_fails(
     assert "Metadata store unavailable; retry the save." in state["message"]
 
 
-@pytest.mark.parametrize("tab", ["Table", "Column", "Data Quality", "Review"])
+@pytest.mark.parametrize(
+    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+)
 def test_shared_footer_discards_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
 ):
@@ -1460,7 +1481,7 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     authoring_grid = controls["right_pane"].children[0]
     assert "Add Rule Manually" in authoring_grid.children[0].children[0].value
     assert "Generate Rules with AI" in authoring_grid.children[1].children[0].value
-    for label in ("Table", "Column", "Data Quality", "Review"):
+    for label in ("Table", "Column", "Data Quality", "Review", "AI settings"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -1468,10 +1489,10 @@ def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_ru
     assert widget_runtime["calls"]["guardrails"] == []
 
 
-def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
+def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     widget_runtime, monkeypatch
 ):
-    """Main tab panels expand naturally while genuine lists retain bounded scrolling."""
+    """Desktop panes scroll in place while section content and compact layouts flow naturally."""
     state, _captures = _open_with_ai(widget_runtime, monkeypatch)
     controls = state["_controls"]
     style = controls["page"].children[0].value
@@ -1480,8 +1501,14 @@ def test_data_contract_uses_notebook_scroll_and_natural_panel_heights(
     assert controls["page"].layout.overflow == "visible"
     assert "height:500px" not in style
     assert "max-height:500px" not in style
+    assert "height:clamp(520px, calc(100vh - 220px), 720px)" in style
+    assert "align-items:stretch !important; overflow:hidden !important" in style
+    assert "height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto" in style
+    assert "gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable" in style
+    assert "align-content:start; overflow-x:hidden !important; overflow-y:auto !important" in style
+    assert "height:auto; max-height:none; overflow:visible !important" in style
+    assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
     assert ".fabricops-business-body {\n    flex:0 1 auto" in style
-    assert "max-height:none; overflow:visible" in style
     assert "overflow-x:hidden; overflow-y:auto" in style
 
     controls["top_nav"].value = "Data Quality"
@@ -1628,8 +1655,11 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert "column_1" in table_summary
 
     controls["accept_grain"].click()
+    assert controls["accept_grain"].description == "Use grain wording"
     assert controls["table_grain"].value == "One row represents a single order line."
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
+    assert controls["grain_enabled"].value is False
+    assert "Turn on Enforce Grain" in state["message"]
     table_summary = controls["left_pane"].children[0].value
     assert "One row represents a single order line." in table_summary
     assert "column_1" in table_summary
@@ -1648,7 +1678,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
     table_summary = controls["left_pane"].children[0].value
     assert "Load strategy" in table_summary
     assert "SCD1" in table_summary
-    assert "data_quality" not in controls["sidebar_rule_buttons"]
+    assert "Data Quality" not in _sidebar_text(controls["guardrail_sidebar"])
 
     monkeypatch.setattr(
         module,
@@ -1672,7 +1702,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
 
     controls["top_nav"].value = "Table"
     table_summary = controls["left_pane"].children[0].value
-    assert "data_quality" in controls["sidebar_rule_buttons"]
+    assert "Data Quality" in _sidebar_text(controls["guardrail_sidebar"])
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
@@ -2217,7 +2247,7 @@ def test_static_source_does_not_require_temporal_columns(widget_runtime):
     assert freshness["parameters"][1].disabled is True
     assert freshness["block"].disabled is True
     assert "No refresh is expected for this source" in freshness["display"][-1].value
-    assert "Source Drift" in freshness["display"][-1].value
+    assert "Source Drift" not in freshness["display"][-1].value
 
 
 def test_static_freshness_stages_skip_rule(widget_runtime):
@@ -2244,10 +2274,10 @@ def test_static_freshness_stages_skip_rule(widget_runtime):
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
-    """New Freshness and Source Drift rules stage live and block final save while incomplete."""
+    """A new Freshness rule stages live and blocks final save while incomplete."""
     widget_runtime["guardrails"][:] = [
         rule for rule in widget_runtime["guardrails"]
-        if rule["guardrail_type"] not in {"freshness", "source_drift"}
+        if rule["guardrail_type"] != "freshness"
     ]
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
@@ -2280,34 +2310,6 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         "maximum_age_unit": "hours",
     }
 
-    drift = state["_controls"]["table_guardrails"]["source_drift"]
-    drift["enabled"].value = True
-    drift_grid = drift["display"][0]
-    assert [drift_grid.children[index].value for index in (0, 2)] == [
-        "<div style='padding-top:7px;'>Partition column</div>",
-        "<div style='padding-top:7px;'>Change tracking column</div>",
-    ]
-    drift["parameters"][0].value = "column_0"
-    drift["parameters"][1].value = "column_1"
-    drift_preview = drift["display"][-1].value
-    assert "last successfully consumed state for that downstream target" in drift_preview
-    assert "row count, <code>column_1</code> values, and a content fingerprint" in drift_preview
-
-    drift_section = state["_controls"]["right_pane"].children[5]
-    assert drift_section.children[1].children[0] is drift["enabled"]
-    assert drift_section.children[1].children[1] is drift["block"]
-    drift_primary = drift_section.children[2]
-    assert "Applies when this table is used as a source in a downstream pipeline." in drift_primary.children[0].value
-    assert "previously consumed from this table has changed" in drift_primary.children[1].value
-
-    staged_drift = next(
-        record for records in state["_pending_guardrails"].values()
-        for record in records.values()
-        if record.get("guardrail_type") == "source_drift"
-    )
-    assert module._parameters(staged_drift) == {
-        "partition_column": "column_0", "change_column": "column_1",
-    }
     state["_controls"]["save_data_contract"].click()
     assert widget_runtime["calls"]["guardrails"]
 
@@ -2540,7 +2542,7 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
     controls = state["_controls"]
 
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Column", "Data Quality", "Review"
+        "Table", "Column", "Data Quality", "Review", "AI settings"
     )
     controls["top_nav"].value = "Column"
     assert controls["dq_panel"] not in controls["right_pane"].children
@@ -3263,9 +3265,9 @@ def test_guardrail_summary_tracks_working_controls_before_save(widget_runtime):
     """The Table summary reflects working Guardrail state before persistence."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    assert "freshness" in controls["sidebar_rule_buttons"]
+    assert "Freshness" in _sidebar_text(controls["guardrail_sidebar"])
     controls["table_guardrails"]["freshness"]["enabled"].value = False
-    assert "freshness" in controls["sidebar_rule_buttons"]
+    assert "Freshness" in _sidebar_text(controls["guardrail_sidebar"])
     assert "Disabled · intentionally not executed" in _sidebar_text(controls["guardrail_sidebar"])
     assert widget_runtime["calls"]["guardrails"] == []
 
@@ -3426,8 +3428,8 @@ def _sidebar_text(widget):
     return str(getattr(widget, "value", "") or "") + str(getattr(widget, "description", "") or "") + " ".join(titles.values()) + " ".join(_sidebar_text(child) for child in getattr(widget, "children", ()))
 
 
-def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime):
-    """Both paths show one underlying configuration and navigate to the existing editors."""
+def test_sidebar_paths_show_read_only_shared_rule_details(widget_runtime):
+    """Both paths summarize one configuration without controlling the editor."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["table_grain"].value = "One row per combination"
@@ -3438,12 +3440,10 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     assert "When this table is read" in read and "orchestrate_read()" in read
     assert "Before this table is written" in write and "orchestrate_write()" in write
     assert "Freshness" in read and "Freshness" not in write
-    assert "Source Drift" not in read and "Source Drift" in write
+    assert "Source Drift" not in read and "Source Drift" not in write
     assert "Sensitive Data · 1 treatment" not in read and "Sensitive Data · 1 treatment" in write
-    assert "orders → consuming target" in write
     for content in (read, write):
         assert "Grain · column_0 + column_1 · Block" in content
-        assert "One row per combination" in content
         assert "Schema · 1 required column" in content
         assert "column_0: long" in content and "column_1: timestamp" in content
         assert "extra columns" in content
@@ -3451,6 +3451,9 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
         assert "Accepted failure rate %" in content
         assert "Operator" in content
     assert "treatment must succeed" in write
+    assert "Checks:</b> Returned rows before downstream processing." in read
+    assert "Checks:</b> Prepared input before publication." in write
+    assert "SCD2 history" not in read and "SCD2 history" not in write
     assert "Passed" not in write and "Skipped" not in write
     sidebar = _sidebar_text(controls["guardrail_sidebar"])
     assert "Guardrail Coverage" not in sidebar
@@ -3459,16 +3462,16 @@ def test_sidebar_paths_shared_rules_details_and_editor_navigation(widget_runtime
     for group in controls["sidebar_groups"].values():
         assert "Grain · column_0 + column_1 · Warn" in _sidebar_text(group)
     assert len([r for r in state["current"]["guardrails"] if r.get("guardrail_type") == "grain"]) == 1
-    controls["sidebar_rule_buttons"]["grain"][0].click()
-    assert controls["top_nav"].value == "Table"
-    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
-    controls["sidebar_rule_buttons"]["schema"][0].click()
-    assert controls["top_nav"].value == "Column"
-    assert controls["column_select"].value == "col-0"
-    table_rule = next(button for button in controls["sidebar_rule_buttons"]["data_quality"] if "column relationship" in button.description)
-    table_rule.click()
-    assert controls["top_nav"].value == "Data Quality"
-    assert controls["business_saved"].value == "advanced"
+    assert "sidebar_rule_buttons" not in controls
+    assert "_guardrail_editor_target" not in state
+    assert "fabricops-guardrail-summary" in sidebar
+    original_tab = controls["top_nav"].value
+    original_right = controls["right_pane"].children
+    read_group = controls["sidebar_groups"]["read"]
+    first_rule = read_group.children[1].children[1]
+    first_rule.children[0].value = not first_rule.children[0].value
+    assert controls["top_nav"].value == original_tab
+    assert controls["right_pane"].children == original_right
     assert widget_runtime["calls"]["draft"] == []
 
 
@@ -3534,8 +3537,8 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
     controls["row_key_columns"].value = ("column_1",)
     controls["grain_enabled"].value = True
     assert "Grain · column_1 · Block" in _sidebar_text(controls["guardrail_sidebar"])
-    controls["sidebar_rule_buttons"]["grain"][0].click()
-    assert controls["right_pane"].children[0].children[1].children[0] is controls["grain_enabled"]
+    assert "sidebar_rule_buttons" not in controls
+    assert len(controls["right_pane"].children) > 1
     assert "inventory" in controls["left_pane"].children[0].value
 
 
@@ -3560,11 +3563,12 @@ def test_sidebar_expand_controls_preserve_state_during_live_updates(widget_runti
 
 
 def test_sidebar_has_no_duplicate_configuration_buttons(widget_runtime):
-    """Configured guardrails retain navigation without the redundant configuration menu."""
+    """Configured Guardrails remain read-only without configuration controls."""
     controls = widget_runtime["open"]()["_controls"]
     assert "configure_guardrails" not in controls
     assert "configure_options" not in controls
     assert "configure_guardrail_buttons" not in controls
+    assert "sidebar_rule_buttons" not in controls
     assert len(controls["guardrail_sidebar"].children) == 2
 
 
@@ -4047,6 +4051,20 @@ def test_ai_widget_overrides_and_effective_information(widget_runtime, overrides
             assert value in text
         assert "Fabric capacity consumption" in text and "manual authoring remains available" in text
     assert state["ai_usage"] == []
+
+
+def test_ai_information_is_contained_in_its_own_editor_tab(widget_runtime):
+    """AI guidance and usage do not lengthen every authoring tab."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+
+    assert controls["editor_ai_information"] not in controls["editor_shell"].children
+    assert controls["ai_usage"] not in controls["editor_shell"].children
+
+    controls["top_nav"].value = "AI settings"
+
+    assert controls["left_pane"].children == (controls["editor_ai_information"],)
+    assert controls["right_pane"].children == (controls["ai_usage"],)
 
 
 @pytest.mark.parametrize("override", [
