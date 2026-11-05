@@ -3533,6 +3533,32 @@ def test_sidebar_unsaved_parameters_types_counts_and_reopen(widget_runtime):
     assert "Grain · column_0 · Block" in _sidebar_text(reopened["sidebar_groups"]["read"])
 
 
+def test_sidebar_shows_incomplete_working_sensitive_data_configuration(widget_runtime):
+    """Unsaved Sensitive Data choices remain visible while required Reason is missing."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_select"].value = "col-1"
+    controls["pii_type"].value = "indirect"
+    controls["sensitive_treatment"].value = "tokenize"
+    controls["sensitive_enabled"].value = True
+    controls["column_classification"].value = "Restricted"
+
+    write = _sidebar_text(controls["sidebar_groups"]["write"])
+    assert "Sensitive Data" in write
+    assert "Indirect PII" in write
+    assert "tokenize" in write
+    assert "Restricted" in write
+    assert "Incomplete" in write
+    assert "provide a Reason before saving" in write
+    assert "column.col-1.sensitive" in state["_validation_errors"]
+
+    controls["pii_reason"].value = "Timestamp can contribute to re-identification."
+
+    write = _sidebar_text(controls["sidebar_groups"]["write"])
+    assert "Incomplete" not in write
+    assert "column.col-1.sensitive" not in state["_validation_errors"]
+
+
 def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, monkeypatch):
     """Switch tables in one widget without carrying rules or navigation callbacks."""
     other_catalogue = [{**row, "table_id": "inventory", "table_name": "inventory"} for row in widget_runtime["catalogue"]]

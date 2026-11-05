@@ -2627,6 +2627,7 @@ def widget_data_contract(
         sidebar_groups = {}
         expanded_guardrails = {}
         sidebar_snapshot = {"signature": None}
+        working_sensitive_controls: dict[str, Any] = {}
 
         def close_sidebar_widgets(nodes):
             seen = set()
@@ -2680,6 +2681,64 @@ def widget_data_contract(
                 if str(rule.get("guardrail_type") or "") in visible_types
             ]
             names_by_id = {str(c.get("column_id")): str(c.get("column_name")) for c in columns}
+            working_sensitive_column_id = str(
+                getattr(
+                    working_sensitive_controls.get("column_select"), "value", "",
+                ) or ""
+            )
+            working_sensitive_enabled = bool(getattr(
+                working_sensitive_controls.get("enabled"), "value", False,
+            ))
+            working_pii_type = str(getattr(
+                working_sensitive_controls.get("pii_type"), "value", "none",
+            ) or "none")
+            if working_sensitive_column_id and (
+                working_sensitive_enabled or working_pii_type != "none"
+            ):
+                working_treatment = str(getattr(
+                    working_sensitive_controls.get("treatment"), "value", "",
+                ) or "")
+                working_reason = str(getattr(
+                    working_sensitive_controls.get("reason"), "value", "",
+                ) or "").strip()
+                active = [
+                    rule for rule in active
+                    if not (
+                        str(rule.get("guardrail_type") or "") == "sensitive_data"
+                        and str(rule.get("column_id") or "")
+                        == working_sensitive_column_id
+                    )
+                ]
+                active.append({
+                    "guardrail_type": "sensitive_data",
+                    "column_id": working_sensitive_column_id,
+                    "column_name": names_by_id.get(
+                        working_sensitive_column_id, working_sensitive_column_id,
+                    ),
+                    "rule_type": working_treatment or "treatment required",
+                    "action": "Block",
+                    "is_active": working_sensitive_enabled,
+                    "rule_parameters_json": json.dumps({
+                        "scope": "column",
+                        "treatment": working_treatment or "Not selected",
+                        "pii_type": working_pii_type,
+                        "pii_reason": working_reason,
+                    }),
+                    "_working_incomplete": bool(
+                        working_sensitive_enabled
+                        and (
+                            working_pii_type == "none"
+                            or not working_treatment
+                            or not working_reason
+                        )
+                    ),
+                    "_working_output_classification": str(
+                        getattr(
+                            working_sensitive_controls.get("classification"),
+                            "value", "Not classified",
+                        ) or "Not classified"
+                    ),
+                })
             payload_columns = json.loads(str(current["contract"].get("contract_payload_json") or "{}")).get("table", {}).get("columns", [])
             types = {str(c.get("column_name")): str(c.get("data_type")) for c in payload_columns}
             types = {str(c.get("column_name")): types.get(str(c.get("column_name")), str(c.get("data_type") or "")) for c in columns}
@@ -2736,6 +2795,27 @@ def widget_data_contract(
                         ))
                 else:
                     detail = [("Scope", "Column" if rule.get("column_id") else "Table-level"), ("Columns", affected_names or "Table-level"), ("Rule", str(rule.get("rule_type") or "").replace("_", " ")), ("Policy", "Block · treatment must succeed" if kind == "sensitive_data" else policy)]
+                    if kind == "sensitive_data":
+                        pii_label = {
+                            "direct": "Direct PII", "indirect": "Indirect PII",
+                            "none": "Not PII",
+                        }.get(
+                            str(params.get("pii_type") or "none"),
+                            str(params.get("pii_type") or "Not PII"),
+                        )
+                        detail.extend((
+                            ("PII assessment", pii_label),
+                            (
+                                "Output classification",
+                                rule.get("_working_output_classification")
+                                or "Saved contract value",
+                            ),
+                        ))
+                        if rule.get("_working_incomplete"):
+                            detail.append((
+                                "Configuration",
+                                "Incomplete · provide a Reason before saving.",
+                            ))
                     if kind == "freshness":
                         detail.append(("Scope", "Source Read · no refresh expected; no age validation" if rule.get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else "Source returned by orchestrate_read(); latest timestamp relative to run time"))
                     detail.extend((("Accepted failure rate %" if key in {"maximum_missing_percent", "maximum_failure_percent"} else key.replace("_", " ").capitalize()), value) for key, value in params.items() if key not in {"columns", "engineering_reviewed_by", "engineering_review_note"})
@@ -3230,6 +3310,14 @@ def widget_data_contract(
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
         sensitive_treatment = widgets.Dropdown(options=_SENSITIVE_TREATMENT_OPTIONS, disabled=not editable, **shared.widget_common(widgets, "Treatment"))
+        working_sensitive_controls.update({
+            "column_select": column_select,
+            "enabled": sensitive_enabled,
+            "pii_type": pii_type,
+            "reason": pii_reason,
+            "treatment": sensitive_treatment,
+            "classification": column_classification,
+        })
         for sensitive_field in (pii_type, sensitive_treatment, pii_reason):
             sensitive_field.layout.width = "100%"
             sensitive_field.layout.min_width = "0"
@@ -4394,6 +4482,8 @@ def widget_data_contract(
                 )
             except (TypeError, ValueError, RuntimeError) as exc:
                 set_validation_error(key, exc)
+            finally:
+                render_table_summary()
 
         def sync_dq_family(kind: str) -> None:
             if hydrating["active"] or not editable:
