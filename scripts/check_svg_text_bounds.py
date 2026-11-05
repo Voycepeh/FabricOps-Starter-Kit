@@ -26,10 +26,12 @@ def estimate_width(label: str, font_size: float) -> float:
 
 
 def attr(node: ET.Element, name: str, default: str = "0") -> float:
+    """Read a numeric SVG attribute with a fallback value."""
     return float(node.attrib.get(name, default))
 
 
 def inspect(path: Path) -> list[str]:
+    """Inspect SVG text positions and return potential bounds violations."""
     root = ET.parse(path).getroot()
     if not root.tag.endswith("svg"):
         return [f"{path}: expected SVG root"]
@@ -64,6 +66,7 @@ def inspect(path: Path) -> list[str]:
 
 
 def main() -> None:
+    """Run the SVG text bounds validation command."""
     parser = argparse.ArgumentParser()
     parser.add_argument("paths", nargs="*", type=Path)
     args = parser.parse_args()
