@@ -161,6 +161,7 @@ Spark transformations; Delta can push these into the eventual scan.
 | Live | 0.2.5 |
 | Live | 0.3.0 |
 | Live | 0.3.1 |
+| Live | 0.4.0 |
 
 ### Live-critical dependencies
 

@@ -6,13 +6,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-05
+
+### Added
+
+- Add Live `METADATA_DATA_CONTRACT_ACTIVATION` and `METADATA_PIPELINE_ACTIVATION` contracts so Data Contract selection, accepted pipeline submissions, and Governance decisions no longer share the Pipeline Registry structure.
+- Restore `widget_activate_data_contract()` as a Live Governance entry point for exact frozen Data Contract selections and scoped Agreement associations.
+
 ### Changed
 
-- Define 13 canonical metadata tables with independent physical Data Contract Activation and immutable per-workspace Pipeline Promotion versions.
-- Add reviewed notebook promotion, complete write-once ipynb archives, saved-code/binding verification and preserved-copy integrity repair. Engineers retain control of schedules.
-- Apply compatible metadata evolution directly in `setup_metadata_tables()`, preserving Catalogue values, retained Pipeline Run content/hashes and Processing State checkpoints and publication receipts. Incompatible schemas fail without deleting data.
-- Validate consumer physical bindings before Data Agent provisioning, retain retry-safe target claim cleanup and resolve default schemas through destination workspace configuration.
-- Preserve `_row_hash`, append strategies, overwrite, incremental, SCD1/SCD2, profiling, lineage and publication receipts. Governed admission remains blocked pending signed-in Fabric acceptance.
+- Store nested `METADATA_DATA_CATALOGUE` processing definitions and `METADATA_PIPELINE_RUN` operations, profiling, and failures as validated SQL-compatible JSON strings so the physical tables can be opened in native Microsoft Fabric viewers. FabricOps continues to expose typed logical values to package workflows.
+- Record immutable per-workspace Pipeline Promotion versions in `METADATA_PIPELINE_REGISTRY`, with exact Governance approval references from `METADATA_PIPELINE_ACTIVATION` and execution provenance in version 3 Pipeline Run records.
+- Apply compatible metadata evolution directly in `setup_metadata_tables()`, preserving Catalogue values, retained Pipeline Run content and hashes, Processing State checkpoints, and publication receipts. Incompatible schemas fail without deleting data.
+- Preserve reviewed notebook promotion archives, saved-code and binding verification, preserved-copy integrity repair, retry-safe target claims, configured write strategies, profiling, lineage, and publication receipts.
+
+### Fixed
+
+- Correct unified Read and Write execution metrics, retained failure details, prepared publication inputs, and input-snapshot lifecycle logging.
+- Resolve destination schemas through configured workspace bindings and validate consumer physical bindings before Data Agent provisioning.
+
+### Upgrade instructions
+
+- Upgrade the package and use the matching v0.4.0 `00_env_config.ipynb` and `02_pipeline.ipynb` release snapshots.
+- Run `setup_metadata_tables()` against the configured Metadata Lakehouse to apply the supported automatic metadata evolution. Existing rows are preserved; incompatible schemas fail without deleting data.
+- Validate governed execution in signed-in Microsoft Fabric before enabling Production admission.
 
 ## [0.3.1] - 2026-10-31
 

@@ -557,9 +557,10 @@ def test_02b_guided_demo_restores_and_resolves_instructional_images():
     missing = [reference for reference in local_references if not (page.parent / unquote(reference)).resolve().is_file()]
     assert not missing
     required = {
-        "File Upload.png", "Day 1.png", "Incremental_Read_inspect.png", "Incremental_Write_Inspect.png",
-        "Day 2.png", "Incremental_Read_Day2.png", "Incremental_Write_Day2.png",
-        "Day 3.png", "Incremental_Read_Day1_again.png", "Incremental_Write_Day1_again.png",
+        "File Upload.png",
+        "Day 1.png", "Incremental_Read_Day1.png", "AppendAll_Day1.png", "Full_Read_Day1.png", "AppendNew_Day1.png",
+        "Day 2.png", "Incremental_Read_Day2.png", "AppendAll_Day2.png", "Full_Read_Day2.png", "AppendNew_Day2.png",
+        "Day 3.png", "Incremental_Read_Day3.png", "AppendAll_Day3.png", "Full_Read_Day3.png", "AppendNew_Day3.png",
     }
     assert required <= {Path(unquote(reference)).name for reference in local_references}
 
