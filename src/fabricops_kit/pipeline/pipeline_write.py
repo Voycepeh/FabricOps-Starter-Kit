@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.shared import get_spark_session, retry_delta_metadata
 
 import json
 from typing import Any
@@ -131,9 +131,8 @@ def _persist_target_processing(
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "scope_workspace_id": active_workspace_id},
     )
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        target.alias("target")
+    retry_delta_metadata(lambda: (
+        DeltaTable.forPath(spark_session, path).alias("target")
         .merge(
             source.alias("source"),
             "target.workspace_id = source.workspace_id "
@@ -166,7 +165,7 @@ def _persist_target_processing(
         )
         .whenNotMatchedInsert(values={name: f"source.{name}" for name in row})
         .execute()
-    )
+    ))
 
 
 def _write_scope() -> dict[str, Any]:
