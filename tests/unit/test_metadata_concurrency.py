@@ -104,3 +104,85 @@ def test_fabric_structured_delta_conflict_is_retried(monkeypatch):
         return True
     assert retry_delta_metadata(action) is True
     assert len(calls) == 2
+
+
+@pytest.mark.parametrize("destination", [
+    "steward", "custom_steward", "agreement", "custom_agreement", "contract", "custom_contract",
+])
+@pytest.mark.parametrize("failure", ["transient", "exhausted", "permission", "unknown_commit"])
+def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypatch, destination, failure):
+    """Keep typed input fixed and retry only the append, including configured destinations."""
+    from fabricops_kit.data_contract import shared as contracts
+    from fabricops_kit.widgets import shared as widgets
+
+    writer = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
+    calls, frames, delays, reads, audits = [], [], [], [], []
+    monkeypatch.setattr("time.sleep", delays.append)
+    monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _: None)
+    monkeypatch.setattr(writer, "resolve_configured_lakehouse_table",
+        lambda store, table, schema, **kw: (None, table.strip(), schema, "configured-path"))
+    monkeypatch.setattr(writer, "repartition_dataframe_for_write", lambda df, _: df)
+
+    class Conflict(Exception):
+        def getCondition(self):  # noqa: N802
+            return "DELTA_CONCURRENT_APPEND.WITHOUT_HINT"
+
+    error = {"transient": Conflict(), "exhausted": Conflict(),
+             "permission": PermissionError("403"), "unknown_commit": OSError("lost acknowledgement")}[failure]
+
+    def write(frame, path, **kwargs):
+        calls.append((frame, path, kwargs))
+        if failure != "transient" or len(calls) == 1:
+            raise error
+
+    def create_frame(rows, schema):
+        frame = SimpleNamespace(rows=rows, schema=schema)
+        frames.append(frame)
+        return frame
+
+    monkeypatch.setattr(writer, "write_delta_path", write)
+    spark = SimpleNamespace(createDataFrame=create_frame)
+    if "contract" in destination:
+        def read(table, **kwargs):
+            reads.append((table, kwargs))
+            return ([{"table_id": "orders", "workspace_id": "dev", "metadata_level": "table", "is_active": True}]
+                    if table == "METADATA_DATA_CATALOGUE" else [])
+
+        def audit(**kwargs):
+            audits.append(kwargs)
+            return {}
+
+        monkeypatch.setattr(contracts, "read_lakehouse_table", read)
+        monkeypatch.setattr(contracts, "build_runtime_audit_fields", audit)
+        action = lambda: contracts.create_contract_draft(  # noqa: E731
+            table_id="orders", config={}, active_workspace_id="dev", spark_session=spark,
+            store="GovernanceArchive" if destination.startswith("custom_") else "Metadata",
+            schema="contracts", metadata_workspace_id="metadata-workspace")
+    else:
+        kind = "data_steward" if "steward" in destination else "data_agreement"
+        canonical = "METADATA_DATA_STEWARD" if kind == "data_steward" else "METADATA_DATA_AGREEMENT"
+        table = "CUSTOM_" + canonical if destination.startswith("custom_") else canonical
+        config = {"metadata_tables": {kind: table}, "governance_metadata_schema": "custom_governance"}
+        action = lambda: widgets.write_widget_metadata_row(  # noqa: E731
+            spark=spark, config=config, active_workspace_id="dev", table=table,
+            row={"steward_id": "steward"} if kind == "data_steward" else {"agreement_id": "agreement"})
+
+    if failure == "transient":
+        action()
+        assert len(calls) == 2 and len(delays) == 1
+    else:
+        with pytest.raises(type(error)) as raised:
+            action()
+        assert raised.value is error
+        assert len(calls) == (32 if failure == "exhausted" else 1)
+        assert len(delays) == (31 if failure == "exhausted" else 0)
+    assert len(frames) == 1
+    assert all(frame is frames[0] and path == "configured-path" and options["mode"] == "append"
+               for frame, path, options in calls)
+    if "contract" in destination:
+        assert len(reads) == 2 and len(audits) == 1
+        assert all(kwargs["context"]["scope_workspace_id"] == "metadata-workspace" for _, kwargs in reads)
+        assert frames[0].rows[0]["contract_version"] == 1
+        assert frames[0].rows[0]["status"] == "draft"
+    else:
+        assert calls[0][2]["options"] is None

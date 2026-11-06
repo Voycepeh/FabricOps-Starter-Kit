@@ -20,6 +20,7 @@ from fabricops_kit.config import shared as config_shared
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
+    retry_delta_metadata,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
@@ -958,7 +959,16 @@ def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: s
     }.get(table, table)
     canonical_schema = metadata_table_schema_registry().get(canonical_table)
     typed_row = coerce_metadata_row_types(canonical_table, row)
-    write_lakehouse_table(spark.createDataFrame([typed_row], schema=canonical_schema), table, store="Metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "scope_workspace_id": active_workspace_id}, mode="append")
+    frame = spark.createDataFrame([typed_row], schema=canonical_schema)
+    write_options = {"store": "Metadata", "schema": metadata_table_physical_schema(config, canonical_table),
+                     "context": {"config": config, "scope_workspace_id": active_workspace_id}, "mode": "append"}
+    if table.strip() in CANONICAL_METADATA_TABLES:
+        # Foundational I/O already retries canonical appends; keep one budget.
+        write_lakehouse_table(frame, table, **write_options)
+    else:
+        # Configured Steward/Agreement aliases are known metadata even though
+        # their physical names cannot be recognized by the generic writer.
+        retry_delta_metadata(lambda: write_lakehouse_table(frame, table, **write_options))
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""
