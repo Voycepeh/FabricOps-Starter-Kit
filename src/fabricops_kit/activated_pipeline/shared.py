@@ -1,10 +1,11 @@
 """Notebook promotion authority, exact Contracts and retained publication coordination.
 
-Canonical Registry rows contain only immutable pipeline versions. Publication
-claims retain the existing Serializable whole-table protocol in Metadata Files,
-never in the Registry. They do not expire after a crashed writer.
+Canonical Registry rows contain only immutable pipeline versions. Pipelines own
+their target tables exclusively; scheduling prevents overlapping target writes.
 """
 from __future__ import annotations
+
+from fabricops_kit.io.shared import retry_delta_metadata
 
 import hashlib
 import json
@@ -299,96 +300,49 @@ def replace_metadata_transaction(txn, source_files, rows, *, schema, spark_sessi
     return version
 
 
-def mutate_metadata(table, mutation, *, context, spark_session=None, operation_id=None, path=None, schema=None):
+def mutate_metadata(table, mutation, *, context, spark_session=None, operation_id=None):
     """Apply a conditional mutation to the exact version tracked by Delta's read set."""
     spark = get_spark_session(spark_session, context=context)
-    path = path or metadata_path(table, context=context)
-    schema = schema or metadata_table_schema_registry()[table]
-    log = spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(spark._jsparkSession, path)
-    txn = log.startTransaction()
-    txn.readWholeTable()
-    files = txn.filterFiles()
-    if json.loads(txn.metadata().json())["metaData"]["configuration"].get("delta.isolationLevel") != "Serializable":
-        raise ValueError("Governance mutations require Serializable Delta isolation; run fresh setup.")
-    previous = [row.asDict(recursive=True) for row in spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path).collect()]
-    if table == REGISTRY_TABLE:
-        validate_registry(previous)
-    elif table == ACTIVATION_TABLE:
-        validate_activations(previous)
-    proposed, result = mutation(deepcopy(previous))
-    if table == REGISTRY_TABLE:
-        validate_registry(proposed)
-    elif table == ACTIVATION_TABLE:
-        validate_activations(proposed)
-    if proposed == previous:
+    path = metadata_path(table, context=context)
+    schema = metadata_table_schema_registry()[table]
+    def attempt():
+        log = spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(spark._jsparkSession, path)
+        txn = log.startTransaction()
+        txn.readWholeTable()
+        files = txn.filterFiles()
+        if json.loads(txn.metadata().json())["metaData"]["configuration"].get("delta.isolationLevel") != "Serializable":
+            raise ValueError("Governance mutations require Serializable Delta isolation; run fresh setup.")
+        previous = [row.asDict(recursive=True) for row in spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path).collect()]
+        if table == REGISTRY_TABLE:
+            validate_registry(previous)
+        elif table == ACTIVATION_TABLE:
+            validate_activations(previous)
+        proposed, result = mutation(deepcopy(previous))
+        if table == REGISTRY_TABLE:
+            validate_registry(proposed)
+        elif table == ACTIVATION_TABLE:
+            validate_activations(proposed)
+        if proposed == previous:
+            return result
+        rows = [coerce_metadata_row_types(table, row) for row in proposed] if table else proposed
+        replace_metadata_transaction(txn, files, rows, schema=schema, spark_session=spark, path=path,
+            marker={"fabricops_operation_id": operation_id or str(uuid4()), "content_sha256": manifest_digest(rows)})
         return result
-    rows = [coerce_metadata_row_types(table, row) for row in proposed] if table else proposed
-    replace_metadata_transaction(txn, files, rows, schema=schema, spark_session=spark, path=path,
-        marker={"fabricops_operation_id": operation_id or str(uuid4()), "content_sha256": manifest_digest(rows)})
-    return result
 
-
-def publication_claim(owner, destination, *, context, spark_session=None, release=False):
-    """Retain the existing exclusive writer protocol outside canonical Registry rows.
-
-    The auxiliary Delta ledger in Metadata Files is runtime coordination, not a
-    canonical metadata table. Contract Activation takes the same target claim so
-    checking protection and admitting a writer cannot race. Interrupted claims
-    never expire; reconcile the physical publication before explicit removal.
-    """
-    from pyspark.sql.types import StructType, StructField, StringType
-    spark = get_spark_session(spark_session, context=context)
-    root = metadata_path(REGISTRY_TABLE, context=context).split("/Tables/", 1)[0]
-    path = root + "/Files/fabricops/publication_coordination"
-    schema = StructType([StructField("target", StringType(), False), StructField("owner", StringType(), False)])
-    from delta.tables import DeltaTable
-    if not DeltaTable.isDeltaTable(spark, path):
-        try:
-            spark.createDataFrame([], schema).write.format("delta").mode("errorifexists").option("delta.isolationLevel", "Serializable").save(path)
-        except Exception:
-            if not DeltaTable.isDeltaTable(spark, path):
-                raise
-    target = canonical_pipeline_json(normalized_destination(destination))
-    def mutate(rows):
-        matches = [row for row in rows if row["target"] == target]
-        if len(matches) > 1:
-            raise RuntimeError("Duplicate publication claims; reconcile before publishing.")
-        if matches and matches[0]["owner"] != owner:
-            if release:
-                return rows, None
-            raise RuntimeError("Another operation holds this target's publication lease; finalize or reconcile the interrupted publication.")
-        if release:
-            return [row for row in rows if row["target"] != target], None
-        return rows if matches else rows + [{"target": target, "owner": owner}], None
-    return mutate_metadata(None, mutate, context=context, spark_session=spark, path=path, schema=schema)
+    return retry_delta_metadata(attempt)
 
 
 def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
-    """Exclude competing publications and active Contract physical aliases."""
-    publication_claim(plan.plan_id, destination, context=plan.runtime_context, spark_session=spark_session)
-    try:
-        rows = read_activations(context=plan.runtime_context, spark_session=spark_session)
-        if any((row["workspace_id"].casefold() == destination["workspace_id"].casefold() and row["table_id"] == table_id)
-                or normalized_destination(parse_metadata_json(row["destination_json"], field="destination_json")) == normalized_destination(destination)
-                for row in rows):
-            raise ValueError("Ungoverned cannot write a protected Table ID or physical destination alias.")
-    except BaseException:
-        publication_claim(plan.plan_id, destination, context=plan.runtime_context, spark_session=spark_session, release=True)
-        raise
-    plan.evidence.setdefault("publication_claims", []).append(dict(destination))
-    plan.evidence["lease_token"] = plan.plan_id
+    """Reject protected Table IDs and physical aliases before an Ungoverned write.
 
-
-def release_pipeline_lease(plan, *, spark_session=None):
-    """Release only this finalized run's claims; never expire crashed writers."""
-    if not plan.evidence.get("sealed"):
-        raise ValueError("Finalize the execution before releasing its publication leases.")
-    claims = plan.evidence.get("publication_claims", [])
-    while claims:
-        publication_claim(plan.plan_id, claims[0], context=plan.runtime_context, spark_session=spark_session, release=True)
-        del claims[0]
-    plan.evidence.pop("lease_token", None)
-    plan.evidence.pop("publication_claims", None)
+    Target ownership and non-overlapping scheduling are deployment requirements.
+    Contract Activation must be performed while that target's pipeline is stopped.
+    """
+    rows = read_activations(context=plan.runtime_context, spark_session=spark_session)
+    if any((row["workspace_id"].casefold() == destination["workspace_id"].casefold() and row["table_id"] == table_id)
+            or normalized_destination(parse_metadata_json(row["destination_json"], field="destination_json")) == normalized_destination(destination)
+            for row in rows):
+        raise ValueError("Ungoverned cannot write a protected Table ID or physical destination alias.")
 
 
 def set_table_contract_activation(table_id, contract_id, contract_version, *, expected_activation_id, activation_id,
@@ -432,28 +386,23 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
         if record["agreement_sha256"] != expected_agreement_sha256:
             raise ValueError("Agreement changed after Contract review; refresh before activation.")
     check_contract_agreement(record, execution_workspace_id=workspace, context=context, spark_session=spark_session)
-    owner = "activation:" + activation_id
-    publication_claim(owner, destination, context=context, spark_session=spark_session)
-    try:
-        def mutate(rows):
-            matches = [row for row in rows if (row["workspace_id"], row["table_id"]) == (workspace, table_id) and row["status"] == "active"]
-            current = matches[0] if matches else None
-            replay = [row for row in rows if row["activation_id"] == activation_id]
-            if replay:
-                if any(replay[0].get(key) != record[key] for key in ("workspace_id", "table_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
-                    raise ValueError("Activation operation ID was reused with different content.")
-                return rows, replay[0]
-            if (current["activation_id"] if current else None) != expected_activation_id:
-                raise ValueError("Stale Contract Activation; refresh and review again.")
-            record["revision"] = current["revision"] + 1 if current else 1
-            if current:
-                current["status"] = "superseded"
-            result = rows + [record]
-            validate_activations(result)
-            return result, record
-        return mutate_metadata(ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session, operation_id=activation_id)
-    finally:
-        publication_claim(owner, destination, context=context, spark_session=spark_session, release=True)
+    def mutate(rows):
+        matches = [row for row in rows if (row["workspace_id"], row["table_id"]) == (workspace, table_id) and row["status"] == "active"]
+        current = matches[0] if matches else None
+        replay = [row for row in rows if row["activation_id"] == activation_id]
+        if replay:
+            if any(replay[0].get(key) != record[key] for key in ("workspace_id", "table_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
+                raise ValueError("Activation operation ID was reused with different content.")
+            return rows, replay[0]
+        if (current["activation_id"] if current else None) != expected_activation_id:
+            raise ValueError("Stale Contract Activation; refresh and review again.")
+        record["revision"] = current["revision"] + 1 if current else 1
+        if current:
+            current["status"] = "superseded"
+        result = rows + [record]
+        validate_activations(result)
+        return result, record
+    return mutate_metadata(ACTIVATION_TABLE, mutate, context=context, spark_session=spark_session, operation_id=activation_id)
 
 
 class FabricNotebookClient:
@@ -1367,14 +1316,6 @@ def verify_governed_plan(plan, *, spark_session=None):
     for contract in json.loads(plan.contracts_json).values():
         resolve_activation_contract({**contract, "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()},
             context=plan.runtime_context, spark_session=spark_session)
-
-
-def guard_governed_write(plan, destination, *, spark_session=None):
-    """Use the same exclusive physical target claim across old and new admitted versions."""
-    verify_governed_plan(plan, spark_session=spark_session)
-    publication_claim(plan.plan_id, destination, context=plan.runtime_context, spark_session=spark_session)
-    plan.evidence.setdefault("publication_claims", []).append(dict(destination))
-    plan.evidence["lease_token"] = plan.plan_id
 
 
 def restore_promoted_notebook(pipeline_id, *, workspace_id, expected_active_version, approval_id,
