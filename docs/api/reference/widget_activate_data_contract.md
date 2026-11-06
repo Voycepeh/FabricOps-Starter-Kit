@@ -137,7 +137,6 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.mutate_metadata</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.publication_claim</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.read_activation_history</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.set_table_contract_activation</code></li>
@@ -184,6 +183,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>

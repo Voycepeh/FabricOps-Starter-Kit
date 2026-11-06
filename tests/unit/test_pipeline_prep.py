@@ -579,13 +579,30 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
     assert persisted[0]["dataframe"] is dataframe
 
 
-def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch):
+@pytest.mark.parametrize("conflict", [None, "python", "jvm", "structured"])
+def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch, conflict):
     """Write only governed processing fields into the target's table-level Catalogue row."""
     import json
     import sys
     import types
 
     rows = []
+    attempts = []
+    targets = []
+    monkeypatch.setattr("time.sleep", lambda _: None)
+
+    class FabricConflict(Exception):
+        def getErrorClass(self):  # noqa: N802
+            return "DELTA_CONCURRENT_APPEND.WITHOUT_HINT"
+
+    error = type("ConcurrentAppendException", (Exception,), {})()
+    if conflict == "jvm":
+        error = Exception()
+        error.java_exception = types.SimpleNamespace(
+            getClass=lambda: types.SimpleNamespace(getSimpleName=lambda: "ConcurrentAppendException")
+        )
+    elif conflict == "structured":
+        error = FabricConflict()
 
     class Source:
         def alias(self, _name):
@@ -614,10 +631,18 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
             return self
 
         def execute(self):
+            attempts.append(self)
+            if conflict and len(attempts) == 1:
+                raise error
             return None
 
+    def for_path(*_args):
+        target = Merge()
+        targets.append(target)
+        return target
+
     tables_module = types.ModuleType("delta.tables")
-    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(for_path)})
     monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
     monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
     metadata_audit = {
@@ -672,6 +697,10 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         "watermark_column": "updated_at",
         "tracked_columns": None,
     }
+
+    assert len(attempts) == (2 if conflict else 1)
+    assert len(targets) == len(attempts)
+    assert len(rows) == 1
 
 
 @pytest.mark.parametrize(

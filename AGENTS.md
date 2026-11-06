@@ -9,6 +9,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Pull requests must target `main`.
 - Treat GitHub and repository source as the source of truth.
 - Treat Microsoft Fabric as the execution runtime.
+- Each business target table has one owning pipeline; scheduling prevents overlapping target writes, and Contract Activation runs while that pipeline is stopped. Pipelines across users and workspaces share canonical Metadata tables; retry confirmed aborted metadata conflicts without replaying business writes.
 - Prefer small, focused PRs and update existing owner files before adding new abstractions.
 - Do not add compatibility aliases, legacy parameter names, wrappers, adapters, resolver layers, or transitional shims unless migration support is explicitly requested.
 - Keep examples generic and public-safe. Never include real data, secrets, tenant or workspace identifiers, internal URLs, or production screenshots.

@@ -320,20 +320,15 @@ def test_dry_run_finalization_remains_session_only(runtime, monkeypatch):
     runtime.writes.assert_not_called()
 
 
-def test_finalization_records_caught_failure_and_releases_publication_claim(runtime, monkeypatch):
+def test_finalization_records_caught_failure_without_publication_coordination(runtime, monkeypatch):
     from fabricops_kit import finalize_pipeline
-    activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
     session = setup_pipeline(pipeline_mode='Dry Run')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     session.plan = replace(session.plan, execution_mode='ungoverned')
-    session.plan.evidence['lease_token'] = session.plan.plan_id
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', Mock())
-    release = Mock(side_effect=lambda plan, **kwargs: plan.evidence.pop('lease_token'))
-    monkeypatch.setattr(activation, 'release_pipeline_lease', release)
     result = finalize_pipeline(session, failed=True)
     assert result['status'] == 'failed'
     assert result['boundary_completed'] is False
-    release.assert_called_once()
 
 
 
@@ -445,13 +440,9 @@ def test_finalization_checks_runtime_identity_for_explicit_and_active_sessions(
     setup_notebook(_config(), workspace_id='dev')
     pipeline = setup_pipeline(pipeline_mode='Dry Run')
     orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    release = Mock(side_effect=lambda plan, **kwargs: plan.evidence.pop('lease_token'))
     if mode == 'Governed':
         pipeline.plan = replace(pipeline.plan, execution_mode='governed', pipeline_version=1,
             promotion_id='reviewed', governed_notebook_id=pipeline.plan.notebook_id)
-        pipeline.plan.evidence['lease_token'] = pipeline.plan.plan_id
-        activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-        monkeypatch.setattr(activation, 'release_pipeline_lease', release)
     fake_notebookutils.context[field] = 'another-execution'
     with pytest.raises(RuntimeError, match='Notebook execution changed'):
         finalize_pipeline(pipeline) if explicit else finalize_pipeline()
@@ -459,8 +450,6 @@ def test_finalization_checks_runtime_identity_for_explicit_and_active_sessions(
     assert all(row['boundary_completed'] is False for row in committed)
     if mode == 'Dry Run':
         assert not committed
-    else:
-        release.assert_called_once()
 
 
 def test_closed_finalization_remains_idempotent_after_setup_is_invalidated(runtime, monkeypatch, fake_notebookutils):
@@ -500,34 +489,6 @@ def test_finalize_emits_compact_summary_even_when_report_widget_exists(runtime, 
     assert f"Run ID: {session.plan.plan_id}" in output
 
 
-def test_public_finalize_retries_remaining_claims_after_partial_release(runtime, monkeypatch):
-    """A closed session retries cleanup without replaying its durable Run or touching successors."""
-    from fabricops_kit import finalize_pipeline
-    from fabricops_kit.activated_pipeline import shared as authority
-    session = setup_pipeline(pipeline_mode='Dry Run')
-    orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    session.plan = replace(session.plan, execution_mode='ungoverned')
-    claims = [{'table_name': 'A'}, {'table_name': 'B'}]
-    session.plan.evidence.update(lease_token=session.plan.plan_id, publication_claims=claims)
-    committed = Mock()
-    monkeypatch.setattr(shared, '_merge_pipeline_run_row', committed)
-    released, fail = [], [True]
-    def release(owner, target, **kwargs):
-        assert kwargs['release'] is True
-        name = target['table_name']
-        if name == 'B' and fail[0]:
-            fail[0] = False
-            raise RuntimeError('release conflict')
-        released.append(name)
-    monkeypatch.setattr(authority, 'publication_claim', release)
-    with pytest.raises(RuntimeError, match='release conflict'):
-        finalize_pipeline(session)
-    assert session.closed and released == ['A']
-    result = finalize_pipeline(session)
-    assert result['status'] == 'ungoverned_completed'
-    assert released == ['A', 'B']
-    committed.assert_called_once()
-    assert 'lease_token' not in session.plan.evidence
 
 
 @pytest.mark.parametrize("ui_fails", [False, True])

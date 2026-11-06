@@ -145,7 +145,7 @@ def _print_pipeline_summary(pipeline, result):
 
     print("\n" + "=" * 72)
     print(f"FabricOps Pipeline Summary · {status}")
-    print(f"Mode: {mode} | Reads: {reads} | Writes: {writes} | Duration: {duration}")
+    print(f"Mode: {mode} | Reads: {reads:,} | Writes: {writes:,} | Duration: {duration}")
     print(f"Pipeline ID: {result.get('pipeline_id') or pipeline.pipeline_id}")
     print(f"Run ID: {result.get('run_id') or pipeline.plan.plan_id}")
 
@@ -216,8 +216,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     reported separately and do not change the finalized outcome. This is not
     Governance approval. Ungoverned and
     Governed executions persist their real operational outcome. Persistent
-    finalization also releases this execution's physical publication claims. Interrupted runs
-    remain incomplete and are never reported as successful finalization.
+    finalization records whole-run completion. Interrupted runs remain incomplete
+    and are never reported as successful finalization. Each target has one owning
+    pipeline; schedules must prevent overlapping writes to the same target.
 
     Parameters
     ----------
@@ -277,8 +278,6 @@ def finalize_pipeline(pipeline=None, *, failed=False):
             pipeline.validate_current_context()
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
-        if pipeline.plan.evidence.get("lease_token"):
-            finalize_pipeline_run(pipeline.plan, spark_session=pipeline.spark)
         result = pipeline.plan.run_result
         # Render from the finalized run snapshot; do not re-read metadata or
         # trigger additional source/target actions just to build the report.

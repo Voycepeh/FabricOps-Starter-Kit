@@ -261,7 +261,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 132 |
+| Live-critical dependencies | 133 |
 
 ### Release history
 
@@ -346,6 +346,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._measure_returned_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>

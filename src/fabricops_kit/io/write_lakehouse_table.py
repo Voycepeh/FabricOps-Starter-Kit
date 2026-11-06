@@ -194,7 +194,9 @@ def write_lakehouse_table(
         commits, empty DataFrames, small-file risk, and Spark shuffle failures
         are handled by Spark/Delta or the configured Fabric runtime. The
         function does not make simultaneous independent writes to the same
-        table safe.
+        business table safe. Canonical Metadata appends retry only confirmed
+        aborted Delta concurrency transactions with bounded jittered backoff.
+        Permission errors and unknown commit outcomes propagate without replay.
 
     Side effects
         This function performs a physical Delta table write and triggers Spark
@@ -307,7 +309,12 @@ def write_lakehouse_table(
             attempt = None
     if attempt is not None:
         physical_options["userMetadata"] = attempt.token
-    write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options)
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
+    from fabricops_kit.io.shared import retry_delta_metadata
+    if store == "Metadata" and _table_value in CANONICAL_METADATA_TABLES and normalized_mode == "append":
+        retry_delta_metadata(lambda: write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options))
+    else:
+        write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options)
     if attempt is not None:
         metrics["rows_committed"] = attempt.read(getattr(df, "sparkSession", None), path)
         if metrics["rows_committed"] is not None:

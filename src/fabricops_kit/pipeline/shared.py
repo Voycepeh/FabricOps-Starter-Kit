@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import retry_delta_metadata
+
 import hashlib
 import json
 import ast
@@ -154,7 +156,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
     """Run one visible stage while retaining its original exception as the cause."""
     started = time.perf_counter()
     if verbose:
-        print(f"[{index}/{total}] {stage} ... running")
+        print(f"[{index:,}/{total:,}] {stage} ... running")
     try:
         try:
             result = function()
@@ -165,9 +167,9 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
                       "evaluation_status": "not_fully_evaluated", "reason": str(exc)}
         if verbose and stage == "Data Quality" and isinstance(result, dict) and result.get("summary"):
             summary = result["summary"]
-            print(f"  DQ applicable rows: {summary.get('DQ_PASSED_ROW_PERCENT', 0):.2f}% pass, "
-                  f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations; "
-                  f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0)} not applicable. Tolerances determine continuation.")
+            print(f"  DQ applicable rows: {summary.get('DQ_PASSED_ROW_PERCENT', 0):,.2f}% pass, "
+                  f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):,.2f}% with violations; "
+                  f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0):,} not applicable. Tolerances determine continuation.")
         status = _orchestration_status(result)
         if stage in {"Schema", "Grain", "Data Quality", "Sensitive Data", "Source Drift", "Freshness"}:
             items = result if isinstance(result, list) else [result]
@@ -216,7 +218,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             origin = traceback.extract_tb(root.__traceback__)[-1]
             location = f" ({origin.filename.rsplit('/', 1)[-1]}:{origin.lineno} in {origin.name})"
         if verbose:
-            print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
+            print(f"[{index:,}/{total:,}] {stage} ... ✗ Failed ({duration:,.2f}s)")
             print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
@@ -233,7 +235,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             "blocked": ("✗", "Blocked (diagnostic)"),
         }
         marker, label = outcomes[status]
-        print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
+        print(f"[{index:,}/{total:,}] {stage} ... {marker} {label} ({duration:,.2f}s)")
     record = {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
     details = result if isinstance(result, list) else [result]
     incomplete = next((item for item in details if isinstance(item, dict) and item.get("evaluation_status")), None)
@@ -501,7 +503,7 @@ def persist_lineage_participation(
         context=resolved_context,
     )
     (
-        DeltaTable.forPath(spark, path)
+        retry_delta_metadata(lambda: DeltaTable.forPath(spark, path)
         .alias("target")
         .merge(
             frame.alias("source"),
@@ -509,7 +511,7 @@ def persist_lineage_participation(
         )
         .whenMatchedUpdateAll()
         .whenNotMatchedInsertAll()
-        .execute()
+        .execute())
     )
     return identifier
 
@@ -1041,7 +1043,7 @@ def validate_target_row_hash(identity, *, context, cache_hashes=False):
 
 
 def filter_unpublished_rows(dataframe, identity, *, context, target_hashes=None):
-    """Compare only hash projections in Spark under the managed target publication lease."""
+    """Compare only hash projections in Spark for the exclusively owned pipeline target."""
     from fabricops_kit.io import read_warehouse_table
     distinct = dataframe.dropDuplicates(["_row_hash"])
     if target_hashes is not None:
@@ -1575,10 +1577,10 @@ def _merge_source_observation_records(
         if row["record_type"] != "source_observation" and not _publication_receipt(row, records):
             raise ValueError("A checkpoint or baseline requires its publication receipt in the same atomic merge.")
     (
-        target.alias("target")
+        retry_delta_metadata(lambda: target.alias("target")
         .merge(frame.alias("source"), "target.record_id = source.record_id")
         .whenMatchedUpdate(condition="target.status <> 'committed'", set={name: f"source.{name}" for name in frame.columns})
-        .whenNotMatchedInsertAll().execute()
+        .whenNotMatchedInsertAll().execute())
     )
 
 
@@ -5808,6 +5810,15 @@ def capture_source_observation(
     return drift_observation
 
 
+def _summary_value(value):
+    """Group numeric display values while retaining text and unavailable markers."""
+    if value is None:
+        return "Not captured"
+    if isinstance(value, (int, float, Decimal)) and not isinstance(value, bool):
+        return format(value, ",")
+    return str(value)
+
+
 class ExecutionSummary:
     """Format notebook summaries without materializing any DataFrame."""
 
@@ -5821,7 +5832,7 @@ class ExecutionSummary:
         """Print aligned, explicit unavailable values to notebook stdout."""
         if self.verbose:
             for label, value in fields:
-                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")
+                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {_summary_value(value)}")
 
     def finish(self, fields):
         """Print a concise successful summary; expand it when verbose output is enabled."""
@@ -5832,8 +5843,8 @@ class ExecutionSummary:
         duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         if self.verbose:
             print(f"\nFabricOps {self.operation} Summary")
-            for label, value in [*fields, ("Total duration", duration)]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")  # noqa: E701
-        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not captured'}" for label, value in [*fields, ("Total duration", duration)]))  # noqa: E701, E501
+            for label, value in [*fields, ("Total duration", duration)]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {_summary_value(value)}")  # noqa: E701
+        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {_summary_value(value)}" for label, value in [*fields, ("Total duration", duration)]))  # noqa: E701, E501
         return elapsed
 
 
@@ -6042,7 +6053,6 @@ def _read_pipeline_run_rows(plan, *, spark_session=None):
 
 def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     from delta.tables import DeltaTable
-    from delta.exceptions import ConcurrentAppendException, ConcurrentWriteException, ConcurrentDeleteReadException, ConcurrentDeleteDeleteException
     from pyspark.sql.types import StructField, StructType
 
     spark = get_spark_session(spark_session, context=plan.runtime_context)
@@ -6062,7 +6072,7 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
         properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
         if "delta.setTransactionRetentionDuration" in properties:
             raise RuntimeError("Pipeline Run requires unbounded Delta transaction identity retention.")
-        (frame.drop("_expected").write.format("delta").mode("append")
+        retry_delta_metadata(lambda: frame.drop("_expected").write.format("delta").mode("append")
          .option("txnAppId", "fabricops-pipeline-run:" + plan.plan_id).option("txnVersion", 0).save(path))
     else:
         # Compare the complete previous row inside the transaction. No physical
@@ -6072,16 +6082,8 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
         changes["run_id"] = ("CASE WHEN target.completed_at IS NULL AND "
             "(target.status <> 'failed' OR source.status = 'failed') AND (" + previous + " <=> source._expected) "
             "THEN source.run_id ELSE CAST(raise_error('Stale or terminal Pipeline Run') AS STRING) END")
-        for attempt in range(4):
-            try:
-                (DeltaTable.forPath(spark, path).alias("target")
-                 .merge(frame.alias("source"), "target.run_id = source.run_id").whenMatchedUpdate(set=changes).execute())
-                break
-            except (ConcurrentAppendException, ConcurrentWriteException, ConcurrentDeleteReadException, ConcurrentDeleteDeleteException):
-                if attempt == 3:
-                    raise
-                # Delta aborted this transaction. Retry metadata only; the same
-                # expected row still fences a stale writer on this run ID.
+        retry_delta_metadata(lambda: DeltaTable.forPath(spark, path).alias("target")
+            .merge(frame.alias("source"), "target.run_id = source.run_id").whenMatchedUpdate(set=changes).execute())
     stored = _read_pipeline_run_rows(plan, spark_session=spark_session)
     observed = validate_pipeline_run(stored[0]) if len(stored) == 1 else {}
     wanted = validate_pipeline_run(physical)
@@ -6190,9 +6192,6 @@ class PipelineOperation:
                 enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
                 if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
-                if self.role == "target":
-                    from fabricops_kit.activated_pipeline.shared import guard_governed_write
-                    guard_governed_write(plan, actual_binding, spark_session=args.get("spark_session"))
             elif plan.execution_mode == "ungoverned" and self.role == "target":
                 from fabricops_kit.activated_pipeline.shared import guard_ungoverned_write
                 guard_ungoverned_write(plan, table_id, actual_binding, spark_session=args.get("spark_session"))
@@ -6279,9 +6278,6 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         if plan.evidence.get("persistence_failed"):
             raise RuntimeError("Evidence persistence failed; create a new plan.")
         if plan.evidence.get("sealed"):
-            if plan.evidence.get("lease_token"):
-                from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
-                release_pipeline_lease(plan, spark_session=spark_session)
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
@@ -6307,9 +6303,6 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             except Exception:
                 plan.evidence["submission_persistence_failed"] = True
                 raise
-        if plan.evidence.get("lease_token"):
-            from fabricops_kit.activated_pipeline.shared import release_pipeline_lease
-            release_pipeline_lease(plan, spark_session=spark_session)
         return row
 
 
@@ -7691,7 +7684,7 @@ def _replace_snapshot_rows(
         return
     snapshot_id = str(snapshot["profile_snapshot_id"]).replace("'", "''")
     (
-        DeltaTable.forPath(spark_session, path)
+        retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
         .whenMatchedUpdateAll()
@@ -7699,7 +7692,7 @@ def _replace_snapshot_rows(
         .whenNotMatchedBySourceDelete(
             condition=f"target.profile_snapshot_id = '{snapshot_id}'"
         )
-        .execute()
+        .execute())
     )
 
 
@@ -7726,9 +7719,9 @@ def _replace_frequency_rows(
         context={"config": config, "scope_workspace_id": active_workspace_id},
     )
     snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
-    (DeltaTable.forPath(spark_session, path).alias("target")
+    (retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).alias("target")
      .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
-     .whenMatchedDelete().execute())
+     .whenMatchedDelete().execute()))
 
 
 def _delete_profile_snapshot(
@@ -7743,9 +7736,9 @@ def _delete_profile_snapshot(
             "Metadata", table_name, metadata_table_physical_schema(config, table_name),
             context={"config": config, "scope_workspace_id": active_workspace_id},
         )
-        (DeltaTable.forPath(spark_session, path).alias("target")
+        (retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).alias("target")
          .merge(snapshots.alias("source"), "target.profile_snapshot_id = source.profile_snapshot_id")
-         .whenMatchedDelete().execute())
+         .whenMatchedDelete().execute()))
 
 
 def _stage_catalogue_profile_retry(
@@ -7774,7 +7767,7 @@ def _stage_catalogue_profile_retry(
         .count()
     )
     (
-        target.alias("target")
+        retry_delta_metadata(lambda: target.alias("target")
         .merge(
             activities.alias("source"),
             "target.workspace_id = source.workspace_id "
@@ -7782,7 +7775,7 @@ def _stage_catalogue_profile_retry(
             "AND target._activity_id = source._activity_id",
         )
         .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
-        .execute()
+        .execute())
     )
     return same_activity_retry
 
@@ -7911,7 +7904,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_works
     table_id = str(first["table_id"]).replace("'", "''")
     target = DeltaTable.forPath(spark_session, path)
     (
-        target.alias("target")
+        retry_delta_metadata(lambda: target.alias("target")
         .merge(
             catalogue_df.alias("source"),
             "target.workspace_id = source.workspace_id "
@@ -7969,7 +7962,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_works
             ),
             set={"is_active": "false"},
         )
-        .execute()
+        .execute())
     )
 
 
@@ -8270,5 +8263,6 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     candidate_value = F.lit(encode_metadata_row(CATALOGUE_TABLE, {
         "profile_key_candidates_json": _key_candidate_evidence(candidates, max_columns=max_columns),
     })["profile_key_candidates_json"])
-    table.update(condition=condition, set={"profile_key_candidates_json": candidate_value,
-        **{name: F.lit(value) for name, value in audit.items()}})
+    updates = {"profile_key_candidates_json": candidate_value,
+        **{name: F.lit(value) for name, value in audit.items()}}
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).update(condition=condition, set=updates))

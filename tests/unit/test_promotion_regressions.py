@@ -67,28 +67,6 @@ def test_consumer_uses_physical_workspace_for_remote_contract(consumer_metadata)
     assert result['source']['workspace_id'] == 'REMOTE'
 
 
-def test_claim_cleanup_retries_only_remaining_targets(monkeypatch):
-    """A completed target's transferred ownership never blocks releasing another target."""
-    destinations = [operation(table='A')['destination'], operation(table='B')['destination']]
-    owners, calls = {'A': 'old-run', 'B': 'old-run'}, []
-    failed = False
-    def claim(owner, destination, **kw):
-        nonlocal failed
-        table = destination['table_name']; calls.append(table)
-        if table == 'B' and not failed:
-            failed = True
-            raise RuntimeError('Concurrent Delta modification')
-        assert owners.get(table) == owner
-        owners.pop(table)
-    monkeypatch.setattr(authority, 'publication_claim', claim)
-    plan = SimpleNamespace(plan_id='old-run', runtime_context={}, evidence=dict(sealed=True, lease_token='old-run', publication_claims=destinations))
-    with pytest.raises(RuntimeError, match='Concurrent'):
-        authority.release_pipeline_lease(plan)
-    assert [binding['table_name'] for binding in plan.evidence['publication_claims']] == ['B']
-    owners['A'] = 'new-run'
-    authority.release_pipeline_lease(plan)
-    assert owners == {'A': 'new-run'} and calls == ['A', 'B', 'B']
-    assert 'lease_token' not in plan.evidence
 
 
 def test_default_schema_and_table_identity_use_destination():

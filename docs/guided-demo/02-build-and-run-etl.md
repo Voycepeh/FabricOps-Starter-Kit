@@ -40,7 +40,7 @@ The notebook places governed Read and Write boundaries around project-owned PySp
 | Read | `orchestrate_read()` reads a source and runs applicable checks and profiling. |
 | Transform | Project-owned PySpark joins, filters, derives, aggregates, or selects data. |
 | Write | `orchestrate_write()` checks and publishes the prepared DataFrame using the selected Write Mode. |
-| Finalize | `finalize_pipeline(pipeline)` records the outcome and releases physical publication claims. |
+| Finalize | `finalize_pipeline(pipeline)` records the outcome. Each target has one owning pipeline with non-overlapping scheduled runs. |
 
 ### Explore the notebook
 

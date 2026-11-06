@@ -392,6 +392,43 @@ def repartition_dataframe_for_write(df, repartition_by):
     return df.repartition(*normalized_columns)
 
 
+def retry_delta_metadata(action):
+    """Retry only confirmed, aborted Delta metadata concurrency transactions.
+
+    Each attempt must construct a fresh transaction from the same intended
+    metadata input, or re-read and revalidate a conditional Governance mutation.
+    Never wrap a business publication, a schema change, or a multi-step workflow.
+    Unknown acknowledgements, permission failures and stale approvals propagate.
+    """
+    import random
+    import time
+
+    transient = {
+        "ConcurrentAppendException", "ConcurrentWriteException",
+        "ConcurrentDeleteReadException", "ConcurrentDeleteDeleteException",
+        "ConcurrentTransactionException",
+    }
+    conditions = {
+        "DELTA_CONCURRENT_APPEND", "DELTA_CONCURRENT_WRITE", "DELTA_CONCURRENT_DELETE_READ",
+        "DELTA_CONCURRENT_DELETE_DELETE", "DELTA_CONCURRENT_TRANSACTION",
+    }
+    for attempt in range(32):
+        try:
+            return action()
+        except Exception as exc:
+            java = getattr(exc, "java_exception", None)
+            name = java.getClass().getSimpleName() if java is not None else type(exc).__name__
+            # Fabric may surface Delta conflicts as a captured Spark exception
+            # with a structured error condition (including a sub-condition).
+            condition = None
+            getter = getattr(exc, "getCondition", None) or getattr(exc, "getErrorClass", None)
+            if callable(getter):
+                condition = getter()
+            if (name not in transient and str(condition).split(".", 1)[0] not in conditions) or attempt == 31:
+                raise
+            time.sleep(random.uniform(0.1, min(8.0, 0.2 * 2 ** attempt)))
+
+
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:
     """Write a DataFrame to a Delta path through Spark."""
     writer = df.write.mode(mode).format("delta")

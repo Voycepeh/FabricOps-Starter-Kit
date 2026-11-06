@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from fabricops_kit.io.shared import retry_delta_metadata
+
 from fabricops_kit.pipeline.shared import default_profiling_policy, validate_profiling_policy
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
@@ -549,7 +551,7 @@ def save_contract_draft(
         context=runtime_context,
     )
     (
-        DeltaTable.forPath(spark_session, path)
+        retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(
             frame.alias("source"),
@@ -557,7 +559,7 @@ def save_contract_draft(
             "AND target.contract_version = source.contract_version",
         )
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
-        .execute()
+        .execute())
     )
     return _confirm_contract_mutation(
         updated, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
@@ -1494,7 +1496,7 @@ def freeze_contract(
         context=runtime_context,
     )
     (
-        DeltaTable.forPath(spark_session, path)
+        retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(
             frame.alias("source"),
@@ -1502,7 +1504,7 @@ def freeze_contract(
             "target.contract_version = source.contract_version",
         )
         .whenMatchedUpdateAll(condition="target.status = 'draft'")
-        .execute()
+        .execute())
     )
     frozen = _confirm_contract_mutation(
         frozen, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
