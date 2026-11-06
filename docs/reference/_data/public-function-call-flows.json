@@ -7294,6 +7294,7 @@
         "fabricops_kit.pipeline.shared._delete_profile_snapshot",
         "fabricops_kit.pipeline.shared._merge_pipeline_run_row",
         "fabricops_kit.pipeline.shared._merge_source_observation_records",
+        "fabricops_kit.pipeline.shared._persist_grain_candidates",
         "fabricops_kit.pipeline.shared._replace_frequency_rows",
         "fabricops_kit.pipeline.shared._replace_snapshot_rows",
         "fabricops_kit.pipeline.shared._stage_catalogue_profile_retry",
@@ -10278,7 +10279,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._persist_grain_candidates",
-      "source_end_line": 8267,
+      "source_end_line": 8268,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 8251,
       "supports_live_contract": true,
@@ -22418,6 +22419,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared._persist_grain_candidates"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.retry_delta_metadata",
       "caller_qualified_name": "fabricops_kit.pipeline.shared._persist_grain_candidates"
     },
     {

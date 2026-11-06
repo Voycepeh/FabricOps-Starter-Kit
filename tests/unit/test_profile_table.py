@@ -906,3 +906,55 @@ def test_warehouse_discovery_can_search_beyond_previous_width_limit(monkeypatch,
     assert query.call_count == 11 + expected_count
     if candidates:
         assert candidates[0]["columns"] == ["a", "b", "c", "d"]
+
+
+@pytest.mark.parametrize("failure", ["conflict", "permission", "acknowledgement"])
+def test_grain_catalogue_update_retries_only_aborted_conflicts(spark_session, monkeypatch, failure):
+    """Retry the Grain Discovery update with a fresh target and stable metadata input."""
+    import sys
+    from types import SimpleNamespace
+
+    module = importlib.import_module("fabricops_kit.pipeline.shared")
+    targets, updates = [], []
+    conflict = Exception("wrapped Delta conflict")
+    conflict.java_exception = SimpleNamespace(
+        getClass=lambda: SimpleNamespace(getSimpleName=lambda: "ConcurrentAppendException")
+    )
+    error = {"conflict": conflict, "permission": PermissionError("403"),
+             "acknowledgement": OSError("lost acknowledgement")}[failure]
+
+    def update(**kwargs):
+        updates.append(kwargs)
+        if len(updates) == 1:
+            raise error
+
+    def for_path(session, path):
+        assert session is spark_session and path == "/metadata/catalogue"
+        target = Mock()
+        target.toDF.return_value.where.return_value.limit.return_value.count.return_value = 1
+        target.update.side_effect = update
+        targets.append(target)
+        return target
+
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=for_path)))
+    monkeypatch.setattr("time.sleep", lambda _: None)
+    monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *a, **kw: (None, None, None, "/metadata/catalogue"))
+    monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: "engineering")
+    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kw: {"_activity_id": "activity"})
+    monkeypatch.setattr(module, "_key_candidate_evidence", lambda *a, **kw: {"candidates": []})
+    monkeypatch.setattr(module, "encode_metadata_row", lambda table, row: {"profile_key_candidates_json": json.dumps(row)})
+
+    def persist():
+        module._persist_grain_candidates({"table_id": "orders"}, [], max_columns=3,
+            config={}, active_workspace_id="dev", context={}, spark_session=spark_session)
+
+    if failure == "conflict":
+        persist()
+        assert len(updates) == 2
+        assert updates[0]["condition"] is updates[1]["condition"]
+        assert updates[0]["set"]["profile_key_candidates_json"] is updates[1]["set"]["profile_key_candidates_json"]
+        assert targets[-1] is not targets[-2]
+    else:
+        with pytest.raises(type(error)):
+            persist()
+        assert len(updates) == 1
