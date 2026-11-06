@@ -115,11 +115,11 @@ def check_source_drift(
         )
         print(
             "  Changes "
-            f"inserted={result.get('inserted_count', 0)}, "
-            f"updated={result.get('updated_count', 0)}, "
-            f"deleted={result.get('deleted_count', 0)}, "
-            f"recent={result.get('recent_changes', 0)}, "
-            f"historical={result.get('historical_changes', 0)}."
+            f"inserted={result.get('inserted_count', 0):,}, "
+            f"updated={result.get('updated_count', 0):,}, "
+            f"deleted={result.get('deleted_count', 0):,}, "
+            f"recent={result.get('recent_changes', 0):,}, "
+            f"historical={result.get('historical_changes', 0):,}."
         )
         print("  Accepted baseline is committed only after pipeline_write() succeeds.")
     return result

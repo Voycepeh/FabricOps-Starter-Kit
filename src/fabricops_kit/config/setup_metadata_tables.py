@@ -364,18 +364,18 @@ def _print_setup_summary(
     if failed:
         successful_count = len(created) + len(evolved) + len(validated)
         print("\nFabricOps metadata setup completed with failures.")
-        print(f"Successful: {successful_count}/{total}")
-        print(f"Failed: {len(failed)}/{total}\n")
+        print(f"Successful: {successful_count:,}/{total:,}")
+        print(f"Failed: {len(failed):,}/{total:,}\n")
         print("Failed tables:")
         for table_name in failed:
             print(f"- {table_name}: {table_results[table_name].get('message', '')}")
         print(f"Active steward present: {active_label}")
         return
     if created or evolved:
-        print(f"\nFabricOps metadata setup complete ({total}/{total}).")
-        print(f"Created: {len(created)}")
-        print(f"Evolved: {len(evolved)}")
-        print(f"Validated: {len(validated)}")
+        print(f"\nFabricOps metadata setup complete ({total:,}/{total:,}).")
+        print(f"Created: {len(created):,}")
+        print(f"Evolved: {len(evolved):,}")
+        print(f"Validated: {len(validated):,}")
         if created:
             print("Created tables:")
             for table_name in created:
@@ -386,7 +386,7 @@ def _print_setup_summary(
                 print(f"- {table_name}")
         print(f"Active steward present: {active_label}")
         return
-    print(f"\nFabricOps metadata tables ready ({total}/{total}).")
+    print(f"\nFabricOps metadata tables ready ({total:,}/{total:,}).")
     print(f"Active steward present: {active_label}")
 
 
@@ -560,7 +560,7 @@ def setup_metadata_tables(
                 created_tables.append(table_name)
                 table_results[table_name] = _result(table_name, "created", "Metadata table was created and validated.")
                 if verbose:
-                    print(f"[{index}/{total_tables}] Created {table_name}\n")
+                    print(f"[{index:,}/{total_tables:,}] Created {table_name}\n")
             elif upgrade:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
@@ -568,7 +568,7 @@ def setup_metadata_tables(
                     **upgrade,
                 }
                 if verbose:
-                    print(f"[{index}/{total_tables}] Automatically upgraded {table_name} to SQL-compatible JSON strings\n")
+                    print(f"[{index:,}/{total_tables:,}] Automatically upgraded {table_name} to SQL-compatible JSON strings\n")
             elif evolved_columns:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
@@ -580,7 +580,7 @@ def setup_metadata_tables(
                     "added_columns": evolved_columns,
                 }
                 if verbose:
-                    print(f"[{index}/{total_tables}] Evolved {table_name}")
+                    print(f"[{index:,}/{total_tables:,}] Evolved {table_name}")
                     print(f"       Added columns: {', '.join(evolved_columns)}\n")
             else:
                 validated_tables.append(table_name)
@@ -591,7 +591,7 @@ def setup_metadata_tables(
             failed_tables.append(table_name)
             table_results[table_name] = _result(table_name, "failed", f"{exc}", error_type=type(exc).__name__)
             if verbose:
-                print(f"[{index}/{total_tables}] Failed {table_name}")
+                print(f"[{index:,}/{total_tables:,}] Failed {table_name}")
                 print(f"       {exc}\n")
 
     active_stewards = _active_steward_presence(steward_table)

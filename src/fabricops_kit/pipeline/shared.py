@@ -156,7 +156,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
     """Run one visible stage while retaining its original exception as the cause."""
     started = time.perf_counter()
     if verbose:
-        print(f"[{index}/{total}] {stage} ... running")
+        print(f"[{index:,}/{total:,}] {stage} ... running")
     try:
         try:
             result = function()
@@ -167,9 +167,9 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
                       "evaluation_status": "not_fully_evaluated", "reason": str(exc)}
         if verbose and stage == "Data Quality" and isinstance(result, dict) and result.get("summary"):
             summary = result["summary"]
-            print(f"  DQ applicable rows: {summary.get('DQ_PASSED_ROW_PERCENT', 0):.2f}% pass, "
-                  f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations; "
-                  f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0)} not applicable. Tolerances determine continuation.")
+            print(f"  DQ applicable rows: {summary.get('DQ_PASSED_ROW_PERCENT', 0):,.2f}% pass, "
+                  f"{summary.get('DQ_FAILED_ROW_PERCENT', 0):,.2f}% with violations; "
+                  f"{summary.get('DQ_NOT_APPLICABLE_ROW_COUNT', 0):,} not applicable. Tolerances determine continuation.")
         status = _orchestration_status(result)
         if stage in {"Schema", "Grain", "Data Quality", "Sensitive Data", "Source Drift", "Freshness"}:
             items = result if isinstance(result, list) else [result]
@@ -218,7 +218,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             origin = traceback.extract_tb(root.__traceback__)[-1]
             location = f" ({origin.filename.rsplit('/', 1)[-1]}:{origin.lineno} in {origin.name})"
         if verbose:
-            print(f"[{index}/{total}] {stage} ... ✗ Failed ({duration:.2f}s)")
+            print(f"[{index:,}/{total:,}] {stage} ... ✗ Failed ({duration:,.2f}s)")
             print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
@@ -235,7 +235,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             "blocked": ("✗", "Blocked (diagnostic)"),
         }
         marker, label = outcomes[status]
-        print(f"[{index}/{total}] {stage} ... {marker} {label} ({duration:.2f}s)")
+        print(f"[{index:,}/{total:,}] {stage} ... {marker} {label} ({duration:,.2f}s)")
     record = {"name": name, "stage": stage, "status": status, "duration_seconds": duration}
     details = result if isinstance(result, list) else [result]
     incomplete = next((item for item in details if isinstance(item, dict) and item.get("evaluation_status")), None)
@@ -5810,6 +5810,15 @@ def capture_source_observation(
     return drift_observation
 
 
+def _summary_value(value):
+    """Group numeric display values while retaining text and unavailable markers."""
+    if value is None:
+        return "Not captured"
+    if isinstance(value, (int, float, Decimal)) and not isinstance(value, bool):
+        return format(value, ",")
+    return str(value)
+
+
 class ExecutionSummary:
     """Format notebook summaries without materializing any DataFrame."""
 
@@ -5823,7 +5832,7 @@ class ExecutionSummary:
         """Print aligned, explicit unavailable values to notebook stdout."""
         if self.verbose:
             for label, value in fields:
-                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")
+                print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {_summary_value(value)}")
 
     def finish(self, fields):
         """Print a concise successful summary; expand it when verbose output is enabled."""
@@ -5834,8 +5843,8 @@ class ExecutionSummary:
         duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         if self.verbose:
             print(f"\nFabricOps {self.operation} Summary")
-            for label, value in [*fields, ("Total duration", duration)]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {value if value is not None else 'Not captured'}")  # noqa: E701
-        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {value if value is not None else 'Not captured'}" for label, value in [*fields, ("Total duration", duration)]))  # noqa: E701, E501
+            for label, value in [*fields, ("Total duration", duration)]: print(f"   {label:<16}{' ' if len(label) >= 16 else ''}→ {_summary_value(value)}")  # noqa: E701
+        else: print(f"FabricOps {self.operation} Summary · " + " · ".join(f"{label}: {_summary_value(value)}" for label, value in [*fields, ("Total duration", duration)]))  # noqa: E701, E501
         return elapsed
 
 

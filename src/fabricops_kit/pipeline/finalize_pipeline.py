@@ -145,7 +145,7 @@ def _print_pipeline_summary(pipeline, result):
 
     print("\n" + "=" * 72)
     print(f"FabricOps Pipeline Summary · {status}")
-    print(f"Mode: {mode} | Reads: {reads} | Writes: {writes} | Duration: {duration}")
+    print(f"Mode: {mode} | Reads: {reads:,} | Writes: {writes:,} | Duration: {duration}")
     print(f"Pipeline ID: {result.get('pipeline_id') or pipeline.pipeline_id}")
     print(f"Run ID: {result.get('run_id') or pipeline.plan.plan_id}")
 

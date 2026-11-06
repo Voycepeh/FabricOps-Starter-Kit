@@ -91,11 +91,11 @@ def check_dq(
     if verbose:
         checks = list(result.get("checks") or [])
         failed = [check for check in checks if str(check.get("status") or "").lower() not in {"passed", "pass"}]
-        print(f"  Contract selected; evaluated {len(checks)} active DQ rule(s).")
-        print(f"  Rule outcomes {len(checks) - len(failed)} passed, {len(failed)} warning/failed.")
+        print(f"  Contract selected; evaluated {len(checks):,} active DQ rule(s).")
+        print(f"  Rule outcomes {len(checks) - len(failed):,} passed, {len(failed):,} warning/failed.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS for each evaluated rule.")
         summary = result.get("summary", {})
-        print(f"  Applicable rows {summary.get('DQ_PASSED_ROW_PERCENT', 0):.2f}% pass, {summary.get('DQ_FAILED_ROW_PERCENT', 0):.2f}% with violations.")
+        print(f"  Applicable rows {summary.get('DQ_PASSED_ROW_PERCENT', 0):,.2f}% pass, {summary.get('DQ_FAILED_ROW_PERCENT', 0):,.2f}% with violations.")
         print("  Failure examples disabled." if diagnostics == "none" else
               "  Up to 10 examples per rule are stored with summaries; full diagnostics are opt-in.")
     return result
