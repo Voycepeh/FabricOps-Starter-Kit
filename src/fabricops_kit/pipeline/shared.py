@@ -8263,5 +8263,6 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     candidate_value = F.lit(encode_metadata_row(CATALOGUE_TABLE, {
         "profile_key_candidates_json": _key_candidate_evidence(candidates, max_columns=max_columns),
     })["profile_key_candidates_json"])
-    table.update(condition=condition, set={"profile_key_candidates_json": candidate_value,
-        **{name: F.lit(value) for name, value in audit.items()}})
+    updates = {"profile_key_candidates_json": candidate_value,
+        **{name: F.lit(value) for name, value in audit.items()}}
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).update(condition=condition, set=updates))
