@@ -57,13 +57,13 @@ function renderMetadataSvg(layout, models) {
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
       const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;
-      const label=kind?`<text x="${x+13}" y="${baseline}" fill="${kind==="PK"?"#008064":"#0574C5"}" font-weight="700" font-size="14" font-family="Arial, sans-serif">${kind}</text>\n`:"";
+      const label=kind?`<text x="${x+13}" y="${baseline}" fill="${kind==="PK"?"#7C3AED":"#2563EB"}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text>\n`:"";
       const normalized=String(value);
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
-      return label+`<text x="${x+51}" y="${baseline}" fill="#243550" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Arial, sans-serif">${esc(visible)}</text>`;
+      return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
-    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#1168B6" font-size="12" font-family="Arial, sans-serif">Engineering deployment evidence</text>`;
+    if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
     return block;
   });
@@ -87,7 +87,7 @@ function renderMetadataSvg(layout, models) {
   const badge=(x,y,label,color)=>{
     if(!label)return "";
     const str=esc(label);
-    return `<rect x="${x-11}" y="${y-11}" width="22" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Arial, sans-serif" fill="${color}">${str}</text>`;
+    return `<rect x="${x-11}" y="${y-11}" width="22" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="${color}">${str}</text>`;
   };
   const direction=(a,b)=>{
     const dx=b[0]-a[0],dy=b[1]-a[1];
@@ -96,7 +96,7 @@ function renderMetadataSvg(layout, models) {
   };
   const rendered=routes.map(r=>{
     const [from,to,card,kind,d,p0,p1,label]=r;
-    const color=kind==="logical"?"#7144AE":"#1168B6";
+    const color=kind==="logical"?"#7C3AED":"#2563EB";
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
     const last=d.match(/([HV])(-?[\d.]+)$/);

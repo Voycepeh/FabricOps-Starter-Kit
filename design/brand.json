@@ -1,0 +1,44 @@
+{
+  "name": "FabricOps Starter Kit",
+  "palette": {
+    "blue": "#2563EB",
+    "blue_deep": "#1D4ED8",
+    "purple": "#7C3AED",
+    "purple_deep": "#6D28D9",
+    "ink": "#19243A",
+    "muted": "#52627A",
+    "canvas": "#FFFFFF",
+    "surface": "#F6F8FF",
+    "border": "#DDE3F3",
+    "success": "#15803D",
+    "warning": "#B45309",
+    "danger": "#B91C1C"
+  },
+  "gradient": {
+    "start": "#2563EB",
+    "end": "#7C3AED",
+    "angle": "110deg"
+  },
+  "typography": {
+    "ui": "Segoe UI, Arial, sans-serif",
+    "code": "Cascadia Code, Consolas, monospace",
+    "diagram": "Segoe UI, Arial, sans-serif"
+  },
+  "roles": {
+    "engineering": "blue",
+    "governance": "purple",
+    "accent": "blue",
+    "success": "success"
+  },
+  "diagram_semantics": {
+    "default": "ink",
+    "background": "canvas",
+    "engineering_focus": "blue",
+    "governance_handoff": "purple",
+    "success": "success",
+    "warning": "warning",
+    "failure": "danger",
+    "instruction": "Do not alternate Engineering stages between colours. Neutral first; semantic colour only.",
+    "gradient_usage": "Website header/hero, not ordinary diagram stages."
+  }
+}

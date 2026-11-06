@@ -31,7 +31,7 @@ The notebook places governed Read and Write boundaries around project-owned PySp
 </div>
 </div>
 
-![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
+![FabricOps pipeline lifecycle with project-owned PySpark transformation](../assets/engineering/pipeline-lifecycle.svg)
 
 | Template section | What it provides |
 | --- | --- |

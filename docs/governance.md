@@ -10,7 +10,11 @@
   <span class="fabricops-release-status fabricops-release-status--preview">Governed execution: gated</span>
 </div>
 
+![Governance lifecycle from accountability to approved deployment](assets/governance-lifecycle.svg){ .fabricops-section-evidence }
+
 ## What is a Data Contract?
+
+![Anatomy of a frozen Data Contract](assets/data-contract-anatomy.svg){ .fabricops-section-evidence }
 
 A FabricOps Data Contract is the versioned definition for one governed `table_id`. It combines the observed table and column structure with the decisions Governance owns:
 
@@ -149,7 +153,7 @@ disables AI actions. Opening the selector never invokes AI. See the
 
 ### Sensitive data decisions { #sensitive-data-discovery-classification-and-treatment }
 
-![AI-assisted Direct and Indirect PII review and treatment](assets/AiDatacontract.png){ .fabricops-section-evidence }
+![Sensitive Data governance from classification to deterministic treatment](assets/sensitive-data-governance.svg){ .fabricops-section-evidence }
 
 Governance can classify a column as Direct PII, Indirect PII or Not PII, choose **Mask**, **Bucket**, **Tokenize** or **Remove**, and record the post-treatment information classification. AI can suggest from governed schema and bounded profile evidence; a person reviews the decision. Runtime treatment is deterministic and does not call AI.
 
@@ -163,7 +167,7 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
 ### Business rules and Data Quality
 
-![Natural-language business rules converted into reviewable Data Quality rules](assets/BusinessRuletoDQ.png){ .fabricops-section-evidence }
+![Business rules become approved deterministic Data Quality checks](assets/business-rules-data-quality.svg){ .fabricops-section-evidence }
 
 Governance can author supported Data Quality rules directly or ask AI to translate a business requirement into explicit proposals. A person reviews every proposal. Approved rules run deterministically through internal [`check_dq()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13); AI is not involved during pipeline execution.
 
