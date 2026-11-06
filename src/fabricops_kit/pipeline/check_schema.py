@@ -163,9 +163,9 @@ def check_schema(
         )
         print(
             "  Differences "
-            f"missing={len(result.get('missing_columns') or [])}, "
-            f"unexpected={len(result.get('unexpected_columns') or [])}, "
-            f"datatype={len(result.get('datatype_mismatches') or [])}."
+            f"missing={len(result.get('missing_columns') or []):,}, "
+            f"unexpected={len(result.get('unexpected_columns') or []):,}, "
+            f"datatype={len(result.get('datatype_mismatches') or []):,}."
         )
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
     return result
