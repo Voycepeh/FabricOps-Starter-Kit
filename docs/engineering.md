@@ -38,7 +38,7 @@ One execution can register multiple reads and publish multiple targets. FabricOp
 
 ??? info "Under the Hood — execution ownership"
 
-    [`setup_pipeline()`](api/reference/setup_pipeline.md) fixes the stable Pipeline ID, execution mode and session plan. [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves and evaluates each source. [`orchestrate_write()`](api/reference/orchestrate_write.md) prepares and evaluates each target, then previews or publishes it. [`finalize_pipeline()`](api/reference/finalize_pipeline.md) records the complete outcome and releases any reservation.
+    [`setup_pipeline()`](api/reference/setup_pipeline.md) fixes the stable Pipeline ID, execution mode and session plan. [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves and evaluates each source. [`orchestrate_write()`](api/reference/orchestrate_write.md) prepares and evaluates each target, then previews or publishes it. [`finalize_pipeline()`](api/reference/finalize_pipeline.md) records the complete outcome.
 
     The original Fabric Notebook ID establishes the logical identity. The Pipeline Registry maps every promoted physical Notebook ID back to that identity; no Pipeline ID is declared in notebook source.
 
@@ -117,7 +117,46 @@ Every managed output receives a lowercase SHA256 `_row_hash` through internal [`
 
     The publication identity includes the prepared business-row multiset, Processing definition, source membership, workspace and target. Lakehouse recovery verifies Delta commit evidence. Warehouse recovery requires the exact audit-marker row count. Partial or unverifiable publication fails closed instead of advancing the checkpoint.
 
-    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). A target lease in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) coordinates competing FabricOps writers, but it cannot stop an external writer that bypasses FabricOps.
+    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). Each business target has one owning pipeline; scheduling prevents overlapping writes, including old and new notebook versions. Stop that pipeline before changing its Contract Activation. Runtime does not acquire target leases or use a publication coordination Files ledger.
+
+## What happens when pipelines write to the same Metadata table?
+
+**Pipelines across engineers and workspaces share the configured Governance-owned Metadata Lakehouse. Confirmed aborted metadata conflicts are retried automatically.** Even when business targets differ, updates to shared tables such as [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) and [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) can touch the same Delta files.
+
+Delta checks for conflicts at commit. If another writer's change causes a recognized aborted concurrency exception, FabricOps waits briefly and retries that metadata mutation against a fresh transaction. The intended rows and workspace scope stay fixed. Conditional Governance decisions and Pipeline Promotion updates re-read current state and recheck their expected revision; an outdated approval cannot overwrite a newer decision.
+
+### How many attempts, and how long between them?
+
+**Each metadata mutation gets up to 32 total attempts: one initial attempt and at most 31 retries.** This is a per-mutation retry budget, not a limit of 32 parallel pipelines or a request to run the whole pipeline 32 times. The first attempt starts immediately. After each retryable failure, a fresh random delay spreads competing writers apart:
+
+| Failed attempt | Delay before the next attempt |
+| --- | --- |
+| 1 | 0.1–0.2 seconds |
+| 2 | 0.1–0.4 seconds |
+| 3 | 0.1–0.8 seconds |
+| 4 | 0.1–1.6 seconds |
+| 5 | 0.1–3.2 seconds |
+| 6 | 0.1–6.4 seconds |
+| 7–31 | 0.1–8.0 seconds each |
+| 32 | Propagate the failure; no further retry or delay |
+
+The delay ceiling doubles until it reaches eight seconds; the randomly selected delay itself can be shorter than the previous one. Permission errors, stale approvals, schema/protocol changes and unknown commit outcomes are not retried by this policy. Business-table publication, SCD processing, Sensitive Data mapping writes and complete workflows are outside the metadata retry boundary.
+
+### Why can otherwise similar runs have different durations?
+
+Elapsed time includes metadata work and any retry waits within the measured operation. With no conflict there is no backoff. One conflict adds 0.1–0.2 seconds of waiting plus the cost of another metadata attempt; two conflicts add 0.2–0.6 seconds of waiting plus two additional attempts. Different writers can encounter different numbers of conflicts and draw different delays, so they need not finish together.
+
+Across all 31 possible waits, the scheduled waiting budget is **3.1–212.6 seconds per metadata mutation**, excluding transaction execution and storage latency. This is not a pipeline timeout: a run can perform several metadata mutations, and reads, transformations, target writes, profiling and Spark scheduling add their own time. A longer run alone does not establish a metadata conflict; these are policy-derived timing ranges, not measured Fabric performance results.
+
+!!! important "Recover metadata without repeating a business write"
+
+    Retrying an aborted metadata transaction does not replay the business publication. Existing publication receipts and physical target markers govern recovery. An uncertain target commit requires reconciliation; exhausting the metadata retry budget surfaces a failure even if an earlier business publication succeeded.
+
+??? info "Under the Hood — retry implementation and validation"
+
+    Internal [`retry_delta_metadata()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py) recognizes five aborted Delta concurrency exception classes and structured Fabric error conditions, including `DELTA_CONCURRENT_APPEND.WITHOUT_HINT`. It does not infer retryability from message text. After failed attempt `n` (1–31), it samples `uniform(0.1, min(8.0, 0.2 * 2 ** (n - 1)))` seconds. Metadata setup and schema evolution must finish before concurrent execution.
+
+    Local Delta workloads passed at 5, 10 and 20 simultaneous synthetic workspace/user identities; the earlier 12-attempt budget was insufficient at width 20. These results do not establish a supported maximum concurrency or signed-in Fabric acceptance. See [Shared Metadata Lakehouse concurrency](maintainer/concurrent-metadata-reliability-plan.md) for writer coverage, retained record checks and the outstanding Fabric acceptance procedure.
 
 ## How does FabricOps detect Source Drift?
 
@@ -159,7 +198,7 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Location | Required Engineering configuration |
 | --- | --- |
 | `00_env_config` | Workspace IDs, logical store aliases, item IDs/names, store types and the shared Metadata target |
-| Pipeline setup | Stable `pipeline_id`, `pipeline_mode`, and optional full Source Observation policy |
+| Pipeline setup | `pipeline_mode` and optional full Source Observation policy; the Fabric Notebook ID establishes the stable Pipeline ID |
 | Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
 | Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
@@ -195,9 +234,9 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 ## What evidence do I get after a run?
 
-- technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
-
 ![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
+
+- technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);

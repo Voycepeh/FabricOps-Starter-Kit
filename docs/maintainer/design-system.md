@@ -1,6 +1,6 @@
 # FabricOps visual identity
 
-Canonical source: [`design/brand.json`](../../design/brand.json). This file is the reference for website colours, documentation illustrations, engineering diagrams, governance diagrams, and future visual artifacts. The MkDocs CSS token sheet is generated using `python scripts/sync_brand_tokens.py`; use `--check` in validation.
+Canonical source: [`design/brand.json`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/design/brand.json). This file is the reference for website colours, documentation illustrations, engineering diagrams, governance diagrams, and future visual artifacts. The MkDocs CSS token sheet is generated using `python scripts/sync_brand_tokens.py`; use `--check` in validation.
 
 ## Brand direction
 
