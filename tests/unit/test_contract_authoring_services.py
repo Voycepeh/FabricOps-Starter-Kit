@@ -616,3 +616,35 @@ def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
     payload['profiling']['standard']['days'] = 0
     with pytest.raises(ValueError, match='positive integer'):
         service.validate_contract_definitions(payload)
+
+
+def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
+    """A wide table needs one read per metadata table, including older column snapshots."""
+    profiles = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
+                 "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                 "_committed_at": "2026-09-26T01:00:00Z", "row_count": 10}
+                for index in range(60)]
+    profiles.append({**profiles[0], "profile_id": "failed", "status": "failed",
+                     "_committed_at": "2026-09-27T01:00:00Z"})
+    frequency = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
+                  "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                  "value": f"v-{rank}", "frequency_count": 10 - rank,
+                  "frequency_rank": rank, "frequency_percent": 10}
+                 for index in range(60) for rank in (4, 2, 1, 3)]
+    frequency.extend([{**frequency[0], "workspace_id": "other", "value": "foreign"},
+                      {**frequency[0], "profile_id": "old", "profile_snapshot_id": "old", "value": "old"}])
+    reads = []
+    def read(name, **_kwargs):
+        reads.append(name)
+        return {"METADATA_DATA_PROFILED": profiles,
+                "METADATA_DATA_PROFILED_FREQUENCY": frequency,
+                "METADATA_DATA_LINEAGE": []}[name]
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+    kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
+    bulk = service.get_table_runtime_context(**kwargs)["profile_contexts"]
+    assert len(reads) == 3
+    assert len(bulk) == 60
+    for column_id, context in bulk.items():
+        assert context == service.get_column_profile_context(column_id=column_id, **kwargs)
+        assert [row["value"] for row in context["values"]] == ["v-1", "v-2", "v-3"]

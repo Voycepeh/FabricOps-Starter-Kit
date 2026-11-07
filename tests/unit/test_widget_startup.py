@@ -32,6 +32,7 @@ def test_public_widget_displays_before_services_without_duplicate_reads(name, mo
         def service(*args, **kwargs):
             assert len(outputs) >= 3
             assert "role=\"status\"" in outputs[-1][1].data
+            assert "<progress " in outputs[-1][1].data
             reads.append(label)
             return result
         return service

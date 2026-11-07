@@ -256,7 +256,8 @@ class WidgetStartup:
             f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div></div>'
         )
         if self.html_available:
-            loading = '<p role="status" aria-live="polite">Initializing FabricOps…</p>'
+            loading = ('<p role="status" aria-live="polite">Initializing FabricOps…</p>'
+                       '<progress aria-label="Initializing FabricOps" style="width:100%;height:6px"></progress>')
             # Keep the banner in its own stable output. Replacing a plain HTML
             # loading view with a widget view in the same output can flicker in
             # notebook frontends, especially when the placeholder also owns the banner.
@@ -282,7 +283,9 @@ class WidgetStartup:
         """Time one synchronous stage and retain actionable failure output."""
         began = perf_counter()
         if self.html_available:
-            content = f'<p role="status">{_html_escape(message)}</p>'
+            content = (f'<p role="status">{_html_escape(message)}</p>'
+                       f'<progress aria-label="{_html_escape(message)}" '
+                       'style="width:100%;height:6px"></progress>')
             self.ip.update_display(self.ip.HTML(self._reserved_html(content) if self.reserved_height else content),
                                    display_id=self.display_id)
         try:

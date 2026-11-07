@@ -73,6 +73,7 @@ def widget_runtime(monkeypatch):
             self._dom_classes = []
             self.description = description
             self.placeholder = kwargs.get("placeholder", "")
+            self.continuous_update = kwargs.get("continuous_update", True)
             self.tooltip = kwargs.get("tooltip", "")
             self.disabled = disabled
             self.layout = layout or Layout()
@@ -2144,11 +2145,18 @@ def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monk
     controls["column_select"].value = "col-0"
 
     assert controls["column_description"].value == "First draft"
-    assert set(next(iter(state["_ai_suggestions"].values()))["columns"]) == {"col-0", "col-1"}
+    assert set(next(iter(state["_ai_suggestions"].values()))["columns"]) == {"col-0"}
     calls_before = len(captures["sensitive"])
     controls["column_select"].value = "col-1"
     assert controls["column_description"].value == "Second draft"
     assert len(captures["sensitive"]) == calls_before
+    assert controls["rerun_column_description"].description == "Generate"
+    assert controls["rerun_sensitive"].description == "Generate"
+    controls["rerun_column_description"].click()
+    controls["rerun_sensitive"].click()
+    assert captures["enrichment"][-1]["column_name"] == "column_1"
+    assert len(captures["sensitive"]) == calls_before + 1
+    assert controls["rerun_sensitive"].description == "Re-run"
 
 
 def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runtime, monkeypatch):
@@ -4242,3 +4250,180 @@ def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtim
     controls["rerun_column_description"].click()
     assert state["_ai_diagnostics"][scope] == {}
     assert not state["_ai_failure"] and not state["_ai_failure_diagnostic"]
+
+
+@pytest.mark.parametrize("value, expected", [
+    ("2026-09-26T02:45:00Z", "26 Sep 2026, 10:45"),
+    ("2026-09-26T04:45:00+02:00", "26 Sep 2026, 10:45"),
+    ("2026-09-26T02:45:00", "26 Sep 2026, 02:45"),
+    (None, "Unknown"),
+    ("unparseable", "unparseable"),
+])
+def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, value, expected):
+    """Profile provenance and lineage use the same configured audit zone."""
+    widget_runtime["config"].audit_timezone = "Asia/Singapore"
+    module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "latest_profile": {"committed_at": value},
+        "lineage": [{"last_seen": value}],
+    })
+    controls = widget_runtime["open"]()["_controls"]
+    summary = controls["left_pane"].children[0].value
+    assert f" · {expected}</div>" in summary
+    assert f"title='{expected}'>{expected}</td>" in summary
+
+
+def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, monkeypatch):
+    """Navigating sixty columns adds neither Spark profile reads nor AI requests."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
+    widget_runtime["catalogue"][:] = _catalogue_rows(60)
+    _capture_fixture_columns(widget_runtime)
+    profiles = {f"col-{index}": {"kind": "profile", "profile": {"row_count": 10},
+                "values": [{"value": f"sample-{index}", "count": 1, "percent": 10}]}
+                for index in range(59)}
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "profile_contexts": profiles,
+    })
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Column"
+    before = {key: len(value) for key, value in captures.items()}
+    for index in range(60):
+        controls["column_select"].value = f"col-{index}"
+        if index < 59:
+            assert f"sample-{index}" in controls["profile_context"].value
+    assert "Not yet profiled" in controls["profile_context"].value
+    assert widget_runtime["calls"]["profiles"] == []
+    assert {key: len(value) for key, value in captures.items()} == before
+
+
+def test_spark_datetime_uses_process_zone_before_audit_zone(widget_runtime, monkeypatch):
+    """A naive Spark collection is process-local even when the audit zone differs."""
+    import time
+    from datetime import datetime
+
+    monkeypatch.setenv("TZ", "America/New_York")
+    time.tzset()
+    try:
+        # 22:45 in New York is 02:45 UTC and 10:45 in Singapore.
+        test_runtime_timestamps_use_audit_timezone(
+            widget_runtime, monkeypatch, datetime(2026, 9, 25, 22, 45), "26 Sep 2026, 10:45"
+        )
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+
+
+def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, monkeypatch):
+    """Blocking AI stays on the notebook thread with visible progress and safe retry controls."""
+    import threading
+
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    caller_thread = threading.get_ident()
+    observed = []
+    def fail(*_args, **_kwargs):
+        progress = controls["operation_progress"].value
+        assert "Generating column description" in progress
+        assert "<progress " in progress and "aria-busy='true'" in progress
+        assert "value=" not in progress  # Unknown duration uses indeterminate progress.
+        assert controls["rerun_column_description"].disabled
+        assert controls["column_select"].disabled
+        assert controls["top_nav"].disabled
+        assert threading.get_ident() == caller_thread
+        observed.append(progress)
+        raise RuntimeError("temporary timeout")
+    monkeypatch.setattr(module, "suggest_enrichment", fail)
+    controls["rerun_column_description"].click()
+    assert len(observed) == 1
+    assert state["_busy_depth"] == 0
+    assert not controls["rerun_column_description"].disabled
+    assert not controls["column_select"].disabled
+    assert not controls["top_nav"].disabled
+    assert controls["accept_column_description"].disabled
+    assert "Operation finished in" in controls["operation_progress"].value
+    assert state["_operation_timings"][-1]["seconds"] >= 0
+
+
+def test_save_progress_precedes_write_and_restores_controls(widget_runtime, monkeypatch):
+    """A failed Metadata write leaves the draft editable and clears its busy state."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_description"].value = "Unsaved draft"
+    def fail(**_kwargs):
+        assert "Saving Data Contract" in controls["operation_progress"].value
+        assert "<progress " in controls["operation_progress"].value
+        assert controls["save_data_contract"].disabled
+        assert controls["change_table"].disabled
+        raise RuntimeError("write unavailable")
+    monkeypatch.setattr(module.contracts, "save_contract_draft", fail)
+    controls["save_data_contract"].click()
+    assert "write unavailable" in state["message"]
+    assert state["dirty"]
+    assert controls["table_description"].value == "Unsaved draft"
+    assert not controls["save_data_contract"].disabled
+    assert not controls["change_table"].disabled
+    assert state["_busy_depth"] == 0
+
+
+def test_review_is_built_only_when_opened_and_refreshes_after_edits(widget_runtime, monkeypatch):
+    """Opening and editing skip the full Review representation until it is visible."""
+    builds = []
+    original = module._manifest_sections
+    def build(*args, **kwargs):
+        builds.append(True)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(module, "_manifest_sections", build)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert builds == []
+    controls["top_nav"].value = "Review"
+    assert len(builds) == 1
+    controls["top_nav"].value = "Table"
+    controls["column_description"].value = "Updated description for Review"
+    assert len(builds) == 1
+    controls["top_nav"].value = "Review"
+    assert len(builds) == 2
+    assert "Updated description for Review" in controls["manifest_preview"].value
+
+
+def test_reopening_releases_old_editor_models(widget_runtime):
+    """Repeated editor sessions close old controls and keep live model counts bounded."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    counts = []
+    for _ in range(4):
+        previous = controls["column_description"]
+        controls["change_table"].click()
+        controls["open_without_ai"].click()
+        assert previous.closed
+        assert previous.layout.closed
+        assert not controls["column_description"].closed
+        counts.append(len(widget_runtime["models"]))
+    assert max(counts) - min(counts) <= 2
+    assert not controls["change_table"].closed
+    assert not controls["editor_ai_information"].closed
+
+
+def test_discard_and_clear_does_not_reload_or_generate_ai(widget_runtime, monkeypatch):
+    """Clearing the editor must not load profiles or make billable AI requests."""
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["table_description"].value = "Discard this change"
+    reads = len(widget_runtime["calls"]["review"])
+    ai_calls = {key: len(value) for key, value in captures.items()}
+    controls["discard_data_contract"].click()
+    controls["confirm_discard_data_contract"].click()
+    assert state["current"] is None
+    assert not state["dirty"]
+    assert len(widget_runtime["calls"]["review"]) == reads
+    assert {key: len(value) for key, value in captures.items()} == ai_calls
+
+
+def test_authoring_text_commits_on_blur_while_search_stays_live(widget_runtime):
+    """Typing a long description must not assemble a complete contract per character."""
+    controls = widget_runtime["open"]()["_controls"]
+    for key in ("table_description", "table_grain", "column_description", "pii_reason",
+                "manual_expression", "business_requirement"):
+        assert controls[key].continuous_update is False
+    assert controls["column_search"].continuous_update is True
