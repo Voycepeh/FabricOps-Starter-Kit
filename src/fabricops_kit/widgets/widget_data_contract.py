@@ -268,10 +268,15 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-contract-list { overflow:visible !important; }
 .fabricops-data-contract .fabricops-contract-list select {
-    width:100%; min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto;
+    width:100%; min-width:0; max-width:100%; height:180px; min-height:180px;
+    padding:5px; box-sizing:border-box; overflow-x:hidden; overflow-y:auto;
 }
 .fabricops-data-contract .fabricops-contract-list option {
+    min-height:30px; padding:5px 8px; line-height:20px; box-sizing:border-box;
     max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
+.fabricops-data-contract .fabricops-contract-columns select {
+    height:100%; min-height:320px;
 }
 @container (max-width:800px) {
     .fabricops-data-contract .fabricops-contract-workspace,
@@ -293,7 +298,7 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-data-quality-workspace { overscroll-behavior:auto; }
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
-    .fabricops-data-contract .fabricops-contract-columns { height:660px !important; }
+    .fabricops-data-contract .fabricops-contract-columns { height:360px !important; flex:none; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -1864,13 +1869,13 @@ def widget_data_contract(
         row_key_columns = widgets.SelectMultiple(
             options=list(dict.fromkeys([*column_names, *existing_row_key_columns])),
             value=tuple(existing_row_key_columns if existing_row_key else profiled_key_columns),
-            rows=min(4, max(2, len(column_names))), disabled=not editable,
+            rows=5, disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
         row_key_columns.layout.close()
         row_key_columns.layout = widgets.Layout(
             width="100%", max_width="560px", min_width="0",
-            height=f"{min(8, max(4, len(column_names))) * 30 + 12}px",
+            height="auto",
             max_height="252px",
         )
         row_key_columns.add_class("fabricops-contract-list")
@@ -2046,12 +2051,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Watermark column"),
         )
         key_columns_control = widgets.SelectMultiple(
-            options=column_names,
+            rows=5, options=column_names,
             value=tuple(value for value in processing.get("key_columns", []) if value in column_names),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Key columns"),
         )
-        key_columns_control.layout.height = "132px"
+        key_columns_control.layout.height = "auto"
         key_columns_control.layout.max_height = "220px"
         key_columns_control.add_class("fabricops-contract-list")
         effective_column_control = widgets.Dropdown(
@@ -2061,12 +2066,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Effective column"),
         )
         tracked_columns_control = widgets.SelectMultiple(
-            options=column_names,
+            rows=5, options=column_names,
             value=tuple(value for value in processing.get("tracked_columns", []) if value in column_names),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Tracked columns"),
         )
-        tracked_columns_control.layout.height = "132px"
+        tracked_columns_control.layout.height = "auto"
         tracked_columns_control.layout.max_height = "220px"
         tracked_columns_control.add_class("fabricops-contract-list")
         processing_parameter_controls = (
@@ -3371,10 +3376,10 @@ def widget_data_contract(
         column_option_style = widgets.HTML()
         column_search = widgets.Text(placeholder="Search columns", layout=widgets.Layout(width="100%", min_width="0", max_width="100%"))
         column_select = widgets.Select(
-            options=(), rows=24,
+            options=(), rows=10,
             layout=widgets.Layout(
                 width="100%", min_width="0", max_width="100%",
-                height="660px", max_height="840px",
+                height="auto", min_height="320px", max_height="840px", flex="1 1 auto",
             ),
         )
         column_select.add_class("fabricops-contract-columns")
@@ -3595,6 +3600,7 @@ def widget_data_contract(
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
         hydrating = {"active": False}
+        refreshing_column_options = {"active": False}
         hydrated_column_snapshots: dict[str, dict[str, Any]] = {}
 
         def dq_snapshot() -> dict[str, dict[str, Any]]:
@@ -4094,6 +4100,8 @@ def widget_data_contract(
         refresh_sensitive_rule_preview()
 
         def column_changed(change: dict[str, Any]) -> None:
+            if refreshing_column_options["active"]:
+                return
             old = str(change.get("old") or "")
             if old:
                 snapshot = column_editor_snapshot()
@@ -4761,14 +4769,17 @@ def widget_data_contract(
             ]
             required_option_rules = "".join(f".fabricops-contract-columns option:nth-child({index}){{color:var(--form-accent);font-weight:600;}}" for index, (label, _value) in enumerate(filtered, start=1) if str(label).endswith(" *"))
             column_option_style.value = "<style>.fabricops-contract-columns option:checked{font-weight:600;}" + required_option_rules + ".fabricops-form .fabricops-column-required{display:flex!important;grid-template-columns:none!important;width:auto!important;max-width:none!important;align-items:center!important;margin:0!important;}.fabricops-form .fabricops-column-required>.widget-label{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;}</style>"
-            column_select.options = filtered
             values = [str(value) for _label, value in filtered]
-            if current_value in values:
-                column_select.value = current_value
-            elif values:
-                column_select.value = values[0]
-            else:
-                column_select.value = None
+            selected_value = current_value if current_value in values else values[0] if values else None
+            refreshing_column_options["active"] = True
+            try:
+                if tuple(column_select.options) != tuple(filtered):
+                    column_select.options = filtered
+                column_select.value = selected_value
+            finally:
+                refreshing_column_options["active"] = False
+            if str(selected_value or "") != current_value:
+                column_changed({"old": current_value, "new": selected_value})
 
         def required_feedback(change: dict[str, Any]) -> None:
             if hydrating["active"]:
@@ -5120,7 +5131,7 @@ def widget_data_contract(
         )
         business_requirement.description = ""
         business_columns = widgets.SelectMultiple(
-            options=[
+            rows=5, options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
                 for column in authoring_columns
             ],
@@ -5158,13 +5169,13 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Column"),
         )
         review_key_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Key columns"),
         )
         review_key_columns.add_class("fabricops-contract-list")
         review_key_columns.layout.close()
-        review_key_columns.layout = widgets.Layout(width="100%", height="96px")
+        review_key_columns.layout = widgets.Layout(width="100%", height="auto")
         review_left_column = widgets.Dropdown(
             options=dq_column_options_with_blank, disabled=not editable,
             **shared.widget_common(widgets, "Left column"),
@@ -5340,7 +5351,7 @@ def widget_data_contract(
         business_requirement.layout.height = "170px"
         business_columns.layout.width = "100%"
         business_columns.layout.min_width = "0"
-        business_columns.layout.height = "132px"
+        business_columns.layout.height = "auto"
         business_columns.layout.max_height = "220px"
         business_proposal_select.layout.width = "100%"
         business_proposal_select.layout.min_width = "0"
@@ -5370,24 +5381,24 @@ def widget_data_contract(
             layout=widgets.Layout(width="100%"),
         )
         manual_batch_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Columns"),
         )
         manual_batch_columns.add_class("fabricops-contract-list")
         manual_batch_columns.layout.close()
         manual_batch_columns.layout = widgets.Layout(
-            width="100%", min_width="0", height="112px", max_height="180px"
+            width="100%", min_width="0", height="auto", max_height="220px"
         )
         manual_key_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Key columns"),
         )
         manual_key_columns.add_class("fabricops-contract-list")
         manual_key_columns.layout.close()
         manual_key_columns.layout = widgets.Layout(
-            width="100%", min_width="0", height="96px", max_height="150px"
+            width="100%", min_width="0", height="auto", max_height="220px"
         )
         manual_left_column = widgets.Dropdown(
             options=dq_column_options_with_blank,

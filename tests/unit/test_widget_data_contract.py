@@ -1116,7 +1116,9 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert controls["left_pane"].children[-1] is controls["column_select"]
     assert controls["column_search"] in controls["left_pane"].children
     assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
-    assert controls["column_select"].layout.height == "660px"
+    assert controls["column_select"].layout.height == "auto"
+    assert controls["column_select"].layout.min_height == "320px"
+    assert controls["column_select"].layout.flex == "1 1 auto"
     assert controls["column_select"].layout.max_height == "840px"
     assert "fabricops-contract-list" in controls["column_select"]._dom_classes
 
@@ -1516,7 +1518,7 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert "scrollbar-gutter:stable; overscroll-behavior:contain" in style
     assert "overflow:visible; overscroll-behavior:auto" in style
     assert "height:auto; max-height:none; overflow:visible !important" in style
-    assert ".fabricops-contract-columns { height:660px !important; }" in style
+    assert ".fabricops-contract-columns { height:360px !important; flex:none; }" in style
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
     assert ".fabricops-business-body {\n    flex:0 1 auto" in style
     assert "overflow-x:hidden; overflow-y:auto" in style
@@ -4427,3 +4429,38 @@ def test_authoring_text_commits_on_blur_while_search_stays_live(widget_runtime):
                 "manual_expression", "business_requirement"):
         assert controls[key].continuous_update is False
     assert controls["column_search"].continuous_update is True
+
+
+def test_column_search_avoids_transient_selection_and_preserves_edits(monkeypatch):
+    """Real selection widgets reset their index when options change; hydrate only the final choice."""
+    real_widgets = pytest.importorskip("ipywidgets")
+    runtime = widget_runtime.__wrapped__(monkeypatch)
+    runtime["catalogue"][:] = _catalogue_rows(60)
+    _capture_fixture_columns(runtime)
+    monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: real_widgets)
+    state = runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Column"
+    controls["column_select"].value = "col-11"
+    controls["column_description"].value = "Retain this column description"
+    rendered = []
+    original = module._profile_html
+    def render_profile(value):
+        rendered.append(value)
+        return original(value)
+    monkeypatch.setattr(module, "_profile_html", render_profile)
+    try:
+        controls["column_search"].value = "column_1"
+        assert controls["column_select"].value == "col-11"
+        assert controls["column_description"].value == "Retain this column description"
+        assert rendered == []
+        controls["column_search"].value = "column_2"
+        assert controls["column_select"].value == "col-2"
+        assert len(rendered) == 1
+        controls["column_search"].value = ""
+        assert len(rendered) == 1
+        controls["column_select"].value = "col-11"
+        assert controls["column_description"].value == "Retain this column description"
+    finally:
+        state["_dispose_editor"]()
+        controls["page"].close()
