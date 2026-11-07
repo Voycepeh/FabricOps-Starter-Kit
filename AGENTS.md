@@ -16,7 +16,6 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
-  - `misc.METADATA_AI_TOKEN_USAGE` stores measured AI request tokens, model, timing, outcome and notebook audit identity; never prompts or generated text.
   - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
   - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.

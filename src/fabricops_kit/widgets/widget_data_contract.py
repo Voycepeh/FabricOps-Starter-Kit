@@ -1147,7 +1147,9 @@ def widget_data_contract(
     Treatment failures always block.
 
     FabricOps AI helper requests automatically append measured token usage to
-    ``misc.METADATA_AI_TOKEN_USAGE`` in the configured Metadata Lakehouse.
+    ``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone
+    widget telemetry table is created on its first write; it is excluded from
+    ``setup_metadata_tables()`` and the canonical Metadata model.
     ``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.
     Prompts and generated text are not stored. Missing usage statistics remain
     unavailable. Audit write failures are shown in AI usage without replaying requests.

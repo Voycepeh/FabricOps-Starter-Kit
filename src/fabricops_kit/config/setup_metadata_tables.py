@@ -19,7 +19,6 @@ from .metadata_schemas import (
     RETIRED_PREVIEW_METADATA_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
-    MISC_METADATA_TABLES,
     metadata_table_physical_schema,
     metadata_schema_type_name,
     metadata_table_field_names,
@@ -399,7 +398,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the canonical metadata tables.
+    """Create, validate and safely evolve the 14 canonical metadata tables.
 
     Parameters
     ----------
@@ -421,7 +420,6 @@ def setup_metadata_tables(
         Overall readiness, configured ownership schemas, canonical table names,
         created/evolved/validated/failed tables, per-table results, steward
         readiness and advisory diagnostics for noncanonical metadata tables.
-        Schema group summaries include governance, engineering and misc.
 
     Raises
     ------
@@ -433,10 +431,6 @@ def setup_metadata_tables(
 
     Notes
     -----
-    The configured misc schema includes METADATA_AI_TOKEN_USAGE for automatic
-    FabricOps AI request telemetry. Existing governance and engineering tables
-    retain their configured physical schemas.
-
     Missing tables are created empty with error-if-exists semantics. Registry
     and Contract Activation use Serializable isolation. Setup never manufactures
     approvals, populates business metadata, deletes rows or replaces business
@@ -639,17 +633,7 @@ def setup_metadata_tables(
         "validated_tables": [table for table in engineering_tables if table in validated_tables],
         "failed_tables": engineering_failed,
     }
-    misc_tables = list(MISC_METADATA_TABLES)
-    misc = {
-        "status": "failed" if any(table in failed_tables for table in misc_tables) else "ready",
-        "tables": misc_tables,
-        "created_tables": [table for table in misc_tables if table in created_tables],
-        "evolved_tables": [table for table in misc_tables if table in evolved_tables],
-        "validated_tables": [table for table in misc_tables if table in validated_tables],
-        "failed_tables": [table for table in misc_tables if table in failed_tables],
-    }
     metadata_schemas = {
-        "misc": normalized.misc_metadata_schema,
         "governance": normalized.governance_metadata_schema,
         "engineering": normalized.engineering_metadata_schema,
     }
@@ -663,7 +647,6 @@ def setup_metadata_tables(
         "table_results": table_results,
         "metadata_schemas": metadata_schemas,
         "engineering": engineering,
-        "misc": misc,
         "fully_qualified_tables": fully_qualified_tables,
         "created_tables": created_tables,
         "evolved_tables": evolved_tables,

@@ -440,7 +440,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
 
     def read_table(table_name, *, store, schema=None, spark_session=None, context=None):
         assert store == "Metadata"
-        assert schema == ("misc" if table_name == "METADATA_AI_TOKEN_USAGE" else "governance" if table_name in {
+        assert schema == ("governance" if table_name in {
             "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION",
         } else "engineering")
         assert context["scope_workspace_id"] == "dev"
@@ -452,7 +452,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         df, table_name, *, store, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
     ):
         assert store == "Metadata"
-        assert schema in {"governance", "engineering", "misc"}
+        assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
         assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None)
         assert verbose is False
@@ -569,7 +569,7 @@ def test_setup_metadata_tables_reports_configured_ownership_schemas(monkeypatch)
     object.__setattr__(cfg, "engineering_metadata_schema", "operations")
     result = call_with_spark(spark, setup_metadata_tables,  config=cfg, workspace_id="dev")
 
-    assert result["metadata_schemas"] == {"governance": "governed", "engineering": "operations", "misc": "misc"}
+    assert result["metadata_schemas"] == {"governance": "governed", "engineering": "operations"}
     assert result["fully_qualified_tables"][0] == "governed.METADATA_DATA_STEWARD"
     assert "operations.METADATA_DATA_CATALOGUE" in result["fully_qualified_tables"]
 
@@ -621,7 +621,7 @@ def test_setup_metadata_tables_ignores_store_default_schema_for_owned_tables(mon
 
     result = call_with_spark(spark, setup_metadata_tables,  config=cfg, workspace_id="dev")
 
-    assert result["metadata_schemas"] == {"governance": "governance", "engineering": "engineering", "misc": "misc"}
+    assert result["metadata_schemas"] == {"governance": "governance", "engineering": "engineering"}
     assert all(not name.startswith("dbo.") for name in result["fully_qualified_tables"])
 
 
@@ -1771,16 +1771,3 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     assert "blacklist" in business_prompt
     assert "regular expression" in business_prompt
     assert "only when none of those structured patterns" in business_prompt
-
-
-def test_misc_schema_defaults_and_validation():
-    """Operational telemetry has an explicit configurable physical schema."""
-    from dataclasses import replace
-    from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-
-    cfg = framework_config()
-    assert cfg.misc_metadata_schema == "misc"
-    custom = replace(cfg, misc_metadata_schema="operational")
-    assert metadata_table_physical_schema(custom, "METADATA_AI_TOKEN_USAGE") == "operational"
-    with pytest.raises(ValueError, match="misc_metadata_schema"):
-        replace(cfg, misc_metadata_schema=" ")

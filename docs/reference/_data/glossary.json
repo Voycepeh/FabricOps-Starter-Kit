@@ -822,15 +822,5 @@
     "long_definition": "METADATA_PIPELINE_ACTIVATION records immutable imports and append-only conditional decisions, reviewer identity, policy review evidence, revisions, expiration and recovery intent. Approval and Engineering deployment are distinct records and identities.",
     "preferred_usage": "Use Pipeline Approval for authoritative Governance decisions; distinguish deployment state.",
     "avoid_usage": "Registry status as Governance approval"
-  },
-  {
-    "id": "ai-token-usage",
-    "term": "AI token usage",
-    "aliases": [],
-    "category": "FabricOps concepts",
-    "short_definition": "Measured token consumption for FabricOps AI Functions requests.",
-    "long_definition": "METADATA_AI_TOKEN_USAGE in the configured misc schema records model, operation, request outcome, timing, available token counts, and notebook audit identity. It excludes prompts and generated text. Missing statistics remain unavailable; billing estimates are derived separately.",
-    "preferred_usage": "Use for measured usage captured by FabricOps AI helpers.",
-    "avoid_usage": "Treating estimated tokens or cost as measured billing."
   }
 ]

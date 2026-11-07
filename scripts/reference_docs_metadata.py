@@ -100,13 +100,12 @@ USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/config/": CONFIG_USAGE_NOTE,
 }
 
-METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with three physical schemas:
+METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
 
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
-- **Misc** stores operational AI token usage in `METADATA_AI_TOKEN_USAGE`.
 
-`table_id` connects the same governed asset across the schemas. `contract_id` and `contract_version` identify one exact Data Contract version."""
+`table_id` connects the same governed asset across both schemas. `contract_id` and `contract_version` identify one exact Data Contract version."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -123,14 +122,6 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_MODELS = {
-    "METADATA_AI_TOKEN_USAGE": {
-        "purpose": "Records measured usage for each FabricOps AI Functions request without prompts or generated text.",
-        "grain": "One append-only row per provider invocation, identified by usage_id.",
-        "implementation_notes": "Written automatically to the configured misc schema in the Metadata Lakehouse. gpt-5-mini is the default; gpt-5.1 remains an explicit override. Provider status describes response execution, not subsequent suggestion validation. Failed requests retain unavailable counters as NULL. Missing statistics are never inferred. Currency and CU estimates are derived separately from model/token counts. Setup creates this table; writes also create it when missing. Audit failures leave the provider result usable and are reported without replaying the request. Calls made directly to df.ai outside FabricOps helpers are not intercepted.",
-        "relationships": [],
-        "primary_key": ["usage_id"],
-        "foreign_keys": [],
-    },
     "METADATA_DATA_CONTRACT_ACTIVATION": {
         "purpose": "Selects one exact globally frozen Contract for each physical table workspace/Table ID.",
         "grain": "One retained activation revision per physical workspace_id and table_id; one current active selection.",
@@ -293,7 +284,6 @@ METADATA_TABLE_MODELS = {
 # delegate the physical Delta write to internal helpers. Keep this separate from
 # per-column provenance; do not list read-only access resolution as a writer.
 METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
-    "METADATA_AI_TOKEN_USAGE": ["widget_data_contract"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
@@ -311,7 +301,6 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
 }
 
 METADATA_REFERENCE_ORDER = [
-    "METADATA_AI_TOKEN_USAGE",
     "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
@@ -344,10 +333,6 @@ _UNTRACED_AGREEMENT_STEWARD_OWNER = {
 }
 
 METADATA_COLUMN_OWNERS = {
-    "METADATA_AI_TOKEN_USAGE": {
-        "__default__": ["fabricops_kit.widgets.enrichment_shared._persist_ai_usage"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    },
     "METADATA_DATA_STEWARD": {
         "__default__": [
             "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",

@@ -221,7 +221,7 @@ def test_usage_append_routes_to_metadata_and_keeps_missing_counts_null(monkeypat
     from datetime import UTC, datetime
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS
 
-    config = {"path_config": {"paths": {"central": {"Metadata": {}}}}, "misc_metadata_schema": "operations"}
+    config = {"path_config": {"paths": {"central": {"Metadata": {}}}}}
     context = {"config": config, "scope_workspace_id": "authoring", "ai_usage_metadata": {
         "table_id": "orders", "contract_version": 2, "prompt": "never persist"}}
     audit = {name: "identity" for name, *_ in AUDIT_SCHEMA_FIELDS}
@@ -244,9 +244,20 @@ def test_usage_append_routes_to_metadata_and_keeps_missing_counts_null(monkeypat
     assert row["workspace_id"] == audit["_workspace_id"]
     assert "never persist" not in str(row)
     options = writer.call_args.kwargs
-    assert writer.call_args.args[1] == "METADATA_AI_TOKEN_USAGE"
-    assert options["store"] == "Metadata" and options["schema"] == "operations"
+    assert writer.call_args.args[1] == "AI_TOKEN_USAGE"
+    assert options["store"] == "Metadata" and options["schema"] == "misc"
     assert options["mode"] == "append" and options["verbose"] is False
     assert options["context"]["scope_workspace_id"] == "central"
     assert options["context"]["_spark_session"] is spark
     assert options["options"] == {"txnAppId": "request-id", "txnVersion": "0"}
+
+
+def test_ai_usage_schema_is_standalone_from_canonical_metadata():
+    """Widget telemetry must not join metadata setup, model or ERD registries."""
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+
+    assert "AI_TOKEN_USAGE" not in CANONICAL_METADATA_TABLES
+    assert "METADATA_AI_TOKEN_USAGE" not in CANONICAL_METADATA_TABLES
+    assert "AI_TOKEN_USAGE" not in metadata_table_schema_registry()
+    schema = module._ai_usage_schema()
+    assert {"usage_id", "input_tokens", "output_tokens", "_notebook_id"} <= set(schema.fieldNames())

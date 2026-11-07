@@ -57,28 +57,6 @@ AUDIT_FIELD_DESCRIPTIONS = {
     "_activity_id": "Fabric execution activity identifier for the current notebook or pipeline run.",
 }
 
-AI_USAGE_FIELD_DESCRIPTIONS = {
-    "usage_id": "Unique invocation identifier, also used for idempotent Delta appends.",
-    "provider": "Fabric AI Functions provider identifier.",
-    "operation": "FabricOps authoring operation that submitted this request.",
-    "model": "Configured built-in model deployment; provider-reported models are retained in statistics_json.",
-    "reasoning_effort": "Requested reasoning effort; NULL delegates to the provider default.",
-    "verbosity": "Requested response verbosity; NULL delegates to the provider default.",
-    "status": "Provider request outcome: succeeded, provider_error, or execution_error. Later suggestion validation is separate.",
-    "statistics_status": "Whether provider statistics were available after result collection.",
-    "started_at": "UTC instant when provider execution began.",
-    "completed_at": "UTC instant when provider execution ended, before the audit append.",
-    "duration_ms": "Elapsed provider execution and statistics collection time in milliseconds; excludes audit storage.",
-    "workspace_id": "Originating notebook workspace from runtime audit identity.",
-    "evidence_workspace_id": "Workspace selected for authoring evidence, when supplied by the widget.",
-    "input_tokens": "Measured input tokens across all reported statistics rows, including cached input; NULL if incomplete.",
-    "output_tokens": "Measured output tokens, including reasoning; NULL if incomplete.",
-    "cached_tokens": "Cached input breakdown already included in input_tokens; NULL if unavailable.",
-    "reasoning_tokens": "Reasoning output breakdown already included in output_tokens; NULL if unavailable.",
-    "error_type": "Exception class only; no exception message or provider response content.",
-    "statistics_json": "Filtered measured provider statistics, excluding prompts and generated text."
-}
-
 METADATA_FIELD_DESCRIPTIONS = {
     "destination_json": "Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.",
     "load_strategy_parameters_json": "Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.",
@@ -4380,8 +4358,6 @@ def _metadata_managed_by(
 
 def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
-    if table_name == "METADATA_AI_TOKEN_USAGE" and column_name in AI_USAGE_FIELD_DESCRIPTIONS:
-        return AI_USAGE_FIELD_DESCRIPTIONS[column_name]
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
@@ -4660,9 +4636,6 @@ def _metadata_column_categories(
     if unknown := set(table_overrides) - names:
         raise RuntimeError(f"Unknown column categories for {table_name}: {sorted(unknown)}")
     owner = metadata_table_owner(table_name)
-    # Misc is a physical grouping for Engineering operational telemetry.
-    if owner == "misc":
-        owner = "engineering"
     categories = {
         name: ("audit" if name in audit_column_names else table_overrides.get(name, owner))
         for name in names
@@ -4911,7 +4884,7 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Model",
             "",
-            f"**Authoritative writer:** `{'engineering' if metadata_table_owner(table_name) == 'misc' else metadata_table_owner(table_name)}`",
+            f"**Authoritative writer:** `{metadata_table_owner(table_name)}`",
             "",
             f"**Default physical schema:** `{metadata_table_owner(table_name)}`",
             "",

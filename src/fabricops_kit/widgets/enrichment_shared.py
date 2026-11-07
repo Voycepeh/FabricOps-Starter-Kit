@@ -16,7 +16,7 @@ from typing import Any
 import warnings
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, build_metadata_schema, audit_schema_fields
 from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
 from fabricops_kit.config.shared import metadata_timestamp_sort_key, validate_ai_enrichment, resolve_fabric_context
@@ -148,8 +148,46 @@ def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
     }
 
 
+def _ai_usage_schema() -> Any:
+    """Define the standalone widget telemetry table, outside canonical Metadata setup."""
+    audit = audit_schema_fields()
+    return build_metadata_schema(
+        "AI_TOKEN_USAGE",
+        [
+            ("usage_id", "string", False),
+            ("provider", "string", False),
+            ("operation", "string", False),
+            ("model", "string", False),
+            ("reasoning_effort", "string"),
+            ("verbosity", "string"),
+            ("status", "string", False),
+            ("statistics_status", "string", False),
+            ("started_at", "timestamp", False),
+            ("completed_at", "timestamp", False),
+            ("duration_ms", "long", False),
+            ("workspace_id", "string", False),
+            ("evidence_workspace_id", "string"),
+            ("table_id", "string"),
+            ("column_id", "string"),
+            ("contract_id", "string"),
+            ("contract_version", "long"),
+            ("input_tokens", "long"),
+            ("output_tokens", "long"),
+            ("cached_tokens", "long"),
+            ("reasoning_tokens", "long"),
+            ("num_successful", "long"),
+            ("num_exceptions", "long"),
+            ("num_unevaluated", "long"),
+            ("num_harmful", "long"),
+            ("error_type", "string"),
+            ("statistics_json", "string"),
+            *audit,
+        ],
+    )
+
+
 def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: dict[str, Any] | None) -> None:
-    """Append measured usage to configured Metadata without persisting request content."""
+    """Create or append standalone AI telemetry in the configured lakehouse, without request content."""
     config, scope, resolved = resolve_fabric_context(context=runtime_context)
     path_config = config.get("path_config") if isinstance(config, dict) else config.path_config
     paths = path_config.get("paths", path_config) if isinstance(path_config, dict) else path_config.paths
@@ -160,8 +198,8 @@ def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: di
         scope = routes[0]
     resolved.update(config=config, scope_workspace_id=scope, _spark_session=spark)
     audit = build_runtime_audit_fields(config=config, active_workspace_id=scope, runtime_context=resolved)
-    table = "METADATA_AI_TOKEN_USAGE"
-    schema = metadata_table_schema_registry()[table]
+    table = "AI_TOKEN_USAGE"
+    schema = _ai_usage_schema()
     row = {field.name: None for field in schema.fields}
     for name in row:
         if name in record:
@@ -179,7 +217,7 @@ def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: di
     row["statistics_json"] = json.dumps(stats, sort_keys=True) if stats else None
     write_lakehouse_table(
         spark.createDataFrame([row], schema=schema), table, store="Metadata",
-        schema=metadata_table_physical_schema(config, table), mode="append", verbose=False,
+        schema="misc", mode="append", verbose=False,
         options={"txnAppId": record["usage_id"], "txnVersion": "0"}, context=resolved,
     )
 

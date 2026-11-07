@@ -20,7 +20,6 @@ GLOSSARY_GROUPS = [
         ),
         [
             "fabricops-starter-kit",
-            "ai-token-usage",
             "data-agreement",
             "data-contract",
             "pipeline-promotion",

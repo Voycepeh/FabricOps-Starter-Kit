@@ -20,7 +20,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
     "METADATA_PROCESSING_STATE",
-    "METADATA_AI_TOKEN_USAGE",
 ]
 
 # Intentional lifecycle declarations, independent of physical schema ownership.
@@ -72,21 +71,18 @@ GOVERNANCE_METADATA_TABLES = (
     "METADATA_PIPELINE_ACTIVATION",
 )
 
-MISC_METADATA_TABLES = ("METADATA_AI_TOKEN_USAGE",)
-
 ENGINEERING_METADATA_TABLES = tuple(
-    table_name for table_name in CANONICAL_METADATA_TABLES if table_name not in GOVERNANCE_METADATA_TABLES + MISC_METADATA_TABLES
+    table_name for table_name in CANONICAL_METADATA_TABLES if table_name not in GOVERNANCE_METADATA_TABLES
 )
 
 METADATA_TABLE_OWNERSHIP = {
-    **{table_name: "misc" for table_name in MISC_METADATA_TABLES},
     **{table_name: "governance" for table_name in GOVERNANCE_METADATA_TABLES},
     **{table_name: "engineering" for table_name in ENGINEERING_METADATA_TABLES},
 }
 
 
 def metadata_table_owner(table_name: str) -> str:
-    """Return the metadata schema group for a canonical metadata table."""
+    """Return the authoritative writer class for a canonical metadata table."""
     try:
         return METADATA_TABLE_OWNERSHIP[table_name]
     except KeyError as exc:
@@ -266,39 +262,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
     """Return physical schemas, or typed logical contracts for JSON metadata."""
     audit = audit_schema_fields()
     schemas = {
-        "METADATA_AI_TOKEN_USAGE": build_metadata_schema(
-            "METADATA_AI_TOKEN_USAGE",
-            [
-                ("usage_id", "string", False),
-                ("provider", "string", False),
-                ("operation", "string", False),
-                ("model", "string", False),
-                ("reasoning_effort", "string"),
-                ("verbosity", "string"),
-                ("status", "string", False),
-                ("statistics_status", "string", False),
-                ("started_at", "timestamp", False),
-                ("completed_at", "timestamp", False),
-                ("duration_ms", "long", False),
-                ("workspace_id", "string", False),
-                ("evidence_workspace_id", "string"),
-                ("table_id", "string"),
-                ("column_id", "string"),
-                ("contract_id", "string"),
-                ("contract_version", "long"),
-                ("input_tokens", "long"),
-                ("output_tokens", "long"),
-                ("cached_tokens", "long"),
-                ("reasoning_tokens", "long"),
-                ("num_successful", "long"),
-                ("num_exceptions", "long"),
-                ("num_unevaluated", "long"),
-                ("num_harmful", "long"),
-                ("error_type", "string"),
-                ("statistics_json", "string"),
-                *audit,
-            ],
-        ),
         "METADATA_DATA_STEWARD": build_metadata_schema(
             "METADATA_DATA_STEWARD",
             [("steward_id", "string", False), ("steward_name", "string"), ("steward_role", "string"), ("contact", "string"), ("is_active", "boolean"), ("custom_fields_json", "string"), *audit],
@@ -826,7 +789,6 @@ __all__ = [
     "CANONICAL_METADATA_TABLES",
     "GOVERNANCE_METADATA_TABLES",
     "ENGINEERING_METADATA_TABLES",
-    "MISC_METADATA_TABLES",
     "METADATA_TABLE_OWNERSHIP",
     "audit_schema_fields",
     "coerce_metadata_row_types",

@@ -159,7 +159,9 @@ summaries including min/max and the three most frequent values.
 Treatment failures always block.
 
 FabricOps AI helper requests automatically append measured token usage to
-``misc.METADATA_AI_TOKEN_USAGE`` in the configured Metadata Lakehouse.
+``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone
+widget telemetry table is created on its first write; it is excluded from
+``setup_metadata_tables()`` and the canonical Metadata model.
 ``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.
 Prompts and generated text are not stored. Missing usage statistics remain
 unavailable. Audit write failures are shown in AI usage without replaying requests.
@@ -185,7 +187,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:1043`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1043-L7822">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1043-L7824">View on GitHub</a>
 </div>
 
 
