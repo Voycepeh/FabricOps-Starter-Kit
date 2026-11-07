@@ -414,7 +414,7 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
 
 
 def test_reintroduced_activation_widget_is_live_with_unchanged_history(repository_call_flow_payload) -> None:
-    """The v0.4.0 promotion restores Live support without rewriting retirement history."""
+    """The v0.4.0 promotion restores Live support and v0.4.1 retains that status."""
     qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
     history, _ = flows.read_function_lifecycle()
     assert history[qn].lifecycle_status == "live"
@@ -424,7 +424,10 @@ def test_reintroduced_activation_widget_is_live_with_unchanged_history(repositor
     assert current.discontinued_in == "0.3.0"
     assert current.release_history == history[qn].release_history
     assert any(row["status"] == "discontinued" for row in current.release_history)
-    assert current.release_history[-1] == {"version": "0.4.0", "status": "live"}
+    assert current.release_history[-2:] == (
+        {"version": "0.4.0", "status": "live"},
+        {"version": "0.4.1", "status": "live"},
+    )
     row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
     assert row["lifecycle_status"] == "live"
     assert row["contract_classification"] == "live_public_function"
