@@ -4510,3 +4510,81 @@ def test_profile_cache_keeps_workspace_results_separate(widget_runtime, monkeypa
     state["_controls"]["workspace_select"].value = "prod"
     assert state["load_profile_context"]("col-0")["profile"]["row_count"] == 42
     assert calls == ["dev", "prod"]
+
+
+@pytest.mark.parametrize("action", ["change_table", "discard_data_contract"])
+def test_invalid_unstaged_edits_require_discard_confirmation(widget_runtime, action):
+    """Invalid text is still unsaved work, even before a valid record can be staged."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][4]
+    maximum_age.value = "invalid age"
+    assert not state["dirty"]
+    assert "table.freshness" in state["_validation_errors"]
+    controls[action].click()
+    assert state["current"] is not None
+    assert maximum_age.value == "invalid age"
+    confirmation = "table_exit_confirm" if action == "change_table" else "discard_data_contract_confirm"
+    assert controls[confirmation].layout.display == ""
+    assert widget_runtime["calls"]["draft"] == []
+
+
+@pytest.mark.parametrize("action", ["save_data_contract", "freeze"])
+def test_notebook_actions_cannot_bypass_editor_validation(widget_runtime, action):
+    """Returned notebook actions enforce the same validation as the visible buttons."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_guardrails"]["freshness"]["parameters"][4].value = "invalid age"
+    with pytest.raises(ValueError, match="Complete the current draft configuration"):
+        state[action]()
+    assert widget_runtime["calls"]["draft"] == []
+    assert widget_runtime["calls"]["freeze"] == 0
+    assert state["current"] is not None
+
+
+@pytest.mark.parametrize("action", ["save", "freeze"])
+def test_optional_ai_failure_does_not_block_valid_manual_work(widget_runtime, monkeypatch, action):
+    """An unaccepted AI request must not become a validation error on the authored contract."""
+    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    def fail(*_args, **_kwargs):
+        raise RuntimeError("temporary provider timeout")
+    monkeypatch.setattr(module, "suggest_business_rule", fail)
+    controls["resolve_business_rule"].click()
+    assert "business_rule_ai" in state["_validation_errors"]
+    if action == "save":
+        controls["table_description"].value = "Valid manually authored description"
+        controls["save_data_contract"].click()
+        assert len(widget_runtime["calls"]["draft"]) == 1
+        saved = widget_runtime["calls"]["draft"][0]
+        assert any(row.get("value") == "Valid manually authored description"
+                   for row in saved["enrichment"]["table"])
+    else:
+        controls["freeze"].click()
+        controls["freeze_confirm"].click()
+        assert widget_runtime["calls"]["freeze"] == 1, state["message"]
+
+
+def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkeypatch):
+    """No matching column means no editable stale column and no model requests for an empty identity."""
+    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Column"
+    controls["column_description"].value = "Keep this authored description"
+    before = {key: len(value) for key, value in captures.items()}
+    controls["column_search"].value = "no-such-column"
+    assert controls["column_select"].value is None
+    assert controls["right_pane"].children == (controls["empty_column"],)
+    for key in ("rerun_column_description", "rerun_sensitive", "accept_column_description", "accept_sensitive"):
+        assert controls[key].disabled
+        controls[key].click()
+    assert {key: len(value) for key, value in captures.items()} == before
+    assert "" not in next(iter(state["_ai_suggestions"].values()))["columns"]
+    controls["top_nav"].value = "Table"
+    controls["top_nav"].value = "Column"
+    assert controls["right_pane"].children == (controls["empty_column"],)
+    controls["column_search"].value = ""
+    assert controls["column_select"].value == "col-0"
+    assert controls["column_description"].value == "Keep this authored description"
+    assert controls["right_pane"].children != (controls["empty_column"],)
+    assert not controls["rerun_column_description"].disabled

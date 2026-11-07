@@ -123,6 +123,8 @@ use Generate on a column to request further AI suggestions explicitly.
 Long operations show an animated progress indicator and record elapsed seconds in
 ``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
 on blur or Enter, while searches remain live. Full Review content is built on demand.
+Save and Freeze validate pending editor input through both buttons and returned actions.
+Optional AI request failures do not block valid manually authored contracts.
 Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
 stage the same configuration as one independent rule per selected column.
 Uniqueness can instead treat selected columns as one composite key.
@@ -177,7 +179,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:907`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L907-L7654">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L907-L7677">View on GitHub</a>
 </div>
 
 

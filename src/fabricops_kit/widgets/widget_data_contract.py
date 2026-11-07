@@ -975,6 +975,8 @@ def widget_data_contract(
     Long operations show an animated progress indicator and record elapsed seconds in
     ``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
     on blur or Enter, while searches remain live. Full Review content is built on demand.
+    Save and Freeze validate pending editor input through both buttons and returned actions.
+    Optional AI request failures do not block valid manually authored contracts.
     Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
     stage the same configuration as one independent rule per selected column.
     Uniqueness can instead treat selected columns as one composite key.
@@ -1205,6 +1207,9 @@ def widget_data_contract(
             if callable(refresh_dq_rules):
                 refresh_dq_rules()
         if selected_view == "Column":
+            refresh_column_view = state.get("_refresh_column_view")
+            if callable(refresh_column_view):
+                refresh_column_view()
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
@@ -1219,6 +1224,33 @@ def widget_data_contract(
         state["message"] = message
         colour = "#a4262c" if error else "#8a6d1d" if warning else "#107c10"
         status.value = f'<div style="color:{colour};font-weight:600;">{html.escape(message)}</div>'
+
+    def blocking_validation_errors() -> dict[str, str]:
+        """Exclude optional AI generation failures from authored contract validation."""
+        return {key: value for key, value in state["_validation_errors"].items()
+                if key != "business_rule_ai"}
+
+    def has_pending_authoring_changes() -> bool:
+        current = state.get("current")
+        if not current:
+            return False
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        return bool(state.get("dirty") or blocking_validation_errors()
+                    or state["_column_drafts"].get(scope))
+
+    def validate_authoring_session(action: str) -> None:
+        errors = blocking_validation_errors()
+        if errors:
+            raise ValueError(
+                f"Complete the current draft configuration before {action}: "
+                + str(next(iter(errors.values())))
+            )
+        current = state["current"]
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        if state["_column_drafts"].get(scope):
+            raise ValueError(
+                f"Complete the retained Column edits before {action} the Data Contract."
+            )
 
     def refresh_manifest() -> dict[str, Any] | None:
         current = state.get("current")
@@ -1381,6 +1413,7 @@ def widget_data_contract(
         prepare_save = state.get("_prepare_data_contract_save")
         if callable(prepare_save):
             prepare_save()
+        validate_authoring_session("saving")
         removed_column_ids = {
             str(rule.get("column_id") or "")
             for rule in current.get("guardrails", [])
@@ -1473,6 +1506,7 @@ def widget_data_contract(
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
+        validate_authoring_session("freezing")
         if state.get("dirty"):
             raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
@@ -1688,7 +1722,7 @@ def widget_data_contract(
         dispose_editor = state.pop("_dispose_editor", None)
         if callable(dispose_editor):
             dispose_editor()
-        for key in ("_refresh_review", "_refresh_dq_rules", "_refresh_ai_controls", "_load_selected_profile"):
+        for key in ("_refresh_review", "_refresh_dq_rules", "_refresh_ai_controls", "_load_selected_profile", "_refresh_column_view"):
             state.pop(key, None)
         authoring_footer.children = ()
         authoring_footer.layout.display = "none"
@@ -3390,6 +3424,7 @@ def widget_data_contract(
         column_select.add_class("fabricops-contract-columns")
         column_select.add_class("fabricops-contract-list")
         column_context = widgets.HTML()
+        empty_column = widgets.HTML("<p>No columns match this search. Change or clear the search to select a column.</p>")
         profile_context = widgets.HTML(
             "<p>No column selected.</p>",
             layout=widgets.Layout(
@@ -4118,9 +4153,12 @@ def widget_data_contract(
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
-                if str(top_nav.value) == "Column":
-                    load_selected_profile()
-                render_column_ai(selected_id)
+            render_column_ai(str(change.get("new") or ""))
+            if str(top_nav.value) == "Column":
+                refresh_column_view = state.get("_refresh_column_view")
+                if callable(refresh_column_view):
+                    refresh_column_view()
+                load_selected_profile()
 
         column_select.observe(column_changed, names="value")
 
@@ -4217,7 +4255,7 @@ def widget_data_contract(
                     "Sensitive Data", suggestions.get("sensitive_data")
                 )
             available = (
-                editable and ai_available() and ai_mode == "with_ai"
+                editable and ai_available() and ai_mode == "with_ai" and bool(column_id)
             )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
@@ -4245,6 +4283,9 @@ def widget_data_contract(
 
         @busy_action("Generating column description…")
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
+            if not column_id:
+                render_column_ai("")
+                return
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
@@ -4301,6 +4342,9 @@ def widget_data_contract(
         def run_sensitive_ai(
             column_id: str, *, force: bool = False, use_description_suggestion: bool = False
         ) -> None:
+            if not column_id:
+                render_column_ai("")
+                return
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
@@ -5097,6 +5141,11 @@ def widget_data_contract(
             ),
         )
         view_content["Column"] = (column_left, column_right)
+
+        def refresh_column_view() -> None:
+            if str(top_nav.value) == "Column":
+                right.children = column_right if column_select.value else (empty_column,)
+        state["_refresh_column_view"] = refresh_column_view
 
         if ai_mode == "with_ai":
             if not str(table_grain.value or "").strip():
@@ -6986,19 +7035,6 @@ def widget_data_contract(
 
             def save_contract_clicked(_button: Any) -> None:
                 try:
-                    errors = state["_validation_errors"]
-                    if errors:
-                        first_error = next(iter(errors.values()))
-                        raise ValueError(
-                            "Complete the current draft configuration before saving: "
-                            f"{first_error}"
-                        )
-                    scope = (str(current["contract_id"]), int(current["contract_version"]))
-                    retained_columns = state["_column_drafts"].get(scope, {})
-                    if retained_columns:
-                        raise ValueError(
-                            "Complete the retained Column edits before saving the Data Contract."
-                        )
                     save_data_contract_session()
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
@@ -7041,19 +7077,6 @@ def widget_data_contract(
                 try:
                     freeze_confirm_button.disabled = True
                     if state.get("dirty"):
-                        errors = state["_validation_errors"]
-                        if errors:
-                            first_error = next(iter(errors.values()))
-                            raise ValueError(
-                                "Complete the current draft configuration before freezing: "
-                                f"{first_error}"
-                            )
-                        scope = (str(current["contract_id"]), int(current["contract_version"]))
-                        retained_columns = state["_column_drafts"].get(scope, {})
-                        if retained_columns:
-                            raise ValueError(
-                                "Complete the retained Column edits before freezing the Data Contract."
-                            )
                         save_data_contract_session(return_to_selector_after=False)
                     freeze()
                     render()
@@ -7063,7 +7086,7 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def discard_contract_clicked(_button: Any) -> None:
-                if state.get("dirty"):
+                if has_pending_authoring_changes():
                     discard_contract_confirm.layout.display = ""
                     return
                 try:
@@ -7176,7 +7199,7 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
-            "column_search": column_search,
+            "column_search": column_search, "empty_column": empty_column,
             "column_select": column_select, "column_context": column_context,
             "column_header": column_header,
             "column_required_controls": column_required_controls,
@@ -7596,7 +7619,7 @@ def widget_data_contract(
     state["_return_to_selector"] = return_to_selector
 
     def change_table(_button: Any) -> None:
-        if state.get("dirty"):
+        if has_pending_authoring_changes():
             table_exit_confirm.layout.display = ""
             return
         return_to_selector("Select a governed table and contract.")
