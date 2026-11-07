@@ -1,4 +1,4 @@
-<!-- Generated file. Edit docs/releases/manifests/0.4.0.yml or the authoritative source metadata and regenerate. -->
+<!-- Generated file. Edit docs/releases/manifests/0.4.1.yml or the authoritative source metadata and regenerate. -->
 
 # Releases
 
@@ -6,6 +6,7 @@
 
 | Release | Release date | Description |
 | --- | --- | --- |
+| [FabricOps Starter Kit 0.4.1](0.4.1/index.md) | 2026-11-07 | FabricOps 0.4.1 fixes concurrency conflicts in metadata Delta mutations and improves Data Contract widget responsiveness and authoring behavior. |
 | [FabricOps Starter Kit 0.4.0](0.4.0/index.md) | 2026-11-05 | FabricOps 0.4.0 repairs metadata structures that did not work correctly in Microsoft Fabric, replaces native-viewer-incompatible array and struct storage with validated SQL-compatible JSON, preserves existing metadata through automatic migration, and corrects execution metric and logging defects. |
 | [FabricOps Starter Kit 0.3.1](0.3.1/index.md) | 2026-10-31 | FabricOps 0.3.1 enables configured pipeline Reads and Writes across Fabric workspaces while preserving the governed execution model introduced in v0.3.0. |
 | [FabricOps Starter Kit 0.3.0](0.3.0/index.md) | 2026-10-30 | FabricOps 0.3.0 establishes workspace-scoped governed pipeline execution, promotes the core execution and metadata contracts to Live, and introduces explicit Dry Run, Ungoverned, and Governed workflows. |

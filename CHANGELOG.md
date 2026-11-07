@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-07
+
+### Fixed
+
+- Retry confirmed Delta conflicts in Catalogue, profiling, and configured metadata authoring mutations without replaying business writes.
+- Improve Data Contract widget responsiveness, loading feedback, and authoring behavior.
+
+### Upgrade instructions
+
+- Upgrade the package. This release does not change metadata schemas, so existing v0.4.0 metadata tables require no schema migration.
+
 ## [0.4.0] - 2026-11-05
 
 ### Added
