@@ -7,10 +7,12 @@ import traceback
 import json
 import uuid
 from decimal import Decimal, InvalidOperation
+from functools import wraps
+from time import perf_counter
 from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import metadata_timestamp_sort_key, resolve_fabric_context, validate_ai_enrichment
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, normalize_audit_datetime, resolve_fabric_context, validate_ai_enrichment
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
@@ -118,8 +120,19 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract * { overflow-anchor:none !important; }
 .fabricops-data-contract .fabricops-contract-nav { width:100%; margin:0; }
 .fabricops-data-contract .fabricops-contract-nav-row {
-    position:sticky; top:0; z-index:4; padding:4px 0 6px; background:var(--form-canvas, #f6f8fb);
+    position:sticky; top:40px; z-index:4; padding:4px 0 6px; background:var(--form-canvas, #f6f8fb);
 }
+.fabricops-data-contract .fabricops-operation-progress {
+    position:sticky; top:0; z-index:5; min-height:40px;
+    background:var(--form-canvas, #f6f8fb);
+}
+.fabricops-data-contract .fabricops-ai-usage-table {
+    width:100%; min-width:560px; border-collapse:collapse; font-size:12px;
+}
+.fabricops-data-contract .fabricops-ai-usage-table :is(th,td) {
+    text-align:left; padding:8px; border-bottom:1px solid var(--form-border); vertical-align:top;
+}
+.fabricops-data-contract .fabricops-ai-usage-table th { background:var(--form-tint); }
 .fabricops-data-contract .fabricops-contract-nav > div {
     display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
     border:1px solid var(--form-border); border-radius:7px; width:fit-content;
@@ -262,10 +275,15 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-contract-list { overflow:visible !important; }
 .fabricops-data-contract .fabricops-contract-list select {
-    width:100%; min-width:0; max-width:100%; overflow-x:hidden; overflow-y:auto;
+    width:100%; min-width:0; max-width:100%; height:180px; min-height:180px;
+    padding:5px; box-sizing:border-box; overflow-x:hidden; overflow-y:auto;
 }
 .fabricops-data-contract .fabricops-contract-list option {
+    min-height:30px; padding:5px 8px; line-height:20px; box-sizing:border-box;
     max-width:100%; overflow:hidden; text-overflow:ellipsis;
+}
+.fabricops-data-contract .fabricops-contract-columns select {
+    height:100%; min-height:320px;
 }
 @container (max-width:800px) {
     .fabricops-data-contract .fabricops-contract-workspace,
@@ -287,7 +305,7 @@ _CONTRACT_STYLE = """<style>
     .fabricops-data-contract .fabricops-data-quality-workspace { overscroll-behavior:auto; }
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
-    .fabricops-data-contract .fabricops-contract-columns { height:660px !important; }
+    .fabricops-data-contract .fabricops-contract-columns { height:360px !important; flex:none; }
 }
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
@@ -815,7 +833,7 @@ def _manifest_html(payload: dict[str, Any]) -> str:
 def _profile_html(context: dict[str, Any]) -> str:
     """Render a compact datatype-aware summary of governed profile evidence."""
     if context.get("kind") == "unavailable":
-        return "<p>Not yet profiled.</p>"
+        return "<p>" + html.escape(str(context.get("message") or "Not yet profiled.")) + "</p>"
 
     profile = dict(context.get("profile") or {})
     values = list(context.get("values") or [])
@@ -889,7 +907,138 @@ def _profile_html(context: dict[str, Any]) -> str:
     ):
         lines.append("Values are highly unique, so value frequency profiling was skipped.")
 
+    if not lines:
+        return "<p>A profile record exists, but no metrics were recorded for this column.</p>"
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
+
+def _ai_usage_html(records: list[dict[str, Any]]) -> str:
+    """Render measured tokens and an explicitly estimated Fabric AI capacity equivalent."""
+    # Microsoft AI Functions billing rates, checked 7 November 2026, per 1,000 tokens.
+    rates = {"gpt-5-mini": (Decimal("8.40"), Decimal("0.84"), Decimal("67.23")),
+             "gpt-5.1": (Decimal("42.02"), Decimal("4.20"), Decimal("336.13"))}
+    rates["gpt-5-mini-2025-08-07"] = rates["gpt-5-mini"]
+    rates["gpt-5.1-2025-11-13"] = rates["gpt-5.1"]
+    fields = ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens")
+    totals = {field: 0 for field in fields}
+    known = {field: 0 for field in fields}
+    missing = {field: False for field in fields}
+    estimated = Decimal(0)
+    estimated_rows = 0
+    estimate_partial = False
+    cache_assumed = False
+    rows = []
+    labels = {"table_enrichment": "Table description", "column_enrichment": "Column description",
+              "grain_key": "Grain and row key", "sensitive_data": "Sensitive Data",
+              "business_rule_ai": "Data Quality suggestions"}
+
+    def count(value: Any) -> int | None:
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            number = Decimal(str(value))
+            return int(number) if number.is_finite() and number >= 0 and number == number.to_integral_value() else None
+        except (InvalidOperation, ValueError, OverflowError):
+            return None
+
+    def shown(value: int, available: int, partial: bool) -> str:
+        if not available:
+            return "Unavailable"
+        return f"{value:,}" + (" (partial)" if partial else "")
+
+    for index, record in enumerate(records, 1):
+        stats = record.get("statistics") or []
+        values = {field: 0 for field in fields}
+        available = {field: 0 for field in fields}
+        partial = {field: not bool(stats) for field in fields}
+        request_estimate = Decimal(0)
+        request_priced = 0
+        request_partial = not bool(stats)
+        for stat in stats:
+            counts = {field: count(stat.get(field)) for field in fields}
+            for field, value in counts.items():
+                if value is None:
+                    partial[field] = True
+                else:
+                    values[field] += value
+                    available[field] += 1
+            input_count, output_count = counts["input_tokens"], counts["output_tokens"]
+            cached_count = counts["cached_tokens"]
+            model_rates = rates.get(str(stat.get("model") or record.get("model") or ""))
+            if model_rates is None or input_count is None or output_count is None:
+                request_partial = True
+                continue
+            if cached_count is None:
+                cache_assumed = True
+                cached_count = 0
+            if cached_count > input_count:
+                request_partial = True
+                continue
+            input_rate, cached_rate, output_rate = model_rates
+            # Cached input and reasoning are breakdowns of input/output respectively.
+            request_estimate += ((input_count - cached_count) * input_rate
+                                 + cached_count * cached_rate + output_count * output_rate) / 1000
+            request_priced += 1
+        for field in fields:
+            totals[field] += values[field]
+            known[field] += available[field]
+            missing[field] |= partial[field]
+        estimated += request_estimate
+        estimated_rows += request_priced
+        estimate_partial |= request_partial
+        operation = str(record.get("operation") or "AI request")
+        model = str(record.get("model") or "Unknown")
+        capacity = (f"{request_estimate:,.3f}" + (" (partial)" if request_partial else "")) if request_priced else "Unavailable"
+        rows.append(
+            f"<tr><td>{index}</td><td>{html.escape(labels.get(operation, operation))}</td>"
+            f"<td>{html.escape(model)}</td>"
+            f"<td><strong>{shown(values['input_tokens'], available['input_tokens'], partial['input_tokens'])}</strong></td>"
+            f"<td><strong>{shown(values['output_tokens'], available['output_tokens'], partial['output_tokens'])}</strong></td>"
+            f"<td>{capacity}</td></tr>"
+        )
+    unsaved = sum(record.get("persistence_status") == "unconfirmed" for record in records)
+    persistence_notice = (f"<p><strong>{unsaved} AI usage audit write(s) unconfirmed.</strong> Check Metadata access; requests were not replayed.</p>" if unsaved else "")
+    input_total = shown(totals["input_tokens"], known["input_tokens"], missing["input_tokens"]) if records else "0"
+    output_total = shown(totals["output_tokens"], known["output_tokens"], missing["output_tokens"]) if records else "0"
+    capacity_total = (
+        f"{estimated:,.3f} CU-seconds ({estimated / 3600:,.6f} CU-hours)"
+        + (" — partial estimate" if estimate_partial else "")
+    ) if estimated_rows or not records else "Unavailable"
+    table = (
+        "<div style='overflow:auto;max-height:360px;max-width:100%;'><table class='fabricops-ai-usage-table'>"
+        "<caption>Recorded AI requests for this widget instance</caption>"
+        "<thead><tr><th>#</th><th>Operation</th><th>Model</th><th>Input tokens</th>"
+        "<th>Output tokens</th><th>Estimated CU-seconds</th></tr></thead><tbody>"
+        + "".join(rows) + "</tbody></table></div>"
+    ) if rows else "<p>No AI requests made by this widget.</p>"
+    return (
+        persistence_notice +
+        "<h4 style='margin:0 0 12px;'>AI usage</h4>"
+        f"<p><strong>Total input tokens: {input_total}</strong><br>"
+        f"<strong>Total output tokens: {output_total}</strong></p>"
+        + ("<p style='font-size:12px;'>Included breakdowns — cached input: "
+           + shown(totals["cached_tokens"], known["cached_tokens"], missing["cached_tokens"])
+           + "; reasoning output: " + shown(totals["reasoning_tokens"], known["reasoning_tokens"], missing["reasoning_tokens"])
+           + ".</p>" if records else "")
+        + f"<p>Estimated AI capacity: <strong>{capacity_total}</strong></p>"
+        + table
+        + ("<p>Totals include available statistics only; missing values are not counted as zero.</p>"
+           if any(missing.values()) and records else "")
+        + ("<p>Cache statistics were unavailable for some requests; their estimate assumes no cached-input discount.</p>"
+           if cache_assumed else "")
+        + "<details><summary>Capacity and money estimate</summary>"
+        "<p>Rates checked 7 Nov 2026; CU-seconds per 1,000 tokens: "
+        "gpt-5-mini: input 8.40, cached input 0.84, output 67.23; "
+        "gpt-5.1: input 42.02, cached input 4.20, output 336.13. Rates can change. "
+        "Cached input is included in input tokens; reasoning is included in output tokens and is not added again.</p>"
+        "<p>Money equivalent ≈ estimated CU-hours × (your capacity hourly price ÷ capacity CUs). "
+        "This allocates capacity cost; it is not an invoice amount. Spark compute is separate.</p>"
+        "<p>Verify consumption in <a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>"
+        "Fabric Capacity Metrics</a>. <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing'>"
+        "Microsoft AI Functions billing rates</a>.</p></details>"
+        "<details><summary>Raw statistics</summary><pre style='white-space:pre-wrap;max-height:240px;overflow:auto;'>"
+        + html.escape(json.dumps(records, ensure_ascii=False, indent=2, default=str)) + "</pre></details>"
+    )
+
 
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
@@ -956,6 +1105,14 @@ def widget_data_contract(
     from business language when AI is enabled. Proposals require explicit review
     and addition. Both paths create the same editable Guardrail records; the
     Column tab contains column metadata and non-DQ settings only.
+    Opening with AI prepares suggestions for the table and first column.
+    Switching columns reuses table-level profile reads and cached suggestions;
+    use Generate on a column to request further AI suggestions explicitly.
+    Long operations show an animated progress indicator and record elapsed seconds in
+    ``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
+    on blur or Enter, while searches remain live. Full Review content is built on demand.
+    Save and Freeze validate pending editor input through both buttons and returned actions.
+    Optional AI request failures do not block valid manually authored contracts.
     Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
     stage the same configuration as one independent rule per selected column.
     Uniqueness can instead treat selected columns as one composite key.
@@ -988,6 +1145,14 @@ def widget_data_contract(
     schema and contract metadata. When profiling exists, they also receive profile
     summaries including min/max and the three most frequent values.
     Treatment failures always block.
+
+    FabricOps AI helper requests automatically append measured token usage to
+    ``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone
+    widget telemetry table is created on its first write; it is excluded from
+    ``setup_metadata_tables()`` and the canonical Metadata model.
+    ``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.
+    Prompts and generated text are not stored. Missing usage statistics remain
+    unavailable. Audit write failures are shown in AI usage without replaying requests.
 
     Examples
     --------
@@ -1063,6 +1228,71 @@ def widget_data_contract(
     }
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
+    operation_progress = widgets.HTML(layout=widgets.Layout(width="100%", min_height="40px"))
+    operation_progress.add_class("fabricops-operation-progress")
+    state["_operation_timings"] = []
+    state["_busy_depth"] = 0
+
+    def loading_html(label: str) -> str:
+        """Animate in the browser while Spark blocks the notebook thread."""
+        return (
+            "<div role='status' aria-live='polite' aria-busy='true' style='width:100%;'>"
+            f"<div style='font-size:12px;margin-bottom:4px;'>{html.escape(label)}</div>"
+            f"<progress aria-label='{html.escape(label, quote=True)}' "
+            "style='display:block;width:100%;height:6px;accent-color:var(--form-accent);'></progress>"
+            "</div>"
+        )
+
+    def busy_action(label: str):
+        """Show progress before blocking work and restore navigation on every exit."""
+        def decorate(callback):
+            @wraps(callback)
+            def run(*args, **kwargs):
+                outermost = state["_busy_depth"] == 0
+                locked = []
+                if outermost:
+                    controls = state["_controls"]
+                    candidates = [controls.get(key) for key in (
+                        "top_nav", "table", "workspace_select", "contract", "column_select",
+                        "open_with_ai", "open_without_ai", "save_data_contract", "discard_data_contract",
+                        "freeze", "freeze_confirm", "change_table", "confirm_exit_discard",
+                        "confirm_discard_data_contract",
+                    )] + state["_ai_buttons"]
+                    seen = set()
+                    for control in candidates:
+                        if control is not None and id(control) not in seen and not control.disabled:
+                            seen.add(id(control))
+                            locked.append(control)
+                            control.disabled = True
+                state["_busy_depth"] += 1
+                began = perf_counter()
+                operation_progress.value = loading_html(label)
+                if state.get("_opening_with_ai"):
+                    open_progress.value = operation_progress.value
+                try:
+                    return callback(*args, **kwargs)
+                finally:
+                    elapsed = perf_counter() - began
+                    state["_operation_timings"].append({"operation": label, "seconds": elapsed})
+                    del state["_operation_timings"][:-100]
+                    state["_busy_depth"] -= 1
+                    if outermost:
+                        for control in locked:
+                            if not getattr(control, "closed", False):
+                                control.disabled = False
+                        refresh_ai_controls = state.get("_refresh_ai_controls")
+                        if state.get("current") and callable(refresh_ai_controls):
+                            refresh_ai_controls()
+                        if not ai_available():
+                            for control in state["_ai_buttons"]:
+                                control.disabled = True
+                            open_with_ai_button.disabled = True
+                        operation_progress.value = (
+                            "<div role='status' style='font-size:12px;color:#667085;'>"
+                            f"Operation finished in {elapsed:.1f} s.</div>"
+                        )
+            return run
+        return decorate
     top_nav = widgets.ToggleButtons(
         options=_TABS,
         value="Table",
@@ -1102,6 +1332,15 @@ def widget_data_contract(
     authoring_footer.add_class("fabricops-authoring-footer")
     view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
 
+    def ai_runtime_context(column_id: str | None = None) -> dict[str, Any]:
+        """Route usage to central Metadata while preserving notebook and asset identity."""
+        contract = (state.get("current") or {}).get("contract") or {}
+        return {**resolved, "config": config, "scope_workspace_id": routing_workspace_id,
+                "ai_usage_metadata": {"table_id": state.get("table_id"), "column_id": column_id,
+                                      "contract_id": contract.get("contract_id"),
+                                      "contract_version": state.get("contract_version"),
+                                      "evidence_workspace_id": active_workspace_id}}
+
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)
         if selected_view == "Data Quality":
@@ -1121,6 +1360,9 @@ def widget_data_contract(
             if callable(refresh_dq_rules):
                 refresh_dq_rules()
         if selected_view == "Column":
+            refresh_column_view = state.get("_refresh_column_view")
+            if callable(refresh_column_view):
+                refresh_column_view()
             load_selected_profile = state.get("_load_selected_profile")
             if callable(load_selected_profile):
                 load_selected_profile()
@@ -1135,6 +1377,33 @@ def widget_data_contract(
         state["message"] = message
         colour = "#a4262c" if error else "#8a6d1d" if warning else "#107c10"
         status.value = f'<div style="color:{colour};font-weight:600;">{html.escape(message)}</div>'
+
+    def blocking_validation_errors() -> dict[str, str]:
+        """Exclude optional AI generation failures from authored contract validation."""
+        return {key: value for key, value in state["_validation_errors"].items()
+                if key != "business_rule_ai"}
+
+    def has_pending_authoring_changes() -> bool:
+        current = state.get("current")
+        if not current:
+            return False
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        return bool(state.get("dirty") or blocking_validation_errors()
+                    or state["_column_drafts"].get(scope))
+
+    def validate_authoring_session(action: str) -> None:
+        errors = blocking_validation_errors()
+        if errors:
+            raise ValueError(
+                f"Complete the current draft configuration before {action}: "
+                + str(next(iter(errors.values())))
+            )
+        current = state["current"]
+        scope = (str(current["contract_id"]), int(current["contract_version"]))
+        if state["_column_drafts"].get(scope):
+            raise ValueError(
+                f"Complete the retained Column edits before {action} the Data Contract."
+            )
 
     def refresh_manifest() -> dict[str, Any] | None:
         current = state.get("current")
@@ -1287,6 +1556,7 @@ def widget_data_contract(
         refresh_manifest()
         return normalized
 
+    @busy_action("Saving Data Contract…")
     def save_data_contract_session(*, return_to_selector_after: bool = True) -> None:
         """Overwrite the selected draft JSON once, then reload canonical state once."""
         current = state.get("current")
@@ -1296,6 +1566,7 @@ def widget_data_contract(
         prepare_save = state.get("_prepare_data_contract_save")
         if callable(prepare_save):
             prepare_save()
+        validate_authoring_session("saving")
         removed_column_ids = {
             str(rule.get("column_id") or "")
             for rule in current.get("guardrails", [])
@@ -1346,8 +1617,9 @@ def widget_data_contract(
             select(str(state["table_id"]), int(state["contract_version"]))
             set_status("Data Contract draft saved.")
 
-    def discard_data_contract_session() -> None:
-        """Discard staged changes for the selected contract and reload canonical state."""
+    @busy_action("Discarding unsaved changes…")
+    def discard_data_contract_session(*, return_to_selector_after: bool = False) -> None:
+        """Discard staged changes, then reload or return directly to the selector."""
         current = state.get("current")
         if not current:
             return
@@ -1357,9 +1629,12 @@ def widget_data_contract(
         state["_column_drafts"].pop(scope, None)
         state["_column_dq_selection"].pop(scope, None)
         state["dirty"] = False
-        select(str(state["table_id"]), int(state["contract_version"]))
-        render()
-        set_status("Unsaved Data Contract changes discarded.")
+        if return_to_selector_after:
+            return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
+        else:
+            select(str(state["table_id"]), int(state["contract_version"]))
+            render()
+            set_status("Unsaved Data Contract changes discarded.")
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
@@ -1367,8 +1642,8 @@ def widget_data_contract(
         selected_column = str(column_id or "").strip()
         if not selected_table or not selected_column:
             raise ValueError("Select a governed table and column before loading profile context.")
-        cache_key = (selected_table, selected_column)
-        profile_cache: dict[tuple[str, str], dict[str, Any]] = state["_profile_cache"]
+        cache_key = (active_workspace_id, selected_table, selected_column)
+        profile_cache: dict[tuple[str, str, str], dict[str, Any]] = state["_profile_cache"]
         if cache_key not in profile_cache:
             profile_cache[cache_key] = contracts.get_column_profile_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
@@ -1379,10 +1654,12 @@ def widget_data_contract(
         state["profile_context"] = profile
         return profile
 
+    @busy_action("Freezing Data Contract…")
     def freeze() -> dict[str, Any]:
         current = state.get("current")
         if not current or str(current["contract"].get("status") or "").lower() != "draft":
             raise ValueError("Only a draft Data Contract version can be frozen.")
+        validate_authoring_session("freezing")
         if state.get("dirty"):
             raise ValueError("Save the Data Contract before freezing this version.")
         result = contracts.freeze_contract(
@@ -1522,12 +1799,17 @@ def widget_data_contract(
         item_name = configured_item_name(row)
         return f"{item_name} · {table_name}" if item_name else table_name
 
+    rows_cache: dict[str, Any] = {}
+
     def current_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         current = state["current"]
-        return (
-            _latest(list(current.get("enrichment", [])), "enrichment_level", "column_id", "enrichment_type"),
-            _latest(list(current.get("guardrails", [])), "guardrail_rule_id"),
-        )
+        for key, identity in (("enrichment", ("enrichment_level", "column_id", "enrichment_type")),
+                              ("guardrails", ("guardrail_rule_id",))):
+            rows = current.get(key, [])
+            if rows_cache.get(key) is not rows:
+                rows_cache[key] = rows
+                rows_cache[key + "_latest"] = _latest(rows, *identity)
+        return rows_cache["enrichment_latest"], rows_cache["guardrails_latest"]
 
     def enrichment_value(rows: list[dict[str, Any]], level: str, kind: str, column_id: str = "") -> str:
         return str(next((
@@ -1589,11 +1871,17 @@ def widget_data_contract(
 
     def render() -> None:
         current = state.get("current")
+        previous_controls = dict(state["_controls"])
+        dispose_editor = state.pop("_dispose_editor", None)
+        if callable(dispose_editor):
+            dispose_editor()
+        for key in ("_refresh_review", "_refresh_dq_rules", "_refresh_ai_controls", "_load_selected_profile", "_refresh_column_view"):
+            state.pop(key, None)
         authoring_footer.children = ()
         authoring_footer.layout.display = "none"
         state.pop("_refresh_guardrail_sidebar", None)
         dispose_sidebar = state.pop("_dispose_guardrail_sidebar", None)
-        if callable(dispose_sidebar):
+        if not callable(dispose_editor) and callable(dispose_sidebar):
             dispose_sidebar()
         view_content.clear()
         state["_controls"].update({
@@ -1611,7 +1899,7 @@ def widget_data_contract(
         enrichments, guardrails = current_rows()
 
         def session_guardrails() -> list[dict[str, Any]]:
-            return _latest(list(current.get("guardrails", [])), "guardrail_rule_id")
+            return current_rows()[1]
 
         def set_validation_error(key: str, error: Exception | str | None = None) -> None:
             errors: dict[str, str] = state["_validation_errors"]
@@ -1732,7 +2020,7 @@ def widget_data_contract(
             top_nav.value = "Table"
 
         # Table: passive identity plus explicitly saved Enrichment and table Guardrails.
-        table_description = widgets.Textarea(
+        table_description = widgets.Textarea(continuous_update=False,
             value=enrichment_value(enrichments, "table", "Description"), disabled=not editable,
             **shared.widget_common(widgets, "Description", textarea=True),
         )
@@ -1746,8 +2034,10 @@ def widget_data_contract(
             disabled=True, **shared.widget_common(widgets, "Classification"),
         )
         table_description.description = ""
+        table_description.layout.close()
         table_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
         table_classification.description = ""
+        table_classification.layout.close()
         table_classification.layout = widgets.Layout(width="250px", max_width="100%", min_width="0")
         table_description_ai = widgets.HTML()
         accept_table_description = widgets.Button(description="Apply", disabled=not editable, button_style="info")
@@ -1755,11 +2045,12 @@ def widget_data_contract(
         state["_ai_buttons"].extend([accept_table_description, rerun_table_description])
 
         # Description, selected key, and enforcement are independent authoring choices.
-        table_grain = widgets.Text(
+        table_grain = widgets.Text(continuous_update=False,
             value=enrichment_value(enrichments, "table", "Grain"), disabled=not editable,
             placeholder="Example: One row per order line",
             **shared.widget_common(widgets, "Row grain"),
         )
+        table_grain.layout.close()
         table_grain.layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         existing_row_key = next((rule for rule in guardrails if rule.get("guardrail_type") == "grain"), {})
         existing_row_key_columns = list(_parameters(existing_row_key).get("columns", []))
@@ -1767,12 +2058,13 @@ def widget_data_contract(
         row_key_columns = widgets.SelectMultiple(
             options=list(dict.fromkeys([*column_names, *existing_row_key_columns])),
             value=tuple(existing_row_key_columns if existing_row_key else profiled_key_columns),
-            rows=min(4, max(2, len(column_names))), disabled=not editable,
+            rows=5, disabled=not editable,
             **shared.widget_common(widgets, "Row key columns"),
         )
+        row_key_columns.layout.close()
         row_key_columns.layout = widgets.Layout(
             width="100%", max_width="560px", min_width="0",
-            height=f"{min(8, max(4, len(column_names))) * 30 + 12}px",
+            height="auto",
             max_height="252px",
         )
         row_key_columns.add_class("fabricops-contract-list")
@@ -1786,6 +2078,7 @@ def widget_data_contract(
             disabled=not editable or not grain_enabled.value,
             **shared.widget_common(widgets, "On violation"),
         )
+        grain_policy.layout.close()
         grain_policy.layout = widgets.Layout(width="220px", max_width="100%")
         grain_policy.add_class("fabricops-grain-policy")
         grain_profile_evidence = widgets.HTML()
@@ -1828,8 +2121,9 @@ def widget_data_contract(
                 "Select a row key manually if this table has one.</div>"
             )
 
+        @busy_action("Generating grain and row key suggestions…")
         def run_grain_ai(*_args: Any) -> None:
-            if suggest_grain.disabled or not ai_available():
+            if not editable or not ai_available() or ai_mode != "with_ai":
                 return
             retrying = "grain_key" in ai_errors
             try:
@@ -1864,7 +2158,8 @@ def widget_data_contract(
                         "columns": profile_rows,
                     },
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="grain_key",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="grain_key",
                 )
                 ai_state["table"]["grain_key"] = suggestion
                 refresh_ai_usage()
@@ -1926,6 +2221,7 @@ def widget_data_contract(
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Load strategy"),
         )
+        load_strategy_control.layout.close()
         load_strategy_control.layout = compact_field_layout
         processing_source_labels = {
             "catalogue": "Resolved from Engineering Catalogue · read-only",
@@ -1945,12 +2241,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Watermark column"),
         )
         key_columns_control = widgets.SelectMultiple(
-            options=column_names,
+            rows=5, options=column_names,
             value=tuple(value for value in processing.get("key_columns", []) if value in column_names),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Key columns"),
         )
-        key_columns_control.layout.height = "132px"
+        key_columns_control.layout.height = "auto"
         key_columns_control.layout.max_height = "220px"
         key_columns_control.add_class("fabricops-contract-list")
         effective_column_control = widgets.Dropdown(
@@ -1960,12 +2256,12 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Effective column"),
         )
         tracked_columns_control = widgets.SelectMultiple(
-            options=column_names,
+            rows=5, options=column_names,
             value=tuple(value for value in processing.get("tracked_columns", []) if value in column_names),
             disabled=not editable or processing_locked,
             **shared.widget_common(widgets, "Tracked columns"),
         )
-        tracked_columns_control.layout.height = "132px"
+        tracked_columns_control.layout.height = "auto"
         tracked_columns_control.layout.max_height = "220px"
         tracked_columns_control.add_class("fabricops-contract-list")
         processing_parameter_controls = (
@@ -2027,6 +2323,7 @@ def widget_data_contract(
             )
             rerun_table_description.disabled = not available
 
+        @busy_action("Generating table description…")
         def run_table_ai(*, force: bool = False) -> None:
             if (
                 not editable
@@ -2041,7 +2338,7 @@ def widget_data_contract(
             retrying = "table_enrichment" in ai_errors
             try:
                 if state.get("_opening_with_ai"):
-                    set_open_progress("Generating table description…", 50)
+                    set_open_progress("Generating table description…")
                 description_context = build_ai_enrichment_context(
                     table,
                     metadata_level="table",
@@ -2056,7 +2353,8 @@ def widget_data_contract(
                 result = suggest_enrichment(
                     description_context,
                     description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="table_enrichment",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="table_enrichment",
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -2113,6 +2411,7 @@ def widget_data_contract(
                     **shared.widget_common(widgets, "Refresh expectation"),
                 )
                 refresh_expectation.description = ""
+                refresh_expectation.layout.close()
                 refresh_expectation.layout = field_layout
                 configured_freshness_column = str(
                     existing_parameters.get("freshness_column") or ""
@@ -2137,8 +2436,9 @@ def widget_data_contract(
                     table_name=str(table.get("table_name") or ""),
                 )
                 freshness_column.description = ""
+                freshness_column.layout.close()
                 freshness_column.layout = field_layout
-                expected_refresh_frequency = widgets.Text(
+                expected_refresh_frequency = widgets.Text(continuous_update=False,
                     value=str(existing_parameters.get("expected_refresh_frequency") or ""),
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="100px"),
@@ -2149,7 +2449,7 @@ def widget_data_contract(
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="130px", min_width="110px"),
                 )
-                maximum_age = widgets.Text(
+                maximum_age = widgets.Text(continuous_update=False,
                     value=str(existing_parameters.get("maximum_age") or ""),
                     disabled=not editable or not temporal_column_names,
                     layout=widgets.Layout(width="150px", min_width="100px"),
@@ -2490,20 +2790,35 @@ def widget_data_contract(
                     lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
                 )
 
+        if state["_busy_depth"]:
+            set_open_progress("Loading profiles and pipeline usage…")
         runtime_context = contracts.get_table_runtime_context(
             config=config, active_workspace_id=active_workspace_id, spark_session=spark,
             table_id=str(state.get("table_id") or ""),
             metadata_workspace_id=routing_workspace_id,
         )
+        # The runtime summary already loads profiles for this table. Reuse that
+        # read instead of starting two Spark jobs for every column selection.
+        if "profile_contexts" in runtime_context:
+            profiles = runtime_context["profile_contexts"]
+            for column in authoring_columns:
+                column_id = str(column.get("column_id") or "")
+                state["_profile_cache"][(active_workspace_id, str(state["table_id"]), column_id)] = profiles.get(
+                    column_id, {"kind": "unavailable", "message": (
+                        f"Not yet profiled in workspace {active_workspace_id}. "
+                        "Select the workspace where profiling ran, then reopen the contract to reload its profiles."
+                    )}
+                )
 
         def context_timestamp(value: Any) -> str:
-            if isinstance(value, datetime):
-                return value.strftime("%d %b %Y, %H:%M")
             text = str(value or "").strip()
             if not text:
                 return "Unknown"
             try:
-                parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+                # Spark-collected naive datetimes represent process-local time;
+                # offset-free strings retain the audit-input helper's semantics.
+                instant = value.astimezone(UTC) if isinstance(value, datetime) else value
+                parsed = normalize_audit_datetime(instant, config)
                 return parsed.strftime("%d %b %Y, %H:%M")
             except ValueError:
                 return text
@@ -2619,12 +2934,28 @@ def widget_data_contract(
         sidebar_snapshot = {"signature": None}
         working_sensitive_controls: dict[str, Any] = {}
 
-        def close_sidebar_widgets(nodes):
+        def close_sidebar_widgets(nodes, *, preserve=()):
             seen = set()
+            def remember(widget):
+                if widget is None or id(widget) in seen:
+                    return
+                seen.add(id(widget))
+                for child in getattr(widget, "children", ()):
+                    remember(child)
+                remember(getattr(widget, "layout", None))
+                remember(getattr(widget, "style", None))
+            for node in preserve:
+                remember(node)
             def close_owned(widget):
                 if widget is None or id(widget) in seen:
                     return
                 seen.add(id(widget))
+                if isinstance(widget, dict):
+                    for child in widget.values():
+                        close_owned(child)
+                elif isinstance(widget, (list, tuple)):
+                    for child in widget:
+                        close_owned(child)
                 for child in getattr(widget, "children", ()):
                     close_owned(child)
                 # Layout and Style models have their own widget comms.
@@ -2872,6 +3203,8 @@ def widget_data_contract(
             sidebar_snapshot["signature"] = signature
             close_sidebar_widgets(previous)
 
+        runtime_summary_html = runtime_context_html()
+
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
             source_refresh_expectation = "Not defined"
@@ -2906,7 +3239,7 @@ def widget_data_contract(
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
                 + "<details style='margin-top:10px;'><summary style='cursor:pointer;'>Table context</summary>"
                 + table_identity_html()
-                + runtime_context_html()
+                + runtime_summary_html
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Grain</div>"
@@ -3237,15 +3570,16 @@ def widget_data_contract(
         column_option_style = widgets.HTML()
         column_search = widgets.Text(placeholder="Search columns", layout=widgets.Layout(width="100%", min_width="0", max_width="100%"))
         column_select = widgets.Select(
-            options=(), rows=24,
+            options=(), rows=10,
             layout=widgets.Layout(
                 width="100%", min_width="0", max_width="100%",
-                height="660px", max_height="840px",
+                height="auto", min_height="320px", max_height="840px", flex="1 1 auto",
             ),
         )
         column_select.add_class("fabricops-contract-columns")
         column_select.add_class("fabricops-contract-list")
         column_context = widgets.HTML()
+        empty_column = widgets.HTML("<p>No columns match this search. Change or clear the search to select a column.</p>")
         profile_context = widgets.HTML(
             "<p>No column selected.</p>",
             layout=widgets.Layout(
@@ -3253,11 +3587,13 @@ def widget_data_contract(
                 height="auto", overflow="visible",
             ),
         )
-        column_description = widgets.Textarea(disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
+        column_description = widgets.Textarea(continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Description", textarea=True))
         column_classification = widgets.Dropdown(options=classification_options, disabled=not editable, **shared.widget_common(widgets, "Classification"))
         column_description.description = ""
+        column_description.layout.close()
         column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
         column_classification.description = "Output classification"
+        column_classification.layout.close()
         column_classification.layout = widgets.Layout(
             width="100%", min_width="0", max_width="560px"
         )
@@ -3296,7 +3632,7 @@ def widget_data_contract(
             options=[(label, value) for value, label in PII_LABELS.items()],
             value="none", disabled=not editable, **shared.widget_common(widgets, "PII assessment"),
         )
-        pii_reason = widgets.Textarea(
+        pii_reason = widgets.Textarea(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Reason", textarea=True)
         )
         sensitive_treatment = widgets.Dropdown(options=_SENSITIVE_TREATMENT_OPTIONS, disabled=not editable, **shared.widget_common(widgets, "Treatment"))
@@ -3318,13 +3654,13 @@ def widget_data_contract(
         treatment_help = widgets.HTML()
         bucket_mode = widgets.Dropdown(options=(("Approved ranges", "ranges"), ("Fixed width", "width")),
                                        disabled=not editable, **shared.widget_common(widgets, "Bucket method"))
-        bucket_width = widgets.Text(value="10", disabled=not editable, **shared.widget_common(widgets, "Interval width"))
-        bucket_origin = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Starting point"))
-        mask_start = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at start"))
-        mask_end = widgets.Text(value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at end"))
-        mask_character = widgets.Text(value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
-        bucket_bins = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Lower bounds"))
-        bucket_labels = widgets.Text(disabled=not editable, **shared.widget_common(widgets, "Band labels"))
+        bucket_width = widgets.Text(continuous_update=False, value="10", disabled=not editable, **shared.widget_common(widgets, "Interval width"))
+        bucket_origin = widgets.Text(continuous_update=False, value="0", disabled=not editable, **shared.widget_common(widgets, "Starting point"))
+        mask_start = widgets.Text(continuous_update=False, value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at start"))
+        mask_end = widgets.Text(continuous_update=False, value="0", disabled=not editable, **shared.widget_common(widgets, "Visible characters at end"))
+        mask_character = widgets.Text(continuous_update=False, value="*", disabled=not editable, **shared.widget_common(widgets, "Mask character"))
+        bucket_bins = widgets.Text(continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Lower bounds"))
+        bucket_labels = widgets.Text(continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Band labels"))
         def dq_checkbox(label: str) -> Any:
             control = widgets.Checkbox(
                 description=label,
@@ -3335,22 +3671,22 @@ def widget_data_contract(
             control.add_class("fabricops-dq-checkbox")
             return control
 
-        dq_completeness_failure = widgets.Text(
+        dq_completeness_failure = widgets.Text(continuous_update=False,
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         dq_blank_missing = dq_checkbox("Count blank text as missing")
         dq_blank_missing.value = False
-        dq_uniqueness_failure = widgets.Text(
+        dq_uniqueness_failure = widgets.Text(continuous_update=False,
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Accepted failure rate %"),
         )
-        dq_whitelist_values = widgets.Text(
+        dq_whitelist_values = widgets.Text(continuous_update=False,
             disabled=not editable,
             placeholder="Example: Active, Inactive",
             **shared.widget_common(widgets, "Whitelist"),
         )
-        dq_blacklist_values = widgets.Text(
+        dq_blacklist_values = widgets.Text(continuous_update=False,
             disabled=not editable,
             placeholder="Example: Unknown, N/A",
             **shared.widget_common(widgets, "Blacklist"),
@@ -3374,21 +3710,21 @@ def widget_data_contract(
         dq_whitelist_values.observe(refresh_dq_value_counts, names="value")
         dq_blacklist_values.observe(refresh_dq_value_counts, names="value")
         refresh_dq_value_counts()
-        dq_minimum = widgets.Text(
+        dq_minimum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
         dq_minimum_inclusive = dq_checkbox("Include lower bound")
         dq_minimum_inclusive.value = True
-        dq_maximum = widgets.Text(
+        dq_maximum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Upper bound")
         )
         dq_maximum_inclusive = dq_checkbox("Include upper bound")
         dq_maximum_inclusive.value = True
-        dq_whitelist_max_failure = widgets.Text(
+        dq_whitelist_max_failure = widgets.Text(continuous_update=False,
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Accepted failure rate %"),
         )
-        dq_range_max_failure = widgets.Text(
+        dq_range_max_failure = widgets.Text(continuous_update=False,
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Accepted failure rate %"),
         )
@@ -3459,6 +3795,7 @@ def widget_data_contract(
             return next((c for c in columns if str(c.get("column_id") or "") == str(column_select.value or "")), {})
 
         hydrating = {"active": False}
+        refreshing_column_options = {"active": False}
         hydrated_column_snapshots: dict[str, dict[str, Any]] = {}
 
         def dq_snapshot() -> dict[str, dict[str, Any]]:
@@ -3958,6 +4295,8 @@ def widget_data_contract(
         refresh_sensitive_rule_preview()
 
         def column_changed(change: dict[str, Any]) -> None:
+            if refreshing_column_options["active"]:
+                return
             old = str(change.get("old") or "")
             if old:
                 snapshot = column_editor_snapshot()
@@ -3969,10 +4308,12 @@ def widget_data_contract(
             if change.get("new"):
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
-                if str(top_nav.value) == "Column":
-                    load_selected_profile()
-                if not state.get("_opening_with_ai"):
-                    prepare_column_ai(selected_id)
+            render_column_ai(str(change.get("new") or ""))
+            if str(top_nav.value) == "Column":
+                refresh_column_view = state.get("_refresh_column_view")
+                if callable(refresh_column_view):
+                    refresh_column_view()
+                load_selected_profile()
 
         column_select.observe(column_changed, names="value")
 
@@ -3981,7 +4322,7 @@ def widget_data_contract(
         ) -> str:
             heading = "<b>AI suggestion</b><br>" if show_heading else ""
             if not suggestion:
-                return f"<p>{heading}<span style=\"color:#666\">Preparing…</span></p>"
+                return f"<p>{heading}<span style=\"color:#666\">Select Generate to request a suggestion.</span></p>"
             stale = " · <b>Needs refresh</b>" if suggestion.get("stale") else ""
             error = suggestion.get("error")
             if error:
@@ -4069,7 +4410,7 @@ def widget_data_contract(
                     "Sensitive Data", suggestions.get("sensitive_data")
                 )
             available = (
-                editable and ai_available() and ai_mode == "with_ai"
+                editable and ai_available() and ai_mode == "with_ai" and bool(column_id)
             )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
@@ -4079,6 +4420,8 @@ def widget_data_contract(
             )
             rerun_column_description.disabled = not available
             rerun_sensitive.disabled = not available
+            rerun_column_description.description = "Re-run" if suggestions.get("description") else "Generate"
+            rerun_sensitive.description = "Re-run" if suggestions.get("sensitive_data") else "Generate"
 
         def mark_sensitive_stale(column_id: str) -> None:
             """Mark one column's dependent Sensitive Data advice stale."""
@@ -4093,7 +4436,11 @@ def widget_data_contract(
                 if suggestion:
                     suggestion["stale"] = True
 
+        @busy_action("Generating column description…")
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
+            if not column_id:
+                render_column_ai("")
+                return
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
@@ -4109,10 +4456,10 @@ def widget_data_contract(
             retrying = error_key in ai_errors
             try:
                 if state.get("_opening_with_ai"):
-                    set_open_progress("Loading first-column profile…", 65)
+                    set_open_progress("Loading first-column profile…")
                 profile_value = load_profile_context(column_id)
                 if state.get("_opening_with_ai"):
-                    set_open_progress("Generating first-column description…", 75)
+                    set_open_progress("Generating first-column description…")
                 result = suggest_enrichment(
                     build_ai_enrichment_context(
                         selected,
@@ -4121,7 +4468,8 @@ def widget_data_contract(
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
                     description_prompt=str(ai_enrichment.get("column_description_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="column_enrichment",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(column_id), operation="column_enrichment",
                 )
                 previous_value = str(suggestions.get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -4146,9 +4494,13 @@ def widget_data_contract(
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
+        @busy_action("Assessing sensitive data…")
         def run_sensitive_ai(
             column_id: str, *, force: bool = False, use_description_suggestion: bool = False
         ) -> None:
+            if not column_id:
+                render_column_ai("")
+                return
             suggestions = ai_state["columns"].setdefault(column_id, {})
             if not editable or not ai_available() or ai_mode != "with_ai":
                 render_column_ai(column_id)
@@ -4166,7 +4518,7 @@ def widget_data_contract(
             retrying = error_key in ai_errors
             try:
                 if state.get("_opening_with_ai"):
-                    set_open_progress("Assessing first column for sensitive data…", 88)
+                    set_open_progress("Assessing first column for sensitive data…")
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
                 context_value = build_ai_sensitive_data_context({
@@ -4198,7 +4550,8 @@ def widget_data_contract(
                 })
                 result = suggest_sensitive_data(
                     context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="sensitive_data",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(column_id), operation="sensitive_data",
                 )
                 if len(result) != 1:
                     selected_name = str(selected.get("column_name") or column_id)
@@ -4622,14 +4975,17 @@ def widget_data_contract(
             ]
             required_option_rules = "".join(f".fabricops-contract-columns option:nth-child({index}){{color:var(--form-accent);font-weight:600;}}" for index, (label, _value) in enumerate(filtered, start=1) if str(label).endswith(" *"))
             column_option_style.value = "<style>.fabricops-contract-columns option:checked{font-weight:600;}" + required_option_rules + ".fabricops-form .fabricops-column-required{display:flex!important;grid-template-columns:none!important;width:auto!important;max-width:none!important;align-items:center!important;margin:0!important;}.fabricops-form .fabricops-column-required>.widget-label{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;}</style>"
-            column_select.options = filtered
             values = [str(value) for _label, value in filtered]
-            if current_value in values:
-                column_select.value = current_value
-            elif values:
-                column_select.value = values[0]
-            else:
-                column_select.value = None
+            selected_value = current_value if current_value in values else values[0] if values else None
+            refreshing_column_options["active"] = True
+            try:
+                if tuple(column_select.options) != tuple(filtered):
+                    column_select.options = filtered
+                column_select.value = selected_value
+            finally:
+                refreshing_column_options["active"] = False
+            if str(selected_value or "") != current_value:
+                column_changed({"old": current_value, "new": selected_value})
 
         def required_feedback(change: dict[str, Any]) -> None:
             if hydrating["active"]:
@@ -4662,6 +5018,8 @@ def widget_data_contract(
             refresh_manifest()
             refresh_column_options()
             hydrate_column(cid)
+            if str(top_nav.value) == "Column":
+                load_selected_profile()
             set_status("Contract datatype choice staged locally. Save the Data Contract to persist.")
 
         required.observe(required_feedback, names="value")
@@ -4941,6 +5299,11 @@ def widget_data_contract(
         )
         view_content["Column"] = (column_left, column_right)
 
+        def refresh_column_view() -> None:
+            if str(top_nav.value) == "Column":
+                right.children = column_right if column_select.value else (empty_column,)
+        state["_refresh_column_view"] = refresh_column_view
+
         if ai_mode == "with_ai":
             if not str(table_grain.value or "").strip():
                 run_grain_ai()
@@ -4971,7 +5334,7 @@ def widget_data_contract(
         business_editor_heading = widgets.HTML(
             "<div class='fabricops-dq-editor-heading'>Rule editor</div>"
         )
-        business_requirement = widgets.Textarea(
+        business_requirement = widgets.Textarea(continuous_update=False,
             disabled=not editable,
             placeholder=(
                 "Example: Approved orders require an approved date, "
@@ -4981,7 +5344,7 @@ def widget_data_contract(
         )
         business_requirement.description = ""
         business_columns = widgets.SelectMultiple(
-            options=[
+            rows=5, options=[
                 (str(column.get("column_name") or ""), str(column.get("column_name") or ""))
                 for column in authoring_columns
             ],
@@ -5001,14 +5364,15 @@ def widget_data_contract(
         business_block = widgets.ToggleButtons(
             options=[("Warn", False), ("Block", True)], value=False, description="On failure", disabled=not editable
         )
-        business_tolerance = widgets.Text(
+        business_tolerance = widgets.Text(continuous_update=False,
             value="0", disabled=not editable, **shared.widget_common(widgets, "Accepted failure rate %"),
         )
         business_tolerance_hint = widgets.HTML()
-        business_parameters = widgets.Textarea(
+        business_parameters = widgets.Textarea(continuous_update=False,
             disabled=not editable,
             **shared.widget_common(widgets, "Rule parameters (JSON)", textarea=True),
         )
+        business_parameters.layout.close()
         business_parameters.layout = widgets.Layout(
             width="100%", min_width="0", height="150px"
         )
@@ -5018,12 +5382,13 @@ def widget_data_contract(
             **shared.widget_common(widgets, "Column"),
         )
         review_key_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Key columns"),
         )
         review_key_columns.add_class("fabricops-contract-list")
-        review_key_columns.layout = widgets.Layout(width="100%", height="96px")
+        review_key_columns.layout.close()
+        review_key_columns.layout = widgets.Layout(width="100%", height="auto")
         review_left_column = widgets.Dropdown(
             options=dq_column_options_with_blank, disabled=not editable,
             **shared.widget_common(widgets, "Left column"),
@@ -5045,19 +5410,19 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Value behavior"),
         )
-        review_values = widgets.Text(
+        review_values = widgets.Text(continuous_update=False,
             disabled=not editable, placeholder="Comma-separated values",
             **shared.widget_common(widgets, "Values"),
         )
-        review_minimum = widgets.Text(
+        review_minimum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
-        review_maximum = widgets.Text(
+        review_maximum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Upper bound")
         )
         review_minimum_inclusive = dq_checkbox("Include lower bound")
         review_maximum_inclusive = dq_checkbox("Include upper bound")
-        review_pattern = widgets.Text(
+        review_pattern = widgets.Text(continuous_update=False,
             disabled=not editable,
             **shared.widget_common(widgets, "Regular expression"),
         )
@@ -5069,14 +5434,15 @@ def widget_data_contract(
             options=("=", "!="), disabled=not editable,
             **shared.widget_common(widgets, "Condition"),
         )
-        review_condition_value = widgets.Text(
+        review_condition_value = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Condition value")
         )
         review_blank_missing = dq_checkbox("Count blank text as missing")
-        review_expression = widgets.Textarea(
+        review_expression = widgets.Textarea(continuous_update=False,
             disabled=not editable,
             **shared.widget_common(widgets, "PySpark boolean expression", textarea=True),
         )
+        review_expression.layout.close()
         review_expression.layout = widgets.Layout(width="100%", height="110px")
         review_parameter_box = widgets.VBox(
             layout=widgets.Layout(width="100%", min_width="0")
@@ -5158,12 +5524,12 @@ def widget_data_contract(
             ),
         )
         delete_business_rule_confirm.layout.display = "none"
-        engineering_reviewer = widgets.Text(
+        engineering_reviewer = widgets.Text(continuous_update=False,
             disabled=not editable,
             placeholder="Engineer name or identifier",
             **shared.widget_common(widgets, "Engineering reviewer"),
         )
-        engineering_review_note = widgets.Textarea(
+        engineering_review_note = widgets.Textarea(continuous_update=False,
             disabled=not editable,
             placeholder="Optional review note",
             **shared.widget_common(widgets, "Review note", textarea=True),
@@ -5198,7 +5564,7 @@ def widget_data_contract(
         business_requirement.layout.height = "170px"
         business_columns.layout.width = "100%"
         business_columns.layout.min_width = "0"
-        business_columns.layout.height = "132px"
+        business_columns.layout.height = "auto"
         business_columns.layout.max_height = "220px"
         business_proposal_select.layout.width = "100%"
         business_proposal_select.layout.min_width = "0"
@@ -5228,22 +5594,24 @@ def widget_data_contract(
             layout=widgets.Layout(width="100%"),
         )
         manual_batch_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Columns"),
         )
         manual_batch_columns.add_class("fabricops-contract-list")
+        manual_batch_columns.layout.close()
         manual_batch_columns.layout = widgets.Layout(
-            width="100%", min_width="0", height="112px", max_height="180px"
+            width="100%", min_width="0", height="auto", max_height="220px"
         )
         manual_key_columns = widgets.SelectMultiple(
-            options=dq_column_options,
+            rows=5, options=dq_column_options,
             disabled=not editable,
             **shared.widget_common(widgets, "Key columns"),
         )
         manual_key_columns.add_class("fabricops-contract-list")
+        manual_key_columns.layout.close()
         manual_key_columns.layout = widgets.Layout(
-            width="100%", min_width="0", height="96px", max_height="150px"
+            width="100%", min_width="0", height="auto", max_height="220px"
         )
         manual_left_column = widgets.Dropdown(
             options=dq_column_options_with_blank,
@@ -5270,22 +5638,22 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Value behavior"),
         )
-        manual_values = widgets.Text(
+        manual_values = widgets.Text(continuous_update=False,
             disabled=not editable,
             placeholder="Comma-separated values",
             **shared.widget_common(widgets, "Values"),
         )
-        manual_minimum = widgets.Text(
+        manual_minimum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Lower bound")
         )
-        manual_maximum = widgets.Text(
+        manual_maximum = widgets.Text(continuous_update=False,
             disabled=not editable, **shared.widget_common(widgets, "Upper bound")
         )
         manual_minimum_inclusive = dq_checkbox("Include lower bound")
         manual_minimum_inclusive.value = True
         manual_maximum_inclusive = dq_checkbox("Include upper bound")
         manual_maximum_inclusive.value = True
-        manual_pattern = widgets.Text(
+        manual_pattern = widgets.Text(continuous_update=False,
             disabled=not editable,
             placeholder="Example: ^ORD-[0-9]+$",
             **shared.widget_common(widgets, "Regular expression"),
@@ -5300,20 +5668,21 @@ def widget_data_contract(
             disabled=not editable,
             **shared.widget_common(widgets, "Condition"),
         )
-        manual_condition_value = widgets.Text(
+        manual_condition_value = widgets.Text(continuous_update=False,
             disabled=not editable,
             **shared.widget_common(widgets, "Condition value"),
         )
         manual_blank_missing = dq_checkbox("Count blank text as missing")
-        manual_expression = widgets.Textarea(
+        manual_expression = widgets.Textarea(continuous_update=False,
             disabled=not editable,
             placeholder='Example: F.col("amount") > 0',
             **shared.widget_common(widgets, "PySpark boolean expression", textarea=True),
         )
+        manual_expression.layout.close()
         manual_expression.layout = widgets.Layout(
             width="100%", min_width="0", height="110px"
         )
-        manual_tolerance = widgets.Text(
+        manual_tolerance = widgets.Text(continuous_update=False,
             value="0", disabled=not editable,
             **shared.widget_common(widgets, "Accepted failure rate %"),
         )
@@ -5972,6 +6341,7 @@ def widget_data_contract(
                 and rule_column_names(rule)
             ]
 
+        @busy_action("Generating Data Quality proposals…")
         def resolve_business_rule_clicked(_button: Any) -> None:
             if not editable or not ai_available() or ai_mode != "with_ai":
                 return
@@ -6014,7 +6384,8 @@ def widget_data_contract(
                     requirement=str(business_requirement.value or ""),
                     relevant_columns=list(business_columns.value),
                     prompt=str(ai_enrichment.get("business_rule_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="business_rule_ai",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="business_rule_ai",
                 )
                 business_resolved.clear()
                 business_resolved.extend(
@@ -6645,9 +7016,6 @@ def widget_data_contract(
         # Manifest: current working contract plus changes since the last persisted draft.
         payload = refresh_manifest() or {}
         saved_payload = state.get("_saved_payload") or {}
-        sections = _manifest_sections(
-            payload, column_profiles=runtime_context.get("column_profiles", {})
-        )
 
         def review_change_html() -> str:
             changes: list[str] = []
@@ -6728,9 +7096,9 @@ def widget_data_contract(
             "<div style='color:#667085;font-size:12px;'>"
             "This is the complete contract that will replace the saved draft JSON.</div>"
         )
-        change_preview = widgets.HTML(review_change_html())
+        change_preview = widgets.HTML()
         manifest_preview = widgets.HTML(
-            value=sections["Review"],
+            value="",
             layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
         )
 
@@ -6743,10 +7111,9 @@ def widget_data_contract(
             manifest_preview.value = refreshed_sections["Review"]
             change_preview.value = review_change_html()
         state["_refresh_review"] = refresh_review
-        exact_json_content = widgets.HTML(
-            f"<details><summary>Exact JSON manifest</summary><pre>{html.escape(_expose_manifest(payload))}</pre></details>"
-        )
+        exact_json_content = widgets.HTML()
         exact_json = exact_json_content
+        exact_json.layout.close()
         exact_json.layout = widgets.Layout(
             width="100%", min_width="0", max_width="100%",
             height="auto", overflow="visible",
@@ -6826,19 +7193,6 @@ def widget_data_contract(
 
             def save_contract_clicked(_button: Any) -> None:
                 try:
-                    errors = state["_validation_errors"]
-                    if errors:
-                        first_error = next(iter(errors.values()))
-                        raise ValueError(
-                            "Complete the current draft configuration before saving: "
-                            f"{first_error}"
-                        )
-                    scope = (str(current["contract_id"]), int(current["contract_version"]))
-                    retained_columns = state["_column_drafts"].get(scope, {})
-                    if retained_columns:
-                        raise ValueError(
-                            "Complete the retained Column edits before saving the Data Contract."
-                        )
                     save_data_contract_session()
                 except (TypeError, ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
@@ -6876,23 +7230,11 @@ def widget_data_contract(
             def freeze_cancel_clicked(_button: Any) -> None:
                 freeze_confirm.layout.display = "none"
 
+            @busy_action("Saving and freezing Data Contract…")
             def freeze_confirm_clicked(_button: Any) -> None:
                 try:
                     freeze_confirm_button.disabled = True
                     if state.get("dirty"):
-                        errors = state["_validation_errors"]
-                        if errors:
-                            first_error = next(iter(errors.values()))
-                            raise ValueError(
-                                "Complete the current draft configuration before freezing: "
-                                f"{first_error}"
-                            )
-                        scope = (str(current["contract_id"]), int(current["contract_version"]))
-                        retained_columns = state["_column_drafts"].get(scope, {})
-                        if retained_columns:
-                            raise ValueError(
-                                "Complete the retained Column edits before freezing the Data Contract."
-                            )
                         save_data_contract_session(return_to_selector_after=False)
                     freeze()
                     render()
@@ -6902,21 +7244,17 @@ def widget_data_contract(
                     set_status(str(exc), error=True)
 
             def discard_contract_clicked(_button: Any) -> None:
-                if state.get("dirty"):
+                if has_pending_authoring_changes():
                     discard_contract_confirm.layout.display = ""
                     return
                 try:
-                    discard_data_contract_session()
-                    return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
+                    discard_data_contract_session(return_to_selector_after=True)
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
             def confirm_discard_contract_clicked(_button: Any) -> None:
                 try:
-                    discard_data_contract_session()
-                    return_to_selector(
-                        "Unsaved changes discarded. Select a governed table and contract."
-                    )
+                    discard_data_contract_session(return_to_selector_after=True)
                 except (ValueError, RuntimeError) as exc:
                     set_status(str(exc), error=True)
 
@@ -7019,7 +7357,7 @@ def widget_data_contract(
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,
-            "column_search": column_search,
+            "column_search": column_search, "empty_column": empty_column,
             "column_select": column_select, "column_context": column_context,
             "column_header": column_header,
             "column_required_controls": column_required_controls,
@@ -7124,6 +7462,34 @@ def widget_data_contract(
             "freeze_confirm": freeze_confirm_button if editable else None,
         })
 
+        def refresh_ai_controls() -> None:
+            available = editable and ai_available() and ai_mode == "with_ai"
+            render_table_ai()
+            render_column_ai(str(column_select.value or ""))
+            suggest_grain.disabled = not available
+            accept_grain.disabled = not (available and ai_state["table"].get("grain_key"))
+            resolve_business_rule.disabled = not available
+
+        state["_refresh_ai_controls"] = refresh_ai_controls
+        editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
+        editor_roots.extend(authoring_footer.children)
+        # Conditional fields may be unmounted, but their comms still need closing.
+        editor_roots.extend([
+            sensitive_ai_panel, business_advanced, business_rule_controls,
+            business_proposal_select, review_mode, review_values,
+            review_minimum, review_maximum, review_minimum_inclusive, review_maximum_inclusive,
+            review_pattern, review_condition_operator, review_condition_value,
+            review_blank_missing, review_expression, manual_minimum_inclusive, manual_maximum_inclusive,
+        ])
+        editor_roots.extend(value for key, value in state["_controls"].items()
+                            if value is not previous_controls.get(key))
+
+        def dispose_editor() -> None:
+            close_sidebar_widgets(editor_roots, preserve=(
+                table_exit_row, table_exit_confirm, editor_ai_information, ai_usage_view,
+            ))
+        state["_dispose_editor"] = dispose_editor
+
     def ai_information() -> Any:
         """Show effective settings before opt-in and inside the editor."""
         settings = state["ai_settings"]
@@ -7142,7 +7508,7 @@ def widget_data_contract(
             "<pre style='white-space:pre-wrap;'>widget_data_contract(\n"
             '    ai_model="gpt-5.1",\n    ai_reasoning_effort="high",\n    ai_verbosity="medium",\n)</pre>'
             "<p>Model calls use the Copilot and AI meter, reported as the AI Functions operation. "
-            "Spark execution consumes capacity separately. Token statistics below are measured usage, not CU estimates. "
+            "Spark execution consumes capacity separately. Token statistics below are measured; AI capacity estimates use published token rates. "
             "Per-request CU consumption is not exposed by the documented PySpark stats interface; inspect exact consumption in the "
             "<a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Fabric Capacity Metrics app</a>. "
             "See <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing'>Microsoft billing guidance</a> "
@@ -7155,19 +7521,8 @@ def widget_data_contract(
     ai_usage_view = widgets.HTML()
 
     def refresh_ai_usage() -> None:
-        """Display supported measured token/request statistics without inventing CU values."""
-        records = state["ai_usage"]
-        rows = []
-        for record in records:
-            stats = record.get("statistics")
-            text = json.dumps(stats, ensure_ascii=False) if stats else "Statistics unavailable"
-            rows.append("<li>" + html.escape(f"{record['operation']} / {record['model']}: {text}") + "</li>")
-        ai_usage_view.value = (
-            "<details><summary>AI usage for this widget instance</summary>"
-            + ("<ul>" + "".join(rows) + "</ul>" if rows else "<p>No AI requests made by this widget.</p>")
-            + "<p>Token and row counts are measured statistics, not CU consumption. "
-            "Exact consumption: <a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Capacity Metrics</a>.</p></details>"
-        )
+        """Display measured input/output totals separately from estimated AI capacity."""
+        ai_usage_view.value = _ai_usage_html(state["ai_usage"])
 
     refresh_ai_usage()
     selector_ai_information = ai_information()
@@ -7186,16 +7541,10 @@ def widget_data_contract(
     )
     open_progress = widgets.HTML()
 
-    def set_open_progress(label: str, percent: int) -> None:
-        """Show real opening stages so slow AI calls still feel visibly active."""
-        bounded = max(0, min(100, int(percent)))
-        open_progress.value = (
-            "<div style='width:440px;max-width:100%;'>"
-            f"<div style='font-size:12px;margin-bottom:4px;'>{html.escape(label)}</div>"
-            "<div style='height:6px;background:#e1e6eb;border-radius:3px;overflow:hidden;'>"
-            f"<div style='width:{bounded}%;height:100%;background:var(--form-accent);"
-            "transition:width .25s ease;'></div></div></div>"
-        )
+    def set_open_progress(label: str) -> None:
+        """Show the active stage without estimating unknown Spark or AI duration."""
+        open_progress.value = loading_html(label)
+        operation_progress.value = open_progress.value
 
     ai_availability = widgets.HTML(
         "" if ai_enrichment.get("enabled") else
@@ -7257,6 +7606,7 @@ def widget_data_contract(
     contract_nav_row.add_class("fabricops-contract-nav-row")
     editor_shell = widgets.VBox(
         [
+            operation_progress,
             contract_nav_row,
             workspace,
             authoring_footer,
@@ -7354,6 +7704,7 @@ def widget_data_contract(
         value = change.get("new")
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
+    @busy_action("Opening Data Contract…")
     def open_selected(*, with_ai: bool) -> None:
         if with_ai and not ai_available():
             set_status("AI is disabled in configuration or unavailable. Choose Open without AI.", warning=True)
@@ -7366,7 +7717,7 @@ def widget_data_contract(
         open_with_ai_button.disabled = True
         open_without_ai_button.disabled = True
         state["_opening_with_ai"] = bool(with_ai)
-        set_open_progress("Opening contract…", 20)
+        set_open_progress("Opening contract…")
         try:
             if selected_contract == "new":
                 if not state.get("workspace_id"):
@@ -7380,12 +7731,9 @@ def widget_data_contract(
                 int(state["current"]["contract_version"]),
             )
             state["_ai_mode"][scope] = "with_ai" if with_ai else "without_ai"
-            set_open_progress(
-                "Preparing AI context…" if with_ai else "Loading editor…",
-                35 if with_ai else 70,
-            )
+            set_open_progress("Preparing AI context…" if with_ai else "Loading editor…")
             render()
-            set_open_progress("Building editor…", 96)
+            set_open_progress("Building editor…")
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
             open_progress.value = ""
@@ -7418,7 +7766,7 @@ def widget_data_contract(
     state["_return_to_selector"] = return_to_selector
 
     def change_table(_button: Any) -> None:
-        if state.get("dirty"):
+        if has_pending_authoring_changes():
             table_exit_confirm.layout.display = ""
             return
         return_to_selector("Select a governed table and contract.")
@@ -7429,8 +7777,9 @@ def widget_data_contract(
     def confirm_exit_clicked(_button: Any) -> None:
         table_exit_confirm.layout.display = "none"
         if state.get("current"):
-            discard_data_contract_session()
-        return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
+            discard_data_contract_session(return_to_selector_after=True)
+        else:
+            return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
 
     open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
     open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
@@ -7462,6 +7811,7 @@ def widget_data_contract(
         "contract": contract_control, "contract_search": contract_selector["search"],
         "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
         "open": open_without_ai_button, "open_progress": open_progress,
+        "operation_progress": operation_progress,
         "selector_ai_information": selector_ai_information, "editor_ai_information": editor_ai_information,
         "ai_usage": ai_usage_view,
         "change_table": change_table_button,

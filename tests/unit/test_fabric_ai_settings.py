@@ -163,3 +163,101 @@ def test_diagnostics_show_safe_cause_categories(failure, expected):
     assert expected in diagnostic["message"].lower() or expected == diagnostic["category"]
     assert "SECRET" not in diagnostic["message"]
     assert "SECRET" in diagnostic["detail"]
+
+
+@pytest.mark.parametrize("outcome", ["succeeded", "provider_error", "execution_error"])
+def test_automatic_audit_even_without_usage_collector(monkeypatch, outcome):
+    """Every submitted helper request is audited once without re-executing Spark AI."""
+    _, spark, result = _runtime(
+        monkeypatch, error="private provider detail" if outcome == "provider_error" else None,
+        failure=RuntimeError("private execution detail") if outcome == "execution_error" else None,
+        stats={"input_tokens": 18, "output_tokens": 4},
+    )
+    audit = Mock()
+    monkeypatch.setattr(module, "_persist_ai_usage", audit)
+    if outcome == "succeeded":
+        assert module._invoke_fabric_ai("private prompt", spark_session=spark) == "description"
+    else:
+        with pytest.raises(module.AIProviderError if outcome == "provider_error" else module.AIExecutionError):
+            module._invoke_fabric_ai("private prompt", spark_session=spark)
+    audit.assert_called_once()
+    record = audit.call_args.args[0]
+    assert record["status"] == outcome
+    assert record["model"] == "gpt-5-mini"
+    assert record["completed_at"] >= record["started_at"]
+    assert record["duration_ms"] >= 0
+    assert "private" not in str(record)
+    result.collect.assert_called_once()
+    assert result.ai.stats.collect.call_count == (outcome != "execution_error")
+    spark.createDataFrame.return_value.ai.generate_response.assert_called_once()
+
+
+def test_audit_failure_preserves_response_and_reports_unconfirmed_write(monkeypatch, caplog):
+    """A failed append must neither bill another request nor hide a usable response."""
+    _, spark, result = _runtime(monkeypatch)
+    audit = Mock(side_effect=PermissionError("private storage path"))
+    monkeypatch.setattr(module, "_persist_ai_usage", audit)
+    usage = []
+    assert module._invoke_fabric_ai("private prompt", spark_session=spark, usage=usage) == "description"
+    assert usage[0]["persistence_status"] == "unconfirmed"
+    assert usage[0]["persistence_error_type"] == "PermissionError"
+    assert "private" not in caplog.text
+    result.collect.assert_called_once()
+    audit.assert_called_once()
+
+
+def test_audit_failure_preserves_original_model_failure(monkeypatch):
+    """An audit outage cannot mask the provider failure or encourage implicit replay."""
+    _, spark, result = _runtime(monkeypatch, failure=RuntimeError("execution failed"))
+    monkeypatch.setattr(module, "_persist_ai_usage", Mock(side_effect=PermissionError()))
+    with pytest.raises(module.AIExecutionError) as failure:
+        module._invoke_fabric_ai("prompt", spark_session=spark)
+    assert isinstance(failure.value.__cause__, RuntimeError)
+    result.collect.assert_called_once()
+
+
+def test_usage_append_routes_to_metadata_and_keeps_missing_counts_null(monkeypatch):
+    """Persist typed measured counters and notebook identity through foundational IO."""
+    from datetime import UTC, datetime
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS
+
+    config = {"path_config": {"paths": {"central": {"Metadata": {}}}}}
+    context = {"config": config, "scope_workspace_id": "authoring", "ai_usage_metadata": {
+        "table_id": "orders", "contract_version": 2, "prompt": "never persist"}}
+    audit = {name: "identity" for name, *_ in AUDIT_SCHEMA_FIELDS}
+    audit["_committed_at"] = datetime.now(UTC)
+    monkeypatch.setattr(module, "build_runtime_audit_fields", Mock(return_value=audit))
+    writer = Mock()
+    monkeypatch.setattr(module, "write_lakehouse_table", writer)
+    spark = Mock()
+    now = datetime.now(UTC)
+    record = {"usage_id": "request-id", "provider": "fabric_ai_functions", "operation": "authoring",
+              "model": "gpt-5-mini", "status": "succeeded", "statistics_status": "available",
+              "started_at": now, "completed_at": now, "duration_ms": 1,
+              "statistics": [{"input_tokens": 10, "output_tokens": 2}, {"input_tokens": 5}]}
+    module._persist_ai_usage(record, spark=spark, runtime_context=context)
+    row = spark.createDataFrame.call_args.args[0][0]
+    assert row["input_tokens"] == 15
+    assert row["output_tokens"] is None
+    assert row["cached_tokens"] is None
+    assert row["table_id"] == "orders"
+    assert row["workspace_id"] == audit["_workspace_id"]
+    assert "never persist" not in str(row)
+    options = writer.call_args.kwargs
+    assert writer.call_args.args[1] == "AI_TOKEN_USAGE"
+    assert options["store"] == "Metadata" and options["schema"] == "misc"
+    assert options["mode"] == "append" and options["verbose"] is False
+    assert options["context"]["scope_workspace_id"] == "central"
+    assert options["context"]["_spark_session"] is spark
+    assert options["options"] == {"txnAppId": "request-id", "txnVersion": "0"}
+
+
+def test_ai_usage_schema_is_standalone_from_canonical_metadata():
+    """Widget telemetry must not join metadata setup, model or ERD registries."""
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+
+    assert "AI_TOKEN_USAGE" not in CANONICAL_METADATA_TABLES
+    assert "METADATA_AI_TOKEN_USAGE" not in CANONICAL_METADATA_TABLES
+    assert "AI_TOKEN_USAGE" not in metadata_table_schema_registry()
+    schema = module._ai_usage_schema()
+    assert {"usage_id", "input_tokens", "output_tokens", "_notebook_id"} <= set(schema.fieldNames())

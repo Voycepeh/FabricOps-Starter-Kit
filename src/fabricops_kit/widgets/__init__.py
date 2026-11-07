@@ -27,14 +27,87 @@ def __getattr__(name: str):
 # Form styling belongs to shared.form_page, not a second injected stylesheet.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
-  if (window.__fabricopsFocusReleaseInstalled) {
+  if (window.__fabricopsNotebookUXVersion === 2) {
     return;
   }
   window.__fabricopsFocusReleaseInstalled = true;
+  window.__fabricopsNotebookUXVersion = 2;
 
   let pointerAction = false;
-  document.addEventListener("pointerdown", () => { pointerAction = true; }, true);
-  document.addEventListener("keydown", () => { pointerAction = false; }, true);
+  let scrollSnapshot = null;
+  let restoreFrame = 0;
+
+  const cancelScrollProtection = () => {
+    scrollSnapshot = null;
+  };
+  const rememberNotebookScroll = (form) => {
+    const ancestors = [];
+    for (let node = form.parentElement; node; node = node.parentElement) {
+      if (node === document.body || node === document.documentElement) break;
+      ancestors.push({node, top:node.scrollTop, left:node.scrollLeft});
+    }
+    scrollSnapshot = {form, ancestors, top:window.scrollY, left:window.scrollX};
+  };
+  const restoreNotebookScroll = () => {
+    if (!scrollSnapshot) return;
+    if (!scrollSnapshot.form.isConnected) {
+      cancelScrollProtection();
+      return;
+    }
+    for (const position of scrollSnapshot.ancestors) {
+      if (position.node.isConnected &&
+          (position.node.scrollTop !== position.top || position.node.scrollLeft !== position.left)) {
+        position.node.scrollTo({top:position.top, left:position.left, behavior:"instant"});
+      }
+    }
+    if (window.scrollY !== scrollSnapshot.top || window.scrollX !== scrollSnapshot.left) {
+      window.scrollTo({top:scrollSnapshot.top, left:scrollSnapshot.left, behavior:"instant"});
+    }
+  };
+  const scheduleScrollRestore = () => {
+    if (!scrollSnapshot) return;
+    if (restoreFrame) return;
+    restoreFrame = window.requestAnimationFrame(() => {
+      restoreFrame = 0;
+      restoreNotebookScroll();
+      // Notebook managers may scroll or restore focus in the following frame.
+      window.requestAnimationFrame(restoreNotebookScroll);
+    });
+  };
+
+  document.addEventListener("pointerdown", (event) => {
+    pointerAction = true;
+    const form = event.target instanceof Element ? event.target.closest(".fabricops-form") : null;
+    if (form) rememberNotebookScroll(form);
+    else {
+      pointerAction = false;
+      cancelScrollProtection();
+    }
+  }, true);
+  document.addEventListener("keydown", () => {
+    pointerAction = false;
+    cancelScrollProtection();
+  }, true);
+  for (const eventName of ["wheel", "touchmove"]) {
+    document.addEventListener(eventName, () => {
+      pointerAction = false;
+      cancelScrollProtection();
+    }, {capture:true, passive:true});
+  }
+
+  document.addEventListener("focusin", (event) => {
+    if (scrollSnapshot && scrollSnapshot.form.contains(event.target)) {
+      scheduleScrollRestore();
+      releaseFocus(scrollSnapshot.form, 50);
+    }
+  }, true);
+  document.addEventListener("scroll", (event) => {
+    if (!scrollSnapshot) return;
+    if (event.target === document || event.target === document.documentElement ||
+        scrollSnapshot.ancestors.some(position => position.node === event.target)) {
+      scheduleScrollRestore();
+    }
+  }, true);
 
   const releaseFocus = (form, delay) => {
     if (!pointerAction) return;

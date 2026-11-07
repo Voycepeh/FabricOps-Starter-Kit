@@ -947,14 +947,26 @@ def get_table_runtime_context(
                 return []
             raise
         return [
-            row for row in row_dicts(_scoped_rows(
-                frame, f"table_id = {_sql_literal(table_identity)}"
-            ))
+            row for row in _scoped_rows(
+                frame, f"table_id = {_sql_literal(table_identity)}",
+                "" if table_name == "METADATA_DATA_LINEAGE"
+                else f"workspace_id = {_sql_literal(active_workspace_id)}",
+            )
             if str(row.get("table_id") or "") == table_identity
             and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
         ]
 
     profiled = table_rows("METADATA_DATA_PROFILED")
+    latest_by_column: dict[str, dict[str, Any]] = {}
+    for row in profiled:
+        column_id = str(row.get("column_id") or "")
+        if not column_id or str(row.get("status") or "completed").lower() != "completed":
+            continue
+        previous = latest_by_column.get(column_id)
+        if previous is None or metadata_timestamp_sort_key(
+            row.get("profiled_at") or row.get("_committed_at")
+        ) > metadata_timestamp_sort_key(previous.get("profiled_at") or previous.get("_committed_at")):
+            latest_by_column[column_id] = row
     latest_profile_row = max(
         profiled,
         key=lambda row: (
@@ -1006,7 +1018,18 @@ def get_table_runtime_context(
         for row in latest_profile_rows if str(row.get("column_id") or "")
     }
     latest_snapshot_id = str((latest_profile or {}).get("profile_snapshot_id") or "")
-    if latest_snapshot_id:
+    frequency_rows: list[dict[str, Any]] = []
+    if latest_snapshot_id or latest_by_column:
+        selected_profile_ids = {
+            row.get("profile_id") or row.get("profile_snapshot_id")
+            for row in latest_by_column.values()
+        }
+        frequency_predicate = ""
+        if None not in selected_profile_ids and (selected_profile_ids or latest_snapshot_id):
+            identities = ", ".join(_sql_literal(value) for value in sorted(
+                {str(value) for value in selected_profile_ids} | ({latest_snapshot_id} if latest_snapshot_id else set())
+            ))
+            frequency_predicate = f"(profile_id IN ({identities}) OR profile_snapshot_id IN ({identities}))"
         profile_columns = {
             str(row.get("profile_id") or ""): str(row.get("column_id") or "")
             for row in latest_profile_rows
@@ -1020,7 +1043,7 @@ def get_table_runtime_context(
             )
             frequency_rows = row_dicts(_scoped_rows(
                 frequency_frame,
-                f"profile_snapshot_id = {_sql_literal(latest_snapshot_id)}",
+                frequency_predicate,
                 f"workspace_id = {_sql_literal(active_workspace_id)}",
                 f"table_id = {_sql_literal(table_identity)}",
             ))
@@ -1034,19 +1057,24 @@ def get_table_runtime_context(
                 raise
         frequency_rows = [
             row for row in frequency_rows
+            if str(row.get("workspace_id") or "") == active_workspace_id
+            and str(row.get("table_id") or "") == table_identity
+        ]
+        summary_frequency_rows = [
+            row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
             and str(row.get("workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "") == table_identity
         ]
-        frequency_rows.sort(
+        summary_frequency_rows.sort(
             key=lambda row: (
                 profile_columns.get(str(row.get("profile_id") or ""), ""),
                 int(row.get("frequency_rank") or 2_147_483_647),
                 -int(row.get("frequency_count") or 0),
             )
         )
-        for row in frequency_rows:
+        for row in summary_frequency_rows:
             column_id = profile_columns.get(str(row.get("profile_id") or ""), "")
             if column_id not in column_profiles:
                 continue
@@ -1054,6 +1082,29 @@ def get_table_runtime_context(
             value = row.get("value")
             if value not in (None, "") and value not in examples and len(examples) < 3:
                 examples.append(value)
+
+    # Keep the same per-column latest-completed selection and frequency join as
+    # get_column_profile_context, including columns absent from the latest snapshot.
+    profile_contexts = {}
+    frequency_by_column: dict[str, list[dict[str, Any]]] = {}
+    for row in frequency_rows:
+        frequency_by_column.setdefault(str(row.get("column_id") or ""), []).append(row)
+    for column_id, profile in latest_by_column.items():
+        snapshot = profile.get("profile_id") or profile.get("profile_snapshot_id")
+        values = [
+            row for row in frequency_by_column.get(column_id, [])
+            if snapshot is None or row.get("profile_id") == snapshot
+            or row.get("profile_snapshot_id") == snapshot
+        ]
+        values.sort(key=lambda row: (
+            int(row.get("frequency_rank") or 2_147_483_647),
+            -int(row.get("frequency_count") or 0),
+        ))
+        profile_contexts[column_id] = {
+            "kind": "profile", "profile": profile,
+            "values": [{"value": row.get("value"), "count": row.get("frequency_count"),
+                        "percent": row.get("frequency_percent")} for row in values[:3]],
+        }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for row in table_rows("METADATA_DATA_LINEAGE"):
@@ -1101,6 +1152,7 @@ def get_table_runtime_context(
     return {
         "latest_profile": latest_profile,
         "column_profiles": column_profiles,
+        "profile_contexts": profile_contexts,
         "writer_count": len(writers),
         "reader_count": len(readers),
         "lineage": lineage,

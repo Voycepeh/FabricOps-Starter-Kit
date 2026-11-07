@@ -117,6 +117,14 @@ any supported deterministic rule manually, or generate transient proposals
 from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
 Column tab contains column metadata and non-DQ settings only.
+Opening with AI prepares suggestions for the table and first column.
+Switching columns reuses table-level profile reads and cached suggestions;
+use Generate on a column to request further AI suggestions explicitly.
+Long operations show an animated progress indicator and record elapsed seconds in
+``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
+on blur or Enter, while searches remain live. Full Review content is built on demand.
+Save and Freeze validate pending editor input through both buttons and returned actions.
+Optional AI request failures do not block valid manually authored contracts.
 Manual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can
 stage the same configuration as one independent rule per selected column.
 Uniqueness can instead treat selected columns as one composite key.
@@ -150,6 +158,14 @@ schema and contract metadata. When profiling exists, they also receive profile
 summaries including min/max and the three most frequent values.
 Treatment failures always block.
 
+FabricOps AI helper requests automatically append measured token usage to
+``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone
+widget telemetry table is created on its first write; it is excluded from
+``setup_metadata_tables()`` and the canonical Metadata model.
+``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.
+Prompts and generated text are not stored. Missing usage statistics remain
+unavailable. Audit write failures are shown in AI usage without replaying requests.
+
 </div>
 
 ## Behavior and scope
@@ -169,9 +185,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:894`
+`fabricops_kit/widgets/widget_data_contract.py:1043`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L894-L7474">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1043-L7824">View on GitHub</a>
 </div>
 
 

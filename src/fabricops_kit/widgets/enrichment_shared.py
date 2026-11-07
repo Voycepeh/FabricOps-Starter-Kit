@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import ast
+from datetime import UTC, datetime
+import logging
+from time import perf_counter
+from uuid import uuid4
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from functools import partial
@@ -11,9 +15,11 @@ import json
 from typing import Any
 import warnings
 
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, build_metadata_schema, audit_schema_fields
+from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
-from fabricops_kit.config.shared import metadata_timestamp_sort_key, validate_ai_enrichment
+from fabricops_kit.config.shared import metadata_timestamp_sort_key, validate_ai_enrichment, resolve_fabric_context
 from fabricops_kit.data_contract.shared import (
     normalize_guardrail_action,
     validate_sensitive_data_parameters,
@@ -142,8 +148,83 @@ def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
     }
 
 
+def _ai_usage_schema() -> Any:
+    """Define the standalone widget telemetry table, outside canonical Metadata setup."""
+    audit = audit_schema_fields()
+    return build_metadata_schema(
+        "AI_TOKEN_USAGE",
+        [
+            ("usage_id", "string", False),
+            ("provider", "string", False),
+            ("operation", "string", False),
+            ("model", "string", False),
+            ("reasoning_effort", "string"),
+            ("verbosity", "string"),
+            ("status", "string", False),
+            ("statistics_status", "string", False),
+            ("started_at", "timestamp", False),
+            ("completed_at", "timestamp", False),
+            ("duration_ms", "long", False),
+            ("workspace_id", "string", False),
+            ("evidence_workspace_id", "string"),
+            ("table_id", "string"),
+            ("column_id", "string"),
+            ("contract_id", "string"),
+            ("contract_version", "long"),
+            ("input_tokens", "long"),
+            ("output_tokens", "long"),
+            ("cached_tokens", "long"),
+            ("reasoning_tokens", "long"),
+            ("num_successful", "long"),
+            ("num_exceptions", "long"),
+            ("num_unevaluated", "long"),
+            ("num_harmful", "long"),
+            ("error_type", "string"),
+            ("statistics_json", "string"),
+            *audit,
+        ],
+    )
+
+
+def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: dict[str, Any] | None) -> None:
+    """Create or append standalone AI telemetry in the configured lakehouse, without request content."""
+    config, scope, resolved = resolve_fabric_context(context=runtime_context)
+    path_config = config.get("path_config") if isinstance(config, dict) else config.path_config
+    paths = path_config.get("paths", path_config) if isinstance(path_config, dict) else path_config.paths
+    routes = sorted(str(key) for key, stores in paths.items() if "Metadata" in stores)
+    if scope not in routes:
+        if not routes:
+            raise ValueError("AI token usage requires a configured Metadata Lakehouse.")
+        scope = routes[0]
+    resolved.update(config=config, scope_workspace_id=scope, _spark_session=spark)
+    audit = build_runtime_audit_fields(config=config, active_workspace_id=scope, runtime_context=resolved)
+    table = "AI_TOKEN_USAGE"
+    schema = _ai_usage_schema()
+    row = {field.name: None for field in schema.fields}
+    for name in row:
+        if name in record:
+            row[name] = record[name]
+    row.update(audit)
+    row["workspace_id"] = audit["_workspace_id"]
+    metadata = resolved.get("ai_usage_metadata") or {}
+    for name in ("evidence_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
+        row[name] = metadata.get(name)
+    stats = record.get("statistics") or []
+    for name in ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens",
+                 "num_successful", "num_exceptions", "num_unevaluated", "num_harmful"):
+        values = [item.get(name) for item in stats]
+        row[name] = sum(values) if values and all(type(value) is int and value >= 0 for value in values) else None
+    row["statistics_json"] = json.dumps(stats, sort_keys=True) if stats else None
+    write_lakehouse_table(
+        spark.createDataFrame([row], schema=schema), table, store="Metadata",
+        schema="misc", mode="append", verbose=False,
+        options={"txnAppId": record["usage_id"], "txnVersion": "0"}, context=resolved,
+    )
+
+
 def _invoke_fabric_ai(
     prompt: str, *, ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    runtime_context: dict[str, Any] | None = None,
     usage: list[dict[str, Any]] | None = None, operation: str = "authoring",
 ) -> str:
     """Invoke Microsoft Fabric PySpark AI Functions without nesting notebook event loops."""
@@ -199,16 +280,19 @@ def _invoke_fabric_ai(
               "statistics": None, "statistics_status": "unavailable"}
     if usage is not None:
         usage.append(record)
+    record.update(usage_id=str(uuid4()), provider="fabric_ai_functions", status="execution_error",
+                  started_at=datetime.now(UTC))
+    started = perf_counter()
     result = None
     try:
-        with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
-            result = ai.generate_response(
-                prompt="{fabricops_prompt}", is_prompt_template=True,
-                output_col="fabricops_response", error_col="fabricops_ai_error",
-            ).persist()
-            rows = result.collect()
-            row = rows[0] if rows else None
-            if usage is not None:
+        try:
+            with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+                result = ai.generate_response(
+                    prompt="{fabricops_prompt}", is_prompt_template=True,
+                    output_col="fabricops_response", error_col="fabricops_ai_error",
+                ).persist()
+                rows = result.collect()
+                row = rows[0] if rows else None
                 try:
                     stats = result.ai.stats.collect()
                     fields = {"num_successful", "num_exceptions", "num_unevaluated", "num_harmful",
@@ -221,23 +305,40 @@ def _invoke_fabric_ai(
                 except Exception:
                     # Telemetry is optional; never hide a successful authoring response.
                     pass
+        except Exception as exc:
+            raise AIExecutionError("Fabric AI Functions execution failed.") from exc
+        finally:
+            if result is not None:
+                try:
+                    result.unpersist()
+                except Exception:
+                    pass
+        if row is None:
+            raise AIProviderError("Fabric AI Functions returned no result row.")
+        error = row["fabricops_ai_error"]
+        if error:
+            raise AIProviderError(str(error))
+        response = str(row["fabricops_response"] or "").strip()
+        if not response:
+            raise AIProviderError("Fabric AI Functions returned an empty response.")
+        record["status"] = "succeeded"
+        return response
+    except AIProviderError as exc:
+        record.update(status="provider_error", error_type=type(exc).__name__)
+        raise
     except Exception as exc:
-        raise AIExecutionError("Fabric AI Functions execution failed.") from exc
+        record["error_type"] = type(exc).__name__
+        raise
     finally:
-        if result is not None:
-            try:
-                result.unpersist()
-            except Exception:
-                pass
-    if row is None:
-        raise AIProviderError("Fabric AI Functions returned no result row.")
-    error = row["fabricops_ai_error"]
-    if error:
-        raise AIProviderError(str(error))
-    response = str(row["fabricops_response"] or "").strip()
-    if not response:
-        raise AIProviderError("Fabric AI Functions returned an empty response.")
-    return response
+        record.update(completed_at=datetime.now(UTC), duration_ms=int((perf_counter() - started) * 1000))
+        try:
+            _persist_ai_usage(record, spark=spark, runtime_context=runtime_context)
+            record["persistence_status"] = "saved"
+        except Exception as exc:
+            record.update(persistence_status="unconfirmed", persistence_error_type=type(exc).__name__)
+            logging.getLogger(__name__).warning(
+                "AI token usage write unconfirmed (%s); the AI request will not be replayed.", type(exc).__name__,
+            )
 
 
 def suggest_enrichment(
@@ -246,13 +347,14 @@ def suggest_enrichment(
     description_prompt: str,
     invoke: Any = None,
     ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    runtime_context: dict[str, Any] | None = None,
     usage: list[dict[str, Any]] | None = None, operation: str = "suggest_enrichment",
 ) -> dict[str, str]:
     """Return one transient AI Description suggestion."""
     if not str(description_prompt).strip():
         raise AIConfigurationError("An AI Enrichment description prompt is required.")
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     context_json = json.dumps(context, sort_keys=True, default=str)
     guidance = ""
@@ -360,7 +462,8 @@ def _parse_ai_json(raw: str, label: str) -> Any:
 
 def suggest_sensitive_data(
     context: dict[str, Any], *, prompt: str, invoke: Any = None, ai_config: dict[str, Any] | None = None,
-    spark_session: Any = None, usage: list[dict[str, Any]] | None = None, operation: str = "suggest_sensitive_data"
+    spark_session: Any = None, runtime_context: dict[str, Any] | None = None,
+    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_sensitive_data"
 ) -> list[dict[str, Any]]:
     """Return validated transient Sensitive Data rule suggestions."""
     if not str(prompt).strip():
@@ -386,7 +489,7 @@ def suggest_sensitive_data(
         f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
     )
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     raw = str(call(instruction)).strip()
     candidates = _parse_ai_json(raw, "AI Sensitive Data suggestion")
@@ -488,6 +591,7 @@ def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
 def suggest_grain_key(
     context: dict[str, Any], *, prompt: str, invoke: Any = None,
     ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    runtime_context: dict[str, Any] | None = None,
     usage: list[dict[str, Any]] | None = None, operation: str = "suggest_grain_key",
 ) -> dict[str, Any]:
     """Return one transient grain wording suggestion grounded by profiled key evidence."""
@@ -533,7 +637,7 @@ Profiled row-key candidate:
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     raw = str(call(instruction)).strip()
     candidate = _parse_ai_json(raw, "AI Grain suggestion")
@@ -545,7 +649,9 @@ Context:
         "rationale": str(candidate.get("rationale") or "").strip(),
     }
 
-def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None) -> list[dict[str, Any]]:
+def suggest_dq_rules(context: dict[str, Any], *, prompt: str, invoke: Any = None,
+                     ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+                     runtime_context: dict[str, Any] | None = None, usage: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     """Return validated, transient suggestions for the four column-level DQ families."""
     if not str(prompt).strip():
         raise AIConfigurationError("An AI Data Quality prompt is required.")
@@ -566,7 +672,8 @@ Pattern requires a regex only for clearly structured text. Use governed evidence
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or _invoke_fabric_ai)(instruction)).strip()
+    raw = str((invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session,
+                                      runtime_context=runtime_context, usage=usage, operation="suggest_dq_rules"))(instruction)).strip()
     if raw.startswith("```"):
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
@@ -710,6 +817,7 @@ def suggest_business_rule(
     prompt: str,
     invoke: Any = None,
     ai_config: dict[str, Any] | None = None, spark_session: Any = None,
+    runtime_context: dict[str, Any] | None = None,
     usage: list[dict[str, Any]] | None = None, operation: str = "suggest_business_rule",
 ) -> list[dict[str, Any]]:
     """Resolve natural-language business intent into one or more atomic Guardrails."""
@@ -766,7 +874,7 @@ Do not force a known pattern when it would weaken, broaden, or otherwise change 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation,
+        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     raw = str(call(instruction)).strip()
     candidates = _parse_ai_json(raw, "AI DQ Rule proposal")
