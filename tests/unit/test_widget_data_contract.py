@@ -1096,7 +1096,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 
     state["load_profile_context"]("col-0")
     assert widget_runtime["calls"]["profiles"].count("col-0") == 1
-    assert ("orders", "col-0") in state["_profile_cache"]
+    assert ("dev", "orders", "col-0") in state["_profile_cache"]
 
 
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):
@@ -4464,3 +4464,49 @@ def test_column_search_avoids_transient_selection_and_preserves_edits(monkeypatc
     finally:
         state["_dispose_editor"]()
         controls["page"].close()
+
+
+def test_datatype_change_keeps_profile_visible_without_new_reads(widget_runtime):
+    """Rehydrating the active Column editor must not leave the profile placeholder behind."""
+    widget_runtime["catalogue"][1]["data_type"] = "string"
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Column"
+    before = controls["profile_context"].value
+    reads = list(widget_runtime["calls"]["profiles"])
+    assert "Row count" in before
+    controls["datatype_choice"].value = "string"
+    assert controls["profile_context"].value == before
+    assert widget_runtime["calls"]["profiles"] == reads
+
+
+def test_profile_without_metrics_explains_empty_display():
+    """A metadata-only profile record must not render as a blank paragraph."""
+    assert "no metrics were recorded" in module._profile_html({
+        "kind": "profile", "profile": {"profile_id": "profile-1", "column_id": "col-0"},
+    })
+    assert "&lt;workspace&gt;" in module._profile_html({
+        "kind": "unavailable", "message": "No profile found in <workspace>.",
+    })
+
+
+def test_profile_cache_keeps_workspace_results_separate(widget_runtime, monkeypatch):
+    """A missing profile in one observation must not hide a profile in another workspace."""
+    original = module.contracts.list_contract_governance_state
+    def list_state(**kwargs):
+        result = original(**kwargs)
+        result["tables"] = [*result["tables"], {**result["tables"][0], "workspace_id": "prod"}]
+        return result
+    calls = []
+    def profile_context(*, active_workspace_id, **_kwargs):
+        calls.append(active_workspace_id)
+        if active_workspace_id == "dev":
+            return {"kind": "unavailable", "message": "No profile in dev."}
+        return {"kind": "profile", "profile": {"row_count": 42}}
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", list_state)
+    monkeypatch.setattr(module.contracts, "get_column_profile_context", profile_context)
+    state = widget_runtime["open"]()
+    assert state["load_profile_context"]("col-0")["kind"] == "unavailable"
+    state["_controls"]["workspace_select"].value = "prod"
+    assert state["load_profile_context"]("col-0")["profile"]["row_count"] == 42
+    assert calls == ["dev", "prod"]

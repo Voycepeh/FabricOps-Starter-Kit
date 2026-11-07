@@ -826,7 +826,7 @@ def _manifest_html(payload: dict[str, Any]) -> str:
 def _profile_html(context: dict[str, Any]) -> str:
     """Render a compact datatype-aware summary of governed profile evidence."""
     if context.get("kind") == "unavailable":
-        return "<p>Not yet profiled.</p>"
+        return "<p>" + html.escape(str(context.get("message") or "Not yet profiled.")) + "</p>"
 
     profile = dict(context.get("profile") or {})
     values = list(context.get("values") or [])
@@ -900,6 +900,8 @@ def _profile_html(context: dict[str, Any]) -> str:
     ):
         lines.append("Values are highly unique, so value frequency profiling was skipped.")
 
+    if not lines:
+        return "<p>A profile record exists, but no metrics were recorded for this column.</p>"
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
 
 def widget_data_contract(
@@ -1454,8 +1456,8 @@ def widget_data_contract(
         selected_column = str(column_id or "").strip()
         if not selected_table or not selected_column:
             raise ValueError("Select a governed table and column before loading profile context.")
-        cache_key = (selected_table, selected_column)
-        profile_cache: dict[tuple[str, str], dict[str, Any]] = state["_profile_cache"]
+        cache_key = (active_workspace_id, selected_table, selected_column)
+        profile_cache: dict[tuple[str, str, str], dict[str, Any]] = state["_profile_cache"]
         if cache_key not in profile_cache:
             profile_cache[cache_key] = contracts.get_column_profile_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
@@ -2612,8 +2614,11 @@ def widget_data_contract(
             profiles = runtime_context["profile_contexts"]
             for column in authoring_columns:
                 column_id = str(column.get("column_id") or "")
-                state["_profile_cache"][(str(state["table_id"]), column_id)] = profiles.get(
-                    column_id, {"kind": "unavailable", "message": "Not yet profiled."}
+                state["_profile_cache"][(active_workspace_id, str(state["table_id"]), column_id)] = profiles.get(
+                    column_id, {"kind": "unavailable", "message": (
+                        f"Not yet profiled in workspace {active_workspace_id}. "
+                        "Select the workspace where profiling ran, then reopen the contract to reload its profiles."
+                    )}
                 )
 
         def context_timestamp(value: Any) -> str:
@@ -4812,6 +4817,8 @@ def widget_data_contract(
             refresh_manifest()
             refresh_column_options()
             hydrate_column(cid)
+            if str(top_nav.value) == "Column":
+                load_selected_profile()
             set_status("Contract datatype choice staged locally. Save the Data Contract to persist.")
 
         required.observe(required_feedback, names="value")
