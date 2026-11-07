@@ -121,7 +121,7 @@ appends one complete agreement row only after final validation.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 68 |
+| Live-critical dependencies | 69 |
 
 ### Release history
 
@@ -165,6 +165,7 @@ appends one complete agreement row only after final validation.
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.widgets.shared._audit_date</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>

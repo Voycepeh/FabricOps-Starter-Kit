@@ -232,11 +232,15 @@ def create_contract_draft(
         "status": "draft",
         **audit,
     })
-    write_lakehouse_table(
-        spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]),
-        DATA_CONTRACT_TABLE, store=store, schema=schema,
-        context=runtime_context, mode="append",
-    )
+    frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE])
+    write_options = {"store": store, "schema": schema, "context": runtime_context, "mode": "append"}
+    if store == "Metadata":
+        # Canonical appends already own their retry budget in foundational I/O.
+        write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
+    else:
+        # Alternate authoring stores still contain metadata. Retry the fixed
+        # append, never draft discovery/version selection or the whole workflow.
+        retry_delta_metadata(lambda: write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options))
     return row
 
 def _sql_literal(value: Any) -> str:

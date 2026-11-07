@@ -115,7 +115,7 @@ No session is created; Spark-dependent work raises
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 54 |
+| Live-critical dependencies | 55 |
 
 ### Release history
 
@@ -159,6 +159,7 @@ No session is created; Spark-dependent work raises
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared._is_table_not_found_error</code></li>
