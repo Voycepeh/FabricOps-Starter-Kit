@@ -109,7 +109,7 @@ def _set_selection_value(
             f"control={control_name!r}, value={value!r}, {location}, "
             f"valid_options={valid_options!r}"
         ) from exc
-_TABS = ("Table", "Columns", "Data Quality", "Review", "AI Settings")
+_TABS = ("Table", "Columns", "Data Quality", "Review", "AI Usage")
 _CONTRACT_STYLE = """<style>
 .fabricops-data-contract {
     --contract-accent:var(--form-accent); --contract-border:var(--form-border);
@@ -134,11 +134,11 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-ai-usage-table th { background:var(--form-tint); }
 .fabricops-data-contract .fabricops-contract-nav > div {
-    display:flex; flex-direction:column; gap:4px; padding:4px; background:var(--form-tint);
+    display:flex; flex-direction:row; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
     border:1px solid var(--form-border); border-radius:7px; width:100%;
 }
 .fabricops-data-contract .fabricops-contract-nav button {
-    min-width:0; width:100%; text-align:left; min-height:30px; height:auto; padding:5px 10px; border:0; border-radius:5px; margin:0;
+    flex:1 1 120px; min-width:0; width:auto; text-align:center; min-height:36px; height:auto; padding:6px 10px; border:0; border-radius:5px; margin:0;
     background:transparent; color:#526477; font-weight:600; box-shadow:none;
 }
 .fabricops-data-contract .fabricops-contract-nav button.mod-active { background:#fff; color:var(--form-accent); border-left:3px solid var(--form-accent); }
@@ -275,10 +275,12 @@ _CONTRACT_STYLE = """<style>
 @container (max-width:1000px) {
     .fabricops-data-contract .fabricops-contract-assistant-grid,
     .fabricops-data-contract .fabricops-contract-labeled-grid { grid-template-columns:minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:320px minmax(0,1fr) !important; }
 }
 @container (max-width:600px) {
-    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:170px minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:220px minmax(0,1fr) !important; }
     .fabricops-data-contract .fabricops-contract-sidebar { padding:10px; }
+    .fabricops-data-contract .fabricops-contract-nav button { flex-basis:100px; }
     .fabricops-data-contract .fabricops-contract-detail > .widget-vbox { padding:12px; }
     .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox {
         grid-template-columns:minmax(0,1fr) !important;
@@ -1087,8 +1089,8 @@ def widget_data_contract(
     and addition. Both paths create the same editable Guardrail records; the
     Columns section contains column metadata and non-DQ settings only.
     Open Data Contract loads a manual-first editor without AI inference or AI-only
-    profile reads. Sidebar navigation keeps Table, Columns, Data Quality, Review,
-    AI Settings and lifecycle actions accessible beside one scrolling content region.
+    profile reads. Top navigation keeps Table, Columns, Data Quality, Review,
+    and AI Usage above the editor; lifecycle actions remain in the sidebar.
     Every AI request requires an explicit Generate, Suggest or Re-run action.
     Suggestions persist during navigation and require explicit acceptance.
     Switching columns reuses cached profile reads and suggestions.
@@ -1277,7 +1279,7 @@ def widget_data_contract(
                                 control.disabled = True
                         operation_progress.value = (
                             "<div role='status' style='font-size:12px;color:#667085;'>"
-                            f"Operation finished in {elapsed:.1f} s.</div>"
+                            "Ready.</div>"
                         )
             return run
         return decorate
@@ -1307,7 +1309,7 @@ def widget_data_contract(
         [left, right],
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            grid_template_columns="240px minmax(0, 1fr)",
+            grid_template_columns="480px minmax(0, 1fr)",
             grid_gap="12px", align_items="flex-start", overflow="visible",
         ),
     )
@@ -1352,7 +1354,10 @@ def widget_data_contract(
         elif str(top_nav.value) == "Review":
             refresh_review = state.get("_refresh_review")
             if callable(refresh_review):
-                refresh_review()
+                try:
+                    refresh_review()
+                except Exception as exc:
+                    set_status(_format_widget_exception(exc, phase="review context"), error=True)
 
     top_nav.observe(apply_view, names="value")
 
@@ -2138,6 +2143,7 @@ def widget_data_contract(
                 return
             retrying = "grain_key" in ai_errors
             try:
+                ensure_runtime_context()
                 render_grain_profile_evidence()
                 profile_rows = []
                 for column in authoring_columns:
@@ -2778,25 +2784,7 @@ def widget_data_contract(
                     lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
                 )
 
-        if state["_busy_depth"]:
-            set_open_progress("Loading profiles and pipeline usage…")
-        runtime_context = contracts.get_table_runtime_context(
-            config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-            table_id=str(state.get("table_id") or ""),
-            metadata_workspace_id=routing_workspace_id,
-        )
-        # The runtime summary already loads profiles for this table. Reuse that
-        # read instead of starting two Spark jobs for every column selection.
-        if "profile_contexts" in runtime_context:
-            profiles = runtime_context["profile_contexts"]
-            for column in authoring_columns:
-                column_id = str(column.get("column_id") or "")
-                state["_profile_cache"][(active_workspace_id, str(state["table_id"]), column_id)] = profiles.get(
-                    column_id, {"kind": "unavailable", "message": (
-                        f"Not yet profiled in workspace {active_workspace_id}. "
-                        "Select the workspace where profiling ran, then reopen the contract to reload its profiles."
-                    )}
-                )
+        runtime_context: dict[str, Any] = {}
 
         def context_timestamp(value: Any) -> str:
             text = str(value or "").strip()
@@ -3192,7 +3180,10 @@ def widget_data_contract(
             sidebar_snapshot["signature"] = signature
             close_sidebar_widgets(previous)
 
-        runtime_summary_html = runtime_context_html()
+        runtime_summary_html = (
+            "<div style='color:#667085;font-size:12px;margin-top:14px;'>"
+            "Profile and pipeline usage have not been loaded.</div>"
+        )
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
@@ -3264,6 +3255,46 @@ def widget_data_contract(
             rule_controls["enabled"].observe(render_table_summary, names="value")
         for freshness_control in table_rules["freshness"]["parameters"]:
             freshness_control.observe(render_table_summary, names="value")
+
+        load_table_context_button = widgets.Button(
+            description="Load profile and pipeline usage",
+            layout=widgets.Layout(width="100%"),
+        )
+
+        @busy_action("Loading profile and pipeline usage…")
+        def ensure_runtime_context() -> None:
+            nonlocal runtime_context, runtime_summary_html
+            if runtime_context:
+                return
+            loaded = contracts.get_table_runtime_context(
+                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
+                table_id=str(state.get("table_id") or ""),
+                metadata_workspace_id=routing_workspace_id,
+            )
+            runtime_context = loaded
+            # Reuse the bulk profile read when Columns is opened.
+            if "profile_contexts" in loaded:
+                profiles = loaded["profile_contexts"]
+                for column in authoring_columns:
+                    column_id = str(column.get("column_id") or "")
+                    state["_profile_cache"][(active_workspace_id, str(state["table_id"]), column_id)] = profiles.get(
+                        column_id, {"kind": "unavailable", "message": (
+                            f"Not yet profiled in workspace {active_workspace_id}. "
+                            "Select the workspace where profiling ran, then reopen the contract to reload its profiles."
+                        )}
+                    )
+            runtime_summary_html = runtime_context_html()
+            load_table_context_button.layout.display = "none"
+            render_table_summary()
+
+        def load_table_context_clicked(_button: Any) -> None:
+            try:
+                ensure_runtime_context()
+                set_status("Profile and pipeline usage loaded. Open Table context to view.")
+            except Exception as exc:
+                set_status(_format_widget_exception(exc, phase="table context"), error=True)
+
+        load_table_context_button.on_click(load_table_context_clicked)
         processing_hint_row = widgets.VBox(
             [processing_source_hint],
             layout=widgets.Layout(width="100%", min_width="0", align_items="flex-start"),
@@ -4052,8 +4083,9 @@ def widget_data_contract(
                 profile_context.value = "<p>No column selected.</p>"
                 return
             try:
+                ensure_runtime_context()
                 profile_context.value = _profile_html(load_profile_context(column_id))
-            except (ValueError, RuntimeError) as exc:
+            except Exception as exc:
                 profile_context.value = f"<p>{html.escape(str(exc))}</p>"
 
         state["_load_selected_profile"] = load_selected_profile
@@ -6293,6 +6325,7 @@ def widget_data_contract(
             retrying = "business_rule_ai" in state["_validation_errors"]
             business_proposal.value = "<p role='status'>Generating proposals for review…</p>"
             try:
+                ensure_runtime_context()
                 profiles = dict(runtime_context.get("column_profiles") or {})
                 context_payload = build_ai_business_rule_context({
                     "table_name": table.get("table_name"),
@@ -7042,6 +7075,7 @@ def widget_data_contract(
 
         def refresh_review() -> None:
             nonlocal payload
+            ensure_runtime_context()
             payload = refresh_manifest() or {}
             refreshed_sections = _manifest_sections(
                 payload, column_profiles=runtime_context.get("column_profiles", {})
@@ -7228,13 +7262,13 @@ def widget_data_contract(
             ),
         )
         view_content["Review"] = (review_left, review_right)
-        view_content["AI Settings"] = (
+        view_content["AI Usage"] = (
             (),
             (editor_ai_information, ai_usage_view),
         )
         nonlocal sidebar_content
         sidebar_content = (
-            table_summary, contract_nav_row, sidebar_actions, table_exit_row,
+            table_summary, load_table_context_button, sidebar_actions, table_exit_row,
             table_exit_confirm, operation_progress, status, guardrail_disclosure,
         )
         apply_view()
@@ -7248,6 +7282,7 @@ def widget_data_contract(
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "guardrail_sidebar": guardrail_sidebar, "guardrail_disclosure": guardrail_disclosure, "sidebar_groups": sidebar_groups,
+            "load_table_context": load_table_context_button,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
@@ -7375,7 +7410,7 @@ def widget_data_contract(
 
         state["_refresh_ai_controls"] = refresh_ai_controls
         editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
-        editor_roots.extend([table_summary, guardrail_disclosure, *sidebar_actions.children])
+        editor_roots.extend([table_summary, load_table_context_button, guardrail_disclosure, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
             sensitive_ai_panel, business_advanced, business_rule_controls,
@@ -7505,6 +7540,7 @@ def widget_data_contract(
     contract_nav_row.add_class("fabricops-contract-nav-row")
     editor_shell = widgets.VBox(
         [
+            contract_nav_row,
             workspace,
         ],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
@@ -7625,7 +7661,7 @@ def widget_data_contract(
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
             open_progress.value = ""
-            set_status(f"Opened Data Contract v{state['contract_version']} for {state['table_id']}.")
+            set_status(f"Data Contract v{state['contract_version']} opened.")
         except Exception as exc:
             open_progress.value = ""
             set_status(_format_widget_exception(exc, phase="editor render"), error=True)

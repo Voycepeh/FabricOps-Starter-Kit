@@ -771,9 +771,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Columns", "Data Quality", "Review", "AI Settings"
+        "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "240px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -949,7 +949,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
 
 
 def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime):
-    """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
+    """Keep top navigation separate from the widened sidebar and editor pane."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -1118,7 +1118,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["column_select"] in controls["right_pane"].children
     assert controls["column_search"] in controls["right_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "240px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
     assert controls["column_select"].layout.height == "180px"
     assert controls["column_select"].layout.min_height == "130px"
     assert controls["column_select"].layout.flex == "0 0 auto"
@@ -1277,7 +1277,7 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
 def test_sidebar_saves_and_clears_from_every_section(
     widget_runtime, monkeypatch, tab
@@ -1303,7 +1303,7 @@ def test_sidebar_saves_and_clears_from_every_section(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
 def test_sidebar_preserves_state_when_save_fails(
     widget_runtime, monkeypatch, tab
@@ -1329,7 +1329,7 @@ def test_sidebar_preserves_state_when_save_fails(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
 def test_shared_footer_discards_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
@@ -1480,7 +1480,7 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert "max-height:500px" not in style
     assert "max-height:max(680px, calc(100vh - 200px))" in style
     assert "position:sticky; top:0; align-self:start" in style
-    assert "flex-direction:column" in style
+    assert "flex-direction:row; flex-wrap:wrap" in style
     assert "align-items:stretch !important; overflow:hidden !important" not in module._CONTRACT_STYLE
     assert "overflow-y:auto !important" not in module._CONTRACT_STYLE
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
@@ -1545,7 +1545,8 @@ def test_persistent_sidebar_owns_lifecycle_actions_in_every_section(widget_runti
         return root is target or any(contains(child, target) for child in getattr(root, "children", ()))
     for section in module._TABS:
         controls["top_nav"].value = section
-        for key in ("save_data_contract", "discard_data_contract", "freeze", "change_table", "status", "operation_progress", "top_nav"):
+        assert contains(controls["editor_shell"].children[0], controls["top_nav"])
+        for key in ("save_data_contract", "discard_data_contract", "freeze", "change_table", "status", "operation_progress"):
             assert contains(controls["left_pane"], controls[key])
             assert not contains(controls["right_pane"], controls[key])
     assert controls["sidebar_actions"] not in controls["editor_shell"].children
@@ -2492,7 +2493,7 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
     controls = state["_controls"]
 
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Columns", "Data Quality", "Review", "AI Settings"
+        "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
     controls["top_nav"].value = "Columns"
     assert controls["dq_panel"] not in controls["right_pane"].children
@@ -4051,7 +4052,7 @@ def test_ai_information_is_contained_in_its_own_editor_tab(widget_runtime):
     assert controls["editor_ai_information"] not in controls["editor_shell"].children
     assert controls["ai_usage"] not in controls["editor_shell"].children
 
-    controls["top_nav"].value = "AI Settings"
+    controls["top_nav"].value = "AI Usage"
 
     assert controls["editor_ai_information"] in controls["right_pane"].children
     assert controls["ai_usage"] in controls["right_pane"].children
@@ -4183,9 +4184,30 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
         "lineage": [{"last_seen": value}],
     })
     controls = widget_runtime["open"]()["_controls"]
+    controls["load_table_context"].click()
     summary = controls["left_pane"].children[0].value
     assert f" · {expected}</div>" in summary
     assert f"title='{expected}'>{expected}</td>" in summary
+
+
+def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
+    """Opening the editor leaves collapsed runtime context unread until requested."""
+    reads = []
+    original = module.contracts.get_table_runtime_context
+
+    def load_context(**kwargs):
+        reads.append(kwargs)
+        return original(**kwargs)
+
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
+    controls = widget_runtime["open"]()["_controls"]
+    assert reads == []
+    assert "have not been loaded" in controls["left_pane"].children[0].value
+
+    controls["load_table_context"].click()
+    assert len(reads) == 1
+    assert controls["load_table_context"].layout.display == "none"
+    assert "Pipeline usage" in controls["left_pane"].children[0].value
 
 
 def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, monkeypatch):
@@ -4256,7 +4278,7 @@ def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, mo
     assert not controls["column_select"].disabled
     assert not controls["top_nav"].disabled
     assert controls["accept_column_description"].disabled
-    assert "Operation finished in" in controls["operation_progress"].value
+    assert "Ready." in controls["operation_progress"].value
     assert state["_operation_timings"][-1]["seconds"] >= 0
 
 
