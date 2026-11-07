@@ -150,6 +150,7 @@ Spark schema inference or another schema strategy is requested.
 | Live | 0.3.0 |
 | Live | 0.3.1 |
 | Live | 0.4.0 |
+| Live | 0.4.1 |
 
 ### Live-critical dependencies
 

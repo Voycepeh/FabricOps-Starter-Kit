@@ -323,10 +323,8 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "native Microsoft Fabric viewers" in notes
-    assert "METADATA_DATA_CONTRACT_ACTIVATION" in notes
-    assert "METADATA_PIPELINE_ACTIVATION" in notes
-    assert "setup_metadata_tables()" in notes
+    assert "Retry confirmed Delta conflicts in Catalogue" in notes
+    assert "no schema migration" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):

@@ -5,7 +5,7 @@ source_ref: v0.4.1
 source_ref_note: Frozen release source is the annotated v0.4.1 tag.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
-release_motivation: FabricOps 0.4.1 fixes concurrency conflicts in metadata Delta mutations and improves Data Contract widget responsiveness and authoring behavior.
+release_motivation: FabricOps 0.4.1 fixes concurrency conflicts in metadata Delta mutations across Catalogue, profiling, and configured metadata authoring.
 functions:
   - name: check_dq
     qualified_name: fabricops_kit.pipeline.check_dq.check_dq

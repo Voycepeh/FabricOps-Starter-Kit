@@ -11,7 +11,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Fixed
 
 - Retry confirmed Delta conflicts in Catalogue, profiling, and configured metadata authoring mutations without replaying business writes.
-- Improve Data Contract widget responsiveness, loading feedback, and authoring behavior.
 
 ### Upgrade instructions
 

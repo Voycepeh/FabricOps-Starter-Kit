@@ -124,6 +124,7 @@ No related guides documented.
 | Discontinued | 0.3.0 |
 | Discontinued | 0.3.1 |
 | Live | 0.4.0 |
+| Live | 0.4.1 |
 
 ### Live-critical dependencies
 

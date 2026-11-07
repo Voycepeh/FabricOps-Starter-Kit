@@ -185,6 +185,7 @@ restricted instead of being presented as unrestricted table access.
 | Preview | 0.3.0 |
 | Preview | 0.3.1 |
 | Preview | 0.4.0 |
+| Preview | 0.4.1 |
 
 
 </details>

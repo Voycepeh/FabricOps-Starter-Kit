@@ -67,7 +67,6 @@
 ### Fixed
 
 - Retry confirmed Delta conflicts in Catalogue, profiling, and configured metadata authoring mutations without replaying business writes.
-- Improve Data Contract widget responsiveness, loading feedback, and authoring behavior.
 
 ### Upgrade instructions
 
