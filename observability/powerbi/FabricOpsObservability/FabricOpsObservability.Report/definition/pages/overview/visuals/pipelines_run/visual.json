@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "pipelines_run",
+  "position": {
+    "x": 25,
+    "y": 135,
+    "z": 0,
+    "height": 105,
+    "width": 220,
+    "tabOrder": 160
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Measures"
+                    }
+                  },
+                  "Property": "Pipelines Run"
+                }
+              },
+              "queryRef": "Measures.Pipelines Run",
+              "nativeQueryRef": "Pipelines Run"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Unique pipelines that ran\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Unique pipelines that ran visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

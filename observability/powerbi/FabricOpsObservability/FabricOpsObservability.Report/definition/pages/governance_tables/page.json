@@ -1,0 +1,560 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "governance_tables",
+  "displayName": "Governance \u2014 Tables",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "workspace_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "catalogue_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "layers_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "all_tables",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "layers_g",
+      "target": "contracts_by_status",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "workspace_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "catalogue_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "activation_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "tables_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "contracts_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "agreements_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "profiled_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "access_g",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "all_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_by_status",
+      "target": "layers_g",
+      "type": "DataFilter"
+    }
+  ]
+}

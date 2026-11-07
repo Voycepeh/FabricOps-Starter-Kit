@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "table_d",
+  "position": {
+    "x": 25,
+    "y": 55,
+    "z": 0,
+    "height": 55,
+    "width": 480,
+    "tabOrder": 80
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Table Key"
+                }
+              },
+              "queryRef": "Catalogue Table.Table Key",
+              "nativeQueryRef": "Table Key"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Physical workspace/Table\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Physical workspace/Table visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

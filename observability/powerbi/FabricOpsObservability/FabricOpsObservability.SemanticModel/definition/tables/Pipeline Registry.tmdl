@@ -1,0 +1,46 @@
+table 'Pipeline Registry'
+	lineageTag: ef2ff250-31c8-5a70-b962-1b4c596e9795
+
+	column 'Pipeline Key'
+		dataType: string
+		lineageTag: 81d72f5e-088a-587c-bd45-c5003c4e5541
+		sourceColumn: pipeline_key
+
+	column 'Pipeline Version'
+		dataType: int64
+		lineageTag: ab8f1101-d4b8-520c-b5bf-02c58fb3cc40
+		sourceColumn: pipeline_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Promotion ID'
+		dataType: string
+		lineageTag: f9d435a9-c6b8-597a-8f79-ac8ce14cf526
+		sourceColumn: promotion_id
+
+	column 'Status'
+		dataType: string
+		lineageTag: 3e8d73ce-039c-593b-988f-9d0d6548fe3f
+		sourceColumn: status
+
+	column 'Promoted At'
+		dataType: dateTime
+		lineageTag: 0e9aedc8-b350-59c5-aa57-8863e5b97353
+		sourceColumn: promoted_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Fabric Notebook URL'
+		dataType: string
+		lineageTag: 3636e13a-dc6c-52e8-9bdf-f6a27ab61e25
+		sourceColumn: fabric_notebook_url
+		dataCategory: WebUrl
+
+	partition 'Pipeline Registry' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "WITH p AS (SELECT CONCAT(execution_workspace_id,'|',pipeline_id) pipeline_key,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,execution_workspace_id,ROW_NUMBER() OVER(PARTITION BY execution_workspace_id,pipeline_id ORDER BY pipeline_version DESC,promoted_at DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT pipeline_key,pipeline_version,promotion_id,status,promoted_at,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',execution_workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM p WHERE rn=1",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

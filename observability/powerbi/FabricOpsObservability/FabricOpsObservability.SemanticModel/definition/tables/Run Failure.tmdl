@@ -1,0 +1,27 @@
+table 'Run Failure'
+	lineageTag: 97d97e16-f448-54c0-944f-c342d6088d94
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: a66f2a01-ca87-5f21-b84d-556c192c78a1
+		sourceColumn: run_id
+
+	column 'Failure Code'
+		dataType: string
+		lineageTag: 80ab8eec-353f-5ed7-878e-50da7ec80c83
+		sourceColumn: failure_code
+
+	column 'Exception Type'
+		dataType: string
+		lineageTag: a2545724-c194-5c61-92e6-b27487b5c14d
+		sourceColumn: exception_type
+
+	partition 'Run Failure' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT r.run_id,f.code failure_code,f.exception_type FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r CROSS APPLY OPENJSON(r.failures) WITH (code nvarchar(400) '$.code',exception_type nvarchar(400) '$.exception_type') f WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

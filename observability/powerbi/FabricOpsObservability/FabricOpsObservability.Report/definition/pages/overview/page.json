@@ -1,0 +1,560 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "overview",
+  "displayName": "Overview",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "workspace",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "modes",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "modes",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "modes",
+      "type": "DataFilter"
+    }
+  ]
+}

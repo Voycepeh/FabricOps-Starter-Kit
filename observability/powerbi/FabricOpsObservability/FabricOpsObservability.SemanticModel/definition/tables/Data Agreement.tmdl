@@ -1,0 +1,54 @@
+table 'Data Agreement'
+	lineageTag: aab3f8c6-7162-504c-8c8b-3d052edb7a94
+
+	column 'Agreement Key'
+		dataType: string
+		lineageTag: dae4eb87-616c-5267-8ff1-7cf4eb22d03f
+		sourceColumn: agreement_key
+
+	column 'Agreement ID'
+		dataType: string
+		lineageTag: 5475b692-241f-5617-99df-46272b15c90b
+		sourceColumn: agreement_id
+
+	column 'Agreement Version'
+		dataType: string
+		lineageTag: 10565dca-593e-5dbc-a070-02fd965199bb
+		sourceColumn: agreement_version
+
+	column 'Agreement Name'
+		dataType: string
+		lineageTag: 8c1231d3-2787-5e43-91e1-e60fef125546
+		sourceColumn: agreement_name
+
+	column 'Domain'
+		dataType: string
+		lineageTag: 102f9976-6791-5e99-a257-ac40396bbc56
+		sourceColumn: domain
+
+	column 'Start Date'
+		dataType: dateTime
+		lineageTag: 660b9cbb-7b86-5e86-a42a-11f81e6a85c9
+		sourceColumn: start_date
+		formatString: yyyy-MM-dd
+
+	column 'Expiry Date'
+		dataType: dateTime
+		lineageTag: 38f043be-0364-5625-bdd5-89ad59d0d904
+		sourceColumn: expiry_date
+		formatString: yyyy-MM-dd
+
+	column 'Business Purpose'
+		dataType: string
+		lineageTag: 9b875b7d-d77d-54f3-a537-adcc003f178f
+		sourceColumn: business_purpose
+
+	partition 'Data Agreement' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT CONCAT(agreement_id,'|',agreement_version) agreement_key,agreement_id,agreement_version,agreement_name,domain,start_date,expiry_date,business_purpose FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_AGREEMENT]",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

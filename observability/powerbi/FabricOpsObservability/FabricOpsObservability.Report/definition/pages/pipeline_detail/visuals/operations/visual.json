@@ -1,0 +1,408 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "operations",
+  "position": {
+    "x": 795,
+    "y": 270,
+    "z": 0,
+    "height": 210,
+    "width": 395,
+    "tabOrder": 1065
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Operation Key"
+                }
+              },
+              "queryRef": "Run Operation.Operation Key",
+              "nativeQueryRef": "Operation Key"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Table ID"
+                }
+              },
+              "queryRef": "Run Operation.Table ID",
+              "nativeQueryRef": "Table ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Pipeline Role"
+                }
+              },
+              "queryRef": "Run Operation.Pipeline Role",
+              "nativeQueryRef": "Pipeline Role"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Read Mode"
+                }
+              },
+              "queryRef": "Run Operation.Read Mode",
+              "nativeQueryRef": "Read Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Write Mode"
+                }
+              },
+              "queryRef": "Run Operation.Write Mode",
+              "nativeQueryRef": "Write Mode"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Read"
+                }
+              },
+              "queryRef": "Run Operation.Rows Read",
+              "nativeQueryRef": "Rows Read"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Columns"
+                }
+              },
+              "queryRef": "Run Operation.Columns",
+              "nativeQueryRef": "Columns"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Input Rows"
+                }
+              },
+              "queryRef": "Run Operation.Input Rows",
+              "nativeQueryRef": "Input Rows"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Input Columns"
+                }
+              },
+              "queryRef": "Run Operation.Input Columns",
+              "nativeQueryRef": "Input Columns"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Committed"
+                }
+              },
+              "queryRef": "Run Operation.Rows Committed",
+              "nativeQueryRef": "Rows Committed"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Inserted"
+                }
+              },
+              "queryRef": "Run Operation.Rows Inserted",
+              "nativeQueryRef": "Rows Inserted"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Updated"
+                }
+              },
+              "queryRef": "Run Operation.Rows Updated",
+              "nativeQueryRef": "Rows Updated"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Rows Unchanged"
+                }
+              },
+              "queryRef": "Run Operation.Rows Unchanged",
+              "nativeQueryRef": "Rows Unchanged"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Versions Inserted"
+                }
+              },
+              "queryRef": "Run Operation.Versions Inserted",
+              "nativeQueryRef": "Versions Inserted"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Versions Expired"
+                }
+              },
+              "queryRef": "Run Operation.Versions Expired",
+              "nativeQueryRef": "Versions Expired"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Total Target Rows"
+                }
+              },
+              "queryRef": "Run Operation.Total Target Rows",
+              "nativeQueryRef": "Total Target Rows"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Measurement Source"
+                }
+              },
+              "queryRef": "Run Operation.Measurement Source",
+              "nativeQueryRef": "Measurement Source"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Contract ID"
+                }
+              },
+              "queryRef": "Run Operation.Contract ID",
+              "nativeQueryRef": "Contract ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Contract Version"
+                }
+              },
+              "queryRef": "Run Operation.Contract Version",
+              "nativeQueryRef": "Contract Version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Run Operation.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Started At"
+                }
+              },
+              "queryRef": "Run Operation.Started At",
+              "nativeQueryRef": "Started At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Completed At"
+                }
+              },
+              "queryRef": "Run Operation.Completed At",
+              "nativeQueryRef": "Completed At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Destination Kind"
+                }
+              },
+              "queryRef": "Run Operation.Destination Kind",
+              "nativeQueryRef": "Destination Kind"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Destination Table Name"
+                }
+              },
+              "queryRef": "Run Operation.Destination Table Name",
+              "nativeQueryRef": "Destination Table Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Run Operation"
+                    }
+                  },
+                  "Property": "Fabric Item URL"
+                }
+              },
+              "queryRef": "Run Operation.Fabric Item URL",
+              "nativeQueryRef": "Fabric Item URL"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Selected run operations, tables and recorded execution metrics\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Selected run operations, tables and recorded execution metrics visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+table 'Contract Activation'
+	lineageTag: c6ff985c-9b67-5e6a-aad4-3c827c966e27
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: 28ba29a9-d6fd-5579-b303-548d5e2de4a5
+		sourceColumn: table_key
+
+	column 'Contract Key'
+		dataType: string
+		lineageTag: 937555a3-825c-5e52-b6d0-cf53b6c32a48
+		sourceColumn: contract_key
+
+	column 'Agreement Key'
+		dataType: string
+		lineageTag: 5a798a88-ffad-5105-bdd6-37e35cb4172a
+		sourceColumn: agreement_key
+
+	column 'Activation ID'
+		dataType: string
+		lineageTag: 4796728c-7d0a-5cac-a42a-ad97e107ce1b
+		sourceColumn: activation_id
+
+	column 'Revision'
+		dataType: int64
+		lineageTag: 2c7d7705-b2c0-5f49-b7d8-da000ef55165
+		sourceColumn: revision
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		lineageTag: daf49d99-e675-5dcf-981e-4a1e5f9dc606
+		sourceColumn: status
+
+	column 'Activated At'
+		dataType: dateTime
+		lineageTag: 8a9a47b7-a646-5c98-a6d4-94429d559581
+		sourceColumn: activated_at
+		formatString: yyyy-MM-dd HH:mm
+
+	partition 'Contract Activation' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "WITH a AS (SELECT CONCAT(workspace_id,'|',table_id) table_key,CONCAT(contract_id,'|',contract_version) contract_key,CASE WHEN agreement_id IS NULL THEN NULL ELSE CONCAT(agreement_id,'|',agreement_version) END agreement_key,activation_id,revision,status,activated_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY revision DESC,activated_at DESC) rn FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT table_key,contract_key,agreement_key,activation_id,revision,status,activated_at FROM a WHERE rn=1",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

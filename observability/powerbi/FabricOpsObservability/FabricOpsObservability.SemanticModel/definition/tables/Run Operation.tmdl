@@ -1,0 +1,174 @@
+table 'Run Operation'
+	lineageTag: ac577b62-d389-5b4b-a2dd-efd3b6b8a98f
+
+	column 'Operation Key'
+		dataType: string
+		lineageTag: 8ae9d4e7-3525-538d-958b-31172dc90378
+		sourceColumn: operation_key
+
+	column 'Run ID'
+		dataType: string
+		lineageTag: ece29265-181b-5bb7-b1c5-cc862b690ae1
+		sourceColumn: run_id
+
+	column 'Table Key'
+		dataType: string
+		lineageTag: 66f96445-5336-52a3-9405-122d575d5ef8
+		sourceColumn: table_key
+
+	column 'Table ID'
+		dataType: string
+		lineageTag: e76eb008-2f24-5e14-bc6d-b16471a3d6ec
+		sourceColumn: table_id
+
+	column 'Pipeline Role'
+		dataType: string
+		lineageTag: e4c9707f-ac66-536c-8388-272bb7e7ca1f
+		sourceColumn: pipeline_role
+
+	column 'Read Mode'
+		dataType: string
+		lineageTag: 5ad70d51-df53-5e3a-b0a5-fa646e65c1a5
+		sourceColumn: read_mode
+
+	column 'Write Mode'
+		dataType: string
+		lineageTag: 6a53149a-ac4f-5491-b68c-167c2ba5ce68
+		sourceColumn: write_mode
+
+	column 'Rows Read'
+		dataType: int64
+		lineageTag: 8ed99dd3-43a9-5219-98d9-8c7e7732dda9
+		sourceColumn: rows_read
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Columns'
+		dataType: int64
+		lineageTag: cbc858b4-e080-5ce9-98aa-ada84c11fab4
+		sourceColumn: columns
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Input Rows'
+		dataType: int64
+		lineageTag: 2fc440c2-f2ce-5265-8c09-8a8ee04140f6
+		sourceColumn: input_rows
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Input Columns'
+		dataType: int64
+		lineageTag: d2f75002-09ed-5b95-8b9b-33abcdb1594c
+		sourceColumn: input_columns
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Rows Committed'
+		dataType: int64
+		lineageTag: 49256474-adc8-5aba-94ea-7ab28e2184db
+		sourceColumn: rows_committed
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Rows Inserted'
+		dataType: int64
+		lineageTag: 382567af-a90e-5139-8ca6-7439a867dee0
+		sourceColumn: rows_inserted
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Rows Updated'
+		dataType: int64
+		lineageTag: f4fcb9fb-4906-5f2f-8875-e3b4de5934fd
+		sourceColumn: rows_updated
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Rows Unchanged'
+		dataType: int64
+		lineageTag: f1321a3f-ba5d-5db5-b6d7-98caa707dd10
+		sourceColumn: rows_unchanged
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Versions Inserted'
+		dataType: int64
+		lineageTag: 8583b480-e530-509e-9076-8de463474a11
+		sourceColumn: versions_inserted
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Versions Expired'
+		dataType: int64
+		lineageTag: 6aa9b162-00b0-56de-bdb5-f0c822a1bc96
+		sourceColumn: versions_expired
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Total Target Rows'
+		dataType: int64
+		lineageTag: a017ea63-6807-5dfd-a0ef-04cfdcc1cb29
+		sourceColumn: total_target_rows
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Measurement Source'
+		dataType: string
+		lineageTag: a4603fcb-d613-5119-b495-fa5516500d58
+		sourceColumn: measurement_source
+
+	column 'Contract ID'
+		dataType: string
+		lineageTag: a725f15a-3de9-5261-9bfb-74c0a554e57a
+		sourceColumn: contract_id
+
+	column 'Contract Version'
+		dataType: int64
+		lineageTag: 86ee0c20-a638-57cd-9622-2e0030291f73
+		sourceColumn: contract_version
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		lineageTag: e05a6696-7b11-54c2-be7d-73f5fb0a427f
+		sourceColumn: status
+
+	column 'Started At'
+		dataType: dateTime
+		lineageTag: 6c85563f-bd03-505e-aaab-8eeb6dce73d1
+		sourceColumn: started_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Completed At'
+		dataType: dateTime
+		lineageTag: 59e4e978-f98d-5ddf-983e-928795f82098
+		sourceColumn: completed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	column 'Destination Kind'
+		dataType: string
+		lineageTag: 54df04b0-face-5a32-a5c6-6bcb356dd409
+		sourceColumn: destination_kind
+
+	column 'Destination Table Name'
+		dataType: string
+		lineageTag: 291d13b4-5cf7-5ee3-8269-8c844dd662e0
+		sourceColumn: destination_table_name
+
+	column 'Fabric Item URL'
+		dataType: string
+		lineageTag: 078824d7-0c0e-59bf-bbc2-171c1ef4f2d0
+		sourceColumn: fabric_item_url
+		dataCategory: WebUrl
+
+	partition 'Run Operation' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT o.operation_key,r.run_id,CONCAT(COALESCE(o.destination_workspace_id,r.workspace_id),'|',o.table_id) table_key,o.table_id,o.pipeline_role,o.read_mode,o.write_mode,COALESCE(o.metric_rows_read,o.rows_read) rows_read,o.columns,o.input_rows,o.input_columns,COALESCE(o.rows_committed,o.rows_written) rows_committed,o.rows_inserted,o.rows_updated,o.rows_unchanged,o.versions_inserted,o.versions_expired,o.total_target_rows,o.measurement_source,o.contract_id,o.contract_version,o.status,o.started_at,o.completed_at,o.destination_kind,o.destination_table_name,CASE WHEN o.destination_workspace_id IS NULL OR o.destination_item_id IS NULL OR LOWER(o.destination_kind) NOT IN ('lakehouse','warehouse') THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',o.destination_workspace_id,'/',LOWER(o.destination_kind),'s/',o.destination_item_id) END fabric_item_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r CROSS APPLY OPENJSON(r.operations) WITH (operation_key nvarchar(400) '$.operation_key',table_id nvarchar(400) '$.table_id',pipeline_role nvarchar(50) '$.pipeline_role',read_mode nvarchar(100) '$.read_mode',write_mode nvarchar(100) '$.write_mode',rows_read bigint '$.rows_read',rows_written bigint '$.rows_written',metric_rows_read bigint '$.metrics.rows_read',columns bigint '$.metrics.columns',input_rows bigint '$.metrics.input_rows',input_columns bigint '$.metrics.input_columns',rows_committed bigint '$.metrics.rows_committed',rows_inserted bigint '$.metrics.rows_inserted',rows_updated bigint '$.metrics.rows_updated',rows_unchanged bigint '$.metrics.rows_unchanged',versions_inserted bigint '$.metrics.versions_inserted',versions_expired bigint '$.metrics.versions_expired',total_target_rows bigint '$.metrics.total_target_rows',measurement_source nvarchar(100) '$.metrics.measurement_source',contract_id nvarchar(400) '$.contract_id',contract_version bigint '$.contract_version',status nvarchar(80) '$.status',started_at datetime2 '$.started_at',completed_at datetime2 '$.completed_at',destination_workspace_id nvarchar(400) '$.destination.workspace_id',destination_item_id nvarchar(400) '$.destination.item_id',destination_kind nvarchar(80) '$.destination.kind',destination_table_name nvarchar(400) '$.destination.table_name') o WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

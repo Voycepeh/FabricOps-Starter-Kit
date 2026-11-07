@@ -1,0 +1,51 @@
+{
+  "name": "FabricOps Observability",
+  "dataColors": [
+    "#0F766E",
+    "#14B8A6",
+    "#475569",
+    "#F59E0B",
+    "#DC2626"
+  ],
+  "background": "#F8FAFC",
+  "foreground": "#172033",
+  "tableAccent": "#0F766E",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#E2E8F0"
+              }
+            },
+            "radius": 4
+          }
+        ],
+        "title": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#172033"
+              }
+            },
+            "fontSize": 11,
+            "fontFamily": "Segoe UI Semibold"
+          }
+        ]
+      }
+    }
+  }
+}

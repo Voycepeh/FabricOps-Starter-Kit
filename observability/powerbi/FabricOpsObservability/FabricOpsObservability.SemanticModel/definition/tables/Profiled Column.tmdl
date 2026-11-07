@@ -1,0 +1,59 @@
+table 'Profiled Column'
+	lineageTag: 68c05119-03e2-5001-bef2-7de34e692e1b
+
+	column 'Column Key'
+		dataType: string
+		lineageTag: 0403ccd3-e011-5ef2-a3b8-3b78e4820f30
+		sourceColumn: column_key
+
+	column 'Profile Snapshot ID'
+		dataType: string
+		lineageTag: a870d4c2-9c3a-5d64-aa41-ca41f4ba5d32
+		sourceColumn: profile_snapshot_id
+
+	column 'Row Count'
+		dataType: int64
+		lineageTag: a28af5d0-d57e-54b0-879b-3b7d21de6ebb
+		sourceColumn: row_count
+		summarizeBy: none
+		formatString: #,0
+
+	column 'Null Percent'
+		dataType: double
+		lineageTag: d2adc601-eb67-5acf-b13b-dbbd91fe857d
+		sourceColumn: null_percent
+		summarizeBy: none
+		formatString: #,0.0
+
+	column 'Distinct Percent'
+		dataType: double
+		lineageTag: 0e458a8e-9855-55f5-bf60-3d70ea880a1b
+		sourceColumn: distinct_percent
+		summarizeBy: none
+		formatString: #,0.0
+
+	column 'Minimum Value'
+		dataType: string
+		lineageTag: b412ac9d-d684-581a-9fa6-c80c8f78802e
+		sourceColumn: minimum_value
+
+	column 'Maximum Value'
+		dataType: string
+		lineageTag: 490d5d7b-e7a6-5a31-a156-cb8335ab383c
+		sourceColumn: maximum_value
+
+	column 'Profiled At'
+		dataType: dateTime
+		lineageTag: 15243ec4-23ae-5788-a35b-017aef6c827d
+		sourceColumn: profiled_at
+		formatString: yyyy-MM-dd HH:mm
+
+	partition 'Profiled Column' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "WITH p AS (SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,_committed_at profiled_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id,column_id ORDER BY _committed_at DESC,profile_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,profiled_at FROM p WHERE rn=1",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

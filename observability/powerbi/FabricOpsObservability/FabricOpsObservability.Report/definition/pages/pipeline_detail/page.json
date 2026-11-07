@@ -1,0 +1,583 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "pipeline_detail",
+  "displayName": "Pipeline Detail",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "pipeline_d",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_d",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_d",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pstatus",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pduration",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "plast",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "fabric_link",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "history",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activation_history",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "stages",
+      "type": "DataFilter"
+    },
+    {
+      "source": "operations",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "stages",
+      "target": "failures",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "pipeline_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "run_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "pstatus",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "pduration",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "plast",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "fabric_link",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "activation_history",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "operations",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failures",
+      "target": "stages",
+      "type": "DataFilter"
+    }
+  ],
+  "visibility": "HiddenInViewMode",
+  "type": "Drillthrough",
+  "pageBinding": {
+    "name": "pipeline_detail_drillthrough",
+    "type": "Drillthrough",
+    "referenceScope": "Default",
+    "acceptsFilterContext": "Default",
+    "parameters": [
+      {
+        "name": "Pipeline Key",
+        "fieldExpr": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Pipeline"
+              }
+            },
+            "Property": "Pipeline Key"
+          }
+        }
+      }
+    ]
+  }
+}

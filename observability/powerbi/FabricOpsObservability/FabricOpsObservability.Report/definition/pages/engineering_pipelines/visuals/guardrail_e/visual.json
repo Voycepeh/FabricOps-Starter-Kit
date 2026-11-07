@@ -1,0 +1,156 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "guardrail_e",
+  "position": {
+    "x": 605,
+    "y": 520,
+    "z": 0,
+    "height": 165,
+    "width": 585,
+    "tabOrder": 1125
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Run ID"
+                }
+              },
+              "queryRef": "Guardrail Result.Run ID",
+              "nativeQueryRef": "Run ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Table Name"
+                }
+              },
+              "queryRef": "Guardrail Result.Table Name",
+              "nativeQueryRef": "Table Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Guardrail Type"
+                }
+              },
+              "queryRef": "Guardrail Result.Guardrail Type",
+              "nativeQueryRef": "Guardrail Type"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "Guardrail Result.Status",
+              "nativeQueryRef": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Can Continue"
+                }
+              },
+              "queryRef": "Guardrail Result.Can Continue",
+              "nativeQueryRef": "Can Continue"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Action"
+                }
+              },
+              "queryRef": "Guardrail Result.Action",
+              "nativeQueryRef": "Action"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Reason"
+                }
+              },
+              "queryRef": "Guardrail Result.Reason",
+              "nativeQueryRef": "Reason"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Recorded Guardrail outcomes\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Recorded Guardrail outcomes visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

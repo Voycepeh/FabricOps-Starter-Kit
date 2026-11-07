@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "catalogue_g",
+  "position": {
+    "x": 325,
+    "y": 55,
+    "z": 0,
+    "height": 55,
+    "width": 260,
+    "tabOrder": 380
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Is Active"
+                }
+              },
+              "queryRef": "Catalogue Table.Is Active",
+              "nativeQueryRef": "Is Active"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Catalogue state\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Catalogue state visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

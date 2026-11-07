@@ -1,0 +1,583 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "table_detail",
+  "displayName": "Table Detail",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "table_d",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "table_d",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tcontract",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tagreement",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tprofiled",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "taccess",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "identity",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "governance",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "columns",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "guardrails",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "guardrails",
+      "target": "activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "table_d",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tcontract",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tagreement",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "tprofiled",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "taccess",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "identity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "governance",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "access",
+      "type": "DataFilter"
+    },
+    {
+      "source": "activity",
+      "target": "guardrails",
+      "type": "DataFilter"
+    }
+  ],
+  "visibility": "HiddenInViewMode",
+  "type": "Drillthrough",
+  "pageBinding": {
+    "name": "table_detail_drillthrough",
+    "type": "Drillthrough",
+    "referenceScope": "Default",
+    "acceptsFilterContext": "Default",
+    "parameters": [
+      {
+        "name": "Table Key",
+        "fieldExpr": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Catalogue Table"
+              }
+            },
+            "Property": "Table Key"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,560 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "data_owner",
+  "displayName": "Data Owner \u2014 Tables",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "steward",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "steward",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "role",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "domain",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "tables_o",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_o",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "contracts_o",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profiled_o",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "access_o",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    },
+    {
+      "source": "agreements_list",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "owner_tables",
+      "target": "profile_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "steward",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "role",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "domain",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "tables_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "agreements_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "contracts_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "profiled_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "access_o",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "agreements_list",
+      "type": "DataFilter"
+    },
+    {
+      "source": "profile_o",
+      "target": "owner_tables",
+      "type": "DataFilter"
+    }
+  ]
+}

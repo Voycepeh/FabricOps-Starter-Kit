@@ -1,0 +1,15 @@
+expression MetadataServer = "<your-sql-endpoint>.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression MetadataDatabase = "<metadata-lakehouse-or-warehouse>" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression WorkspaceFilter = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+
+expression HistoryWindowDays = 180 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+
+expression GovernanceSchema = "governance" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression EngineeringSchema = "engineering" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression GovernanceSchemaSql = if Text.Select(GovernanceSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = GovernanceSchema then GovernanceSchema else error "GovernanceSchema must be a SQL identifier."
+
+expression EngineeringSchemaSql = if Text.Select(EngineeringSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = EngineeringSchema then EngineeringSchema else error "EngineeringSchema must be a SQL identifier."
