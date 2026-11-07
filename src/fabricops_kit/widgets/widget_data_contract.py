@@ -126,6 +126,13 @@ _CONTRACT_STYLE = """<style>
     position:sticky; top:0; z-index:5; min-height:40px;
     background:var(--form-canvas, #f6f8fb);
 }
+.fabricops-data-contract .fabricops-ai-usage-table {
+    width:100%; min-width:560px; border-collapse:collapse; font-size:12px;
+}
+.fabricops-data-contract .fabricops-ai-usage-table :is(th,td) {
+    text-align:left; padding:8px; border-bottom:1px solid var(--form-border); vertical-align:top;
+}
+.fabricops-data-contract .fabricops-ai-usage-table th { background:var(--form-tint); }
 .fabricops-data-contract .fabricops-contract-nav > div {
     display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
     border:1px solid var(--form-border); border-radius:7px; width:fit-content;
@@ -903,6 +910,132 @@ def _profile_html(context: dict[str, Any]) -> str:
     if not lines:
         return "<p>A profile record exists, but no metrics were recorded for this column.</p>"
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
+
+def _ai_usage_html(records: list[dict[str, Any]]) -> str:
+    """Render measured tokens and an explicitly estimated Fabric AI capacity equivalent."""
+    # Microsoft AI Functions billing rates, checked 7 November 2026, per 1,000 tokens.
+    rates = {"gpt-5-mini": (Decimal("8.40"), Decimal("0.84"), Decimal("67.23")),
+             "gpt-5.1": (Decimal("42.02"), Decimal("4.20"), Decimal("336.13"))}
+    rates["gpt-5-mini-2025-08-07"] = rates["gpt-5-mini"]
+    rates["gpt-5.1-2025-11-13"] = rates["gpt-5.1"]
+    fields = ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens")
+    totals = {field: 0 for field in fields}
+    known = {field: 0 for field in fields}
+    missing = {field: False for field in fields}
+    estimated = Decimal(0)
+    estimated_rows = 0
+    estimate_partial = False
+    cache_assumed = False
+    rows = []
+    labels = {"table_enrichment": "Table description", "column_enrichment": "Column description",
+              "grain_key": "Grain and row key", "sensitive_data": "Sensitive Data",
+              "business_rule_ai": "Data Quality suggestions"}
+
+    def count(value: Any) -> int | None:
+        if value is None or isinstance(value, bool):
+            return None
+        try:
+            number = Decimal(str(value))
+            return int(number) if number.is_finite() and number >= 0 and number == number.to_integral_value() else None
+        except (InvalidOperation, ValueError, OverflowError):
+            return None
+
+    def shown(value: int, available: int, partial: bool) -> str:
+        if not available:
+            return "Unavailable"
+        return f"{value:,}" + (" (partial)" if partial else "")
+
+    for index, record in enumerate(records, 1):
+        stats = record.get("statistics") or []
+        values = {field: 0 for field in fields}
+        available = {field: 0 for field in fields}
+        partial = {field: not bool(stats) for field in fields}
+        request_estimate = Decimal(0)
+        request_priced = 0
+        request_partial = not bool(stats)
+        for stat in stats:
+            counts = {field: count(stat.get(field)) for field in fields}
+            for field, value in counts.items():
+                if value is None:
+                    partial[field] = True
+                else:
+                    values[field] += value
+                    available[field] += 1
+            input_count, output_count = counts["input_tokens"], counts["output_tokens"]
+            cached_count = counts["cached_tokens"]
+            model_rates = rates.get(str(stat.get("model") or record.get("model") or ""))
+            if model_rates is None or input_count is None or output_count is None:
+                request_partial = True
+                continue
+            if cached_count is None:
+                cache_assumed = True
+                cached_count = 0
+            if cached_count > input_count:
+                request_partial = True
+                continue
+            input_rate, cached_rate, output_rate = model_rates
+            # Cached input and reasoning are breakdowns of input/output respectively.
+            request_estimate += ((input_count - cached_count) * input_rate
+                                 + cached_count * cached_rate + output_count * output_rate) / 1000
+            request_priced += 1
+        for field in fields:
+            totals[field] += values[field]
+            known[field] += available[field]
+            missing[field] |= partial[field]
+        estimated += request_estimate
+        estimated_rows += request_priced
+        estimate_partial |= request_partial
+        operation = str(record.get("operation") or "AI request")
+        model = str(record.get("model") or "Unknown")
+        capacity = (f"{request_estimate:,.3f}" + (" (partial)" if request_partial else "")) if request_priced else "Unavailable"
+        rows.append(
+            f"<tr><td>{index}</td><td>{html.escape(labels.get(operation, operation))}</td>"
+            f"<td>{html.escape(model)}</td>"
+            f"<td><strong>{shown(values['input_tokens'], available['input_tokens'], partial['input_tokens'])}</strong></td>"
+            f"<td><strong>{shown(values['output_tokens'], available['output_tokens'], partial['output_tokens'])}</strong></td>"
+            f"<td>{capacity}</td></tr>"
+        )
+    input_total = shown(totals["input_tokens"], known["input_tokens"], missing["input_tokens"]) if records else "0"
+    output_total = shown(totals["output_tokens"], known["output_tokens"], missing["output_tokens"]) if records else "0"
+    capacity_total = (
+        f"{estimated:,.3f} CU-seconds ({estimated / 3600:,.6f} CU-hours)"
+        + (" — partial estimate" if estimate_partial else "")
+    ) if estimated_rows or not records else "Unavailable"
+    table = (
+        "<div style='overflow:auto;max-height:360px;max-width:100%;'><table class='fabricops-ai-usage-table'>"
+        "<caption>Recorded AI requests for this widget instance</caption>"
+        "<thead><tr><th>#</th><th>Operation</th><th>Model</th><th>Input tokens</th>"
+        "<th>Output tokens</th><th>Estimated CU-seconds</th></tr></thead><tbody>"
+        + "".join(rows) + "</tbody></table></div>"
+    ) if rows else "<p>No AI requests made by this widget.</p>"
+    return (
+        "<h4 style='margin:0 0 12px;'>AI usage</h4>"
+        f"<p><strong>Total input tokens: {input_total}</strong><br>"
+        f"<strong>Total output tokens: {output_total}</strong></p>"
+        + ("<p style='font-size:12px;'>Included breakdowns — cached input: "
+           + shown(totals["cached_tokens"], known["cached_tokens"], missing["cached_tokens"])
+           + "; reasoning output: " + shown(totals["reasoning_tokens"], known["reasoning_tokens"], missing["reasoning_tokens"])
+           + ".</p>" if records else "")
+        + f"<p>Estimated AI capacity: <strong>{capacity_total}</strong></p>"
+        + table
+        + ("<p>Totals include available statistics only; missing values are not counted as zero.</p>"
+           if any(missing.values()) and records else "")
+        + ("<p>Cache statistics were unavailable for some requests; their estimate assumes no cached-input discount.</p>"
+           if cache_assumed else "")
+        + "<details><summary>Capacity and money estimate</summary>"
+        "<p>Rates checked 7 Nov 2026; CU-seconds per 1,000 tokens: "
+        "gpt-5-mini: input 8.40, cached input 0.84, output 67.23; "
+        "gpt-5.1: input 42.02, cached input 4.20, output 336.13. Rates can change. "
+        "Cached input is included in input tokens; reasoning is included in output tokens and is not added again.</p>"
+        "<p>Money equivalent ≈ estimated CU-hours × (your capacity hourly price ÷ capacity CUs). "
+        "This allocates capacity cost; it is not an invoice amount. Spark compute is separate.</p>"
+        "<p>Verify consumption in <a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>"
+        "Fabric Capacity Metrics</a>. <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing'>"
+        "Microsoft AI Functions billing rates</a>.</p></details>"
+        "<details><summary>Raw statistics</summary><pre style='white-space:pre-wrap;max-height:240px;overflow:auto;'>"
+        + html.escape(json.dumps(records, ensure_ascii=False, indent=2, default=str)) + "</pre></details>"
+    )
+
 
 def widget_data_contract(
     *, table_id: str | None = None, contract_version: int | None = None,
@@ -7350,7 +7483,7 @@ def widget_data_contract(
             "<pre style='white-space:pre-wrap;'>widget_data_contract(\n"
             '    ai_model="gpt-5.1",\n    ai_reasoning_effort="high",\n    ai_verbosity="medium",\n)</pre>'
             "<p>Model calls use the Copilot and AI meter, reported as the AI Functions operation. "
-            "Spark execution consumes capacity separately. Token statistics below are measured usage, not CU estimates. "
+            "Spark execution consumes capacity separately. Token statistics below are measured; AI capacity estimates use published token rates. "
             "Per-request CU consumption is not exposed by the documented PySpark stats interface; inspect exact consumption in the "
             "<a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Fabric Capacity Metrics app</a>. "
             "See <a href='https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/billing'>Microsoft billing guidance</a> "
@@ -7363,19 +7496,8 @@ def widget_data_contract(
     ai_usage_view = widgets.HTML()
 
     def refresh_ai_usage() -> None:
-        """Display supported measured token/request statistics without inventing CU values."""
-        records = state["ai_usage"]
-        rows = []
-        for record in records:
-            stats = record.get("statistics")
-            text = json.dumps(stats, ensure_ascii=False) if stats else "Statistics unavailable"
-            rows.append("<li>" + html.escape(f"{record['operation']} / {record['model']}: {text}") + "</li>")
-        ai_usage_view.value = (
-            "<details><summary>AI usage for this widget instance</summary>"
-            + ("<ul>" + "".join(rows) + "</ul>" if rows else "<p>No AI requests made by this widget.</p>")
-            + "<p>Token and row counts are measured statistics, not CU consumption. "
-            "Exact consumption: <a href='https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app'>Capacity Metrics</a>.</p></details>"
-        )
+        """Display measured input/output totals separately from estimated AI capacity."""
+        ai_usage_view.value = _ai_usage_html(state["ai_usage"])
 
     refresh_ai_usage()
     selector_ai_information = ai_information()

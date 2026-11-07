@@ -4588,3 +4588,77 @@ def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkey
     assert controls["column_description"].value == "Keep this authored description"
     assert controls["right_pane"].children != (controls["empty_column"],)
     assert not controls["rerun_column_description"].disabled
+
+
+def test_ai_usage_totals_cached_pricing_and_reasoning_are_not_double_counted():
+    """Price each model separately and treat cached/reasoning tokens as included breakdowns."""
+    usage = module._ai_usage_html([
+        {"operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{
+            "input_tokens": 1000, "output_tokens": 100, "cached_tokens": 200, "reasoning_tokens": 80,
+        }]},
+        {"operation": "table_enrichment", "model": "gpt-5.1", "statistics": [{
+            "input_tokens": 2000, "output_tokens": 200, "cached_tokens": 0, "reasoning_tokens": 0,
+        }]},
+    ])
+    assert "<strong>Total input tokens: 3,000</strong>" in usage
+    assert "<strong>Total output tokens: 300</strong>" in usage
+    assert "164.877 CU-seconds" in usage
+    assert "13.611</td>" in usage
+    assert "151.266</td>" in usage
+    assert "Column description" in usage
+    assert "cached input: 200; reasoning output: 80" in usage
+    assert "partial estimate" not in usage
+
+
+def test_ai_usage_missing_statistics_are_partial_not_zero():
+    """Unavailable usage must not look like free requests or complete totals."""
+    records = [
+        {"operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{
+            "input_tokens": 1000, "output_tokens": 100, "cached_tokens": 0,
+        }]},
+        {"operation": "sensitive_data", "model": "gpt-5-mini", "statistics": None},
+    ]
+    usage = module._ai_usage_html(records)
+    assert "Total input tokens: 1,000 (partial)" in usage
+    assert "Total output tokens: 100 (partial)" in usage
+    assert "15.123 CU-seconds" in usage
+    assert "partial estimate" in usage
+    assert "Unavailable" in usage
+    unavailable = module._ai_usage_html(records[1:])
+    assert "Total input tokens: Unavailable" in unavailable
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in unavailable
+
+
+def test_ai_usage_missing_cache_is_explicit_and_unknown_models_are_not_priced():
+    """Avoid a fabricated rate for unknown models and disclose the no-cache assumption."""
+    usage = module._ai_usage_html([{
+        "operation": "<script>", "model": "unknown", "statistics": [{"input_tokens": 0, "output_tokens": 0}],
+    }])
+    assert "Total input tokens: 0" in usage
+    assert "Total output tokens: 0" in usage
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in usage
+    assert "&lt;script&gt;" in usage and "<script>" not in usage
+    usage = module._ai_usage_html([{
+        "operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{"input_tokens": 1000, "output_tokens": 100}],
+    }])
+    assert "15.123 CU-seconds" in usage
+    assert "assumes no cached-input discount" in usage
+
+
+@pytest.mark.parametrize("value", [None, -1, 1.5, float("nan"), True])
+def test_ai_usage_invalid_counts_do_not_become_measured_tokens(value):
+    """Keep missing, malformed and negative counts out of measured totals and estimates."""
+    usage = module._ai_usage_html([{
+        "operation": "table_enrichment", "model": "gpt-5.1", "statistics": [{"input_tokens": value, "output_tokens": 10}],
+    }])
+    assert "Total input tokens: Unavailable" in usage
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in usage
+
+
+def test_ai_usage_without_requests_shows_zero_and_no_calls():
+    """A new widget reports zero usage without requiring a provider request."""
+    usage = module._ai_usage_html([])
+    assert "Total input tokens: 0" in usage
+    assert "Total output tokens: 0" in usage
+    assert "No AI requests made" in usage
+    assert "0.000 CU-seconds" in usage
