@@ -75,7 +75,7 @@ dict
     Retain this exact instance for ``ai_settings``, ``ai_usage``, and
     ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception
     chains in diagnostics are for maintainers and can include provider context;
-    review before sharing. Opening without AI makes no AI requests.
+    review before sharing. Opening makes no AI requests.
 
 ### Return interpretation
 
@@ -110,16 +110,19 @@ or manually saved processing remains editable until the draft is frozen.
 Profile context remains read-only and is never added
 to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
-The sidebar shows a read-only summary of configured rules for Read and Write;
-it does not execute validation or navigate the authoring controls.
-The Data Quality tab is the single DQ authoring surface. Governance can add
+The sidebar includes collapsible read-only summaries of configured Read and Write
+rules. These summaries do not execute validation or navigate authoring controls.
+The Data Quality section is the single DQ authoring surface. Governance can add
 any supported deterministic rule manually, or generate transient proposals
 from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
-Column tab contains column metadata and non-DQ settings only.
-Opening with AI prepares suggestions for the table and first column.
-Switching columns reuses table-level profile reads and cached suggestions;
-use Generate on a column to request further AI suggestions explicitly.
+Columns section contains column metadata and non-DQ settings only.
+Open Data Contract loads a manual-first editor without AI inference or AI-only
+profile reads. Sidebar navigation keeps Table, Columns, Data Quality, Review,
+AI Settings and lifecycle actions accessible beside one scrolling content region.
+Every AI request requires an explicit Generate, Suggest or Re-run action.
+Suggestions persist during navigation and require explicit acceptance.
+Switching columns reuses cached profile reads and suggestions.
 Long operations show an animated progress indicator and record elapsed seconds in
 ``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
 on blur or Enter, while searches remain live. Full Review content is built on demand.
@@ -185,9 +188,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:1043`
+`fabricops_kit/widgets/widget_data_contract.py:1024`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1043-L7824">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1024-L7701">View on GitHub</a>
 </div>
 
 

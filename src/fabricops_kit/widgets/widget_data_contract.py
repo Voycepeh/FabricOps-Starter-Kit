@@ -109,21 +109,21 @@ def _set_selection_value(
             f"control={control_name!r}, value={value!r}, {location}, "
             f"valid_options={valid_options!r}"
         ) from exc
-_TABS = ("Table", "Column", "Data Quality", "Review", "AI settings")
+_TABS = ("Table", "Columns", "Data Quality", "Review", "AI Settings")
 _CONTRACT_STYLE = """<style>
 .fabricops-data-contract {
     --contract-accent:var(--form-accent); --contract-border:var(--form-border);
-    height:auto !important; max-height:none !important; overflow:visible !important;
+    height:auto; max-height:none; overflow:visible;
     scrollbar-gutter:auto;
 }
 .fabricops-data-contract,
 .fabricops-data-contract * { overflow-anchor:none !important; }
 .fabricops-data-contract .fabricops-contract-nav { width:100%; margin:0; }
 .fabricops-data-contract .fabricops-contract-nav-row {
-    position:sticky; top:40px; z-index:4; padding:4px 0 6px; background:var(--form-canvas, #f6f8fb);
+    padding:0;
 }
 .fabricops-data-contract .fabricops-operation-progress {
-    position:sticky; top:0; z-index:5; min-height:40px;
+    min-height:0;
     background:var(--form-canvas, #f6f8fb);
 }
 .fabricops-data-contract .fabricops-ai-usage-table {
@@ -134,29 +134,27 @@ _CONTRACT_STYLE = """<style>
 }
 .fabricops-data-contract .fabricops-ai-usage-table th { background:var(--form-tint); }
 .fabricops-data-contract .fabricops-contract-nav > div {
-    display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--form-tint);
-    border:1px solid var(--form-border); border-radius:7px; width:fit-content;
+    display:flex; flex-direction:column; gap:4px; padding:4px; background:var(--form-tint);
+    border:1px solid var(--form-border); border-radius:7px; width:100%;
 }
 .fabricops-data-contract .fabricops-contract-nav button {
-    min-width:100px; width:140px; min-height:36px; height:auto; border:0; border-radius:5px; margin:0;
+    min-width:0; width:100%; text-align:left; min-height:30px; height:auto; padding:5px 10px; border:0; border-radius:5px; margin:0;
     background:transparent; color:#526477; font-weight:600; box-shadow:none;
 }
-.fabricops-data-contract .fabricops-contract-nav button.mod-active { background:#fff; color:var(--form-accent); }
+.fabricops-data-contract .fabricops-contract-nav button.mod-active { background:#fff; color:var(--form-accent); border-left:3px solid var(--form-accent); }
 .fabricops-data-contract .fabricops-contract-sidebar,
 .fabricops-data-contract .fabricops-contract-selector {
-    background:#fff; border:1px solid var(--form-border); border-radius:8px; padding:20px; gap:16px;
+    background:#fff; border:1px solid var(--form-border); border-radius:8px; padding:20px; gap:12px;
 }
 .fabricops-data-contract .fabricops-contract-sidebar {
-    height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto;
-    scrollbar-gutter:stable; overscroll-behavior:contain;
+    position:sticky; top:0; align-self:start; height:auto; min-height:0; overflow:visible; padding:14px; gap:8px;
 }
 .fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:8px; }
 .fabricops-data-contract .fabricops-contract-workspace {
-    gap:20px; height:clamp(520px, calc(100vh - 220px), 720px); min-height:0;
-    align-items:stretch !important; overflow:hidden !important;
+    gap:16px; min-height:0; align-items:start; overflow:visible;
 }
 .fabricops-data-contract .fabricops-contract-detail {
-    height:100%; min-height:0; max-height:100%; border:0 !important; padding:0 !important;
+    height:auto; min-height:0; max-height:max(680px, calc(100vh - 200px)); border:0; padding:0;
     gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable;
     overscroll-behavior:contain;
 }
@@ -225,17 +223,6 @@ _CONTRACT_STYLE = """<style>
     color:var(--form-text); white-space:normal; text-align:left; overflow-wrap:anywhere;
 }
 .fabricops-data-contract .fabricops-guardrail-detail { font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
-.fabricops-data-contract .fabricops-data-quality-workspace > .widget-vbox {
-    align-self:start; height:auto; max-height:none !important; min-height:0; overflow:visible;
-    padding:0 !important; border:0 !important; background:transparent;
-}
-.fabricops-data-contract .fabricops-data-quality-workspace {
-    align-content:start; overflow-x:hidden !important; overflow-y:auto !important;
-    scrollbar-gutter:stable; overscroll-behavior:contain;
-}
-.fabricops-data-contract .fabricops-data-quality-workspace > .widget-vbox > .fabricops-section {
-    height:auto !important; max-height:none !important; min-height:0; overflow:visible !important;
-}
 .fabricops-data-contract .fabricops-business-body {
     flex:0 1 auto; min-height:0; overflow:visible; scrollbar-gutter:auto;
 }
@@ -263,7 +250,7 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-delete-request {
     color:#a4262c; background:#fff; border:1px solid #a4262c;
 }
-.fabricops-data-contract .fabricops-authoring-footer {
+.fabricops-data-contract .fabricops-contract-actions {
     width:100%; height:auto; max-height:none; overflow:visible;
 }
 .fabricops-data-contract .fabricops-business-chooser select { height:36px; }
@@ -283,30 +270,24 @@ _CONTRACT_STYLE = """<style>
     max-width:100%; overflow:hidden; text-overflow:ellipsis;
 }
 .fabricops-data-contract .fabricops-contract-columns select {
-    height:100%; min-height:320px;
+    height:180px; min-height:130px;
 }
-@container (max-width:800px) {
-    .fabricops-data-contract .fabricops-contract-workspace,
-    .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox,
-    .fabricops-data-contract .fabricops-contract-assistant-grid { grid-template-columns:minmax(0,1fr) !important; }
+@container (max-width:1000px) {
+    .fabricops-data-contract .fabricops-contract-assistant-grid,
+    .fabricops-data-contract .fabricops-contract-labeled-grid { grid-template-columns:minmax(0,1fr) !important; }
+}
+@container (max-width:600px) {
+    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:170px minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-sidebar { padding:10px; }
+    .fabricops-data-contract .fabricops-contract-detail > .widget-vbox { padding:12px; }
     .fabricops-data-contract .fabricops-contract-selector > .widget-gridbox {
+        grid-template-columns:minmax(0,1fr) !important;
         grid-template-areas:"table" "workspace" "contract" !important;
     }
-    .fabricops-data-contract .fabricops-contract-nav > div { width:100%; }
-    .fabricops-data-contract .fabricops-contract-nav button { flex:1 1 0; min-width:0; width:auto; }
-    .fabricops-data-contract .fabricops-contract-nav-row { position:static; }
-    .fabricops-data-contract .fabricops-contract-workspace {
-        height:auto; max-height:none; overflow:visible !important;
-    }
-    .fabricops-data-contract .fabricops-contract-sidebar,
-    .fabricops-data-contract .fabricops-contract-detail {
-        height:auto; max-height:none; overflow:visible; overscroll-behavior:auto;
-    }
-    .fabricops-data-contract .fabricops-data-quality-workspace { overscroll-behavior:auto; }
     .fabricops-data-contract .fabricops-column-header { align-items:flex-start; }
     .fabricops-data-contract .fabricops-column-required-controls { flex-basis:100%; }
-    .fabricops-data-contract .fabricops-contract-columns { height:360px !important; flex:none; }
 }
+
 </style>"""
 _COLUMN_DQ_TYPES = ("completeness", "uniqueness", "value_set", "range")
 _DQ_HELP = {
@@ -1075,7 +1056,7 @@ def widget_data_contract(
         Retain this exact instance for ``ai_settings``, ``ai_usage``, and
         ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception
         chains in diagnostics are for maintainers and can include provider context;
-        review before sharing. Opening without AI makes no AI requests.
+        review before sharing. Opening makes no AI requests.
 
     Raises
     ------
@@ -1098,16 +1079,19 @@ def widget_data_contract(
     Profile context remains read-only and is never added
     to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
     optional enforcement are independent. Enabling Grain defaults to Block.
-    The sidebar shows a read-only summary of configured rules for Read and Write;
-    it does not execute validation or navigate the authoring controls.
-    The Data Quality tab is the single DQ authoring surface. Governance can add
+    The sidebar includes collapsible read-only summaries of configured Read and Write
+    rules. These summaries do not execute validation or navigate authoring controls.
+    The Data Quality section is the single DQ authoring surface. Governance can add
     any supported deterministic rule manually, or generate transient proposals
     from business language when AI is enabled. Proposals require explicit review
     and addition. Both paths create the same editable Guardrail records; the
-    Column tab contains column metadata and non-DQ settings only.
-    Opening with AI prepares suggestions for the table and first column.
-    Switching columns reuses table-level profile reads and cached suggestions;
-    use Generate on a column to request further AI suggestions explicitly.
+    Columns section contains column metadata and non-DQ settings only.
+    Open Data Contract loads a manual-first editor without AI inference or AI-only
+    profile reads. Sidebar navigation keeps Table, Columns, Data Quality, Review,
+    AI Settings and lifecycle actions accessible beside one scrolling content region.
+    Every AI request requires an explicit Generate, Suggest or Re-run action.
+    Suggestions persist during navigation and require explicit acceptance.
+    Switching columns reuses cached profile reads and suggestions.
     Long operations show an animated progress indicator and record elapsed seconds in
     ``_operation_timings``. Spark stays on the notebook thread. Text authoring updates
     on blur or Enter, while searches remain live. Full Review content is built on demand.
@@ -1194,7 +1178,12 @@ def widget_data_contract(
                           ("reasoning_effort", ai_reasoning_effort), ("verbosity", ai_verbosity)):
         if override is not None:
             configured_ai[key] = override
-    ai_enrichment = validate_ai_enrichment(configured_ai)
+    ai_configuration_error = ""
+    try:
+        ai_enrichment = validate_ai_enrichment(configured_ai)
+    except (TypeError, ValueError) as exc:
+        ai_configuration_error = str(exc)
+        ai_enrichment = validate_ai_enrichment({"enabled": False})
     classification_levels = [
         str(value).strip()
         for value in (getattr(governance_config, "classification_levels", []) or [])
@@ -1218,17 +1207,17 @@ def widget_data_contract(
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
-        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_mode": {}, "_ai_diagnostics": {},
+        "_ai_suggestions": {}, "_ai_errors": {}, "_ai_diagnostics": {},
         "ai_settings": {key: ai_enrichment[key] for key in ("model_deployment_name", "reasoning_effort", "verbosity")},
         "ai_usage": [],
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
         "_column_dq_selection": {}, "_selector_refreshing": False, "dirty": False,
-        "_ai_unavailable": "", "_ai_failure": "", "_ai_failure_category": "",
+        "_ai_unavailable": ai_configuration_error, "_ai_failure": "", "_ai_failure_category": "",
         "_ai_failure_diagnostic": {}, "_ai_buttons": [],
     }
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
-    operation_progress = widgets.HTML(layout=widgets.Layout(width="100%", min_height="40px"))
+    operation_progress = widgets.HTML(layout=widgets.Layout(width="100%"))
     operation_progress.add_class("fabricops-operation-progress")
     state["_operation_timings"] = []
     state["_busy_depth"] = 0
@@ -1243,18 +1232,20 @@ def widget_data_contract(
             "</div>"
         )
 
-    def busy_action(label: str):
+    def busy_action(label: str, *, ai_request: bool = False):
         """Show progress before blocking work and restore navigation on every exit."""
         def decorate(callback):
             @wraps(callback)
             def run(*args, **kwargs):
+                if ai_request and state["_busy_depth"]:
+                    return None
                 outermost = state["_busy_depth"] == 0
                 locked = []
                 if outermost:
                     controls = state["_controls"]
                     candidates = [controls.get(key) for key in (
                         "top_nav", "table", "workspace_select", "contract", "column_select",
-                        "open_with_ai", "open_without_ai", "save_data_contract", "discard_data_contract",
+                        "open", "save_data_contract", "discard_data_contract",
                         "freeze", "freeze_confirm", "change_table", "confirm_exit_discard",
                         "confirm_discard_data_contract",
                     )] + state["_ai_buttons"]
@@ -1267,8 +1258,6 @@ def widget_data_contract(
                 state["_busy_depth"] += 1
                 began = perf_counter()
                 operation_progress.value = loading_html(label)
-                if state.get("_opening_with_ai"):
-                    open_progress.value = operation_progress.value
                 try:
                     return callback(*args, **kwargs)
                 finally:
@@ -1286,7 +1275,6 @@ def widget_data_contract(
                         if not ai_available():
                             for control in state["_ai_buttons"]:
                                 control.disabled = True
-                            open_with_ai_button.disabled = True
                         operation_progress.value = (
                             "<div role='status' style='font-size:12px;color:#667085;'>"
                             f"Operation finished in {elapsed:.1f} s.</div>"
@@ -1319,17 +1307,20 @@ def widget_data_contract(
         [left, right],
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            grid_template_columns="minmax(250px, 27fr) minmax(0, 73fr)",
+            grid_template_columns="240px minmax(0, 1fr)",
             grid_gap="12px", align_items="flex-start", overflow="visible",
         ),
     )
     workspace.add_class("fabricops-contract-workspace")
-    authoring_footer = widgets.VBox(
+    sidebar_actions = widgets.VBox(
         layout=widgets.Layout(
             width="100%", height="auto", overflow="visible", display="none",
         )
     )
-    authoring_footer.add_class("fabricops-authoring-footer")
+    sidebar_actions.add_class("fabricops-contract-actions")
+    section_heading = widgets.HTML()
+    section_heading.add_class("fabricops-contract-section-heading")
+    sidebar_content: tuple[Any, ...] = ()
     view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
 
     def ai_runtime_context(column_id: str | None = None) -> dict[str, Any]:
@@ -1343,23 +1334,15 @@ def widget_data_contract(
 
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)
-        if selected_view == "Data Quality":
-            workspace.add_class("fabricops-data-quality-workspace")
-        else:
-            workspace.remove_class("fabricops-data-quality-workspace")
-        workspace.layout.grid_template_columns = (
-            "minmax(0, 1fr)"
-            if selected_view == "Data Quality"
-            else "minmax(250px, 27fr) minmax(0, 73fr)"
-        )
         left_children, right_children = view_content.get(selected_view, ((), ()))
-        left.children = tuple(left_children)
-        right.children = tuple(right_children)
+        left.children = sidebar_content
+        section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_view)}</h3>"
+        right.children = (section_heading, *left_children, *right_children)
         if selected_view == "Data Quality":
             refresh_dq_rules = state.get("_refresh_dq_rules")
             if callable(refresh_dq_rules):
                 refresh_dq_rules()
-        if selected_view == "Column":
+        if selected_view == "Columns":
             refresh_column_view = state.get("_refresh_column_view")
             if callable(refresh_column_view):
                 refresh_column_view()
@@ -1455,11 +1438,15 @@ def widget_data_contract(
                     f"Data Contract v{int(version)} was not found for table {state['table_id']}."
                 )
         state["contract_version"] = int(chosen["contract_version"])
-        state["current"] = contracts.get_contract_review_state(
-            config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-            contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
-            metadata_workspace_id=routing_workspace_id,
-        )
+        began = perf_counter()
+        try:
+            state["current"] = contracts.get_contract_review_state(
+                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
+                contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
+                metadata_workspace_id=routing_workspace_id,
+            )
+        finally:
+            state["_operation_timings"].append({"operation": "Loading contract metadata", "seconds": perf_counter() - began})
         state["_saved_payload"] = json.loads(
             str(state["current"]["contract"].get("contract_payload_json") or "{}")
         )
@@ -1645,11 +1632,15 @@ def widget_data_contract(
         cache_key = (active_workspace_id, selected_table, selected_column)
         profile_cache: dict[tuple[str, str, str], dict[str, Any]] = state["_profile_cache"]
         if cache_key not in profile_cache:
-            profile_cache[cache_key] = contracts.get_column_profile_context(
-                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-                table_id=selected_table, column_id=selected_column,
-                metadata_workspace_id=routing_workspace_id,
-            )
+            began = perf_counter()
+            try:
+                profile_cache[cache_key] = contracts.get_column_profile_context(
+                    config=config, active_workspace_id=active_workspace_id, spark_session=spark,
+                    table_id=selected_table, column_id=selected_column,
+                    metadata_workspace_id=routing_workspace_id,
+                )
+            finally:
+                state["_operation_timings"].append({"operation": "Loading profile context", "seconds": perf_counter() - began})
         profile = profile_cache[cache_key]
         state["profile_context"] = profile
         return profile
@@ -1700,7 +1691,6 @@ def widget_data_contract(
             state["_ai_unavailable"] = diagnostic["message"]
             for button in state["_ai_buttons"]:
                 button.disabled = True
-            open_with_ai_button.disabled = True
             ai_availability.value = f"<p>{html.escape(state['_ai_unavailable'])}</p>"
         return str(diagnostic["message"])
 
@@ -1872,13 +1862,13 @@ def widget_data_contract(
     def render() -> None:
         current = state.get("current")
         previous_controls = dict(state["_controls"])
+        sidebar_actions.children = ()
         dispose_editor = state.pop("_dispose_editor", None)
         if callable(dispose_editor):
             dispose_editor()
         for key in ("_refresh_review", "_refresh_dq_rules", "_refresh_ai_controls", "_load_selected_profile", "_refresh_column_view"):
             state.pop(key, None)
-        authoring_footer.children = ()
-        authoring_footer.layout.display = "none"
+        sidebar_actions.layout.display = "none"
         state.pop("_refresh_guardrail_sidebar", None)
         dispose_sidebar = state.pop("_dispose_guardrail_sidebar", None)
         if not callable(dispose_editor) and callable(dispose_sidebar):
@@ -1983,7 +1973,6 @@ def widget_data_contract(
         state["_ai_failure"] = latest.get("detail", "")
         state["_ai_failure_category"] = latest.get("category", "")
         state["_ai_failure_diagnostic"] = latest
-        ai_mode = state["_ai_mode"].get(suggestion_scope)
         column_names = [
             str(column.get("column_name") or "") for column in authoring_columns
         ]
@@ -2014,7 +2003,7 @@ def widget_data_contract(
         field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
         compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
-        ai_visible = bool(ai_enrichment.get("enabled") and ai_mode == "with_ai")
+        ai_visible = bool(ai_enrichment.get("enabled"))
         top_nav.options = _TABS
         if str(top_nav.value) not in _TABS:
             top_nav.value = "Table"
@@ -2086,7 +2075,7 @@ def widget_data_contract(
         suggest_grain = widgets.Button(
             description="Suggest grain",
             disabled=(
-                not editable or not ai_available() or ai_mode != "with_ai"
+                not editable or not ai_available()
             ),
         )
         accept_grain = widgets.Button(
@@ -2121,9 +2110,31 @@ def widget_data_contract(
                 "Select a row key manually if this table has one.</div>"
             )
 
-        @busy_action("Generating grain and row key suggestions…")
+        def render_grain_ai() -> None:
+            suggestion = ai_state["table"].get("grain_key")
+            if not suggestion:
+                return
+            key_text = (
+                ", ".join(profiled_key_columns)
+                if profiled_key_columns else "No row key suggestion available"
+            )
+            grain_ai.value = (
+                "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
+                "padding:9px 11px;font-size:12px;line-height:1.5;'>"
+                f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
+                f"<b>Profiled row key:</b> {html.escape(key_text)}"
+                "<details style='margin-top:5px;color:#667085;'>"
+                "<summary style='cursor:pointer;'>Why this suggestion?</summary>"
+                f"<div style='margin-top:4px;'>{html.escape(suggestion['rationale'])}</div>"
+                "</details></div>"
+            )
+            accept_grain.disabled = not (editable and ai_available())
+
+        render_grain_ai()
+
+        @busy_action("Generating grain and row key suggestions…", ai_request=True)
         def run_grain_ai(*_args: Any) -> None:
-            if not editable or not ai_available() or ai_mode != "with_ai":
+            if not editable or not ai_available():
                 return
             retrying = "grain_key" in ai_errors
             try:
@@ -2172,21 +2183,7 @@ def widget_data_contract(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
                         ),
                     )
-                key_text = (
-                    ", ".join(profiled_key_columns)
-                    if profiled_key_columns else "No row key suggestion available"
-                )
-                grain_ai.value = (
-                    "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
-                    "padding:9px 11px;font-size:12px;line-height:1.5;'>"
-                    f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
-                    f"<b>Profiled row key:</b> {html.escape(key_text)}"
-                    "<details style='margin-top:5px;color:#667085;'>"
-                    "<summary style='cursor:pointer;'>Why this suggestion?</summary>"
-                    f"<div style='margin-top:4px;'>{html.escape(suggestion['rationale'])}</div>"
-                    "</details></div>"
-                )
-                accept_grain.disabled = False
+                render_grain_ai()
             except (TypeError, ValueError, RuntimeError, ImportError) as exc:
                 ai_state["table"].pop("grain_key", None)
                 accept_grain.disabled = True
@@ -2301,34 +2298,27 @@ def widget_data_contract(
                 table_description_ai.value = "<p>Disabled in 00_env_config.</p>"
             elif not editable:
                 table_description_ai.value = "<p>Not run for review-only versions.</p>"
-            elif ai_mode != "with_ai":
-                message = (
-                    "Skipped for this contract session."
-                    if ai_mode == "without_ai"
-                    else "Choose Run with AI suggestions above."
-                )
-                table_description_ai.value = f"<p>{message}</p>"
             elif not ai_state["table"].get("description") and str(table_description.value or "").strip():
-                table_description_ai.value = "<p>Saved description retained. Use Re-run to request a new suggestion.</p>"
+                table_description_ai.value = "<p>Saved description retained. Use Generate to request a suggestion.</p>"
             else:
                 table_description_ai.value = _suggestion_html(
                     "Description", ai_state["table"].get("description"), show_heading=False
                 )
             available = (
-                editable and ai_available() and ai_mode == "with_ai"
+                editable and ai_available()
             )
             accept_table_description.disabled = not (
                 available and ai_state["table"].get("description")
                 and not ai_state["table"]["description"].get("error")
             )
             rerun_table_description.disabled = not available
+            rerun_table_description.description = "Re-run" if ai_state["table"].get("description") else "Generate"
 
-        @busy_action("Generating table description…")
+        @busy_action("Generating table description…", ai_request=True)
         def run_table_ai(*, force: bool = False) -> None:
             if (
                 not editable
                 or not ai_available()
-                or ai_mode != "with_ai"
             ):
                 render_table_ai()
                 return
@@ -2337,8 +2327,6 @@ def widget_data_contract(
                 return
             retrying = "table_enrichment" in ai_errors
             try:
-                if state.get("_opening_with_ai"):
-                    set_open_progress("Generating table description…")
                 description_context = build_ai_enrichment_context(
                     table,
                     metadata_level="table",
@@ -2926,8 +2914,9 @@ def widget_data_contract(
         table_summary = widgets.HTML()
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
-        sidebar_style = widgets.HTML("")
-        table_left = (*resolution_controls, table_summary, sidebar_style, guardrail_sidebar, table_exit_row, table_exit_confirm)
+        guardrail_disclosure = widgets.Accordion([guardrail_sidebar], selected_index=None)
+        guardrail_disclosure.set_title(0, "Read / Write Guardrails")
+        table_left = resolution_controls
 
         sidebar_groups = {}
         expanded_guardrails = {}
@@ -3237,6 +3226,7 @@ def widget_data_contract(
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or table.get('workspace_id') or '') or str(state.get('workspace_id') or 'Unknown'))}</div>"
                 + "<details style='margin-top:10px;'><summary style='cursor:pointer;'>Table context</summary>"
                 + table_identity_html()
                 + runtime_summary_html
@@ -3256,9 +3246,7 @@ def widget_data_contract(
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
                 f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
-                "</details><div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Guardrails</div>"
-                "</div>"
+                "</details>"
             )
             if state.get("workspace_id"):
                 difference = state.get("observation_difference", {})
@@ -3573,7 +3561,7 @@ def widget_data_contract(
             options=(), rows=10,
             layout=widgets.Layout(
                 width="100%", min_width="0", max_width="100%",
-                height="auto", min_height="320px", max_height="840px", flex="1 1 auto",
+                height="180px", min_height="130px", max_height="180px", flex="0 0 auto",
             ),
         )
         column_select.add_class("fabricops-contract-columns")
@@ -4054,7 +4042,7 @@ def widget_data_contract(
                             controls["parameters"], values.get("parameters", []), strict=False
                         ):
                             control.value = value
-                profile_context.value = "<p>Open the Column tab to load profile evidence.</p>"
+                profile_context.value = "<p>Open Columns to load profile evidence.</p>"
             finally:
                 hydrating["active"] = False
 
@@ -4309,7 +4297,7 @@ def widget_data_contract(
                 selected_id = str(change["new"])
                 hydrate_column(selected_id)
             render_column_ai(str(change.get("new") or ""))
-            if str(top_nav.value) == "Column":
+            if str(top_nav.value) == "Columns":
                 refresh_column_view = state.get("_refresh_column_view")
                 if callable(refresh_column_view):
                     refresh_column_view()
@@ -4368,14 +4356,6 @@ def widget_data_contract(
                 )) or ""),
             )
 
-        def _effective_ai_description(column_id: str) -> str:
-            """Return the freshest Description context for dependent AI suggestions."""
-            description, _classification = _column_editable_values(column_id)
-            suggestion = ai_state["columns"].get(column_id, {}).get("description", {})
-            if suggestion and not suggestion.get("error") and not suggestion.get("stale"):
-                return str(suggestion.get("value") or description)
-            return description
-
         def _effective_table_ai_description() -> str:
             """Return the freshest table Description context for dependent AI suggestions."""
             suggestion = ai_state["table"].get("description", {})
@@ -4394,14 +4374,6 @@ def widget_data_contract(
             elif not editable:
                 column_description_ai.value = "<p>Not run for review-only versions.</p>"
                 sensitive_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
-            elif ai_mode != "with_ai":
-                message = (
-                    "Skipped for this contract session."
-                    if ai_mode == "without_ai"
-                    else "Choose Run with AI suggestions on the Table tab."
-                )
-                column_description_ai.value = f"<p>{message}</p>"
-                sensitive_ai.value = f"<p><b>AI suggestion</b><br>{message}</p>"
             else:
                 column_description_ai.value = _suggestion_html(
                     "Description", suggestions.get("description"), show_heading=False
@@ -4410,7 +4382,7 @@ def widget_data_contract(
                     "Sensitive Data", suggestions.get("sensitive_data")
                 )
             available = (
-                editable and ai_available() and ai_mode == "with_ai" and bool(column_id)
+                editable and ai_available() and bool(column_id)
             )
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
@@ -4436,13 +4408,13 @@ def widget_data_contract(
                 if suggestion:
                     suggestion["stale"] = True
 
-        @busy_action("Generating column description…")
+        @busy_action("Generating column description…", ai_request=True)
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
             if not column_id:
                 render_column_ai("")
                 return
             suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not editable or not ai_available() or ai_mode != "with_ai":
+            if not editable or not ai_available():
                 render_column_ai(column_id)
                 return
             if not force and suggestions.get("description"):
@@ -4455,11 +4427,7 @@ def widget_data_contract(
             error_key = (column_id, "enrichment")
             retrying = error_key in ai_errors
             try:
-                if state.get("_opening_with_ai"):
-                    set_open_progress("Loading first-column profile…")
                 profile_value = load_profile_context(column_id)
-                if state.get("_opening_with_ai"):
-                    set_open_progress("Generating first-column description…")
                 result = suggest_enrichment(
                     build_ai_enrichment_context(
                         selected,
@@ -4494,15 +4462,15 @@ def widget_data_contract(
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
-        @busy_action("Assessing sensitive data…")
+        @busy_action("Assessing sensitive data…", ai_request=True)
         def run_sensitive_ai(
-            column_id: str, *, force: bool = False, use_description_suggestion: bool = False
+            column_id: str, *, force: bool = False
         ) -> None:
             if not column_id:
                 render_column_ai("")
                 return
             suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not editable or not ai_available() or ai_mode != "with_ai":
+            if not editable or not ai_available():
                 render_column_ai(column_id)
                 return
             if not force and suggestions.get("sensitive_data"):
@@ -4512,13 +4480,9 @@ def widget_data_contract(
                 (column for column in columns if str(column.get("column_id") or "") == column_id), {}
             )
             description, classification = _column_editable_values(column_id)
-            if use_description_suggestion:
-                description = _effective_ai_description(column_id)
             error_key = (column_id, "sensitive_data")
             retrying = error_key in ai_errors
             try:
-                if state.get("_opening_with_ai"):
-                    set_open_progress("Assessing first column for sensitive data…")
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
                 context_value = build_ai_sensitive_data_context({
@@ -4528,11 +4492,7 @@ def widget_data_contract(
                     "layer": table.get("layer"),
                     "contract_id": current.get("contract_id"),
                     "contract_version": current.get("contract_version"),
-                    "table_description": (
-                        _effective_table_ai_description()
-                        if use_description_suggestion
-                        else str(table_description.value or "")
-                    ),
+                    "table_description": str(table_description.value or ""),
                     "table_classification": table_classification.value,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
@@ -4580,18 +4540,6 @@ def widget_data_contract(
                     warning=True,
                 )
             render_column_ai(column_id)
-
-        def prepare_column_ai(column_id: str) -> None:
-            if (
-                not editable
-                or not ai_available()
-                or ai_mode != "with_ai"
-                or not column_id
-            ):
-                render_column_ai(column_id)
-                return
-            run_column_enrichment_ai(column_id)
-            run_sensitive_ai(column_id, use_description_suggestion=True)
 
         def accept_description_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
@@ -5018,7 +4966,7 @@ def widget_data_contract(
             refresh_manifest()
             refresh_column_options()
             hydrate_column(cid)
-            if str(top_nav.value) == "Column":
+            if str(top_nav.value) == "Columns":
                 load_selected_profile()
             set_status("Contract datatype choice staged locally. Save the Data Contract to persist.")
 
@@ -5297,22 +5245,14 @@ def widget_data_contract(
                 ai_children=list(sensitive_ai_panel.children),
             ),
         )
-        view_content["Column"] = (column_left, column_right)
+        view_content["Columns"] = (column_left, column_right)
 
         def refresh_column_view() -> None:
-            if str(top_nav.value) == "Column":
-                right.children = column_right if column_select.value else (empty_column,)
+            if str(top_nav.value) == "Columns":
+                right.children = (section_heading, *column_left, *(column_right if column_select.value else (empty_column,)))
         state["_refresh_column_view"] = refresh_column_view
 
-        if ai_mode == "with_ai":
-            if not str(table_grain.value or "").strip():
-                run_grain_ai()
-            if not str(table_description.value or "").strip():
-                run_table_ai()
-            else:
-                render_table_ai()
-        else:
-            render_table_ai()
+        render_table_ai()
         if column_options:
             _set_selection_value(
                 column_select,
@@ -5322,8 +5262,6 @@ def widget_data_contract(
             )
             hydrate_column(str(column_select.value))
             render_column_ai(str(column_select.value))
-            if ai_mode == "with_ai":
-                prepare_column_ai(str(column_select.value))
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
         new_rule_option = "__new_rule__"
@@ -5491,7 +5429,7 @@ def widget_data_contract(
         resolve_business_rule = widgets.Button(
             description="Generate DQ Rules",
             disabled=not (
-                editable and ai_available() and ai_mode == "with_ai"
+                editable and ai_available()
             ),
             button_style="primary",
         )
@@ -5596,7 +5534,7 @@ def widget_data_contract(
         manual_batch_columns = widgets.SelectMultiple(
             rows=5, options=dq_column_options,
             disabled=not editable,
-            **shared.widget_common(widgets, "Columns"),
+            **shared.widget_common(widgets, "Column"),
         )
         manual_batch_columns.add_class("fabricops-contract-list")
         manual_batch_columns.layout.close()
@@ -6341,9 +6279,9 @@ def widget_data_contract(
                 and rule_column_names(rule)
             ]
 
-        @busy_action("Generating Data Quality proposals…")
+        @busy_action("Generating Data Quality proposals…", ai_request=True)
         def resolve_business_rule_clicked(_button: Any) -> None:
-            if not editable or not ai_available() or ai_mode != "with_ai":
+            if not editable or not ai_available():
                 return
             resolve_business_rule.disabled = True
             resolve_business_rule.description = "Generating DQ Rules…"
@@ -6418,7 +6356,7 @@ def widget_data_contract(
                     set_validation_error("business_rule_ai", exc)
             finally:
                 resolve_business_rule.description = "Generate DQ Rules"
-                resolve_business_rule.disabled = not (editable and ai_available() and ai_mode == "with_ai")
+                resolve_business_rule.disabled = not (editable and ai_available())
 
         def sync_column_rule(rule: Mapping[str, Any]) -> None:
             column_id = str(rule.get("column_id") or "")
@@ -7129,7 +7067,6 @@ def widget_data_contract(
             )
 
         state["_refresh_review"] = refresh_review
-        review_actions: list[Any] = []
         save_contract_button = None
         discard_contract_button = None
         discard_contract_confirm = None
@@ -7137,11 +7074,11 @@ def widget_data_contract(
         cancel_discard_contract = None
         if editable:
             save_contract_button = widgets.Button(
-                description="Save and clear",
+                description="Save draft",
                 button_style="primary",
             )
             discard_contract_button = widgets.Button(
-                description="Discard and clear",
+                description="Discard changes",
                 button_style="danger",
             )
             confirm_discard_contract = widgets.Button(
@@ -7269,52 +7206,15 @@ def widget_data_contract(
             freeze_button.on_click(freeze_clicked)
             freeze_cancel.on_click(freeze_cancel_clicked)
             freeze_confirm_button.on_click(freeze_confirm_clicked)
-            authoring_footer.children = (
-                shared.form_section(
-                    widgets,
-                    title="Draft actions",
-                    children=[
-                        widgets.HTML(
-                            "<div style='color:#667085;font-size:12px;'>"
-                            "Save all staged changes or leave the persisted draft unchanged."
-                            "</div>"
-                        ),
-                        shared.action_row(
-                            widgets,
-                            [discard_contract_button, save_contract_button],
-                        ),
-                        discard_contract_confirm,
-                    ],
-                ),
+            sidebar_actions.children = (
+                save_contract_button, discard_contract_button, freeze_button,
+                discard_contract_confirm, freeze_confirm,
             )
-            authoring_footer.layout.display = ""
-            review_actions.append(
-                shared.form_section(
-                    widgets,
-                    title="Review & Freeze",
-                    children=[
-                        widgets.HBox(
-                            [freeze_button],
-                            layout=widgets.Layout(gap="8px", align_items="center"),
-                        ),
-                        freeze_confirm,
-                    ],
-                )
-            )
+            sidebar_actions.layout.display = ""
         else:
-            review_actions.append(
-                shared.form_section(
-                    widgets,
-                    title="Review & Freeze",
-                    children=[widgets.HTML(
-                        "<div style='color:#667085;font-size:12px;'>"
-                        "Frozen contracts are review-only here. Complete exact-version validation, "
-                        "Data Agreement selection, and Production activation in the Activation widget."
-                        "</div>"
-                    )],
-                )
-            )
-        review_left = table_left
+            sidebar_actions.children = (widgets.HTML("<p>Frozen contract: review only.</p>"),)
+            sidebar_actions.layout.display = ""
+        review_left = ()
 
         review_right = (
             widgets.VBox(
@@ -7326,15 +7226,18 @@ def widget_data_contract(
                 title="Exact JSON",
                 children=[exact_json],
             ),
-            *review_actions,
         )
         view_content["Review"] = (review_left, review_right)
-        view_content["AI settings"] = (
-            (editor_ai_information,),
-            (ai_usage_view,),
+        view_content["AI Settings"] = (
+            (),
+            (editor_ai_information, ai_usage_view),
+        )
+        nonlocal sidebar_content
+        sidebar_content = (
+            table_summary, contract_nav_row, sidebar_actions, table_exit_row,
+            table_exit_confirm, operation_progress, status, guardrail_disclosure,
         )
         apply_view()
-
 
         state["_refresh_guardrail_sidebar"] = render_table_summary
         render_table_summary()
@@ -7344,7 +7247,7 @@ def widget_data_contract(
             "table_grain": table_grain, "row_key_columns": row_key_columns,
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
-            "guardrail_sidebar": guardrail_sidebar, "sidebar_groups": sidebar_groups,
+            "guardrail_sidebar": guardrail_sidebar, "guardrail_disclosure": guardrail_disclosure, "sidebar_groups": sidebar_groups,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "load_strategy": load_strategy_control,
@@ -7452,7 +7355,7 @@ def widget_data_contract(
             "review_target_column": review_target_column,
             "review_operator": review_operator,
             "manifest_preview": manifest_preview,
-            "authoring_footer": authoring_footer,
+            "sidebar_actions": sidebar_actions,
             "save_data_contract": save_contract_button,
             "discard_data_contract": discard_contract_button,
             "discard_data_contract_confirm": discard_contract_confirm,
@@ -7463,7 +7366,7 @@ def widget_data_contract(
         })
 
         def refresh_ai_controls() -> None:
-            available = editable and ai_available() and ai_mode == "with_ai"
+            available = editable and ai_available()
             render_table_ai()
             render_column_ai(str(column_select.value or ""))
             suggest_grain.disabled = not available
@@ -7472,7 +7375,7 @@ def widget_data_contract(
 
         state["_refresh_ai_controls"] = refresh_ai_controls
         editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
-        editor_roots.extend(authoring_footer.children)
+        editor_roots.extend([table_summary, guardrail_disclosure, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
             sensitive_ai_panel, business_advanced, business_rule_controls,
@@ -7487,6 +7390,7 @@ def widget_data_contract(
         def dispose_editor() -> None:
             close_sidebar_widgets(editor_roots, preserve=(
                 table_exit_row, table_exit_confirm, editor_ai_information, ai_usage_view,
+                contract_nav_row, top_nav, sidebar_actions, operation_progress, status, section_heading,
             ))
         state["_dispose_editor"] = dispose_editor
 
@@ -7500,11 +7404,12 @@ def widget_data_contract(
             f"Reasoning effort: {html.escape(settings['reasoning_effort'] or 'provider/model default')}; "
             f"Verbosity: {html.escape(settings['verbosity'] or 'provider/model default')}<br>"
             "Billing: Fabric capacity consumption. AI is optional; manual authoring remains available.<br>"
+            f"{html.escape(ai_configuration_error)}<br>"
             "Availability depends on Microsoft's supported regions, tenant settings and eligible paid capacity. "
             "Stronger models and higher reasoning may increase consumption and latency."
             "<details><summary>Setup, consumption and stronger model example</summary>"
             "<p>Requires Runtime 2.0 and the tenant setting ‘Users can use Copilot and other features powered by Azure OpenAI’. "
-            "Review all suggestions before accepting them. Open without AI makes zero AI requests.</p>"
+            "Review all suggestions before accepting them. Opening and navigation make zero AI requests. Generate, Suggest and Re-run consume Fabric AI capacity only when requested.</p>"
             "<pre style='white-space:pre-wrap;'>widget_data_contract(\n"
             '    ai_model="gpt-5.1",\n    ai_reasoning_effort="high",\n    ai_verbosity="medium",\n)</pre>'
             "<p>Model calls use the Copilot and AI meter, reported as the AI Functions operation. "
@@ -7528,14 +7433,8 @@ def widget_data_contract(
     selector_ai_information = ai_information()
     editor_ai_information = ai_information()
 
-    open_with_ai_button = widgets.Button(
-        description="Open with AI suggestions",
-        button_style="info",
-        disabled=not ai_available(),
-        layout=widgets.Layout(width="220px"),
-    )
-    open_without_ai_button = widgets.Button(
-        description="Open without AI",
+    open_button = widgets.Button(
+        description="Open Data Contract",
         button_style="primary",
         layout=widgets.Layout(width="220px"),
     )
@@ -7547,7 +7446,7 @@ def widget_data_contract(
         operation_progress.value = open_progress.value
 
     ai_availability = widgets.HTML(
-        "" if ai_enrichment.get("enabled") else
+        html.escape(ai_configuration_error) if ai_configuration_error else "" if ai_enrichment.get("enabled") else
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
     )
     change_table_button = widgets.Button(
@@ -7584,7 +7483,7 @@ def widget_data_contract(
     selector_actions = widgets.VBox(
         [
             widgets.HBox(
-                [open_with_ai_button, open_without_ai_button],
+                [open_button],
                 layout=widgets.Layout(width="100%", justify_content="center", gap="12px"),
             ),
             ai_availability,
@@ -7593,7 +7492,7 @@ def widget_data_contract(
         layout=widgets.Layout(width="100%", align_items="center", gap="8px", margin="16px 0 0 0"),
     )
     selector_panel = widgets.VBox(
-        [selector, selector_ai_information, selector_actions],
+        [selector, selector_ai_information, selector_actions, status],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display=""),
     )
     selector_panel.add_class("fabricops-contract-selector")
@@ -7606,10 +7505,7 @@ def widget_data_contract(
     contract_nav_row.add_class("fabricops-contract-nav-row")
     editor_shell = widgets.VBox(
         [
-            operation_progress,
-            contract_nav_row,
             workspace,
-            authoring_footer,
         ],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
     )
@@ -7705,18 +7601,13 @@ def widget_data_contract(
         state["pending_contract_version"] = None if value in (None, "", "new") else int(value)
 
     @busy_action("Opening Data Contract…")
-    def open_selected(*, with_ai: bool) -> None:
-        if with_ai and not ai_available():
-            set_status("AI is disabled in configuration or unavailable. Choose Open without AI.", warning=True)
-            return
+    def open_selected() -> None:
         selected_table = str(state.get("pending_table_id") or "")
         selected_contract = contract_control.value
         if not selected_table or not selected_contract:
             set_status("Select a governed table and contract before opening.", error=True)
             return
-        open_with_ai_button.disabled = True
-        open_without_ai_button.disabled = True
-        state["_opening_with_ai"] = bool(with_ai)
+        open_button.disabled = True
         set_open_progress("Opening contract…")
         try:
             if selected_contract == "new":
@@ -7726,33 +7617,20 @@ def widget_data_contract(
                 new_draft()
             else:
                 select(selected_table, int(selected_contract))
-            scope = (
-                str(state["current"]["contract_id"]),
-                int(state["current"]["contract_version"]),
-            )
-            state["_ai_mode"][scope] = "with_ai" if with_ai else "without_ai"
-            set_open_progress("Preparing AI context…" if with_ai else "Loading editor…")
+            set_open_progress("Loading editor…")
+            top_nav.value = "Table"
             render()
             set_open_progress("Building editor…")
+            selector_panel.children = tuple(child for child in selector_panel.children if child is not status)
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
             open_progress.value = ""
-            set_status(
-                f"Opened Data Contract v{state['contract_version']} for {state['table_id']}"
-                + (
-                    f". {state['_ai_unavailable']}" if state["_ai_unavailable"]
-                    else f". {state['_ai_failure_diagnostic']['message']}" if state["_ai_failure"]
-                    else " with AI suggestions." if with_ai else " without AI."
-                ),
-                warning=bool(state["_ai_unavailable"] or state["_ai_failure"]),
-            )
+            set_status(f"Opened Data Contract v{state['contract_version']} for {state['table_id']}.")
         except Exception as exc:
             open_progress.value = ""
             set_status(_format_widget_exception(exc, phase="editor render"), error=True)
         finally:
-            state["_opening_with_ai"] = False
-            open_with_ai_button.disabled = not ai_available()
-            open_without_ai_button.disabled = False
+            open_button.disabled = False
 
     def return_to_selector(message: str) -> None:
         state["current"] = None
@@ -7761,6 +7639,7 @@ def widget_data_contract(
         state["contract_version"] = None
         editor_shell.layout.display = "none"
         selector_panel.layout.display = ""
+        selector_panel.children = tuple(child for child in selector_panel.children if child is not status) + (status,)
         set_status(message)
 
     state["_return_to_selector"] = return_to_selector
@@ -7781,8 +7660,7 @@ def widget_data_contract(
         else:
             return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
 
-    open_with_ai_button.on_click(lambda _button: open_selected(with_ai=True))
-    open_without_ai_button.on_click(lambda _button: open_selected(with_ai=False))
+    open_button.on_click(lambda _button: open_selected())
     change_table_button.on_click(change_table)
     cancel_exit.on_click(cancel_exit_clicked)
     confirm_exit_discard.on_click(confirm_exit_clicked)
@@ -7797,7 +7675,7 @@ def widget_data_contract(
     page = shared.form_page(
         widgets, title="Data Contract", tone="governance",
         description="Select, author, review, and freeze one governed table contract.",
-        children=[selector_panel, editor_shell, status],
+        children=[selector_panel, editor_shell],
     )
     page.layout.height = "auto"
     page.layout.overflow = "visible"
@@ -7809,8 +7687,7 @@ def widget_data_contract(
         "table": table_control, "table_search": table_selector["search"],
         "workspace_select": workspace_control, "workspace_search": workspace_selector["search"],
         "contract": contract_control, "contract_search": contract_selector["search"],
-        "open_with_ai": open_with_ai_button, "open_without_ai": open_without_ai_button,
-        "open": open_without_ai_button, "open_progress": open_progress,
+        "open": open_button, "open_progress": open_progress,
         "operation_progress": operation_progress,
         "selector_ai_information": selector_ai_information, "editor_ai_information": editor_ai_information,
         "ai_usage": ai_usage_view,

@@ -104,10 +104,15 @@ Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata
 | Fabric AI Functions | Suggests descriptions, assessments and Data Quality rules |
 | FabricOps | Validates suggestions, stages changes and deterministically enforces approved Guardrails |
 
-AI is optional. **Open without AI** makes no AI requests and does not initialize AI Functions.
+AI is optional. **Open Data Contract** opens a manual-first editor without AI requests
+or AI Functions initialization. Sidebar navigation, column changes, Save, Discard,
+Review and Freeze also make no AI requests. Use contextual **Generate**, **Suggest**
+or **Re-run** to request one suggestion explicitly; each requested inference consumes
+Fabric AI capacity. Successful suggestions remain available during navigation until
+reviewed and accepted.
 Description, Grain and Row Key, Sensitive Data, Data Quality and all deterministic lifecycle
 and Guardrail controls remain available. `GOVERNANCE_CONFIG.ai_enrichment.enabled=False`
-disables AI actions. Opening the selector never invokes AI. See the
+disables AI actions. AI Settings and usage reporting remain accessible from the sidebar. See the
 [configuration exercise](guided-demo/03-author-and-freeze-data-contract.md#choose-the-ai-settings-or-author-manually).
 
 ??? info "Built-in models, reasoning, billing and usage monitoring"
