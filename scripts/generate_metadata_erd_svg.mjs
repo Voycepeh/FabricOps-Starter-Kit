@@ -63,12 +63,13 @@ function renderMetadataSvg(layout, models) {
       return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
+    if (name === "AI_TOKEN_USAGE") lines += `\n<text x="${x+13}" y="${y+105}" fill="#52627A" font-size="14" font-family="Segoe UI, Arial, sans-serif">misc schema · operational usage</text>`;
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==14||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==15||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
   // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.

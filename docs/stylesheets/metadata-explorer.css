@@ -23,6 +23,7 @@
   white-space: nowrap;
 }
 .metadata-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.metadata-dot.misc { background: var(--fabricops-muted, #52627A); }
 .metadata-dot.governance { background: #9333ea; }
 .metadata-dot.engineering { background: #0284c7; margin-left: .5rem; }
 .metadata-explorer-hint { color: var(--md-default-fg-color--light); }

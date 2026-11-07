@@ -995,6 +995,8 @@ def _ai_usage_html(records: list[dict[str, Any]]) -> str:
             f"<td><strong>{shown(values['output_tokens'], available['output_tokens'], partial['output_tokens'])}</strong></td>"
             f"<td>{capacity}</td></tr>"
         )
+    unsaved = sum(record.get("persistence_status") == "unconfirmed" for record in records)
+    persistence_notice = (f"<p><strong>{unsaved} AI usage audit write(s) unconfirmed.</strong> Check Metadata access; requests were not replayed.</p>" if unsaved else "")
     input_total = shown(totals["input_tokens"], known["input_tokens"], missing["input_tokens"]) if records else "0"
     output_total = shown(totals["output_tokens"], known["output_tokens"], missing["output_tokens"]) if records else "0"
     capacity_total = (
@@ -1009,6 +1011,7 @@ def _ai_usage_html(records: list[dict[str, Any]]) -> str:
         + "".join(rows) + "</tbody></table></div>"
     ) if rows else "<p>No AI requests made by this widget.</p>"
     return (
+        persistence_notice +
         "<h4 style='margin:0 0 12px;'>AI usage</h4>"
         f"<p><strong>Total input tokens: {input_total}</strong><br>"
         f"<strong>Total output tokens: {output_total}</strong></p>"
@@ -1142,6 +1145,12 @@ def widget_data_contract(
     schema and contract metadata. When profiling exists, they also receive profile
     summaries including min/max and the three most frequent values.
     Treatment failures always block.
+
+    FabricOps AI helper requests automatically append measured token usage to
+    ``misc.METADATA_AI_TOKEN_USAGE`` in the configured Metadata Lakehouse.
+    ``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.
+    Prompts and generated text are not stored. Missing usage statistics remain
+    unavailable. Audit write failures are shown in AI usage without replaying requests.
 
     Examples
     --------
@@ -1320,6 +1329,15 @@ def widget_data_contract(
     )
     authoring_footer.add_class("fabricops-authoring-footer")
     view_content: dict[str, tuple[tuple[Any, ...], tuple[Any, ...]]] = {}
+
+    def ai_runtime_context(column_id: str | None = None) -> dict[str, Any]:
+        """Route usage to central Metadata while preserving notebook and asset identity."""
+        contract = (state.get("current") or {}).get("contract") or {}
+        return {**resolved, "config": config, "scope_workspace_id": routing_workspace_id,
+                "ai_usage_metadata": {"table_id": state.get("table_id"), "column_id": column_id,
+                                      "contract_id": contract.get("contract_id"),
+                                      "contract_version": state.get("contract_version"),
+                                      "evidence_workspace_id": active_workspace_id}}
 
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)
@@ -2138,7 +2156,8 @@ def widget_data_contract(
                         "columns": profile_rows,
                     },
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="grain_key",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="grain_key",
                 )
                 ai_state["table"]["grain_key"] = suggestion
                 refresh_ai_usage()
@@ -2332,7 +2351,8 @@ def widget_data_contract(
                 result = suggest_enrichment(
                     description_context,
                     description_prompt=str(ai_enrichment.get("table_description_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="table_enrichment",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="table_enrichment",
                 )
                 previous_value = str(ai_state["table"].get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -4446,7 +4466,8 @@ def widget_data_contract(
                         profile_rows=[dict(profile_value.get("profile") or {})],
                     ),
                     description_prompt=str(ai_enrichment.get("column_description_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="column_enrichment",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(column_id), operation="column_enrichment",
                 )
                 previous_value = str(suggestions.get("description", {}).get("value") or "")
                 new_value = str(result["Description"])
@@ -4527,7 +4548,8 @@ def widget_data_contract(
                 })
                 result = suggest_sensitive_data(
                     context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="sensitive_data",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(column_id), operation="sensitive_data",
                 )
                 if len(result) != 1:
                     selected_name = str(selected.get("column_name") or column_id)
@@ -6360,7 +6382,8 @@ def widget_data_contract(
                     requirement=str(business_requirement.value or ""),
                     relevant_columns=list(business_columns.value),
                     prompt=str(ai_enrichment.get("business_rule_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"], operation="business_rule_ai",
+                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
+                    runtime_context=ai_runtime_context(), operation="business_rule_ai",
                 )
                 business_resolved.clear()
                 business_resolved.extend(

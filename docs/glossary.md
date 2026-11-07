@@ -17,6 +17,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p>FabricOps packages reusable notebooks, governed read/write orchestration, Data Contracts, Data Agreements, and shared metadata so teams can run governed Fabric pipelines without rebuilding the same engineering and governance plumbing.</p>
 </details>
 
+<details id="ai-token-usage">
+<summary><strong>AI token usage</strong> — Measured token consumption for FabricOps AI Functions requests.</summary>
+<p>METADATA_AI_TOKEN_USAGE in the configured misc schema records model, operation, request outcome, timing, available token counts, and notebook audit identity. It excludes prompts and generated text. Missing statistics remain unavailable; billing estimates are derived separately.</p>
+</details>
+
 <details id="data-agreement">
 <summary><strong>Data Agreement</strong> — A versioned agreement between provider and recipient Data Stewards that defines why data may be shared and used.</summary>
 <p>A Data Agreement records accountable provider/recipient stewards, purpose, approved uses and validity. Governance associates an exact Agreement version with each applicable physical frozen Contract selection in METADATA_DATA_CONTRACT_ACTIVATION. Engineering Registry records are deployment evidence and cannot grant policy authorization.</p>

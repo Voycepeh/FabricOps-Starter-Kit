@@ -88,6 +88,7 @@ dict[str, Any]
     Overall readiness, configured ownership schemas, canonical table names,
     created/evolved/validated/failed tables, per-table results, steward
     readiness and advisory diagnostics for noncanonical metadata tables.
+    Schema group summaries include governance, engineering and misc.
 
 ### Return interpretation
 
@@ -113,6 +114,10 @@ RuntimeError
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
+
+The configured misc schema includes METADATA_AI_TOKEN_USAGE for automatic
+FabricOps AI request telemetry. Existing governance and engineering tables
+retain their configured physical schemas.
 
 Missing tables are created empty with error-if-exists semantics. Registry
 and Contract Activation use Serializable isolation. Setup never manufactures
@@ -148,9 +153,9 @@ read as canonical authority or automatically deleted.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:393`
+`fabricops_kit/config/setup_metadata_tables.py:394`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L675">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L394-L692">View on GitHub</a>
 </div>
 
 

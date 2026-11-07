@@ -17,7 +17,8 @@
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id", "table_id"], "metadata_data_profiled_frequency/"],
     ["DATA_LINEAGE", "engineering", ["lineage_id"], ["table_id"], "metadata_data_lineage/"],
     ["PROCESSING_STATE", "engineering", ["record_id"], ["source_table_id", "target_table_id", "run_id", "publication_id"], "metadata_processing_state/"],
-    ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
+    ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"],
+    ["AI_TOKEN_USAGE", "misc", ["usage_id"], [], "metadata_ai_token_usage/"]
   ];
 
   // Cardinalities always follow the declared parent-to-child direction.
@@ -109,7 +110,7 @@
     }
     root.innerHTML =
       '<div class="metadata-explorer-topbar">' +
-      '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering</span>' +
+      '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering <i class="metadata-dot misc"></i> Misc</span>' +
       '<span class="metadata-explorer-hint">Solid: keyed joins · Dashed: conceptual references</span>' +
       '</div>' +
       '<div class="metadata-explorer-layout">' +

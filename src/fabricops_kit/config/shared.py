@@ -628,6 +628,8 @@ class FrameworkConfig:
         IANA timezone used for FabricOps-generated audit and technical timestamps.
     governance_metadata_schema : str, default="governance"
         Physical schema for governance-authored metadata definitions.
+    misc_metadata_schema : str, default="misc"
+        Physical schema for operational AI token usage.
     engineering_metadata_schema : str, default="engineering"
         Physical schema for engineering-written metadata.
 
@@ -645,11 +647,12 @@ class FrameworkConfig:
     audit_timezone: str = DEFAULT_AUDIT_TIMEZONE
     governance_metadata_schema: str = "governance"
     engineering_metadata_schema: str = "engineering"
+    misc_metadata_schema: str = "misc"
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
         object.__setattr__(self, "audit_timezone", _validate_audit_timezone(self.audit_timezone))
-        for field_name in ("governance_metadata_schema", "engineering_metadata_schema"):
+        for field_name in ("governance_metadata_schema", "engineering_metadata_schema", "misc_metadata_schema"):
             value = str(getattr(self, field_name) or "").strip()
             if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
                 raise ValueError(f"{field_name} must be a simple non-empty schema name.")

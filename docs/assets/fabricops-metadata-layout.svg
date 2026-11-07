@@ -89,5 +89,11 @@
 <text x="1745" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_ai_token_usage/" target="_blank">
+<rect x="1595" y="735" width="300" height="175" rx="4" fill="white" stroke="#52627A" stroke-width="1.65"/>
+<path d="M1599 735H1891Q1895 735 1895 739V772H1595V739Q1595 735 1599 735Z" fill="#52627A"/>
+<text x="1745" y="759" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">AI_TOKEN_USAGE</text>
+<title>Open metadata documentation: AI_TOKEN_USAGE</title>
+</a>
 <text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Solid: application-enforced keyed references · Dashed: logical associations · Delta has no enforced foreign keys</text>
 </svg>

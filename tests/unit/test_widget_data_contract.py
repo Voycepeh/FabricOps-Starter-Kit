@@ -4662,3 +4662,14 @@ def test_ai_usage_without_requests_shows_zero_and_no_calls():
     assert "Total output tokens: 0" in usage
     assert "No AI requests made" in usage
     assert "0.000 CU-seconds" in usage
+
+
+def test_ai_usage_reports_unconfirmed_audit_without_exposing_storage_details():
+    """Audit outages are visible in the widget's existing usage area."""
+    usage = module._ai_usage_html([{
+        "model": "gpt-5-mini", "statistics": [{"input_tokens": 5, "output_tokens": 2}],
+        "persistence_status": "unconfirmed", "persistence_error_type": "PermissionError",
+    }])
+    assert "1 AI usage audit write(s) unconfirmed" in usage
+    assert "private storage error" not in usage
+    assert "Total input tokens: 5" in usage
