@@ -2,7 +2,7 @@
 
 **Run the FabricOps operating model yourself in Microsoft Fabric, from initial setup through governed Production consumption.**
 
-`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. Use a dedicated, initially empty Metadata Lakehouse shared only by these demo workspaces. The seven numbered steps then walk you through the implementation. For a complete restart, select a fresh demo Metadata item in every demo configuration and rerun 0A–0C; existing history stays in the previous lakehouse.
+`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. Use a dedicated, initially empty Metadata Lakehouse shared only by these demo workspaces. The seven numbered steps then walk you through the implementation. For a complete restart, stop demo jobs and run the single reset cell in 00C with `RESET_DEMO = True`; this clears the dedicated demo metadata and restores Day 1.
 
 !!! info "Want the conceptual operating model first?"
 

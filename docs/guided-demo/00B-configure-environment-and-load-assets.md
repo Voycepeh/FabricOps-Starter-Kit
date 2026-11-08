@@ -66,7 +66,7 @@ If you are a member of several Fabric workspaces, the Environment picker may sho
 
 Use the same FabricOps wheel version across the workspace-specific Environments so the notebooks run against a consistent package version.
 
-For regression validation after a package change, replace the custom library with the wheel being validated, publish each Environment and start new notebook sessions. Confirm the installed version in `setup_notebook()` output. Use a fresh dedicated Metadata item for each complete lifecycle restart and update every demo `00_env_config` copy; 00C uses those mappings for both business and Metadata stores. Complete metadata setup below, then run [00C and its validation checklist](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) before rerunning the demos.
+For regression validation after a package change, replace the custom library with the wheel being validated, publish each Environment and start new notebook sessions. Confirm the installed version in `setup_notebook()` output. Use the dedicated `demo_metadata` item and stop all demo executions before resetting with 00C; 00C uses those mappings for both business and Metadata stores. Complete metadata setup below, then run [00C and its validation checklist](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) before rerunning the demos.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
@@ -83,7 +83,7 @@ GOVERNANCE_METADATA_LAKEHOUSE_ID = "<item-id-of-your-manually-created-demo-lakeh
 GOVERNANCE_METADATA_LAKEHOUSE_NAME = "demo_metadata"
 ```
 
-Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` only provisions or upgrades metadata tables inside the item you configured. All canonical tables must be empty before 00C starts the business reset.
+Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` only provisions or upgrades metadata tables inside the item you configured. 00C previews counts with `RESET_DEMO = False`; `True` clears all metadata in this dedicated item and restores Day 1.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
@@ -140,7 +140,7 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This initializes empty governance and engineering schemas in the dedicated demo lakehouse before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use a fresh dedicated lakehouse: any pre-existing metadata rows will make 00C stop before changing business data. Run 00C before Step 1 creates Stewards and Agreements. On a complete restart, stop earlier demo/promoted copies, select a new dedicated Metadata item in every demo config, initialize it and start fresh notebook sessions.
+`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

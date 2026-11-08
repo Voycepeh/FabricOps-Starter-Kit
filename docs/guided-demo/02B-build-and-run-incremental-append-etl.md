@@ -182,7 +182,7 @@ Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows,
 
 A failed Path A publication must not advance its accepted incremental checkpoint. Retry or recover that exact publication before starting later work for the same target. Verified target markers and receipts distinguish a completed publication from an unverified attempt.
 
-Repeated Day 2 staging keeps Bronze unique. For a complete lifecycle restart, stop current and earlier demo executions, configure a fresh dedicated Metadata Lakehouse through 00B, and then run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package). Wait for `RESET COMPLETE`, begin Step 1, and set both 02B and 02C back to `DEMO_DAY = 1`. Existing metadata history stays in the previous lakehouse. Never run 00C between days or against production assets.
+Repeated Day 2 staging keeps Bronze unique. For a complete lifecycle restart, stop current and earlier demo executions, run the single reset cell with `RESET_DEMO = True` in [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package). Wait for `RESET COMPLETE`, begin Step 1, and set both 02B and 02C back to `DEMO_DAY = 1`. This clears all metadata in the dedicated `demo_metadata` item. Never run 00C between days or against production assets.
 
 If counts differ, inspect the two finalized results, Read scopes, Write metrics, publication statuses, and persisted targets. Do not delete a checkpoint or overwrite a target merely to force the expected demonstration counts.
 

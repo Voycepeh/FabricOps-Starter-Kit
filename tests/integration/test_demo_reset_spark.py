@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from importlib import import_module
 from pathlib import Path
+import shutil
 from types import SimpleNamespace
 
 import nbformat
@@ -12,7 +13,7 @@ from pyspark.sql import functions as F
 
 from fabricops_kit import read_lakehouse_csv, read_lakehouse_table, write_lakehouse_table
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from tests.templates.test_demo_reset import CELLS, ROOT, _helpers
+from tests.templates.test_demo_reset import ROOT, _helpers, _namespace, _run_reset
 
 pytestmark = pytest.mark.spark
 
@@ -39,32 +40,74 @@ def demo_delta(demo_csv, monkeypatch, tmp_path):
     return SimpleNamespace(spark=spark_session, root=tmp_path, DeltaTable=delta.DeltaTable)
 
 
-def test_day1_notebook_source_restoration_is_repeatable_and_content_verified(demo_delta):
-    run, ns = demo_delta, _helpers()
-    day1 = {(store, table): read_lakehouse_csv(file, store='Bronze', inferSchema=True)
-            for (store, table), (file, count) in ns['_DEMO_SOURCES'].items()}
-    def read(*, table_name, store, schema):
-        # The Warehouse transport boundary is represented by a local Delta table.
+def test_single_cell_clears_metadata_restores_sources_and_retries_partial_failure(demo_delta, capsys):
+    run = demo_delta
+    ns, _ = _namespace()
+    registry = metadata_table_schema_registry()
+    def read(table_name, *, store, schema):
         return read_lakehouse_table(table_name, store=store, schema=schema)
     def write(frame, *, table_name, store, schema, mode):
         write_lakehouse_table(frame, table_name, store=store, schema=schema, mode=mode)
-    ns.update(F=F, _demo_confirmed=True, _demo_day1=day1,
-              read_lakehouse_csv=read_lakehouse_csv, read_lakehouse_table=read, read_warehouse_table=read,
-              write_lakehouse_table=write, write_warehouse_table=write, read_warehouse_query=lambda *a, **kw: None)
-    cells = ('412da4dc-8cdd-478e-9c25-cd16d8ab97ad', '7c5f1da6-05e4-4a47-b366-44bd98f7efaa',
-             '66cfd20c-2601-4b53-8abf-b32fd2b0b8ea', 'stage-day1-scenarios')
-    for repeat in range(2):
-        ns['orders_csv_df'] = day1[('Bronze', 'orders')]
-        for cell in cells:
-            exec(CELLS[cell], ns)
-        for (store, table), expected in day1.items():
-            persisted = read(table_name=table, store=store, schema='demo')
-            assert persisted.count() == ns['_DEMO_SOURCES'][(store, table)][1]
-            ns['_demo_assert_source'](persisted, expected)
-    wrong = day1[('Bronze', 'orders')].withColumn('quantity', F.lit(-1))
-    with pytest.raises(RuntimeError, match='content differs'):
-        ns['_demo_assert_source'](wrong, day1[('Bronze', 'orders')])
-    # Multisets matter: equal row counts cannot hide a missing row and a duplicate.
+    # Real canonical Delta schemas and rows, including frozen Contracts and retained activations.
+    for table, schema in registry.items():
+        record = {f.name: None if f.nullable else datetime(2026, 1, 1)
+                  if f.dataType.simpleString() == 'timestamp' else datetime(2026, 1, 1).date()
+                  if f.dataType.simpleString() == 'date' else False
+                  if f.dataType.simpleString() == 'boolean' else 1
+                  if f.dataType.simpleString() in {'int', 'bigint'} else 'demo' for f in schema}
+        for key in record:
+            if key in {'table_id', 'source_table_id', 'target_table_id'}: record[key] = 'orders'
+            if key.endswith('workspace_id'): record[key] = 'dev'
+            if key in {'operations', 'profiling', 'operations_json'}: record[key] = '[]'
+            if key in {'package_json', 'contract_payload_json', 'destination_json'}: record[key] = '{}'
+        if table == 'METADATA_DATA_CONTRACT': record['status'] = 'frozen'
+        if table in {'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_REGISTRY'}: record['status'] = 'active'
+        write(run.spark.createDataFrame([record], schema), table_name=table, store='Metadata', schema='metadata', mode='overwrite')
+    sentinel = run.spark.createDataFrame([(77,)], 'id int')
+    write(sentinel, table_name='unrelated', store='Silver', schema='other', mode='overwrite')
+    for store, table in ns['_DEMO_OUTPUTS']:
+        write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
+    # Only remote Fabric catalog/warehouse removal is replaced by equivalent local filesystem IO.
+    def remove(*, preview=False):
+        if preview: return
+        for store, table in ns['_DEMO_OUTPUTS']:
+            shutil.rmtree(run.root / store / table, ignore_errors=True)
+    def verify():
+        assert all(not (run.root / store / table).exists() for store, table in ns['_DEMO_OUTPUTS'])
+    ns['context'].paths['Metadata'].root = str(run.root / 'Metadata')
+    from fabricops_kit.activated_pipeline.shared import snapshot_file
+    ns.update(spark=run.spark, F=F, DeltaTable=run.DeltaTable, snapshot_file=snapshot_file,
+              read_lakehouse_table=read, read_warehouse_table=read, write_lakehouse_table=write, write_warehouse_table=write,
+              read_lakehouse_csv=read_lakehouse_csv, _demo_check_jobs=lambda: None,
+              _demo_remove_outputs=remove, _demo_verify_outputs=verify,
+              resolve_configured_lakehouse_table=lambda store, table, schema: (store, table, schema, str(run.root / store / table)))
+    artifacts = run.root / 'Metadata/Files/fabricops/engineering'
+    (artifacts / 'submissions').mkdir(parents=True)
+    (artifacts / 'submissions/demo.json').write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
+    _run_reset(ns)  # False previews populated state without changing it.
+    assert all(count == 1 for count in ns['_demo_metadata_counts']().values())
+    ns['RESET_DEMO'] = True
+    # Fail after metadata deletion to prove the same cell can recover without a new configuration.
+    ns['_demo_remove_outputs'] = lambda **kw: None if kw.get('preview') else (
+        _ for _ in ()).throw(RuntimeError('simulated Fabric transport failure'))
+    with pytest.raises(RuntimeError, match='simulated Fabric transport'):
+        _run_reset(ns)
+    assert 'RESET COMPLETE' not in capsys.readouterr().out
+    ns['_demo_remove_outputs'] = remove
+    for _ in range(2):
+        _run_reset(ns)
+        assert ns['_demo_metadata_counts']() == dict.fromkeys(registry, 0)
+        assert ns['_demo_metadata_files']() == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
+        for (store, table), (file, count) in ns['_DEMO_SOURCES'].items():
+            expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
+            actual = read(table, store=store, schema='demo')
+            assert actual.count() == count
+            ns['_demo_assert_source'](actual, expected)
+        verify()
+        assert read('unrelated', store='Silver', schema='other').collect() == sentinel.collect()
+        assert all(read(table, store='Metadata', schema='metadata').schema.simpleString() == schema.simpleString() for table, schema in registry.items())
+    assert capsys.readouterr().out.count('RESET COMPLETE') == 2
+    # Equal counts cannot hide a missing row and a duplicate.
     expected = run.spark.createDataFrame([(1,), (2,)], 'id int')
     wrong = run.spark.createDataFrame([(1,), (1,)], 'id int')
     with pytest.raises(RuntimeError, match='content differs'):
@@ -157,34 +200,22 @@ def test_additive_registry_column_uses_the_installed_package_schema(demo_delta):
     frame = frame.withColumn('new_package_field', F.lit('migrated'))
     counts = ns['_demo_metadata_counts']()
     assert counts == {table: 0}
-    ns['_demo_require_empty_metadata'](counts)
 
 
-def test_fresh_metadata_validation_never_rewrites_history_or_clears_contracts(demo_delta):
-    run, ns = demo_delta, _helpers()
-    registry = metadata_table_schema_registry()
-    paths = {table: str(run.root / table) for table in registry}
-    for table, schema in registry.items():
-        run.spark.createDataFrame([], schema).write.format('delta').save(paths[table])
-    ns.update(_demo_config=object(), metadata_table_schema_registry=metadata_table_schema_registry,
-              metadata_table_physical_schema=lambda *_: 'configured-schema',
-              read_lakehouse_table=lambda table, **_: run.spark.read.format('delta').load(paths[table]))
-    for _ in range(2):
-        counts = ns['_demo_metadata_counts']()
-        ns['_demo_require_empty_metadata'](counts)
-        assert counts == dict.fromkeys(registry, 0)
-    table = 'METADATA_DATA_CONTRACT'
-    schema = registry[table]
-    record = {f.name: None if f.nullable else datetime(2026, 1, 1)
-              if f.dataType.simpleString() == 'timestamp' else 1 if f.dataType.simpleString() in {'int', 'bigint'}
-              else 'demo' for f in schema}
-    record.update(contract_id='demo-contract', contract_version=1, table_id='demo-table',
-                  evidence_workspace_id='demo-workspace', contract_payload_json='{}', status='frozen')
-    run.spark.createDataFrame([record], schema).write.format('delta').mode('append').save(paths[table])
-    before = {name: run.DeltaTable.forPath(run.spark, path).history(1).first()['version'] for name, path in paths.items()}
-    preserved = run.spark.read.format('delta').load(paths[table]).collect()
-    with pytest.raises(RuntimeError, match='create a fresh dedicated demo Metadata Lakehouse'):
-        ns['_demo_require_empty_metadata'](ns['_demo_metadata_counts']())
-    assert run.spark.read.format('delta').load(paths[table]).collect() == preserved
-    assert {name: run.DeltaTable.forPath(run.spark, path).history(1).first()['version']
-            for name, path in paths.items()} == before
+
+def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
+    from fabricops_kit.activated_pipeline.shared import snapshot_file
+    ns = _helpers()
+    ns.update(spark=demo_csv, snapshot_file=snapshot_file, _metadata=SimpleNamespace(root=str(tmp_path)),
+              _demo_table_ids={'orders'}, _demo_workspaces={'dev'})
+    folder = tmp_path / 'Files/fabricops/engineering/submissions'
+    folder.mkdir(parents=True)
+    file = folder / 'foreign.json'
+    file.write_text('{"manifest":{"operations":[{"table_id":"production-table"}]}}')
+    with pytest.raises(RuntimeError, match='Non-demo'):
+        ns['_demo_metadata_files']()
+    assert file.exists()
+    file.write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
+    assert ns['_demo_metadata_files']()['submissions'] == 1
+    assert ns['_demo_metadata_files'](delete=True)['submissions'] == 1
+    assert not folder.exists()

@@ -41,7 +41,7 @@ Inside the demo **Governance** workspace, **manually create** a schema-enabled L
 
 All demo workspaces share this one isolated lakehouse through the existing logical store key `Metadata`. Set its physical name and item ID in the demo `00_env_config`; do not point the demo at an existing production or project Metadata Lakehouse. The logical key remains case-sensitive `Metadata`.
 
-For a complete restart, create a fresh item such as `demo_metadata_02`, update all demo configuration copies and rerun metadata setup. Previous Contracts, activations and history remain in the previous lakehouse. Keep current and earlier demo executions stopped while resetting the reserved business tables.
+Reserve `demo_metadata` exclusively for this walkthrough. To restart, stop current and earlier demo executions and use the 00C reset cell with `RESET_DEMO = True`. This discards its Contracts, activations and history as well as resetting the reserved business tables.
 
 The business stores may already exist: reuse only the eleven tables reserved by this walkthrough in their `demo` schemas. Other schemas and tables are outside 00C’s scope. Use demo-specific notebook workspaces/configuration so unrelated notebooks keep their original Metadata mapping.
 
