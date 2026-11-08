@@ -29,9 +29,9 @@ Only **Governance** and **Engineering Development** are needed initially. You ca
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Create the Governance metadata Lakehouse
+## Create the dedicated demo Metadata Lakehouse
 
-Inside the **Governance** workspace and create a Lakehouse named **Metadata**, it is the shared home for FabricOps Governance records
+Inside the demo **Governance** workspace, **manually create** a schema-enabled Lakehouse named **demo_metadata**, exclusively for this seven-step walkthrough.
 
 </div>
 </div>
@@ -39,7 +39,11 @@ Inside the **Governance** workspace and create a Lakehouse named **Metadata**, i
 
 
 
-Use this exact name and casing for the Guided Demo. FabricOps uses this Lakehouse to persist its Governance metadata throughout the walkthrough.
+All demo workspaces share this one isolated lakehouse through the existing logical store key `Metadata`. Set its physical name and item ID in the demo `00_env_config`; do not point the demo at an existing production or project Metadata Lakehouse. The logical key remains case-sensitive `Metadata`.
+
+For a complete restart, create a fresh item such as `demo_metadata_02`, update all demo configuration copies and rerun metadata setup. Previous Contracts, activations and history remain in the previous lakehouse. Keep current and earlier demo executions stopped while resetting the reserved business tables.
+
+The business stores may already exist: reuse only the eleven tables reserved by this walkthrough in their `demo` schemas. Other schemas and tables are outside 00C’s scope. Use demo-specific notebook workspaces/configuration so unrelated notebooks keep their original Metadata mapping.
 
 
 
@@ -148,7 +152,7 @@ After you are done publishing you can share this environment with anyone in your
 
 You now have:
 
-- a Governance workspace with the `Metadata` Lakehouse and a published Fabric Environment containing FabricOps;
+- a Governance workspace with the dedicated `demo_metadata` Lakehouse and a published Fabric Environment containing FabricOps;
 - an Engineering Development workspace with `bronze`, `silver`, and `gold`, plus its own published Fabric Environment containing the same FabricOps wheel;
 - optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
 - optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run project-specific consumer notebooks.

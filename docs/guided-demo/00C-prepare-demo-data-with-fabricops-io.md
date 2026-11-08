@@ -2,11 +2,11 @@
 
 ### Before you begin
 
-Complete [Step 0B](00B-configure-environment-and-load-assets.md), import all three demo notebooks, and read [Reset, rerun and validate a package](#reset-rerun-and-validate-a-package) before executing 00C.
+Complete [Step 0B](00B-configure-environment-and-load-assets.md) with an empty, dedicated demo Metadata Lakehouse, import all three demo notebooks, and read [Reset, rerun and validate a package](#reset-rerun-and-validate-a-package) before executing 00C.
 
 !!! warning "Dedicated demo environment only"
 
-    Running 00C resets demo sources, all six outputs and applicable previous demo metadata. Stop schedules and interactive demo runs, review its preview and confirm `RESET DEMO`. Never run against unrelated production assets. Wait for `RESET COMPLETE` before starting Day 1.
+    Running 00C resets the five sources and six outputs in the reserved `demo` schemas. Metadata must already be empty and exclusively for this walkthrough; 00C never deletes existing metadata. Stop current and earlier demo executions, review the preview and confirm `RESET DEMO`. Wait for `RESET COMPLETE` before beginning Step 1.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -188,8 +188,8 @@ This step prepares two dedicated Bronze tables using the sample CSV files:
 
 | Source file | Bronze table | Used by |
 |---|---|---|
-| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B incremental/full append comparison |
-| `Demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
+| `demo/inventory_day1.csv` | `demo.inventory_movements` | 02B incremental/full append comparison |
+| `demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
 
 ### Run the complete `00C_demo_setup` notebook, including confirmation and verification.
 
@@ -221,115 +221,114 @@ gold Warehouse
 
 ## Reset, rerun and validate a package
 
-Use 00C as the single reset entrypoint for the dedicated Ungoverned engineering demo.
+Start the seven-step lifecycle with isolated, empty metadata and known Day 1 business data.
 
 </div>
 </div>
 
-!!! warning "Destructive demo reset"
+!!! warning "Business reset and dedicated metadata"
 
-    00C overwrites five demo sources, removes all six demo outputs and deletes applicable demo metadata, including previous Run history. Use it only in the dedicated demo environment. Never point it at unrelated production assets. It preserves shared Governance and immutable deployment history and blocks ambiguous ownership.
+    00C overwrites the five named sources and removes the six named outputs in the existing `demo` schemas. Reserve those eleven tables for this walkthrough. Other schemas, tables and source files are untouched. Never use production Metadata for this demo. 00C does not delete metadata: any existing Contract, activation, Run or other metadata row blocks preparation.
 
-### Preview and confirm
+### Create the isolation boundary
 
-1. Install or upgrade the wheel being validated in the Fabric Environments, publish the Environments and start new notebook sessions as described in [00B](00B-configure-environment-and-load-assets.md). Record the installed version displayed by `setup_notebook()`; the regression target is v0.4.2 Ungoverned, while the notebook always runs the package actually installed.
-2. Import 02A, 02B and 02C into Engineering Development **before running 00C**, keeping the names `02A_full_refresh_demo`, `02B_incremental_append_demo` and `02C_scd_demo`. 00C resolves their exact Fabric Notebook IDs; both paths in 02B use the same Pipeline ID and separate Run IDs.
-3. Check the existing Bronze, Silver, Gold and Metadata mappings. Bronze, Silver and Metadata must be separate schema-enabled Lakehouses; Gold is a separate Warehouse. Run the installed package’s metadata setup/migration using 00B to provision or upgrade all current metadata tables, and create the Gold `demo` schema shown above before running 00C. Use the configured Metadata Lakehouse, never the attached/default Lakehouse as a substitute.
-4. Stop demo schedules, jobs and interactive executions. Keep them stopped through verification. Set `DEMO_EXECUTIONS_STOPPED = True` in 00C. Run from the top through **reset-preview** and inspect the workspace/item identities, all five restores, six removals and remove/preserve counts for every metadata table.
-5. After reviewing the preview, set `RESET_CONFIRMATION = "RESET DEMO"` in **reset-confirmation** and execute that cell, then **reset-apply**. The application consumes this confirmation. Unrelated pipelines may continue writing to the shared Metadata Lakehouse; only demo executions and metadata schema migrations must remain stopped during the reset. Continue through all the existing I/O examples and source writes, ending with **reset-verify**. Accept the reset only when it prints **`RESET COMPLETE`** and actual removal counts, including zeros. An exception means the reset is incomplete.
+1. Create a schema-enabled Lakehouse such as `demo_metadata` in the demo Governance workspace. It is exclusively for this seven-step walkthrough. All participating demo workspaces use that **same** lakehouse through the existing logical `Metadata` store.
+2. Set `GOVERNANCE_METADATA_LAKEHOUSE_ID` and `GOVERNANCE_METADATA_LAKEHOUSE_NAME` in the demo `00_env_config` to that item's exact ID and physical name. Keep the existing Governance/Engineering metadata schemas. Update every demo config copy, including demo Production and Consumer when used. Use demo-specific workspaces/configuration, or the existing shared `config_workspace_id` option, so unrelated projects keep their original configuration.
+3. Run metadata setup in [00B](00B-configure-environment-and-load-assets.md): set `INITIALIZE_METADATA = True`, run the config directly once, then restore `False`. Setup creates or upgrades tables; **it does not clear existing rows**. Do not run Step 1 yet: 00C must see empty metadata tables.
+4. Upload the fixtures into Bronze **`Files/demo`**, with lowercase `demo`. The repository folder remains `templates/DemoData`; that download location is different from the case-sensitive Fabric Files folder.
 
-The restored sources are Bronze `demo.orders` (120), `demo.products` (8), `demo.inventory_movements` (8), `demo.product_master_updates` (8), and Gold `demo.order_history` (180). 00C compares their full row content with the Day 1 fixtures. Source files remain untouched.
+Business stores can already contain the `demo` schemas and may contain unrelated schemas. 00C uses the configured Bronze/Silver/Gold stores and touches only the eleven listed demo tables. Metadata isolation does not authorize other pipelines to share those eleven tables or permit resetting production-governed assets.
 
-| Demo | Output absent after reset |
+### Preview and confirm 00C
+
+1. Install/publish the wheel being validated and start fresh notebook sessions. Confirm the installed version in `setup_notebook()` output. The regression target is v0.4.2 Ungoverned; the notebook uses the package actually installed.
+2. Import `02A_full_refresh_demo`, `02B_incremental_append_demo` and `02C_scd_demo` with those names. Stop schedules and interactive executions, including earlier demo/promoted copies that share the demo tables. Add their exact IDs to `EXTRA_DEMO_NOTEBOOK_IDS` for additional job checks. Do not reuse an old promoted copy after changing Metadata.
+3. Confirm that the existing `Metadata` store in the demo `00_env_config` points at your manually created `demo_metadata` lakehouse. Set `DEMO_EXECUTIONS_STOPPED = True` only after stopping demo work. Run from the top through **reset-preview**.
+4. Review the configured workspace/item identities, five restores, six removals and counts for **every installed metadata table**. 00C checks the Metadata item selected by `00_env_config`; it must be separate from the business stores. Every metadata count must be zero.
+5. Set `RESET_CONFIRMATION = "RESET DEMO"` in **reset-confirmation**, execute it and then **reset-apply**. The application consumes the confirmation and rechecks empty metadata before changing business data. Continue through every source-write cell and **reset-verify**. Accept preparation only when it prints **`RESET COMPLETE`**.
+
+The restored sources are Bronze `demo.orders` (120), `demo.products` (8), `demo.inventory_movements` (8), `demo.product_master_updates` (8), and Gold `demo.order_history` (180). Verification compares their full row content with the Day 1 fixtures.
+
+| Demo | Output absent after 00C |
 | --- | --- |
 | 02A | Silver `demo.curated_orders`; Gold `demo.customer_summary` |
 | 02B | Silver `demo.inventory_movements_append_all`; `demo.inventory_movements_append_new_only` |
 | 02C | Silver `demo.product_master_scd1`; `demo.product_master_scd2` |
 
-??? info "Metadata reset coverage and ownership"
+??? info "All metadata tables are checked; none is deleted"
 
-    All reads use the Metadata store and the configured Engineering/Governance schemas. Table identities come from `resolve_table_id()` with exact configured store/schema/table coordinates. Workspace scope is mandatory because Table IDs alone do not distinguish workspaces. Run operations must match the configured physical destinations as well.
+    Counts and schemas come from the installed package's canonical registry and configured Metadata store. Missing tables or incompatible column types require metadata setup before any business reset. New canonical tables are checked automatically. Existing rows in any table block preparation, regardless of their workspace or table ownership. There is no selective metadata deletion, truncation, Contract removal or activation bypass.
 
-    | Existing metadata table | Demo records and reset policy | State after reset |
-    | --- | --- | --- |
-    | `METADATA_PIPELINE_RUN` | Remove exact demo Notebook/Pipeline IDs in the execution workspace, including failed/terminated incomplete Ungoverned runs. Reject mixed participants, changed physical bindings or governed history. | No previous demo Runs; unrelated history retained. |
-    | `METADATA_PROCESSING_STATE` | Remove demo-owned source observations, incremental checkpoints, drift baselines, full-source baselines and publication receipts using exact source/target, workspace, pipeline, Run and publication identifiers. Block links to unrelated owners. | No stale progress or receipts for the demo. |
-    | `METADATA_DATA_LINEAGE` | Remove exact demo table/workspace participation with verified Notebook ownership. | No previous demo participation. |
-    | `METADATA_DATA_CATALOGUE` | Remove table and column records for the 11 exact source/output identities in the execution workspace, only with verified demo Notebook ownership. This also clears processing definitions, profile candidates and profile timing fields. | No stale demo Catalogue entries. |
-    | `METADATA_DATA_PROFILED` | Remove exact demo table/workspace profile snapshots with verified Notebook ownership. | No previous demo profiles. |
-    | `METADATA_DATA_PROFILED_FREQUENCY` | Remove exact demo frequency records before profiles; check retained records do not reference removed profile/snapshot identifiers. | No previous demo frequencies or orphaned demo profile references. |
-    | `METADATA_GUARDRAIL_RESULTS` | Ungoverned normally writes none. Remove applicable demo-owned results by exact Run/table/workspace/Notebook identifiers; block unrelated references. | Zero applicable demo results. |
-    | `METADATA_DATA_ACCESS` | These notebooks do not scan access. Remove only demonstrably demo-owned records with exact table/workspace/Notebook scope if present. A separately owned scan blocks reset rather than losing its records. | Normally zero deletions; unrelated scans retained. |
-    | `METADATA_PIPELINE_REGISTRY` | Ungoverned does not create promotion versions. Preserve immutable history; a demo binding or exact demo table use in this workspace blocks reset. | Unchanged; normally zero demo rows. |
-    | `METADATA_PIPELINE_ACTIVATION` | These Ungoverned demos do not submit Governance decisions. Preserve history; a demo binding or exact demo table use in this workspace blocks reset. | Unchanged. |
-    | `METADATA_DATA_CONTRACT` | These demos do not author Contracts. Preserve all versions; a Contract using demo evidence from this workspace blocks reset. | Unchanged. |
-    | `METADATA_DATA_CONTRACT_ACTIVATION` | Preserve retained selections and Agreement associations. A demo Table ID in a configured physical demo workspace blocks reset. | Unchanged. |
-    | `METADATA_DATA_AGREEMENT` | No writes from 00C or 02A–02C. Shared Governance records are never deleted. | Unchanged. |
-    | `METADATA_DATA_STEWARD` | No writes from 00C or 02A–02C. Shared Governance records are never deleted. | Unchanged. |
+    | Current metadata table | Required state before and after 00C |
+    | --- | --- |
+    | `METADATA_DATA_STEWARD` | Empty; Step 1 creates the demo stewards afterward. |
+    | `METADATA_DATA_AGREEMENT` | Empty; Step 1 creates the demo agreement afterward. |
+    | `METADATA_DATA_CONTRACT` | Empty; old drafts and frozen versions stay in the previous lakehouse. |
+    | `METADATA_DATA_CONTRACT_ACTIVATION` | Empty; old selections and Agreement associations stay in the previous lakehouse. |
+    | `METADATA_PIPELINE_ACTIVATION` | Empty; old submissions and Governance decisions stay in the previous lakehouse. |
+    | `METADATA_PIPELINE_REGISTRY` | Empty; old promotion history stays in the previous lakehouse. |
+    | `METADATA_PIPELINE_RUN` | Empty; previous execution history remains available in the previous lakehouse. |
+    | `METADATA_PROCESSING_STATE` | Empty; no old observations, checkpoints, baselines or receipts can affect Day 1. |
+    | `METADATA_DATA_CATALOGUE` | Empty; new pipeline observations register the current demo tables/columns. |
+    | `METADATA_DATA_PROFILED` | Empty; the new package creates fresh profile metrics. |
+    | `METADATA_DATA_PROFILED_FREQUENCY` | Empty; the new package creates applicable frequency distributions. |
+    | `METADATA_DATA_LINEAGE` | Empty; previous demo pipeline participation cannot appear in new Contract authoring. |
+    | `METADATA_GUARDRAIL_RESULTS` | Empty; subsequent evaluations create applicable results. |
+    | `METADATA_DATA_ACCESS` | Empty; subsequent scans create applicable access snapshots. |
 
-    The reset deletes children before parents and Run history last. Native Delta deletion matches complete reviewed rows, including supported extension columns; it does not truncate, replace metadata tables, change schemas or delete by name substring.
-
-    Confirmation rechecks demo ownership and the exact selected records, allowing unrelated metadata inserts and updates. Each deletion uses an isolated Delta commit tag: its metrics must report exactly the reviewed number of deleted demo rows and zero inserted/updated rows. This verifies the reset’s own changes without requiring unrelated workspaces to remain frozen. Final output reports actual deletions and the current remaining row count, which can differ from the preview because unrelated pipelines remain active.
-
-    Processing State and profile links are checked before cleanup, and no selected demo records may remain afterward. Catalogue fields retain profile timing and candidates. Profiling policies live in preserved Contract payloads (Ungoverned uses fixed defaults), and outcomes live in Run `profiling`; there is no separate profiling schedule table.
-
-??? info "After a metadata schema migration"
-
-    Metadata migration remains owned by `setup_metadata_tables()` in 00B. Supported additive changes and known format upgrades preserve existing rows. After installing a package, run that setup before 00C. The reset reads schemas from the installed package and validates required column names and types across every current metadata table before any deletion; it does not perform migrations itself.
-
-    A missing column or old native collection where JSON STRING is now required blocks the preview. A compatible addition already applied by metadata setup is picked up from the package registry without duplicating its schema in 00C. A new or retired table blocks reset until its ownership policy and coverage matrix are reviewed. Identity/relationship changes also require review; they must never be inferred by a demo reset. Keep schema migrations stopped until reset verification finishes. Map-valued extensions on a table with selected demo rows block cleanup because native Delta equality cannot safely match them.
+    Every summary reports `removed 0; remaining 0`. A populated lakehouse is preserved and rejected, including immutable Governance/deployment history. Pointing every demo notebook at the fresh lakehouse and starting fresh sessions prevents old Contracts, profiles, lineage and Run-based profiling schedules from leaking into the new walkthrough.
 
 ### Execute the engineering regression
 
-Keep `PIPELINE_MODE = "Ungoverned"` in all three demos. Run each notebook from its top through Finalize; 02B finalizes both independent paths. Do not run 00C between days.
+After `RESET COMPLETE`, continue with [Step 1](01-establish-governance-context.md), then the existing Steps 2–7. Run the engineering scenarios below in Ungoverned mode before Contract authoring. Do not run 00C between days or after Step 1 has populated Metadata.
 
 | Day | Execute in order | Physical results |
 | --- | --- | --- |
-| 1 | 00C → [02A](02A-full-refresh-demo.md) → [02B](02B-build-and-run-incremental-append-etl.md) with `DEMO_DAY = 1` → [02C](02C-build-and-run-scd-etl.md) with `DEMO_DAY = 1` | 02A: 120 curated orders, 30 customers. 02B: 8 rows in each target. 02C: 8 SCD1 rows and 8 SCD2 versions. |
+| 1 | 02A → 02B with `DEMO_DAY = 1` → 02C with `DEMO_DAY = 1` | 02A: 120 curated orders and 30 customers. 02B: 8 rows in each target. 02C: 8 SCD1 rows and 8 SCD2 versions. |
 | 2 | 02B with `DEMO_DAY = 2` → 02C with `DEMO_DAY = 2` | 02B: 12 source rows and 12 in each target. 02C: 8 SCD1 rows and 9 SCD2 versions. |
-| 3 | 02B with `DEMO_DAY = 3` → 02C with `DEMO_DAY = 3` | 02B: no new movements; both targets remain 12. 02C: 8 SCD1 rows and 10 SCD2 versions, with 8 current products. |
+| 3 | 02B with `DEMO_DAY = 3` → 02C with `DEMO_DAY = 3` | 02B: no new movements; both targets remain 12. 02C: 8 SCD1 rows and 10 SCD2 versions, including 8 current products. |
 
-Day 3 is implemented: 02B deliberately stages no new file, while 02C stages `products_day3.csv`. Run the staging cells, not just the parameter cell. The individual demo pages include content checks as well as counts.
+Day 3 is implemented: 02B stages no new file, while 02C stages `demo/products_day3.csv`. Run each notebook from its top through Finalize, including its staging cells. 02B finalizes two separate executions. The existing governed admission restrictions in Steps 5–6 remain unchanged; metadata isolation does not bypass them.
 
 ### Validate outputs and metadata
 
-- [ ] Inspect persisted targets using the optional public read cells in 02A–02C. Write previews are prepared input, not proof of the persisted target content.
-- [ ] Verify each demo's expected values, keys, row hashes and history using the checks on its page. Ensure business sources retain the expected content for that day; the orchestrators must not mutate them.
-- [ ] Inspect `pipeline_result` after each Finalize. In the clean sequence without replays there are **10 new `METADATA_PIPELINE_RUN` rows**: one 02A, six 02B, three 02C. All should have `execution_mode = ungoverned`, `status = ungoverned_completed`, `boundary_completed = true`, and a completion time. Replays add new Runs; they must not duplicate business content.
-- [ ] Filter metadata by exact execution workspace, Table IDs and the three Pipeline IDs printed by the notebooks. Run operations must reference the correct source/target IDs and physical destinations; 02B's incremental target is the Append All target. Check both 02B Runs on each day, not only the last `pipeline_result` displayed.
-- [ ] Check Catalogue source/target identities and processing definitions, applicable profile snapshots/frequencies, and Lineage source/target roles with the exact `_notebook_id` and `_activity_id`. Lineage is pipeline participation, not exact DataFrame derivation, and its activity can be shared by interactive executions; do not expect one Lineage row per Run.
-- [ ] Check committed Processing State publication receipts match the exact physical target markers. Checkpoint/baseline members must reference their receipt's `publication_id` and exact source/target/workspace. No accepted checkpoint may move past an unpublished batch. Day 3 no-op Writes need not create another publication receipt. Profiles are policy-driven; do not require an arbitrary fixed number of snapshots.
-- [ ] Ungoverned must not create Contracts, activations or promotion Registry versions. Guardrail Results are conditional, not a required row count. A missing required Run, mismatched receipt, broken reference, duplicate key, wrong value or changed source is a failed acceptance even if all cells completed.
+- [ ] Inspect persisted targets with the public read cells. Write previews show prepared input, rather than proof of persisted content.
+- [ ] Check the keys, values, hashes and history on the [02A](02A-full-refresh-demo.md), [02B](02B-build-and-run-incremental-append-etl.md) and [02C](02C-build-and-run-scd-etl.md) pages. Orchestrators must preserve the current day's source content.
+- [ ] Expect 10 finalized `METADATA_PIPELINE_RUN` records before extra replays: one 02A, six 02B, three 02C. Check `execution_mode = ungoverned`, `status = ungoverned_completed`, `boundary_completed = true` and completion times. Both 02B paths share a Notebook/Pipeline ID but have distinct Run IDs.
+- [ ] Check Run operation source/target IDs, physical destinations and 02B's incremental target. Check Catalogue processing definitions, applicable profiles/frequencies and Lineage roles. Profiling is policy-driven; there is no fixed required snapshot count.
+- [ ] Check that committed Processing State receipts match physical publication markers and that checkpoint/baseline members reference the exact source, target, workspace and `publication_id`. Failed or skipped publication must not advance progress. No-op Writes need not create another receipt.
+- [ ] Before Step 3, confirm the authoring notebook uses the same new Metadata item and reload it in a fresh session. Its Catalogue, profiles and lineage must come from this walkthrough. New Contracts and activations are created through the existing Governance steps.
 
-??? tip "Inspect the configured Metadata Lakehouse"
+??? tip "Inspect the configured demo Metadata Lakehouse"
 
-    Open its SQL endpoint or notebook and select the configured Engineering schema (default `engineering`). Replace placeholders with the exact IDs printed by setup and the demo notebooks. For example:
+    Use its SQL endpoint or a notebook with the configured Engineering schema (default `engineering`). Replace placeholders with exact IDs printed by the notebooks.
 
     ```sql
-    SELECT run_id, pipeline_id, execution_mode, status, boundary_completed,
-           started_at, completed_at, operations, profiling
+    SELECT run_id, pipeline_id, status, operations, profiling
     FROM engineering.METADATA_PIPELINE_RUN
-    WHERE workspace_id = '<execution-workspace-id>'
-      AND pipeline_id IN ('<02A-notebook-id>', '<02B-notebook-id>', '<02C-notebook-id>');
+    WHERE workspace_id = '<demo-execution-workspace-id>';
 
-    SELECT record_type, status, run_id, pipeline_id, source_table_id,
-           target_table_id, publication_id, publication_batch_id, max_change_value
+    SELECT record_type, status, run_id, source_table_id, target_table_id, publication_id
     FROM engineering.METADATA_PROCESSING_STATE
-    WHERE workspace_id = '<execution-workspace-id>'
-      AND pipeline_id IN ('<02A-notebook-id>', '<02B-notebook-id>', '<02C-notebook-id>');
+    WHERE workspace_id = '<demo-execution-workspace-id>';
     ```
 
-    `operations` and `profiling` are JSON STRING columns. Expand the actual JSON to inspect each operation, its `source_table_ids`, `incremental_target_table_id`, destination, metrics and status. Use the exact `profile_id`/`profile_snapshot_id` and `publication_id` links when checking children; table-name similarity is not ownership.
+    Expand the actual JSON STRING `operations` and `profiling` fields. Use exact `profile_id`/`profile_snapshot_id` and `publication_id` links when checking child records. Lineage is pipeline participation and may share activity identities across interactive Runs.
 
-### Replay, failures and package changes
+### Replay, failures and a complete restart
 
-Repeat 02A before advancing days: overwrite must preserve 120/30 business results. Repeat 02B on the current day: the incremental path must return no already-accepted movements, and Append New Only must admit no seen hashes. Repeat 02C on the current day: it must keep eight current products and add no unchanged SCD2 version. Audit timestamps and Run identities can change.
+Repeat 02A before advancing days: overwrite must preserve 120/30 business results. Repeat 02B on the current day: no already-accepted movements or seen hashes should be added. Repeat 02C on the current day: keep eight current products without duplicate unchanged SCD2 versions. Finalize each execution and inspect its actual results.
 
-After recording results, stop the demo again and run **all of 00C twice**. Both executions must finish with `RESET COMPLETE`; the second must remove zero metadata rows and tolerate absent targets. For a partial reset failure, fix the reported permission, configuration or ownership blocker and restart 00C from the top. Never manually delete just a checkpoint or parent metadata row. A missing metadata table is a blocker; provision/check it through 00B rather than silently skipping it.
+00C is safe to run twice **before Step 1 or any pipeline has written metadata**. Both preparations must finish with `RESET COMPLETE`, preserve all source files and other business tables, and tolerate missing outputs. For a partial physical failure, fix its cause and restart 00C from the top; no metadata rollback or selective checkpoint deletion is needed.
 
-An incomplete Run without a completion time blocks reset. Check Fabric Monitor and stop the execution first. Only then add its exact Run ID to `STOPPED_DEMO_RUN_IDS`. For a verified retired demo notebook copy, add its exact ID to `EXTRA_DEMO_NOTEBOOK_IDS`; unrelated/mixed-table Runs still block. If that ID is absent from the complete notebook listing, 00C checks the item itself. Only an explicit Fabric `ItemNotFound` response confirms deletion and skips its live-job query. Permission errors, service failures and ambiguous 404 responses block reset. Historical incomplete Runs still require explicit stopped-Run confirmation even when their notebook has been deleted. Retained governed history is not disposable: use a separate Ungoverned demo environment instead.
+For a complete seven-step restart or another package baseline:
 
-For each package change, publish the new wheel, start fresh sessions, rerun 00C and repeat this sequence. Record version, date, tester, reset summaries, Run IDs, output/value checks and any failures. **Local automated tests do not establish Fabric acceptance**: cross-workspace routing, Fabric job visibility, Lakehouse catalog removal and Warehouse SQL/connector behavior require this maintainer run in Fabric. Live Fabric is not added to PR CI.
+1. Stop all current and earlier demo schedules, jobs and interactive executions sharing the eleven business tables. Retire old promoted copies from this walkthrough's schedules; 00C does not delete external notebooks, deployment snapshots, schedules or apps.
+2. Create another fresh dedicated Metadata Lakehouse, such as `demo_metadata_02`. Keep the previous one if you need its immutable Contracts, activations, approvals or Run history; 00C never deletes it.
+3. Update the exact Metadata item ID/name in every demo configuration copy, run 00B metadata setup once, and restart notebook sessions. Existing production/project configuration remains unchanged.
+4. Run 00C against the newly selected Metadata item, prepare Day 1 and repeat Steps 1–7. Business stores and the reserved `demo` schemas can be reused.
+
+Record package version, date, tester, metadata item ID, preparation summary, Run IDs and result checks. **Local tests do not establish Fabric acceptance.** Configured cross-workspace routing, Fabric job visibility, Lakehouse catalog removal, Warehouse connector behavior and the documented Governance gates still require the maintainer workflow in Fabric. Live Fabric execution is not added to PR CI.
 
 
 **Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)

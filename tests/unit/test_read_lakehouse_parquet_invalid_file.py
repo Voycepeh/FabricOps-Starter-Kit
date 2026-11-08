@@ -51,7 +51,7 @@ def test_invalid_parquet_footer_skips_tsus_fallback():
 
     with pytest.raises(RuntimeError, match="CANNOT_READ_FILE_FOOTER"):
         call_with_spark(spark, read_lakehouse_parquet,
-            "Demo/orders.parquet",
+            "demo/orders.parquet",
             store="Bronze",
             verbose=False,
             context=_context(),
@@ -59,5 +59,5 @@ def test_invalid_parquet_footer_skips_tsus_fallback():
 
     assert spark.read.parquet_calls == [
         "abfss://dev-bronze-workspace@onelake.dfs.fabric.microsoft.com/"
-        "dev-bronze-item/Files/Demo/orders.parquet"
+        "dev-bronze-item/Files/demo/orders.parquet"
     ]

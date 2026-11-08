@@ -12,8 +12,7 @@ from pyspark.sql import functions as F
 
 from fabricops_kit import read_lakehouse_csv, read_lakehouse_table, write_lakehouse_table
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from fabricops_kit.io.shared import retry_delta_metadata
-from tests.templates.test_demo_reset import CELLS, ROOT, _helpers, _history, _scope
+from tests.templates.test_demo_reset import CELLS, ROOT, _helpers
 
 pytestmark = pytest.mark.spark
 
@@ -38,63 +37,6 @@ def demo_delta(demo_csv, monkeypatch, tmp_path):
         monkeypatch.setattr(import_module('fabricops_kit.io.' + module), 'resolve_configured_lakehouse_table',
             lambda store, table, schema, **_: (store, table, schema, str(tmp_path / store / table)))
     return SimpleNamespace(spark=spark_session, root=tmp_path, DeltaTable=delta.DeltaTable)
-
-
-def test_real_delta_exact_metadata_deletion_repeats_without_replacing_tables(demo_delta):
-    run, ns = demo_delta, _helpers()
-    schema_registry = metadata_table_schema_registry()
-    rows = _history()
-    now = datetime(2026, 1, 1)
-    # Populate the real physical schemas, including all required audit columns.
-    for table in ns['_DEMO_DELETE_ORDER']:
-        schema = schema_registry[table]
-        if table == 'METADATA_DATA_CATALOGUE':
-            schema = schema.add('extension_note', 'string')
-        records = []
-        for row in rows[table]:
-            record = {f.name: None if f.nullable else False if f.dataType.simpleString() == 'boolean'
-                      else 1 if f.dataType.simpleString() in {'int', 'bigint'}
-                      else now if f.dataType.simpleString() == 'timestamp' else 'test' for f in schema}
-            record.update(row)
-            if table == 'METADATA_DATA_CATALOGUE':
-                record['extension_note'] = f"reviewed:{row['workspace_id']}:{row.get('table_id')}"
-            for f in schema:
-                if f.dataType.simpleString() == 'timestamp' and record[f.name] is not None:
-                    record[f.name] = now
-            records.append(record)
-        path = str(run.root / table)
-        run.spark.createDataFrame(records, schema).write.format('delta').save(path)
-        rows[table] = [r.asDict(recursive=True) for r in run.spark.read.format('delta').load(path).collect()]
-    plan = _scope(ns, rows)
-    ns.update(spark=run.spark, F=F, DeltaTable=run.DeltaTable, retry_delta_metadata=retry_delta_metadata,
-              _demo_schemas={table: run.spark.read.format('delta').load(str(run.root / table)).schema
-                             for table in ns['_DEMO_DELETE_ORDER']},
-              read_lakehouse_table=lambda table, **_: run.spark.read.format('delta').load(str(run.root / table)),
-              _demo_config=object(), metadata_table_schema_registry=metadata_table_schema_registry,
-              metadata_table_physical_schema=lambda *_: 'configured-schema',
-              resolve_configured_lakehouse_table=lambda store, table, schema: (store, table, schema, str(run.root / table)))
-    for table in ns['_DEMO_DELETE_ORDER']:
-        path = str(run.root / table)
-        identity = run.DeltaTable.forPath(run.spark, path).detail().first()['id']
-        original_schema = run.spark.read.format('delta').load(path).schema
-        expected = ns['_demo_row_counts'](rows[table]) - ns['_demo_row_counts'](plan[table])
-        # An unrelated writer appends after our MERGE, before we read its metrics.
-        # The reset must find its own tagged commit, not the latest global table count/commit.
-        concurrent = dict(rows[table][-1], workspace_id='concurrent-workspace')
-        append_count = []
-        def interleaved(action):
-            retry_delta_metadata(action)
-            append_count.append(True)
-            run.spark.createDataFrame([concurrent], original_schema).write.format('delta').mode('append').save(path)
-        ns['retry_delta_metadata'] = interleaved
-        assert ns['_demo_delete_rows'](table, plan[table]) == len(plan[table])
-        assert ns['_demo_delete_rows'](table, plan[table]) == 0  # Retry after an uncertain acknowledgement.
-        assert len(append_count) == 1  # A no-op retry needs no commit or history metric.
-        expected.update(ns['_demo_row_counts']([concurrent]))
-        actual = [r.asDict(recursive=True) for r in run.spark.read.format('delta').load(path).collect()]
-        assert ns['_demo_row_counts'](actual) == expected
-        assert run.DeltaTable.forPath(run.spark, path).detail().first()['id'] == identity
-        assert run.spark.read.format('delta').load(path).schema == original_schema
 
 
 def test_day1_notebook_source_restoration_is_repeatable_and_content_verified(demo_delta):
@@ -132,7 +74,7 @@ def test_day1_notebook_source_restoration_is_repeatable_and_content_verified(dem
 def test_02a_real_transform_and_public_overwrite_preserve_source_content(demo_delta):
     ns = {'F': F, 'sources': {}}
     for key, table in [('orders', 'orders'), ('products', 'products'), ('history', 'order_history')]:
-        ns['sources'][key] = {'dataframe': read_lakehouse_csv(f'Demo/{table}.csv', inferSchema=True)}
+        ns['sources'][key] = {'dataframe': read_lakehouse_csv(f'demo/{table}.csv', inferSchema=True)}
     before = {key: frame['dataframe'].collect() for key, frame in ns['sources'].items()}
     notebook = nbformat.read(ROOT / 'templates/DemoData/02A_full_refresh_demo.ipynb', as_version=4)
     exec(next(c.source for c in notebook.cells if c.id == 'transform'), ns)
@@ -161,7 +103,7 @@ def test_02a_real_transform_and_public_overwrite_preserve_source_content(demo_de
 
 def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
     """Keep the business regression active in ordinary Spark CI without Delta jars."""
-    ns = {'F': F, 'sources': {key: {'dataframe': read_lakehouse_csv(f'Demo/{table}.csv', inferSchema=True)}
+    ns = {'F': F, 'sources': {key: {'dataframe': read_lakehouse_csv(f'demo/{table}.csv', inferSchema=True)}
         for key, table in [('orders', 'orders'), ('products', 'products'), ('history', 'order_history')]}}
     notebook = nbformat.read(ROOT / 'templates/DemoData/02A_full_refresh_demo.ipynb', as_version=4)
     exec(next(c.source for c in notebook.cells if c.id == 'transform'), ns)
@@ -175,7 +117,7 @@ def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
     assert sum(Decimal(str(r.total_order_net_amount)).quantize(Decimal('.01')) for r in customers) == Decimal('28539.15')
 
 
-def test_unmigrated_native_catalogue_schema_is_rejected_before_deletion(demo_delta):
+def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta):
     """The supported native-to-JSON migration belongs to metadata setup, before demo cleanup."""
     run, ns = demo_delta, _helpers()
     table = 'METADATA_DATA_CATALOGUE'
@@ -194,8 +136,8 @@ def test_unmigrated_native_catalogue_schema_is_rejected_before_deletion(demo_del
     ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: expected},
               metadata_table_physical_schema=lambda *_: 'engineering',
               read_lakehouse_table=lambda *a, **kw: run.spark.read.format('delta').load(path))
-    with pytest.raises(RuntimeError, match='Run the installed package metadata setup/migration'):
-        ns['_demo_metadata_rows'](schemas={})
+    with pytest.raises(RuntimeError, match='Run the installed package metadata setup'):
+        ns['_demo_metadata_counts']()
     assert delta.history(1).first()['version'] == version
     assert run.spark.read.format('delta').load(path).collect() == before
 
@@ -206,17 +148,43 @@ def test_additive_registry_column_uses_the_installed_package_schema(demo_delta):
     table = 'METADATA_DATA_CATALOGUE'
     current = metadata_table_schema_registry()[table]
     upgraded = metadata_table_schema_registry()[table].add('new_package_field', 'string')
-    record = {f.name: None if f.nullable else datetime(2026, 1, 1)
-              if f.dataType.simpleString() == 'timestamp' else 'demo' for f in current}
-    record.update(table_id='target', workspace_id='dev', _notebook_id='notebook')
-    frame = run.spark.createDataFrame([record], current)
+    frame = run.spark.createDataFrame([], current)
     ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: upgraded},
               metadata_table_physical_schema=lambda *_: 'engineering', read_lakehouse_table=lambda *a, **kw: frame)
     with pytest.raises(RuntimeError, match='new_package_field'):
-        ns['_demo_metadata_rows'](schemas={})
+        ns['_demo_metadata_counts']()
     # Represent the physical result of the package's additive migration.
     frame = frame.withColumn('new_package_field', F.lit('migrated'))
-    schemas = {}
-    rows = ns['_demo_metadata_rows'](schemas=schemas)
-    assert rows[table][0]['new_package_field'] == 'migrated'
-    assert schemas[table] == frame.schema
+    counts = ns['_demo_metadata_counts']()
+    assert counts == {table: 0}
+    ns['_demo_require_empty_metadata'](counts)
+
+
+def test_fresh_metadata_validation_never_rewrites_history_or_clears_contracts(demo_delta):
+    run, ns = demo_delta, _helpers()
+    registry = metadata_table_schema_registry()
+    paths = {table: str(run.root / table) for table in registry}
+    for table, schema in registry.items():
+        run.spark.createDataFrame([], schema).write.format('delta').save(paths[table])
+    ns.update(_demo_config=object(), metadata_table_schema_registry=metadata_table_schema_registry,
+              metadata_table_physical_schema=lambda *_: 'configured-schema',
+              read_lakehouse_table=lambda table, **_: run.spark.read.format('delta').load(paths[table]))
+    for _ in range(2):
+        counts = ns['_demo_metadata_counts']()
+        ns['_demo_require_empty_metadata'](counts)
+        assert counts == dict.fromkeys(registry, 0)
+    table = 'METADATA_DATA_CONTRACT'
+    schema = registry[table]
+    record = {f.name: None if f.nullable else datetime(2026, 1, 1)
+              if f.dataType.simpleString() == 'timestamp' else 1 if f.dataType.simpleString() in {'int', 'bigint'}
+              else 'demo' for f in schema}
+    record.update(contract_id='demo-contract', contract_version=1, table_id='demo-table',
+                  evidence_workspace_id='demo-workspace', contract_payload_json='{}', status='frozen')
+    run.spark.createDataFrame([record], schema).write.format('delta').mode('append').save(paths[table])
+    before = {name: run.DeltaTable.forPath(run.spark, path).history(1).first()['version'] for name, path in paths.items()}
+    preserved = run.spark.read.format('delta').load(paths[table]).collect()
+    with pytest.raises(RuntimeError, match='create a fresh dedicated demo Metadata Lakehouse'):
+        ns['_demo_require_empty_metadata'](ns['_demo_metadata_counts']())
+    assert run.spark.read.format('delta').load(paths[table]).collect() == preserved
+    assert {name: run.DeltaTable.forPath(run.spark, path).history(1).first()['version']
+            for name, path in paths.items()} == before

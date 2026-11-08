@@ -6,7 +6,7 @@ Run two independent paths to see how extraction scope and target duplicate handl
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) into Engineering Development.
 2. Keep `00_env_config.ipynb` beside it and attach the Fabric Environment from [Step 00B](00B-configure-environment-and-load-assets.md).
-3. Upload the demo CSVs and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) once to stage Day 1. Day 2 reads `Demo/inventory_day2.csv` from Bronze Lakehouse `Files/Demo`.
+3. Upload the demo CSVs and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) once to stage Day 1. Day 2 reads `demo/inventory_day2.csv` from Bronze Lakehouse `Files/demo`.
 4. Start with fresh Silver targets. Run Day 1, Day 2, and Day 3 in order; do not rerun 00C after advancing Bronze.
 
 ![The inventory demo CSV files uploaded to the Bronze Lakehouse](../assets/2b/File%20Upload.png)
@@ -182,7 +182,7 @@ Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows,
 
 A failed Path A publication must not advance its accepted incremental checkpoint. Retry or recover that exact publication before starting later work for the same target. Verified target markers and receipts distinguish a completed publication from an unverified attempt.
 
-Repeated Day 2 staging keeps Bronze unique. For a complete replay of the dedicated Ungoverned demo, run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package), wait for `RESET COMPLETE`, set both 02B and 02C back to `DEMO_DAY = 1`, and repeat the complete sequence. 00C resets targets and applicable metadata together. Never run it between days or against production assets.
+Repeated Day 2 staging keeps Bronze unique. For a complete lifecycle restart, stop current and earlier demo executions, configure a fresh dedicated Metadata Lakehouse through 00B, and then run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package). Wait for `RESET COMPLETE`, begin Step 1, and set both 02B and 02C back to `DEMO_DAY = 1`. Existing metadata history stays in the previous lakehouse. Never run 00C between days or against production assets.
 
 If counts differ, inspect the two finalized results, Read scopes, Write metrics, publication statuses, and persisted targets. Do not delete a checkpoint or overwrite a target merely to force the expected demonstration counts.
 

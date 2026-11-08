@@ -23,7 +23,7 @@ Import the three reusable notebook templates:
 | `00_env_config.ipynb` | Import into each workspace that runs FabricOps notebooks |
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering Development workspace |
-| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering Development workspace; keep the original demo notebook names for exact ID resolution by 00C |
+| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering Development workspace; keep the original demo notebook names for 00C live-job checks |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -31,7 +31,7 @@ After importing the notebooks, the two required workspaces should now look like 
 
 ![Governance workspace assets](../assets/00B/Governance_Assets.png)
 
-The Governance workspace contains the `metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
+The Governance workspace contains the dedicated `demo_metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
 
 ![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
 
@@ -66,7 +66,7 @@ If you are a member of several Fabric workspaces, the Environment picker may sho
 
 Use the same FabricOps wheel version across the workspace-specific Environments so the notebooks run against a consistent package version.
 
-For regression validation after a package change, replace the custom library with the wheel being validated, publish each Environment and start new notebook sessions. Confirm the installed version in `setup_notebook()` output. Keep the existing `00_env_config` mappings; 00C uses those mappings for both business and Metadata stores. Complete metadata setup below, then run [00C and its validation checklist](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) before rerunning the demos.
+For regression validation after a package change, replace the custom library with the wheel being validated, publish each Environment and start new notebook sessions. Confirm the installed version in `setup_notebook()` output. Use a fresh dedicated Metadata item for each complete lifecycle restart and update every demo `00_env_config` copy; 00C uses those mappings for both business and Metadata stores. Complete metadata setup below, then run [00C and its validation checklist](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) before rerunning the demos.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
@@ -74,7 +74,16 @@ For regression validation after a package change, replace the custom library wit
 
 ## Configure `00_env_config`
 
-In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Configure `ENGINEERING_WORKSPACES` using stable workspace IDs as keys and each workspace’s business stores as values. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` with Metadata only. Development and Production are example workspace roles; they do not control FabricOps identity or activation order. Keep all Metadata stores pointed at the same Governance Lakehouse.
+In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Configure `ENGINEERING_WORKSPACES` using stable workspace IDs as keys and each workspace’s business stores as values. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` with Metadata only. Development and Production are example workspace roles; they do not control FabricOps identity or activation order. Keep all demo Metadata stores pointed at the same dedicated `demo_metadata` Lakehouse. Set `GOVERNANCE_METADATA_LAKEHOUSE_ID` and `GOVERNANCE_METADATA_LAKEHOUSE_NAME` to that item. Never change unrelated production/project configuration for this walkthrough.
+
+For this walkthrough, **create the schema-enabled Lakehouse named `demo_metadata` yourself in Fabric**, then set these values in the demo `00_env_config`:
+
+```python
+GOVERNANCE_METADATA_LAKEHOUSE_ID = "<item-id-of-your-manually-created-demo-lakehouse>"
+GOVERNANCE_METADATA_LAKEHOUSE_NAME = "demo_metadata"
+```
+
+Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` only provisions or upgrades metadata tables inside the item you configured. All canonical tables must be empty before 00C starts the business reset.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
@@ -108,7 +117,7 @@ Use the current walkthrough store keys exactly as they appear in `00_env_config`
 
 | `FabricStore` key | Open this Fabric item | `kind` |
 | --- | --- | --- |
-| `Metadata` | Governance → `Metadata` | `lakehouse` |
+| `Metadata` | demo Governance → `demo_metadata` (dedicated item) | `lakehouse` |
 | `Bronze` | Engineering Development → `Bronze` | `lakehouse` |
 | `Silver` | Engineering Development → `Silver` | `lakehouse` |
 | `Gold` | Engineering Development → `Gold` | `warehouse` |
@@ -129,9 +138,9 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 ![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
 
-This initializes the central governance and engineering metadata schemas before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
+This initializes empty governance and engineering schemas in the dedicated demo lakehouse before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-`setup_metadata_tables()` initializes missing metadata and applies compatible schema evolution while preserving existing rows. Existing incremental and SCD targets keep their accepted Processing State; missing checkpoints are never inferred or silently recreated.
+`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use a fresh dedicated lakehouse: any pre-existing metadata rows will make 00C stop before changing business data. Run 00C before Step 1 creates Stewards and Agreements. On a complete restart, stop earlier demo/promoted copies, select a new dedicated Metadata item in every demo config, initialize it and start fresh notebook sessions.
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 
@@ -180,10 +189,12 @@ Upload the downloaded demo files to the Bronze Lakehouse and the demo notebooks 
 
 1. Open the **Engineering Development** workspace.
 2. Open the `bronze` Lakehouse created in 0A.
-3. Under **Files**, create a subfolder named `Demo`.
+3. Under **Files**, create a subfolder named `demo` (**lowercase; paths are case-sensitive**).
 4. Upload the **entire downloaded DemoData folder contents** into that folder.
 
-![Upload the packaged demo files into Bronze Files/Demo](../assets/00B/Demo_Files.png)
+![Upload the packaged demo files into Bronze Files/demo](../assets/00B/Demo_Files.png)
+
+The screenshots retain earlier item/folder labels. Use the dedicated Metadata item configured above and the exact lowercase folder `Files/demo`. The repository directory is still named `templates/DemoData`.
 
 At this point, stop. Do not create the managed source tables manually in 0B.
 

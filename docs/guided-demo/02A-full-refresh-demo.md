@@ -197,7 +197,7 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 - [ ] Repeat 02A before advancing days. Both complete targets must be overwritten without duplicate business keys, with valid `_row_hash` and audit fields where the target writer adds them. Bronze Orders/Products and Gold Order History must retain their source content.
 - [ ] Finalize the execution and inspect all three source and both target operations, Catalogue/profiles, publication receipts and Lineage using the [00C metadata checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata). A successful cell alone is insufficient.
 
-For a package regression, follow the [complete Day 1–3 sequence](00C-prepare-demo-data-with-fabricops-io.md#execute-the-engineering-regression): reset with 00C, then run 02A, 02B and 02C on Day 1, followed by 02B/02C on Days 2 and 3. To restart, use all of 00C and wait for `RESET COMPLETE`.
+For a package regression, follow the [complete Day 1–3 sequence](00C-prepare-demo-data-with-fabricops-io.md#execute-the-engineering-regression): reset with 00C, then run 02A, 02B and 02C on Day 1, followed by 02B/02C on Days 2 and 3. To restart the full lifecycle, configure a fresh dedicated Metadata Lakehouse through 00B, then run all of 00C and wait for `RESET COMPLETE` before Step 1.
 
 ### Metadata saved by FabricOps
 

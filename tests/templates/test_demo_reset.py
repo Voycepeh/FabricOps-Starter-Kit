@@ -1,256 +1,169 @@
-"""Exercise the actual notebook-local demo ownership and reset cells."""
+"""Exercise the demo's isolated, read-only metadata boundary and physical reset cells."""
 # ruff: noqa: D103
 import ast
-from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 
 import nbformat
 import pytest
 
-from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
+from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
 ROOT = Path(__file__).resolve().parents[2]
 NOTEBOOK = ROOT / 'templates/DemoData/00C_demo_setup.ipynb'
 CELLS = {cell.id: cell.source for cell in nbformat.read(NOTEBOOK, as_version=4).cells}
+METADATA_ID = '11111111-1111-4111-8111-111111111111'
 
 
 def _helpers():
-    """Load notebook logic without importing unavailable Fabric/Delta boundaries."""
+    """Load actual notebook logic, leaving only Fabric transport boundaries for tests to supply."""
     tree = ast.parse(CELLS['reset-private-helpers'])
     tree.body = [node for node in tree.body if not isinstance(node, (ast.Import, ast.ImportFrom))
                  or (isinstance(node, ast.Import) and node.names[0].name == 'json')
-                 or (isinstance(node, ast.ImportFrom) and node.module in {'collections', 'uuid', 'urllib.error'})]
-    namespace = dict(_demo_extra_notebook_ids=set(), _demo_listed_notebook_ids=set(), _demo_schemas={},
-                     _demo_table_ids={'source', 'target'}, _demo_notebook_ids={'notebook'},
-                     _demo_physical_workspaces={'physical'}, _demo_bindings=None, STOPPED_DEMO_RUN_IDS=[],
-                     context=SimpleNamespace(workspace_id='dev'))
+                 or (isinstance(node, ast.ImportFrom) and node.module in {'uuid', 'urllib.error'})]
+    namespace = dict(_demo_extra_notebook_ids=set(), _demo_listed_notebook_ids=set(),
+                     _demo_notebook_ids={'notebook'}, context=SimpleNamespace(workspace_id='dev'))
     exec(compile(tree, str(NOTEBOOK), 'exec'), namespace)
     return namespace
 
 
-def _history():
-    """Every disposable table has demo rows, unrelated rows, and identical IDs in another workspace."""
-    rows = {table: [] for table in CANONICAL_METADATA_TABLES}
-    rows['METADATA_PIPELINE_RUN'] = [dict(run_id='run', workspace_id='dev', pipeline_id='notebook',
-        execution_mode='ungoverned', completed_at='yesterday', profiling='[]', operations='[{"table_id":"source"},{"table_id":"target"}]')]
-    for table in _helpers()['_DEMO_DELETE_ORDER']:
-        if table == 'METADATA_PIPELINE_RUN':
-            continue
-        row = dict(workspace_id='dev', table_id='target', _notebook_id='notebook')
-        if table == 'METADATA_PROCESSING_STATE':
-            row = dict(workspace_id='dev', source_table_id='source', target_table_id='target',
-                       pipeline_id='notebook', run_id='run', record_id='receipt', publication_id='publication',
-                       record_type='publication_receipt', _notebook_id='notebook')
-        if table in {'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY'}:
-            row.update(profile_id='profile', profile_snapshot_id='snapshot')
-        if table == 'METADATA_GUARDRAIL_RESULTS':
-            row['run_id'] = 'run'
-        rows[table] = [row]
-    for table, records in rows.items():
-        if not records:
-            records.append(dict(shared='immutable-governance-record'))
-        else:
-            records.extend([{**records[0], 'workspace_id': 'other-workspace'},
-                            dict(workspace_id='dev', table_id='unrelated', _notebook_id='other',
-                                 **({'operations': '[]', 'profiling': '[]', 'run_id': 'other-run', 'pipeline_id': 'other'}
-                                    if table == 'METADATA_PIPELINE_RUN' else {}))])
-    return rows
+def _empty():
+    return dict.fromkeys(CANONICAL_METADATA_TABLES, 0)
 
 
-def _scope(ns, rows, **kwargs):
-    return ns['_demo_scope'](rows, 'dev', {'source', 'target'}, {'notebook'}, {'physical'}, **kwargs)
+def _preview_namespace():
+    ns = _helpers()
+    metadata = SimpleNamespace(kind='lakehouse', schema_enabled=True, workspace_id='governance', item_id=METADATA_ID)
+    stores = {key: SimpleNamespace(kind='warehouse' if key == 'Gold' else 'lakehouse', schema_enabled=True,
+              workspace_id='dev', item_id=key.lower()) for key in ('Bronze', 'Silver', 'Gold')}
+    stores['Metadata'] = metadata
+    config = SimpleNamespace(path_config=SimpleNamespace(paths={'dev': stores, 'governance': {'Metadata': metadata}}))
+    context = SimpleNamespace(workspace_id='dev', readiness_status='ready', paths=stores)
+    def request(method, path):
+        if path.endswith('/notebooks'):
+            return {'value': [{'id': str(index), 'displayName': name} for index, name in enumerate(ns['_DEMO_NAMES'])]}
+        return {'displayName': 'configured'}
+    ns.update(context=context, resolve_fabric_context=lambda: (config, 'dev', {}),
+              EXTRA_DEMO_NOTEBOOK_IDS=[], FabricNotebookClient=lambda: SimpleNamespace(request=request),
+              _demo_check_jobs=lambda: None, _demo_metadata_counts=_empty)
+    return ns
 
 
-def test_complete_inventory_and_repeat_reset_preserves_unrelated_records():
-    ns, rows = _helpers(), _history()
-    plan = _scope(ns, rows)
-    assert set(plan) == set(CANONICAL_METADATA_TABLES)
-    for table, selected in plan.items():
-        assert len(selected) == (1 if table in ns['_DEMO_DELETE_ORDER'] else 0)
-    retained = {table: [r for r in records if r not in plan[table]] for table, records in rows.items()}
-    assert not any(_scope(ns, retained).values())
-    assert sum(map(len, retained.values())) == sum(map(len, rows.values())) - 8
-    # An interrupted cleanup resumes independently of which earlier children are absent.
-    for removed_table in ns['_DEMO_DELETE_ORDER']:
-        partial = deepcopy(rows)
-        partial[removed_table] = [r for r in partial[removed_table] if r not in plan[removed_table]]
-        resumed = _scope(ns, partial)
-        assert not resumed[removed_table]
-        assert sum(map(len, resumed.values())) == 7
+def test_preview_is_read_only_and_checks_all_installed_metadata_tables():
+    ns, counts, reads = _helpers(), _empty(), []
+    registry = metadata_table_schema_registry()
+    def read(table, **kwargs):
+        reads.append((table, kwargs))
+        return SimpleNamespace(schema=registry[table], count=lambda: counts[table])
+    ns.update(_demo_config=object(), metadata_table_schema_registry=metadata_table_schema_registry,
+              metadata_table_physical_schema=lambda *_: 'configured-schema', read_lakehouse_table=read)
+    assert ns['_demo_metadata_counts']() == counts
+    ns['_demo_require_empty_metadata'](counts)
+    assert {t for t, _ in reads} == set(CANONICAL_METADATA_TABLES)
+    assert all(kw == {'store': 'Metadata', 'schema': 'configured-schema'} for _, kw in reads)
+    assert '_demo_delete_rows' not in ns and '_demo_scope' not in ns
 
 
-@pytest.mark.parametrize('kind', ['source_observation', 'incremental_checkpoint', 'drift_baseline',
-                                  'full_source_baseline', 'publication_receipt'])
-def test_every_processing_state_type_is_removed(kind):
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PROCESSING_STATE'][0]['record_type'] = kind
-    assert _scope(ns, rows)['METADATA_PROCESSING_STATE'][0]['record_type'] == kind
+@pytest.mark.parametrize('table', CANONICAL_METADATA_TABLES)
+def test_any_existing_metadata_blocks_the_fresh_lifecycle_without_deletion(table):
+    ns, counts = _helpers(), _empty()
+    counts[table] = 1
+    with pytest.raises(RuntimeError, match='create a fresh dedicated demo Metadata Lakehouse'):
+        ns['_demo_require_empty_metadata'](counts)
+    assert counts[table] == 1
 
 
-@pytest.mark.parametrize('table,row', [
-    ('METADATA_DATA_CONTRACT', dict(evidence_workspace_id='dev', table_id='source')),
-    ('METADATA_DATA_CONTRACT_ACTIVATION', dict(workspace_id='physical', table_id='target')),
-    ('METADATA_PIPELINE_REGISTRY', dict(execution_workspace_id='dev', pipeline_id='notebook')),
-    ('METADATA_PIPELINE_ACTIVATION', dict(execution_workspace_id='dev', pipeline_id='notebook')),
+def test_preview_uses_selected_metadata_and_rejects_business_store_alias():
+    ns = _preview_namespace()
+    ns['context'].paths['Bronze'] = ns['context'].paths['Metadata']
+    with pytest.raises(RuntimeError, match='separate from the business stores'):
+        exec(CELLS['reset-preview'], ns)
+
+
+def test_nonempty_selected_metadata_blocks_before_jobs_or_business_io():
+    ns, calls = _preview_namespace(), []
+    counts = _empty(); counts['METADATA_DATA_CONTRACT'] = 1
+    def unexpected():
+        calls.append('fabric notebook API')
+        raise AssertionError('No further preparation should start')
+    ns.update(_demo_metadata_counts=lambda: counts, FabricNotebookClient=unexpected)
+    with pytest.raises(RuntimeError, match='No business reset is permitted'):
+        exec(CELLS['reset-preview'], ns)
+    assert not calls and not ns['_demo_confirmed']
+
+
+@pytest.mark.parametrize('table,field,wrong_type', [
+    ('METADATA_DATA_CATALOGUE', 'load_strategy_parameters_json', 'struct<watermark_column:string>'),
+    ('METADATA_PIPELINE_RUN', 'operations', 'array<struct<table_id:string>>'),
+    ('METADATA_PROCESSING_STATE', 'row_count', 'string'),
 ])
-def test_governance_and_immutable_history_block_without_modification(table, row):
-    ns, rows = _helpers(), _history()
-    rows[table].append(row)
-    before = deepcopy(rows)
-    with pytest.raises(RuntimeError, match='history|preserved'):
-        _scope(ns, rows)
-    assert rows == before
+def test_schema_migration_must_precede_business_reset(table, field, wrong_type):
+    ns = _helpers(); expected = metadata_table_schema_registry()[table]
+    physical = [SimpleNamespace(name=f.name, dataType=f.dataType) for f in expected]
+    next(f for f in physical if f.name == field).dataType = SimpleNamespace(simpleString=lambda: wrong_type)
+    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: expected},
+              metadata_table_physical_schema=lambda *_: 'engineering',
+              read_lakehouse_table=lambda *a, **kw: SimpleNamespace(schema=physical, count=lambda: 0))
+    with pytest.raises(RuntimeError, match='missing columns or incompatible types'):
+        ns['_demo_metadata_counts']()
 
 
-@pytest.mark.parametrize('change,error', [
-    ({'pipeline_id': 'another-pipeline'}, 'ambiguous'),
-    ({'operations': '[{"table_id":"target"},{"table_id":"unrelated"}]'}, 'ambiguous'),
-    ({'operations': 'null'}, 'Invalid operations'),
-    ({'execution_mode': 'governed'}, 'Governed'),
-    ({'completed_at': None}, 'may still be active'),
-])
-def test_ambiguous_or_active_runs_block(change, error):
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PIPELINE_RUN'][0].update(change)
-    with pytest.raises(RuntimeError, match=error):
-        _scope(ns, rows)
+def test_missing_metadata_is_a_setup_error_without_business_changes():
+    ns = _helpers()
+    def missing(*args, **kwargs):
+        raise PermissionError('missing or inaccessible')
+    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {'missing': None},
+              metadata_table_physical_schema=lambda *_: 'configured', read_lakehouse_table=missing)
+    with pytest.raises(RuntimeError, match='run metadata setup in 00B'):
+        ns['_demo_metadata_counts']()
 
 
-def test_confirmed_terminated_incomplete_run_can_be_reset():
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PIPELINE_RUN'][0]['completed_at'] = None
-    assert len(_scope(ns, rows, stopped_runs={'run'})['METADATA_PIPELINE_RUN']) == 1
-
-
-@pytest.mark.parametrize('table,change', [
-    ('METADATA_PROCESSING_STATE', {'target_table_id': 'unrelated'}),
-    ('METADATA_PROCESSING_STATE', {'pipeline_id': 'unrelated'}),
-    ('METADATA_DATA_LINEAGE', {'_notebook_id': 'unrelated'}),
-    ('METADATA_DATA_CATALOGUE', {'_notebook_id': 'unrelated'}),
-    ('METADATA_DATA_PROFILED', {'_notebook_id': 'unrelated'}),
-    ('METADATA_DATA_ACCESS', {'_notebook_id': 'unrelated'}),
-])
-def test_shared_asset_ownership_blocks(table, change):
-    ns, rows = _helpers(), _history()
-    rows[table][0].update(change)
-    with pytest.raises(RuntimeError, match='unrelated|another|unknown'):
-        _scope(ns, rows)
-
-
-@pytest.mark.parametrize('child,fields', [
-    ('METADATA_DATA_PROFILED_FREQUENCY', {'profile_id': 'profile', 'profile_snapshot_id': 'snapshot'}),
-    ('METADATA_PROCESSING_STATE', {'publication_id': 'publication'}),
-    ('METADATA_GUARDRAIL_RESULTS', {'run_id': 'run'}),
-])
-def test_retained_child_cannot_reference_removed_demo_parent(child, fields):
-    ns, rows = _helpers(), _history()
-    rows[child].append(dict(workspace_id='dev', table_id='unrelated', **fields))
-    with pytest.raises(RuntimeError, match='links demo|references demo'):
-        _scope(ns, rows)
-
-
-def test_apply_requires_confirmation_and_propagates_partial_failure():
-    ns, rows = _helpers(), _history()
-    original = deepcopy(rows)
-    selected = _scope(ns, rows)
-    actions = []
-    def remove(table, selected_rows):
-        if table == 'METADATA_DATA_PROFILED':
-            raise OSError('injected storage failure')
-        actions.append(table)
-        rows[table] = [r for r in rows[table] if r not in selected_rows]
-        return len(selected_rows)
-    ns.update(_demo_before=deepcopy(rows), _demo_metadata_rows=lambda **_: deepcopy(rows),
-              _demo_selected=selected, _demo_check_jobs=lambda: None, _demo_delete_rows=remove,
-              _demo_remove_outputs=lambda: actions.append('outputs'), DEMO_EXECUTIONS_STOPPED=True,
-              RESET_CONFIRMATION='cancel')
+def test_apply_requires_confirmation_stopped_jobs_and_empty_metadata():
+    ns, actions = _helpers(), []
+    ns.update(RESET_CONFIRMATION='', DEMO_EXECUTIONS_STOPPED=True, _demo_check_jobs=lambda: None,
+              _demo_metadata_counts=_empty, _demo_remove_outputs=lambda: actions.append('outputs'))
     with pytest.raises(RuntimeError, match='cancelled'):
         exec(CELLS['reset-apply'], ns)
-    assert rows == original and not actions
-    ns['RESET_CONFIRMATION'] = 'RESET DEMO'
-    with pytest.raises(RuntimeError, match='incomplete while cleaning METADATA_DATA_PROFILED') as error:
+    ns.update(RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=False)
+    with pytest.raises(RuntimeError, match='Stop current and earlier'):
         exec(CELLS['reset-apply'], ns)
-    assert isinstance(error.value.__cause__, OSError)
-    assert not ns['_demo_confirmed']
-    assert actions == ['METADATA_GUARDRAIL_RESULTS', 'METADATA_PROCESSING_STATE', 'METADATA_DATA_PROFILED_FREQUENCY']
-    assert rows['METADATA_PIPELINE_RUN'] == original['METADATA_PIPELINE_RUN']
-    resumed = _scope(ns, rows)
-    assert not resumed['METADATA_PROCESSING_STATE'] and resumed['METADATA_PIPELINE_RUN']
-
-
-def test_apply_rechecks_concurrent_changes_and_stopped_executions():
-    ns, rows = _helpers(), _history()
-    ns.update(_demo_before=deepcopy(rows), _demo_selected=_scope(ns, deepcopy(rows)),
-              _demo_metadata_rows=lambda **_: deepcopy(rows),
-              _demo_check_jobs=lambda: None, RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=False)
-    with pytest.raises(RuntimeError, match='Stop all'):
+    counts = _empty(); counts['METADATA_DATA_CONTRACT_ACTIVATION'] = 1
+    ns.update(RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True, _demo_metadata_counts=lambda: counts)
+    with pytest.raises(RuntimeError, match='No business reset is permitted'):
         exec(CELLS['reset-apply'], ns)
-    ns['DEMO_EXECUTIONS_STOPPED'] = True
-    ns['RESET_CONFIRMATION'] = 'RESET DEMO'
-    rows['METADATA_DATA_PROFILED'][0]['row_count'] = 999
-    with pytest.raises(RuntimeError, match='Demo metadata changed since preview'):
+    assert not actions and not ns['_demo_confirmed']
+
+
+def test_repeated_apply_and_partial_failure_preserve_metadata_and_revoke_confirmation():
+    ns, actions = _helpers(), []
+    def failure():
+        actions.append('partial output removal')
+        raise OSError('permission failure')
+    ns.update(RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True, _demo_check_jobs=lambda: None,
+              _demo_metadata_counts=_empty, _demo_remove_outputs=failure)
+    with pytest.raises(RuntimeError, match='business reset incomplete'):
         exec(CELLS['reset-apply'], ns)
-    assert not ns['_demo_confirmed']
+    assert not ns['_demo_confirmed'] and ns['RESET_CONFIRMATION'] == ''
+    ns['_demo_remove_outputs'] = lambda: actions.append('outputs missing is OK')
+    for _ in range(2):
+        ns['RESET_CONFIRMATION'] = 'RESET DEMO'
+        exec(CELLS['reset-apply'], ns)
+        assert ns['_demo_confirmed'] and ns['RESET_CONFIRMATION'] == ''
+    assert actions == ['partial output removal', 'outputs missing is OK', 'outputs missing is OK']
 
 
-def test_missing_metadata_is_never_silently_skipped():
-    ns = _helpers()
-    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {'missing': None},
-              metadata_table_physical_schema=lambda *_: 'configured-engineering')
-    def missing(*args, **kwargs):
-        assert kwargs == {'store': 'Metadata', 'schema': 'configured-engineering'}
-        raise RuntimeError('missing table or access denied')
-    ns['read_lakehouse_table'] = missing
-    with pytest.raises(RuntimeError, match='Check the Metadata mapping'):
-        ns['_demo_metadata_rows']()
-
-
-def test_verification_requires_exact_attributed_deletion_counts(capsys):
-    ns, rows = _helpers(), _history()
-    selected = _scope(ns, rows)
-    remaining = {t: [r for r in records if r not in selected[t]] for t, records in rows.items()}
+def test_verification_requires_all_metadata_to_remain_empty(capsys):
+    ns, counts = _helpers(), _empty()
     ns.update(_demo_confirmed=True, _demo_day1={}, _demo_verify_outputs=lambda: None,
-              _demo_check_jobs=lambda: None, _demo_metadata_rows=lambda **_: remaining,
-              _demo_before=rows, _demo_selected=selected,
-              _demo_removed={t: len(records) for t, records in selected.items()}, _demo_table_ids={'source', 'target'},
-              _demo_notebook_ids={'notebook'}, _demo_physical_workspaces={'physical'}, _demo_bindings=None, STOPPED_DEMO_RUN_IDS=[],
-              context=SimpleNamespace(workspace_id='dev'))
-    ns['_demo_removed']['METADATA_DATA_PROFILED'] = 0
-    with pytest.raises(RuntimeError, match='deletion count differs'):
+              _demo_check_jobs=lambda: None, _demo_metadata_counts=lambda: counts)
+    counts['METADATA_DATA_STEWARD'] = 1
+    with pytest.raises(RuntimeError, match='No business reset is permitted'):
         exec(CELLS['reset-verify'], ns)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
-    ns['_demo_removed']['METADATA_DATA_PROFILED'] = 1
+    counts['METADATA_DATA_STEWARD'] = 0
     exec(CELLS['reset-verify'], ns)
     assert 'RESET COMPLETE' in capsys.readouterr().out
     assert not ns['_demo_confirmed']
-
-
-def test_notebook_validity_and_scope_stay_demo_local():
-    nbformat.validate(nbformat.read(NOTEBOOK, as_version=4))
-    for cell in nbformat.read(NOTEBOOK, as_version=4).cells:
-        if cell.cell_type == 'code':
-            tree = ast.parse(cell.source)
-            assert all(node.name.startswith('_demo_') for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
-    assert 'RESET COMPLETE' in CELLS['reset-verify']
-    assert "print('RESET COMPLETE')" not in CELLS['reset-apply']
-    assert 'METADATA_PIPELINE_RUN' == _helpers()['_DEMO_DELETE_ORDER'][-1]
-
-
-@pytest.mark.parametrize('table,payload_field', [('METADATA_PIPELINE_REGISTRY', 'operations_json'),
-                                              ('METADATA_PIPELINE_ACTIVATION', 'package_json')])
-def test_other_governed_pipeline_using_exact_demo_tables_blocks(table, payload_field):
-    ns, rows = _helpers(), _history()
-    rows[table].append(dict(execution_workspace_id='dev', pipeline_id='another-notebook',
-                           **{payload_field: '{"manifest":{"operations":[{"table_id":"source"}]}}'}))
-    with pytest.raises(RuntimeError, match='immutable'):
-        _scope(ns, rows)
-
-
-def test_changed_physical_bindings_are_not_treated_as_current_demo_history():
-    ns, rows = _helpers(), _history()
-    with pytest.raises(RuntimeError, match='different physical store mappings'):
-        _scope(ns, rows, bindings={'source': {'item_id': 'new-source'}, 'target': {'item_id': 'new-target'}})
 
 
 @pytest.mark.parametrize('status', ['NotStarted', 'InProgress', 'Unknown'])
@@ -314,117 +227,6 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     assert sum(q.startswith('DROP TABLE') for q in sql) == (5 if initially_present else 0)
 
 
-def test_guided_demo_includes_complete_reset_and_daily_regression_workflow():
-    page = (ROOT / 'docs/guided-demo/00C-prepare-demo-data-with-fabricops-io.md').read_text()
-    assert all(table in page for table in CANONICAL_METADATA_TABLES)
-    for phrase in ('RESET COMPLETE', 'RESET DEMO', 'DEMO_EXECUTIONS_STOPPED', 'STOPPED_DEMO_RUN_IDS',
-                   'EXTRA_DEMO_NOTEBOOK_IDS', 'DEMO_DAY = 1', 'DEMO_DAY = 2', 'DEMO_DAY = 3',
-                   'publication_id', 'profile_snapshot_id', 'dedicated demo environment'):
-        assert phrase in page
-    for name in ('00B-configure-environment-and-load-assets.md', '02A-full-refresh-demo.md',
-                 '02B-build-and-run-incremental-append-etl.md', '02C-build-and-run-scd-etl.md'):
-        assert '00C-prepare-demo-data-with-fabricops-io.md' in (ROOT / 'docs/guided-demo' / name).read_text()
-
-
-def test_retained_pipeline_profiling_demo_tables_is_an_ownership_conflict():
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PIPELINE_RUN'].append(dict(workspace_id='dev', pipeline_id='other', operations='[]',
-                                            run_id='other-profile-run', profiling='[{"table_id":"source"}]'))
-    with pytest.raises(RuntimeError, match='ambiguous'):
-        _scope(ns, rows)
-
-
-def test_unknown_processing_state_type_requires_ownership_review():
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PROCESSING_STATE'][0]['record_type'] = 'future-state'
-    with pytest.raises(RuntimeError, match='Unknown demo Processing State'):
-        _scope(ns, rows)
-
-
-def test_catalogue_writer_ownership_survives_later_demo_profiling():
-    ns, rows = _helpers(), _history()
-    rows['METADATA_DATA_CATALOGUE'][0].update(writer_notebook_id='other-writer', writer_workspace_id='dev')
-    with pytest.raises(RuntimeError, match='another writer owner'):
-        _scope(ns, rows)
-
-
-@pytest.mark.parametrize('table,field,wrong_type', [
-    ('METADATA_DATA_CATALOGUE', 'load_strategy_parameters_json', 'struct<watermark_column:string>'),
-    ('METADATA_PIPELINE_RUN', 'operations', 'array<struct<table_id:string>>'),
-    ('METADATA_PROCESSING_STATE', 'row_count', 'string'),
-])
-def test_schema_type_migration_is_required_before_reading_reset_rows(table, field, wrong_type):
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    ns = _helpers()
-    expected = metadata_table_schema_registry()[table]
-    physical = [SimpleNamespace(name=f.name, dataType=f.dataType) for f in expected]
-    next(f for f in physical if f.name == field).dataType = SimpleNamespace(simpleString=lambda: wrong_type)
-    reads = []
-    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: expected},
-              metadata_table_physical_schema=lambda *_: 'engineering',
-              read_lakehouse_table=lambda *a, **kw: SimpleNamespace(schema=physical, collect=lambda: reads.append('rows')))
-    with pytest.raises(RuntimeError, match='Run the installed package metadata setup/migration'):
-        ns['_demo_metadata_rows'](schemas={})
-    assert not reads
-
-
-def test_schema_changes_since_preview_block_before_mutation():
-    ns, rows, actions = _helpers(), _history(), []
-    def read(schemas):
-        schemas['changed'] = 'new-physical-schema'
-        return rows
-    ns.update(_demo_before=deepcopy(rows), _demo_selected=_scope(ns, rows),
-              _demo_metadata_rows=read, _demo_check_jobs=lambda: None,
-              RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True,
-              _demo_delete_rows=lambda *a: actions.append('delete'))
-    with pytest.raises(RuntimeError, match='schemas changed since preview'):
-        exec(CELLS['reset-apply'], ns)
-    assert not actions and not ns['_demo_confirmed']
-
-
-def test_unrelated_writes_before_confirmation_and_after_deletion_are_allowed(capsys):
-    ns, rows = _helpers(), _history()
-    before = deepcopy(rows)
-    plan = _scope(ns, before)
-    # Independent workspace traffic between preview and confirmation.
-    rows['METADATA_PIPELINE_RUN'].append(dict(workspace_id='another-workspace', pipeline_id='other',
-                                            run_id='new-run', operations='[]', profiling='[]'))
-    rows['METADATA_DATA_CATALOGUE'][-1]['last_profiled_at'] = 'updated by its owner'
-    def remove(table, selected):
-        rows[table] = [r for r in rows[table] if r not in selected]
-        return len(selected)
-    ns.update(_demo_before=before, _demo_selected=plan, _demo_metadata_rows=lambda **_: deepcopy(rows),
-              _demo_check_jobs=lambda: None, _demo_delete_rows=remove, _demo_remove_outputs=lambda: None,
-              RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True,
-              _demo_day1={}, _demo_verify_outputs=lambda: None)
-    exec(CELLS['reset-apply'], ns)
-    # More independent traffic after our cleanup; this is not a reset failure.
-    rows['METADATA_DATA_STEWARD'].append({'shared': 'newly registered steward'})
-    rows['METADATA_DATA_PROFILED'][-1]['row_count'] = 42
-    exec(CELLS['reset-verify'], ns)
-    assert 'RESET COMPLETE' in capsys.readouterr().out
-    assert rows['METADATA_PIPELINE_RUN'][-1]['run_id'] == 'new-run'
-    assert rows['METADATA_DATA_CATALOGUE'][-1]['last_profiled_at'] == 'updated by its owner'
-    assert rows['METADATA_DATA_PROFILED'][-1]['row_count'] == 42
-    assert ns['_demo_removed'] == {t: len(records) for t, records in plan.items()}
-
-
-@pytest.mark.parametrize('table,row', [
-    ('METADATA_PIPELINE_RUN', dict(workspace_id='dev', pipeline_id='notebook', run_id='new-demo-run',
-         operations='[]', profiling='[]', execution_mode='ungoverned', completed_at='today')),
-    ('METADATA_DATA_CONTRACT', dict(evidence_workspace_id='dev', table_id='source')),
-])
-def test_new_demo_activity_and_governance_conflicts_still_block_confirmation(table, row):
-    ns, rows = _helpers(), _history()
-    before = deepcopy(rows)
-    ns.update(_demo_before=before, _demo_selected=_scope(ns, before), _demo_metadata_rows=lambda **_: deepcopy(rows),
-              _demo_check_jobs=lambda: None, RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True)
-    rows[table].append(row)
-    with pytest.raises(RuntimeError, match='changed since preview|Contract history'):
-        exec(CELLS['reset-apply'], ns)
-    assert not ns['_demo_confirmed']
-
-
 def test_verified_deleted_retired_id_is_not_queried_for_live_jobs():
     import io
     from urllib.error import HTTPError
@@ -470,10 +272,42 @@ def test_retired_notebook_that_still_exists_must_pass_live_job_checks():
         ns['_demo_check_jobs']()
 
 
-def test_deleted_retired_id_does_not_bypass_incomplete_run_confirmation():
-    ns, rows = _helpers(), _history()
-    rows['METADATA_PIPELINE_RUN'][0].update(pipeline_id='retired', completed_at=None)
-    args = (rows, 'dev', {'source', 'target'}, {'notebook', 'retired'}, {'physical'})
-    with pytest.raises(RuntimeError, match='may still be active'):
-        ns['_demo_scope'](*args)
-    assert ns['_demo_scope'](*args, stopped_runs={'run'})['METADATA_PIPELINE_RUN']
+
+def test_notebook_is_valid_private_and_has_no_metadata_deletion_path():
+    notebook = nbformat.read(NOTEBOOK, as_version=4); nbformat.validate(notebook)
+    for cell in notebook.cells:
+        if cell.cell_type == 'code':
+            tree = ast.parse(cell.source); compile(tree, str(NOTEBOOK), 'exec')
+            assert all(node.name.startswith('_demo_') for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+    assert 'whenMatchedDelete' not in CELLS['reset-private-helpers']
+    assert 'TRUNCATE' not in CELLS['reset-private-helpers']
+    assert "print('RESET COMPLETE')" in CELLS['reset-verify']
+
+
+def test_demo_file_paths_are_lowercase_and_repository_asset_paths_stay_valid():
+    for path in (ROOT / 'templates/DemoData').glob('*.ipynb'):
+        notebook = nbformat.read(path, as_version=4)
+        assert 'Demo/' not in path.read_text()
+        for cell in notebook.cells:
+            if cell.cell_type == 'code':
+                compile(cell.source, str(path), 'exec')
+    ns = _helpers()
+    assert all(file.startswith('demo/') for file, count in ns['_DEMO_SOURCES'].values())
+    for path in [ROOT / 'docs/guided-demo.md', *(ROOT / 'docs/guided-demo').glob('*.md')]:
+        assert 'Files/Demo' not in path.read_text()
+        assert 'subfolder named `Demo`' not in path.read_text()
+
+
+def test_guided_demo_documents_isolated_metadata_and_the_full_restart():
+    page = (ROOT / 'docs/guided-demo/00C-prepare-demo-data-with-fabricops-io.md').read_text()
+    assert all(table in page for table in CANONICAL_METADATA_TABLES)
+    for phrase in ('dedicated Metadata Lakehouse', 'Metadata item selected by `00_env_config`', 'removed 0; remaining 0',
+                   'previous lakehouse', 'before Step 1', 'never deletes', 'Files/demo'):
+        assert phrase in page
+    setup = (ROOT / 'docs/guided-demo/00A-prepare-fabric-artifacts.md').read_text()
+    config = (ROOT / 'docs/guided-demo/00B-configure-environment-and-load-assets.md').read_text()
+    assert 'Lakehouse named **demo_metadata**' in setup
+    assert 'GOVERNANCE_METADATA_LAKEHOUSE_NAME = "demo_metadata"' in config
+    assert 'create' in config and 'yourself in Fabric' in config
+    assert 'INITIALIZE_METADATA = True' in config
+    assert 'Step 1' in config and 'fresh' in config

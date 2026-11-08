@@ -6,7 +6,7 @@
 2. Keep `00_env_config.ipynb` beside it and attach the same Fabric Environment used in Step 00B.
 3. Make sure you have already uploaded the demo files required for this demo in the previous step [Step 00B](00B-configure-environment-and-load-assets.md).
 
-4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first for Day 1. For Days 2 and 3, the notebook reads `Demo/products_day2.csv` and `Demo/products_day3.csv` directly from Bronze Lakehouse `Files/Demo`. There is no `scd_product_master` subfolder.
+4. Run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) first for Day 1. For Days 2 and 3, the notebook reads `demo/products_day2.csv` and `demo/products_day3.csv` directly from Bronze Lakehouse `Files/demo`. There is no `scd_product_master` subfolder.
 5. Use a fresh demo state and run Day 1, then Day 2, then Day 3.
 
 ![File upload](../assets/2c/File%20Upload.png)
@@ -214,6 +214,6 @@ The Read block displays the rows returned by the source Read. Both SCD Write pre
 
 ### Repeat the demo safely
 
-Run Day 1, Day 2 and Day 3 in order. Do not restart Day 1 against targets containing later-day SCD history. Repeated Writes for the same day must preserve current rows and avoid duplicate versions; inspect the persisted target and publication receipts if those invariants fail. Keep accepted Processing State and its corresponding business targets together. For a complete replay in the dedicated Ungoverned demo environment, run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) and wait for `RESET COMPLETE`. Set both 02B and 02C to `DEMO_DAY = 1` and repeat the complete sequence. Shared Governance/deployment history is preserved; ownership conflicts block reset. Never delete the SCD targets or checkpoints separately.
+Run Day 1, Day 2 and Day 3 in order. Do not restart Day 1 against targets containing later-day SCD history. Repeated Writes for the same day must preserve current rows and avoid duplicate versions; inspect the persisted target and publication receipts if those invariants fail. Keep accepted Processing State and its corresponding business targets together. For a complete replay, stop current/earlier demo executions and configure a fresh dedicated Metadata Lakehouse through 00B before running [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) and wait for `RESET COMPLETE`. Begin Step 1, set both 02B and 02C to `DEMO_DAY = 1`, and repeat the complete sequence. Existing Governance/deployment history stays in the previous Metadata Lakehouse. A used Metadata item blocks 00C; select and configure a fresh dedicated item first. Never delete the SCD targets or checkpoints separately.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
