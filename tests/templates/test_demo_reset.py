@@ -20,8 +20,11 @@ def _helpers():
     tree = ast.parse(CELLS['reset-private-helpers'])
     tree.body = [node for node in tree.body if not isinstance(node, (ast.Import, ast.ImportFrom))
                  or (isinstance(node, ast.Import) and node.names[0].name == 'json')
-                 or (isinstance(node, ast.ImportFrom) and node.module == 'collections')]
-    namespace = {}
+                 or (isinstance(node, ast.ImportFrom) and node.module in {'collections', 'uuid', 'urllib.error'})]
+    namespace = dict(_demo_extra_notebook_ids=set(), _demo_listed_notebook_ids=set(), _demo_schemas={},
+                     _demo_table_ids={'source', 'target'}, _demo_notebook_ids={'notebook'},
+                     _demo_physical_workspaces={'physical'}, _demo_bindings=None, STOPPED_DEMO_RUN_IDS=[],
+                     context=SimpleNamespace(workspace_id='dev'))
     exec(compile(tree, str(NOTEBOOK), 'exec'), namespace)
     return namespace
 
@@ -157,7 +160,8 @@ def test_apply_requires_confirmation_and_propagates_partial_failure():
             raise OSError('injected storage failure')
         actions.append(table)
         rows[table] = [r for r in rows[table] if r not in selected_rows]
-    ns.update(_demo_before=deepcopy(rows), _demo_metadata_rows=lambda: deepcopy(rows),
+        return len(selected_rows)
+    ns.update(_demo_before=deepcopy(rows), _demo_metadata_rows=lambda **_: deepcopy(rows),
               _demo_selected=selected, _demo_check_jobs=lambda: None, _demo_delete_rows=remove,
               _demo_remove_outputs=lambda: actions.append('outputs'), DEMO_EXECUTIONS_STOPPED=True,
               RESET_CONFIRMATION='cancel')
@@ -177,14 +181,15 @@ def test_apply_requires_confirmation_and_propagates_partial_failure():
 
 def test_apply_rechecks_concurrent_changes_and_stopped_executions():
     ns, rows = _helpers(), _history()
-    ns.update(_demo_before=deepcopy(rows), _demo_metadata_rows=lambda: deepcopy(rows),
+    ns.update(_demo_before=deepcopy(rows), _demo_selected=_scope(ns, deepcopy(rows)),
+              _demo_metadata_rows=lambda **_: deepcopy(rows),
               _demo_check_jobs=lambda: None, RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=False)
     with pytest.raises(RuntimeError, match='Stop all'):
         exec(CELLS['reset-apply'], ns)
     ns['DEMO_EXECUTIONS_STOPPED'] = True
     ns['RESET_CONFIRMATION'] = 'RESET DEMO'
-    rows['METADATA_DATA_STEWARD'].append({'shared': 'new'})
-    with pytest.raises(RuntimeError, match='changed since preview'):
+    rows['METADATA_DATA_PROFILED'][0]['row_count'] = 999
+    with pytest.raises(RuntimeError, match='Demo metadata changed since preview'):
         exec(CELLS['reset-apply'], ns)
     assert not ns['_demo_confirmed']
 
@@ -201,20 +206,21 @@ def test_missing_metadata_is_never_silently_skipped():
         ns['_demo_metadata_rows']()
 
 
-def test_verification_requires_exact_metadata_preservation(capsys):
+def test_verification_requires_exact_attributed_deletion_counts(capsys):
     ns, rows = _helpers(), _history()
     selected = _scope(ns, rows)
     remaining = {t: [r for r in records if r not in selected[t]] for t, records in rows.items()}
     ns.update(_demo_confirmed=True, _demo_day1={}, _demo_verify_outputs=lambda: None,
-              _demo_check_jobs=lambda: None, _demo_metadata_rows=lambda: remaining,
-              _demo_before=rows, _demo_selected=selected, _demo_table_ids={'source', 'target'},
+              _demo_check_jobs=lambda: None, _demo_metadata_rows=lambda **_: remaining,
+              _demo_before=rows, _demo_selected=selected,
+              _demo_removed={t: len(records) for t, records in selected.items()}, _demo_table_ids={'source', 'target'},
               _demo_notebook_ids={'notebook'}, _demo_physical_workspaces={'physical'}, _demo_bindings=None, STOPPED_DEMO_RUN_IDS=[],
               context=SimpleNamespace(workspace_id='dev'))
-    remaining['METADATA_DATA_STEWARD'].clear()
-    with pytest.raises(RuntimeError, match='changed unexpectedly'):
+    ns['_demo_removed']['METADATA_DATA_PROFILED'] = 0
+    with pytest.raises(RuntimeError, match='deletion count differs'):
         exec(CELLS['reset-verify'], ns)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
-    remaining['METADATA_DATA_STEWARD'] = rows['METADATA_DATA_STEWARD']
+    ns['_demo_removed']['METADATA_DATA_PROFILED'] = 1
     exec(CELLS['reset-verify'], ns)
     assert 'RESET COMPLETE' in capsys.readouterr().out
     assert not ns['_demo_confirmed']
@@ -340,3 +346,134 @@ def test_catalogue_writer_ownership_survives_later_demo_profiling():
     rows['METADATA_DATA_CATALOGUE'][0].update(writer_notebook_id='other-writer', writer_workspace_id='dev')
     with pytest.raises(RuntimeError, match='another writer owner'):
         _scope(ns, rows)
+
+
+@pytest.mark.parametrize('table,field,wrong_type', [
+    ('METADATA_DATA_CATALOGUE', 'load_strategy_parameters_json', 'struct<watermark_column:string>'),
+    ('METADATA_PIPELINE_RUN', 'operations', 'array<struct<table_id:string>>'),
+    ('METADATA_PROCESSING_STATE', 'row_count', 'string'),
+])
+def test_schema_type_migration_is_required_before_reading_reset_rows(table, field, wrong_type):
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    ns = _helpers()
+    expected = metadata_table_schema_registry()[table]
+    physical = [SimpleNamespace(name=f.name, dataType=f.dataType) for f in expected]
+    next(f for f in physical if f.name == field).dataType = SimpleNamespace(simpleString=lambda: wrong_type)
+    reads = []
+    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: expected},
+              metadata_table_physical_schema=lambda *_: 'engineering',
+              read_lakehouse_table=lambda *a, **kw: SimpleNamespace(schema=physical, collect=lambda: reads.append('rows')))
+    with pytest.raises(RuntimeError, match='Run the installed package metadata setup/migration'):
+        ns['_demo_metadata_rows'](schemas={})
+    assert not reads
+
+
+def test_schema_changes_since_preview_block_before_mutation():
+    ns, rows, actions = _helpers(), _history(), []
+    def read(schemas):
+        schemas['changed'] = 'new-physical-schema'
+        return rows
+    ns.update(_demo_before=deepcopy(rows), _demo_selected=_scope(ns, rows),
+              _demo_metadata_rows=read, _demo_check_jobs=lambda: None,
+              RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True,
+              _demo_delete_rows=lambda *a: actions.append('delete'))
+    with pytest.raises(RuntimeError, match='schemas changed since preview'):
+        exec(CELLS['reset-apply'], ns)
+    assert not actions and not ns['_demo_confirmed']
+
+
+def test_unrelated_writes_before_confirmation_and_after_deletion_are_allowed(capsys):
+    ns, rows = _helpers(), _history()
+    before = deepcopy(rows)
+    plan = _scope(ns, before)
+    # Independent workspace traffic between preview and confirmation.
+    rows['METADATA_PIPELINE_RUN'].append(dict(workspace_id='another-workspace', pipeline_id='other',
+                                            run_id='new-run', operations='[]', profiling='[]'))
+    rows['METADATA_DATA_CATALOGUE'][-1]['last_profiled_at'] = 'updated by its owner'
+    def remove(table, selected):
+        rows[table] = [r for r in rows[table] if r not in selected]
+        return len(selected)
+    ns.update(_demo_before=before, _demo_selected=plan, _demo_metadata_rows=lambda **_: deepcopy(rows),
+              _demo_check_jobs=lambda: None, _demo_delete_rows=remove, _demo_remove_outputs=lambda: None,
+              RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True,
+              _demo_day1={}, _demo_verify_outputs=lambda: None)
+    exec(CELLS['reset-apply'], ns)
+    # More independent traffic after our cleanup; this is not a reset failure.
+    rows['METADATA_DATA_STEWARD'].append({'shared': 'newly registered steward'})
+    rows['METADATA_DATA_PROFILED'][-1]['row_count'] = 42
+    exec(CELLS['reset-verify'], ns)
+    assert 'RESET COMPLETE' in capsys.readouterr().out
+    assert rows['METADATA_PIPELINE_RUN'][-1]['run_id'] == 'new-run'
+    assert rows['METADATA_DATA_CATALOGUE'][-1]['last_profiled_at'] == 'updated by its owner'
+    assert rows['METADATA_DATA_PROFILED'][-1]['row_count'] == 42
+    assert ns['_demo_removed'] == {t: len(records) for t, records in plan.items()}
+
+
+@pytest.mark.parametrize('table,row', [
+    ('METADATA_PIPELINE_RUN', dict(workspace_id='dev', pipeline_id='notebook', run_id='new-demo-run',
+         operations='[]', profiling='[]', execution_mode='ungoverned', completed_at='today')),
+    ('METADATA_DATA_CONTRACT', dict(evidence_workspace_id='dev', table_id='source')),
+])
+def test_new_demo_activity_and_governance_conflicts_still_block_confirmation(table, row):
+    ns, rows = _helpers(), _history()
+    before = deepcopy(rows)
+    ns.update(_demo_before=before, _demo_selected=_scope(ns, before), _demo_metadata_rows=lambda **_: deepcopy(rows),
+              _demo_check_jobs=lambda: None, RESET_CONFIRMATION='RESET DEMO', DEMO_EXECUTIONS_STOPPED=True)
+    rows[table].append(row)
+    with pytest.raises(RuntimeError, match='changed since preview|Contract history'):
+        exec(CELLS['reset-apply'], ns)
+    assert not ns['_demo_confirmed']
+
+
+def test_verified_deleted_retired_id_is_not_queried_for_live_jobs():
+    import io
+    from urllib.error import HTTPError
+    ns, calls = _helpers(), []
+    def request(method, path):
+        calls.append(path)
+        if path.endswith('/retired'):
+            raise HTTPError(path, 404, 'Not Found', {}, io.BytesIO(b'{"errorCode":"ItemNotFound"}'))
+        return {'value': [{'status': 'Completed'}]}
+    ns.update(_demo_notebook_ids={'notebook', 'retired'}, _demo_extra_notebook_ids={'retired'},
+              _demo_listed_notebook_ids={'notebook'}, _demo_client=SimpleNamespace(request=request))
+    ns['_demo_check_jobs']()
+    assert '/workspaces/dev/items/notebook/jobs/instances' in calls
+    assert '/workspaces/dev/items/retired' in calls
+    assert '/workspaces/dev/items/retired/jobs/instances' not in calls
+
+
+@pytest.mark.parametrize('status,payload', [
+    (403, b'{"errorCode":"InsufficientPrivileges"}'),
+    (500, b'{"errorCode":"InternalError"}'),
+    (404, b'{"errorCode":"UnknownEndpoint"}'),
+    (404, b'not-json'),
+])
+def test_retired_id_permissions_and_unconfirmed_absence_fail_closed(status, payload):
+    import io
+    from urllib.error import HTTPError
+    ns = _helpers()
+    def request(method, path):
+        raise HTTPError(path, status, 'unavailable', {}, io.BytesIO(payload))
+    ns.update(_demo_notebook_ids={'retired'}, _demo_extra_notebook_ids={'retired'},
+              _demo_client=SimpleNamespace(request=request))
+    with pytest.raises(RuntimeError, match='Check workspace/item permissions and Fabric availability'):
+        ns['_demo_check_jobs']()
+
+
+def test_retired_notebook_that_still_exists_must_pass_live_job_checks():
+    ns = _helpers()
+    def request(method, path):
+        return {'id': 'retired'} if not path.endswith('/jobs/instances') else {'value': [{'status': 'InProgress'}]}
+    ns.update(_demo_notebook_ids={'retired'}, _demo_extra_notebook_ids={'retired'},
+              _demo_client=SimpleNamespace(request=request))
+    with pytest.raises(RuntimeError, match='non-terminal'):
+        ns['_demo_check_jobs']()
+
+
+def test_deleted_retired_id_does_not_bypass_incomplete_run_confirmation():
+    ns, rows = _helpers(), _history()
+    rows['METADATA_PIPELINE_RUN'][0].update(pipeline_id='retired', completed_at=None)
+    args = (rows, 'dev', {'source', 'target'}, {'notebook', 'retired'}, {'physical'})
+    with pytest.raises(RuntimeError, match='may still be active'):
+        ns['_demo_scope'](*args)
+    assert ns['_demo_scope'](*args, stopped_runs={'run'})['METADATA_PIPELINE_RUN']
