@@ -159,6 +159,13 @@ Set `DEMO_DAY = 3` and run from the top. The preparation cell makes no source ch
 
 Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows, but they get there differently: Path A processes 8 + 4 + 0 rows, while Path B processes 8 + 12 + 12 rows and filters already-seen hashes at Write time.
 
+### Content and replay checklist
+
+- [ ] Day 1 contains M001–M008; Day 2 adds M009–M012. Day 3 retains the same 12 unique `movement_id` values.
+- [ ] Compare every business column in each persisted Silver target with the transformed Bronze snapshot; both targets must agree. `_row_hash` must be non-null, 64 characters and unique for these fixtures. Changing only FabricOps audit fields must not change the business hash.
+- [ ] Rerun the current day: no new accepted incremental rows and no new Append New Only hashes; both target totals stay 8 on Day 1 or 12 on Days 2–3. Finalize both paths and inspect their separate Run operations and target-specific receipts/checkpoints.
+- [ ] Follow the [complete metadata and package validation checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata); a failed publication must not advance accepted progress.
+
 ### Metadata saved by FabricOps
 
 | Table | Purpose in this demo |
@@ -175,7 +182,7 @@ Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows,
 
 A failed Path A publication must not advance its accepted incremental checkpoint. Retry or recover that exact publication before starting later work for the same target. Verified target markers and receipts distinguish a completed publication from an unverified attempt.
 
-Repeated Day 2 staging keeps Bronze unique, but this does not authorize resetting target or Processing State history. For an independent replay, use a fresh demo environment or separate table identities and approved Contracts. Keep each target, its physical markers, and its scoped `METADATA_PROCESSING_STATE` history together.
+Repeated Day 2 staging keeps Bronze unique. For a complete replay of the dedicated Ungoverned demo, run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package), wait for `RESET COMPLETE`, set both 02B and 02C back to `DEMO_DAY = 1`, and repeat the complete sequence. 00C resets targets and applicable metadata together. Never run it between days or against production assets.
 
 If counts differ, inspect the two finalized results, Read scopes, Write metrics, publication statuses, and persisted targets. Do not delete a checkpoint or overwrite a target merely to force the expected demonstration counts.
 

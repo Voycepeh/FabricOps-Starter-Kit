@@ -190,6 +190,15 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 | Silver Lakehouse | `demo.curated_orders` | Detailed order-level result, fully replaced by WRITE 1. |
 | Gold Warehouse | `demo.customer_summary` | Customer-level result, fully replaced by WRITE 2. |
 
+### Acceptance checklist
+
+- [ ] Read the persisted Silver `demo.curated_orders` and Gold `demo.customer_summary`, using the optional public read cells. Expect 120 unique orders and 30 unique customers.
+- [ ] Verify each `order_net_amount = round(quantity * unit_price * (1 - discount), 2)`, the product lookup, and the six historical orders per fixture customer. The total order net amount is **28,539.15**; customer `order_count` sums to 120 and customer totals sum to the same amount.
+- [ ] Repeat 02A before advancing days. Both complete targets must be overwritten without duplicate business keys, with valid `_row_hash` and audit fields where the target writer adds them. Bronze Orders/Products and Gold Order History must retain their source content.
+- [ ] Finalize the execution and inspect all three source and both target operations, Catalogue/profiles, publication receipts and Lineage using the [00C metadata checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata). A successful cell alone is insufficient.
+
+For a package regression, follow the [complete Day 1–3 sequence](00C-prepare-demo-data-with-fabricops-io.md#execute-the-engineering-regression): reset with 00C, then run 02A, 02B and 02C on Day 1, followed by 02B/02C on Days 2 and 3. To restart, use all of 00C and wait for `RESET COMPLETE`.
+
 ### Metadata saved by FabricOps
 
 ![FabricOps metadata captured for the Full Refresh pipeline](../assets/2a/Metadat_Captured.png)
@@ -198,7 +207,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
 | Metadata table | What this run records |
 | --- | --- |
-| `METADATA_PIPELINE_REGISTRY` | Immutable per-workspace promotion versions for the explicit Pipeline ID, including the active Governed notebook snapshot. It is not an automatic registration or UUID-recovery mechanism; Dry Run does not write Registry rows. |
+| `METADATA_PIPELINE_REGISTRY` | No rows from this Ungoverned demo. The separate promotion workflow retains immutable per-workspace versions and Governed notebook snapshots; neither Ungoverned nor Dry Run automatically registers a Pipeline. |
 | `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets, plus applicable target processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets when profiling completes. |

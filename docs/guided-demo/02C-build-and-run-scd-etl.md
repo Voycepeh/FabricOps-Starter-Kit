@@ -180,7 +180,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 
 | Metadata table | What this demo records |
 | --- | --- |
-| `METADATA_PIPELINE_REGISTRY` | Immutable per-workspace promotion versions for the explicit Pipeline ID, including the active Governed notebook snapshot. It is not an automatic registration or UUID-recovery mechanism; Dry Run does not write Registry rows. |
+| `METADATA_PIPELINE_REGISTRY` | No rows from this Ungoverned demo. The separate promotion workflow retains immutable per-workspace versions and Governed notebook snapshots; neither Ungoverned nor Dry Run automatically registers a Pipeline. |
 | `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the Bronze source and both Silver targets, plus applicable target processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target when profiling completes. |
@@ -200,12 +200,20 @@ Run the `DEMO_DAY` cell and the **Prepare the Bronze snapshot** cell before Read
 | 2 | 44.90 | Accessories | 8 | 9 |
 | 3 | 44.90 | Travel Accessories | 8 | 10 |
 
-Use a fresh permitted **Governed** plan for governed publication. Dry Run keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. Governed publication requires approved activations and remains blocked pending trusted deployment verification. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
+For this engineering regression, use a fresh **Ungoverned** execution each day. Use a fresh permitted **Governed** plan only for the separate governed workflow. Dry Run keeps Silver and operational metadata unchanged; the explicit Bronze preparation is outside that plan. Governed publication requires approved activations and remains blocked pending trusted deployment verification. Rerun each day in the same interactive session and repeat its Write: SCD2 must retain eight current products and must not add another version for unchanged business values. A new scheduled activity must produce the same results.
 
 The Read block displays the rows returned by the source Read. Both SCD Write previews use `display(write_result["dataframe"].limit(10))` (through the notebook's `writes` dictionary). They show the final prepared processing input with `_row_hash` and audit columns; SCD2 also includes `_effective_from`, `_effective_to` and `_is_current`. This is the input to the merge, rather than the reconstructed destination or full version history. Dry Run shows the input prepared at that stage without publication. No destination read is required for the inline preview. `Not available` SCD metrics do not establish that a merge failed. For SCD2, confirm that superseded P002/P001 versions have `_is_current=False` and populated `_effective_to`, that each product has one current version, and that no `(product_id, _effective_from)` pair is duplicated. Never replace these keyed merges with overwrite to hide a mismatch. For existing target or receipt divergence, follow the [retry and concurrency boundaries](../reference/read-and-load-strategies.md#retry-and-concurrency-boundaries) and reconcile the exact history with its owner. Append repairs must not be applied to SCD history.
 
+### Acceptance checklist
+
+- [ ] Compare current business values with the selected `products_day1.csv`, `products_day2.csv` or `products_day3.csv` snapshot. Bronze remains eight rows and must match that snapshot after pipeline processing.
+- [ ] Verify P002 prices 39.90 → 44.90 → 44.90 and P001 categories Accessories → Accessories → Travel Accessories.
+- [ ] SCD1 keeps eight distinct product keys. SCD2 keeps eight current products and 8/9/10 total versions; closed versions have populated `_effective_to`, with no duplicate `(product_id, _effective_from)` pairs or overlapping intervals.
+- [ ] Inspect stored `_row_hash` values and audit columns. Repeating the current day changes no business values or SCD2 history; hashes reflect the implemented business columns, while version creation follows the configured tracked columns.
+- [ ] Inspect both target operations, their source IDs and committed receipts in the new Runs using the [metadata checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata).
+
 ### Repeat the demo safely
 
-Run Day 1, Day 2 and Day 3 in order. Do not restart Day 1 against targets containing later-day SCD history. Repeated Writes for the same day must preserve current rows and avoid duplicate versions; inspect the persisted target and publication receipts if those invariants fail. Keep accepted Processing State and its corresponding business targets together. Use separate demo table identities and their approved Contracts for an independent run of the scenario.
+Run Day 1, Day 2 and Day 3 in order. Do not restart Day 1 against targets containing later-day SCD history. Repeated Writes for the same day must preserve current rows and avoid duplicate versions; inspect the persisted target and publication receipts if those invariants fail. Keep accepted Processing State and its corresponding business targets together. For a complete replay in the dedicated Ungoverned demo environment, run [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) and wait for `RESET COMPLETE`. Set both 02B and 02C to `DEMO_DAY = 1` and repeat the complete sequence. Shared Governance/deployment history is preserved; ownership conflicts block reset. Never delete the SCD targets or checkpoints separately.
 
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)

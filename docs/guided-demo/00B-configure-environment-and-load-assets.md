@@ -23,6 +23,7 @@ Import the three reusable notebook templates:
 | `00_env_config.ipynb` | Import into each workspace that runs FabricOps notebooks |
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering Development workspace |
+| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering Development workspace; keep the original demo notebook names for exact ID resolution by 00C |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -64,6 +65,8 @@ Open each imported notebook and make sure it uses the Fabric Environment created
 If you are a member of several Fabric workspaces, the Environment picker may show Environments from more than one workspace. For this Guided Demo, choose the Environment that belongs to the notebook's own workspace.
 
 Use the same FabricOps wheel version across the workspace-specific Environments so the notebooks run against a consistent package version.
+
+For regression validation after a package change, replace the custom library with the wheel being validated, publish each Environment and start new notebook sessions. Confirm the installed version in `setup_notebook()` output. Keep the existing `00_env_config` mappings; 00C uses those mappings for both business and Metadata stores. Complete metadata setup below, then run [00C and its validation checklist](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package) before rerunning the demos.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-writing.png" alt="" loading="lazy">
