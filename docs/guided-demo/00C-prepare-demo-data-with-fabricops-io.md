@@ -29,10 +29,14 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 
 **Run the reset cell before the file-reading examples.** Install/publish the package being validated, start fresh notebook sessions and confirm its version in `setup_notebook()` output.
 
-The notebook has one reset code cell with one switch:
+The notebook uses the public `orchestrate_demo_reset()` Preview API, with one switch:
 
 ```python
 RESET_DEMO = False  # Preview only. Set True to reset the dedicated demo environment.
+
+from fabricops_kit import orchestrate_demo_reset
+
+orchestrate_demo_reset(reset=RESET_DEMO)
 ```
 
 1. Run with `False` to inspect metadata counts. No data is changed.
@@ -45,9 +49,9 @@ RESET_DEMO = False  # Preview only. Set True to reset the dedicated demo environ
 
 ??? info "Checks before deletion and reset scope"
 
-    The cell checks the configured and actual Metadata item name (`demo_metadata`), store separation, installed metadata schemas, exact demo table/workspace references, lifecycle artifact contents, active notebook jobs and all five fixture row counts. Unexpected references or unreadable evidence block deletion. A lakehouse name alone does not prove ownership: reserve this item and the eleven business tables exclusively for the walkthrough. Do not share it with production or unrelated projects.
+    The orchestrator checks the configured and actual Metadata item name (`demo_metadata`), store separation, installed metadata schemas, exact demo table/workspace references, lifecycle artifact contents, active notebook jobs and all five fixture row counts. Unexpected references or unreadable evidence block deletion. A lakehouse name alone does not prove ownership: reserve this item and the eleven business tables exclusively for the walkthrough. Do not share it with production or unrelated projects.
 
-    All current metadata tables are cleared together, with dependent records before their parents; schemas remain in place. The cell reports rows removed per table, including zero, and checks that tables and lifecycle artifact folders are empty afterward. Missing/incompatible metadata tables require the existing 00B metadata setup first; 00C does not migrate schemas. If a future package changes the metadata inventory, the reset stops for review.
+    All current metadata tables are cleared together, with dependent records before their parents; schemas remain in place. The orchestrator reports rows removed per table, including zero, and checks that tables and lifecycle artifact folders are empty afterward. Missing/incompatible metadata tables require the existing 00B metadata setup first; the orchestrator does not migrate schemas. If a future package changes the metadata inventory, the reset stops for review.
 
     | Restore from Day 1 fixtures | Rows |
     | --- | --- |

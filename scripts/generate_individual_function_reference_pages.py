@@ -5720,6 +5720,7 @@ def main() -> None:
             "functions": {
                 "setup_notebook",
                 "setup_metadata_tables",
+                "orchestrate_demo_reset",
                 "widget_render_data_steward",
                 "widget_render_data_agreement",
                 "widget_activate_data_contract",

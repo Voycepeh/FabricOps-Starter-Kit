@@ -25,6 +25,16 @@ uses the same detected session for readiness and the configured audit timezone.
 Tests inject sessions at internal discovery boundaries or through private runtime
 context; notebook code does not need session plumbing.
 
+## Dedicated Guided Demo reset
+
+After `setup_notebook()`, call the public Preview API `orchestrate_demo_reset()`
+to inspect the reset scope. `orchestrate_demo_reset(reset=True)` opts into clearing
+all metadata and saved lifecycle artifacts in the dedicated `demo_metadata`
+Lakehouse, restoring five Day 1 sources and removing six demo outputs. Stop all
+demo writers first; never use shared or production Metadata. The orchestrator
+owns preflight and verification, so 00C imports no internal reset foundations.
+See the [Guided Demo](../docs/guided-demo/00C-prepare-demo-data-with-fabricops-io.md).
+
 ## Regenerate the function reference
 
 ```bash

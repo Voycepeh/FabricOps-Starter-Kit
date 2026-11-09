@@ -11,9 +11,11 @@ import nbformat
 import pytest
 from pyspark.sql import functions as F
 
-from fabricops_kit import read_lakehouse_csv, read_lakehouse_table, write_lakehouse_table
+from fabricops_kit import orchestrate_demo_reset, read_lakehouse_csv, read_lakehouse_table, write_lakehouse_table
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from tests.templates.test_demo_reset import ROOT, _helpers, _namespace, _run_reset
+from tests.unit.test_orchestrate_demo_reset import API, _environment
+
+ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.spark
 
@@ -40,9 +42,9 @@ def demo_delta(demo_csv, monkeypatch, tmp_path):
     return SimpleNamespace(spark=spark_session, root=tmp_path, DeltaTable=delta.DeltaTable)
 
 
-def test_single_cell_clears_metadata_restores_sources_and_retries_partial_failure(demo_delta, capsys):
+def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failure(demo_delta, monkeypatch, capsys):
     run = demo_delta
-    ns, _ = _namespace()
+    env = _environment(monkeypatch)
     registry = metadata_table_schema_registry()
     def read(table_name, *, store, schema):
         return read_lakehouse_table(table_name, store=store, schema=schema)
@@ -65,44 +67,50 @@ def test_single_cell_clears_metadata_restores_sources_and_retries_partial_failur
         write(run.spark.createDataFrame([record], schema), table_name=table, store='Metadata', schema='metadata', mode='overwrite')
     sentinel = run.spark.createDataFrame([(77,)], 'id int')
     write(sentinel, table_name='unrelated', store='Silver', schema='other', mode='overwrite')
-    for store, table in ns['_DEMO_OUTPUTS']:
+    for store, table in API._DEMO_OUTPUTS:
         write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
     # Only remote Fabric catalog/warehouse removal is replaced by equivalent local filesystem IO.
-    def remove(*, preview=False):
+    def remove(self, *, preview=False):
         if preview: return
-        for store, table in ns['_DEMO_OUTPUTS']:
+        for store, table in API._DEMO_OUTPUTS:
             shutil.rmtree(run.root / store / table, ignore_errors=True)
-    def verify():
-        assert all(not (run.root / store / table).exists() for store, table in ns['_DEMO_OUTPUTS'])
-    ns['context'].paths['Metadata'].root = str(run.root / 'Metadata')
-    from fabricops_kit.activated_pipeline.shared import snapshot_file
-    ns.update(spark=run.spark, F=F, DeltaTable=run.DeltaTable, snapshot_file=snapshot_file,
-              read_lakehouse_table=read, read_warehouse_table=read, write_lakehouse_table=write, write_warehouse_table=write,
-              read_lakehouse_csv=read_lakehouse_csv, _demo_check_jobs=lambda: None,
-              _demo_remove_outputs=remove, _demo_verify_outputs=verify,
-              resolve_configured_lakehouse_table=lambda store, table, schema: (store, table, schema, str(run.root / store / table)))
+    def verify(self=None):
+        assert all(not (run.root / store / table).exists() for store, table in API._DEMO_OUTPUTS)
+    env.setup.paths['Metadata'].root = str(run.root / 'Metadata')
+    env.state._metadata = env.setup.paths['Metadata']
+    env.state.spark = run.spark
+    env.state._demo_table_ids = {table for store, table in [*API._DEMO_SOURCES, *API._DEMO_OUTPUTS]}
+    env.state._demo_workspaces = {'dev', 'governance'}
+    monkeypatch.setattr(API, 'get_spark_session', lambda: run.spark)
+    for name, function in {'read_lakehouse_table': read, 'read_warehouse_table': read,
+            'write_lakehouse_table': write, 'write_warehouse_table': write, 'read_lakehouse_csv': read_lakehouse_csv}.items():
+        monkeypatch.setattr(API, name, function)
+    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', remove)
+    monkeypatch.setattr(API._DemoReset, '_demo_verify_outputs', verify)
+    monkeypatch.setattr(API, 'resolve_configured_lakehouse_table',
+        lambda store, table, schema: (store, table, schema, str(run.root / store / table)))
     artifacts = run.root / 'Metadata/Files/fabricops/engineering'
     (artifacts / 'submissions').mkdir(parents=True)
     (artifacts / 'submissions/demo.json').write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
-    _run_reset(ns)  # False previews populated state without changing it.
-    assert all(count == 1 for count in ns['_demo_metadata_counts']().values())
-    ns['RESET_DEMO'] = True
+    orchestrate_demo_reset()  # False previews populated state without changing it.
+    assert all(count == 1 for count in env.state._demo_metadata_counts().values())
     # Fail after metadata deletion to prove the same cell can recover without a new configuration.
-    ns['_demo_remove_outputs'] = lambda **kw: None if kw.get('preview') else (
-        _ for _ in ()).throw(RuntimeError('simulated Fabric transport failure'))
+    def fail(self, **kw):
+        if not kw.get('preview'): raise RuntimeError('simulated Fabric transport failure')
+    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', fail)
     with pytest.raises(RuntimeError, match='simulated Fabric transport'):
-        _run_reset(ns)
+        orchestrate_demo_reset(reset=True)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
-    ns['_demo_remove_outputs'] = remove
+    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', remove)
     for _ in range(2):
-        _run_reset(ns)
-        assert ns['_demo_metadata_counts']() == dict.fromkeys(registry, 0)
-        assert ns['_demo_metadata_files']() == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
-        for (store, table), (file, count) in ns['_DEMO_SOURCES'].items():
+        orchestrate_demo_reset(reset=True)
+        assert env.state._demo_metadata_counts() == dict.fromkeys(registry, 0)
+        assert env.state._demo_metadata_files() == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
+        for (store, table), (file, count) in API._DEMO_SOURCES.items():
             expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
             actual = read(table, store=store, schema='demo')
             assert actual.count() == count
-            ns['_demo_assert_source'](actual, expected)
+            env.state._demo_assert_source(actual, expected)
         verify()
         assert read('unrelated', store='Silver', schema='other').collect() == sentinel.collect()
         assert all(read(table, store='Metadata', schema='metadata').schema.simpleString() == schema.simpleString() for table, schema in registry.items())
@@ -111,7 +119,7 @@ def test_single_cell_clears_metadata_restores_sources_and_retries_partial_failur
     expected = run.spark.createDataFrame([(1,), (2,)], 'id int')
     wrong = run.spark.createDataFrame([(1,), (1,)], 'id int')
     with pytest.raises(RuntimeError, match='content differs'):
-        ns['_demo_assert_source'](wrong, expected)
+        env.state._demo_assert_source(wrong, expected)
 
 
 def test_02a_real_transform_and_public_overwrite_preserve_source_content(demo_delta):
@@ -160,9 +168,9 @@ def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
     assert sum(Decimal(str(r.total_order_net_amount)).quantize(Decimal('.01')) for r in customers) == Decimal('28539.15')
 
 
-def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta):
+def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta, monkeypatch):
     """The supported native-to-JSON migration belongs to metadata setup, before demo cleanup."""
-    run, ns = demo_delta, _helpers()
+    run, state = demo_delta, _environment(monkeypatch).state
     table = 'METADATA_DATA_CATALOGUE'
     expected = metadata_table_schema_registry()[table]
     native = metadata_table_schema_registry(logical=True)[table]
@@ -176,46 +184,45 @@ def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_del
     delta = run.DeltaTable.forPath(run.spark, path)
     version = delta.history(1).first()['version']
     before = run.spark.read.format('delta').load(path).collect()
-    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: expected},
-              metadata_table_physical_schema=lambda *_: 'engineering',
-              read_lakehouse_table=lambda *a, **kw: run.spark.read.format('delta').load(path))
+    monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: expected})
+    monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: run.spark.read.format('delta').load(path))
     with pytest.raises(RuntimeError, match='Run the installed package metadata setup'):
-        ns['_demo_metadata_counts']()
+        state._demo_metadata_counts()
     assert delta.history(1).first()['version'] == version
     assert run.spark.read.format('delta').load(path).collect() == before
 
 
-def test_additive_registry_column_uses_the_installed_package_schema(demo_delta):
+def test_additive_registry_column_uses_the_installed_package_schema(demo_delta, monkeypatch):
     """An already-applied compatible addition needs no notebook schema copy or new reset API."""
-    run, ns = demo_delta, _helpers()
+    run, state = demo_delta, _environment(monkeypatch).state
     table = 'METADATA_DATA_CATALOGUE'
     current = metadata_table_schema_registry()[table]
     upgraded = metadata_table_schema_registry()[table].add('new_package_field', 'string')
     frame = run.spark.createDataFrame([], current)
-    ns.update(_demo_config=object(), metadata_table_schema_registry=lambda: {table: upgraded},
-              metadata_table_physical_schema=lambda *_: 'engineering', read_lakehouse_table=lambda *a, **kw: frame)
+    monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: upgraded})
+    monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: frame)
     with pytest.raises(RuntimeError, match='new_package_field'):
-        ns['_demo_metadata_counts']()
+        state._demo_metadata_counts()
     # Represent the physical result of the package's additive migration.
     frame = frame.withColumn('new_package_field', F.lit('migrated'))
-    counts = ns['_demo_metadata_counts']()
+    counts = state._demo_metadata_counts()
     assert counts == {table: 0}
 
 
 
 def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
-    from fabricops_kit.activated_pipeline.shared import snapshot_file
-    ns = _helpers()
-    ns.update(spark=demo_csv, snapshot_file=snapshot_file, _metadata=SimpleNamespace(root=str(tmp_path)),
-              _demo_table_ids={'orders'}, _demo_workspaces={'dev'})
+    state = API._DemoReset(object(), object(), {}, demo_csv)
+    state._metadata = SimpleNamespace(root=str(tmp_path))
+    state._demo_table_ids = {'orders'}
+    state._demo_workspaces = {'dev'}
     folder = tmp_path / 'Files/fabricops/engineering/submissions'
     folder.mkdir(parents=True)
     file = folder / 'foreign.json'
     file.write_text('{"manifest":{"operations":[{"table_id":"production-table"}]}}')
     with pytest.raises(RuntimeError, match='Non-demo'):
-        ns['_demo_metadata_files']()
+        state._demo_metadata_files()
     assert file.exists()
     file.write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
-    assert ns['_demo_metadata_files']()['submissions'] == 1
-    assert ns['_demo_metadata_files'](delete=True)['submissions'] == 1
+    assert state._demo_metadata_files()['submissions'] == 1
+    assert state._demo_metadata_files(delete=True)['submissions'] == 1
     assert not folder.exists()
