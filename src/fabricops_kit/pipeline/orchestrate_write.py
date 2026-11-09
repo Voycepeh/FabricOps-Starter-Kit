@@ -6,7 +6,6 @@ from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
-from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import (
@@ -124,15 +123,12 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         if "target" not in context["_pipeline_identities"][target_id]["roles"]:
             raise ValueError("Write requires an explicit target participant.")
         active = pipeline_guardrail_types(context, target_id)
-        drift_ids = [source_id for source_id in source_ids if "source_drift" in pipeline_guardrail_types(context, source_id)]
         source_checks = source_guardrail_results(context, sources)
         names = []
         if "schema" in active:
             names.append("Schema")
         if "sensitive_data" in active:
             names.append("Sensitive Data")
-        if drift_ids:
-            names.append("Source Drift")
         if "grain" in active:
             names.append("Grain")
         if "data_quality" in active:
@@ -156,9 +152,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             if "sensitive_data" in active:
                 sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             prepared = sensitive["dataframe"]
-            evaluated_drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}) for source_id in drift_ids]) if drift_ids else []
-            drift_by_source = dict(zip(drift_ids, evaluated_drift, strict=True))
-            drift = [drift_by_source.get(source_id, dict(skipped)) for source_id in source_ids]
             grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
             dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
             common_results = {
@@ -166,7 +159,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 **execution_result(context, target_id, stages=stages),
                 "schema_result": schema_result,
                 "sensitive_result": sensitive,
-                "source_drift_results": drift,
                 "grain_result": grain_result,
                 "dq_result": dq_result,
                 "source_guardrail_results": source_checks,

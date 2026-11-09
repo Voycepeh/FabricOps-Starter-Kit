@@ -1463,6 +1463,13 @@ def widget_data_contract(
         state["_saved_payload"] = json.loads(
             str(state["current"]["contract"].get("contract_payload_json") or "{}")
         )
+        if str(chosen.get("status") or "").lower() == "draft":
+            # Source Drift is pipeline configuration. Saving a mutable draft
+            # cannot retain the retired table policy; frozen history stays exact.
+            state["current"]["guardrails"] = [
+                rule for rule in state["current"].get("guardrails", [])
+                if rule.get("guardrail_type") != "source_drift"
+            ]
         scope = (str(chosen["contract_id"]), state["contract_version"])
         state["dirty"] = bool(
             state["_pending_enrichment"].get(scope)

@@ -55,7 +55,7 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 1. **Establish Governance context.** Record accountable Data Stewards and the versioned Data Agreement that explains why the data is shared.
 2. **Build and observe the pipeline.** Engineering runs real sources and targets in Development, creating Catalogue, profiling, lineage and processing observations.
 3. **Author and freeze Data Contracts.** Governance combines that Engineering evidence with Enrichment, Processing and Guardrails, then freezes exact immutable versions.
-4. **Preview the frozen versions.** Engineering selects those versions in Dry Run and exercises the Read → Transform → Write path without publishing or committing operational state.
+4. **Preview the frozen versions.** Engineering selects those versions in Dry Run and exercises the Read → Observe Source Drift (optional) → Transform → Write path without publishing or committing operational state.
 5. **Activate, approve and deploy.** Governance activates each physical table Contract, independently approves the saved Dry Run submission, and Engineering deploys that exact snapshot as a separate Governed notebook.
 6. **Run the persistent path and grant access.** Governed execution remains fail-closed pending signed-in Fabric acceptance; use the supported runnable paths and native Fabric permissions without treating Preview promotion as Production enforcement.
 7. **Consume and productize.** Approved consumers use native Fabric interfaces or project-specific accelerators with the governed context available in shared metadata.
@@ -83,6 +83,10 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 | [5. Activate Data Contracts and deploy](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Fabric Deployment Pipeline | Link exact contract versions to the Data Agreement, activate them for Production, then deploy the reviewed engineering artifact. |
 | [6. Run the pipeline in Production and grant access](guided-demo/06-run-production.md) | Governed 02A pipeline + native Fabric access | Run the activated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
 | [7. Consume and productize governed data](guided-demo/07-consume-production-data.md) | Native Fabric interfaces or a project-specific notebook | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |
+
+### Optional Source Drift observation
+
+The lifecycle is **Setup → Read → Observe Source Drift (optional) → Transform → Write → Finalize**. Add `observe_source_drift()` after the last Read to detect changed or missing historical source content. See [02A’s optional test](guided-demo/02A-full-refresh-demo.md#optional-source-drift-test) for immediate, scheduled and nonblocking controls.
 
 ### Choose Read Mode and Write Mode
 

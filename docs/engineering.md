@@ -164,15 +164,29 @@ Source Drift is **not the same mechanism as target `_row_hash` de-duplication**.
 
 ![Full source observation, prior accepted content fingerprint, and change detection.](assets/engineering/source-drift.svg){ .fabricops-section-evidence }
 
-Set `observe_source=True` for a manual complete observation, or set `source_observation_days` to a positive interval. FabricOps fingerprints the complete physical source independently of an Incremental predicate. At Write time, an applicable Source Drift Guardrail compares the current source observation with the last accepted source-to-target baseline using partition presence, row counts, change-value bounds and content fingerprints. Its result identifies new, changed, removed or reappeared partitions, not exact updated, inserted or deleted business rows.
+Call [`observe_source_drift()`](api/reference/observe_source_drift.md) after all Reads and before transformation. It observes every registered physical source, including history outside an Incremental Read. New rows alone pass; missing or modified historical content fails. All sources finish evaluation before one consolidated decision.
 
-The new baseline is accepted only after verified target publication. Observation alone is diagnostic; publication blocks only when the selected Data Contract contains a blocking Source Drift policy.
+```python
+observe_source_drift(
+    observe_immediately=True,    # Observe immediately: True / False
+    source_observation_days=1,    # Observe every day(s)
+    block=True,                  # Block write: True / False
+)
+```
 
-??? info "Under the Hood — full-source observation cost and limitations"
+Remove `observe_source` and `source_observation_days` from existing `setup_pipeline()` calls; these controls now belong to `observe_source_drift()`.
 
-    Internal [`observe_full_source()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1077) performs the independent full scan and [`check_source_drift()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L15) evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan. Accepted baselines are stored in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
+Immediate observation overrides the interval. With `observe_immediately=False`, a recent accepted snapshot produces `skipped`, never a clean-check claim. This optional call is independent of Data Contracts and all target Write Modes. It reports source changes and does not repair them.
 
-    A changed fingerprint is evidence, not an automatic delete or update instruction. The configured Write strategy still determines target behaviour.
+??? info "Under the Hood — exact history, costs and acceptance"
+
+    Source Observation retains deterministic key/content hashes and multiplicities in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). Valid unique authored Grain or source processing keys support exact modified/removed counts. Without reliable keys, distributed multiset comparison counts added and missing content; missing content fails and modifications remain ambiguous. Ambiguous counts overlap missing-content counts when identity is unavailable. Row content includes the complete typed business schema: added or removed fields and datatype changes can modify historical rows. Stable keys preserve exact modification/removal counts across non-key schema changes. Column ordering is normalized; changed or unavailable keys use the honest multiset strategy.
+
+    Each due observation scans the complete physical source. Historical storage grows with distinct source content and retained snapshots. No raw business values are stored. Existing aggregate fingerprints cannot reconstruct old rows: the first exact snapshot establishes history only after a successful execution.
+
+    Observation captures candidates. Successful `finalize_pipeline()` persists whole-run success, verifies every required publication receipt, then atomically advances accepted source heads with a concurrency check. Blocked, failed, partially published or stale runs do not accept candidates. Successful nonblocking runs with completed evaluation accept their new snapshots while retaining warning diagnostics. Unavailable evaluations do not accept candidates. Read-only successful runs have no publication requirement. Write-layer no-ops (`empty_incremental_scope` or `no_unseen_hashes`) also require no physical publication. Baseline acceptance warnings remain separate from the immutable completed Run and never trigger business-write replay. Dry Run never accepts or persists history.
+
+    Results include at most ten hash-only samples per failure category in `METADATA_GUARDRAIL_RESULTS`, plus a generated next-cell query scoped to the actual workspace, pipeline, execution and source. Unavailable evaluation is distinct from clean evaluation. Local tests do not prove signed-in Fabric acceptance; follow the [acceptance procedure](maintainer/governed-pipeline-fabric-acceptance.md#source-drift-observation).
 
 ## How does a Governance Data Contract affect my ETL?
 
@@ -185,7 +199,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Setup | Selects the exact contract version and approved Processing definition. |
 | Read | Applies Freshness, Schema, Grain and Data Quality where configured. |
 | Transform | Leaves project PySpark visible and project-owned. |
-| Write preparation | Applies target Schema, Sensitive Data treatment, Source Drift, Grain and Data Quality. |
+| Write preparation | Applies target Schema, Sensitive Data treatment, Grain and Data Quality. |
 | Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
 | Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
 
@@ -198,8 +212,9 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Location | Required Engineering configuration |
 | --- | --- |
 | `00_env_config` | Workspace IDs, logical store aliases, item IDs/names, store types and the shared Metadata target |
-| Pipeline setup | `pipeline_mode` and optional full Source Observation policy; the Fabric Notebook ID establishes the stable Pipeline ID |
+| Pipeline setup | `pipeline_mode`; the Fabric Notebook ID establishes the stable Pipeline ID |
 | Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
+| Optional observation | `observe_source_drift()` after all Reads, with immediate, interval and blocking controls |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
 | Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
 | Finalization | [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md) after all Reads, transformations and Writes, or `failed=True` after a caught project failure |

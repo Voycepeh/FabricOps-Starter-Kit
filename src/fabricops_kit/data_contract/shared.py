@@ -30,7 +30,7 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"})
+GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
@@ -163,7 +163,8 @@ def create_contract_draft(
         names = {str(column["column_name"]) for column in columns}
         changed_names = {str(column["column_name"]) for column in columns if str(column["column_id"]) in changed_ids}
         seed["guardrails"] = [rule for rule in seed.get("guardrails", [])
-                              if (not rule.get("column_id") or str(rule["column_id"]) in retained_ids - changed_ids)
+                              if rule.get("guardrail_type") != "source_drift"
+                              and (not rule.get("column_id") or str(rule["column_id"]) in retained_ids - changed_ids)
                               and not (set(rule.get("rule_parameters", {}).get("columns", [])) - retained_ids - names)
                               and not (set(rule.get("rule_parameters", {}).get("columns", [])) & (changed_ids | changed_names))]
         for rule in seed["guardrails"]:
@@ -395,6 +396,8 @@ def validate_contract_definitions(
     seen = set()
     active_policies = set()
     for rule in rules:
+        if isinstance(rule, dict) and rule.get("guardrail_type") == "source_drift":
+            raise ValueError("Source Drift is pipeline-level configuration. Save a new Data Contract version without this table policy and call observe_source_drift() after Reads.")
         if not isinstance(rule, dict) or rule.get("guardrail_type") not in GUARDRAIL_TYPES:
             raise ValueError("Data Contract contains an unsupported Guardrail definition.")
         if not isinstance(rule.get("rule_parameters"), dict):
@@ -406,7 +409,7 @@ def validate_contract_definitions(
             raise ValueError(f"Missing or competing Guardrail rule identity {key!r}.")
         seen.add(key)
         kind = rule["guardrail_type"]
-        if kind in {"schema", "freshness", "source_drift", "sensitive_data"} and rule.get("is_active", True):
+        if kind in {"schema", "freshness", "sensitive_data"} and rule.get("is_active", True):
             policy = (kind, str(rule.get("column_id") or ""))
             if policy in active_policies:
                 raise ValueError(f"Competing active Guardrails for {policy!r}.")
@@ -687,7 +690,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, a
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
         raise ValueError(
-            "guardrail_type must be Schema, Grain, Freshness, Source Drift, Data Quality, or Sensitive Data."
+            "guardrail_type must be Schema, Grain, Freshness, Data Quality, or Sensitive Data."
         )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:

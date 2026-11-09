@@ -45,7 +45,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     assert namespace['finalize_pipeline'].call_count == expected_sessions
     assert [call.args[0] for call in namespace['finalize_pipeline'].call_args_list] == sessions[:expected_sessions]
     notebook_setup.assert_called_once_with()
-    observation = dict(observe_source=False, source_observation_days=None)
+    observation = {}
     assert setup.call_count == expected_sessions
     assert all(call.kwargs == {'pipeline_mode': 'Ungoverned', **observation} for call in setup.call_args_list)
     expected = {
@@ -69,7 +69,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert not {'execution-plan','inspect'}.intersection(ids)
     calls = {}
     for cell in notebook.cells:
-        if cell.cell_type != 'code' or cell.id == 'workspace_id':
+        if cell.cell_type != 'code' or cell.id in {'workspace_id', 'optional-source-drift-test'}:
             continue
         for node in ast.walk(ast.parse(cell.source)):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
@@ -79,7 +79,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == expected_executions
     assert len(calls['finalize_pipeline']) == expected_executions
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_mode', 'observe_source', 'source_observation_days'}
+    expected_setup = {'pipeline_mode'}
     assert all({arg.arg for arg in call.keywords} == expected_setup for call in calls['setup_pipeline'])
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform

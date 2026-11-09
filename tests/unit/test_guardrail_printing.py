@@ -38,7 +38,7 @@ def test_internal_guardrail_stage_controls_are_consistent() -> None:
 def test_guardrail_formatter_preserves_public_statuses(capsys, result, expected) -> None:
     """The shared formatter reports the actual normalized result only."""
     print_guardrail_result("Schema", result, verbose=True, table_id="source.demo.orders")
-    assert capsys.readouterr().out == (f"FabricOps Check → Schema\n  Table  source.demo.orders\n  Result {expected}\n")
+    assert capsys.readouterr().out == (f"FabricOps Check → Schema\n  Table  source.demo.orders\n  Result {expected} · {'CONTINUE' if result['can_continue'] else 'BLOCKED'}\n")
 
 
 def test_guardrail_formatter_resolves_catalogue_labels(monkeypatch, capsys) -> None:
@@ -67,7 +67,7 @@ def test_guardrail_formatter_resolves_catalogue_labels(monkeypatch, capsys) -> N
         "FabricOps Check → Source Drift\n"
         "  Source Bronze.demo.orders\n"
         "  Target Silver.demo.curated_orders\n"
-        "  Result SKIPPED\n"
+        "  Result SKIPPED · CONTINUE\n"
     )
 
 
@@ -97,7 +97,7 @@ def test_guardrail_formatter_uses_current_run_identity_before_catalogue(monkeypa
     assert capsys.readouterr().out == (
         "FabricOps Check → Freshness\n"
         "  Table  Bronze.demo.orders\n"
-        "  Result SKIPPED\n"
+        "  Result SKIPPED · CONTINUE\n"
     )
 
 

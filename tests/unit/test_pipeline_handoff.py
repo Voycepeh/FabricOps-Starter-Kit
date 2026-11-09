@@ -180,7 +180,7 @@ def test_accepted_content_is_immutable_and_prior_approval_does_not_cover_change(
 def test_registry_edits_cannot_manufacture_approval(authority, field):
     """An active Engineering row cannot authorize unrelated content or behavior."""
     row = authorized_row(approved(authority))
-    row[field] = "{}" if field.endswith("json") else "forged"
+    row[field] = '{"forged": true}' if field.endswith("json") else "forged"
     with pytest.raises((ValueError, KeyError)):
         service.verify_registry_approval(row, context=authority.eng)
 

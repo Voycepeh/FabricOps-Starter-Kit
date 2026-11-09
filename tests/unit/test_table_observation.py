@@ -57,7 +57,6 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
         if kwargs.get("guardrail_type") == "source_drift"
         else None,
     )
-    monkeypatch.setattr(shared, "resolve_source_drift_observation_columns", lambda rule: ("partition", "changed"))
     monkeypatch.setattr(shared, "_observe_dataframe", lambda frame, *args, **kwargs: [{
         "partition_value": "p", "row_count": 1, "min_change_value": "1",
         "max_change_value": "1", "content_fingerprint": "hash", "is_present": True,
@@ -68,7 +67,7 @@ def test_capture_reuses_pipeline_read_dataframe_without_rescanning(monkeypatch) 
     })
     monkeypatch.setattr(shared, "coerce_metadata_row_types", lambda table, row: row)
     monkeypatch.setattr(shared, "_merge_source_observation_records", lambda *a, **k: None)
-    result = shared.capture_source_observation(table_id="source-a", dataframe=dataframe)
+    result = shared.capture_source_observation(table_id="source-a", dataframe=dataframe, incremental_columns=("partition", "changed"))
     assert result[0]["source_table_id"] == "source-a"
 
 

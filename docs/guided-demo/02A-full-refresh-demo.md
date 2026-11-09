@@ -226,3 +226,15 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
 Run `pipeline_result = finalize_pipeline(pipeline)` after the last Write. Dry Run returns a session-only summary; Ungoverned and Governed record the actual execution outcome.
+
+### Optional Source Drift test
+
+At the end of `02A_full_refresh_demo`, set `RUN_SOURCE_OBSERVATION_TEST = True` only after a clean `00C` reset. The normal walkthrough is unchanged while the flag is False.
+
+The section verifies Day 1 orders, accepts a clean exact baseline in a successful read-only run, then removes O0001, changes O0002’s quantity and inserts O9999. It reads orders, products and order_history before `observe_source_drift(block=True)`. The consolidated result evaluates all three sources before blocking. It prints bounded hash-only samples and a ready-to-run query scoped to the actual pipeline, run and source. It then demonstrates `block=False` without accepting the drifted candidate.
+
+Without valid authored keys, expect two added content rows, two missing historical content rows and two ambiguous historical changes; these include the changed row and are not fabricated exact modifications. With valid unique authored Grain keys, the same mutation yields Added 1, Modified 1, Removed 1.
+
+Use `observe_immediately=True` to check now. Use `observe_immediately=False, source_observation_days=1` to observe when the accepted one-day interval is due. `block` is the **Block write** control. Call after all Reads and before transformation; any later Read invalidates pending coverage.
+
+Restore through the existing **00C** notebook with `RESET_DEMO = True`, then rerun 02A. Its native reset restores Day 1 source fixtures and clears demo Processing State and Guardrail Results, including snapshots and bounded diagnostics. No separate reset is needed. A successful nonblocking Finalize accepts its new snapshot while retaining warning evidence; this demonstration deliberately finalizes its warning run as failed to preserve the clean baseline for investigation.

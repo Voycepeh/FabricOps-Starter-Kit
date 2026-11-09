@@ -8,7 +8,6 @@ The treatment is part of the frozen Data Contract for a column. During [`orchest
 Input DataFrame
 → Schema
 → Sensitive Data treatment
-→ Source Drift
 → Data Quality
 → Write
 → Profile

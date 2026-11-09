@@ -97,6 +97,7 @@ _PROCESSING_STATE_COLUMNS = [
     "publication_at",
     "publication_input_rows",
     "publication_strategy",
+        "snapshot_payload_json",
     *_AUDIT_COLUMNS,
 ]
 

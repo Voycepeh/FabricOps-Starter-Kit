@@ -224,7 +224,7 @@ def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
     saved = json.loads(promoted)["cells"][1]["source"]
     assert "pipeline_id" not in saved
     assert 'pipeline_mode="Governed"' in saved
-    assert parameters == {"manual": False, "days": None}
+    assert parameters == {}
 
 
 def test_cross_workspace_data_access_requires_an_effective_agreement():

@@ -231,7 +231,7 @@ A new Full Read execution with Overwrite replaces the complete target, even for 
 
     Read evaluates applicable Freshness, Schema, Grain, and Data Quality checks, then profiles eligible full-source data according to policy.
 
-    Before publication, Write evaluates the configured Schema, Sensitive Data, Source Drift, Grain, and Data Quality checks. Only configured checks run. Governed execution stops when required checks fail or cannot execute.
+    Before publication, Write evaluates the configured Schema, Sensitive Data, Grain, and Data Quality checks. Only configured checks run. Governed execution stops when required checks fail or cannot execute.
 
     Dry Run prepares and validates the operation without publishing target data or persistent operational state. Successful persistent Writes publish the target and record associated metadata at the relevant lifecycle boundaries. These separate Fabric operations are not one atomic transaction.
 

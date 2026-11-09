@@ -46,3 +46,18 @@ Granular OneLake permissions must be available and effective for the tenant/runt
 A Governed folder is organizational. Directly privileged Engineering users can edit notebooks or execute Spark outside FabricOps. Saved-definition checks cannot attest the running kernel. Imported dependencies are not frozen. There is no atomic transaction across approval, notebook APIs and Registry writes; runtime authority verification remains necessary.
 
 No workspace identities or service principals are required for this manual workflow. A release-gate change requires reviewed signed-in acceptance evidence, not a local monkeypatch or green CI.
+
+## Source Drift observation
+
+Local unit, integration and Spark checks do not establish signed-in Microsoft Fabric acceptance. Record package version, date, tester, workspace mappings and actual run IDs for this procedure:
+
+1. Run native 00C reset in a dedicated demo environment. Run existing 02A, 02B and 02C with observation omitted; verify their normal output counts and all five Write Modes.
+2. Enable 02A’s optional Source Drift test. Verify a clean accepted baseline precedes mutation; orders fails, products and order_history pass, all three appear before the blocking exception. Check the failed run has no new accepted head.
+3. Execute the generated investigation cell. Verify actual Metadata schema, workspace, pipeline, run and source filters; inspect counts and at most ten identity/hash samples per category. Confirm business values and sensitive values are absent.
+4. Verify immediate True overrides an unelapsed interval, immediate False with one day returns skipped, an older accepted observation becomes due, and zero/negative/boolean/noninteger intervals fail.
+5. Repeat with Full and Incremental Reads, repeated Reads, an empty source, changed schemas and unavailable source access. Confirm observation always covers physical history and unavailable checks never claim a pass.
+6. With `block=False`, complete all required writes and Finalize. Verify the candidate becomes accepted only at Finalize and prior warning diagnostics remain. Repeat with a failed Write, partial multi-target publication, caught project error (`failed=True`) and failed Run persistence; none may advance history.
+7. Run overlapping synthetic observation executions against the same baseline and finalize the newer run first. Confirm the stale candidate fails its conditional acceptance; different pipelines/workspaces retain isolated heads and queries. Inject an aborted Delta conflict and a lost acceptance acknowledgement; confirm retry/reconciliation does not replay business writes.
+8. Run native 00C reset again; verify original Day 1 content, cleared related snapshots/diagnostics and a clean subsequent 02A run.
+
+Existing aggregate-only observations cannot recreate exact historical rows. The first successful exact snapshot starts the supported comparison history. Data Contract versions containing retired Source Drift rules must be reauthored and frozen without that policy. New drafts and saved mutable drafts omit it; frozen payloads must never be edited in place.

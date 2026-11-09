@@ -34,6 +34,7 @@ from .io import (
 from .pipeline import (
     finalize_pipeline,
     setup_pipeline,
+    observe_source_drift,
     resolve_table_id,
     profile_table,
     pipeline_read,
@@ -82,6 +83,7 @@ IO_EXPORTS = (
 PIPELINE_EXPORTS = (
     "finalize_pipeline",
     "setup_pipeline",
+    "observe_source_drift",
     "profile_table",
     "resolve_table_id",
     "pipeline_read",

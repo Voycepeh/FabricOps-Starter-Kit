@@ -591,3 +591,41 @@ def test_governed_run_preserves_governance_decision_and_exact_contracts(runtime)
     assert row["activation_revision"] == "7"
     assert [(op["contract_id"], op["contract_version"]) for op in row["operations"]] == [("contract-table0", 1), ("contract-table1", 1)]
     assert all(len(op["payload_sha256"]) == 64 for op in row["operations"])
+
+
+@pytest.mark.parametrize("mode", ["ungoverned", "dry_run"])
+def test_source_snapshots_accept_only_after_successful_finalization(runtime, monkeypatch, mode):
+    """A publication or completed Read alone cannot accept source history."""
+    make, operation, saved, writes, failure = runtime
+    plan = make(mode=mode, roles=("source", "target"))
+    accepted = []
+    monkeypatch.setattr(shared, "accept_pipeline_source_snapshots", lambda candidate, **kw: accepted.append(candidate.plan_id))
+    operation(plan, 0)
+    operation(plan, 1)
+    assert accepted == []
+    plan.evidence["boundary_completed"] = True
+    shared.finalize_pipeline_run(plan)
+    assert accepted == ([plan.plan_id] if mode == "ungoverned" else [])
+
+
+@pytest.mark.parametrize("cause", ["project", "partial", "write", "persist"])
+def test_source_history_does_not_advance_for_failed_or_partial_runs(runtime, monkeypatch, cause):
+    """Failure, missing target and final Run persistence failure leave candidates unaccepted."""
+    make, operation, saved, writes, failure = runtime
+    plan = make(mode="ungoverned", roles=("source", "target", "target"))
+    accepted = []
+    monkeypatch.setattr(shared, "accept_pipeline_source_snapshots", lambda *a, **kw: accepted.append(True))
+    operation(plan, 0)
+    operation(plan, 1)
+    if cause != "partial":
+        operation(plan, 2)
+    if cause == "write":
+        plan.evidence["failures"].append({"code": "write_failed"})
+    plan.evidence["boundary_completed"] = True
+    if cause == "persist":
+        monkeypatch.setattr(shared, "persist_pipeline_run", lambda *a, **kw: (_ for _ in ()).throw(OSError("finalization persistence failed")))
+        with pytest.raises(OSError):
+            shared.finalize_pipeline_run(plan)
+    else:
+        shared.finalize_pipeline_run(plan, failed=cause == "project")
+    assert accepted == []

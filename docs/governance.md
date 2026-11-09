@@ -22,7 +22,7 @@ A FabricOps Data Contract is the versioned definition for one governed `table_id
 - the expected schema and required columns;
 - the approved processing strategy;
 - profiling schedules;
-- Grain, Freshness, Source Drift, Data Quality and Sensitive Data Guardrails.
+- Grain, Freshness, Data Quality and Sensitive Data Guardrails.
 
 Saving keeps a draft editable. **Freezing creates an immutable version.** Engineering can select that exact frozen payload in Dry Run and validate it against real reads, transformations and prepared writes. Later profile observations never silently rewrite the frozen contract.
 
@@ -58,7 +58,7 @@ An independently activated table contract protects that Table ID and physical de
 3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing, profiling and Guardrails.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
-6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data outcomes allow continuation.
+6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Data Quality and Sensitive Data outcomes allow continuation.
 7. **Activate the physical table contracts.** Use [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) for every source and target in its physical workspace, selecting the applicable Agreement each time.
 8. **Approve the saved pipeline submission.** Engineering finalizes a saved Dry Run submission. Governance uses [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) to inspect that exact notebook, its recorded checks and resolved bindings, then approve, reject or revoke it. The decision is stored in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md).
 9. **Let Engineering deploy the approval.** Engineering uses the controls beneath [`finalize_pipeline()`](api/reference/finalize_pipeline.md) to deploy the exact approved snapshot as a separate Governed notebook, then explicitly rebinds the Fabric schedule. Governance approval alone never creates or deploys a notebook.
@@ -74,7 +74,7 @@ An independently activated table contract protects that Table ID and physical de
 | Enrichment | Table and column descriptions plus governed classification | Supplies business context to reviewers and downstream consumers. |
 | Processing | Overwrite, Append All, Append New Only, SCD1 or SCD2, including required watermark and key parameters | The proposed Engineering operation must agree with the selected contract. |
 | Profiling | Standard, Grain and Frequency profiling schedules | Controls when evidence is collected; it does not itself block the pipeline. |
-| Guardrails | Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
+| Guardrails | Schema, Grain, Freshness, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
 
 Each profiling activity independently supports `every`, `first` or `interval` with a positive number of days, and a `read`, `write` or `read_or_write` trigger. Successful completion history determines when it is next due. A failed attempt does not consume the interval.
 
@@ -91,8 +91,9 @@ FabricOps applies the checks at the boundary where the decision matters:
 | Boundary | Applicable protection |
 | --- | --- |
 | Read | Freshness, Schema, Grain and Data Quality against the source DataFrame |
-| Before Write | Target Schema, Sensitive Data treatment, Source Drift for contributing sources, target Grain and Data Quality |
-| After successful publication | Accepted checkpoints, Source Drift baselines, profiles, lineage and run evidence |
+| Before Write | Target Schema, Sensitive Data treatment, target Grain and Data Quality |
+| After successful publication | Accepted incremental checkpoints, profiles and lineage |
+| Successful Finalize | Whole-run outcome; Source Drift candidates accepted only after required publications verify |
 
 Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) records aggregate outcomes and whether execution can continue; full failing business rows are not automatically copied into governance storage.
 

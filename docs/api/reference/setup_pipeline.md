@@ -35,12 +35,7 @@ preview = setup_pipeline(pipeline_mode="Dry Run")
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def setup_pipeline(
-    *,
-    pipeline_mode: str='Ungoverned',
-    observe_source: bool=False,
-    source_observation_days: int | None=None,
-):
+def setup_pipeline(*, pipeline_mode: str='Ungoverned')
 ```
 
 </div>
@@ -56,8 +51,6 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
-| `observe_source` | `bool` | No | `False` | Manually request a full physical Source Observation for this execution. |
-| `source_observation_days` | `int \| None` | No | `None` | Automatically observe after this many days since the last accepted full observation. None disables automatic observation. Manual requests override the interval. Incremental SQL scope does not restrict observation. Baselines are accepted only with verified target publication; failed or no-op writes do not consume the interval. Changed fingerprints are diagnostic unless a separately configured Source Drift policy blocks publication. |
 
 </div>
 
@@ -74,7 +67,7 @@ Returns a context-local session exposing the Registry-resolved logical Pipeline 
 ## Raises / Errors
 
 ValueError
-    If the mode or observation configuration is invalid.
+    If the mode is invalid.
 RuntimeError
     If notebook setup or Spark is unavailable, or signed-in Fabric validation
     remains pending. Governed fails before admission and publication.
@@ -126,7 +119,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L207">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L186">View on GitHub</a>
 </div>
 
 

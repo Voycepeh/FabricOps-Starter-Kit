@@ -155,7 +155,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **_k: {"_activity_id": "test-run"})
     writes = []
     monkeypatch.setattr(shared, "write_lakehouse_table", lambda frame, table, **kwargs: writes.append((frame, table, kwargs)))
-    spark = SimpleNamespace(createDataFrame=lambda rows: RecordingFrame(rows))
+    spark = SimpleNamespace(createDataFrame=lambda rows, schema=None: RecordingFrame(rows))
     dataframe = schema_frame({
         "matching": [("id", "bigint")],
         "missing": [],

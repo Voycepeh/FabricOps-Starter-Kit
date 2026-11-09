@@ -262,3 +262,14 @@ def test_inventory_addition_requires_dependency_review_before_clearing(monkeypat
     with pytest.raises(RuntimeError, match='Metadata inventory changed'):
         API.orchestrate_demo_reset(reset=True)
     assert env.rows['METADATA_DATA_CATALOGUE'] and not env.removed
+
+
+def test_native_reset_clears_exact_source_snapshots_and_bounded_diagnostics(monkeypatch):
+    env = _ready(monkeypatch)
+    env.rows['METADATA_PROCESSING_STATE'] = [
+        {'record_type': kind, 'source_table_id': 'orders', 'workspace_id': 'dev'}
+        for kind in ('source_row_evidence', 'source_snapshot', 'pipeline_source_baseline', 'source_snapshot_acceptance')
+    ]
+    env.rows['METADATA_GUARDRAIL_RESULTS'] = [{'table_id': 'orders', 'workspace_id': 'dev', 'guardrail_type': 'source_drift'}]
+    API.orchestrate_demo_reset(reset=True)
+    assert env.rows['METADATA_PROCESSING_STATE'] == env.rows['METADATA_GUARDRAIL_RESULTS'] == []

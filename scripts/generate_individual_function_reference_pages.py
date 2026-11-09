@@ -275,10 +275,10 @@ METADATA_JSON_EXAMPLES = {
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
-    "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
-    "record_type": "source_observation, incremental_checkpoint, drift_baseline, full_source_baseline, or publication_receipt.",
-    "status": "observed for captured source observations; staged before target publication; committed only after exact physical publication verification.",
-    "observation_id": "Identifier grouping the partitions of one captured source snapshot.",
+    "record_id": "Stable SHA256 identity for a typed record. Snapshot evidence and acceptance events are immutable; accepted pipeline source heads advance conditionally.",
+    "record_type": "source_row_evidence, source_snapshot, pipeline_source_baseline, source_snapshot_acceptance, source_observation, incremental_checkpoint, drift_baseline, full_source_baseline or publication_receipt.",
+    "status": "observed for immutable source captures; staged for pending publication progress; committed for verified receipts/checkpoints and source heads/acceptance history after successful Finalize.",
+    "observation_id": "Identifier grouping hash evidence or legacy partitions belonging to one captured physical source snapshot.",
     "run_id": "Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.",
     "pipeline_id": "Stable pipeline identity when execution uses a pipeline plan.",
     "source_table_name": "Physical source table name captured with the observation; null on publication receipts.",
@@ -288,11 +288,11 @@ PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "partition_column": "Column defining observed source partitions, or the incremental watermark column.",
     "change_column": "Source column supplying minimum and maximum change values.",
     "watermark_type": "Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries.",
-    "partition_value": "Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows.",
-    "row_count": "Observed source-partition row count, or zero for an empty source/removal tombstone.",
+    "partition_value": "SHA256 row identity for source_row_evidence; canonical partition text for incremental observations. Null remains distinct from an empty string and applies to receipts and snapshot headers.",
+    "row_count": "Hash multiplicity for source_row_evidence, total rows for a snapshot manifest/head, or legacy partition row count; zero for an empty source.",
     "min_change_value": "Lossless minimum change value encoded according to watermark_type; null for empty observations/removals.",
     "max_change_value": "Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records.",
-    "content_fingerprint": "Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint.",
+    "content_fingerprint": "Source content SHA256: row hash for exact snapshot evidence, manifest hash for a pipeline source head, or legacy partition fingerprint; independent of publication batch identity.",
     "is_present": "True for a present source partition; false for an absent partition or empty incremental aggregate; null when no source partition applies, including empty-source headers and receipts.",
     "publication_id": "Reference to the exact target-specific publication_receipt record_id; a receipt references itself.",
     "publication_batch_id": "Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt.",
@@ -300,6 +300,7 @@ PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "publication_at": "UTC timestamp stamped atomically with target rows; paired with publication_activity_id for verification.",
     "publication_input_rows": "Prepared batch row count. Warehouse append/overwrite recovery verifies the complete marker count.",
     "publication_strategy": "Physical append, overwrite, scd1 or scd2 strategy of the receipt.",
+    "snapshot_payload_json": "Versioned source snapshot manifest: normalized schema, validated key columns, identity strategy, hash/multiplicity completeness totals and parent accepted observation ID. Contains no raw business values.",
 }
 
 METADATA_RELATED_FUNCTIONS = {
@@ -310,7 +311,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_GUARDRAIL_RESULTS": [
-        "check_schema", "check_freshness", "check_source_drift", "check_dq",
+        "check_schema", "check_freshness", "observe_source_drift", "check_dq",
     ],
     "METADATA_PROCESSING_STATE": ["pipeline_read"],
 }
@@ -5697,7 +5698,7 @@ def main() -> None:
             "title": "Standard Orchestration",
             "note": "Recommended",
             "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
+            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "observe_source_drift", "orchestrate_write"},
             "open": True,
         },
         {

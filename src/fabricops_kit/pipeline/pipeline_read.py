@@ -10,7 +10,6 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table
 from fabricops_kit.pipeline.shared import (
     capture_source_observation,
-    observe_full_source,
     resolve_catalogue_table_identity,
     resolve_incremental_source_scope,
     resolve_incremental_observation_columns,
@@ -466,9 +465,7 @@ def pipeline_read(
             context={**(io_context or {}), "_spark_session": spark_session},
         )
 
-    full_observation = observe_full_source(identity,
-        dataframe=(complete_dataframe if store_kind == "lakehouse" else dataframe if read_mode == "full" and query is None else None),
-        context=context)
+    full_observation = {"status": "skipped", "reason": "Call observe_source_drift after all Reads."}
     if has_contract and observation is None:
         observation = capture_source_observation(
             table_id=str(identity["table_id"]), dataframe=dataframe, source_identity=identity, context=context, spark_session=spark_session
@@ -476,7 +473,7 @@ def pipeline_read(
         observation_label = (
             "captured current-run state"
             if observation is not None
-            else "no Source Drift observation configured"
+            else "no observation required"
         )
     elif observation is not None:
         scope_label = "bootstrap full read" if scope.get("first_run") else scope["type"]

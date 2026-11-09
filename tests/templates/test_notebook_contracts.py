@@ -34,7 +34,7 @@ def _load_notebook(path: Path) -> nbformat.NotebookNode:
 def _code_cells(path: Path) -> Iterable[tuple[int, str]]:
     notebook = _load_notebook(path)
     for index, cell in enumerate(notebook.cells):
-        if cell.cell_type == "code":
+        if cell.cell_type == "code" and cell.id != "optional-source-drift-test":
             yield index, cell.source
 
 
@@ -371,7 +371,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
         assert "inspect_source" not in source and "inspect_write" not in source
         assert not {"inspect", "execution-plan"}.intersection(cell.id for cell in notebook.cells)
         for cell in notebook.cells:
-            if cell.cell_type != "code":
+            if cell.cell_type != "code" or cell.id == "optional-source-drift-test":
                 continue
             for orchestrator in ("orchestrate_read", "orchestrate_write"):
                 if f"{orchestrator}(" not in cell.source:
@@ -431,8 +431,8 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
         setup_cells = [cell for cell in notebook.cells
                        if cell.cell_type == "code" and "setup_pipeline(" in cell.source]
         for cell in setup_cells:
-            assert "observe_source=False" in cell.source
-            assert "source_observation_days=None" in cell.source
+            assert "observe_source=" not in cell.source
+            assert "source_observation_days=" not in cell.source
 
         transform_cells = [cell for cell in notebook.cells
                            if cell.cell_type == "code" and cell.id.startswith("transform")]
@@ -653,7 +653,8 @@ def test_demo_notebooks_start_with_title_and_finalize_after_write(notebook_name:
     assert ids[0] == "title"
     assert notebook.cells[0].cell_type == "markdown"
     assert ids.count("title") == 1
-    assert ids[-1] == "finalize-run" and "inspect" not in ids
+    standard_ids = [cell_id for cell_id in ids if not cell_id.startswith("optional-source-drift")]
+    assert standard_ids[-1] == "finalize-run" and "inspect" not in ids
     last_write = max(
         index for index, cell_id in enumerate(ids)
         if cell_id.startswith("write-") and cell_id not in {"write-inspection", "write-dictionary-inspection-heading"}
@@ -740,3 +741,20 @@ def test_02_templates_and_demo_variants_enable_orchestration_progress():
         for call in calls:
             assert any(keyword.arg == "verbose" and isinstance(keyword.value, ast.Constant) and keyword.value.value is True
                        for keyword in call.keywords), f"{path} must set verbose=True for every orchestrator call"
+
+
+def test_02a_optional_source_drift_section_is_dormant_and_complete():
+    """The optional section follows Finalize and demonstrates both decisions before reset."""
+    notebook = _load_notebook(DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb")
+    cells = {cell.id: cell for cell in notebook.cells}
+    source = cells["optional-source-drift-test"].source
+    ast.parse(source)
+    assert source.startswith("RUN_SOURCE_OBSERVATION_TEST = False")
+    assert "if RUN_SOURCE_OBSERVATION_TEST:" in source
+    assert '"O0001"' in source and '"O0002"' in source and '"O9999"' in source
+    assert "observe_source_drift(block=True" in source and "observe_source_drift(block=False" in source
+    assert source.index("finalize_pipeline(baseline_pipeline)") < source.index("mutated =")
+    assert "investigation_query" in source and "samples" in source
+    assert "00C" in source and "RESET_DEMO = True" in source
+    ids = [cell.id for cell in notebook.cells]
+    assert ids.index("optional-source-drift-test") > ids.index("finalize-run")

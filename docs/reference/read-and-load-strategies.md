@@ -390,21 +390,27 @@ An existing target without `_row_hash`, or with missing/invalid historical hashe
 
 ## Full Source Observation
 
-Configure this independently of each Read Mode near pipeline setup:
+Use **Setup → Read → Observe Source Drift (optional) → Transform → Write → Finalize**.
 
 ```python
-pipeline = setup_pipeline(
-    pipeline_mode="Ungoverned",
-    observe_source=False,       # True requests observation in this execution.
-    source_observation_days=7,   # None disables automatic observation.
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
+orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+observation = observe_source_drift(
+    observe_immediately=False,
+    source_observation_days=1,
+    block=True,
 )
 ```
 
-When due, the next Read observes the **entire configured physical source**, ignoring incremental SQL predicates and custom query filters for observation. A complete physical Read is reused where available. The processing DataFrame keeps its normal full or incremental scope.
+Immediate observation (`observe_immediately=True`, the default) forces a check. Otherwise the positive interval runs when due; `None` checks on every call. A scheduled skip means the source was not checked. Invalid intervals, including booleans, fail validation.
 
-The result is exposed as `read_result["full_source_observation"]` and reports first observation, changed, unchanged or skipped. It compares with the previous successfully accepted full observation for this pipeline and source. Disappearing hashes change the fingerprint but never authorize row deletion or SCD expiration. A changed fingerprint does not add a blocking policy; existing explicitly configured Source Drift policies still apply.
+The function observes every source already read, once per canonical Table ID per call. Full, query and Incremental Reads all compare the complete physical source. Later Reads supersede coverage and invalidate pending acceptance; call observation again after the last Read. Existing pipelines that omit this call keep their normal behavior.
 
-`METADATA_PROCESSING_STATE` stores captured `source_observation` rows and publication-bound `full_source_baseline` records. A failed or nonpublishing/no-op Write does not accept a newer full baseline or consume its interval. Exact recovery accepts the original publication's source records. Full observation scans and hashes the source, so choose its interval to match source size and operational needs.
+New rows are allowed. Valid authored unique Grain or source processing keys distinguish exact modifications from removals. Missing, null or duplicate keys use an exact content multiset: added content, missing historical content, zero confirmed modifications and explicitly ambiguous historical changes. No old/new rows are arbitrarily paired. Schema changes are reported and may invalidate identity comparison.
+
+`METADATA_PROCESSING_STATE` retains hash evidence, multiplicity and completeness manifests. Observation creates candidates; successful Finalize and verified required publications accept them. A successful nonblocking run accepts its candidate while keeping warning evidence. Failed, blocked, partially published and stale concurrent executions cannot replace accepted snapshots. The first successful exact snapshot establishes history; old aggregate-only observations cannot reconstruct historical rows.
+
+Full-source scans cost compute, and retained hash evidence grows with distinct content and snapshot count. Observation does not delete, repair or rewrite source rows. All Write Modes retain their existing publication and retry semantics. See [Engineering](../engineering.md#how-does-fabricops-detect-source-drift) for acceptance and diagnostics.
 
 ## Retry and concurrency boundaries
 

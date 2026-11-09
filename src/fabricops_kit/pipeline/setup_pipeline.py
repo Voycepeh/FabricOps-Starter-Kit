@@ -39,12 +39,12 @@ def _table(rows, columns):
 def _applicability(kind, roles):
     boundaries = {
         "schema": "Read and Write", "grain": "Read and Write", "data_quality": "Read and Write",
-        "freshness": "Read", "source_drift": "Write (source/target relationship; Read captures observation)",
+        "freshness": "Read",
         "sensitive_data": "Write",
     }
     boundary = boundaries.get(kind, "Unsupported by current evaluator; retained for review")
     applicable = (kind in {"schema", "grain", "data_quality"}
-                  or (kind in {"freshness", "source_drift"} and "source" in roles)
+                  or (kind in {"freshness"} and "source" in roles)
                   or (kind == "sensitive_data" and "target" in roles))
     return boundary + ("" if applicable else " · Will not run at this participant's boundary")
 
@@ -59,7 +59,7 @@ def _contract_review(row, roles=("source", "target")):
     if not isinstance(columns, list) or not isinstance(rules, list):
         raise ValueError("Selected frozen payload requires table.columns and guardrails lists.")
     names = {column.get("column_id"): column.get("column_name") for column in columns}
-    groups = {kind: [] for kind in ("schema", "grain", "data_quality", "freshness", "source_drift", "sensitive_data")}
+    groups = {kind: [] for kind in ("schema", "grain", "data_quality", "freshness", "sensitive_data")}
     for rule in rules:
         if not isinstance(rule, dict):
             raise ValueError("Invalid saved Guardrail definition.")
@@ -84,7 +84,7 @@ def _contract_review(row, roles=("source", "target")):
 def _inspector(row, roles, results=()):
     review = _contract_review(row, roles)
     labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "freshness": "Freshness",
-              "source_drift": "Source Drift", "sensitive_data": "Sensitive Data"}
+              "sensitive_data": "Sensitive Data"}
     sections = []
     for kind, rules in review["categories"].items():
         content = ""
@@ -127,8 +127,7 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = False,
-                   source_observation_days: int | None = None):
+def setup_pipeline(*, pipeline_mode: str = "Ungoverned"):
     """Start a pipeline using the current Fabric notebook identity and one execution mode.
 
     Dry Run previews transformations, optional Contract checks and profiling without
@@ -141,16 +140,6 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     ----------
     pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
         Preview, publish without governance, or enforce activated governance.
-
-    observe_source : bool, default=False
-        Manually request a full physical Source Observation for this execution.
-    source_observation_days : int or None, default=None
-        Automatically observe after this many days since the last accepted full
-        observation. None disables automatic observation. Manual requests override
-        the interval. Incremental SQL scope does not restrict observation. Baselines
-        are accepted only with verified target publication; failed or no-op writes
-        do not consume the interval. Changed fingerprints are diagnostic unless
-        a separately configured Source Drift policy blocks publication.
 
     Returns
     -------
@@ -177,7 +166,7 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     Raises
     ------
     ValueError
-        If the mode or observation configuration is invalid.
+        If the mode is invalid.
     RuntimeError
         If notebook setup or Spark is unavailable, or signed-in Fabric validation
         remains pending. Governed fails before admission and publication.
@@ -193,15 +182,5 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
 
     if pipeline_mode not in {"Dry Run", "Ungoverned", "Governed"}:
         raise ValueError("pipeline_mode must be exactly Dry Run, Ungoverned or Governed.")
-    if not isinstance(observe_source, bool):
-        raise ValueError("observe_source must be a boolean.")
-    if source_observation_days is not None and (isinstance(source_observation_days, bool)
-            or not isinstance(source_observation_days, int) or source_observation_days <= 0):
-        raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
     session = start_pipeline_session(pipeline_mode, inspector=_inspector)
-    policy = {"manual": observe_source, "days": source_observation_days}
-    if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != policy:
-        session.close(failed=True)
-        raise RuntimeError("Governed parameter overrides differ from the frozen notebook; Dry Run and promote a new version.")
-    session.plan.evidence["source_observation_policy"] = policy
     return session

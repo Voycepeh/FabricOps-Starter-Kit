@@ -902,7 +902,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
 
     controls["save_data_contract"].click()
     assert widget_runtime["calls"]["draft"]
-    assert any(
+    assert not any(
         rule["guardrail_type"] == "source_drift"
         for rule in widget_runtime["calls"]["guardrails"][-1]
     )
@@ -1374,7 +1374,8 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     saved = widget_runtime["calls"]["guardrails"][-1]
 
     by_type = {record["guardrail_type"] for record in saved}
-    assert {"freshness", "source_drift", "sensitive_data", "data_quality"} <= by_type
+    assert {"freshness", "sensitive_data", "data_quality"} <= by_type
+    assert "source_drift" not in by_type
     assert any(
         record["rule_type"] == "completeness"
         and module._parameters(record)["treat_blank_as_missing"] is True

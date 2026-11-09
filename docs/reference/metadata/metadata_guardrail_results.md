@@ -1,9 +1,10 @@
 # METADATA_GUARDRAIL_RESULTS
 
-Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.
+Stores Guardrail outcomes and continuation decisions, with bounded hash-only Source Drift diagnostics.
 
 ## Writer functions
 
+* [`observe_source_drift`](../../api/reference/observe_source_drift.md)
 * [`orchestrate_read`](../../api/reference/orchestrate_read.md)
 * [`orchestrate_write`](../../api/reference/orchestrate_write.md)
 
@@ -18,7 +19,7 @@ Summarizes Guardrail checks from finalized Test runs and Live runs, including wh
 
 **Default physical schema:** `engineering`
 
-**Grain:** One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.
+**Grain:** One table Guardrail outcome or consolidated pipeline Source Drift observation.
 
 **Primary key:** `guardrail_result_id`
 
@@ -30,7 +31,7 @@ via `run_id`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+**Implementation details:** Store aggregate Contract Guardrail outcomes and pipeline Source Drift diagnostics. Source Drift result_payload_json includes pipeline/run/evaluation/source identity, counts, observation timestamp and at most ten hash-only samples per category; pipeline_observation rows persist the consolidated decision without table or Contract identity; raw business rows are never retained. Captured context does not follow later table or rule changes.
 
 ## Column summary
 

@@ -534,6 +534,7 @@ def pipeline_write(
     from fabricops_kit.pipeline.shared import (
         PublicationBatch,
         source_observation_run_id,
+        record_pipeline_publication,
         commit_pipeline_write_success,
         execute_lakehouse_processing,
         stage_pipeline_write_observations,
@@ -661,6 +662,7 @@ def pipeline_write(
             if verbose:
                 print("FabricOps Write → empty incremental scope; no publication or checkpoint commit")
             prepared_df = batch.materialize_caller_snapshot(add_target_audit_fields(batch.dataframe, audit))
+            record_pipeline_publication(target_table_id, "empty_incremental_scope", context=context)
             return {"table_id": target_table_id, "strategy": strategy, "published": False,
                     "publication_status": "empty_incremental_scope", "write_metrics": write_metrics,
                     "dataframe": batch.transfer_caller_snapshot()}
@@ -704,6 +706,7 @@ def pipeline_write(
             if output_rows == 0:
                 write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="no_unseen_hashes")
                 prepared_df = batch.materialize_caller_snapshot(prepared_df)
+                record_pipeline_publication(target_table_id, "no_unseen_hashes", context=context)
                 return {"table_id": target_table_id, "strategy": strategy, "published": False,
                         "publication_status": "no_unseen_hashes", "write_metrics": write_metrics,
                         "dataframe": batch.transfer_caller_snapshot()}

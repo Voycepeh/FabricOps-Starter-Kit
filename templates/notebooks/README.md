@@ -155,7 +155,7 @@ Profiling options, diagnostic detail and repartitioning may differ from the appr
 
 Select `overwrite`, `append_all`, `append_new_only`, `scd1` or `scd2` directly in each `orchestrate_write()` call. Read Mode remains a separate per-source choice. Every managed output contains `_row_hash`; hashing needs no business key or extra contract setting.
 
-The existing Setup Pipeline cell exposes `observe_source=False` and `source_observation_days=None`. Set the boolean to `True` for a manual full physical observation, or set a positive interval such as `7` for automatic observation on a due Read. `None` disables automatic observation. Observation ignores incremental predicates while processing keeps its selected scope. Accepted observation state advances only with verified target publication.
+Call `observe_source_drift(observe_immediately=True, source_observation_days=1, block=True)` after all Reads to opt in. Immediate mode forces a full physical check; False uses the accepted observation interval. A skip means no check ran. `block` is the Block write policy. Successful Finalize accepts candidates only after required publications verify. Pipelines that omit the optional call continue normally. Source Drift is independent of Data Contracts and Write Modes.
 
 See [Read & Write Modes](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/read-and-load-strategies/) for the five strategies, exact hash inputs, legacy-target handling and retry boundaries.
 

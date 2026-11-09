@@ -109,7 +109,7 @@ def _validate_existing_metadata_schema(
         )
     if table_name == "METADATA_PROCESSING_STATE" and (
         "observation_status" in existing or "publication_payload_json" in existing
-        or set(expected) - set(existing)
+        or (set(expected) - set(existing) - ({"snapshot_payload_json"} if allow_missing else set()))
     ):
         raise ValueError(
             "Incompatible METADATA_PROCESSING_STATE schema. Existing checkpoints and publication receipts have been preserved. "

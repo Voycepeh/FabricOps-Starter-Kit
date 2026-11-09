@@ -160,7 +160,7 @@ def test_promotion_only_switches_literal_mode_and_retains_full_content():
     expected = json.loads(raw)
     expected["cells"][1]["source"] = expected["cells"][1]["source"].replace('"Dry Run"', '"Governed"')
     assert json.loads(promoted) == expected
-    assert parameters == {"manual": False, "days": None}
+    assert parameters == {}
 
 
 @pytest.mark.parametrize("code", ["x = 1", 'setup_pipeline(pipeline_id=ID, pipeline_mode="Dry Run")',
