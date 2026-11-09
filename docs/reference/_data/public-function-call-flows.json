@@ -2360,6 +2360,7 @@
         "fabricops_kit.activated_pipeline.shared.read_pipeline_submission",
         "fabricops_kit.activated_pipeline.shared.restore_promoted_notebook",
         "fabricops_kit.activated_pipeline.shared.verify_promotion_integrity",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
         "fabricops_kit.config.orchestrate_demo_reset::<module>"
       ],
       "lifecycle_status": "internal",
@@ -3221,6 +3222,9 @@
         "fabricops_kit.activated_pipeline.shared.metadata_path",
         "fabricops_kit.activated_pipeline.shared.metadata_records",
         "fabricops_kit.activated_pipeline.shared::<module>",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
@@ -3307,6 +3311,7 @@
         "fabricops_kit.activated_pipeline.shared::<module>",
         "fabricops_kit.config.metadata_schemas.coerce_metadata_row_types",
         "fabricops_kit.config.metadata_schemas.metadata_json_schema",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
         "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_metadata_tables::<module>",
@@ -3444,6 +3449,135 @@
       "usage": "public_flow_reachable"
     },
     {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_assert_source",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_assert_source",
+      "source_end_line": 71,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 65,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_check_jobs",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs",
+      "source_end_line": 127,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 74,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_check_metadata_scope",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
+      "source_end_line": 162,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 130,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_clear_metadata",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
+      "source_end_line": 258,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 245,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_metadata_counts",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
+      "source_end_line": 62,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 44,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_metadata_files",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
+      "source_end_line": 188,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 165,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_remove_outputs",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
+      "source_end_line": 220,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 191,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_demo_verify_outputs",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
+      "source_end_line": 242,
+      "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+      "source_start_line": 223,
+      "usage": "public_flow_reachable"
+    },
+    {
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
@@ -3465,9 +3599,9 @@
       "raises_documentation": "ValueError\n    If reset is not a boolean.\nRuntimeError\n    If notebook setup is not ready, required stores or metadata schemas\n    are invalid, non-demo references or active jobs are found, fixtures\n    are unavailable, or reset verification fails. Fabric/Spark permission,\n    transport and storage failures propagate; correct the cause and rerun.",
       "returns_documentation": "None\n    Prints a preview or verified reset summary, including actual removed\n    metadata counts. ``RESET COMPLETE`` is printed only after verification.",
       "signature": "def orchestrate_demo_reset(*, reset: bool=False) -> None",
-      "source_end_line": 453,
+      "source_end_line": 444,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
-      "source_start_line": 270,
+      "source_start_line": 261,
       "summary": "Preview or reset the dedicated FabricOps Guided Demo to Day 1.",
       "usage": "public_flow_reachable",
       "usage_notes": "True clears all current canonical metadata rows in the dedicated item,\nincluding frozen Contracts, activations, approvals, promotion history,\nRuns and Processing State. Saved submissions, Dry Run evidence and notebook\nsnapshots in its three native lifecycle folders are removed too. Table\ndefinitions remain; no metadata migration is performed.\n\nFive Day 1 sources are overwritten and six outputs removed in the reserved\n``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business\ntables and source files are preserved. Exact demo table/workspace references,\nrelevant jobs, artifact contents, fixture counts and catalog locations are\nchecked before deletion. A dedicated name alone cannot prove ownership;\nnever share this Metadata item or these eleven tables with other projects.\n\nMissing outputs and repeated resets are supported. A failure may leave a\npartial reset: this operation is not atomic across tables/stores. Stop all\nwriters, correct the reported cause and rerun. Deployed notebooks, schedules\nand apps are not removed. Live Fabric acceptance is still required."
@@ -6007,8 +6141,9 @@
       "function_type": "public_function",
       "inbound_source_references": [
         "fabricops_kit.activated_pipeline.shared.metadata_records",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
-        "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.config.setup_metadata_tables._retired_preview_warnings",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.data_contract.shared._confirm_contract_mutation",
@@ -6129,7 +6264,7 @@
       "function_name": "read_warehouse_query",
       "function_type": "public_function",
       "inbound_source_references": [
-        "fabricops_kit.config.orchestrate_demo_reset::<module>",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.pipeline_read.pipeline_read",
         "fabricops_kit.pipeline.pipeline_write._target_has_rows",
@@ -6772,6 +6907,7 @@
       "function_name": "execute_warehouse_sql",
       "function_type": "shared_function",
       "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
         "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.io.shared._drop_warehouse_stage_best_effort",
         "fabricops_kit.io.shared.execute_warehouse_processing"
@@ -7105,6 +7241,9 @@
       "inbound_source_references": [
         "fabricops_kit.activated_pipeline.shared.metadata_path",
         "fabricops_kit.activated_pipeline.shared::<module>",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
         "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.config.setup_metadata_tables._upgrade_json_metadata",
         "fabricops_kit.data_contract.shared.freeze_contract",
@@ -7328,6 +7467,7 @@
       "function_name": "resolve_warehouse_name",
       "function_type": "shared_function",
       "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
         "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.io.shared.execute_warehouse_processing",
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
@@ -8937,8 +9077,8 @@
       "function_name": "_table",
       "function_type": "private_function",
       "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
-        "fabricops_kit.config.orchestrate_demo_reset::<module>",
         "fabricops_kit.pipeline.setup_pipeline._inspector"
       ],
       "lifecycle_status": "internal",
@@ -16517,20 +16657,35 @@
     },
     {
       "files_touched": [
+        "src/fabricops_kit/activated_pipeline/shared.py",
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/orchestrate_demo_reset.py",
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_csv.py",
         "src/fabricops_kit/io/read_lakehouse_table.py",
+        "src/fabricops_kit/io/read_warehouse_query.py",
         "src/fabricops_kit/io/shared.py",
         "src/fabricops_kit/pipeline/shared.py"
       ],
       "metrics": {
-        "depth": 4,
-        "scope": 23,
-        "width": 6
+        "depth": 7,
+        "scope": 43,
+        "width": 14
       },
-      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+      "refactor_signals": [
+        {
+          "evidence": [
+            {
+              "depth": 7,
+              "width": 14
+            }
+          ],
+          "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
+          "severity": "warning",
+          "signal": "large_width_or_depth"
+        }
+      ]
     },
     {
       "files_touched": [
@@ -20196,6 +20351,116 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs"
+    },
+    {
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
+      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts"
+    },
+    {
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
+      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.activated_pipeline.shared.snapshot_file",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.execute_warehouse_sql",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_warehouse_name",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs"
+    },
+    {
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
+      "callee_qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_assert_source",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_jobs",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
+      "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
       "caller_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
     },
     {

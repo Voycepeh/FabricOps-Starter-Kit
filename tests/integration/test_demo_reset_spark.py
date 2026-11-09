@@ -85,32 +85,32 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     for name, function in {'read_lakehouse_table': read, 'read_warehouse_table': read,
             'write_lakehouse_table': write, 'write_warehouse_table': write, 'read_lakehouse_csv': read_lakehouse_csv}.items():
         monkeypatch.setattr(API, name, function)
-    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', remove)
-    monkeypatch.setattr(API._DemoReset, '_demo_verify_outputs', verify)
+    monkeypatch.setattr(API, '_demo_remove_outputs', remove)
+    monkeypatch.setattr(API, '_demo_verify_outputs', verify)
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table',
         lambda store, table, schema: (store, table, schema, str(run.root / store / table)))
     artifacts = run.root / 'Metadata/Files/fabricops/engineering'
     (artifacts / 'submissions').mkdir(parents=True)
     (artifacts / 'submissions/demo.json').write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
     orchestrate_demo_reset()  # False previews populated state without changing it.
-    assert all(count == 1 for count in env.state._demo_metadata_counts().values())
+    assert all(count == 1 for count in API._demo_metadata_counts(env.state).values())
     # Fail after metadata deletion to prove the same cell can recover without a new configuration.
     def fail(self, **kw):
         if not kw.get('preview'): raise RuntimeError('simulated Fabric transport failure')
-    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', fail)
+    monkeypatch.setattr(API, '_demo_remove_outputs', fail)
     with pytest.raises(RuntimeError, match='simulated Fabric transport'):
         orchestrate_demo_reset(reset=True)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
-    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', remove)
+    monkeypatch.setattr(API, '_demo_remove_outputs', remove)
     for _ in range(2):
         orchestrate_demo_reset(reset=True)
-        assert env.state._demo_metadata_counts() == dict.fromkeys(registry, 0)
-        assert env.state._demo_metadata_files() == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
+        assert API._demo_metadata_counts(env.state) == dict.fromkeys(registry, 0)
+        assert API._demo_metadata_files(env.state) == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
         for (store, table), (file, count) in API._DEMO_SOURCES.items():
             expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
             actual = read(table, store=store, schema='demo')
             assert actual.count() == count
-            env.state._demo_assert_source(actual, expected)
+            API._demo_assert_source(env.state, actual, expected)
         verify()
         assert read('unrelated', store='Silver', schema='other').collect() == sentinel.collect()
         assert all(read(table, store='Metadata', schema='metadata').schema.simpleString() == schema.simpleString() for table, schema in registry.items())
@@ -119,7 +119,7 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     expected = run.spark.createDataFrame([(1,), (2,)], 'id int')
     wrong = run.spark.createDataFrame([(1,), (1,)], 'id int')
     with pytest.raises(RuntimeError, match='content differs'):
-        env.state._demo_assert_source(wrong, expected)
+        API._demo_assert_source(env.state, wrong, expected)
 
 
 def test_02a_real_transform_and_public_overwrite_preserve_source_content(demo_delta):
@@ -187,7 +187,7 @@ def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_del
     monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: expected})
     monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: run.spark.read.format('delta').load(path))
     with pytest.raises(RuntimeError, match='Run the installed package metadata setup'):
-        state._demo_metadata_counts()
+        API._demo_metadata_counts(state)
     assert delta.history(1).first()['version'] == version
     assert run.spark.read.format('delta').load(path).collect() == before
 
@@ -202,16 +202,16 @@ def test_additive_registry_column_uses_the_installed_package_schema(demo_delta, 
     monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: upgraded})
     monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: frame)
     with pytest.raises(RuntimeError, match='new_package_field'):
-        state._demo_metadata_counts()
+        API._demo_metadata_counts(state)
     # Represent the physical result of the package's additive migration.
     frame = frame.withColumn('new_package_field', F.lit('migrated'))
-    counts = state._demo_metadata_counts()
+    counts = API._demo_metadata_counts(state)
     assert counts == {table: 0}
 
 
 
 def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
-    state = API._DemoReset(object(), object(), {}, demo_csv)
+    state = SimpleNamespace(_demo_config=object(), context=object(), _demo_runtime={}, spark=demo_csv)
     state._metadata = SimpleNamespace(root=str(tmp_path))
     state._demo_table_ids = {'orders'}
     state._demo_workspaces = {'dev'}
@@ -220,9 +220,9 @@ def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
     file = folder / 'foreign.json'
     file.write_text('{"manifest":{"operations":[{"table_id":"production-table"}]}}')
     with pytest.raises(RuntimeError, match='Non-demo'):
-        state._demo_metadata_files()
+        API._demo_metadata_files(state)
     assert file.exists()
     file.write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
-    assert state._demo_metadata_files()['submissions'] == 1
-    assert state._demo_metadata_files(delete=True)['submissions'] == 1
+    assert API._demo_metadata_files(state)['submissions'] == 1
+    assert API._demo_metadata_files(state, delete=True)['submissions'] == 1
     assert not folder.exists()

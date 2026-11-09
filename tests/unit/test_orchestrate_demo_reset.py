@@ -36,17 +36,17 @@ def _environment(monkeypatch):
     monkeypatch.setattr(API, 'FabricNotebookClient', lambda: SimpleNamespace(request=request))
     monkeypatch.setattr(API, 'resolve_physical_table_identity', lambda *a, **kw: {'table_id': kw['table_name']})
     monkeypatch.setattr(API, 'get_spark_session', lambda: object())
-    state = API._DemoReset(config, setup, runtime, object())
+    state = SimpleNamespace(_demo_config=config, context=setup, _demo_runtime=runtime, spark=object())
     return SimpleNamespace(rows=rows, config=config, setup=setup, runtime=runtime, state=state)
 
 
 def _ready(monkeypatch):
     env = _environment(monkeypatch)
-    monkeypatch.setattr(API._DemoReset, '_demo_check_jobs', lambda self: None)
-    monkeypatch.setattr(API._DemoReset, '_demo_metadata_files', lambda self, **kw: {'submissions': 0, 'dry_runs': 0, 'pipeline_snapshots': 0})
-    monkeypatch.setattr(API._DemoReset, '_demo_remove_outputs', lambda self, **kw: None)
-    monkeypatch.setattr(API._DemoReset, '_demo_verify_outputs', lambda self: None)
-    monkeypatch.setattr(API._DemoReset, '_demo_assert_source', lambda *a: None)
+    monkeypatch.setattr(API, '_demo_check_jobs', lambda self: None)
+    monkeypatch.setattr(API, '_demo_metadata_files', lambda self, **kw: {'submissions': 0, 'dry_runs': 0, 'pipeline_snapshots': 0})
+    monkeypatch.setattr(API, '_demo_remove_outputs', lambda self, **kw: None)
+    monkeypatch.setattr(API, '_demo_verify_outputs', lambda self: None)
+    monkeypatch.setattr(API, '_demo_assert_source', lambda *a: None)
     monkeypatch.setattr(API, 'read_lakehouse_csv', lambda file, **kw: SimpleNamespace(cache=lambda: SimpleNamespace(
         count=lambda: next(count for path, count in API._DEMO_SOURCES.values() if path == file), unpersist=lambda: None)))
     monkeypatch.setattr(API, 'write_lakehouse_table', lambda *a, **kw: None)
@@ -60,7 +60,7 @@ def _ready(monkeypatch):
             print(f'{table}: removed {len(env.rows[table])}')
             if env.rows[table]: env.removed.append(table)
             env.rows[table].clear()
-    monkeypatch.setattr(API._DemoReset, '_demo_clear_metadata', clear)
+    monkeypatch.setattr(API, '_demo_clear_metadata', clear)
     return env
 
 
@@ -130,7 +130,7 @@ def test_foreign_metadata_blocks_true_before_any_deletion(monkeypatch, table, ro
 def test_owned_contract_and_activation_references_are_in_scope(monkeypatch):
     state = _environment(monkeypatch).state
     state._demo_table_ids = {'orders'}; state._demo_workspaces = {'dev', 'governance'}
-    state._demo_check_metadata_scope({'table_id': 'orders', 'workspace_id': 'DEV',
+    API._demo_check_metadata_scope(state, {'table_id': 'orders', 'workspace_id': 'DEV',
         'contract_payload_json': '{"table":{"table_id":"orders"}}',
         'package_json': '{"manifest":{"operations":[{"table_id":"orders"}]}}'})
 
@@ -147,7 +147,7 @@ def test_schema_migration_must_precede_reset(monkeypatch, table, field, wrong_ty
     monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: expected})
     monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: SimpleNamespace(schema=actual, count=lambda: 0))
     with pytest.raises(RuntimeError, match='missing columns or incompatible types'):
-        env.state._demo_metadata_counts()
+        API._demo_metadata_counts(env.state)
 
 
 @pytest.mark.parametrize('status', ['NotStarted', 'InProgress', 'Unknown'])
@@ -159,7 +159,7 @@ def test_active_demo_job_blocks_reset(monkeypatch, status):
         return {'value': [{'status': status}]}
     state._demo_client = SimpleNamespace(request=request)
     with pytest.raises(RuntimeError, match='job is active'):
-        state._demo_check_jobs()
+        API._demo_check_jobs(state)
 
 
 @pytest.mark.parametrize('initially_present', [False, True])
@@ -190,9 +190,9 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table', lambda store, table, schema: (store, table, schema, f'/configured/{store}/demo/{table}'))
     monkeypatch.setattr(API, 'read_warehouse_query', lambda *a, **kw: SimpleNamespace(first=lambda: {'n': 0}))
     before = existing.copy()
-    state._demo_remove_outputs(preview=True)
+    API._demo_remove_outputs(state, preview=True)
     assert existing == before and not warehouse
-    state._demo_remove_outputs(); state._demo_remove_outputs(); state._demo_verify_outputs()
+    API._demo_remove_outputs(state); API._demo_remove_outputs(state); API._demo_verify_outputs(state)
     assert existing == {'/configured/Silver/demo/unrelated'}
     assert not catalog and len(warehouse) == 2
     assert all('DROP TABLE [demo].[customer_summary]' in call[0][2] for call in warehouse)
@@ -225,7 +225,7 @@ def test_fixture_failure_precedes_metadata_or_output_deletion(monkeypatch):
 
 def test_incomplete_metadata_deletion_cannot_report_success(monkeypatch, capsys):
     env = _ready(monkeypatch); env.rows['METADATA_PROCESSING_STATE'] = [{'source_table_id': 'orders'}]
-    monkeypatch.setattr(API._DemoReset, '_demo_clear_metadata', lambda *a: None)
+    monkeypatch.setattr(API, '_demo_clear_metadata', lambda *a: None)
     with pytest.raises(RuntimeError, match='Metadata reset incomplete'):
         API.orchestrate_demo_reset(reset=True)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
@@ -234,7 +234,7 @@ def test_incomplete_metadata_deletion_cannot_report_success(monkeypatch, capsys)
 def test_output_verification_failure_cannot_report_success(monkeypatch, capsys):
     _ready(monkeypatch)
     def fail(self): raise RuntimeError('output remains')
-    monkeypatch.setattr(API._DemoReset, '_demo_verify_outputs', fail)
+    monkeypatch.setattr(API, '_demo_verify_outputs', fail)
     with pytest.raises(RuntimeError, match='output remains'):
         API.orchestrate_demo_reset(reset=True)
     assert 'RESET COMPLETE' not in capsys.readouterr().out
