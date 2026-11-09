@@ -16,6 +16,8 @@ def test_reset_is_one_code_cell_and_false_cannot_write_later_cells():
     assert CELLS['reset'].startswith('RESET_DEMO = False')
     assert 'orchestrate_demo_reset(reset=RESET_DEMO)' in CELLS['reset']
     assert len(CELLS['reset'].splitlines()) <= 5
+    cell_ids = [cell.id for cell in notebook.cells]
+    assert cell_ids.index('reset') < cell_ids.index('f301cfb3-3d29-41b5-87b3-28335c93a447')
     for cell in notebook.cells:
         if cell.cell_type != 'code': continue
         compile(cell.source, str(NOTEBOOK), 'exec')

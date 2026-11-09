@@ -13,7 +13,7 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 </div>
 </div>
 
-1. If you havent done so , download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
+1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 
 2. Attach the same Fabric Environment used by the other notebooks.
 
@@ -21,7 +21,9 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 
 ![File upload](../assets/00C/File%20Upload.png)
 
-### Load the shared 00_env_config notebook that is in the same workspace via our helper function (Or if you did want to point to a notebook in another workpace just pass the workpace id into the helper funciton)
+### Load the shared configuration
+
+Run `setup_notebook()` to load the existing `00_env_config`.
 
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
 
@@ -45,7 +47,7 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
 !!! warning "Dedicated demo environment only"
 
-    `True` deletes **all rows in the 14 metadata tables**, including Contracts, activations, approvals and Run history, plus saved submissions, Dry Run evidence and notebook snapshots in the dedicated Metadata item. It also restores five Day 1 sources and removes six demo outputs. Use only disposable demo assets. Source files and other business tables are preserved. Deployed notebooks and schedules are not deleted; stop or retire old copies before restarting.
+    `True` deletes **all rows in the 14 metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores five Day 1 sources and removes six outputs. Stop demo jobs first. Never use shared or production assets.
 
 ??? info "Checks before deletion and reset scope"
 
@@ -69,6 +71,8 @@ orchestrate_demo_reset(reset=RESET_DEMO)
     | `demo.inventory_movements_append_new_only` | Silver |
     | `demo.product_master_scd1` | Silver |
     | `demo.product_master_scd2` | Silver |
+
+    The reset clears saved submissions, Dry Run evidence and notebook snapshots. Source files and other business tables are preserved. Deployed notebooks and schedules are not deleted; stop or retire old copies before restarting.
 
     Verification compares full source content with the fixtures and checks all six outputs are absent. Missing outputs are OK. If preparation fails partway, fix the reported cause and rerun the same reset cell. Repeated resets return to the same Day 1 state. To retain old Contracts/history, use a separate demo environment instead of clearing this one.
 

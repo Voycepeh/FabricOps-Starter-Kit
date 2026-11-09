@@ -99,14 +99,9 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="governance-metadata" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">8 functions · Author and inspect governed context</span></summary>
+<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">7 functions · Author and inspect governed context</span></summary>
 <p class="reference-function-group-description">Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows.</p>
 <div class="reference-catalogue-list">
-<article id="config.orchestrate_demo_reset-orchestrate_demo_reset" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_demo_reset" data-callable-module="config.orchestrate_demo_reset" data-function-type="public-starter-kit" data-callable-purpose="Preview or reset the dedicated Guided Demo to Day 1.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_demo_reset/"><code>orchestrate_demo_reset</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Preview or reset the dedicated Guided Demo to Day 1.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables and check existing table columns and Spark data types.</p>
@@ -225,6 +220,18 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
+</article>
+</div>
+</details>
+
+<details class="reference-function-group" data-callable-group="demo" data-default-open="false">
+<summary><span class="reference-function-group-title">Demo</span><span class="reference-function-group-meta">1 function · Dedicated demo environment only</span></summary>
+<p class="reference-function-group-description">Preview or reset the disposable Guided Demo to Day 1.</p>
+<div class="reference-catalogue-list">
+<article id="config.orchestrate_demo_reset-orchestrate_demo_reset" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_demo_reset" data-callable-module="config.orchestrate_demo_reset" data-function-type="public-starter-kit" data-callable-purpose="Preview or reset the dedicated Guided Demo to Day 1.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_demo_reset/"><code>orchestrate_demo_reset</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Preview or reset the dedicated Guided Demo to Day 1.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
 </details>
