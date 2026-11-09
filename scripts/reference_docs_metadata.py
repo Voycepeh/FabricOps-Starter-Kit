@@ -1771,6 +1771,21 @@ PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipe
     'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
     'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})
 
+PUBLIC_SYMBOL_DOCS.append({
+    'kind': 'function', 'module': 'config.orchestrate_demo_reset',
+    'function_type': 'callable', 'symbol_name': 'orchestrate_demo_reset',
+    'summary_override': 'Preview or reset the dedicated Guided Demo to Day 1.',
+    'template_notebook': '00C_demo_setup', 'template_segment': 'Reset demo',
+    'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
+    'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
+    'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.',
+    'side_effects': 'With reset=True, clears all 14 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
+    'fabric_context': 'Requires successful setup_notebook, a manually created schema-enabled demo_metadata Lakehouse and configured Bronze/Silver/Gold stores with uploaded Files/demo fixtures.',
+    'preferred_example': 'from fabricops_kit import setup_notebook, orchestrate_demo_reset\n\ncontext = setup_notebook()\nRESET_DEMO = False\norchestrate_demo_reset(reset=RESET_DEMO)',
+    'related_functions': ['setup_notebook', 'setup_metadata_tables'],
+    'related_guides': [{'title': 'Prepare and reset the demo', 'path': '../../guided-demo/00C-prepare-demo-data-with-fabricops-io.md'}],
+})
+
 for _row in PUBLIC_SYMBOL_DOCS:
     _update = FOCUSED_FUNCTION_DOC_UPDATES.get(_row.get("symbol_name"))
     if _update:
