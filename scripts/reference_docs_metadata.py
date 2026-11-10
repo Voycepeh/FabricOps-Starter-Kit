@@ -939,7 +939,7 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Source read capability',
  'use_when': 'Use for an explicit full source read or a target-aware incremental source read.',
  'do_not_use_when': 'Use orchestrate_read for the standard governed Read lifecycle, including Guardrails; use foundational file readers for raw Lakehouse Files.',
- 'parameters': 'Canonical source table_id or configured store, schema, and table_name; explicit read_mode; target_table_id required for incremental mode; optional full-read Warehouse query.',
+ 'parameters': 'Canonical source table_id or configured store, schema, and table_name; explicit read_mode; target_table_id required for incremental mode; optional full-read Spark SQL on a Lakehouse or T-SQL on a Warehouse.',
  'returns': 'DataFrame, canonical source table_id, read mode, custom-query and contract signals, has_data/should_process, and a compact resolved scope summary.',
  'side_effects': 'Captures current Source Observation state for governed full reads and stages target-specific incremental state; accepted progress advances only after successful target publication.',
  'preferred_example': 'source = pipeline_read(store="Bronze", schema="demo", table_name="orders")',

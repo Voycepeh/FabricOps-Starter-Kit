@@ -34,7 +34,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
 
     Profiling uses the complete source with frozen contract policies and shared
     persisted completion history. Full table reads reuse the exact returned DataFrame;
-    query and incremental Reads still profile the complete physical source. Successful
+    query and incremental Reads still profile the complete physical source when due.
+    A restricted query never replaces full-source observations or profile snapshots.
+    Not-due or trigger-mismatched schedules cause no separate profiling scan; configured
+    Source Observation, Freshness and Source Drift checks retain their physical scope. Successful
     Dry Run retains calculated observations only in the session without consuming
     persisted schedules. Guardrail
     checks run regardless of profiling eligibility.
@@ -54,7 +57,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id : str, optional
         Required target for incremental reads, also a participant in the plan.
     query : str, optional
-        Read-only Warehouse query, supported for full reads only.
+        Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full
+        reads only. Lakehouse SQL binds the declared source through configured
+        OneLake routing. Simple integer TOP projections can convert to LIMIT;
+        complex T-SQL requires native Spark SQL and otherwise raises ValueError.
     verbose : bool
         Print concise stage outcomes and summary.
     dq_diagnostics : {"sample", "none", "full"}

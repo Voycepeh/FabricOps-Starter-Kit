@@ -67,7 +67,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical source table name. |
 | `read_mode` | `str` | No | `'full'` | Full reads profile the source; incremental reads retain checkpoint bounds. |
-| `query` | `str \| None` | No | `None` | Read-only Warehouse query, supported for full reads only. |
+| `query` | `str \| None` | No | `None` | Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full reads only. Lakehouse SQL binds the declared source through configured OneLake routing. Simple integer TOP projections can convert to LIMIT; complex T-SQL requires native Spark SQL and otherwise raises ValueError. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental watermark_column; must agree with the selected contract. |
 | `target_table_id` | `str \| None` | No | `None` | Required target for incremental reads, also a participant in the plan. |
 | `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
@@ -114,7 +114,10 @@ dq_diagnostics accepts sample, none or full for explicit debugging.
 
 Profiling uses the complete source with frozen contract policies and shared
 persisted completion history. Full table reads reuse the exact returned DataFrame;
-query and incremental Reads still profile the complete physical source. Successful
+query and incremental Reads still profile the complete physical source when due.
+A restricted query never replaces full-source observations or profile snapshots.
+Not-due or trigger-mismatched schedules cause no separate profiling scan; configured
+Source Observation, Freshness and Source Drift checks retain their physical scope. Successful
 Dry Run retains calculated observations only in the session without consuming
 persisted schedules. Guardrail
 checks run regardless of profiling eligibility.
@@ -130,7 +133,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L155">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L161">View on GitHub</a>
 </div>
 
 
@@ -146,7 +149,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 230 |
+| Live-critical dependencies | 232 |
 
 ### Release history
 
@@ -235,11 +238,13 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_freshness.check_freshness</code></li>
 <li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._lakehouse_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._measure_returned_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>

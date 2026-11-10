@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.shared import get_spark_session, validate_select_query
 
 from typing import Any
 
@@ -132,6 +132,103 @@ def _resolve_requested_incremental_columns(
     return requested, requested
 
 
+def _lakehouse_query(query: str, identity: dict[str, Any], *, context, spark_session):
+    """Bind a read-only Spark query to the configured source, never the default catalog."""
+    from uuid import uuid4
+
+    import sqlglot
+    from sqlglot import exp, errors
+    from sqlglot.optimizer.scope import traverse_scope
+
+    label = ".".join(str(identity[key]) for key in ("store", "schema", "table_name") if identity.get(key))
+
+    def invalid(reason):
+        return ValueError(f"Lakehouse source {label!r}: {reason}")
+
+    sql = str(query or "").strip()
+    # Only a simple TOP projection has a deliberately supported conversion.
+    # Do not use general-purpose transpilation as proof of SQL equivalence.
+    try:
+        tokens = sqlglot.Dialect.get_or_raise("spark").tokenize(sql)
+        tsql = any(token.text.upper() == "TOP" and token.token_type.name not in
+                   {"STRING", "IDENTIFIER"} for token in tokens)
+        if not tsql and any(token.token_type.name == "L_BRACKET" and
+                            (index == 0 or tokens[index - 1].token_type.name not in
+                             {"VAR", "IDENTIFIER", "R_PAREN", "R_BRACKET"})
+                            for index, token in enumerate(tokens)):
+            raise invalid("T-SQL bracket identifiers require native Spark backtick identifiers; "
+                          "automatic bracket conversion is supported only with simple TOP queries.")
+        statements = sqlglot.parse(sql, read="tsql" if tsql else "spark")
+    except (errors.ParseError, errors.TokenError) as exc:
+        raise invalid("expected one read-only Spark SQL SELECT/CTE; unsupported T-SQL must be rewritten as Spark SQL.") from exc
+    if len(statements) != 1 or not isinstance(statements[0], exp.Query):
+        raise invalid("expected one read-only Spark SQL SELECT/CTE.")
+    tree = statements[0]
+    forbidden = (exp.DDL, exp.DML, exp.Command, exp.Into, exp.Lock, exp.Parameter)
+    if any(isinstance(node, forbidden) for node in tree.walk()):
+        raise invalid("mutations, SELECT INTO, commands, locks and parameters are unsupported.")
+    if tsql:
+        allowed = (exp.Select, exp.From, exp.Table, exp.Identifier, exp.Column, exp.Star,
+                   exp.Alias, exp.Limit, exp.Literal, exp.Where, exp.And, exp.Or, exp.Not,
+                   exp.Paren, exp.EQ, exp.NEQ, exp.GT, exp.GTE, exp.LT, exp.LTE,
+                   exp.Is, exp.Null, exp.Boolean, exp.Order, exp.Ordered)
+        limit = tree.args.get("limit")
+        if (not isinstance(tree, exp.Select) or limit is None
+                or not isinstance(limit.expression, exp.Literal) or not limit.expression.is_int
+                or any(not isinstance(node, allowed) for node in tree.walk())
+                or any(node.args.get("limit_options") for node in tree.find_all(exp.Limit))):
+            raise invalid("T-SQL TOP conversion supports only a simple projection/filter/order with an integer row count; "
+                          "PERCENT, WITH TIES, functions, joins and compound queries require native Spark SQL.")
+    # Scope analysis distinguishes real tables from CTE names, including nested CTEs.
+    # Only the explicitly governed physical source may be bound by this operation.
+    references = []
+    try:
+        sources = [pair for scope in traverse_scope(tree) for pair in scope.selected_sources.values()]
+    except errors.OptimizeError as exc:
+        raise invalid(f"ambiguous query source: {exc}") from exc
+    for node, source in sources:
+        if not isinstance(source, exp.Table):
+            continue
+        if (not isinstance(source.this, exp.Identifier) or source.catalog
+                or source.name != str(identity["table_name"])
+                or (source.db and source.db != identity.get("schema"))
+                or set(source.args) - {"this", "db", "catalog", "alias"}):
+            raise invalid("query tables must name the declared source (table or schema.table); "
+                          "other sources, catalog names, paths, table functions and hints are unsupported.")
+        references.append(node)
+    if not references:
+        raise invalid("query must read the declared physical source.")
+    # Reject table-valued functions and external sources that scope analysis does
+    # not classify as physical Table nodes (for example read_files or UNNEST).
+    if any(isinstance(node, (exp.UDTF, exp.Lateral)) for node in tree.walk()):
+        raise invalid("external and table-valued sources are unsupported.")
+    view = "_fabricops_query_" + uuid4().hex
+    for node in references:
+        alias = node.args.get("alias") or exp.TableAlias(this=exp.to_identifier(node.name))
+        node.replace(exp.Table(this=exp.to_identifier(view), alias=alias.copy()))
+    # Removing a schema qualifier from a table also requires resolving qualified
+    # column references against its preserved alias.
+    for column in tree.find_all(exp.Column):
+        if column.db or column.catalog:
+            if column.catalog or column.db != identity.get("schema") or column.table != identity["table_name"]:
+                raise invalid("column qualifiers must refer to the declared source or its alias.")
+            column.set("db", None)
+    try:
+        sql = tree.sql(dialect="spark", unsupported_level=errors.ErrorLevel.RAISE)
+    except errors.UnsupportedError as exc:
+        raise invalid("SQL cannot be represented safely in Spark; use native Spark SQL.") from exc
+    dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]),
+                                    schema=identity.get("schema"), context=context)
+    dataframe.createOrReplaceTempView(view)
+    try:
+        # Spark analyzes and binds the logical plan while the private view exists.
+        return spark_session.sql(sql)
+    except Exception as exc:
+        raise invalid(f"Spark SQL analysis failed: {exc}") from exc
+    finally:
+        spark_session.catalog.dropTempView(view)
+
+
 def pipeline_read(
     *,
     store: str | None = None,
@@ -176,13 +273,17 @@ def pipeline_read(
         form and is mutually exclusive with ``store``, ``schema``, and
         ``table_name``.
     query : str, optional
-        Read-only SQL for a configured Warehouse source in full mode only;
+        Read-only Spark SQL for a Lakehouse or T-SQL for a Warehouse in full mode only;
         incremental mode rejects caller-owned SQL. The supplied source
         identity remains the governed source participant even when the result
         is a projection, filter, join, or aggregation. FabricOps does not infer
         arbitrary source identity by parsing SQL. A query may accompany either
         physical coordinates or ``table_id`` when the resolved store is a
-        Warehouse.
+        Lakehouse or Warehouse. Lakehouse queries bind only the declared source,
+        using table or schema.table names, including CTEs and self joins.
+        Simple integer TOP projection/filter/order queries are converted to LIMIT;
+        complex T-SQL raises ValueError rather than risking a changed meaning.
+        SQL endpoint fallback is not configured by this API.
     read_mode : {"full", "incremental"}, default="full"
         Explicit source read behaviour. ``full`` preserves the complete-source
         read. ``incremental`` resolves unconsumed work from the last Source
@@ -219,7 +320,7 @@ def pipeline_read(
         - ``dataframe``: the Spark DataFrame returned by the selected
           foundational Fabric I/O reader.
         - ``table_id``: the canonical identity of the governed physical source.
-        - ``is_query``: whether ``dataframe`` is a custom Warehouse query
+        - ``is_query``: whether ``dataframe`` is a custom SQL query
           result rather than the complete physical table.
         - ``has_contract``: whether an workspace_id-selected immutable Data
           Contract applies. The contract record itself is not exposed.
@@ -233,9 +334,8 @@ def pipeline_read(
     ------
     ValueError
         If identity inputs conflict or are incomplete, the source is not
-        registered, its configured store kind is unsupported, or a query is
-        supplied for a Lakehouse source, incremental mode has no target, or
-        project-owned Warehouse SQL is combined with incremental mode.
+        registered, its configured store kind is unsupported, a Lakehouse query contains unsupported SQL or other physical sources,
+        incremental mode has no target, or caller-owned SQL is combined with incremental mode.
     RuntimeError
         If a different source state is already awaiting publication for this
         source and target. Finish or retry that Read's prepared batch before
@@ -274,7 +374,7 @@ def pipeline_read(
     Files do not have a canonical ``table_id`` and should continue to use the
     foundational CSV, Excel, JSON, or Parquet readers directly.
 
-    Incremental Warehouse reads reject caller-owned ``query`` SQL because
+    Incremental reads reject caller-owned ``query`` SQL because
     FabricOps cannot safely compose arbitrary SQL with its target-specific
     progress predicate. Source Drift remains a separate compatibility check;
     incremental scope answers only what this target has not consumed.
@@ -383,8 +483,11 @@ def pipeline_read(
             f"Configured source has unsupported store kind {store_kind or '<blank>'!r}; "
             "supported kinds are: lakehouse, warehouse."
         )
-    if store_kind == "lakehouse" and query is not None:
-        raise ValueError("query is supported only for a configured Warehouse source, not a Lakehouse source.")
+    if store_kind == "warehouse" and query is not None:
+        try:
+            query = validate_select_query(query)
+        except ValueError as exc:
+            raise ValueError(f"Warehouse source {identity['store']}.{identity['table_name']}: {exc}") from exc
 
     canonical_target_id = str(target_table_id).strip() if target_table_id is not None else None
 
@@ -406,7 +509,7 @@ def pipeline_read(
     source_parts.append(f"Table: {identity['table_name']}")
     io_context = {**context, "_fabricops_suppress_io_log": True}
     if store_kind == "lakehouse":
-        reader_name = "read_lakehouse_table"
+        reader_name = "Spark SQL via read_lakehouse_table" if query is not None else "read_lakehouse_table"
     elif query is not None or read_mode == "incremental":
         reader_name = "read_warehouse_query"
     else:
@@ -423,7 +526,11 @@ def pipeline_read(
     recovery_start = len(context.get("_fabricops_source_observation_recovery", []))
     observation = None
     scope: dict[str, Any] = {"type": "full", "first_run": False}
-    if store_kind == "lakehouse":
+    complete_dataframe = None
+    if store_kind == "lakehouse" and query is not None:
+        dataframe = _lakehouse_query(query, identity, context={**io_context, "_spark_session": spark_session},
+                                    spark_session=spark_session)
+    elif store_kind == "lakehouse":
         complete_dataframe = read_lakehouse_table(str(identity["table_name"]), store=str(identity["store"]), schema=identity.get("schema"), context={**(io_context or {}), "_spark_session": spark_session})
         if read_mode == "incremental":
             observation = capture_source_observation(
@@ -441,7 +548,12 @@ def pipeline_read(
         else:
             dataframe = complete_dataframe
     elif query is not None:
-        dataframe = read_warehouse_query(query, store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session})
+        try:
+            dataframe = read_warehouse_query(query, store=str(identity["store"]), context={**(io_context or {}), "_spark_session": spark_session})
+        except Exception as exc:
+            exc.add_note(f"Warehouse source {identity['store']}.{identity.get('schema')}.{identity['table_name']}: "
+                         "query execution uses the configured T-SQL engine; SQL is not converted or retried on another source.")
+            raise
     elif read_mode == "incremental":
         observation = capture_source_observation(
             table_id=str(identity["table_id"]),
@@ -471,7 +583,7 @@ def pipeline_read(
         context=context)
     if has_contract and observation is None:
         observation = capture_source_observation(
-            table_id=str(identity["table_id"]), dataframe=dataframe, source_identity=identity, context=context, spark_session=spark_session
+            table_id=str(identity["table_id"]), dataframe=None if query is not None else dataframe, source_identity=identity, context=context, spark_session=spark_session
         )
         observation_label = (
             "captured current-run state"

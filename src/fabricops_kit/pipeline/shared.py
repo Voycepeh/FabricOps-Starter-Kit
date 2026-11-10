@@ -6844,7 +6844,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 "results_persisted": False}, context=context, spark_session=spark_session)
             profile_context = {**context, "activity_id": profile_snapshot_id,
                                "_profile_snapshot_id": profile_snapshot_id}
-            outcome = execute_table_profile(table_id=table_id, context=profile_context,
+            outcome = execute_table_profile(table_id=table_id, dataframe=dataframe, context=profile_context,
                 spark_session=spark_session, verbose=False, activities={activity})
             completed_at = datetime.now(UTC).isoformat()
             outcomes[activity] = {"status": "passed", "profile_snapshot_id": profile_snapshot_id if activity != "grain" and not outcome.get("empty_result") else None,

@@ -65,7 +65,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `schema` | `str \| None` | No | `None` | Physical source schema, when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | `None` | Physical source table name. Required with ``store`` when ``table_id`` is omitted. ``store``, optional ``schema``, and ``table_name`` form one identity form. |
 | `table_id` | `str \| None` | No | `None` | Canonical registered source identity. This is the alternative identity form and is mutually exclusive with ``store``, ``schema``, and ``table_name``. |
-| `query` | `str \| None` | No | `None` | Read-only SQL for a configured Warehouse source in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse. |
+| `query` | `str \| None` | No | `None` | Read-only Spark SQL for a Lakehouse or T-SQL for a Warehouse in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Lakehouse or Warehouse. Lakehouse queries bind only the declared source, using table or schema.table names, including CTEs and self joins. Simple integer TOP projection/filter/order queries are converted to LIMIT; complex T-SQL raises ValueError rather than risking a changed meaning. SQL endpoint fallback is not configured by this API. |
 | `read_mode` | `str` | No | `'full'` | Explicit source read behaviour. ``full`` preserves the complete-source read. ``incremental`` resolves unconsumed work from the last Source Observation committed for this exact source-to-target relationship. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental read configuration. Supports only watermark_column. If a Data Contract is selected, its watermark must match the requested one. For incremental mode, provide ``{"watermark_column": "modified_at"}`` when no selected contract supplies the watermark. None is valid only when the selected mode and contract provide the required configuration. |
 | `target_table_id` | `str \| None` | No | `None` | Canonical governed target being prepared. It is accepted for both read modes so target flows can use one consistent call shape, and is required when ``read_mode="incremental"``. |
@@ -146,7 +146,7 @@ dict
     - ``dataframe``: the Spark DataFrame returned by the selected
       foundational Fabric I/O reader.
     - ``table_id``: the canonical identity of the governed physical source.
-    - ``is_query``: whether ``dataframe`` is a custom Warehouse query
+    - ``is_query``: whether ``dataframe`` is a custom SQL query
       result rather than the complete physical table.
     - ``has_contract``: whether an workspace_id-selected immutable Data
       Contract applies. The contract record itself is not exposed.
@@ -160,9 +160,8 @@ dict
 
 ValueError
     If identity inputs conflict or are incomplete, the source is not
-    registered, its configured store kind is unsupported, or a query is
-    supplied for a Lakehouse source, incremental mode has no target, or
-    project-owned Warehouse SQL is combined with incremental mode.
+    registered, its configured store kind is unsupported, a Lakehouse query contains unsupported SQL or other physical sources,
+    incremental mode has no target, or caller-owned SQL is combined with incremental mode.
 RuntimeError
     If a different source state is already awaiting publication for this
     source and target. Finish or retry that Read's prepared batch before
@@ -193,9 +192,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/pipeline_read.py:135`
+`fabricops_kit/pipeline/pipeline_read.py:232`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L135-L546">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py#L232-L658">View on GitHub</a>
 </div>
 
 
@@ -233,7 +232,7 @@ general-purpose Fabric reads that do not need pipeline orchestration.
 Files do not have a canonical ``table_id`` and should continue to use the
 foundational CSV, Excel, JSON, or Parquet readers directly.
 
-Incremental Warehouse reads reject caller-owned ``query`` SQL because
+Incremental reads reject caller-owned ``query`` SQL because
 FabricOps cannot safely compose arbitrary SQL with its target-specific
 progress predicate. Source Drift remains a separate compatibility check;
 incremental scope answers only what this target has not consumed.
@@ -261,7 +260,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 133 |
+| Live-critical dependencies | 135 |
 
 ### Release history
 
@@ -348,7 +347,9 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._lakehouse_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._measure_returned_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
