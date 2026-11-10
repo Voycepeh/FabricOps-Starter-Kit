@@ -3,7 +3,7 @@
 ## Implemented functionality
 
 - Functional PBIP with TMDL semantic model, enhanced PBIR report definitions, DAX measures, explicit relationships, theme, four visible pages, and two hidden native drillthrough pages.
-- TMDL relationship endpoints use valid dotted quoted references for table and column names, including names with spaces.
+- TMDL relationships use dotted quoted references and supported `bothDirections` cross-filter values.
 - Configurable SQL endpoint, database, metadata schemas, workspace scope, and 180-day default history window.
 - Explicit source projection and selective JSON extraction; no `SELECT *`, reporting views, persisted tables, or pipeline/metadata-writer changes.
 - Descriptive pipeline activity and outcomes, activation decisions and submitted Dry Run evidence, duration versus historical median, all-table Governance exploration, Steward-filtered Data Owner tables, latest profiling/access observations, and per-run diagnostics.

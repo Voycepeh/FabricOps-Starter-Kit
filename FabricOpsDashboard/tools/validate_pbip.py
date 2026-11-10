@@ -31,6 +31,8 @@ pages=json.loads((REPORT/'pages/pages.json').read_text()); check(pages['pageOrde
 relationships=(MODEL/'relationships.tmdl').read_text()
 relationship_columns=re.findall(r"(?m)^\t(?:from|to)Column: (.+)$",relationships)
 check(bool(relationship_columns) and all(re.fullmatch(r"'(?:[^']|'')+'\.'(?:[^']|'')+'",column) for column in relationship_columns),'TMDL relationship columns must use dotted quoted references')
+cross_filter_values=re.findall(r"(?m)^\tcrossFilteringBehavior: (.+)$",relationships)
+check(set(cross_filter_values)<={'oneDirection','bothDirections','automatic'},'TMDL relationship cross-filter behavior is invalid')
 for pid in pages['pageOrder']:
  page=json.loads((REPORT/f'pages/{pid}/page.json').read_text()); visuals=[]
  for p in (REPORT/f'pages/{pid}/visuals').glob('*/visual.json'):
