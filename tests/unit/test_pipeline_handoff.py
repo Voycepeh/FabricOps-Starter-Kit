@@ -422,10 +422,11 @@ def test_durable_dry_run_does_not_serialize_the_python_session(authority, deploy
     plan = SimpleNamespace(plan_id="dry-run", pipeline_id=PIPELINE_ID, workspace_id="DEV", notebook_id="development",
         runtime_context=authority.eng, evidence={"notebook_snapshot": base64.b64decode(package["executed_notebook_base64"]),
             "final_result": package["dry_run"], "operations": {op["operation_key"]: op for op in manifest["tested_operations"]},
-            "source_observation_policy": manifest["parameters"], "session": object()}, contracts_json="{}")
+            "source_observation_policy": {"manual": False, "days": None}, "pipeline_parameters": manifest["parameters"], "session": object()}, contracts_json="{}")
     uri = service.persist_engineering_dry_run(plan)
     retained = json.loads(deployment_io.files[uri])
     assert retained["dry_run"]["run_id"] == "dry-run"
+    assert retained["parameters"] == manifest["parameters"]
     assert "session" not in retained
     assert retained["manifest_sha256"] == service.manifest_digest({key: value for key, value in retained.items() if key != "manifest_sha256"})
     assert base64.b64decode(retained["source_notebook_base64"]) == plan.evidence["notebook_snapshot"]
@@ -494,3 +495,28 @@ def test_governance_policy_review_rejects_fabricated_recovery_lineage(authority,
     package["manifest"]["retained_promotion_id"] = "fabricated"
     with pytest.raises(ValueError, match="missing or duplicated"):
         POLICY_REVIEW(resign(package), context=authority.gov)
+
+
+def test_real_setup_parameters_survive_export_and_reject_runtime_overrides(authority, deployment_io, monkeypatch):
+    """Use setup's actual journal instead of pre-seeding combined parameters by hand."""
+    import importlib
+    from fabricops_kit.pipeline import shared as pipeline
+    setup = importlib.import_module('fabricops_kit.pipeline.setup_pipeline')
+    candidate = package_candidate()
+    manifest = candidate['manifest']
+    plan = SimpleNamespace(plan_id='dry-run', pipeline_id=PIPELINE_ID, workspace_id='DEV', notebook_id=PIPELINE_ID,
+        execution_mode='dry_run', runtime_context=authority.eng, evidence={
+            'notebook_snapshot': base64.b64decode(candidate['executed_notebook_base64']),
+            'final_result': candidate['dry_run'], 'sealed': True,
+            'operations': {op['operation_key']: op for op in manifest['tested_operations']}}, contracts_json='{}')
+    session = object.__new__(pipeline.PipelineSession)
+    session.plan = plan
+    monkeypatch.setattr(pipeline, 'start_pipeline_session', lambda *a, **kw: session)
+    setup.setup_pipeline(pipeline_mode='Dry Run')
+    deployment_io.saved[PIPELINE_ID] = plan.evidence['notebook_snapshot']
+    exported = service.export_pipeline_submission(session, destination_workspace_id='DEV', context=authority.eng)
+    assert exported['manifest']['parameters'] == plan.evidence['pipeline_parameters']
+    assert exported['manifest']['parameters']['profiling_max_rows'] is None
+    plan.evidence['pipeline_parameters']['profiling_max_rows'] = 100
+    with pytest.raises(ValueError, match='parameter overrides'):
+        service.export_pipeline_submission(session, destination_workspace_id='DEV', context=authority.eng)

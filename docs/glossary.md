@@ -192,8 +192,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="table-profiling-policy">
-<summary><strong>table profiling policy</strong> — Versioned Data Contract schedules for Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
-<p>METADATA_DATA_CONTRACT.contract_payload_json stores independently versioned profiling policies. METADATA_PIPELINE_RUN records per-table completion linked to METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. Scheduling shares successful history by Table ID, workspace and physical destination; no Registry profiling approval lifecycle is required.</p>
+<summary><strong>table profiling policy</strong> — Engineering-owned pipeline settings for independent Standard Profiling, Grain Discovery and Frequency Profiling.</summary>
+<p>setup_pipeline configures Standard enablement and interval, optional bounded selection, and opt-in first-completion Grain Discovery and Frequency Profiling. Approved notebook packages retain these settings. METADATA_PIPELINE_RUN records shared physical-table completion history linked to METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY snapshots. Saved bounded results identify their sample scope and never drive Guardrails, Source Observation or checkpoints. Data Contracts contain governance definitions without profiling schedules.</p>
 </details>
 
 <details id="lineage">

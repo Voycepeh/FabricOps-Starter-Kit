@@ -128,7 +128,10 @@ def _inspector(row, roles, results=()):
 
 
 def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = False,
-                   source_observation_days: int | None = None):
+                   source_observation_days: int | None = None,
+                   profiling_enabled: bool = True, profiling_interval_days: int = 1,
+                   profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False,
+                   frequency_enabled: bool = False):
     """Start a pipeline using the current Fabric notebook identity and one execution mode.
 
     Dry Run previews transformations, optional Contract checks and profiling without
@@ -151,6 +154,26 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
         are accepted only with verified target publication; failed or no-op writes
         do not consume the interval. Changed fingerprints are diagnostic unless
         a separately configured Source Drift policy blocks publication.
+
+    profiling_enabled : bool, default=True
+        Enable Standard profiling independently of Grain discovery and Frequency.
+    profiling_interval_days : int, default=1
+        Positive integer interval since the latest confirmed physical-table
+        Standard completion with sufficient scope, shared across pipelines.
+        Full-table requests ignore bounded completions; bounded requests may reuse
+        full completions or completions with an equal or larger requested bound.
+    profiling_max_rows : int or None, default=None
+        None profiles the complete physical table (the prepared DataFrame for
+        Dry Run Writes). A positive integer bounds each
+        enabled activity using an arbitrary row selection; statistics describe only
+        that selection. This does not guarantee a physical read of only that many
+        rows. Saved results carry their scope. Guardrails and Source Observation
+        always use their own required input, independently of this limit.
+    grain_discovery_enabled : bool, default=False
+        Discover candidate Grain keys once per physical table and sufficient scope.
+        Does not control mandatory Grain Guardrails.
+    frequency_enabled : bool, default=False
+        Profile value frequencies once per physical table and sufficient scope.
 
     Returns
     -------
@@ -177,7 +200,7 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     Raises
     ------
     ValueError
-        If the mode or observation configuration is invalid.
+        If the mode, observation or profiling configuration is invalid.
     RuntimeError
         If notebook setup or Spark is unavailable, or signed-in Fabric validation
         remains pending. Governed fails before admission and publication.
@@ -198,10 +221,20 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     if source_observation_days is not None and (isinstance(source_observation_days, bool)
             or not isinstance(source_observation_days, int) or source_observation_days <= 0):
         raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
+    profiling = {
+        "profiling_enabled": profiling_enabled, "profiling_interval_days": profiling_interval_days,
+        "profiling_max_rows": profiling_max_rows, "grain_discovery_enabled": grain_discovery_enabled,
+        "frequency_enabled": frequency_enabled,
+    }
+    from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+
+    profiling = validate_pipeline_profiling(profiling)
     session = start_pipeline_session(pipeline_mode, inspector=_inspector)
     policy = {"manual": observe_source, "days": source_observation_days}
-    if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != policy:
+    if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != {**policy, **profiling}:
         session.close(failed=True)
         raise RuntimeError("Governed parameter overrides differ from the frozen notebook; Dry Run and promote a new version.")
+    session.plan.evidence["pipeline_parameters"] = {**policy, **profiling}
+    session.plan.evidence["profiling_configuration"] = profiling
     session.plan.evidence["source_observation_policy"] = policy
     return session

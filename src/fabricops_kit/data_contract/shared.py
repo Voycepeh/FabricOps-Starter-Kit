@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from fabricops_kit.io.shared import retry_delta_metadata
 
-from fabricops_kit.pipeline.shared import default_profiling_policy, validate_profiling_policy
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
@@ -205,10 +204,10 @@ def create_contract_draft(
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
             },
         },
-        "profiling": seed.get("profiling", default_profiling_policy()),
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
         "guardrails": list(seed.get("guardrails") or []),
     }
+    payload.pop("profiling", None)
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
     payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
@@ -352,8 +351,6 @@ def validate_contract_definitions(
     only while disabled.
     """
     obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
-    if "profiling" in payload:
-        validate_profiling_policy(payload["profiling"])
     definitions = [payload, payload.get("table")]
     if isinstance(payload.get("guardrails"), list):
         definitions.extend(payload["guardrails"])
@@ -507,6 +504,7 @@ def save_contract_draft(
         raise ValueError("Only a draft Data Contract version can be saved.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
+    canonical.pop("profiling", None)
     canonical["contract"] = {
         "contract_id": contract_id,
         "contract_version": contract_version,
@@ -980,6 +978,7 @@ def get_table_runtime_context(
     latest_profile_rows: list[dict[str, Any]] = []
     if latest_profile_row is not None:
         latest_profile = {
+            **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
             "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
             "pipeline_name": str(
@@ -1008,6 +1007,7 @@ def get_table_runtime_context(
             ]
 
     profile_fields = (
+        "profile_scope", "profiling_max_rows",
         "data_type", "row_count", "null_count", "null_percent",
         "distinct_count", "distinct_percent", "min_value", "max_value",
     )
@@ -1340,7 +1340,7 @@ def freeze_contract_record(
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
     payload.get("table", {}).pop("scheduled_refresh", None)
-    payload.setdefault("profiling", default_profiling_policy())
+    payload.pop("profiling", None)
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
@@ -1485,7 +1485,6 @@ def assemble_contract_payload(
             "columns": [row for row in enrichment_docs if row.get("column_id")],
         },
         "guardrails": guardrail_docs,
-        "profiling": validate_profiling_policy(draft_payload.get("profiling", default_profiling_policy())),
     }
     payload["table"].pop("scheduled_refresh", None)
     if not allow_incomplete_grain:

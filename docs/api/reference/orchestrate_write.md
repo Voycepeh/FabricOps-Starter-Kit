@@ -126,8 +126,9 @@ available. The result includes publication metrics and Guardrail diagnostics.
 A successful Write does not imply successful completion of the notebook.
 
 Dry Run profiles the prepared DataFrame in memory without publishing the target.
-Persistent modes profile the complete target after successful publication.
-Frozen profiling policies apply when a contract is selected; Dry Run observations
+Persistent modes profile the physical target after successful publication,
+bounded only by setup_pipeline(profiling_max_rows=...).
+Pipeline-owned settings apply independently of selected Contracts; Dry Run observations
 do not consume persisted schedules. Guardrail checks run regardless
 of profiling eligibility.
 
@@ -142,7 +143,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:29`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L272">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L273">View on GitHub</a>
 </div>
 
 
@@ -158,7 +159,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 258 |
+| Live-critical dependencies | 257 |
 
 ### Release history
 
@@ -375,9 +376,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.check_source_drift_for_target</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.contract_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.default_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
@@ -396,6 +395,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
@@ -425,9 +425,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_target_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>

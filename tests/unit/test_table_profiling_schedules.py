@@ -28,7 +28,7 @@ def metadata(monkeypatch):
         return {'config': {}, 'scope_workspace_id': 'dev', '_pipeline_identities': {
             'orders': {'table_id': 'orders', 'store': 'Bronze', 'schema': 'demo', 'table_name': 'orders'}},
             '_pipeline_contracts': {'orders': None},
-            'execution_plan': SimpleNamespace(plan_id=run_id, permits_persistence=True, evidence={}), **overrides}
+            'execution_plan': SimpleNamespace(plan_id=run_id, permits_persistence=True, evidence={"profiling_configuration": {"grain_discovery_enabled": True, "frequency_enabled": True}}), **overrides}
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
         table_id: {'workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
@@ -47,6 +47,10 @@ def metadata(monkeypatch):
                 continue
             for event in run.get('profiling', []):
                 kind = event['activity']
+                requested = shared.validate_pipeline_profiling(context['execution_plan'].evidence.get('profiling_configuration'))['profiling_max_rows']
+                scope = event.get('profile_scope')
+                if scope not in (None, 'full_table') and not (scope == 'bounded_selection' and requested is not None and event.get('profiling_max_rows', 0) >= requested):
+                    continue
                 if event.get('context_key') != key or event['status'] != 'passed' or not event.get('results_persisted'):
                     continue
                 if activity is not None and activity != kind:
@@ -77,23 +81,18 @@ def metadata(monkeypatch):
                            profiler=profiler, execute=execute, history_reads=history_reads)
 
 
-def policy(context, activity, settings):
-    proposed = shared.default_profiling_policy()
-    proposed[activity] = settings
-    context['_pipeline_contracts']['orders'] = {'contract_payload_json': json.dumps({'profiling': proposed})}
-
-
 def test_independent_defaults_and_validation():
-    expected = {'standard': {'frequency': 'interval', 'days': 1, 'trigger': 'read_or_write'},
-                'grain': {'frequency': 'first', 'trigger': 'read_or_write'},
-                'frequency': {'frequency': 'first', 'trigger': 'read_or_write'}}
-    assert shared.validate_profiling_policy(shared.default_profiling_policy()) == expected
-    for value in (0, -1, True, 1.2, '1', None):
-        invalid = copy.deepcopy(expected)
-        invalid['standard']['days'] = value
-        with pytest.raises(ValueError, match='positive integer'):
-            shared.validate_profiling_policy(invalid)
-    assert shared.default_profiling_policy() == expected
+    configuration = shared.validate_pipeline_profiling()
+    assert configuration == {"profiling_enabled": True, "profiling_interval_days": 1,
+        "profiling_max_rows": None, "grain_discovery_enabled": False, "frequency_enabled": False}
+    for name in ('profiling_interval_days', 'profiling_max_rows'):
+        for value in (0, -1, True, 1.2, '1'):
+            with pytest.raises(ValueError, match='positive integer'):
+                shared.validate_pipeline_profiling({name: value})
+    for name in ('profiling_enabled', 'grain_discovery_enabled', 'frequency_enabled'):
+        for value in (0, 1, None, 'true'):
+            with pytest.raises(ValueError, match='boolean'):
+                shared.validate_pipeline_profiling({name: value})
 
 
 @pytest.mark.parametrize('frequency', ['every', 'first', 'interval'])
@@ -248,14 +247,14 @@ def test_profiling_execution_modes_compute_and_persist_as_required(
     assert bool(metadata.rows['METADATA_DATA_PROFILED_FREQUENCY']) is expected_persisted
 
 
-def test_every_write_and_frozen_policy_are_exact(metadata):
-    policy(metadata.context, 'standard', {'frequency': 'every', 'trigger': 'write'})
+def test_contract_owned_policy_has_no_execution_authority(metadata):
+    metadata.context['_pipeline_contracts']['orders'] = {'contract_payload_json': json.dumps({
+        'profiling': {'standard': {'frequency': 'every', 'trigger': 'write'}}})}
     original = copy.deepcopy(metadata.context['_pipeline_contracts'])
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
-    assert metadata.profiler.call_count == 2
+    assert metadata.profiler.call_count == 3
     shared.schedule_table_profiling('orders', 'write', context=metadata.context)
-    shared.schedule_table_profiling('orders', 'write', context=metadata.context)
-    assert metadata.profiler.call_count == 4
+    assert metadata.profiler.call_count == 3
     assert metadata.context['_pipeline_contracts'] == original
 
 
@@ -268,23 +267,6 @@ def test_multiple_tables_keep_independent_outcomes_in_one_run(metadata):
     passed = [outcome for outcome in saved if outcome['status'] == 'passed']
     assert len(passed) == 6 and {outcome['table_id'] for outcome in passed} == {'orders', 'customers'}
     assert all(outcome['physical']['table_name'] == outcome['table_id'] for outcome in passed)
-
-
-def test_draft_controls_follow_contract_save_and_frozen_is_read_only():
-    import ipywidgets as widgets
-    module = importlib.import_module('fabricops_kit.widgets.widget_data_contract')
-    payload = {'profiling': shared.default_profiling_policy()}
-    edits = []
-    section = module._profiling_section(widgets, payload, editable=True, on_change=edits.append)
-    grain = section.profiling_controls['grain']
-    grain['frequency'].value = 'interval'
-    grain['days'].value = 7
-    grain['trigger'].value = 'write'
-    assert edits[-1]['grain'] == {'frequency': 'interval', 'days': 7, 'trigger': 'write'}
-    assert grain['days'].layout.display == ''
-    assert payload['profiling']['grain']['frequency'] == 'first'
-    frozen = module._profiling_section(widgets, {'profiling': edits[-1]}, editable=False, on_change=edits.append)
-    assert all(control.disabled for values in frozen.profiling_controls.values() for control in values.values())
 
 
 @pytest.mark.parametrize('activity', ['standard','grain','frequency','grain_frequency'])
@@ -377,7 +359,7 @@ def test_scheduler_checks_history_once_per_activity_and_not_for_mismatched_trigg
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert metadata.history_reads == ['standard', 'grain', 'frequency']
     metadata.history_reads.clear()
-    policy(metadata.context, 'standard', {'frequency': 'every', 'trigger': 'write'})
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_enabled'] = False
     shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     assert metadata.history_reads == ['grain', 'frequency']
 
@@ -417,7 +399,7 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
 def test_test_activity_selection_and_supplied_frame_do_not_override_policy(metadata):
     """Combined Test work honors each frozen trigger and uses the prepared input."""
     metadata.context['execution_plan'].permits_persistence = False
-    policy(metadata.context, 'standard', {'frequency': 'every', 'trigger': 'read'})
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_enabled'] = False
     frame = object()
     result = shared.schedule_table_profiling('orders', 'write', dataframe=frame, context=metadata.context)
     metadata.profiler.assert_called_once()
@@ -441,3 +423,158 @@ def test_not_due_profiling_does_not_scan_source(metadata):
     result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
     metadata.profiler.assert_not_called()
     assert all(activity['status'] == 'skipped' for activity in result['activities'].values())
+
+
+@pytest.mark.parametrize('standard', [True, False])
+@pytest.mark.parametrize('grain', [True, False])
+@pytest.mark.parametrize('frequency', [True, False])
+def test_pipeline_activity_flags_are_independent(metadata, standard, grain, frequency):
+    metadata.context['execution_plan'].evidence['profiling_configuration'] = {
+        'profiling_enabled': standard, 'grain_discovery_enabled': grain, 'frequency_enabled': frequency}
+    result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    expected = {kind for kind, enabled in zip(shared.PROFILING_ACTIVITIES, (standard, grain, frequency)) if enabled}
+    assert {next(iter(call.kwargs['activities'])) for call in metadata.profiler.call_args_list} == expected
+    assert {kind for kind, outcome in result['activities'].items() if outcome['status'] == 'passed'} == expected
+
+
+def test_each_pipeline_applies_its_own_interval_to_shared_completion(metadata):
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    instant = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling']:
+        if event['status'] == 'passed':
+            event['completed_at'] = instant
+    metadata.profiler.reset_mock()
+    slow = metadata.make_context('weekly')
+    slow['execution_plan'].evidence['profiling_configuration']['profiling_interval_days'] = 7
+    shared.schedule_table_profiling('orders', 'read', context=slow)
+    metadata.profiler.assert_not_called()
+    daily = metadata.make_context('daily')
+    shared.schedule_table_profiling('orders', 'write', context=daily)
+    assert [call.kwargs['activities'] for call in metadata.profiler.call_args_list] == [{'standard'}]
+
+
+@pytest.mark.parametrize('persistent', [True, False])
+def test_bounded_counts_cannot_be_reported_as_physical_totals(metadata, persistent):
+    plan = metadata.context['execution_plan']
+    plan.permits_persistence = persistent
+    plan.evidence['profiling_configuration']['profiling_max_rows'] = 100
+    result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    assert result['row_count'] is None
+    assert result['profiled_row_count'] == 100
+    assert result['profile_scope'] == 'bounded_selection'
+    for call in metadata.profiler.call_args_list:
+        assert call.kwargs['context']['_profile_scope'] == {
+            'profile_scope': 'bounded_selection', 'profiling_max_rows': 100}
+    if persistent:
+        passed = [event for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling'] if event['status'] == 'passed']
+        assert all(event['profile_scope'] == 'bounded_selection' and event['profiling_max_rows'] == 100 for event in passed)
+    else:
+        assert not metadata.rows['METADATA_PIPELINE_RUN']
+
+
+@pytest.mark.parametrize('kind', ['lakehouse', 'warehouse'])
+def test_bounded_selection_limits_real_computation_and_labels_saved_metrics(kind, spark_session, monkeypatch):
+    module = importlib.import_module('fabricops_kit.pipeline.shared')
+    frame = spark_session.createDataFrame([(1, 'A'), (2, 'A'), (3, 'B'), (4, 'B')], ['id', 'category'])
+    identity = {'table_id': 'orders', 'store': 'Bronze', 'schema': 'demo', 'table_name': 'orders', 'store_kind': kind}
+    monkeypatch.setattr(module, 'resolve_catalogue_table_identity', lambda *a, **kw: dict(identity))
+    monkeypatch.setattr(module, 'read_lakehouse_table', Mock(return_value=frame))
+    warehouse = Mock(return_value=frame.limit(2))
+    monkeypatch.setattr(module, 'read_warehouse_query', warehouse)
+    monkeypatch.setattr(module, '_warehouse_profile_dataframes', Mock(side_effect=AssertionError('full-table pushdown is forbidden for bounded work')))
+    def persist(observation, *, context, **kwargs):
+        stats = observation['profile'].collect()
+        assert all(row.ROW_COUNT == 2 for row in stats)
+        assert {row.VALUE for row in observation['frequency_profile'].collect()} == {'A'}
+        assert all(candidate['row_count'] == 2 for candidate in observation['grain_candidates'])
+        canonical = module._canonical_profiled_dataframe(observation['profile'], config={}, active_workspace_id='dev',
+            runtime_context={**context, 'table_name': 'orders'}, workspace_id='dev', table_id='orders', profile_snapshot_id='bounded')
+        rows = canonical.collect()
+        assert all(row.profile_scope == 'bounded_selection' and row.profiling_max_rows == 2 and row.row_count == 2 for row in rows)
+        frequencies = module._frequency_metadata_dataframe(observation['frequency_profile'], profiled_df=canonical,
+            table_id='orders', config={}, active_workspace_id='dev', runtime_context=context).collect()
+        assert all(row.profile_scope == 'bounded_selection' and row.profiling_max_rows == 2 and row.profiled_row_count == 2 for row in frequencies)
+        return {'row_count': 2}
+    monkeypatch.setattr(module, '_persist_profile_observation', persist)
+    monkeypatch.setattr(module, '_audit_literal_columns', lambda **kwargs: {name: __import__('pyspark.sql.functions', fromlist=['lit']).lit(None).cast('timestamp' if name == '_committed_at' else 'string') for name in module.PROFILED_COLUMNS if name.startswith('_')})
+    result = module.execute_table_profile(table_id='orders', context={'config': {}, 'scope_workspace_id': 'dev',
+        '_profile_scope': {'profile_scope': 'bounded_selection', 'profiling_max_rows': 2}},
+        spark_session=spark_session, activities={'standard', 'grain', 'frequency'}, verbose=False)
+    assert result['row_count'] == 2
+    if kind == 'warehouse':
+        assert warehouse.call_args.args[0] == 'SELECT TOP (2) * FROM [demo].[orders]'
+
+
+@pytest.mark.parametrize('persistent', [True, False])
+@pytest.mark.parametrize('verbose', [True, False])
+@pytest.mark.parametrize('state', ['due', 'disabled', 'not_due'])
+def test_scope_output_only_for_verbose_due_work(metadata, capsys, persistent, verbose, state):
+    if state == 'not_due':
+        shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    if state == 'disabled':
+        metadata.context['execution_plan'].evidence['profiling_configuration'] = {
+            'profiling_enabled': False, 'grain_discovery_enabled': False, 'frequency_enabled': False}
+    metadata.context['execution_plan'].permits_persistence = persistent
+    capsys.readouterr()
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context, verbose=verbose)
+    output = capsys.readouterr().out
+    assert output.count('Profiling scope') == (1 if state == 'due' and verbose else 0)
+
+
+@pytest.mark.parametrize('first_limit,next_limit,expected_runs', [
+    (100, None, 6), (100, 1000, 6), (100, 50, 3), (100, 100, 3), (None, 100, 3), (None, None, 3)])
+def test_scope_switching_does_not_suppress_stronger_requests(metadata, first_limit, next_limit, expected_runs):
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = first_limit
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    other = metadata.make_context('second-pipeline')
+    other['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = next_limit
+    shared.schedule_table_profiling('orders', 'write', context=other)
+    assert metadata.profiler.call_count == expected_runs
+    assert len(metadata.rows['METADATA_DATA_PROFILED']) == expected_runs // 3
+    assert len(metadata.rows['METADATA_DATA_PROFILED_FREQUENCY']) == expected_runs // 3
+
+
+@pytest.mark.parametrize('requested_limit,eligible', [(None, False), (101, False), (100, True), (50, True)])
+@pytest.mark.parametrize('activity', ['standard', 'grain', 'frequency'])
+def test_real_history_filters_bounded_completion_scope_in_spark(metadata, spark_session, monkeypatch, requested_limit, eligible, activity):
+    """Filter before MAX so a newer sample cannot hide an older complete snapshot."""
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = 100
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    tables = {table: spark_session.createDataFrame(
+        [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
+        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        for table, rows in metadata.rows.items()}
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = requested_limit
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
+    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
+    history = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session, activity=activity)
+    assert bool(history) is eligible
+
+
+def test_newer_sample_does_not_replace_latest_full_completion_for_history(metadata, spark_session, monkeypatch):
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    earlier = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    sample_events = []
+    for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling']:
+        if event['status'] == 'passed':
+            event['completed_at'] = earlier
+            sample_events.append({**event, 'profile_scope': 'bounded_selection', 'profiling_max_rows': 100,
+                'completed_at': datetime.now(UTC).isoformat(), 'profile_snapshot_id': 'sample-' + event['activity']})
+            if event['activity'] != 'grain':
+                table = 'METADATA_DATA_PROFILED' if event['activity'] == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
+                metadata.rows[table].append({'table_id': 'orders', 'workspace_id': 'dev',
+                    'profile_snapshot_id': 'sample-' + event['activity']})
+    metadata.rows['METADATA_PIPELINE_RUN']['sample'] = {
+        'run_id': 'sample', 'workspace_id': 'dev', 'execution_mode': 'live', 'profiling': sample_events}
+    tables = {table: spark_session.createDataFrame(
+        [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
+        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        for table, rows in metadata.rows.items()}
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
+    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
+    history = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session)
+    assert {value['last_success'] for value in history.values()} == {earlier}
+    assert shared.profiling_due(shared.pipeline_profiling_policy(context=metadata.context)['standard'],
+        history['standard'], 'read', datetime.now(UTC))

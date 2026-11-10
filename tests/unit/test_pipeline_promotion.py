@@ -7,6 +7,8 @@ import json
 
 import pytest
 
+from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+
 from fabricops_kit.activated_pipeline import shared as service
 from fabricops_kit.pipeline import shared as pipeline
 from tests.unit.test_activated_pipeline import PIPELINE_ID, notebook, operation, promotion
@@ -224,7 +226,7 @@ def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
     saved = json.loads(promoted)["cells"][1]["source"]
     assert "pipeline_id" not in saved
     assert 'pipeline_mode="Governed"' in saved
-    assert parameters == {"manual": False, "days": None}
+    assert parameters == {"manual": False, "days": None, **validate_pipeline_profiling()}
 
 
 def test_cross_workspace_data_access_requires_an_effective_agreement():

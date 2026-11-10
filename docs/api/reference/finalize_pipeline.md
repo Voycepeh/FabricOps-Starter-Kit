@@ -251,8 +251,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 </ul>
 

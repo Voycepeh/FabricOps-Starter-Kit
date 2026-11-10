@@ -29,6 +29,7 @@ from fabricops_kit.io.shared import get_spark_session
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 _PROFILE_CONTEXT_FIELDS = (
+    "profile_scope", "profiling_max_rows",
     "row_count", "non_null_count", "null_count", "null_percent",
     "distinct_count", "distinct_percent", "mean_value", "stddev_value",
         "min_value", "percentile_25_value", "median_value",
@@ -374,6 +375,7 @@ def suggest_enrichment(
 def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
     """Build approved profile summaries and up to three frequent-value samples."""
     fields = (
+        "profile_scope", "profiling_max_rows",
         "row_count", "non_null_count", "null_count", "null_percent",
         "distinct_count", "distinct_percent", "mean_value", "stddev_value",
         "min_value", "percentile_25_value", "median_value",
@@ -563,6 +565,7 @@ def suggest_sensitive_data(
 def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
     """Build governed metadata/profile context without raw rows or internal identifiers."""
     fields = (
+        "profile_scope", "profiling_max_rows",
         "row_count", "non_null_count", "null_count", "null_percent",
         "distinct_count", "distinct_percent", "mean_value", "stddev_value",
         "min_value", "percentile_25_value", "median_value",

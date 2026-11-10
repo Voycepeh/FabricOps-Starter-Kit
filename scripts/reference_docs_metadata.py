@@ -118,7 +118,7 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
-    "containing authored Guardrails, Enrichment and profiling policies for each contract version."
+    "containing authored Guardrails and Enrichment for each contract version; profiling is configured by setup_pipeline."
 )
 
 METADATA_TABLE_MODELS = {
@@ -192,7 +192,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT": {
         "purpose": "Defines one global immutable table contract history. Workspace observations supply authoring evidence; workspace activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table.",
-        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
+        "implementation_notes": "Reusable immutable frozen table definition with Enrichment and executable Guardrails. Engineering owns profiling through setup_pipeline. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [],
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],

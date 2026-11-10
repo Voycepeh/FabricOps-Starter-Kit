@@ -35,49 +35,6 @@ DATA_CONTRACT_MANIFEST: dict[str, Any] | None = None
 DATA_CONTRACT_MANIFEST_JSON: str | None = None
 
 
-def _profiling_section(widgets, payload, *, editable, on_change):
-    """Edit the selected draft's canonical policy through the normal Save action."""
-    from fabricops_kit.pipeline.shared import PROFILING_ACTIVITIES, default_profiling_policy, validate_profiling_policy
-    policy = validate_profiling_policy(payload.get("profiling", default_profiling_policy()))
-    controls = {}
-    status = widgets.HTML()
-    children = [widgets.HTML("<p>Profiling follows this Data Contract version. Save the draft, freeze, test and activate to apply changes.</p>")]
-    labels = {"standard": "Standard Profiling", "grain": "Grain Discovery", "frequency": "Frequency Profiling"}
-    frequencies = [("Every eligible run", "every"), ("First eligible run only", "first"),
-                   ("First eligible run after X days", "interval")]
-    triggers = [("Read only", "read"), ("Write only", "write"), ("Read or Write", "read_or_write")]
-    for activity in PROFILING_ACTIVITIES:
-        settings = policy[activity]
-        frequency = widgets.Dropdown(options=frequencies, value=settings["frequency"], description="Frequency", disabled=not editable, layout=widgets.Layout(width="100%"))
-        days = widgets.IntText(value=settings.get("days", 1), description="Days", disabled=not editable, layout=widgets.Layout(width="100%"))
-        trigger = widgets.Dropdown(options=triggers, value=settings["trigger"], description="Trigger", disabled=not editable, layout=widgets.Layout(width="100%"))
-        days.layout.display = "" if frequency.value == "interval" else "none"
-        controls[activity] = {"frequency": frequency, "days": days, "trigger": trigger}
-        children.extend([widgets.HTML(f"<b>{labels[activity]}</b>"), shared.form_grid(widgets, [frequency, days, trigger])])
-    def changed(_event):
-        for values in controls.values():
-            values["days"].layout.display = "" if values["frequency"].value == "interval" else "none"
-        proposed = {activity: {"frequency": values["frequency"].value, "trigger": values["trigger"].value,
-            **({"days": values["days"].value} if values["frequency"].value == "interval" else {})}
-            for activity, values in controls.items()}
-        if editable:
-            # Keep invalid input in the draft so Save/Freeze validation cannot
-            # silently persist the previous valid policy instead.
-            on_change(proposed)
-            try:
-                validate_profiling_policy(proposed)
-                status.value = "<p>Unsaved profiling changes.</p>"
-            except ValueError as exc:
-                status.value = f"<p role='alert'>{html.escape(str(exc))}</p>"
-    for values in controls.values():
-        for control in values.values():
-            control.observe(changed, names="value")
-    children.append(status)
-    section = shared.form_section(widgets, title="Profiling", children=children)
-    section.profiling_controls = controls
-    return section
-
-
 def _valid_dropdown_value(options: list[str] | tuple[str, ...], value: Any, *, fallback: Any = None) -> Any:
     """Return a widget-safe value when persisted metadata no longer matches its options."""
     candidate = str(value or "")
@@ -834,6 +791,12 @@ def _profile_html(context: dict[str, Any]) -> str:
         return f"<b>{html.escape(shown(value))}{suffix}</b>"
 
     facts = []
+    if profile.get("profile_scope") == "bounded_selection":
+        facts.append("Sampled evidence: arbitrary bounded selection (at most " +
+                     html.escape(str(profile.get("profiling_max_rows"))) +
+                     " rows). All counts, uniqueness and distributions describe the selection only; full-table facts are unknown.")
+    elif profile.get("profile_scope") == "supplied_dataframe":
+        facts.append("Scope: supplied DataFrame; complete physical table coverage is unverified.")
     for key, label, suffix in (
         ("row_count", "Row count", ""),
         ("distinct_count", "Distinct count", ""),
@@ -1995,7 +1958,7 @@ def widget_data_contract(
         ] if isinstance(raw_profile_key_candidates, list) else []
         profiled_key_columns = (
             [str(name) for name in profile_key_candidates[0].get("columns", [])]
-            if profile_key_candidates else []
+            if profile_key_candidates and discovery.get("profile_scope") != "bounded_selection" else []
         )
         temporal_column_names = [
             str(column.get("column_name") or "")
@@ -2105,14 +2068,16 @@ def widget_data_contract(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                     "<details><summary>Profile evidence · suggested keys</summary><ul style='margin:5px 0 0 18px;'>"
                     + rows
-                    + "</ul><span>Suggested key only. Enable Grain explicitly to enforce it.</span></details></div>"
+                    + "</ul>"
+                    + ("<p>Sampled Grain candidates: uniqueness applies only to the bounded selection; full-table uniqueness is unverified.</p>" if discovery.get("profile_scope") == "bounded_selection" else "")
+                    + "<span>Suggested key only. Enable Grain explicitly to enforce it.</span></details></div>"
                 )
                 return
             grain_profile_evidence.value = (
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                 "<b>Profile evidence</b><br>"
-                "No row key suggestion available from the latest profile. "
-                "Select a row key manually if this table has one.</div>"
+                + ("Sampled Grain discovery used a bounded selection; full-table uniqueness is unverified. " if discovery.get("profile_scope") == "bounded_selection" else "No row key suggestion available from the latest profile. ")
+                + "Select a row key manually if this table has one.</div>"
             )
 
         def render_grain_ai() -> None:
@@ -2159,6 +2124,7 @@ def widget_data_contract(
                         **{
                             name: profile.get(name)
                             for name in (
+                                "profile_scope", "profiling_max_rows",
                                 "row_count", "non_null_count", "null_count", "null_percent",
                                 "distinct_count", "distinct_percent",
                             )
@@ -2171,7 +2137,7 @@ def widget_data_contract(
                         "schema_name": str(table.get("schema_name") or ""),
                         "table_description": str(table_description.value or ""),
                         "table_classification": str(table_classification.value or ""),
-                        "profile_key_candidates": profile_key_candidates,
+                        "profile_key_candidates": profile_key_candidates if discovery.get("profile_scope") != "bounded_selection" else [],
                         "columns": profile_rows,
                     },
                     prompt=str(ai_enrichment.get("grain_prompt") or ""),
@@ -2809,6 +2775,8 @@ def widget_data_contract(
                 age = f"{max(0, (datetime.now(UTC) - instant).days)} days" if rank and isinstance(instant, datetime) else "Unknown"
                 row_count = next((item.get("row_count") for item in runtime_context.get("column_profiles", {}).values()
                                   if item.get("row_count") is not None), "Unknown")
+                scope_label = ("Sampled rows (bounded selection only)" if profile.get("profile_scope") == "bounded_selection"
+                               else "Rows in supplied DataFrame" if profile.get("profile_scope") == "supplied_dataframe" else "Rows")
                 profile_html = (
                     "<div style='margin-top:14px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
@@ -2816,7 +2784,7 @@ def widget_data_contract(
                     f"{html.escape(pipeline_name)}</div>"
                     f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
                     f"{html.escape(context_timestamp(profile.get('committed_at')))}</div>"
-                    f"<div style='color:#667085;font-size:12px;'>Age: {html.escape(age)} · Rows: {html.escape(str(row_count))}</div></div>"
+                    f"<div style='color:#667085;font-size:12px;'>Age: {html.escape(age)} · {scope_label}: {html.escape(str(row_count))}</div></div>"
                 )
             else:
                 profile_html = (
@@ -3518,20 +3486,9 @@ def widget_data_contract(
         grain_definition.children[1].add_class("fabricops-grain-controls")
         grain_definition.children[3].add_class("fabricops-grain-fields")
         grain_definition.children[3].add_class("fabricops-contract-assistant-grid")
-        def profiling_changed(policy):
-            current = state["current"]
-            payload = json.loads(current["contract"]["contract_payload_json"])
-            payload["profiling"] = policy
-            current["contract"]["contract_payload_json"] = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-            state["dirty"] = True
-        state["_profiling_editor"] = _profiling_section(widgets,
-            json.loads(state["current"]["contract"]["contract_payload_json"]),
-            editable=str(state["current"]["contract"].get("status") or "").lower() == "draft",
-            on_change=profiling_changed)
         table_right = (
             grain_definition,
             table_definition,
-            state["_profiling_editor"],
             shared.form_section(
                 widgets,
                 title="Processing",
@@ -4530,6 +4487,7 @@ def widget_data_contract(
                         **dict(selected), "description": description,
                         "classification": classification,
                         **{name: profile.get(name) for name in (
+                            "profile_scope", "profiling_max_rows",
                             "row_count", "non_null_count", "null_count", "null_percent",
                             "distinct_count", "distinct_percent", "min_value", "max_value",
                             "mean_value", "stddev_value", "percentile_25_value", "median_value", "percentile_75_value",

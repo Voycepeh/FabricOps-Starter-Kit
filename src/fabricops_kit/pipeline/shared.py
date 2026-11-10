@@ -6168,7 +6168,7 @@ class PipelineOperation:
                            "started_at": datetime.now(UTC).isoformat()}
             plan.evidence["operations"][key] = self.record
             # These are the notebook settings retained and compared in Governed mode.
-            # Processing parameters and profiling policy belong to the table contract.
+            # Processing parameters belong to the table contract; profiling belongs to setup_pipeline.
             self.record.update(
                 store=str(identity["store"]),
                 requested_schema=args.get("schema"),
@@ -6664,41 +6664,42 @@ def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtim
 PROFILING_ACTIVITIES = ("standard", "grain", "frequency")
 
 
-def default_profiling_policy():
-    """Return independent table-level defaults, without mutable shared state."""
-    return {"standard": {"frequency": "interval", "days": 1, "trigger": "read_or_write"},
-            "grain": {"frequency": "first", "trigger": "read_or_write"},
-            "frequency": {"frequency": "first", "trigger": "read_or_write"}}
-
-
-def validate_profiling_policy(policy):
-    """Accept exactly the three simple frequencies and operation triggers."""
-    if not isinstance(policy, dict) or set(policy) != set(PROFILING_ACTIVITIES):
-        raise ValueError("Configure Standard Profiling, Grain Discovery and Frequency Profiling independently.")
-    result = {}
-    for activity, settings in policy.items():
-        if not isinstance(settings, dict):
-            raise ValueError("Each profiling activity needs frequency and trigger.")
-        frequency, trigger = settings.get("frequency"), settings.get("trigger")
-        if frequency not in {"every", "first", "interval"}:
-            raise ValueError("Frequency must be every, first or interval.")
-        if trigger not in {"read", "write", "read_or_write"}:
-            raise ValueError("Trigger must be read, write or read_or_write.")
-        keys = {"frequency", "trigger", "days"} if frequency == "interval" else {"frequency", "trigger"}
-        if set(settings) != keys:
-            raise ValueError("Only interval frequency accepts a days value.")
-        if frequency == "interval" and (isinstance(settings["days"], bool)
-                or not isinstance(settings["days"], int) or settings["days"] <= 0):
-            raise ValueError("Profiling interval days must be a positive integer.")
-        result[activity] = dict(settings)
+def validate_pipeline_profiling(configuration=None):
+    """Validate Engineering-owned profiling settings without bool-as-int coercion."""
+    result = {"profiling_enabled": True, "profiling_interval_days": 1,
+              "profiling_max_rows": None, "grain_discovery_enabled": False, "frequency_enabled": False}
+    if configuration is not None:
+        if not isinstance(configuration, dict) or set(configuration) - set(result):
+            raise ValueError("Invalid pipeline profiling configuration.")
+        result.update(configuration)
+    for name in ("profiling_enabled", "grain_discovery_enabled", "frequency_enabled"):
+        if not isinstance(result[name], bool):
+            raise ValueError(f"{name} must be a boolean.")
+    for name in ("profiling_interval_days", "profiling_max_rows"):
+        value = result[name]
+        if name == "profiling_max_rows" and value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer" + (" or None." if name == "profiling_max_rows" else "."))
     return result
+
+
+def pipeline_profiling_policy(*, context):
+    """Read only the active pipeline session's independent activity configuration."""
+    configuration = validate_pipeline_profiling(context["execution_plan"].evidence.get("profiling_configuration"))
+    return {
+        activity: {"enabled": configuration[flag], "frequency": frequency, "trigger": "read_or_write",
+                   **({"days": configuration["profiling_interval_days"]} if activity == "standard" else {})}
+        for activity, flag, frequency in (("standard", "profiling_enabled", "interval"),
+            ("grain", "grain_discovery_enabled", "first"), ("frequency", "frequency_enabled", "first"))
+    }
 
 
 def profiling_due(settings, history, operation, now):
     """Use successful completion, never an attempt, to determine eligibility."""
     if operation not in {"read", "write"}:
         raise ValueError("Profiling operation must be read or write.")
-    if settings["trigger"] not in {operation, "read_or_write"}:
+    if not settings.get("enabled", True) or settings["trigger"] not in {operation, "read_or_write"}:
         return False
     last = history.get("last_success")
     if not last or settings["frequency"] == "every":
@@ -6719,15 +6720,6 @@ def profiling_context_key(table_id, *, context, spark_session=None):
     return _metadata_hash(descriptor), descriptor
 
 
-def contract_profiling_policy(table_id, *, context):
-    """Use the selected immutable payload; explicit No Contract uses fixed defaults."""
-    contract = context.get("_pipeline_contracts", {}).get(table_id)
-    if contract is None:
-        return default_profiling_policy()
-    payload = json.loads(contract["contract_payload_json"])
-    return validate_profiling_policy(payload.get("profiling", default_profiling_policy()))
-
-
 def profiling_completion_history(table_id, *, context, spark_session=None, activity=None):
     """Aggregate confirmed physical-context completions in Spark before collecting."""
     from pyspark.sql import functions as F
@@ -6744,6 +6736,14 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
         .select("event.*")
         .filter((F.col("context_key") == key) & (F.col("status") == "passed")
                 & F.col("results_persisted") & F.col("completed_at").isNotNull()))
+    requested_limit = validate_pipeline_profiling(context["execution_plan"].evidence.get("profiling_configuration"))["profiling_max_rows"]
+    # Historical scheduler completions predate bounded profiling and covered full
+    # physical tables. Supplied DataFrames never establish physical coverage.
+    sufficient_scope = F.col("profile_scope").isNull() | (F.col("profile_scope") == "full_table")
+    if requested_limit is not None:
+        sufficient_scope = sufficient_scope | ((F.col("profile_scope") == "bounded_selection")
+            & (F.col("profiling_max_rows") >= requested_limit))
+    events = events.filter(sufficient_scope)
     if activity is not None:
         events = events.filter(F.col("activity") == activity)
     markers = events.filter((F.col("activity") == "grain") |
@@ -6786,20 +6786,30 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
     return {"status": "skipped", "reason": reason, "activities": activities}
 
 
-def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None):
+def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False):
     """Profile due work using successful completion history as the schedule."""
     if operation not in {"read", "write"}:
         raise ValueError("Profiling operation must be read or write.")
+    configuration = validate_pipeline_profiling(context["execution_plan"].evidence.get("profiling_configuration"))
+    max_rows = configuration["profiling_max_rows"]
+    scope = "bounded_selection" if max_rows is not None else ("supplied_dataframe" if dataframe is not None and operation == "write" and not persistence_permitted(context) else "full_table")
+    profile_scope = {"profile_scope": scope, "profiling_max_rows": max_rows}
+    scope_message = (f"bounded selection of at most {max_rows} rows; physical reads may exceed the limit."
+        if max_rows is not None else "prepared Dry Run DataFrame; no physical target publication or complete-table coverage asserted."
+        if scope == "supplied_dataframe" else "complete physical table when due; may scan all physical source rows, including rows outside the SQL query.")
+    scope_reported = False
     outcomes = {}
     if not persistence_permitted(context):
         # Dry Run can inspect due work, but never consumes successful intervals.
-        policy = contract_profiling_policy(table_id, context=context)
+        policy = pipeline_profiling_policy(context=context)
         history = profiling_completion_history(table_id, context=context, spark_session=spark_session)
         key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
         due = {activity for activity in PROFILING_ACTIVITIES
                if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
+        if due and verbose:
+            print("Profiling scope → " + scope_message)
         profile = (execute_table_profile(table_id=table_id, dataframe=dataframe,
-            context={**context, "_profile_trigger": operation}, spark_session=spark_session,
+            context={**context, "_profile_trigger": operation, "_profile_scope": profile_scope}, spark_session=spark_session,
             verbose=False, activities=due) if due else {})
         for activity in PROFILING_ACTIVITIES:
             if activity in due:
@@ -6808,7 +6818,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                     outcomes[activity]["frequency_profile"] = None
                 if activity != "grain" and "grain_candidates" in profile:
                     outcomes[activity]["grain_candidates"] = []
-                diagnostic = {"status": "passed", "results_persisted": False, "reason": "read_only_diagnostic"}
+                diagnostic = {"status": "passed", "results_persisted": False, "reason": "read_only_diagnostic",
+                              **profile_scope, "row_count": profile.get("row_count")}
             else:
                 outcomes[activity] = {"status": "skipped", "reason": "Not due for this operation"}
                 diagnostic = outcomes[activity]
@@ -6816,15 +6827,16 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 "trigger": operation, "pipeline_run_id": context["execution_plan"].plan_id,
                 "executed_at": datetime.now(UTC).isoformat()}, context=context, spark_session=spark_session)
         return {**profile, "status": "passed", "activities": outcomes, "persistence_status": "disabled",
-                "row_count": profile.get("row_count")}
+                "row_count": profile.get("row_count") if scope != "bounded_selection" else None, **profile_scope,
+                "profiled_row_count": profile.get("row_count")}
     key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
-    policy = contract_profiling_policy(table_id, context=context)
+    policy = pipeline_profiling_policy(context=context)
     for activity in PROFILING_ACTIVITIES:
         base = {**descriptor, "context_key": key, "activity": activity, "trigger": operation,
                 "pipeline_run_id": context["execution_plan"].plan_id, "executed_at": datetime.now(UTC).isoformat()}
         settings = policy[activity]
-        if settings["trigger"] not in {operation, "read_or_write"}:
-            skipped = {"status": "skipped", "reason": "trigger_mismatch"}
+        if not settings.get("enabled", True) or settings["trigger"] not in {operation, "read_or_write"}:
+            skipped = {"status": "skipped", "reason": "disabled"}
             outcomes[activity] = skipped
             record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
             continue
@@ -6836,6 +6848,9 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             outcomes[activity] = skipped
             record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
             continue
+        if verbose and not scope_reported:
+            print("Profiling scope → " + scope_message)
+            scope_reported = True
         profile_snapshot_id = str(uuid4())
         outcome = None
         completion_recorded = False
@@ -6843,12 +6858,12 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             record_profiling_outcome({**base, "status": "running", "profile_snapshot_id": profile_snapshot_id,
                 "results_persisted": False}, context=context, spark_session=spark_session)
             profile_context = {**context, "activity_id": profile_snapshot_id,
-                               "_profile_snapshot_id": profile_snapshot_id}
+                               "_profile_snapshot_id": profile_snapshot_id, "_profile_scope": profile_scope}
             outcome = execute_table_profile(table_id=table_id, dataframe=dataframe, context=profile_context,
                 spark_session=spark_session, verbose=False, activities={activity})
             completed_at = datetime.now(UTC).isoformat()
             outcomes[activity] = {"status": "passed", "profile_snapshot_id": profile_snapshot_id if activity != "grain" and not outcome.get("empty_result") else None,
-                                  "row_count": outcome.get("row_count"), "results_persisted": True,
+                                  "row_count": outcome.get("row_count"), **profile_scope, "results_persisted": True,
                                   "empty_result": outcome.get("empty_result", False),
                                   "completed_at": completed_at}
             record_profiling_outcome({**base, **outcomes[activity]}, context=context, spark_session=spark_session)
@@ -6865,7 +6880,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             if profile is not None and hasattr(profile, "unpersist"):
                 profile.unpersist()
     counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
-    return {"status": "passed", "activities": outcomes, "row_count": counts[0] if counts else None}
+    return {"status": "passed", "activities": outcomes, "row_count": counts[0] if counts and scope == "full_table" else None, **profile_scope,
+            "profiled_row_count": counts[0] if counts else None}
 
 
 # Persisted-table profiling implementation shared by standalone and scheduled calls.
@@ -7173,7 +7189,7 @@ def _warehouse_profile_dataframes(identity, *, spark_session, context, frequency
 
 def _key_candidate_evidence(
     candidates: Sequence[Mapping[str, Any]], *, evaluated: bool = True,
-    max_columns: int = _KEY_CANDIDATE_MAX_SIZE
+    max_columns: int = _KEY_CANDIDATE_MAX_SIZE, scope=None
 ) -> dict[str, Any]:
     """Return one explicit table-level key-discovery evidence envelope."""
     values = [dict(candidate) for candidate in candidates]
@@ -7181,6 +7197,7 @@ def _key_candidate_evidence(
         "status": "resolved" if values else ("unresolved" if evaluated else "not_evaluated"),
         "max_combination_width": max_columns if evaluated else 0,
         "candidates": values,
+        **(scope or {}),
     }
 
 
@@ -7602,6 +7619,8 @@ def _canonical_profiled_dataframe(
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
+        F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
+        F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         "row_count",
         "non_null_count",
         "null_count",
@@ -7657,6 +7676,8 @@ def _frequency_metadata_dataframe(
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
         identities.workspace_id.cast("string").alias("workspace_id"),
+        F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
+        F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         F.col("VALUE").cast("string").alias("value"),
         F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
         F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
@@ -7973,11 +7994,11 @@ def execute_table_profile(
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
-    grain_discovery_enabled: bool = True,
+    grain_discovery_enabled: bool = False,
     grain_discovery_max_columns: int = 3,
     grain_discovery_max_candidates: int = 8,
     frequency_columns=None,
-    frequency_enabled: bool = True, frequency_top_n: int | None = 5,
+    frequency_enabled: bool = False, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
     context=None,
     spark_session=None,
@@ -7991,6 +8012,9 @@ def execute_table_profile(
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
             raise ValueError(f"{name} must be a positive integer.")
+    for name, value in (("grain_discovery_enabled", grain_discovery_enabled), ("frequency_enabled", frequency_enabled)):
+        if not isinstance(value, bool):
+            raise ValueError(f"{name} must be a boolean.")
     coordinates = (store, schema, table_name)
     has_coordinates = any(value is not None for value in coordinates)
     if table_id is not None and has_coordinates:
@@ -8059,65 +8083,82 @@ def execute_table_profile(
         emit("1. Identity → DataFrame only; no governed table_id")
         emit("2. Profiling backend → PySpark")
 
-    profile_metrics = {"row_count": None}
-    profile_key_candidates: list[dict[str, Any]] = []
-    if warehouse_physical:
-        statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
-            identity, spark_session=spark_session, context=context,
-            frequency_columns=selected_frequency_columns,
-            threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n, metrics=profile_metrics,
-        )
-        warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
-        if identity is not None and grain_discovery_enabled:
-            profile_key_candidates = _warehouse_profile_key_candidates(
-                identity,
-                statistical_profile,
-                spark_session=spark_session,
-                context=context,
-                warehouse_columns=warehouse_columns,
-                max_columns=grain_discovery_max_columns,
-                max_candidates=grain_discovery_max_candidates,
+    scope = dict((context or {}).get("_profile_scope") or {
+        "profile_scope": "supplied_dataframe" if profile_input_label == "supplied DataFrame" else "full_table",
+        "profiling_max_rows": None,
+    })
+    max_rows = scope["profiling_max_rows"]
+    if max_rows is not None:
+        if warehouse_physical:
+            dataframe = read_warehouse_query(
+                f"SELECT TOP ({max_rows}) * FROM {_sql_identifier(identity['schema'])}.{_sql_identifier(identity['table_name'])}",
+                store=identity["store"], context={**context, "_spark_session": spark_session})
+            warehouse_physical = False
+        dataframe = dataframe.limit(max_rows).cache()
+    context = {**(context or {}), "_profile_scope": scope}
+    try:
+        profile_metrics = {"row_count": None}
+        profile_key_candidates: list[dict[str, Any]] = []
+        if warehouse_physical:
+            statistical_profile, frequency_profile, warehouse_columns = _warehouse_profile_dataframes(
+                identity, spark_session=spark_session, context=context,
+                frequency_columns=selected_frequency_columns,
+                threshold_percent=frequency_max_distinct_percent, top_n=frequency_top_n, metrics=profile_metrics,
             )
-    else:
-        statistical_profile = build_profile_dataframe(dataframe)
-        selected_columns = _selected_frequency_columns(
-            dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
-        )
-        frequency_profile = None
-        if selected_columns:
-            frequency_profile = build_frequency_distribution_dataframe(
-                dataframe, columns=selected_columns, top_n=frequency_top_n
+            warehouse_fields = [(name, canonical) for name, canonical, _sql_type in warehouse_columns]
+            if identity is not None and grain_discovery_enabled:
+                profile_key_candidates = _warehouse_profile_key_candidates(
+                    identity,
+                    statistical_profile,
+                    spark_session=spark_session,
+                    context=context,
+                    warehouse_columns=warehouse_columns,
+                    max_columns=grain_discovery_max_columns,
+                    max_candidates=grain_discovery_max_candidates,
+                )
+        else:
+            statistical_profile = build_profile_dataframe(dataframe)
+            selected_columns = _selected_frequency_columns(
+                dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
             )
-        if identity is not None and grain_discovery_enabled:
-            profile_key_candidates = _spark_profile_key_candidates(
-                dataframe, statistical_profile, metrics=profile_metrics,
-                max_columns=grain_discovery_max_columns, max_candidates=grain_discovery_max_candidates,
-            )
+            frequency_profile = None
+            if selected_columns:
+                frequency_profile = build_frequency_distribution_dataframe(
+                    dataframe, columns=selected_columns, top_n=frequency_top_n
+                )
+            if identity is not None and grain_discovery_enabled:
+                profile_key_candidates = _spark_profile_key_candidates(
+                    dataframe, statistical_profile, metrics=profile_metrics,
+                    max_columns=grain_discovery_max_columns, max_candidates=grain_discovery_max_candidates,
+                )
 
-    if identity is not None:
-        emit("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
-    frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
-    emit("3. Statistical profile → calculated")
-    emit(f"4. Frequency profile → {frequency_label}")
+        if identity is not None:
+            emit("   Grain discovery → " + ("calculated" if grain_discovery_enabled else "disabled; saved candidates preserved"))
+        frequency_label = "calculated" if frequency_profile is not None else "skipped; no eligible/requested columns"
+        emit("3. Statistical profile → calculated")
+        emit(f"4. Frequency profile → {frequency_label}")
 
 
-    if identity is None or not persistence_permitted(context):
-        emit("5. Metadata persistence → disabled by Dry Run policy" if identity is not None else
-              "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
-        emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
-        result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
-        return result
+        if identity is None or not persistence_permitted(context):
+            emit("5. Metadata persistence → disabled by Dry Run policy" if identity is not None else
+                  "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
+            emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
+            result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
+            return result
 
-    observation = {
-        "identity": identity, "profile": statistical_profile, "frequency_profile": frequency_profile,
-        "grain_candidates": profile_key_candidates, "row_count": profile_metrics["row_count"],
-        "activities": selected_activities, "grain_discovery_max_columns": grain_discovery_max_columns,
-        "replace_frequency": frequency_enabled or activities is None,
-        "source_fields": warehouse_fields, "source_df": dataframe,
-    }
-    return _persist_profile_observation(observation,
-        context={**context, "config": config, "scope_workspace_id": active_workspace_id},
-        spark_session=spark_session, emit=emit)
+        observation = {
+            "identity": identity, "profile": statistical_profile, "frequency_profile": frequency_profile,
+            "grain_candidates": profile_key_candidates, "row_count": profile_metrics["row_count"],
+            "activities": selected_activities, "grain_discovery_max_columns": grain_discovery_max_columns,
+            "replace_frequency": frequency_enabled or activities is None,
+            "source_fields": warehouse_fields, "source_df": dataframe,
+        }
+        return _persist_profile_observation(observation,
+            context={**context, "config": config, "scope_workspace_id": active_workspace_id},
+            spark_session=spark_session, emit=emit)
+    finally:
+        if max_rows is not None:
+            dataframe.unpersist()
 
 
 def _persist_profile_observation(observation, *, context, spark_session, emit):
@@ -8216,7 +8257,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
                 writer_notebook_name=None,
                 scheduled_refresh_json=None,
                 profile_key_candidates_json=_key_candidate_evidence(
-                    profile_key_candidates, max_columns=grain_discovery_max_columns
+                    profile_key_candidates, max_columns=grain_discovery_max_columns, scope=context.get("_profile_scope")
                 ) if grain_discovery_enabled else None,
                 source_fields=observation["source_fields"],
             )
@@ -8261,7 +8302,7 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     candidate_value = F.lit(encode_metadata_row(CATALOGUE_TABLE, {
-        "profile_key_candidates_json": _key_candidate_evidence(candidates, max_columns=max_columns),
+        "profile_key_candidates_json": _key_candidate_evidence(candidates, max_columns=max_columns, scope=context.get("_profile_scope")),
     })["profile_key_candidates_json"])
     updates = {"profile_key_candidates_json": candidate_value,
         **{name: F.lit(value) for name, value in audit.items()}}

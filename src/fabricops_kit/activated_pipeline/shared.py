@@ -588,7 +588,7 @@ def promoted_notebook(raw):
                     raise ValueError("Promotion requires one unconditional module-level setup_pipeline call.")
                 found += 1
                 values = {kw.arg: kw.value for kw in call.keywords}
-                if call.args or None in values or set(values) - {"pipeline_mode", "observe_source", "source_observation_days"}:
+                if call.args or None in values or set(values) - {"pipeline_mode", "observe_source", "source_observation_days", "profiling_enabled", "profiling_interval_days", "profiling_max_rows", "grain_discovery_enabled", "frequency_enabled"}:
                     raise ValueError("Promotion requires literal setup_pipeline parameters without argument overrides.")
                 try:
                     literal = {key: constants[node.id] if isinstance(node, ast.Name) else ast.literal_eval(node)
@@ -597,7 +597,11 @@ def promoted_notebook(raw):
                     raise ValueError("Promotion requires literal setup_pipeline parameters or preceding saved literal constants.") from None
                 if literal.get("pipeline_mode") != "Dry Run":
                     raise ValueError("Save the manually tested source notebook with literal Dry Run mode.")
-                parameters = {"manual": literal.get("observe_source", False), "days": literal.get("source_observation_days")}
+                from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+
+                profiling = validate_pipeline_profiling({key: value for key, value in literal.items()
+                    if key in {"profiling_enabled", "profiling_interval_days", "profiling_max_rows", "grain_discovery_enabled", "frequency_enabled"}})
+                parameters = {"manual": literal.get("observe_source", False), "days": literal.get("source_observation_days"), **profiling}
                 for key, node in values.items():
                     if key == "pipeline_mode":
                         replacements.append((node, '"Governed"'))
@@ -854,7 +858,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
         raise ValueError("Saved executable notebook changed since execution; save and repeat the Dry Run.")
     executed, raw = raw, current
     snapshot, parameters = promoted_notebook(raw)
-    if parameters != plan.evidence.get("source_observation_policy"):
+    if parameters != plan.evidence.get("pipeline_parameters"):
         raise ValueError("Executed parameter overrides differ from the saved definition.")
     config, _, runtime = resolve_fabric_context(context=context or plan.runtime_context)
     routed = {**runtime, "config": config, "scope_workspace_id": destination_workspace_id,
@@ -1430,7 +1434,7 @@ def persist_engineering_dry_run(plan, *, spark_session=None):
         executable_sha256=notebook_executable_digest(raw), dry_run=run, contracts=json.loads(plan.contracts_json),
         operations=[{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
             "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]],
-        parameters=plan.evidence["source_observation_policy"],
+        parameters=plan.evidence["pipeline_parameters"],
         created_by=plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name"),
         created_at=run["completed_at"])
     if not record["created_by"]:

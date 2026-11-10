@@ -998,10 +998,9 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert table_summary.index("Row Key") < table_summary.index("Load strategy")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children[1:]
-    assert [section.children[0].value for section in table_sections[:5]] == [
+    assert [section.children[0].value for section in table_sections[:4]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
-        "<div class=\"fabricops-section-heading\">Profiling</div>",
         "<div class=\"fabricops-section-heading\">Processing</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
     ]
@@ -2175,7 +2174,7 @@ def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_run
     assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
     assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
 
-    freshness_section = state["_controls"]["right_pane"].children[5]
+    freshness_section = state["_controls"]["right_pane"].children[4]
     assert freshness_section.children[1].children[0] is freshness["enabled"]
     assert freshness_section.children[1].children[1] is freshness["block"]
     freshness_primary = freshness_section.children[2]
@@ -3175,7 +3174,7 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     )
 
     processing_hint = controls["processing_source"]
-    processing_section = controls["right_pane"].children[4]
+    processing_section = controls["right_pane"].children[3]
     processing_hint_row = processing_section.children[2]
     assert processing_hint_row.children == (processing_hint,)
     assert processing_hint_row.layout.align_items == "flex-start"
@@ -3969,32 +3968,14 @@ def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_
     assert widget_runtime["calls"]["draft"] == []
 
 
-def test_profiling_edits_use_normal_draft_save_and_preserve_guardrails(widget_runtime):
-    """Table policy edits remain draft state until the normal contract Save action."""
+@pytest.mark.parametrize('status', ['draft', 'frozen'])
+def test_contract_authoring_has_no_profiling_execution_controls(widget_runtime, status):
+    """Engineering owns profiling; contract definitions retain their Guardrails."""
+    widget_runtime['contract']['status'] = status
     state = widget_runtime['open']()
-    before = json.loads(json.dumps(state['manifest']))
-    controls = state['_profiling_editor'].profiling_controls
-    controls['standard']['days'].value = 7
-    controls['grain']['frequency'].value = 'every'
-    controls['grain']['trigger'].value = 'write'
-    assert state['dirty'] is True
-    assert widget_runtime['calls']['draft'] == []
-    state['save_data_contract'](return_to_selector_after=False)
-    saved = widget_runtime['calls']['draft'][-1]
-    assert saved['profiling']['standard']['days'] == 7
-    assert saved['profiling']['grain'] == {'frequency': 'every', 'trigger': 'write'}
-    assert saved['guardrails'] == before['guardrails']
-    reopened = widget_runtime['open']()
-    assert reopened['_profiling_editor'].profiling_controls['standard']['days'].value == 7
-
-
-def test_frozen_profiling_controls_cannot_edit_policy(widget_runtime):
-    """An immutable version exposes disabled policy controls and no separate Save."""
-    widget_runtime['contract']['status'] = 'frozen'
-    state = widget_runtime['open']()
-    section = state['_profiling_editor']
-    assert all(control.disabled for values in section.profiling_controls.values() for control in values.values())
-    assert not hasattr(section, 'profiling_save')
+    assert '_profiling_editor' not in state
+    assert 'profiling' not in state['manifest']
+    assert 'guardrails' in state['manifest']
 
 
 @pytest.mark.parametrize('uniqueness', [None, 0.0, 100.0])
@@ -4681,3 +4662,17 @@ def test_cached_grain_and_column_suggestions_survive_editor_refresh(widget_runti
     assert "Suggested column description" in controls["column_description_ai"].value
     assert "Direct PII" in controls["sensitive_ai"].value
     assert {key: len(items) for key, items in captures.items()} == counts
+
+
+@pytest.mark.parametrize('candidates', [[], [{'columns': ['column_0'], 'row_count': 10,
+    'distinct_count': 10, 'uniqueness_percent': 100.0, 'null_count': 0}]])
+def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widget_runtime, candidates):
+    """A sample may suggest no keys or appear unique without proving physical Grain."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': 'resolved' if candidates else 'unresolved', 'max_combination_width': 3,
+        'profile_scope': 'bounded_selection', 'profiling_max_rows': 10, 'candidates': candidates}
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    assert 'bounded selection' in controls['grain_profile_evidence'].value
+    assert 'full-table uniqueness is unverified' in controls['grain_profile_evidence'].value
+    assert tuple(controls['row_key_columns'].value) == ()
