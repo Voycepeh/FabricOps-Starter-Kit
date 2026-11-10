@@ -98,12 +98,17 @@ The pipeline flow is **Setup Notebook → Setup Pipeline → Read → Transform 
 ```python
 context = setup_notebook()
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
-source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+source = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders",
+    query="SELECT * FROM demo.orders",  # Optional Full Read SQL; None disables SQL.
+)
 transformed = transform(source["dataframe"])
 result = orchestrate_write(transformed, store="Gold", schema="demo",
                            table_name="customer_summary", write_mode="overwrite")
 pipeline_result = finalize_pipeline(pipeline)
 ```
+
+For Full Reads, `query` can use the declared table in Spark SQL (Lakehouse) or T-SQL (Warehouse). Use `query=None` for a plain table read and for Incremental Reads, which use FabricOps-managed bounds.
 
 `pipeline_mode` accepts exactly three values:
 
