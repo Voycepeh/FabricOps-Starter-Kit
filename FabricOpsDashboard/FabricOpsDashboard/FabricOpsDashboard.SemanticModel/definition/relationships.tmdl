@@ -1,72 +1,72 @@
 relationship 70f3a72d-d907-568b-9e97-3f2c3d077e2b
-	fromColumn: 'Pipeline Registry'['Pipeline Key']
-	toColumn: 'Pipeline'['Pipeline Key']
+	fromColumn: 'Pipeline Registry'.'Pipeline Key'
+	toColumn: 'Pipeline'.'Pipeline Key'
 
 relationship 5e92a754-fc80-52b3-a4d1-ba606a805cd9
-	fromColumn: 'Pipeline Activation'['Pipeline Key']
-	toColumn: 'Pipeline'['Pipeline Key']
+	fromColumn: 'Pipeline Activation'.'Pipeline Key'
+	toColumn: 'Pipeline'.'Pipeline Key'
 
 relationship 8da568cf-a9f3-5de3-b119-aa16982b5b91
-	fromColumn: 'Pipeline Run'['Pipeline Key']
-	toColumn: 'Pipeline'['Pipeline Key']
+	fromColumn: 'Pipeline Run'.'Pipeline Key'
+	toColumn: 'Pipeline'.'Pipeline Key'
 
 relationship 03a3bac8-62ba-5fc2-886d-ebc1ee5129c1
-	fromColumn: 'Run Operation'['Run ID']
-	toColumn: 'Pipeline Run'['Run ID']
+	fromColumn: 'Run Operation'.'Run ID'
+	toColumn: 'Pipeline Run'.'Run ID'
 	crossFilteringBehavior: both
 
 relationship b8f7e965-9efb-55e8-b395-9d487277a23a
-	fromColumn: 'Run Stage'['Run ID']
-	toColumn: 'Pipeline Run'['Run ID']
+	fromColumn: 'Run Stage'.'Run ID'
+	toColumn: 'Pipeline Run'.'Run ID'
 
 relationship a04673ca-a7f3-5b87-8af2-e1a2ce1e0714
-	fromColumn: 'Run Failure'['Run ID']
-	toColumn: 'Pipeline Run'['Run ID']
+	fromColumn: 'Run Failure'.'Run ID'
+	toColumn: 'Pipeline Run'.'Run ID'
 
 relationship 14b22b9e-44fc-531e-a0d0-f16830641146
-	fromColumn: 'Guardrail Result'['Run ID']
-	toColumn: 'Pipeline Run'['Run ID']
+	fromColumn: 'Guardrail Result'.'Run ID'
+	toColumn: 'Pipeline Run'.'Run ID'
 
 relationship f29c22d5-e9fc-5bde-8f37-bdf7049b0a3c
-	fromColumn: 'Run Operation'['Table Key']
-	toColumn: 'Catalogue Table'['Table Key']
+	fromColumn: 'Run Operation'.'Table Key'
+	toColumn: 'Catalogue Table'.'Table Key'
 
 relationship 45f0bf43-2a7a-5361-be6c-8668588c9c6c
-	fromColumn: 'Guardrail Result'['Table Key']
-	toColumn: 'Catalogue Table'['Table Key']
+	fromColumn: 'Guardrail Result'.'Table Key'
+	toColumn: 'Catalogue Table'.'Table Key'
 
 relationship 3eb96aa1-190c-5eac-b8c2-4d01531e1d25
-	fromColumn: 'Catalogue Column'['Table Key']
-	toColumn: 'Catalogue Table'['Table Key']
+	fromColumn: 'Catalogue Column'.'Table Key'
+	toColumn: 'Catalogue Table'.'Table Key'
 
 relationship 27584e76-794d-58c6-a87d-01ec40a3b992
-	fromColumn: 'Profiled Column'['Column Key']
-	toColumn: 'Catalogue Column'['Column Key']
+	fromColumn: 'Profiled Column'.'Column Key'
+	toColumn: 'Catalogue Column'.'Column Key'
 
 relationship e7625533-e1b8-555a-b92c-edb53172e4a5
-	fromColumn: 'Data Access'['Table Key']
-	toColumn: 'Catalogue Table'['Table Key']
+	fromColumn: 'Data Access'.'Table Key'
+	toColumn: 'Catalogue Table'.'Table Key'
 
 relationship a07b4a4d-939a-5a93-a551-86809cb6e27d
-	fromColumn: 'Contract Activation'['Table Key']
-	toColumn: 'Catalogue Table'['Table Key']
+	fromColumn: 'Contract Activation'.'Table Key'
+	toColumn: 'Catalogue Table'.'Table Key'
 	crossFilteringBehavior: both
 
 relationship 3d6a89ec-33d5-5053-8d15-b6a8ccf53827
-	fromColumn: 'Contract Activation'['Contract Key']
-	toColumn: 'Data Contract'['Contract Key']
+	fromColumn: 'Contract Activation'.'Contract Key'
+	toColumn: 'Data Contract'.'Contract Key'
 	crossFilteringBehavior: both
 
 relationship c4729330-9302-511d-bc13-0ec97f43c465
-	fromColumn: 'Contract Activation'['Agreement Key']
-	toColumn: 'Data Agreement'['Agreement Key']
+	fromColumn: 'Contract Activation'.'Agreement Key'
+	toColumn: 'Data Agreement'.'Agreement Key'
 	crossFilteringBehavior: both
 
 relationship 305080ba-5f64-5c51-bf68-8ef2cfa947fa
-	fromColumn: 'Agreement Steward'['Agreement Key']
-	toColumn: 'Data Agreement'['Agreement Key']
+	fromColumn: 'Agreement Steward'.'Agreement Key'
+	toColumn: 'Data Agreement'.'Agreement Key'
 	crossFilteringBehavior: both
 
 relationship 21e38829-ee5c-5a13-9d86-8cbf87f8ef26
-	fromColumn: 'Agreement Steward'['Steward ID']
-	toColumn: 'Data Steward'['Steward ID']
+	fromColumn: 'Agreement Steward'.'Steward ID'
+	toColumn: 'Data Steward'.'Steward ID'

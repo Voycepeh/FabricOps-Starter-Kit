@@ -185,7 +185,7 @@ def model():
  rels=[('Pipeline Registry','Pipeline Key','Pipeline','Pipeline Key',None),('Pipeline Activation','Pipeline Key','Pipeline','Pipeline Key',None),('Pipeline Run','Pipeline Key','Pipeline','Pipeline Key',None),('Run Operation','Run ID','Pipeline Run','Run ID','both'),('Run Stage','Run ID','Pipeline Run','Run ID',None),('Run Failure','Run ID','Pipeline Run','Run ID',None),('Guardrail Result','Run ID','Pipeline Run','Run ID',None),('Run Operation','Table Key','Catalogue Table','Table Key',None),('Guardrail Result','Table Key','Catalogue Table','Table Key',None),('Catalogue Column','Table Key','Catalogue Table','Table Key',None),('Profiled Column','Column Key','Catalogue Column','Column Key',None),('Data Access','Table Key','Catalogue Table','Table Key',None),('Contract Activation','Table Key','Catalogue Table','Table Key','both'),('Contract Activation','Contract Key','Data Contract','Contract Key','both'),('Contract Activation','Agreement Key','Data Agreement','Agreement Key','both'),('Agreement Steward','Agreement Key','Data Agreement','Agreement Key','both'),('Agreement Steward','Steward ID','Data Steward','Steward ID',None)]
  out=[]
  for i,(a,b,c,e,f) in enumerate(rels):
-  out += [f"relationship {gid('rel:'+str(i))}",f"\tfromColumn: '{a}'['{b}']",f"\ttoColumn: '{c}'['{e}']"]+([f'\tcrossFilteringBehavior: {f}'] if f else [])+['']
+  out += [f"relationship {gid('rel:'+str(i))}",f"\tfromColumn: '{a}'.'{b}'",f"\ttoColumn: '{c}'.'{e}'"]+([f'\tcrossFilteringBehavior: {f}'] if f else [])+['']
  put(d/'relationships.tmdl','\n'.join(out))
 def main():
  PROJECT.mkdir(parents=True,exist_ok=True)

@@ -28,6 +28,9 @@ check(pbism.get('$schema')=='https://developer.microsoft.com/json-schemas/fabric
 check(version=={'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json','version':'2.0.0'},'PBIR version metadata mismatch')
 
 pages=json.loads((REPORT/'pages/pages.json').read_text()); check(pages['pageOrder']==['overview','engineering_pipelines','governance_tables','data_owner','pipeline_detail','table_detail'],'page order mismatch')
+relationships=(MODEL/'relationships.tmdl').read_text()
+relationship_columns=re.findall(r"(?m)^\t(?:from|to)Column: (.+)$",relationships)
+check(bool(relationship_columns) and all(re.fullmatch(r"'(?:[^']|'')+'\.'(?:[^']|'')+'",column) for column in relationship_columns),'TMDL relationship columns must use dotted quoted references')
 for pid in pages['pageOrder']:
  page=json.loads((REPORT/f'pages/{pid}/page.json').read_text()); visuals=[]
  for p in (REPORT/f'pages/{pid}/visuals').glob('*/visual.json'):
@@ -108,7 +111,7 @@ for p in REPORT.glob('pages/*/visuals/*/visual.json'):
    fld=item['field']; kind='Measure' if 'Measure' in fld else 'Column'; body=fld[kind]; table=body['Expression']['SourceRef']['Entity']; prop=body['Property']
    check((table,prop) in measures if kind=='Measure' else prop in columns.get(table,set()),f'{p.relative_to(ROOT)}: missing {kind} {table}.{prop}')
    if kind=='Column': used_columns.add((table,prop))
-for ft,fc,tt,tc in re.findall(r"fromColumn: '([^']+)'\['([^']+)'\]\s+toColumn: '([^']+)'\['([^']+)'\]",(MODEL/'relationships.tmdl').read_text()):
+for ft,fc,tt,tc in re.findall(r"fromColumn: '([^']+)'\.'([^']+)'\s+toColumn: '([^']+)'\.'([^']+)'",(MODEL/'relationships.tmdl').read_text()):
  check(fc in columns.get(ft,set()) and tc in columns.get(tt,set()),f'relationship endpoint missing: {ft}.{fc} -> {tt}.{tc}')
  used_columns.update({(ft,fc),(tt,tc)})
 for table,table_columns in columns.items():
@@ -120,8 +123,8 @@ required={'Registered Pipelines','Pipeline Identities','Pipelines Run','Submitte
 check(required<={name for table,name in measures if table=='Measures'},f'missing required measures: {sorted(required-{name for table,name in measures if table=="Measures"})}')
 relationships=(MODEL/'relationships.tmdl').read_text()
 for edge in [("Pipeline Activation","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Run","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Registry","Pipeline Key","Pipeline","Pipeline Key")]:
- check(f"fromColumn: '{edge[0]}'['{edge[1]}']\n\ttoColumn: '{edge[2]}'['{edge[3]}']" in relationships,f'missing pipeline identity relationship: {edge}')
-check("fromColumn: 'Guardrail Result'['Table Key']\n\ttoColumn: 'Catalogue Table'['Table Key']" in relationships,'missing table-to-guardrail relationship')
+ check(f"fromColumn: '{edge[0]}'.'{edge[1]}'\n\ttoColumn: '{edge[2]}'.'{edge[3]}'" in relationships,f'missing pipeline identity relationship: {edge}')
+check("fromColumn: 'Guardrail Result'.'Table Key'\n\ttoColumn: 'Catalogue Table'.'Table Key'" in relationships,'missing table-to-guardrail relationship')
 
 # Representative test-only outcomes remain mutually exclusive and descriptive.
 def outcome(status,boundary):
