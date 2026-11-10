@@ -3,6 +3,9 @@
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 </p>
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">`01_governance`</span>
+</p>
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
