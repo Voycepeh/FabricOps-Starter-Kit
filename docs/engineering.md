@@ -19,7 +19,10 @@ A FabricOps pipeline is the standard notebook flow **Setup → Read → Transfor
 context = setup_notebook()
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 
-orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+orders = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders",
+    query="SELECT * FROM demo.orders",  # Optional Full Read SQL; None reads the whole table.
+)
 products = orchestrate_read(store="Bronze", schema="demo", table_name="products")
 
 prepared = transform(orders["dataframe"], products["dataframe"])
@@ -70,7 +73,7 @@ For registered table pipelines, the same [`orchestrate_read()`](api/reference/or
 - Lakehouse SQL uses the declared `table_name` or `schema.table_name`, with optional aliases, CTEs and self joins. FabricOps binds it to the configured OneLake source, including cross-workspace stores, instead of the notebook's default Lakehouse. Other physical sources, paths and table functions are rejected.
 - A simple `SELECT TOP (100) id FROM demo.orders ORDER BY id` on a Lakehouse can become Spark `LIMIT 100`. `TOP PERCENT`, `WITH TIES`, functions and compound T-SQL are rejected with a source-specific error. Write native Spark SQL for these cases. SQL endpoint fallback is not available because the store configuration does not identify a Lakehouse SQL endpoint. Use Spark backticks for quoted identifiers; bracket conversion is limited to simple TOP queries.
 
-For example, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
+The pipeline example above uses `SELECT * FROM demo.orders` to demonstrate the optional Full Read SQL argument without filtering the source. Set `query=None` to use a plain table read. For a narrowed Lakehouse read, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
 
 Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
 

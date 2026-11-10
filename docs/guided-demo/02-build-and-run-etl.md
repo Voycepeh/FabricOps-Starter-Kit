@@ -116,13 +116,15 @@ source = orchestrate_read(
     schema="demo",
     table_name="source_table",
     read_mode="full",
-    query=None,
+    query="SELECT * FROM demo.source_table",  # Optional Full Read SQL; None disables it.
     dq_diagnostics="sample",
 )
 sources["source"] = source
 
 display(sources["source"]["dataframe"].limit(10))
 ```
+
+The `query` argument is available for **Full Reads** from both configured Lakehouses and Warehouses. The example `SELECT * FROM demo.source_table` preserves the same rows as a plain Full Read while making SQL authoring visible; change the projection or `WHERE` clause when you want a narrower result, or set `query=None` to use an unrestricted table read. Lakehouses execute Spark SQL, while Warehouses execute T-SQL. The SQL must reference the declared `schema.table_name` and cannot introduce a different physical source. **Incremental Reads require `query=None`** because FabricOps owns their watermark bounds.
 
 The transform consumes `sources["source"]["dataframe"]`. Additional sources use distinct dictionary keys and should participate only when they contribute to a target.
 
