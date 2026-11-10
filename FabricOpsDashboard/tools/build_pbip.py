@@ -17,7 +17,12 @@ def put(p,v):
 def expr(t,c,m=False): return {('Measure' if m else 'Column'):{'Expression':{'SourceRef':{'Entity':t}},'Property':c}}
 def vis(n,typ,x,y,w,h,roles=None,title=None,sync=None):
  v={'visualType':typ}
- if roles:v['query']={'queryState':{r:{'projections':[{'field':expr(*f),'queryRef':f'{f[0]}.{f[1]}','nativeQueryRef':f[1]} for f in fs]} for r,fs in roles.items()}}
+ if roles:
+  query_state={}
+  for role,fields in roles.items():
+   query_role='Data' if typ=='cardVisual' and role=='Values' else role
+   query_state[query_role]={'projections':[{'field':expr(*field),'queryRef':f'{field[0]}.{field[1]}','nativeQueryRef':field[1]} for field in fields]}
+  v['query']={'queryState':query_state}
  if title:v['visualContainerObjects']={'title':[{'properties':{'show':{'expr':{'Literal':{'Value':'true'}}},'text':{'expr':{'Literal':{'Value':json.dumps(title)}}}}}], 'general':[{'properties':{'altText':{'expr':{'Literal':{'Value':json.dumps(title+' visual')}}}}}]}
  if sync:v['syncGroup']={'groupName':sync,'fieldChanges':True,'filterChanges':True}
  return {'$schema':f'{RS}/visualContainer/2.9.0/schema.json','name':n,'position':{'x':x,'y':y,'z':0,'height':h,'width':w,'tabOrder':y+x},'visual':v}

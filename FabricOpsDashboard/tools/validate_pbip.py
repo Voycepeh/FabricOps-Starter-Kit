@@ -30,7 +30,8 @@ check(version=={'$schema':'https://developer.microsoft.com/json-schemas/fabric/i
 pages=json.loads((REPORT/'pages/pages.json').read_text()); check(pages['pageOrder']==['overview','engineering_pipelines','governance_tables','data_owner','pipeline_detail','table_detail'],'page order mismatch')
 relationships=(MODEL/'relationships.tmdl').read_text()
 relationship_columns=re.findall(r"(?m)^\t(?:from|to)Column: (.+)$",relationships)
-check(bool(relationship_columns) and all(re.fullmatch(r"'(?:[^']|'')+'\.'(?:[^']|'')+'",column) for column in relationship_columns),'TMDL relationship columns must use dotted quoted references')
+object_reference=r"(?:'(?:[^']|'')+'|[A-Za-z_][A-Za-z0-9_-]*)\.(?:'(?:[^']|'')+'|[A-Za-z_][A-Za-z0-9_-]*)"
+check(bool(relationship_columns) and all(re.fullmatch(object_reference,column) for column in relationship_columns),'TMDL relationship columns must use dotted object references')
 cross_filter_values=re.findall(r"(?m)^\tcrossFilteringBehavior: (.+)$",relationships)
 check(set(cross_filter_values)<={'oneDirection','bothDirections','automatic'},'TMDL relationship cross-filter behavior is invalid')
 for pid in pages['pageOrder']:
@@ -106,11 +107,16 @@ for p in (MODEL/'tables').glob('*.tmdl'):
  text=p.read_text()
  match=re.search(r"^table '?([^'\n]+)'?",text)
  if not match: continue
- table=match.group(1); columns[table]=set(re.findall(r"^\s*column '([^']+)'",text,re.M)); measures|={(table,m) for m in re.findall(r"^\s*measure '?([^'=\n]+)'?\s*=",text,re.M)}
+ table=match.group(1)
+ columns[table]={quoted or plain for quoted,plain in re.findall(r"^\s*column (?:'((?:[^']|'')+)'|([A-Za-z_][A-Za-z0-9_]*))",text,re.M)}
+ measures|={(table,m) for m in re.findall(r"^\s*measure '?([^'=\n]+)'?\s*=",text,re.M)}
 check('Measures' not in columns,'unsupported semantic model table name Measures is present')
 for p in REPORT.glob('pages/*/visuals/*/visual.json'):
  raw=json.loads(p.read_text())
- for role in raw.get('visual',{}).get('query',{}).get('queryState',{}).values():
+ query_state=raw.get('visual',{}).get('query',{}).get('queryState',{})
+ if raw.get('visual',{}).get('visualType')=='cardVisual':
+  check('Data' in query_state and 'Values' not in query_state,f'{p.relative_to(ROOT)}: cardVisual must bind its measure through the Data role')
+ for role in query_state.values():
   for item in role.get('projections',[]):
    fld=item['field']; kind='Measure' if 'Measure' in fld else 'Column'; body=fld[kind]; table=body['Expression']['SourceRef']['Entity']; prop=body['Property']
    check((table,prop) in measures if kind=='Measure' else prop in columns.get(table,set()),f'{p.relative_to(ROOT)}: missing {kind} {table}.{prop}')
@@ -126,9 +132,18 @@ check(not unused,f'loaded model columns without a traceable reporting purpose: {
 required={'Registered Pipelines','Pipeline Identities','Pipelines Run','Submitted Dry Run Submissions','Approved Activation Decisions','Registered Physical Tables','Run Count','Successful Runs','Failed Runs','Incomplete Runs','Pipeline Success Rate','Run Duration Minutes','Historical Median Duration Minutes','Duration Deviation Percent','Active Contracts','Contract Coverage','Recorded Guardrail Failures','Recorded Blocking Guardrail Outcomes','Last Successful Execution','Latest Recorded Run Status','Tables With Agreement','Recorded Access Observations','Tables With Recorded Access'}
 check(required<={name for table,name in measures if table=='Dashboard Metrics'},f'missing required measures: {sorted(required-{name for table,name in measures if table=="Dashboard Metrics"})}')
 relationships=(MODEL/'relationships.tmdl').read_text()
-for edge in [("Pipeline Activation","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Run","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Registry","Pipeline Key","Pipeline","Pipeline Key")]:
- check(f"fromColumn: '{edge[0]}'.'{edge[1]}'\n\ttoColumn: '{edge[2]}'.'{edge[3]}'" in relationships,f'missing pipeline identity relationship: {edge}')
-check("fromColumn: 'Guardrail Result'.'Table Key'\n\ttoColumn: 'Catalogue Table'.'Table Key'" in relationships,'missing table-to-guardrail relationship')
+def relationship_name(reference):
+ table,column=reference.split('.',1)
+ return tuple(part[1:-1].replace("''", "'") if part.startswith("'") else part for part in (table,column))
+relationship_edges=set()
+for block in re.split(r'(?m)^relationship\s+',relationships)[1:]:
+ source=re.search(r"(?m)^\tfromColumn: (.+)$",block)
+ target=re.search(r"(?m)^\ttoColumn: (.+)$",block)
+ if source and target and re.fullmatch(object_reference,source.group(1)) and re.fullmatch(object_reference,target.group(1)):
+  relationship_edges.add((*relationship_name(source.group(1)),*relationship_name(target.group(1))))
+required_edges=[("Pipeline Activation","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Run","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Registry","Pipeline Key","Pipeline","Pipeline Key"),("Contract Activation","Contract Key","Data Contract","Contract Key"),("Guardrail Result","Table Key","Catalogue Table","Table Key")]
+for edge in required_edges:
+ check(edge in relationship_edges,f'missing semantic-model relationship: {edge}')
 
 # Representative test-only outcomes remain mutually exclusive and descriptive.
 def outcome(status,boundary):
