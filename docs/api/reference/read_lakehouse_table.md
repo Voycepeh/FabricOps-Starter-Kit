@@ -10,8 +10,8 @@
 Read a Delta table from a configured Fabric lakehouse target.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">`02_pipeline`</span>
-<span class="reference-chip">`00C_demo_setup`</span>
+<span class="reference-chip">00C_demo_setup</span>
+<span class="reference-chip">02B_incremental_append_demo</span>
 </p>
 
 ## Usage notes
