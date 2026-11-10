@@ -5760,6 +5760,14 @@ def main() -> None:
             },
             "open": False,
         },
+        {
+            "key": "demo",
+            "title": "Demo",
+            "note": "Dedicated demo environment only",
+            "description": "Preview or reset the disposable Guided Demo to Day 1.",
+            "functions": {"orchestrate_demo_reset"},
+            "open": False,
+        },
     ]
     group_items: dict[str, list[str]] = {group["key"]: [] for group in reference_groups}
     for node in catalogue_nodes:
@@ -5844,7 +5852,7 @@ def main() -> None:
                 (
                     "<summary>"
                     f'<span class="reference-function-group-title">{_esc(group["title"])}</span>'
-                    f'<span class="reference-function-group-meta">{count} functions · {_esc(group["note"])}</span>'
+                    f'<span class="reference-function-group-meta">{count} {"function" if count == 1 else "functions"} · {_esc(group["note"])}</span>'
                     "</summary>"
                 ),
                 f'<p class="reference-function-group-description">{_esc(group["description"])}</p>',

@@ -3911,6 +3911,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -4398,13 +4410,13 @@
         }
       ],
       "summary": {
-        "added": 16,
+        "added": 17,
         "modified": 12,
-        "nonbreaking": 16,
+        "nonbreaking": 17,
         "potentially_breaking": 12,
         "removed": 14,
         "review_required": 14,
-        "total": 42
+        "total": 43
       },
       "target": "working-tree"
     },
@@ -7584,6 +7596,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -7994,13 +8018,13 @@
         }
       ],
       "summary": {
-        "added": 11,
+        "added": 12,
         "modified": 15,
-        "nonbreaking": 12,
+        "nonbreaking": 13,
         "potentially_breaking": 15,
         "removed": 11,
         "review_required": 10,
-        "total": 37
+        "total": 38
       },
       "target": "working-tree"
     },
@@ -11122,6 +11146,18 @@
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -11530,13 +11566,13 @@
         }
       ],
       "summary": {
-        "added": 3,
+        "added": 4,
         "modified": 22,
-        "nonbreaking": 4,
+        "nonbreaking": 5,
         "potentially_breaking": 22,
         "removed": 9,
         "review_required": 8,
-        "total": 34
+        "total": 35
       },
       "target": "working-tree"
     },
@@ -13231,6 +13267,18 @@
       "baseline": "v0.3.0",
       "changes": [
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -13287,13 +13335,13 @@
         }
       ],
       "summary": {
-        "added": 1,
+        "added": 2,
         "modified": 3,
-        "nonbreaking": 2,
+        "nonbreaking": 3,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 4
+        "total": 5
       },
       "target": "working-tree"
     },
@@ -14988,6 +15036,18 @@
       "baseline": "v0.3.1",
       "changes": [
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -15044,13 +15104,13 @@
         }
       ],
       "summary": {
-        "added": 1,
+        "added": 2,
         "modified": 3,
-        "nonbreaking": 2,
+        "nonbreaking": 3,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
-        "total": 4
+        "total": 5
       },
       "target": "working-tree"
     },
@@ -16719,15 +16779,28 @@
     },
     {
       "baseline": "v0.4.0",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        }
+      ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -18396,15 +18469,28 @@
     },
     {
       "baseline": "v0.4.1",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        }
+      ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -20073,15 +20159,28 @@
     },
     {
       "baseline": "main",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        }
+      ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -20135,6 +20234,18 @@
           ],
           "signature_after": null,
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
         },
         {
           "change_type": "modified",
@@ -20628,9 +20739,9 @@
         "modified": 12,
         "nonbreaking": 14,
         "potentially_breaking": 20,
-        "removed": 16,
-        "review_required": 8,
-        "total": 42
+        "removed": 17,
+        "review_required": 9,
+        "total": 43
       },
       "target": "v0.1.0"
     },
@@ -20696,6 +20807,18 @@
           ],
           "signature_after": null,
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
         },
         {
           "change_type": "modified",
@@ -21112,9 +21235,9 @@
         "modified": 15,
         "nonbreaking": 11,
         "potentially_breaking": 19,
-        "removed": 11,
-        "review_required": 7,
-        "total": 37
+        "removed": 12,
+        "review_required": 8,
+        "total": 38
       },
       "target": "v0.2.0"
     },
@@ -21160,6 +21283,18 @@
           ],
           "signature_after": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "scan_workspace_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
         },
         {
           "change_type": "modified",
@@ -21574,9 +21709,9 @@
         "modified": 22,
         "nonbreaking": 10,
         "potentially_breaking": 23,
-        "removed": 3,
-        "review_required": 1,
-        "total": 34
+        "removed": 4,
+        "review_required": 2,
+        "total": 35
       },
       "target": "v0.2.5"
     },
@@ -21584,6 +21719,18 @@
       "baseline": "working-tree",
       "changes": [
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -21644,9 +21791,9 @@
         "modified": 3,
         "nonbreaking": 0,
         "potentially_breaking": 2,
-        "removed": 1,
-        "review_required": 2,
-        "total": 4
+        "removed": 2,
+        "review_required": 3,
+        "total": 5
       },
       "target": "v0.3.0"
     },
@@ -21654,6 +21801,18 @@
       "baseline": "working-tree",
       "changes": [
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -21714,51 +21873,90 @@
         "modified": 3,
         "nonbreaking": 0,
         "potentially_breaking": 2,
-        "removed": 1,
-        "review_required": 2,
-        "total": 4
+        "removed": 2,
+        "review_required": 3,
+        "total": 5
       },
       "target": "v0.3.1"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        }
+      ],
       "summary": {
         "added": 0,
         "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "v0.4.0"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        }
+      ],
       "summary": {
         "added": 0,
         "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "v0.4.1"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        }
+      ],
       "summary": {
         "added": 0,
         "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "main"
     }
@@ -35706,6 +35904,26 @@
         {
           "certainty": "certain",
           "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "reset",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "return_annotation": "None",
+          "signature": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
+          "source_qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
             {
@@ -37110,7 +37328,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:4d66d3eae351a4f07289f5fa1a3fb26709cfc226ebb02f182654d76e3a74dffa",
+      "source_digest": "sha256:1a639f1f3b328486d5caa0b6e4a6ec9766bc32bf6f8a8edb7006d2dc13a232ce",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

@@ -6,7 +6,7 @@ Run two independent paths to see how extraction scope and target duplicate handl
 
 1. Download [`02B_incremental_append_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02B_incremental_append_demo.ipynb) into Engineering Development.
 2. Keep `00_env_config.ipynb` beside it and attach the Fabric Environment from [Step 00B](00B-configure-environment-and-load-assets.md).
-3. Upload the demo CSVs and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) once to stage Day 1. Day 2 reads `Demo/inventory_day2.csv` from Bronze Lakehouse `Files/Demo`.
+3. Upload the demo CSVs and run [Step 00C](00C-prepare-demo-data-with-fabricops-io.md) once to stage Day 1. Day 2 reads `demo/inventory_day2.csv` from Bronze Lakehouse `Files/demo`.
 4. Start with fresh Silver targets. Run Day 1, Day 2, and Day 3 in order; do not rerun 00C after advancing Bronze.
 
 ![The inventory demo CSV files uploaded to the Bronze Lakehouse](../assets/2b/File%20Upload.png)
@@ -159,6 +159,13 @@ Set `DEMO_DAY = 3` and run from the top. The preparation cell makes no source ch
 
 Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows, but they get there differently: Path A processes 8 + 4 + 0 rows, while Path B processes 8 + 12 + 12 rows and filters already-seen hashes at Write time.
 
+### Content and replay checklist
+
+- [ ] Day 1 contains M001–M008; Day 2 adds M009–M012. Day 3 retains the same 12 unique `movement_id` values.
+- [ ] Compare every business column in each persisted Silver target with the transformed Bronze snapshot; both targets must agree. `_row_hash` must be non-null, 64 characters and unique for these fixtures. Changing only FabricOps audit fields must not change the business hash.
+- [ ] Rerun the current day: no new accepted incremental rows and no new Append New Only hashes; both target totals stay 8 on Day 1 or 12 on Days 2–3. Finalize both paths and inspect their separate Run operations and target-specific receipts/checkpoints.
+- [ ] Follow the [complete metadata and package validation checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata); a failed publication must not advance accepted progress.
+
 ### Metadata saved by FabricOps
 
 | Table | Purpose in this demo |
@@ -175,7 +182,7 @@ Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows,
 
 A failed Path A publication must not advance its accepted incremental checkpoint. Retry or recover that exact publication before starting later work for the same target. Verified target markers and receipts distinguish a completed publication from an unverified attempt.
 
-Repeated Day 2 staging keeps Bronze unique, but this does not authorize resetting target or Processing State history. For an independent replay, use a fresh demo environment or separate table identities and approved Contracts. Keep each target, its physical markers, and its scoped `METADATA_PROCESSING_STATE` history together.
+Repeated Day 2 staging keeps Bronze unique. For a complete lifecycle restart, stop current and earlier demo executions, run the single reset cell with `RESET_DEMO = True` in [00C](00C-prepare-demo-data-with-fabricops-io.md#reset-rerun-and-validate-a-package). Wait for `RESET COMPLETE`, begin Step 1, and set both 02B and 02C back to `DEMO_DAY = 1`. This clears all metadata in the dedicated `demo_metadata` item. Never run 00C between days or against production assets.
 
 If counts differ, inspect the two finalized results, Read scopes, Write metrics, publication statuses, and persisted targets. Do not delete a checkpoint or overwrite a target merely to force the expected demonstration counts.
 

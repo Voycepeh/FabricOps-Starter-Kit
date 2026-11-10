@@ -18,6 +18,7 @@ def test_function_reference_uses_collapsible_groups() -> None:
     assert 'data-callable-group="governance-metadata"' in text
     assert 'data-callable-group="access-consumption"' in text
     assert 'data-callable-group="foundational-io"' in text
+    assert 'data-callable-group="demo"' in text
 
     standard_open = re.search(
         r'<details class="reference-function-group" '
@@ -33,7 +34,7 @@ def test_function_reference_uses_collapsible_groups() -> None:
         r'data-default-open="false">',
         text,
     )
-    assert len(collapsed_groups) == 4
+    assert len(collapsed_groups) == 5
 
 
 def test_every_public_function_is_in_exactly_one_group() -> None:
@@ -47,7 +48,7 @@ def test_every_public_function_is_in_exactly_one_group() -> None:
     group_starts = list(
         re.finditer(r'<details class="reference-function-group"[^>]*>', text)
     )
-    assert len(group_starts) == 5
+    assert len(group_starts) == 6
 
     grouped_rows: list[str] = []
     for index, match in enumerate(group_starts):
@@ -67,3 +68,11 @@ def test_every_public_function_is_in_exactly_one_group() -> None:
     assert function_links
     for function_name in function_links:
         assert (ROOT / "docs" / "api" / "reference" / f"{function_name}.md").exists()
+
+
+def test_demo_group_contains_only_the_demo_reset_function() -> None:
+    """Keep the disposable reset separate from normal Governance and pipeline APIs."""
+    text = REFERENCE_PAGE.read_text(encoding="utf-8")
+    demo = text.split('data-callable-group="demo"', 1)[1].split('</details>', 1)[0]
+    assert re.findall(r'data-callable-name="([^"]+)"', demo) == ['orchestrate_demo_reset']
+    assert '1 function ·' in demo
