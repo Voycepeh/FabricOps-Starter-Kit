@@ -83,7 +83,8 @@ def profile_table(
     context : dict, optional
         Explicit pipeline context; Testing returns profiles without persistence.
     verbose : bool, optional
-        Display profiling progress when True; orchestration uses the automatic report.
+        Print expanded profiling diagnostics when True. Statistical results display
+        automatically even when False.
 
     Returns
     -------
@@ -96,6 +97,13 @@ def profile_table(
 
     Notes
     -----
+    Statistical results display automatically using native Fabric notebook display
+    when available, with a text-table fallback. The preview contains at most 100
+    column rows and 120 characters per text cell; returned DataFrames are complete.
+    Coverage is labelled as a complete table, supplied DataFrame, or bounded
+    selection, with Dry Run identified separately. Display failures do not fail
+    successful profiling. Grain discovery and frequency remain opt-in.
+
     The result also includes ``row_count``, reused from an existing aggregate
     when available (None otherwise). No additional Spark job is run for this
     metric. It describes the profiled dataset, not rows committed by a writer.

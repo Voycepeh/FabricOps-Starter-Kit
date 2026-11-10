@@ -8277,9 +8277,9 @@
       ],
       "returns_documentation": "dict\n    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.\n    ``read_metrics.rows_read`` and the notebook summary describe the exact\n    returned scope. For incremental reads this is the target-specific batch,\n    never the complete physical Source Observation count.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
       "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, verbose: bool=False, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 162,
+      "source_end_line": 173,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
-      "source_start_line": 24,
+      "source_start_line": 25,
       "summary": "Read a source using the active pipeline's contracts and runtime.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -8386,9 +8386,9 @@
       ],
       "returns_documentation": "dict\n    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Per-source\n    Source Drift results remain under ``source_drift_results``; the independent\n    pipeline decision is under ``source_drift_decision``. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome. The DataFrame includes Sensitive Data treatment,\n    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.\n    Append New Only returns only rows submitted for insertion. SCD previews\n    represent processing input, not the reconstructed post-merge destination.\n    Persistent modes return an eagerly materialized, caller-owned snapshot of\n    the exact physical writer input. It remains inspectable after publication;\n    call ``result[\"dataframe\"].unpersist()`` when inspection is complete.\n    ``rows_committed`` measures this attempt; ``total_target_rows`` is the\n    destination total where profiling provides it.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
       "signature": "def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None=None, repartition_by: int | None=None, existing_mapping=None, verbose: bool=False, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 272,
+      "source_end_line": 284,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
-      "source_start_line": 29,
+      "source_start_line": 30,
       "summary": "Evaluate or publish a target using the active pipeline's runtime.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -8918,7 +8918,7 @@
           "type": "dict, optional"
         },
         {
-          "description": "Display profiling progress when True; orchestration uses the automatic report.",
+          "description": "Print expanded profiling diagnostics when True. Statistical results display automatically even when False.",
           "name": "verbose",
           "required": "No",
           "type": "bool"
@@ -8955,13 +8955,13 @@
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
       "signature": "def profile_table(*, dataframe=None, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, grain_discovery_enabled: bool=False, grain_discovery_max_columns: int=3, grain_discovery_max_candidates: int=8, frequency_columns=None, frequency_enabled: bool=False, frequency_top_n: int | None=5, frequency_max_distinct_percent: float | None=80.0, context=None, verbose: bool=True)",
-      "source_end_line": 192,
+      "source_end_line": 200,
       "source_path": "src/fabricops_kit/pipeline/profile_table.py",
       "source_start_line": 8,
       "summary": "Profile a Spark DataFrame or a complete governed physical table.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable",
-      "usage_notes": "The result also includes ``row_count``, reused from an existing aggregate\nwhen available (None otherwise). No additional Spark job is run for this\nmetric. It describes the profiled dataset, not rows committed by a writer."
+      "usage_notes": "Statistical results display automatically using native Fabric notebook display\nwhen available, with a text-table fallback. The preview contains at most 100\ncolumn rows and 120 characters per text cell; returned DataFrames are complete.\nCoverage is labelled as a complete table, supplied DataFrame, or bounded\nselection, with Dry Run identified separately. Display failures do not fail\nsuccessful profiling. Grain discovery and frequency remain opt-in.\n\nThe result also includes ``row_count``, reused from an existing aggregate\nwhen available (None otherwise). No additional Spark job is run for this\nmetric. It describes the profiled dataset, not rows committed by a writer."
     },
     {
       "architecture_classification": "capability",
@@ -9319,9 +9319,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._audit_literal_columns",
-      "source_end_line": 7601,
+      "source_end_line": 7717,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7587,
+      "source_start_line": 7703,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -9342,9 +9342,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._automatic_frequency_columns",
-      "source_end_line": 7573,
+      "source_end_line": 7689,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7559,
+      "source_start_line": 7675,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -9426,9 +9426,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
-      "source_end_line": 7666,
+      "source_end_line": 7782,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7604,
+      "source_start_line": 7720,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -9448,9 +9448,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled",
-      "source_end_line": 7932,
+      "source_end_line": 8048,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7842,
+      "source_start_line": 7958,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -9744,9 +9744,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._delete_profile_snapshot",
-      "source_end_line": 7790,
+      "source_end_line": 7906,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7776,
+      "source_start_line": 7892,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10011,6 +10011,28 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "function_name": "_format_value",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.shared.capture_profile_presentation"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "qualified_name": "fabricops_kit.pipeline.shared._format_value",
+      "source_end_line": 6849,
+      "source_path": "src/fabricops_kit/pipeline/shared.py",
+      "source_start_line": 6839,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "_frequency_metadata_dataframe",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -10019,9 +10041,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._frequency_metadata_dataframe",
-      "source_end_line": 7716,
+      "source_end_line": 7832,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7669,
+      "source_start_line": 7785,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10143,9 +10165,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._key_candidate_evidence",
-      "source_end_line": 7229,
+      "source_end_line": 7345,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7218,
+      "source_start_line": 7334,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10166,9 +10188,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._key_candidate_payload",
-      "source_end_line": 7241,
+      "source_end_line": 7357,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7232,
+      "source_start_line": 7348,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10410,9 +10432,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._normalize_choice",
-      "source_end_line": 7438,
+      "source_end_line": 7554,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7432,
+      "source_start_line": 7548,
       "usage": "detached"
     },
     {
@@ -10638,9 +10660,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._persist_grain_candidates",
-      "source_end_line": 8337,
+      "source_end_line": 8469,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 8320,
+      "source_start_line": 8452,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10660,9 +10682,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._persist_profile_observation",
-      "source_end_line": 8317,
+      "source_end_line": 8449,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 8192,
+      "source_start_line": 8324,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -10782,9 +10804,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._processing_definition",
-      "source_end_line": 7486,
+      "source_end_line": 7602,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7441,
+      "source_start_line": 7557,
       "usage": "unused"
     },
     {
@@ -10893,9 +10915,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._profile_snapshot_id",
-      "source_end_line": 7839,
+      "source_end_line": 7955,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7832,
+      "source_start_line": 7948,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11051,9 +11073,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._replace_frequency_rows",
-      "source_end_line": 7773,
+      "source_end_line": 7889,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7748,
+      "source_start_line": 7864,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11074,9 +11096,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._replace_snapshot_rows",
-      "source_end_line": 7745,
+      "source_end_line": 7861,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7719,
+      "source_start_line": 7835,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11097,9 +11119,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._require_non_empty_string",
-      "source_end_line": 7429,
+      "source_end_line": 7545,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7425,
+      "source_start_line": 7541,
       "usage": "detached"
     },
     {
@@ -11228,9 +11250,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._scalar_frequency_columns",
-      "source_end_line": 7556,
+      "source_end_line": 7672,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7547,
+      "source_start_line": 7663,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11295,9 +11317,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._selected_frequency_columns",
-      "source_end_line": 7584,
+      "source_end_line": 7700,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7576,
+      "source_start_line": 7692,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11476,9 +11498,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._spark_profile_key_candidates",
-      "source_end_line": 7309,
+      "source_end_line": 7425,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7244,
+      "source_start_line": 7360,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11548,9 +11570,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._sql_identifier",
-      "source_end_line": 6976,
+      "source_end_line": 7092,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 6974,
+      "source_start_line": 7090,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11571,9 +11593,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._sql_string",
-      "source_end_line": 6981,
+      "source_end_line": 7097,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 6979,
+      "source_start_line": 7095,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11611,9 +11633,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._stage_catalogue_profile_retry",
-      "source_end_line": 7829,
+      "source_end_line": 7945,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7793,
+      "source_start_line": 7909,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11713,9 +11735,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._upsert_catalogue_identities",
-      "source_end_line": 8015,
+      "source_end_line": 8131,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7935,
+      "source_start_line": 8051,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11776,9 +11798,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._validate_frequency_profile_dataframe",
-      "source_end_line": 7544,
+      "source_end_line": 7660,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7529,
+      "source_start_line": 7645,
       "usage": "unused"
     },
     {
@@ -11810,9 +11832,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._validate_processing_columns",
-      "source_end_line": 7503,
+      "source_end_line": 7619,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7489,
+      "source_start_line": 7605,
       "usage": "unused"
     },
     {
@@ -11827,9 +11849,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.pipeline.shared._validate_resolved_identity",
-      "source_end_line": 7526,
+      "source_end_line": 7642,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7506,
+      "source_start_line": 7622,
       "usage": "unused"
     },
     {
@@ -11957,9 +11979,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_columns",
-      "source_end_line": 7037,
+      "source_end_line": 7153,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7021,
+      "source_start_line": 7137,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -11979,9 +12001,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_frequency_query",
-      "source_end_line": 7157,
+      "source_end_line": 7273,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7139,
+      "source_start_line": 7255,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12022,9 +12044,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_percentile_query",
-      "source_end_line": 7084,
+      "source_end_line": 7200,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7074,
+      "source_start_line": 7190,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12044,9 +12066,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_profile_dataframes",
-      "source_end_line": 7215,
+      "source_end_line": 7331,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7160,
+      "source_start_line": 7276,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12066,9 +12088,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_profile_key_candidates",
-      "source_end_line": 7422,
+      "source_end_line": 7538,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7312,
+      "source_start_line": 7428,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12088,9 +12110,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_statistical_dataframe",
-      "source_end_line": 7136,
+      "source_end_line": 7252,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7087,
+      "source_start_line": 7203,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12110,9 +12132,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_statistical_query",
-      "source_end_line": 7071,
+      "source_end_line": 7187,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 7040,
+      "source_start_line": 7156,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12132,9 +12154,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared._warehouse_type_name",
-      "source_end_line": 7018,
+      "source_end_line": 7134,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 6984,
+      "source_start_line": 7100,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -12362,6 +12384,28 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "function_name": "capture_profile_presentation",
+      "function_type": "shared_function",
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.shared.execute_table_profile"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "qualified_name": "fabricops_kit.pipeline.shared.capture_profile_presentation",
+      "source_end_line": 6891,
+      "source_path": "src/fabricops_kit/pipeline/shared.py",
+      "source_start_line": 6852,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
         "fabricops_kit.pipeline.pipeline_read.pipeline_read"
       ],
@@ -12570,6 +12614,34 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+      ],
+      "function_name": "display_profile_presentations",
+      "function_type": "shared_function",
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+        "fabricops_kit.pipeline.orchestrate_read::<module>",
+        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+        "fabricops_kit.pipeline.orchestrate_write::<module>",
+        "fabricops_kit.pipeline.shared.execute_table_profile"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "direct_live_dependency",
+      "qualified_name": "fabricops_kit.pipeline.shared.display_profile_presentations",
+      "source_end_line": 6930,
+      "source_path": "src/fabricops_kit/pipeline/shared.py",
+      "source_start_line": 6894,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.profile_table.profile_table"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "display_table_identity",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -12672,9 +12744,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared.execute_table_profile",
-      "source_end_line": 8189,
+      "source_end_line": 8321,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 8018,
+      "source_start_line": 8134,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -13767,9 +13839,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared.schedule_table_profiling",
-      "source_end_line": 6912,
+      "source_end_line": 7028,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 6817,
+      "source_start_line": 6933,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -17015,6 +17087,7 @@
         "fabricops_kit.pipeline.shared._dq_tagged_dataframe",
         "fabricops_kit.pipeline.shared._ensure_unambiguous_source_observation",
         "fabricops_kit.pipeline.shared._evaluate_dq_rules",
+        "fabricops_kit.pipeline.shared._format_value",
         "fabricops_kit.pipeline.shared._frequency_metadata_dataframe",
         "fabricops_kit.pipeline.shared._guardrail_schema_check_base",
         "fabricops_kit.pipeline.shared._identifier",
@@ -17089,12 +17162,14 @@
         "fabricops_kit.pipeline.shared.build_pipeline_audit_fields",
         "fabricops_kit.pipeline.shared.build_profile_dataframe",
         "fabricops_kit.pipeline.shared.canonical_pipeline_json",
+        "fabricops_kit.pipeline.shared.capture_profile_presentation",
         "fabricops_kit.pipeline.shared.capture_source_observation",
         "fabricops_kit.pipeline.shared.catalogue_authored_processing",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.compare_source_snapshot_evidence",
         "fabricops_kit.pipeline.shared.contract_guardrail_rows",
         "fabricops_kit.pipeline.shared.current_pipeline_session",
+        "fabricops_kit.pipeline.shared.display_profile_presentations",
         "fabricops_kit.pipeline.shared.display_table_identity",
         "fabricops_kit.pipeline.shared.dq_tolerance_parameter",
         "fabricops_kit.pipeline.shared.execute_table_profile",
@@ -17145,8 +17220,8 @@
       ],
       "metrics": {
         "depth": 19,
-        "scope": 246,
-        "width": 13
+        "scope": 249,
+        "width": 14
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
       "refactor_signals": [
@@ -17154,7 +17229,7 @@
           "evidence": [
             {
               "depth": 19,
-              "width": 13
+              "width": 14
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -17317,6 +17392,7 @@
         "fabricops_kit.pipeline.shared._dq_sample_record",
         "fabricops_kit.pipeline.shared._dq_tagged_dataframe",
         "fabricops_kit.pipeline.shared._evaluate_dq_rules",
+        "fabricops_kit.pipeline.shared._format_value",
         "fabricops_kit.pipeline.shared._frequency_metadata_dataframe",
         "fabricops_kit.pipeline.shared._guardrail_schema_check_base",
         "fabricops_kit.pipeline.shared._is_active_guardrail_rule",
@@ -17379,12 +17455,14 @@
         "fabricops_kit.pipeline.shared.build_pipeline_audit_fields",
         "fabricops_kit.pipeline.shared.build_profile_dataframe",
         "fabricops_kit.pipeline.shared.canonical_pipeline_json",
+        "fabricops_kit.pipeline.shared.capture_profile_presentation",
         "fabricops_kit.pipeline.shared.catalogue_authored_processing",
         "fabricops_kit.pipeline.shared.check_dq_runtime",
         "fabricops_kit.pipeline.shared.check_sensitive_data_rules",
         "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
         "fabricops_kit.pipeline.shared.contract_guardrail_rows",
         "fabricops_kit.pipeline.shared.current_pipeline_session",
+        "fabricops_kit.pipeline.shared.display_profile_presentations",
         "fabricops_kit.pipeline.shared.display_table_identity",
         "fabricops_kit.pipeline.shared.dq_tolerance_parameter",
         "fabricops_kit.pipeline.shared.evaluate_pipeline_source_drift",
@@ -17444,8 +17522,8 @@
       ],
       "metrics": {
         "depth": 18,
-        "scope": 260,
-        "width": 17
+        "scope": 263,
+        "width": 18
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
       "refactor_signals": [
@@ -17453,7 +17531,7 @@
           "evidence": [
             {
               "depth": 18,
-              "width": 17
+              "width": 18
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -17734,6 +17812,7 @@
         "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
         "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled",
         "fabricops_kit.pipeline.shared._delete_profile_snapshot",
+        "fabricops_kit.pipeline.shared._format_value",
         "fabricops_kit.pipeline.shared._frequency_metadata_dataframe",
         "fabricops_kit.pipeline.shared._key_candidate_evidence",
         "fabricops_kit.pipeline.shared._key_candidate_payload",
@@ -17763,6 +17842,8 @@
         "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe",
         "fabricops_kit.pipeline.shared.build_profile_dataframe",
         "fabricops_kit.pipeline.shared.canonical_pipeline_json",
+        "fabricops_kit.pipeline.shared.capture_profile_presentation",
+        "fabricops_kit.pipeline.shared.display_profile_presentations",
         "fabricops_kit.pipeline.shared.execute_table_profile",
         "fabricops_kit.pipeline.shared.persistence_permitted",
         "fabricops_kit.pipeline.shared.pipeline_physical_bindings",
@@ -17777,7 +17858,7 @@
       ],
       "metrics": {
         "depth": 15,
-        "scope": 118,
+        "scope": 121,
         "width": 1
       },
       "qualified_name": "fabricops_kit.pipeline.profile_table.profile_table",
@@ -22274,6 +22355,10 @@
       "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
     },
     {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.display_profile_presentations",
+      "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.execution_result",
       "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
     },
@@ -22323,6 +22408,10 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.current_pipeline_session",
+      "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.display_profile_presentations",
       "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
     },
     {
@@ -23820,6 +23909,10 @@
       "caller_qualified_name": "fabricops_kit.pipeline.shared.build_profile_dataframe"
     },
     {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared._format_value",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.capture_profile_presentation"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.coerce_metadata_row_types",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.capture_source_observation"
     },
@@ -24177,6 +24270,14 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.build_profile_dataframe",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.execute_table_profile"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.capture_profile_presentation",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.execute_table_profile"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared.display_profile_presentations",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.execute_table_profile"
     },
     {

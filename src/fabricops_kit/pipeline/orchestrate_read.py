@@ -8,6 +8,7 @@ from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    display_profile_presentations,
     current_pipeline_session,
     schedule_table_profiling,
     PipelineOperation,
@@ -42,6 +43,14 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Dry Run retains calculated observations only in the session without consuming
     persisted schedules. Guardrail
     checks run regardless of profiling eligibility.
+
+    When statistical profiling completes, the operation summary is followed by a
+    readable profile table even with ``verbose=False``. Native Fabric display has
+    a text fallback; the preview shows at most 100 columns and 120 characters per
+    text cell. Complete-table, bounded-selection and Dry Run scopes are labelled.
+    Skipped or not-due profiling shows no historical results. Presentation reuses
+    current aggregates and cannot fail a successful operation. ``verbose=True``
+    adds operational diagnostics. Returned profiling structures are unchanged.
 
     Parameters
     ----------
@@ -98,6 +107,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("READ", verbose=verbose)
+        presentations = []
         table_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([table_id], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
@@ -147,7 +157,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", verbose=verbose, context=context, spark_session=spark_session,
+        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", verbose=verbose, presentations=presentations, context=context, spark_session=spark_session,
             **({"dataframe": dataframe} if read_mode == "full" and query is None and not source.get("is_query") else {})))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
@@ -158,5 +168,6 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             ("Rows read", metrics["rows_read"]),
             ("Columns", metrics["columns"]),
         ])
+        display_profile_presentations(presentations)
         operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
         return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})
