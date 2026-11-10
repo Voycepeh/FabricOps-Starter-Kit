@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.pipeline.profile_presentation import capture_profile_presentation, display_profile_presentations
+
 from fabricops_kit.io.shared import retry_delta_metadata
 
 import hashlib
@@ -6814,7 +6816,7 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
     return {"status": "skipped", "reason": reason, "activities": activities}
 
 
-def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False):
+def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False, presentations=None):
     """Profile due work using successful completion history as the schedule."""
     if operation not in {"read", "write"}:
         raise ValueError("Profiling operation must be read or write.")
@@ -6838,7 +6840,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             print("Profiling scope → " + scope_message)
         profile = (execute_table_profile(table_id=table_id, dataframe=dataframe,
             context={**context, "_profile_trigger": operation, "_profile_scope": profile_scope}, spark_session=spark_session,
-            verbose=False, activities=due) if due else {})
+            verbose=False, activities=due, presentations=presentations) if due else {})
         for activity in PROFILING_ACTIVITIES:
             if activity in due:
                 outcomes[activity] = dict(profile)
@@ -6888,7 +6890,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             profile_context = {**context, "activity_id": profile_snapshot_id,
                                "_profile_snapshot_id": profile_snapshot_id, "_profile_scope": profile_scope}
             outcome = execute_table_profile(table_id=table_id, dataframe=dataframe, context=profile_context,
-                spark_session=spark_session, verbose=False, activities={activity})
+                spark_session=spark_session, verbose=False, activities={activity}, presentations=presentations)
             completed_at = datetime.now(UTC).isoformat()
             outcomes[activity] = {"status": "passed", "profile_snapshot_id": profile_snapshot_id if activity != "grain" and not outcome.get("empty_result") else None,
                                   "row_count": outcome.get("row_count"), **profile_scope, "results_persisted": True,
@@ -8032,6 +8034,7 @@ def execute_table_profile(
     spark_session=None,
     verbose: bool = True,
     activities=None,
+    presentations=None,
 ):
     """Execute selected persisted-table profiling activities without public workflow calls."""
     for name, value in (
@@ -8124,6 +8127,7 @@ def execute_table_profile(
             warehouse_physical = False
         dataframe = dataframe.limit(max_rows).cache()
     context = {**(context or {}), "_profile_scope": scope}
+    transient_profile = None
     try:
         profile_metrics = {"row_count": None}
         profile_key_candidates: list[dict[str, Any]] = []
@@ -8146,6 +8150,11 @@ def execute_table_profile(
                 )
         else:
             statistical_profile = build_profile_dataframe(dataframe)
+            if "standard" in selected_activities and (identity is None or not persistence_permitted(context)):
+                # Share the lazy aggregates across diagnostics and presentation;
+                # release only our cache after the bounded preview is detached.
+                transient_profile = statistical_profile.cache()
+                statistical_profile = transient_profile
             selected_columns = _selected_frequency_columns(
                 dataframe, statistical_profile, selected_frequency_columns, frequency_max_distinct_percent
             )
@@ -8172,19 +8181,28 @@ def execute_table_profile(
                   "5. Metadata persistence → skipped; DataFrame-only profiling does not invent a table_id")
             emit("Result → profile outputs returned; no Catalogue or profiling metadata was written.")
             result = {"profile": statistical_profile, "frequency_profile": frequency_profile, **({"grain_candidates": profile_key_candidates} if activities is not None else {}), **profile_metrics}
-            return result
-
-        observation = {
-            "identity": identity, "profile": statistical_profile, "frequency_profile": frequency_profile,
-            "grain_candidates": profile_key_candidates, "row_count": profile_metrics["row_count"],
-            "activities": selected_activities, "grain_discovery_max_columns": grain_discovery_max_columns,
-            "replace_frequency": frequency_enabled or activities is None,
-            "source_fields": warehouse_fields, "source_df": dataframe,
-        }
-        return _persist_profile_observation(observation,
-            context={**context, "config": config, "scope_workspace_id": active_workspace_id},
-            spark_session=spark_session, emit=emit)
+        else:
+            observation = {
+                "identity": identity, "profile": statistical_profile, "frequency_profile": frequency_profile,
+                "grain_candidates": profile_key_candidates, "row_count": profile_metrics["row_count"],
+                "activities": selected_activities, "grain_discovery_max_columns": grain_discovery_max_columns,
+                "replace_frequency": frequency_enabled or activities is None,
+                "source_fields": warehouse_fields, "source_df": dataframe,
+            }
+            result = _persist_profile_observation(observation,
+                context={**context, "config": config, "scope_workspace_id": active_workspace_id},
+                spark_session=spark_session, emit=emit)
+        if "standard" in selected_activities and result.get("profile") is not None:
+            presentation = capture_profile_presentation(result["profile"], scope=scope,
+                dry_run=not persistence_permitted(context), table=physical_identity if identity is not None else None)
+            if presentations is None:
+                display_profile_presentations([presentation])
+            elif presentation is not None:
+                presentations.append(presentation)
+        return result
     finally:
+        if transient_profile is not None:
+            transient_profile.unpersist()
         if max_rows is not None:
             dataframe.unpersist()
 

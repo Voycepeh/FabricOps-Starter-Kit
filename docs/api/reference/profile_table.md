@@ -79,7 +79,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
 | `context` | `dict` | No | `None` | Explicit pipeline context; Testing returns profiles without persistence. |
-| `verbose` | `bool` | No | `True` | Display profiling progress when True; orchestration uses the automatic report. |
+| `verbose` | `bool` | No | `True` | Print expanded profiling diagnostics when True. Statistical results display automatically even when False. |
 
 </div>
 
@@ -160,6 +160,13 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
+Statistical results display automatically using native Fabric notebook display
+when available, with a text-table fallback. The preview contains at most 100
+column rows and 120 characters per text cell; returned DataFrames are complete.
+Coverage is labelled as a complete table, supplied DataFrame, or bounded
+selection, with Dry Run identified separately. Display failures do not fail
+successful profiling. Grain discovery and frequency remain opt-in.
+
 The result also includes ``row_count``, reused from an existing aggregate
 when available (None otherwise). No additional Spark job is run for this
 metric. It describes the profiled dataset, not rows committed by a writer.
@@ -197,7 +204,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L192">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L200">View on GitHub</a>
 </div>
 
 
@@ -239,7 +246,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 116 |
+| Live-critical dependencies | 119 |
 
 ### Release history
 
@@ -326,6 +333,9 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation._format_value</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation.capture_profile_presentation</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>

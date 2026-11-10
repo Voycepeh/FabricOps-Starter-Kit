@@ -134,6 +134,14 @@ Pipeline-owned settings apply independently of selected Contracts; Dry Run obser
 do not consume persisted schedules. Guardrail checks run regardless
 of profiling eligibility.
 
+When statistical profiling completes, the operation summary is followed by a
+readable profile table even with ``verbose=False``. Native Fabric display has
+a text fallback; the preview shows at most 100 columns and 120 characters per
+text cell. Complete-table, bounded-selection and Dry Run scopes are labelled.
+Skipped or not-due profiling shows no historical results. Presentation reuses
+current aggregates and cannot fail a successful operation. ``verbose=True``
+adds operational diagnostics. Returned profiling structures are unchanged.
+
 </div>
 
 ## See also
@@ -143,9 +151,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:29`
+`fabricops_kit/pipeline/orchestrate_write.py:30`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L272">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L284">View on GitHub</a>
 </div>
 
 
@@ -161,7 +169,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 254 |
+| Live-critical dependencies | 257 |
 
 ### Release history
 
@@ -280,6 +288,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write.pipeline_write</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation._format_value</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation.capture_profile_presentation</code></li>
+<li><code>fabricops_kit.pipeline.profile_presentation.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_bypass_post_review_warning</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_token_mapping</code></li>
