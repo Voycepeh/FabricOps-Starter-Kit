@@ -132,13 +132,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Run Count"
                 }
               },
-              "queryRef": "Measures.Run Count",
+              "queryRef": "Dashboard Metrics.Run Count",
               "nativeQueryRef": "Run Count"
             },
             {
@@ -146,13 +146,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Latest Recorded Run Status"
                 }
               },
-              "queryRef": "Measures.Latest Recorded Run Status",
+              "queryRef": "Dashboard Metrics.Latest Recorded Run Status",
               "nativeQueryRef": "Latest Recorded Run Status"
             },
             {
@@ -160,13 +160,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Last Recorded Execution"
                 }
               },
-              "queryRef": "Measures.Last Recorded Execution",
+              "queryRef": "Dashboard Metrics.Last Recorded Execution",
               "nativeQueryRef": "Last Recorded Execution"
             }
           ]

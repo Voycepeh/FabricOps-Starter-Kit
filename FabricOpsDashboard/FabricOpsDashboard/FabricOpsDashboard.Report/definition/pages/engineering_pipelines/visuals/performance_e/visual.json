@@ -38,13 +38,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Run Duration Minutes"
                 }
               },
-              "queryRef": "Measures.Run Duration Minutes",
+              "queryRef": "Dashboard Metrics.Run Duration Minutes",
               "nativeQueryRef": "Run Duration Minutes"
             },
             {
@@ -52,13 +52,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Historical Median Duration Minutes"
                 }
               },
-              "queryRef": "Measures.Historical Median Duration Minutes",
+              "queryRef": "Dashboard Metrics.Historical Median Duration Minutes",
               "nativeQueryRef": "Historical Median Duration Minutes"
             }
           ]

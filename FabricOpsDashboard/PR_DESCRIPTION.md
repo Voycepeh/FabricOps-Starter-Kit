@@ -4,6 +4,7 @@
 
 - Functional PBIP with TMDL semantic model, enhanced PBIR report definitions, DAX measures, explicit relationships, theme, four visible pages, and two hidden native drillthrough pages.
 - TMDL relationships use dotted quoted references and supported `bothDirections` cross-filter values.
+- Measures are stored in the `Dashboard Metrics` table to avoid Power BI Desktop's unsupported `Measures` table name.
 - Configurable SQL endpoint, database, metadata schemas, workspace scope, and 180-day default history window.
 - Explicit source projection and selective JSON extraction; no `SELECT *`, reporting views, persisted tables, or pipeline/metadata-writer changes.
 - Descriptive pipeline activity and outcomes, activation decisions and submitted Dry Run evidence, duration versus historical median, all-table Governance exploration, Steward-filtered Data Owner tables, latest profiling/access observations, and per-run diagnostics.

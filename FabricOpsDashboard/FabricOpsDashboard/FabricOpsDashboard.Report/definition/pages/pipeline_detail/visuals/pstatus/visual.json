@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Latest Recorded Run Status"
                 }
               },
-              "queryRef": "Measures.Latest Recorded Run Status",
+              "queryRef": "Dashboard Metrics.Latest Recorded Run Status",
               "nativeQueryRef": "Latest Recorded Run Status"
             }
           ]

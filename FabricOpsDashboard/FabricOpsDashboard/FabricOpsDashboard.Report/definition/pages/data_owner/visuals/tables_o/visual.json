@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Registered Physical Tables"
                 }
               },
-              "queryRef": "Measures.Registered Physical Tables",
+              "queryRef": "Dashboard Metrics.Registered Physical Tables",
               "nativeQueryRef": "Registered Physical Tables"
             }
           ]

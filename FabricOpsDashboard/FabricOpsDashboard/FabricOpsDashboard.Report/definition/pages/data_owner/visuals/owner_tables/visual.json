@@ -62,13 +62,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Selected Contract"
                 }
               },
-              "queryRef": "Measures.Selected Contract",
+              "queryRef": "Dashboard Metrics.Selected Contract",
               "nativeQueryRef": "Selected Contract"
             },
             {
@@ -76,13 +76,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Selected Agreement"
                 }
               },
-              "queryRef": "Measures.Selected Agreement",
+              "queryRef": "Dashboard Metrics.Selected Agreement",
               "nativeQueryRef": "Selected Agreement"
             },
             {
@@ -90,13 +90,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Latest Profiled At"
                 }
               },
-              "queryRef": "Measures.Latest Profiled At",
+              "queryRef": "Dashboard Metrics.Latest Profiled At",
               "nativeQueryRef": "Latest Profiled At"
             },
             {
@@ -104,13 +104,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Recorded Access Observations"
                 }
               },
-              "queryRef": "Measures.Recorded Access Observations",
+              "queryRef": "Dashboard Metrics.Recorded Access Observations",
               "nativeQueryRef": "Recorded Access Observations"
             }
           ]

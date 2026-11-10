@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Run Duration Minutes"
                 }
               },
-              "queryRef": "Measures.Run Duration Minutes",
+              "queryRef": "Dashboard Metrics.Run Duration Minutes",
               "nativeQueryRef": "Run Duration Minutes"
             }
           ]

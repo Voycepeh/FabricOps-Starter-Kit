@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Profiled Tables"
                 }
               },
-              "queryRef": "Measures.Profiled Tables",
+              "queryRef": "Dashboard Metrics.Profiled Tables",
               "nativeQueryRef": "Profiled Tables"
             }
           ]

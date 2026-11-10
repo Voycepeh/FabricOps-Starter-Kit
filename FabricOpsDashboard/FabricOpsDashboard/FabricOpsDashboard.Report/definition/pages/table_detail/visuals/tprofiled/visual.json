@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Latest Profiled At"
                 }
               },
-              "queryRef": "Measures.Latest Profiled At",
+              "queryRef": "Dashboard Metrics.Latest Profiled At",
               "nativeQueryRef": "Latest Profiled At"
             }
           ]

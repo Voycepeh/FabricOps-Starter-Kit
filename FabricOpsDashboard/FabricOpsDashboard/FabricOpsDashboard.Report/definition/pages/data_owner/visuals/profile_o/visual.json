@@ -38,13 +38,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Average Null Percent"
                 }
               },
-              "queryRef": "Measures.Average Null Percent",
+              "queryRef": "Dashboard Metrics.Average Null Percent",
               "nativeQueryRef": "Average Null Percent"
             },
             {
@@ -52,13 +52,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Average Distinct Percent"
                 }
               },
-              "queryRef": "Measures.Average Distinct Percent",
+              "queryRef": "Dashboard Metrics.Average Distinct Percent",
               "nativeQueryRef": "Average Distinct Percent"
             }
           ]

@@ -1,4 +1,4 @@
-table Measures
+table 'Dashboard Metrics'
 	lineageTag: 00000000-0000-0000-0000-000000000001
 	measure 'Registered Pipelines' = DISTINCTCOUNT('Pipeline Registry'[Pipeline Key])
 		formatString: #,0

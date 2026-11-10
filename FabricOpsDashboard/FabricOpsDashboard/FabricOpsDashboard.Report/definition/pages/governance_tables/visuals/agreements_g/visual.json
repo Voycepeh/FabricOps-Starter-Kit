@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Tables With Agreement"
                 }
               },
-              "queryRef": "Measures.Tables With Agreement",
+              "queryRef": "Dashboard Metrics.Tables With Agreement",
               "nativeQueryRef": "Tables With Agreement"
             }
           ]

@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Tables With Recorded Access"
                 }
               },
-              "queryRef": "Measures.Tables With Recorded Access",
+              "queryRef": "Dashboard Metrics.Tables With Recorded Access",
               "nativeQueryRef": "Tables With Recorded Access"
             }
           ]

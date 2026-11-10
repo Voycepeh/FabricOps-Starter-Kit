@@ -21,7 +21,7 @@ def vis(n,typ,x,y,w,h,roles=None,title=None,sync=None):
  if title:v['visualContainerObjects']={'title':[{'properties':{'show':{'expr':{'Literal':{'Value':'true'}}},'text':{'expr':{'Literal':{'Value':json.dumps(title)}}}}}], 'general':[{'properties':{'altText':{'expr':{'Literal':{'Value':json.dumps(title+' visual')}}}}}]}
  if sync:v['syncGroup']={'groupName':sync,'fieldChanges':True,'filterChanges':True}
  return {'$schema':f'{RS}/visualContainer/2.9.0/schema.json','name':n,'position':{'x':x,'y':y,'z':0,'height':h,'width':w,'tabOrder':y+x},'visual':v}
-M=lambda n:[('Measures',n,True)]
+M=lambda n:[('Dashboard Metrics',n,True)]
 C=lambda t,*cs:[(t,c,False) for c in cs]
 PAGES={
 'overview':('Overview',False,[
@@ -105,7 +105,7 @@ def table(name,cols,sql):
   out.append('')
  out += [f"\tpartition '{name}' = m",'\t\tmode: import','\t\tsource =','\t\t\t'+msql(sql).replace('\n','\n\t\t\t'),'']
  return '\n'.join(out)
-MEASURES=r'''table Measures
+MEASURES=r'''table 'Dashboard Metrics'
 	lineageTag: 00000000-0000-0000-0000-000000000001
 	measure 'Registered Pipelines' = DISTINCTCOUNT('Pipeline Registry'[Pipeline Key])
 		formatString: #,0
@@ -181,7 +181,7 @@ def model():
  d=MODEL/'definition';put(MODEL/'.platform',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json','metadata':{'type':'SemanticModel','displayName':'FabricOps Dashboard','description':'FabricOps dashboard semantic model.'},'config':{'version':'2.0','logicalId':gid('model')}});put(MODEL/'definition.pbism',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','version':'4.0','settings':{'qnaEnabled':False}});put(d/'database.tmdl','database FabricOpsDashboard\n\tcompatibilityLevel: 1604\n');put(d/'model.tmdl','model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n')
  put(d/'expressions.tmdl','expression MetadataServer = "<your-sql-endpoint>.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression MetadataDatabase = "<metadata-lakehouse-or-warehouse>" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression WorkspaceFilter = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]\n\nexpression HistoryWindowDays = 180 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]\n\nexpression GovernanceSchema = "governance" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression EngineeringSchema = "engineering" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression GovernanceSchemaSql = if Text.Select(GovernanceSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = GovernanceSchema then GovernanceSchema else error "GovernanceSchema must be a SQL identifier."\n\nexpression EngineeringSchemaSql = if Text.Select(EngineeringSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = EngineeringSchema then EngineeringSchema else error "EngineeringSchema must be a SQL identifier."\n')
  for n,(c,q) in TABLES.items():put(d/f'tables/{n}.tmdl',table(n,c,q))
- put(d/'tables/Measures.tmdl',MEASURES)
+ put(d/'tables/Dashboard Metrics.tmdl',MEASURES)
  rels=[('Pipeline Registry','Pipeline Key','Pipeline','Pipeline Key',None),('Pipeline Activation','Pipeline Key','Pipeline','Pipeline Key',None),('Pipeline Run','Pipeline Key','Pipeline','Pipeline Key',None),('Run Operation','Run ID','Pipeline Run','Run ID','bothDirections'),('Run Stage','Run ID','Pipeline Run','Run ID',None),('Run Failure','Run ID','Pipeline Run','Run ID',None),('Guardrail Result','Run ID','Pipeline Run','Run ID',None),('Run Operation','Table Key','Catalogue Table','Table Key',None),('Guardrail Result','Table Key','Catalogue Table','Table Key',None),('Catalogue Column','Table Key','Catalogue Table','Table Key',None),('Profiled Column','Column Key','Catalogue Column','Column Key',None),('Data Access','Table Key','Catalogue Table','Table Key',None),('Contract Activation','Table Key','Catalogue Table','Table Key','bothDirections'),('Contract Activation','Contract Key','Data Contract','Contract Key','bothDirections'),('Contract Activation','Agreement Key','Data Agreement','Agreement Key','bothDirections'),('Agreement Steward','Agreement Key','Data Agreement','Agreement Key','bothDirections'),('Agreement Steward','Steward ID','Data Steward','Steward ID',None)]
  out=[]
  for i,(a,b,c,e,f) in enumerate(rels):

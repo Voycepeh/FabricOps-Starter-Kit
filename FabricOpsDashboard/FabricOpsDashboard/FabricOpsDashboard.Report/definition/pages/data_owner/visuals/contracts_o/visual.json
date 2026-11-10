@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Active Contracts"
                 }
               },
-              "queryRef": "Measures.Active Contracts",
+              "queryRef": "Dashboard Metrics.Active Contracts",
               "nativeQueryRef": "Active Contracts"
             }
           ]

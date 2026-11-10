@@ -106,6 +106,7 @@ for p in (MODEL/'tables').glob('*.tmdl'):
  match=re.search(r"^table '?([^'\n]+)'?",text)
  if not match: continue
  table=match.group(1); columns[table]=set(re.findall(r"^\s*column '([^']+)'",text,re.M)); measures|={(table,m) for m in re.findall(r"^\s*measure '?([^'=\n]+)'?\s*=",text,re.M)}
+check('Measures' not in columns,'unsupported semantic model table name Measures is present')
 for p in REPORT.glob('pages/*/visuals/*/visual.json'):
  raw=json.loads(p.read_text())
  for role in raw.get('visual',{}).get('query',{}).get('queryState',{}).values():
@@ -122,7 +123,7 @@ for table,table_columns in columns.items():
 unused={(table,column) for table,table_columns in columns.items() for column in table_columns if (table,column) not in used_columns}
 check(not unused,f'loaded model columns without a traceable reporting purpose: {sorted(unused)}')
 required={'Registered Pipelines','Pipeline Identities','Pipelines Run','Submitted Dry Run Submissions','Approved Activation Decisions','Registered Physical Tables','Run Count','Successful Runs','Failed Runs','Incomplete Runs','Pipeline Success Rate','Run Duration Minutes','Historical Median Duration Minutes','Duration Deviation Percent','Active Contracts','Contract Coverage','Recorded Guardrail Failures','Recorded Blocking Guardrail Outcomes','Last Successful Execution','Latest Recorded Run Status','Tables With Agreement','Recorded Access Observations','Tables With Recorded Access'}
-check(required<={name for table,name in measures if table=='Measures'},f'missing required measures: {sorted(required-{name for table,name in measures if table=="Measures"})}')
+check(required<={name for table,name in measures if table=='Dashboard Metrics'},f'missing required measures: {sorted(required-{name for table,name in measures if table=="Dashboard Metrics"})}')
 relationships=(MODEL/'relationships.tmdl').read_text()
 for edge in [("Pipeline Activation","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Run","Pipeline Key","Pipeline","Pipeline Key"),("Pipeline Registry","Pipeline Key","Pipeline","Pipeline Key")]:
  check(f"fromColumn: '{edge[0]}'.'{edge[1]}'\n\ttoColumn: '{edge[2]}'.'{edge[3]}'" in relationships,f'missing pipeline identity relationship: {edge}')

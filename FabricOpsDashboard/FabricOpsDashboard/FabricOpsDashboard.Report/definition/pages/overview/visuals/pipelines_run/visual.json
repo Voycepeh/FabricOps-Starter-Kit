@@ -20,13 +20,13 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Measures"
+                      "Entity": "Dashboard Metrics"
                     }
                   },
                   "Property": "Pipelines Run"
                 }
               },
-              "queryRef": "Measures.Pipelines Run",
+              "queryRef": "Dashboard Metrics.Pipelines Run",
               "nativeQueryRef": "Pipelines Run"
             }
           ]
