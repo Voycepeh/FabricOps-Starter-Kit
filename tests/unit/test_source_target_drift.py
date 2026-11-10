@@ -1,154 +1,66 @@
-"""Behavioral tests for write-side source-to-target stability."""
+"""Distributed exact hashes and multiplicities for pipeline-owned Source Drift."""
 # ruff: noqa: D103
-from __future__ import annotations
-
-from datetime import UTC, datetime, timedelta
-import json
-
-
+import pytest
 from fabricops_kit.pipeline import shared
 
 
-NOW = datetime(2026, 9, 13, tzinfo=UTC)
+@pytest.mark.parametrize('keys,expected', [(['id'], (1, 1, 1)), ([], (2, None, 2))])
+def test_added_removed_modified_are_only_paired_with_reliable_keys(spark_session, keys, expected):
+    old = spark_session.createDataFrame([(1, 'a'), (2, 'b'), (3, 'c')], 'id int, value string')
+    new = spark_session.createDataFrame([(1, 'a'), (2, 'changed'), (4, 'd')], old.schema)
+    previous, _ = shared.source_snapshot_projection(old, keys)
+    current, _ = shared.source_snapshot_projection(new, keys)
+    result = shared.compare_source_snapshot_evidence(current, previous, keyed=bool(keys))
+    assert (result['added_count'], result['modified_count'], result['removed_count']) == expected
+    assert all(len(rows) <= 10 for rows in result['samples'].values())
+    assert 'value' not in str(result['samples'])
 
 
-def row(*, target="", count=2, at=NOW, status="observed"):
-    return {
-        "observation_id": "snapshot",
-        "source_table_id": "source",
-        "target_table_id": target,
-        "workspace_id": "dev",
-        "partition_value": "p1",
-        "row_count": count,
-        "min_change_value": "1",
-        "max_change_value": "2",
-        "content_fingerprint": f"fingerprint-{count}",
-        "is_present": True,
-        "record_id": f"{target}-{status}-{count}",
-        "record_type": "drift_baseline" if status == "committed" else "source_observation",
-        "status": "committed" if status == "committed" else "observed",
-        "_committed_at": at,
-        "_activity_id": "run",
-    }
+def test_duplicate_multiplicities_are_preserved_without_arbitrary_pairing(spark_session):
+    old = spark_session.createDataFrame([(1, 'a'), (1, 'a'), (2, 'b')], 'id int, value string')
+    new = spark_session.createDataFrame([(1, 'a'), (2, 'b'), (2, 'b'), (3, 'c')], old.schema)
+    previous, old_meta = shared.source_snapshot_projection(old, ['id'])
+    current, new_meta = shared.source_snapshot_projection(new, ['id'])
+    assert old_meta['keys'] == new_meta['keys'] == []
+    result = shared.compare_source_snapshot_evidence(current, previous, keyed=False)
+    assert (result['added_count'], result['removed_count'], result['modified_count']) == (2, 1, None)
+    assert result['ambiguous_count'] == 1 and result['ambiguous_count_overlaps_removed']
 
 
-def rule():
-    return {
-        "guardrail_rule_id": "stability",
-        "guardrail_version": 1,
-        "table_id": "source",
-        "workspace_id": "dev",
-        "guardrail_type": "source_drift",
-        "rule_type": "historical_mutation",
-        "rule_parameters_json": json.dumps({"partition_column": "partition", "change_column": "changed"}),
-        "action": "Block",
-        "is_active": True,
-    }
+@pytest.mark.parametrize('keys,rows', [(['absent'], [(1, 'a')]), (['id', 'id'], [(1, 'a')]),
+    (['id'], [(None, 'a')]), (['id'], [(1, 'a'), (1, 'b')])])
+def test_missing_null_or_ambiguous_authored_keys_fall_back_to_content(spark_session, keys, rows):
+    frame = spark_session.createDataFrame(rows, 'id int, value string')
+    evidence, metadata = shared.source_snapshot_projection(frame, keys)
+    assert metadata['keys'] == []
+    assert shared._source_evidence_totals(evidence)['rows'] == len(rows)
 
 
-def configure(monkeypatch, history):
-    shared._CURRENT_SOURCE_OBSERVATIONS.clear()
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
-    shared.set_current_source_observation(
-        workspace_id="dev", activity_id="run", table_id="source", observation=[row()]
-    )
-    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (object(), "dev", {}))
-    monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: {"_activity_id": "run"})
-    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: history)
-    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *args, **kwargs: [rule()])
-    monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kwargs: None)
+def test_typed_content_hash_includes_business_ingestion_fields(spark_session):
+    original = spark_session.createDataFrame([(1, 'run-a', 'value')], 'id int, JobId string, payload string')
+    changed = spark_session.createDataFrame([(1, 'run-b', 'value')], original.schema)
+    previous, _ = shared.source_snapshot_projection(original, ['id'])
+    current, _ = shared.source_snapshot_projection(changed, ['id'])
+    assert shared.compare_source_snapshot_evidence(current, previous, keyed=True)['modified_count'] == 1
 
 
-def test_target_baselines_are_independent_under_one_source_rule(monkeypatch):
-    history = [
-        row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed"),
-        row(target="target-overwrite", count=1, at=NOW - timedelta(hours=1), status="committed"),
-    ]
-    configure(monkeypatch, history)
-    append_result = shared.check_source_drift_for_target(
-        source_table_id="source", target_table_id="target-append",
-        source_processing={"load_strategy": "append_all"},
-    )
-    assert append_result["can_continue"] is False
-    assert append_result["target_table_id"] == "target-append"
-    result = shared.check_source_drift_for_target(
-        source_table_id="source", target_table_id="target-overwrite",
-        source_processing={"load_strategy": "append_all"},
-    )
-    assert result["can_continue"] is False
-    assert result["target_table_id"] == "target-overwrite"
+def test_hash_diagnostics_are_bounded_while_aggregate_counts_cover_all_rows(spark_session):
+    old = spark_session.createDataFrame([(n, 'before') for n in range(25)], 'id int, value string')
+    new = spark_session.createDataFrame([(n, 'after') for n in range(25)], old.schema)
+    previous, _ = shared.source_snapshot_projection(old, ['id'])
+    current, _ = shared.source_snapshot_projection(new, ['id'])
+    result = shared.compare_source_snapshot_evidence(current, previous, keyed=True)
+    assert result['modified_count'] == 25 and len(result['samples']['modified']) == 10
+    assert 'before' not in str(result['samples']) and 'after' not in str(result['samples'])
 
 
-def test_source_overwrite_rule_allows_drift_even_for_append_named_target(monkeypatch):
-    """The source strategy, not any target strategy, controls compatibility."""
-    configure(
-        monkeypatch,
-        [row(target="target-append", count=1, at=NOW - timedelta(hours=1), status="committed")],
-    )
-    result = shared.check_source_drift_for_target(
-        source_table_id="source",
-        target_table_id="target-append",
-        source_processing={"load_strategy": "overwrite"},
-    )
-    assert result["can_continue"] is True
-
-
-def test_success_for_one_target_does_not_advance_another(monkeypatch):
-    configure(monkeypatch, [])
-    shared.check_source_drift_for_target(
-        source_table_id="source", target_table_id="target-a",
-        source_processing={"load_strategy": "append_all"},
-    )
-    assert ("dev", "run", "source", "target-a") in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
-    assert ("dev", "run", "source", "target-b") not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
-
-
-def test_same_read_snapshot_is_reusable_for_two_targets(monkeypatch):
-    configure(monkeypatch, [])
-    first = shared.get_current_source_observation(
-        workspace_id="dev", activity_id="run", table_id="source"
-    )
-    for target in ("target-a", "target-b"):
-        shared.check_source_drift_for_target(
-            source_table_id="source", target_table_id=target,
-            source_processing={"load_strategy": "append_all"},
-        )
-    assert shared.get_current_source_observation(
-        workspace_id="dev", activity_id="run", table_id="source"
-    ) is first
-    assert {key[-1] for key in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS} == {"target-a", "target-b"}
-
-
-def test_blocked_drift_discards_pending_acceptance(monkeypatch):
-    configure(monkeypatch, [row(target="target-a", count=1, at=NOW - timedelta(hours=1), status="committed")])
-    key = ("dev", "run", "source", "target-a")
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [row()]
-    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-                                                 source_processing={"load_strategy": "append_all"})
-    assert result["can_continue"] is False
-    assert key not in shared._PENDING_SOURCE_DRIFT_OBSERVATIONS
-
-
-def test_observed_and_other_environment_baselines_are_not_accepted(monkeypatch):
-    configure(monkeypatch, [row(target="target-a", count=1),
-                           {**row(target="target-a", count=1, status="committed"), "workspace_id": "prod"}])
-    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-                                                 source_processing={"load_strategy": "append_all"})
-    assert result["first_observation"] is True
-    assert result["can_continue"] is True
-
-
-
-def test_null_partition_after_an_empty_baseline_is_new_not_reappeared(monkeypatch):
-    """An empty-source header must not impersonate a historical NULL partition."""
-    header = {**row(target="target-a", status="committed", at=NOW - timedelta(hours=1)),
-              "partition_value": None, "row_count": 0, "is_present": None}
-    configure(monkeypatch, [header])
-    shared.set_current_source_observation(workspace_id="dev", activity_id="run", table_id="source",
-        observation=[{**row(), "partition_value": None}])
-    result = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target-a",
-        source_processing={"load_strategy": "append_all"})
-    assert result["can_continue"] is True
-    assert result["new_partitions"] == [None]
-    assert result["reappeared_partitions"] == []
+@pytest.mark.parametrize('authored,expected', [(False, []), (True, ['id'])])
+def test_sampled_discovery_never_supplies_source_drift_identity(authored, expected):
+    import json
+    from types import SimpleNamespace
+    payload = {'table': {'columns': [{'column_id': 'id-column', 'column_name': 'id'}]},
+        'guardrails': [{'guardrail_type': 'grain', 'is_active': True, 'rule_parameters': {'columns': ['id-column']}}] if authored else []}
+    plan = SimpleNamespace(contracts_json=json.dumps({'source': {'contract_payload': payload}}))
+    identity = {'table_id': 'source', 'load_strategy_parameters_json': {},
+        'grain_candidates_json': {'profile_scope': 'bounded_sample', 'candidates': [{'columns': ['id']}]}}
+    assert shared._source_snapshot_keys(identity, {'execution_plan': plan}) == expected

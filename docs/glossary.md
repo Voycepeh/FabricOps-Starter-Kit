@@ -77,13 +77,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data treatment. orchestrate_read runs four checks: Freshness, Schema, Grain, and Data Quality. orchestrate_write runs five checks: Schema, Sensitive Data, Source Drift on participating sources, Grain, and Data Quality before publication. Schema checks block missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures also block publication. Grain, Freshness, Source Drift, and Data Quality rules can be configured to warn or block when their expectation is not met.</p>
+<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support Schema, Grain, Freshness and Data Quality; target contracts support Schema, Grain, Data Quality and Sensitive Data treatment. orchestrate_read runs four Contract checks and orchestrate_write runs four Contract checks after the independent pipeline-owned Source Drift decision. Schema blocks missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures block publication. Grain, Freshness and Data Quality can warn or block. Source Drift execution policy belongs to setup_pipeline(), without authority from historical Contract rules.</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
 <details id="enforcement">
 <summary><strong>Enforcement</strong> — Evaluating active Guardrails during a pipeline run and applying their configured action.</summary>
-<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness, Source Drift, and Data Quality follow their saved Warn or Block action. Live stops when an applicable configured Guardrail blocks or cannot execute; disabled optional checks do not impose additional requirements.</p>
+<p>FabricOps orchestrate_read() and orchestrate_write() resolve the selected Data Contract and run its Guardrails at the relevant boundary. Schema violations and Sensitive Data treatment failures block; Grain, Freshness and Data Quality follow their saved Warn or Block action. Source Drift follows the independent setup_pipeline() policy. Live stops when an applicable configured Guardrail blocks or cannot execute; disabled optional checks do not impose additional requirements.</p>
 <p><strong>Also known as:</strong> runtime enforcement, enforce</p>
 </details>
 
@@ -122,8 +122,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="source-drift">
-<summary><strong>Source Drift</strong> — A check for unexpected changes to source data already consumed by a target.</summary>
-<p>FabricOps compares the current source observation with the last committed observation for the same source, target, and workspace. A new observation is committed only after the target write succeeds.</p>
+<summary><strong>Source Drift</strong> — Pipeline-owned complete-source change observation against confirmed physical-source history.</summary>
+<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. All source decisions precede Write. METADATA_PROCESSING_STATE accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
 </details>
 
 <details id="writer-ownership">
@@ -182,12 +182,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="processing-state">
 <summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
-<p>METADATA_PROCESSING_STATE stores captured observations, accepted incremental checkpoints, accepted Source Drift and full-source baselines, and target publication receipts. Source members are accepted atomically only after physical publication verification.</p>
+<p>METADATA_PROCESSING_STATE stores incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>
 </details>
 
 <details id="source-observation">
 <summary><strong>Source Observation</strong> — Captured source state for incremental execution, Source Drift or full physical-source comparison.</summary>
-<p>Pipeline setup can request a manual full Source Observation or an interval in days. Automatic observation can be disabled. Full observation ignores incremental SQL predicates and reuses a full Read when available. METADATA_PROCESSING_STATE stores captured source_observation rows and accepts full_source_baseline records only after verified target publication. Changed fingerprints report source state; they do not infer row deletions or add a blocking policy.</p>
+<p>Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. METADATA_PROCESSING_STATE retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.</p>
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 

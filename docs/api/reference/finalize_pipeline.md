@@ -61,6 +61,10 @@ Required describes the Python signature. An optional parameter may still be need
 dict
     Final execution summary. For persistent modes this is the
     METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
+    When pipeline Source Drift is enabled, adds a source_drift diagnostic
+    summary and separate baseline acceptance status without altering the
+    immutable Run record. Acceptance failure leaves prior baselines in force
+    and does not roll back completed target publications.
     Each operation retains legacy rows_read/rows_written plus its available
     detailed Read or strategy-specific Write metrics. Missing fields on
     historical records remain valid and display as not captured.
@@ -119,7 +123,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L294">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L303">View on GitHub</a>
 </div>
 
 
@@ -135,7 +139,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 105 |
+| Live-critical dependencies | 106 |
 
 ### Release history
 
@@ -253,6 +257,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 </ul>
 

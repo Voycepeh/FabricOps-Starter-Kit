@@ -432,7 +432,9 @@ def setup_metadata_tables(
     Notes
     -----
     Missing tables are created empty with error-if-exists semantics. Registry
-    and Contract Activation use Serializable isolation. Setup never manufactures
+    and Contract Activation use Serializable isolation; Processing State is
+    created or upgraded to Serializable for atomic Source Drift acceptance.
+    Setup never manufactures
     approvals, populates business metadata, deletes rows or replaces business
     targets. Governance definitions and activation are independent workflows.
 
@@ -507,12 +509,21 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None,
+                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
+            if table_name == "METADATA_PROCESSING_STATE" and not created and hasattr(table, "sparkSession"):
+                from delta.tables import DeltaTable
+                from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+                from fabricops_kit.io.shared import retry_delta_metadata
+                _, _, _, state_path = resolve_configured_lakehouse_table("Metadata", table_name,
+                    resolved_metadata_schema, context=context)
+                properties = DeltaTable.forPath(spark, state_path).detail().select("properties").first()["properties"]
+                if properties.get("delta.isolationLevel") != "Serializable":
+                    retry_delta_metadata(lambda: spark.sql(f"ALTER TABLE delta.`{state_path.replace('`', '``')}` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')"))
             upgrade = None
             if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)

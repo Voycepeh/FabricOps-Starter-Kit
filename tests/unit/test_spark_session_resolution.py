@@ -10,7 +10,6 @@ from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
-from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.io import shared
@@ -70,7 +69,6 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
     [
         check_freshness,
         check_schema,
-        check_source_drift,
         check_dq,
         check_sensitive_data,
         profile_table,

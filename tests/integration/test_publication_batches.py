@@ -89,8 +89,8 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(io, 'read_lakehouse_table', read)
     monkeypatch.setattr(io, 'write_lakehouse_table', write)
     monkeypatch.setattr(shared, 'write_lakehouse_table', write)
-    for mapping in (shared._PENDING_SOURCE_OBSERVATIONS, shared._PENDING_SOURCE_DRIFT_OBSERVATIONS,
-                    shared._INCREMENTAL_SOURCE_SCOPES, shared._ACTIVE_PUBLICATION_SOURCES, shared._CURRENT_TABLE_IDENTITIES):
+    for mapping in (shared._PENDING_SOURCE_OBSERVATIONS, shared._INCREMENTAL_SOURCE_SCOPES,
+                    shared._ACTIVE_PUBLICATION_SOURCES, shared._CURRENT_TABLE_IDENTITIES):
         mapping.clear()
     shared._CURRENT_TABLE_IDENTITIES.update(source={'table_name': 'source'}, target=identity())
 
@@ -674,24 +674,22 @@ def test_durable_multi_source_recovery_is_one_transaction(durable_processing_sta
     shared._PENDING_SOURCE_OBSERVATIONS[("dev", "one-logical-run", "other-source", "target")] = [
         {**row, "source_table_id": "other-source", "observation_id": "other-observation"} for row in current]
     shared._CURRENT_TABLE_IDENTITIES["other-source"] = {"table_name": "other_source"}
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [{**row, "partition_value": "p1"} for row in current]
     run.state["fail"] = "finalize"
     with pytest.raises(RuntimeError, match="metadata finalization"):
         writer.pipeline_write(frame, store="Silver", table_name="target", source_table_ids=["source", "other-source"], verbose=False)
     before = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE")).history(1).first().version
     rows = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
-    assert {row["record_type"] for row in rows} == {"publication_receipt", "incremental_checkpoint", "drift_baseline"}
+    assert {row["record_type"] for row in rows} == {"publication_receipt", "incremental_checkpoint"}
     assert {row["status"] for row in rows} == {"staged"}
     run.state["fail"] = None
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     run.context["execution_plan"].plan_id = "restarted-run"
     shared._recover_completed_source_observations(run.read("METADATA_PROCESSING_STATE"), config=run.context["config"], active_workspace_id="dev",
                                                 context=run.context, source_table_id="source", target_table_id="target")
     table = run.delta.forPath(run.spark, str(run.path / "METADATA_PROCESSING_STATE"))
     assert table.history(1).first().version == before + 1
     accepted = shared.observation_rows(table.toDF())
-    assert len(accepted) == 4
+    assert len(accepted) == 3
     assert {row["status"] for row in accepted} == {"committed"}
     assert {row["run_id"] for row in accepted} == {"one-logical-run"}
     assert len({row["accepted_at"] for row in accepted}) == 1
@@ -763,7 +761,6 @@ def test_exact_retry_without_volatile_snapshots_accepts_all_original_members(dur
     original = shared._PENDING_SOURCE_OBSERVATIONS[key]
     shared._PENDING_SOURCE_OBSERVATIONS[("dev", "original-run", "other-source", "target")] = [
         {**row, "source_table_id": "other-source", "observation_id": "other-snapshot"} for row in original]
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = [{**row, "partition_value": "p1"} for row in original]
     shared._CURRENT_TABLE_IDENTITIES["other-source"] = {"table_name": "other_source"}
 
     def publish(dataframe):
@@ -773,10 +770,10 @@ def test_exact_retry_without_volatile_snapshots_accepts_all_original_members(dur
     with pytest.raises(RuntimeError, match="metadata finalization"):
         publish(frame)
     staged = shared.observation_rows(run.read("METADATA_PROCESSING_STATE"))
-    assert len(staged) == 4 and {row["status"] for row in staged} == {"staged"}
+    assert len(staged) == 3 and {row["status"] for row in staged} == {"staged"}
     run.state["fail"] = None
     run.context["execution_plan"].plan_id = "restarted-run"
-    for cache in (shared._PENDING_SOURCE_OBSERVATIONS, shared._PENDING_SOURCE_DRIFT_OBSERVATIONS, shared._INCREMENTAL_SOURCE_SCOPES):
+    for cache in (shared._PENDING_SOURCE_OBSERVATIONS, shared._INCREMENTAL_SOURCE_SCOPES):
         cache.clear()
     writer_name = "write_warehouse_table" if store_kind == "warehouse" else "write_lakehouse_table"
     monkeypatch.setattr(io, writer_name, lambda *a, **kw: pytest.fail("an exact verified retry must not publish twice"))
@@ -819,39 +816,6 @@ def test_recovery_includes_a_previously_acknowledged_receipt(durable_processing_
     assert {row["status"] for row in persisted} == {"committed"}
     assert next(row for row in persisted if row["record_type"] == "publication_receipt") == receipt
     assert run.read("target").count() == 8
-
-
-@pytest.mark.parametrize("partition_value", [None, "", [None, ""]])
-def test_empty_drift_snapshot_has_unique_durable_partition_keys(durable_processing_state, monkeypatch, partition_value):
-    """The empty-source row must not duplicate a null/empty partition tombstone."""
-    import json
-    run = durable_processing_state
-    run.state["processing"] = {"load_strategy": "overwrite"}
-    source_rule = {"table_id": "source", "workspace_id": "dev", "guardrail_type": "source_drift", "rule_type": "historical_mutation",
-                   "action": "Block", "is_active": True, "guardrail_rule_id": "source-drift",
-                   "rule_parameters_json": json.dumps({"partition_column": "partition", "change_column": "modified"})}
-    monkeypatch.setattr(shared, "get_store", lambda *a, **kw: SimpleNamespace(schema_enabled=False))
-    monkeypatch.setattr(shared, "resolve_lakehouse_table_location", lambda *a, **kw: ("source", None, "source-path"))
-    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **kw: [source_rule])
-    monkeypatch.setattr(shared, "write_guardrail_result_row", lambda **kw: None)
-    partitions = partition_value if isinstance(partition_value, list) else [partition_value]
-    initial = run.spark.createDataFrame([(index, value, 1) for index, value in enumerate(partitions)], "id long, partition string, modified long")
-    for frame in (initial, initial.limit(0), initial.limit(0)):
-        shared.capture_source_observation(table_id="source", dataframe=frame, context=run.context,
-            source_identity={"table_id": "source", "store": "Bronze", "table_name": "source", "store_kind": "lakehouse"})
-        check = shared.check_source_drift_for_target(source_table_id="source", target_table_id="target",
-            source_processing={"load_strategy": "overwrite"}, context=run.context)
-        assert check["can_continue"]
-        run.publish(frame)
-        metadata = run.read("METADATA_PROCESSING_STATE")
-        assert metadata.groupBy("record_id").count().where("count > 1").count() == 0
-    assert run.read("target").count() == 0
-    baseline = shared._previous_source_target_observation(run.read("METADATA_PROCESSING_STATE"), source_table_id="source",
-        target_table_id="target", workspace_id="dev", committed_at=datetime.now(UTC).replace(tzinfo=None))
-    assert len(baseline) == len(partitions) + 1
-    assert len([row for row in baseline if row["is_present"] is None]) == 1
-    removed = [row for row in baseline if row["is_present"] is False]
-    assert {row["partition_value"] for row in removed} == set(partitions)
 
 
 def test_full_overwrite_new_activity_replaces_identical_business_rows(publication_runtime):
@@ -908,58 +872,6 @@ def test_append_new_only_duplicate_batch_changed_values_and_retry(publication_ru
         run.state["activity"] = name
         run.publish(frame.withColumn(name, F.lit("changed")))
     assert run.read("target").count() == 3
-
-
-@pytest.mark.parametrize('failure', ['before', 'finalize'])
-def test_full_observation_acceptance_follows_verified_publication(durable_processing_state, failure):
-    """Failed writes never accept full baselines; interrupted acknowledgements recover atomically."""
-    run = durable_processing_state
-    run.context['execution_plan'].plan_id = 'observation-run'
-    run.context['execution_plan'].pipeline_id = 'pipeline'
-    run.context['execution_plan'].evidence['source_observation_policy'] = {'manual': True, 'days': None}
-    run.state.update(mode='overwrite', processing={'load_strategy': 'overwrite'})
-    frame = run.stage(1, incremental=False)
-    result = shared.observe_full_source({'table_id': 'source', 'table_name': 'source', 'store': 'Bronze',
-        'store_type': 'lakehouse', 'schema': None}, dataframe=frame, context=run.context)
-    assert result['row_count'] == 8
-    run.state['fail'] = failure
-    with pytest.raises(RuntimeError):
-        run.publish(frame)
-    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
-    assert not any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
-    run.state['fail'] = None
-    run.publish(frame)
-    history = shared.observation_rows(run.read('METADATA_PROCESSING_STATE'))
-    assert any(row['record_type'] == 'full_source_baseline' and row['status'] == 'committed' for row in history)
-    accepted = next(row for row in history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed')
-    assert {row['status'] for row in history if row.get('publication_id') == accepted['publication_id']} == {'committed'}
-
-
-@pytest.mark.parametrize('first_observation,metadata_lost', [(True, False), (False, False), (False, True)])
-def test_changed_full_observation_does_not_block_or_advance_an_exact_retry(publication_runtime, first_observation, metadata_lost):
-    """A diagnostic fingerprint change cannot block recovery or claim a newer accepted baseline."""
-    from pyspark.sql import functions as F
-    run = publication_runtime
-    plan = run.context['execution_plan']
-    plan.plan_id, plan.pipeline_id = 'original', 'pipeline'
-    plan.evidence['source_observation_policy'] = {'manual': True, 'days': None}
-    run.state.update(mode='append_new_only', processing={'load_strategy': 'append_new_only'})
-    frame = run.stage(1, incremental=False)
-    identity = {'table_id': 'source', 'table_name': 'source', 'store': 'Bronze', 'store_type': 'lakehouse'}
-    if first_observation:
-        shared.observe_full_source(identity, dataframe=frame, context=run.context)
-    run.publish(frame)
-    if metadata_lost:
-        run.history.clear()
-    plan.plan_id = 'new-execution'
-    observed = shared.observe_full_source(identity, dataframe=frame.withColumn('source_timestamp', F.lit('changed')), context=run.context)
-    assert observed['status'] == ('changed' if first_observation else 'first_observation')
-    result = run.publish(frame)  # transformation output is unchanged
-    assert result['publication_status'] == 'already_applied'
-    assert run.read('target').count() == 8
-    accepted = [row for row in run.history if row['record_type'] == 'full_source_baseline' and row['status'] == 'committed']
-    assert len(accepted) == int(first_observation)
-    assert all(row['content_fingerprint'] != observed['content_fingerprint'] for row in accepted)
 
 
 @pytest.mark.parametrize('strategy', ['scd1', 'scd2'])

@@ -12,14 +12,12 @@ from datetime import UTC, datetime
 import pytest
 
 freshness = importlib.import_module("fabricops_kit.pipeline.check_freshness")
-drift = importlib.import_module("fabricops_kit.pipeline.check_source_drift")
 from fabricops_kit.pipeline.check_freshness import check_freshness
-from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline import shared
 
 
 def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
-    for check in (check_freshness, check_source_drift):
+    for check in (check_freshness,):
         parameters = inspect.signature(check).parameters
         assert "enabled" not in parameters
         assert "raise_on_failure" not in parameters
@@ -27,141 +25,12 @@ def test_governed_guardrail_public_signatures_are_relationship_safe() -> None:
         assert "execution_type" not in parameters
 
 
-def test_source_drift_resolves_source_processing(monkeypatch) -> None:
-    calls = []
-    processing_table_ids = []
-    monkeypatch.setattr(drift, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(
-        drift,
-        "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **kwargs: {
-            "table_id": f"canonical-{table_id}",
-            "load_strategy": "append_all" if table_id == "source-a" else None,
-            "load_strategy_parameters_json": {},
-        },
-    )
-    monkeypatch.setattr(
-        drift,
-        "resolve_table_processing_definition",
-        lambda _config, _env, table_id, **kwargs: processing_table_ids.append(table_id)
-        or {"load_strategy": "append_all"},
-    )
-    monkeypatch.setattr(
-        drift, "resolve_pipeline_data_contract", lambda *args, **kwargs: {"contract_id": "contract"}
-    )
-    monkeypatch.setattr(
-        drift,
-        "check_source_drift_for_target",
-        lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
-    )
-    result = call_with_spark("spark", check_source_drift,
-        "source-a", target_table_id="target-a",  verbose=False
-    )
-    assert result["can_continue"] is True
-    assert calls == [
-        {
-            "source_table_id": "canonical-source-a",
-            "target_table_id": "canonical-target-a",
-            "source_processing": {"load_strategy": "append_all"},
-            "spark_session": "spark",
-            "context": {},
-        }
-    ]
-    assert processing_table_ids == ["canonical-source-a"]
 
 
-def test_source_drift_uses_contract_strategy_for_unmanaged_source(monkeypatch) -> None:
-    calls = []
-    monkeypatch.setattr(drift, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(
-        drift,
-        "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **kwargs: {
-            "table_id": f"canonical-{table_id}",
-            "load_strategy": None,
-            "load_strategy_parameters_json": {},
-        },
-    )
-    monkeypatch.setattr(
-        drift,
-        "resolve_pipeline_data_contract",
-        lambda *args, **kwargs: {
-            "contract_id": "contract",
-            "contract_payload": {
-                "table": {
-                    "processing": {
-                        "load_strategy": "scd2",
-                        "key_columns": ["id"],
-                        "effective_column": "effective_at",
-                    }
-                }
-            },
-        },
-    )
-    monkeypatch.setattr(
-        drift,
-        "resolve_table_processing_definition",
-        lambda *args, **kwargs: pytest.fail("unmanaged sources must not use FabricOps writer processing"),
-    )
-    monkeypatch.setattr(
-        drift,
-        "check_source_drift_for_target",
-        lambda **kwargs: calls.append(kwargs) or {"can_continue": True},
-    )
-
-    result = call_with_spark("spark", check_source_drift,
-        "source-a", target_table_id="target-a",  verbose=False
-    )
-
-    assert result["can_continue"] is True
-    assert calls[0]["source_processing"] == {
-        "load_strategy": "scd2",
-        "key_columns": ["id"],
-        "effective_column": "effective_at",
-    }
 
 
-def test_source_drift_requires_contract_strategy_for_unmanaged_source(monkeypatch) -> None:
-    monkeypatch.setattr(drift, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(
-        drift,
-        "resolve_catalogue_table_identity",
-        lambda _config, _env, table_id, **kwargs: {
-            "table_id": f"canonical-{table_id}",
-            "load_strategy": None,
-            "load_strategy_parameters_json": {},
-        },
-    )
-    monkeypatch.setattr(
-        drift,
-        "resolve_pipeline_data_contract",
-        lambda *args, **kwargs: {
-            "contract_id": "contract",
-            "contract_payload": {"table": {"processing": {}}},
-        },
-    )
-
-    with pytest.raises(ValueError, match="selected Data Contract has no valid processing definition"):
-        call_with_spark("spark", check_source_drift,
-            "source-a", target_table_id="target-a",  verbose=False
-        )
 
 
-def test_explicit_source_drift_check_still_requires_its_rule(monkeypatch) -> None:
-    monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
-    monkeypatch.setattr(
-        shared,
-        "build_runtime_audit_fields",
-        lambda **kwargs: {"_activity_id": "run-1"},
-    )
-    monkeypatch.setattr(shared, "load_table_guardrail_rules", lambda *a, **k: [])
-
-    with pytest.raises(ValueError, match="No active approved Source Drift rule"):
-        shared.check_source_drift_for_target(
-            source_table_id="source-a",
-            target_table_id="target-a",
-            source_processing={"load_strategy": "append_all"},
-        )
 
 
 def _freshness_rule(column: str) -> dict:
@@ -253,7 +122,6 @@ class _Store:
 
 def _configure_observation_capture(monkeypatch, rules):
     shared._CURRENT_FRESHNESS_EVIDENCE.clear()
-    shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(shared, "get_spark_session", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(
@@ -290,11 +158,6 @@ def _configure_observation_capture(monkeypatch, rules):
 
 def test_observation_capture_without_source_drift_is_optional(monkeypatch) -> None:
     _configure_observation_capture(monkeypatch, [{"guardrail_type": "schema"}])
-    monkeypatch.setattr(
-        shared,
-        "resolve_source_drift_observation_columns",
-        lambda _rule: (_ for _ in ()).throw(AssertionError("Source Drift was resolved")),
-    )
 
     assert shared.capture_source_observation(table_id="source-a", dataframe=[]) is None
 

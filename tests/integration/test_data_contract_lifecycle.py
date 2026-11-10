@@ -174,8 +174,8 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(runtime, '_merge_pipeline_run_row', persist_run)
     schedule = importlib.import_module("fabricops_kit.data_contract.scheduled_refresh")
     monkeypatch.setattr(schedule, "discover_scheduled_refresh", lambda **kwargs: {"status": "not_configured", "schedules": []})
-    for name in ("_CURRENT_SOURCE_OBSERVATIONS", "_CURRENT_FRESHNESS_EVIDENCE", "_PENDING_SOURCE_OBSERVATIONS",
-                 "_PENDING_SOURCE_DRIFT_OBSERVATIONS", "_INCREMENTAL_SOURCE_SCOPES", "_CURRENT_TABLE_IDENTITIES"):
+    for name in ("_CURRENT_FRESHNESS_EVIDENCE", "_PENDING_SOURCE_OBSERVATIONS",
+                 "_INCREMENTAL_SOURCE_SCOPES", "_CURRENT_TABLE_IDENTITIES"):
         monkeypatch.setattr(runtime, name, {})
     for module in modules:
         if module.__name__.endswith(("orchestrate_read", "orchestrate_write")):
@@ -211,8 +211,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
              ("grain", "uniqueness", "", {"columns": ["id"]}),
              ("data_quality", "completeness", f"{table_id}/id", {"columns": ["id"], "maximum_missing_percent": 0, "treat_blank_as_missing": False})]
     if source:
-        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "expected_refresh_frequency": 1, "expected_refresh_unit": "days", "maximum_age": 2, "maximum_age_unit": "days"}),
-                  ("source_drift", "historical_mutation", "", {"partition_column": "day", "change_column": "modified_at"})]
+        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "expected_refresh_frequency": 1, "expected_refresh_unit": "days", "maximum_age": 2, "maximum_age_unit": "days"})]
     else:
         specs += [("sensitive_data", "mask", f"{table_id}/email", {"scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*"})]
     if schema_only:
@@ -231,7 +230,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     assert widget["_controls"]["grain_enabled"].value is (not schema_only)
     if not schema_only:
         assert widget["_controls"]["row_key_columns"].value == ("id",)
-    assert len(widget["current"]["guardrails"]) == (1 if schema_only else 5 if source else 4)
+    assert len(widget["current"]["guardrails"]) == (1 if schema_only else 4)
     widget["_controls"]["table_description"].value = "Authored and hydrated"
     widget["save_data_contract"](return_to_selector_after=False)
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)

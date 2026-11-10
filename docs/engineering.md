@@ -167,23 +167,20 @@ Across all 31 possible waits, the scheduled waiting budget is **3.1–212.6 seco
 
 ## How does FabricOps detect Source Drift?
 
-Source Drift is **not the same mechanism as target `_row_hash` de-duplication**.
+Engineering opts in through `setup_pipeline(source_drift_enabled=True, source_drift_interval_days=1, source_drift_block=True)`. Source Drift is independent of Standard profiling, Grain discovery, Frequency and the profiling row limit. An enabled due Read observes its **complete physical source**, including rows outside a SQL query or incremental watermark scope.
 
-![Full source observation, prior accepted content fingerprint, and change detection.](assets/engineering/source-drift.svg){ .fabricops-section-evidence }
+Read all sources before any Write. The first Write consolidates every source observation and closes the Read set; later Reads require a new pipeline execution. Blocking stops confirmed additions, removals, modifications, typed-schema changes or unavailable observations. `source_drift_block=False` permits warnings, while baseline acceptance still waits for successful finalization and every required verified publication.
 
-Set `observe_source=True` for a manual complete observation, or set `source_observation_days` to a positive interval. FabricOps fingerprints the complete physical source independently of an Incremental predicate. At Write time, an applicable Source Drift Guardrail compares the current source observation with the last accepted source-to-target baseline using partition presence, row counts, change-value bounds and content fingerprints. Its result identifies new, changed, removed or reappeared partitions, not exact updated, inserted or deleted business rows.
+The first successful exact snapshot establishes history; changes before it are unknown. Distributed SHA256 identity/content hashes preserve row multiplicities without storing historical business values. Validated authored unique keys support exact modified-row counts. Without trustworthy keys, added/missing content is measurable but modifications remain unknown; unrelated rows are never paired. Diagnostics retain at most ten hash-only examples per category.
 
-The new baseline is accepted only after verified target publication. Observation alone is diagnostic; publication blocks only when the selected Data Contract contains a blocking Source Drift policy.
+`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, DQ, Freshness, Sensitive Data and Processing requirements, without Source Drift execution policy.
 
-??? info "Under the Hood — full-source observation cost and limitations"
+??? info "Scope, cost and recovery"
 
-    Internal [`observe_full_source()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1077) performs the independent full scan and [`check_source_drift()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L15) evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan. Accepted baselines are stored in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
+    A SQL result of 100 rows and a profiling cap of 100,000 rows do not restrict Source Drift observation. Due complete-source hashing can scan billions of physical rows and retains hashes proportional to distinct content. Disabled Source Drift performs no additional observation scan. Freshness and incremental Processing retain their independent required scopes.
 
-    A query returning 100 rows measures and caches that result scope. It does not itself request a complete-source fingerprint or profiling scan. A manual observation or an elapsed `source_observation_days` interval still scans the complete physical source. Selected Freshness and Source Drift rules can also require physical-source aggregates. These mandatory checks are independent of the query predicate and cannot use its partial result as a physical baseline.
+    A candidate becomes accepted only after successful finalization and verified required target publications. Warning mode does not bypass that boundary. Baseline acceptance failure is reported separately from already completed publications; repeat from Read and inspect retained `METADATA_GUARDRAIL_RESULTS` and `METADATA_PROCESSING_STATE` before relying on the next interval. See [pipeline configuration and Source Drift boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#read--write-modes).
 
-    Profiling inherits Engineering settings from `setup_pipeline()`: Standard is enabled daily; Grain discovery and Frequency are disabled unless explicitly enabled, then run once per physical table after successful completion. Each pipeline uses its own Standard interval against shared confirmed completion history of sufficient scope. Sampled completions cannot suppress later full-table work; full completions and sufficiently large bounded completions satisfy bounded requests. Disabled or not-due work performs no profiling scan. Full non-query reads reuse their DataFrame; a restricted query result never supplies complete-source profiling or Source Observation. Due full-table profiling can scan all source rows despite a SQL limit. `profiling_max_rows` bounds profiling aggregates with an arbitrary row selection and records sampled scope; it does not promise a physical read limit or representative statistics. Sample counts never become Read/Write full-table totals or inputs to Guardrails, Source Observation or checkpoints. Review and promote notebook setting changes through the existing Governance approval flow.
-
-    A changed fingerprint is evidence, not an automatic delete or update instruction. The configured Write strategy still determines target behaviour.
 
 ## How does a Governance Data Contract affect my ETL?
 
@@ -196,7 +193,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Setup | Selects the exact contract version and approved Processing definition. |
 | Read | Applies Freshness, Schema, Grain and Data Quality where configured. |
 | Transform | Leaves project PySpark visible and project-owned. |
-| Write preparation | Applies target Schema, Sensitive Data treatment, Source Drift, Grain and Data Quality. |
+| Write preparation | Consolidates pipeline Source Drift, then applies target Schema, Sensitive Data treatment, Grain and Data Quality. |
 | Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
 | Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
 

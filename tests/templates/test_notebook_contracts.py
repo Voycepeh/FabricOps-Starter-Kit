@@ -431,8 +431,9 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
         setup_cells = [cell for cell in notebook.cells
                        if cell.cell_type == "code" and "setup_pipeline(" in cell.source]
         for cell in setup_cells:
-            assert "observe_source=False" in cell.source
-            assert "source_observation_days=None" in cell.source
+            assert "source_drift_enabled=False" in cell.source
+            assert "source_drift_interval_days=1" in cell.source
+            assert "source_drift_block=True" in cell.source
 
         transform_cells = [cell for cell in notebook.cells
                            if cell.cell_type == "code" and cell.id.startswith("transform")]

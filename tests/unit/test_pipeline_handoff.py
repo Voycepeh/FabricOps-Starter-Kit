@@ -131,7 +131,7 @@ def test_rehashing_inconsistent_claims_does_not_validate_them(change):
     if change == "saved": package["source_notebook_base64"] = base64.b64encode(notebook("x = 2")).decode()
     if change == "operations": package["manifest"]["operations"][0]["write_mode"] = "scd1"
     if change == "result": package["dry_run"]["operations"][0]["stages"] = []
-    if change == "parameters": package["manifest"]["parameters"]["manual"] = True
+    if change == "parameters": package["manifest"]["parameters"]["source_drift_enabled"] = True
     with pytest.raises(ValueError):
         service.validate_submission(resign(package))
 
@@ -422,7 +422,7 @@ def test_durable_dry_run_does_not_serialize_the_python_session(authority, deploy
     plan = SimpleNamespace(plan_id="dry-run", pipeline_id=PIPELINE_ID, workspace_id="DEV", notebook_id="development",
         runtime_context=authority.eng, evidence={"notebook_snapshot": base64.b64decode(package["executed_notebook_base64"]),
             "final_result": package["dry_run"], "operations": {op["operation_key"]: op for op in manifest["tested_operations"]},
-            "source_observation_policy": {"manual": False, "days": None}, "pipeline_parameters": manifest["parameters"], "session": object()}, contracts_json="{}")
+            "pipeline_parameters": manifest["parameters"], "session": object()}, contracts_json="{}")
     uri = service.persist_engineering_dry_run(plan)
     retained = json.loads(deployment_io.files[uri])
     assert retained["dry_run"]["run_id"] == "dry-run"
