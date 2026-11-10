@@ -1,11 +1,10 @@
 # `widget_activate_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.4.0</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview — Not Yet Released</span>
 </p>
 
-> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
+> **Preview — Not Yet Released.** This capability is under development and is not part of the current supported FabricOps release. Its interface and behaviour may change before general availability.
 
 Review and activate an exact frozen Contract in its physical workspace.
 
@@ -108,12 +107,12 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | 0.4.0 |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
+| Live since | — |
 | Discontinued in | 0.3.0 |
-| Contract classification | Live public function |
-| Contract risk | Live |
-| Live-critical dependencies | 67 |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
+| Live-critical dependencies | — |
 
 ### Release history
 
@@ -123,8 +122,8 @@ No related guides documented.
 | Preview | 0.2.5 |
 | Discontinued | 0.3.0 |
 | Discontinued | 0.3.1 |
-| Live | 0.4.0 |
-| Live | 0.4.1 |
+| Preview implementation present | 0.4.0 |
+| Preview implementation present | 0.4.1 |
 
 ### Live-critical dependencies
 
