@@ -56,22 +56,22 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Complete execution or reopen persisted Engineering submission, deployment and recovery controls.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Complete execution or reopen persisted Engineering submission, deployment and recovery controls.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`02_pipeline`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span><span class="reference-chip">`02_pipeline`</span></p>
 </article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_read/"><code>orchestrate_read</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed source lifecycle.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`02_pipeline`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span><span class="reference-chip">`02_pipeline`</span></p>
 </article>
 <article id="pipeline.orchestrate_write-orchestrate_write" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_write" data-callable-module="pipeline.orchestrate_write" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed target lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_write/"><code>orchestrate_write</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`02_pipeline`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline</span><span class="reference-chip">`02_pipeline`</span></p>
 </article>
 <article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`02_pipeline`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span><span class="reference-chip">`02_pipeline`</span></p>
 </article>
 </div>
 </details>
@@ -105,37 +105,37 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables and check existing table columns and Spark data types.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00_env_config`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00_env_config</span><span class="reference-chip">`00_env_config`</span></p>
 </article>
 <article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="01_governance, 02_pipeline, 00C_demo_setup" data-callable-usage-source="01_governance, 02_pipeline, 00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span><span class="reference-chip">`02_pipeline`</span><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">01_governance</span><span class="reference-chip">`01_governance`</span><span class="reference-chip">`02_pipeline`</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="widgets.widget_activate_data_contract-widget_activate_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_data_contract" data-callable-module="widgets.widget_activate_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Review and activate an exact frozen Contract in its physical workspace.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_data_contract/"><code>widget_activate_data_contract</code></a></h3>
   <p class="reference-catalogue-item-purpose">Review and activate an exact frozen Contract in its physical workspace.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview — Not Yet Released</span><span class="reference-chip">`01_governance`</span></p>
 </article>
 <article id="widgets.widget_activate_pipeline-widget_activate_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_pipeline" data-callable-module="widgets.widget_activate_pipeline" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Select saved Engineering submissions and independently approve, reject or revoke them.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_pipeline/"><code>widget_activate_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Select saved Engineering submissions and independently approve, reject or revoke them.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">`01_governance`</span></p>
 </article>
 <article id="widgets.widget_data_contract-widget_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_contract" data-callable-module="widgets.widget_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Create or reopen and author one agreement-free, table-centric Data Contract draft.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_contract/"><code>widget_data_contract</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create or reopen and author one agreement-free, table-centric Data Contract draft.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span><span class="reference-chip">`01_governance`</span></p>
 </article>
 <article id="widgets.widget_render_data_agreement-widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="widgets.widget_render_data_agreement" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span><span class="reference-chip">`01_governance`</span></p>
 </article>
 <article id="widgets.widget_render_data_steward-widget_render_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_steward" data-callable-module="widgets.widget_render_data_steward" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-steward intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`01_governance`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span><span class="reference-chip">`01_governance`</span></p>
 </article>
 </div>
 </details>
@@ -179,47 +179,47 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric-resolved path through Spark CSV.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric-resolved path through Spark CSV.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_lakehouse_excel-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_lakehouse_json-read_lakehouse_json" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_json" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read JSON data from a configured Lakehouse Files path through Spark JSON.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_json/"><code>read_lakehouse_json</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read JSON data from a configured Lakehouse Files path through Spark JSON.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_lakehouse_table-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="io" data-callable-starter-path="02_pipeline, 00C_demo_setup" data-callable-usage-source="02_pipeline, 00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read a Delta table from a configured Fabric lakehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Delta table from a configured Fabric lakehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`02_pipeline`</span><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`02_pipeline`</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_warehouse_query-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.read_warehouse_table-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_table/"><code>read_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.write_lakehouse_table-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a configured Fabric lakehouse Delta table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 <article id="io.write_warehouse_table-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 </div>
 </details>
@@ -231,7 +231,7 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 <article id="config.orchestrate_demo_reset-orchestrate_demo_reset" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_demo_reset" data-callable-module="config.orchestrate_demo_reset" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Preview or reset the dedicated Guided Demo to Day 1.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_demo_reset/"><code>orchestrate_demo_reset</code></a></h3>
   <p class="reference-catalogue-item-purpose">Preview or reset the dedicated Guided Demo to Day 1.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">`00C_demo_setup`</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">`00C_demo_setup`</span></p>
 </article>
 </div>
 </details>
