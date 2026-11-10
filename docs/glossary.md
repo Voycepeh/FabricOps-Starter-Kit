@@ -123,7 +123,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="source-drift">
 <summary><strong>Source Drift</strong> — Pipeline-owned complete-source change observation against confirmed physical-source history.</summary>
-<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. All source decisions precede Write. METADATA_PROCESSING_STATE accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
+<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. METADATA_PROCESSING_STATE accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
 </details>
 
 <details id="writer-ownership">

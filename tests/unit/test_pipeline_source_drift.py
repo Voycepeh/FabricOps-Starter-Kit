@@ -12,8 +12,8 @@ from tests.unit.test_pipeline_session import runtime
 
 def result(status='no_change', **values):
     return {'status': status, 'can_continue': True, 'changed': status == 'changes_detected',
-        'added_count': 1 if status == 'changes_detected' else 0, 'removed_count': 0,
-        'modified_count': 0, 'ambiguous_count': 0, **values}
+        'added_count': 0, 'removed_count': 0,
+        'modified_count': 1 if status == 'changes_detected' else 0, 'ambiguous_count': 0, **values}
 
 
 @pytest.mark.parametrize('block', [True, False])
@@ -141,3 +141,34 @@ def test_finalization_reports_acceptance_failure_separately_from_committed_run(r
     assert summary['status'] == 'ungoverned_completed'
     assert summary['source_drift']['baseline']['status'] == ('acceptance_unknown' if unknown else 'acceptance_failed')
     assert 'source_drift' not in session.plan.evidence['final_result']
+
+
+@pytest.mark.parametrize('read_mode', ['full', 'incremental'])
+@pytest.mark.parametrize('modified', [0, None])
+@pytest.mark.parametrize('mode', ['overwrite', 'append_all', 'append_new_only', 'scd1', 'scd2'])
+def test_additions_alone_never_block_publication(runtime, monkeypatch, modified, mode, read_mode):
+    session = setup_pipeline(source_drift_enabled=True, source_drift_block=True)
+    monkeypatch.setattr(shared, '_record_source_drift_result', Mock())
+    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {
+        'table_id': 'target', 'store': 'Silver', 'schema': 'demo', 'table_name': 'target'})
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders', read_mode=read_mode,
+        read_parameters={'watermark_column': 'id'} if read_mode == 'incremental' else None,
+        target_table_id='target' if read_mode == 'incremental' else None, verbose=False)
+    session.plan.evidence['source_drift_observations'] = {'orders': result('changes_detected',
+        table_id='orders', added_count=100, removed_count=0, modified_count=modified)}
+    parameters = {'key_columns': ['id']} if mode in {'scd1', 'scd2'} else None
+    if mode == 'scd2':
+        parameters['effective_column'] = 'id'
+    orchestrate_write(runtime.frame, store='Silver', schema='demo', table_name='target', write_mode=mode,
+        write_parameters=parameters, verbose=False)
+    runtime.publication.assert_called_once()
+    decision = session.plan.evidence['source_drift_decision']
+    assert decision['can_continue'] is True and decision['requires_intervention'] is False
+    assert decision['added_count'] == 100
+
+
+@pytest.mark.parametrize('change', [dict(removed_count=1), dict(modified_count=1), dict(schema_changed=True),
+    dict(status='observation_failed')])
+def test_additions_do_not_mask_historical_changes_or_unavailable_observations(change):
+    assert shared.source_drift_requires_intervention({'added_count': 100, 'removed_count': 0,
+        'modified_count': 0, **change}) is True

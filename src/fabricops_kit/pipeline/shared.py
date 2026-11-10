@@ -1228,6 +1228,12 @@ def _record_source_drift_result(result, *, context, table_id="", table_name="", 
             "guardrail_type": "source_drift", "rule_context": {"rule_type": rule_type}}, context=context)
 
 
+def source_drift_requires_intervention(result):
+    """Separate historical changes from ordinary additive source growth."""
+    return bool(result.get("status") == "observation_failed" or result.get("schema_changed")
+        or result.get("removed_count") or result.get("modified_count"))
+
+
 def observe_full_source(identity, *, dataframe=None, context):
     """Automatically observe a complete source, never the profiling or query scope."""
     plan = context.get("execution_plan")
@@ -1316,15 +1322,21 @@ def observe_full_source(identity, *, dataframe=None, context):
             evidence.unpersist()
         if owned_cache:
             dataframe.unpersist()
-    result.update(can_continue=not (policy["source_drift_block"] and result["status"] in {"changes_detected", "observation_failed"}),
-        action="Block" if policy["source_drift_block"] else "Warn", severity="blocking" if policy["source_drift_block"] else "warning")
+    requires_intervention = source_drift_requires_intervention(result)
+    addition_only = bool(result.get("changed")) and not requires_intervention
+    result.update(requires_intervention=requires_intervention,
+        can_continue=not (policy["source_drift_block"] and requires_intervention),
+        action="Block" if policy["source_drift_block"] and not addition_only else "Warn",
+        severity="blocking" if policy["source_drift_block"] and not addition_only else "warning")
     if result["status"] in {"changes_detected", "observation_failed"}:
         result["investigation_query"] = source_drift_investigation_query(plan, source_id)
     try:
         _record_source_drift_result(result, context=context, table_id=source_id, table_name=identity["table_name"])
     except Exception as exc:
         candidates.pop(source_id, None)
-        result.update(status="observation_failed", can_continue=not policy["source_drift_block"],
+        result.update(status="observation_failed", requires_intervention=True, can_continue=not policy["source_drift_block"],
+            action="Block" if policy["source_drift_block"] else "Warn",
+            severity="blocking" if policy["source_drift_block"] else "warning",
             reason="Source Drift diagnostics could not be persisted; no baseline will be accepted.", error_type=type(exc).__name__)
     observations[source_id] = result
     return result
@@ -1364,11 +1376,12 @@ def evaluate_pipeline_source_drift(plan, *, verbose=False, spark_session=None):
     results = [observations[tid] for tid in sorted(source_ids & set(observations))]
     unavailable = bool(missing) or any(row["status"] == "observation_failed" for row in results)
     changed = any(row.get("changed") for row in results)
-    allowed = not missing and not (policy["source_drift_block"] and (unavailable or changed))
+    requires_intervention = unavailable or any(source_drift_requires_intervention(row) for row in results)
+    allowed = not missing and not (policy["source_drift_block"] and requires_intervention)
     decision = {"status": "blocked" if not allowed else "warning" if unavailable or changed else "not_due"
         if not results or all(row["status"] == "not_due" for row in results) else "baseline_pending"
         if any(row["status"] == "baseline_pending" for row in results) else "no_change",
-        "can_continue": allowed, "sources": results, "source_ids": sorted(source_ids),
+        "can_continue": allowed, "requires_intervention": requires_intervention, "sources": results, "source_ids": sorted(source_ids),
         "missing_source_ids": sorted(missing), "enabled": True, "interval_days": policy["source_drift_interval_days"],
         "block": policy["source_drift_block"], "observed": sum(row["status"] != "not_due" for row in results),
         "skipped": sum(row["status"] == "not_due" for row in results), "baseline_status": "pending_finalization"}

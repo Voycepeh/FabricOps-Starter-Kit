@@ -80,6 +80,7 @@ def test_complete_source_first_baseline_shared_schedule_and_exact_changes(snapsh
     second, second_context, second_identity = rt.run('second', pipeline='second-pipeline', kind=kind)
     changed = shared.observe_full_source(second_identity, context=second_context)
     assert (changed['added_count'], changed['removed_count'], changed['modified_count']) == (1, 1, 1)
+    assert changed['can_continue'] is False and changed['requires_intervention'] is True
     assert changed['status'] == 'changes_detected' and changed['row_count'] == 3  # Profiling cap=1 never restricts observation.
     assert rt.state().where("record_type = 'source_drift_baseline'").first()['run_id'] == 'run'
     assert 'profiling' not in second.evidence
@@ -241,3 +242,26 @@ def test_prior_execution_publication_cannot_accept_new_source_snapshot(snapshots
     verify.assert_not_called()
     assert plan.evidence['source_snapshot_acceptance']['status'] == 'not_eligible'
     assert rt.state().where("record_type = 'source_drift_baseline'").count() == 0
+
+
+@pytest.mark.parametrize('kind', ['lakehouse', 'warehouse'])
+@pytest.mark.parametrize('keys', [('id',), ()], ids=['keyed', 'keyless'])
+def test_pure_additions_allow_blocking_policy_and_accept_only_after_finalization(snapshots, kind, keys):
+    rt = snapshots
+    baseline, context, identity = rt.run('baseline', kind=kind, keys=keys)
+    shared.observe_full_source(identity, context=context)
+    shared.accept_pipeline_source_snapshots(baseline, spark_session=rt.spark)
+    expire(rt)
+    rt.sources['orders'] = rt.spark.createDataFrame([(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd')], 'id int, value string')
+    plan, context, identity = rt.run('addition', kind=kind, keys=keys)
+    observation = shared.observe_full_source(identity, context=context)
+    assert observation['added_count'] == 1 and observation['removed_count'] == 0
+    assert observation['modified_count'] == (0 if keys else None)
+    assert observation['changed'] is True and observation['can_continue'] is True
+    assert observation['requires_intervention'] is False
+    assert rt.state().where("record_type = 'source_drift_baseline'").first().run_id == 'baseline'
+    plan.evidence.pop('source_drift_decision')
+    decision = shared.evaluate_pipeline_source_drift(plan, spark_session=rt.spark)
+    assert decision['can_continue'] is True and decision['requires_intervention'] is False
+    shared.accept_pipeline_source_snapshots(plan, spark_session=rt.spark)
+    assert rt.state().where("record_type = 'source_drift_baseline'").first().run_id == 'addition'

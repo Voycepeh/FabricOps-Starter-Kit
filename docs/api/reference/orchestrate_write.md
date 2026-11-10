@@ -161,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 253 |
+| Live-critical dependencies | 254 |
 
 ### Release history
 
@@ -416,6 +416,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.skip_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.snapshot_pipeline_write_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_drift_requires_intervention</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_guardrail_results</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>

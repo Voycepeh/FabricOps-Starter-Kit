@@ -69,7 +69,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `frequency_enabled` | `bool` | No | `False` | Profile value frequencies once per physical table and sufficient scope. |
 | `source_drift_enabled` | `bool` | No | `False` | Observe complete physical sources automatically during Read, independently of profiling limits and incremental checkpoints. Read every source before any Write; the first Write closes the participating Read set. |
 | `source_drift_interval_days` | `int` | No | `1` | Positive interval since the latest confirmed successful acceptance for the physical source, shared across pipelines. Failed or incomplete runs and nonpublishing Writes do not advance observation history. |
-| `source_drift_block` | `bool` | No | `True` | Block publication on confirmed additions, removals, modifications, schema changes or unavailable observations. False permits warnings; new baselines still require successful finalization and verified required publications. The first exact snapshot does not invent historical changes. |
+| `source_drift_block` | `bool` | No | `True` | Block publication on confirmed removals, modifications, schema changes or unavailable observations. Additions alone are reported and never block publication, including normal incremental source growth. False permits warnings; new baselines still require successful finalization and verified required publications. The first exact snapshot does not invent historical changes. |
 
 </div>
 
@@ -138,7 +138,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L240">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L242">View on GitHub</a>
 </div>
 
 

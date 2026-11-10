@@ -36,6 +36,11 @@ Record commit/version, date, tester, disposable workspace labels and outcomes. K
 | Captured prior authority | Already admitted superseded implementations finish under captured versions and Contracts; new starts use current authority | Pending |
 | Rollback | Separate Governance decision returns to retained code through a new version, with immutable lineage | Pending |
 | Restoration | Separate exact recovery decision and explicit action beneath Finalize required; Setup blocks on drift without automatic repair; stale target/approval rejects; modified copy retained before overwrite | Pending |
+| Source Drift additions | With source_drift_block=True, pure additions permit full and incremental ETL for keyed and keyless Lakehouse/Warehouse sources; counts remain reported | Pending |
+| Source Drift historical changes | Removals, modifications, typed-schema changes and unavailable observations block when configured; keyless comparisons do not invent modification counts | Pending |
+| Source Drift acceptance | Processing State uses Serializable isolation; all required target receipts belong to the current run and verify physically; failed/no-op/prior-run recovery cannot accept new snapshots; concurrent stale candidates cannot partially advance heads | Pending |
+| Source Drift acknowledgements | Immutable acceptance records confirm committed transactions after lost acknowledgements; unavailable read-back reports acceptance_unknown without assuming rollback or repeating business publications | Pending |
+| Source Drift scope and cost | SQL/incremental predicates and profiling limits do not restrict observation; measure full-source scan/shuffle time and retained hash growth on representative data; approve capacity, Metadata storage and retention before billion-row use | Pending |
 | Processing regressions | Standard 02 and 02A/02B/02C, Ungoverned, released v0.3.1 metadata, row hashes, append/incremental/SCD, observations and receipts remain functional | Pending |
 | TOCTOU and direct bypass | Saved versus executing code and privileged direct Spark bypass are demonstrated and residual limits explicitly accepted | Pending |
 
