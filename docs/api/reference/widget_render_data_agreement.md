@@ -10,7 +10,7 @@
 Render the standalone data-agreement intake widget.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">01_governance</span>
+<span class="reference-chip">`01_governance`</span>
 </p>
 
 ## Usage notes
