@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "refresh",
+  "position": {
+    "x": 1035,
+    "y": 30,
+    "z": 0,
+    "height": 60,
+    "width": 205,
+    "tabOrder": 1065
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dashboard Metrics"
+                    }
+                  },
+                  "Property": "Dataset Refreshed At"
+                }
+              },
+              "queryRef": "Dashboard Metrics.Dataset Refreshed At",
+              "nativeQueryRef": "Dataset Refreshed At"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Dataset refreshed (UTC)\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Dataset refreshed (UTC) visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -3,11 +3,11 @@
   "name": "pipelines_run",
   "position": {
     "x": 25,
-    "y": 135,
+    "y": 115,
     "z": 0,
     "height": 105,
-    "width": 220,
-    "tabOrder": 160
+    "width": 225,
+    "tabOrder": 140
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Unique pipelines that ran\""
+                  "Value": "\"Pipelines with executions\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Unique pipelines that ran visual\""
+                  "Value": "\"Pipelines with executions visual\""
                 }
               }
             }

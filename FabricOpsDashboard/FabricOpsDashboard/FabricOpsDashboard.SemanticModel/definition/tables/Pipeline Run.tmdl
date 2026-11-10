@@ -21,6 +21,21 @@ table 'Pipeline Run'
 		lineageTag: 9ca6554d-0c68-5d5e-8e5b-d45056f12c0b
 		sourceColumn: workspace_id
 
+	column 'Workspace Name'
+		dataType: string
+		lineageTag: 90032238-7a7c-5d06-8442-b9729240d59d
+		sourceColumn: workspace_name
+
+	column 'Notebook Name'
+		dataType: string
+		lineageTag: a60c541b-943f-50eb-a4cb-b196f7f3b3f2
+		sourceColumn: notebook_name
+
+	column 'Execution Identity'
+		dataType: string
+		lineageTag: f0a784de-5eb7-5350-9146-c494b3e5caeb
+		sourceColumn: execution_identity
+
 	column 'Started At'
 		dataType: dateTime
 		lineageTag: e21a1361-5337-594b-88a7-d60e8960dc46
@@ -84,7 +99,7 @@ table 'Pipeline Run'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT r.run_id,CONCAT(r.workspace_id,'|',r.pipeline_id) pipeline_key,r.pipeline_id,r.workspace_id,r.started_at,r.completed_at,CAST(r.started_at AS date) run_date,r.status,r.boundary_completed,r.pipeline_version,r.promotion_id,r.execution_mode,(SELECT COUNT(1) FROM OPENJSON(r.failures)) failure_count,CASE WHEN r.governed_notebook_id IS NULL OR r.governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',r.workspace_id,'/notebooks/',r.governed_notebook_id) END fabric_notebook_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT r.run_id,CONCAT(r.workspace_id,'|',r.pipeline_id) pipeline_key,r.pipeline_id,r.workspace_id,r._workspace_name workspace_name,r._notebook_name notebook_name,r.execution_identity,r.started_at,r.completed_at,CAST(r.started_at AS date) run_date,r.status,r.boundary_completed,r.pipeline_version,r.promotion_id,r.execution_mode,(SELECT COUNT(1) FROM OPENJSON(r.failures)) failure_count,CASE WHEN r.governed_notebook_id IS NULL OR r.governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',r.workspace_id,'/notebooks/',r.governed_notebook_id) END fabric_notebook_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

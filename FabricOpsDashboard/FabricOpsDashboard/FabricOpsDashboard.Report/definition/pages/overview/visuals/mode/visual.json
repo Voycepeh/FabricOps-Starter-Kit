@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "mode",
   "position": {
-    "x": 310,
-    "y": 55,
+    "x": 320,
+    "y": 30,
     "z": 0,
-    "height": 55,
-    "width": 250,
-    "tabOrder": 365
+    "height": 60,
+    "width": 190,
+    "tabOrder": 350
   },
   "visual": {
     "visualType": "slicer",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded execution mode\""
+                  "Value": "\"Execution mode\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded execution mode visual\""
+                  "Value": "\"Execution mode visual\""
                 }
               }
             }

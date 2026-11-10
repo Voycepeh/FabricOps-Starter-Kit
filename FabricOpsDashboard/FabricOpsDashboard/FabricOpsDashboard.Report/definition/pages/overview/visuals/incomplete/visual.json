@@ -3,11 +3,11 @@
   "name": "incomplete",
   "position": {
     "x": 965,
-    "y": 135,
+    "y": 115,
     "z": 0,
     "height": 105,
     "width": 225,
-    "tabOrder": 1100
+    "tabOrder": 1080
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Incomplete runs\""
+                  "Value": "\"Incomplete\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Incomplete runs visual\""
+                  "Value": "\"Incomplete visual\""
                 }
               }
             }

@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
-  "name": "modes",
+  "name": "workspace_activity",
   "position": {
-    "x": 615,
-    "y": 270,
+    "x": 635,
+    "y": 245,
     "z": 0,
-    "height": 235,
-    "width": 575,
-    "tabOrder": 885
+    "height": 220,
+    "width": 555,
+    "tabOrder": 880
   },
   "visual": {
     "visualType": "clusteredBarChart",
@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Execution Mode"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline Run.Execution Mode",
-              "nativeQueryRef": "Execution Mode"
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             }
           ]
         },
@@ -65,7 +65,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded runs by execution mode\""
+                  "Value": "\"Executions by workspace\""
                 }
               }
             }
@@ -78,7 +78,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded runs by execution mode visual\""
+                  "Value": "\"Executions by workspace visual\""
                 }
               }
             }

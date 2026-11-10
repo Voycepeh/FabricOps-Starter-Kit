@@ -3,11 +3,11 @@
   "name": "failed",
   "position": {
     "x": 730,
-    "y": 135,
+    "y": 115,
     "z": 0,
     "height": 105,
-    "width": 220,
-    "tabOrder": 865
+    "width": 225,
+    "tabOrder": 845
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Failed runs\""
+                  "Value": "\"Failed\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Failed runs visual\""
+                  "Value": "\"Failed visual\""
                 }
               }
             }

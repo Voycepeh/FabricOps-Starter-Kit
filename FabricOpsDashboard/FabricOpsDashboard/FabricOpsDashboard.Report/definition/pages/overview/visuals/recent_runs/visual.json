@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "recent_runs",
   "position": {
-    "x": 25,
-    "y": 530,
+    "x": 635,
+    "y": 485,
     "z": 0,
-    "height": 155,
-    "width": 1165,
-    "tabOrder": 555
+    "height": 200,
+    "width": 555,
+    "tabOrder": 1120
   },
   "visual": {
     "visualType": "tableEx",
@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline Run.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             },
             {
               "field": {
@@ -37,11 +37,25 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Run ID"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline Run.Run ID",
-              "nativeQueryRef": "Run ID"
+              "queryRef": "Pipeline Run.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Execution Identity"
+                }
+              },
+              "queryRef": "Pipeline Run.Execution Identity",
+              "nativeQueryRef": "Execution Identity"
             },
             {
               "field": {
@@ -70,20 +84,6 @@
               },
               "queryRef": "Pipeline Run.Status",
               "nativeQueryRef": "Status"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Run"
-                    }
-                  },
-                  "Property": "Boundary Completed"
-                }
-              },
-              "queryRef": "Pipeline Run.Boundary Completed",
-              "nativeQueryRef": "Boundary Completed"
             },
             {
               "field": {
@@ -145,7 +145,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recent recorded runs\""
+                  "Value": "\"Recent executions\""
                 }
               }
             }
@@ -158,7 +158,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recent recorded runs visual\""
+                  "Value": "\"Recent executions visual\""
                 }
               }
             }

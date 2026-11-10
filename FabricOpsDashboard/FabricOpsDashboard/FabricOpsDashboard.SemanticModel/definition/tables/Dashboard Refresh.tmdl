@@ -1,0 +1,18 @@
+table 'Dashboard Refresh'
+	lineageTag: d38cc364-0131-5466-b6e2-a3d2df9962cf
+
+	column 'Refreshed At'
+		dataType: dateTime
+		lineageTag: 0b358e83-fa0c-5b62-88a7-03fe0ed60596
+		sourceColumn: refreshed_at
+		formatString: yyyy-MM-dd HH:mm
+
+	partition 'Dashboard Refresh' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT SYSUTCDATETIME() refreshed_at",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

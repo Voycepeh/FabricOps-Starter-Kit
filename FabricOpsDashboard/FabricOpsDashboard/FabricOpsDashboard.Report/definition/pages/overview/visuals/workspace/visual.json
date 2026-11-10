@@ -3,11 +3,11 @@
   "name": "workspace",
   "position": {
     "x": 25,
-    "y": 55,
+    "y": 30,
     "z": 0,
-    "height": 55,
-    "width": 270,
-    "tabOrder": 80
+    "height": 60,
+    "width": 280,
+    "tabOrder": 55
   },
   "visual": {
     "visualType": "slicer",
@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Workspace ID"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline Run.Workspace ID",
-              "nativeQueryRef": "Workspace ID"
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             }
           ]
         }

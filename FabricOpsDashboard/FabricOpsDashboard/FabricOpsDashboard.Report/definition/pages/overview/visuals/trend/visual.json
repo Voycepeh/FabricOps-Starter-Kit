@@ -3,11 +3,11 @@
   "name": "trend",
   "position": {
     "x": 25,
-    "y": 270,
+    "y": 245,
     "z": 0,
-    "height": 235,
-    "width": 565,
-    "tabOrder": 295
+    "height": 220,
+    "width": 590,
+    "tabOrder": 270
   },
   "visual": {
     "visualType": "lineChart",
@@ -93,7 +93,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded run outcomes over time\""
+                  "Value": "\"Execution volume and outcomes\""
                 }
               }
             }
@@ -106,7 +106,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded run outcomes over time visual\""
+                  "Value": "\"Execution volume and outcomes visual\""
                 }
               }
             }

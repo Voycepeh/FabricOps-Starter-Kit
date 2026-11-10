@@ -16,6 +16,8 @@ table 'Dashboard Metrics'
 		formatString: #,0
 	measure 'Run Count' = COUNTROWS('Pipeline Run')
 		formatString: #,0
+	measure 'Dataset Refreshed At' = MAX('Dashboard Refresh'[Refreshed At])
+		formatString: yyyy-MM-dd HH:mm
 	measure 'Successful Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] IN {"succeeded", "ungoverned_completed", "dry_run_completed"}, 'Pipeline Run'[Boundary Completed] = TRUE())
 		formatString: #,0
 	measure 'Failed Runs' = CALCULATE([Run Count], 'Pipeline Run'[Status] = "failed")

@@ -3,11 +3,11 @@
   "name": "successful",
   "position": {
     "x": 495,
-    "y": 135,
+    "y": 115,
     "z": 0,
     "height": 105,
-    "width": 220,
-    "tabOrder": 630
+    "width": 225,
+    "tabOrder": 610
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Successful runs\""
+                  "Value": "\"Successful\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Successful runs visual\""
+                  "Value": "\"Successful visual\""
                 }
               }
             }

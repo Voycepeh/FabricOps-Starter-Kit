@@ -1,0 +1,142 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "pipeline_activity",
+  "position": {
+    "x": 25,
+    "y": 485,
+    "z": 0,
+    "height": 200,
+    "width": 590,
+    "tabOrder": 510
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Notebook Name"
+                }
+              },
+              "queryRef": "Pipeline Run.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Execution Identity"
+                }
+              },
+              "queryRef": "Pipeline Run.Execution Identity",
+              "nativeQueryRef": "Execution Identity"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dashboard Metrics"
+                    }
+                  },
+                  "Property": "Run Count"
+                }
+              },
+              "queryRef": "Dashboard Metrics.Run Count",
+              "nativeQueryRef": "Run Count"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dashboard Metrics"
+                    }
+                  },
+                  "Property": "Pipeline Success Rate"
+                }
+              },
+              "queryRef": "Dashboard Metrics.Pipeline Success Rate",
+              "nativeQueryRef": "Pipeline Success Rate"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dashboard Metrics"
+                    }
+                  },
+                  "Property": "Last Recorded Execution"
+                }
+              },
+              "queryRef": "Dashboard Metrics.Last Recorded Execution",
+              "nativeQueryRef": "Last Recorded Execution"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dashboard Metrics"
+                    }
+                  },
+                  "Property": "Latest Recorded Run Status"
+                }
+              },
+              "queryRef": "Dashboard Metrics.Latest Recorded Run Status",
+              "nativeQueryRef": "Latest Recorded Run Status"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Pipeline activity by recorded notebook name\""
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "\"Pipeline activity by recorded notebook name visual\""
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
