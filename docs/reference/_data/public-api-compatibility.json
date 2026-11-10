@@ -37328,7 +37328,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:ca21b3d126ff17148d454bc1c46d39e7b5e84dfc966fbd4d4af9af950f8d789d",
+      "source_digest": "sha256:1a639f1f3b328486d5caa0b6e4a6ec9766bc32bf6f8a8edb7006d2dc13a232ce",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
