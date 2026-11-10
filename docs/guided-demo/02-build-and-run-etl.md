@@ -31,7 +31,7 @@ The notebook places governed Read and Write boundaries around project-owned PySp
 </div>
 </div>
 
-![FabricOps places governed Read and Write boundaries around project-owned PySpark](../assets/pipeline-boundaries-implementation.svg)
+![FabricOps pipeline lifecycle with project-owned PySpark transformation](../assets/engineering/pipeline-lifecycle.svg)
 
 | Template section | What it provides |
 | --- | --- |
@@ -79,7 +79,7 @@ pipeline = setup_pipeline(
 | `"Ungoverned"` | Yes | Runs without contract-dependent checks and records observations for Governance. It cannot write to a destination that is already governed. |
 | `"Governed"` | Yes, when required checks pass | Resolves and enforces the activated Data Contracts for the current workspace. |
 
-Profiling is controlled by the active Data Contract profiling policy and execution triggers. Standard pipeline calls do not need separate profiling calls or a manually constructed execution plan.
+Profiling is configured once in `setup_pipeline()`: Standard daily by default, Grain discovery and Frequency disabled unless explicitly enabled. A positive `profiling_max_rows` selects bounded rows and labels the saved results as sampled; None profiles the complete physical table when due. Guardrails retain their required scope independently. Standard pipeline calls do not need separate profiling calls or a manually constructed execution plan.
 
 !!! note "A typical adoption path"
     An initial Ungoverned execution can publish data and record the observations Governance needs for Data Contract authoring. Governance can then author, freeze, validate, and activate exact Contract versions before the same pipeline is used in Governed mode. Ungoverned execution cannot bypass an already-governed destination.
@@ -116,13 +116,15 @@ source = orchestrate_read(
     schema="demo",
     table_name="source_table",
     read_mode="full",
-    query=None,
+    query="SELECT * FROM demo.source_table",  # Optional Full Read SQL; None disables it.
     dq_diagnostics="sample",
 )
 sources["source"] = source
 
 display(sources["source"]["dataframe"].limit(10))
 ```
+
+The `query` argument is available for **Full Reads** from both configured Lakehouses and Warehouses. The example `SELECT * FROM demo.source_table` preserves the same rows as a plain Full Read while making SQL authoring visible; change the projection or `WHERE` clause when you want a narrower result, or set `query=None` to use an unrestricted table read. Lakehouses execute Spark SQL, while Warehouses execute T-SQL. The SQL must reference the declared `schema.table_name` and cannot introduce a different physical source. **Incremental Reads require `query=None`** because FabricOps owns their watermark bounds.
 
 The transform consumes `sources["source"]["dataframe"]`. Additional sources use distinct dictionary keys and should participate only when they contribute to a target.
 
@@ -231,7 +233,7 @@ A new Full Read execution with Overwrite replaces the complete target, even for 
 
     Read evaluates applicable Freshness, Schema, Grain, and Data Quality checks, then profiles eligible full-source data according to policy.
 
-    Before publication, Write evaluates the configured Schema, Sensitive Data, Source Drift, Grain, and Data Quality checks. Only configured checks run. Governed execution stops when required checks fail or cannot execute.
+    Before publication, Write consolidates enabled pipeline Source Drift, then evaluates the configured Contract Schema, Sensitive Data, Grain, and Data Quality checks. Governed execution stops when required checks fail or cannot execute.
 
     Dry Run prepares and validates the operation without publishing target data or persistent operational state. Successful persistent Writes publish the target and record associated metadata at the relevant lifecycle boundaries. These separate Fabric operations are not one atomic transaction.
 

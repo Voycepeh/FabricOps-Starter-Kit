@@ -12,11 +12,11 @@ def profile_table(
     schema: str | None = None,
     table_name: str | None = None,
     table_id: str | None = None,
-    grain_discovery_enabled: bool = True,
+    grain_discovery_enabled: bool = False,
     grain_discovery_max_columns: int = 3,
     grain_discovery_max_candidates: int = 8,
     frequency_columns=None,
-    frequency_enabled: bool = True, frequency_top_n: int | None = 5,
+    frequency_enabled: bool = False, frequency_top_n: int | None = 5,
     frequency_max_distinct_percent: float | None = 80.0,
     context=None,
     verbose: bool = True,
@@ -27,7 +27,7 @@ def profile_table(
     supplied DataFrame). No session is created; Spark-dependent work raises
     ``RuntimeError`` when no session is available.
 
-    FabricOps calculates the canonical statistical profile and applicable
+    FabricOps calculates the canonical statistical profile and, when enabled,
     frequency distribution close to the data. Supplied DataFrames and physical
     Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
     the calculations while normalizing reported ``DATA_TYPE`` values to the
@@ -56,7 +56,7 @@ def profile_table(
     table_id : str, optional
         Canonical governed table identity, mutually exclusive with physical
         coordinates.
-    grain_discovery_enabled : bool, default=True
+    grain_discovery_enabled : bool, default=False
         Whether to discover candidate Grain keys for a governed table. False
         skips discovery queries and preserves saved Catalogue candidates.
         The caller controls when to enable discovery; no scheduling is applied.
@@ -72,7 +72,7 @@ def profile_table(
     frequency_columns : sequence of str, optional
         Columns to frequency profile. ``None`` automatically selects eligible
         scalar columns; an empty sequence skips frequency profiling.
-    frequency_enabled : bool, default=True
+    frequency_enabled : bool, default=False
         Whether to calculate frequency distributions for this call. False skips all
         frequency columns. The caller controls when to enable frequency profiling.
     frequency_top_n : int or None, default=5
@@ -83,7 +83,8 @@ def profile_table(
     context : dict, optional
         Explicit pipeline context; Testing returns profiles without persistence.
     verbose : bool, optional
-        Display profiling progress when True; orchestration uses the automatic report.
+        Print expanded profiling diagnostics when True. Statistical results display
+        automatically even when False.
 
     Returns
     -------
@@ -96,6 +97,13 @@ def profile_table(
 
     Notes
     -----
+    Statistical results display automatically using native Fabric notebook display
+    when available, with a text-table fallback. The preview contains at most 100
+    column rows and 120 characters per text cell; returned DataFrames are complete.
+    Coverage is labelled as a complete table, supplied DataFrame, or bounded
+    selection, with Dry Run identified separately. Display failures do not fail
+    successful profiling. Grain discovery and frequency remain opt-in.
+
     The result also includes ``row_count``, reused from an existing aggregate
     when available (None otherwise). No additional Spark job is run for this
     metric. It describes the profiled dataset, not rows committed by a writer.
@@ -157,6 +165,7 @@ def profile_table(
 
     >>> result = profile_table(
     ...     table_id=target_table_id,
+    ...     grain_discovery_enabled=True,
     ...     grain_discovery_max_columns=2, grain_discovery_max_candidates=2,
     ... )
 

@@ -10,21 +10,24 @@
   <span class="fabricops-release-status fabricops-release-status--preview">Governed execution: gated</span>
 </div>
 
+![Governance lifecycle from accountability to approved deployment](assets/governance-lifecycle.svg){ .fabricops-section-evidence }
+
 ## What is a Data Contract?
+
+![Anatomy of a frozen Data Contract](assets/data-contract-anatomy.svg){ .fabricops-section-evidence }
 
 A FabricOps Data Contract is the versioned definition for one governed `table_id`. It combines the observed table and column structure with the decisions Governance owns:
 
 - business descriptions and information classification;
 - the expected schema and required columns;
 - the approved processing strategy;
-- profiling schedules;
-- Grain, Freshness, Source Drift, Data Quality and Sensitive Data Guardrails.
+- Grain, Freshness, Data Quality and Sensitive Data Guardrails.
 
 Saving keeps a draft editable. **Freezing creates an immutable version.** Engineering can select that exact frozen payload in Dry Run and validate it against real reads, transformations and prepared writes. Later profile observations never silently rewrite the frozen contract.
 
 ??? info "Under the Hood — contract identity and immutable payload"
 
-    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing, profiling policy and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
+    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
 
     [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, globally stable `table_id`, authoring provenance and exact JSON payload. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
@@ -51,10 +54,10 @@ An independently activated table contract protects that Table ID and physical de
 
 1. **Record accountability.** Use [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), then create the versioned Data Agreement with [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) to explain ownership, purpose and approved use.
 2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue, profiles, processing definition and pipeline participation describe the real table.
-3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing, profiling and Guardrails.
+3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing and Guardrails.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
-6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data outcomes allow continuation.
+6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Data Quality and Sensitive Data outcomes allow continuation.
 7. **Activate the physical table contracts.** Use [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) for every source and target in its physical workspace, selecting the applicable Agreement each time.
 8. **Approve the saved pipeline submission.** Engineering finalizes a saved Dry Run submission. Governance uses [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) to inspect that exact notebook, its recorded checks and resolved bindings, then approve, reject or revoke it. The decision is stored in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md).
 9. **Let Engineering deploy the approval.** Engineering uses the controls beneath [`finalize_pipeline()`](api/reference/finalize_pipeline.md) to deploy the exact approved snapshot as a separate Governed notebook, then explicitly rebinds the Fabric schedule. Governance approval alone never creates or deploys a notebook.
@@ -69,14 +72,13 @@ An independently activated table contract protects that Table ID and physical de
 | Table and columns | Stable table identity, observed columns, data types and required/optional presence | Schema checks compare the real DataFrame with the frozen definition. |
 | Enrichment | Table and column descriptions plus governed classification | Supplies business context to reviewers and downstream consumers. |
 | Processing | Overwrite, Append All, Append New Only, SCD1 or SCD2, including required watermark and key parameters | The proposed Engineering operation must agree with the selected contract. |
-| Profiling | Standard, Grain and Frequency profiling schedules | Controls when evidence is collected; it does not itself block the pipeline. |
-| Guardrails | Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
+| Guardrails | Schema, Grain, Freshness, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
 
-Each profiling activity independently supports `every`, `first` or `interval` with a positive number of days, and a `read`, `write` or `read_or_write` trigger. Successful completion history determines when it is next due. A failed attempt does not consume the interval.
+Engineering owns Standard, Grain discovery and Frequency execution through `setup_pipeline()`. See [Shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for defaults and scope. Data Contracts can be authored, frozen and activated without saved profiles; missing measurements display **Not yet profiled**. Profiling controls never enable, disable or weaken Guardrails.
 
 ??? info "Under the Hood — payload structure and profiling state"
 
-    The frozen payload contains `table`, `enrichment`, `guardrails` and `profiling`. Processing lives under `table.processing`; profiling remains separate from Guardrails and cannot enable, disable or change enforcement.
+    New frozen payloads contain `table`, `enrichment` and `guardrails`. Source Drift enablement, interval and blocking are Engineering notebook settings reviewed with Pipeline Activation/Promotion; historical Source Drift Contract rules have no execution authority and new versions omit them. Processing lives under `table.processing`. Historical frozen records retain their original bytes; any historical `profiling` object has no execution authority. Pipeline profiling settings are reviewed and retained in the approved notebook package. Bounded measurements are labelled as sampled and do not establish full-table uniqueness or counts.
 
     [`orchestrate_read()`](api/reference/orchestrate_read.md) and [`orchestrate_write()`](api/reference/orchestrate_write.md) call the profiling scheduler. Standard results are stored in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), and independent activity events in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) record when each table, workspace, physical destination, activity and trigger completed. Concurrent runs can both find profiling due, so duplicate snapshots are possible; only a successfully journaled completion advances the schedule.
 
@@ -87,8 +89,8 @@ FabricOps applies the checks at the boundary where the decision matters:
 | Boundary | Applicable protection |
 | --- | --- |
 | Read | Freshness, Schema, Grain and Data Quality against the source DataFrame |
-| Before Write | Target Schema, Sensitive Data treatment, Source Drift for contributing sources, target Grain and Data Quality |
-| After successful publication | Accepted checkpoints, Source Drift baselines, profiles, lineage and run evidence |
+| Before Write | Pipeline-owned Source Drift decision, then target Schema, Sensitive Data treatment, Grain and Data Quality |
+| After successful publication | Accepted incremental checkpoints, profiles, lineage and run evidence; Source Drift baselines wait for successful finalization |
 
 Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) records aggregate outcomes and whether execution can continue; full failing business rows are not automatically copied into governance storage.
 
@@ -100,10 +102,15 @@ Warn/Block is authored policy. [`METADATA_GUARDRAIL_RESULTS`](reference/metadata
 | Fabric AI Functions | Suggests descriptions, assessments and Data Quality rules |
 | FabricOps | Validates suggestions, stages changes and deterministically enforces approved Guardrails |
 
-AI is optional. **Open without AI** makes no AI requests and does not initialize AI Functions.
+AI is optional. **Open Data Contract** opens a manual-first editor without AI requests
+or AI Functions initialization. Sidebar navigation, column changes, Save, Discard,
+Review and Freeze also make no AI requests. Use contextual **Generate**, **Suggest**
+or **Re-run** to request one suggestion explicitly; each requested inference consumes
+Fabric AI capacity. Successful suggestions remain available during navigation until
+reviewed and accepted.
 Description, Grain and Row Key, Sensitive Data, Data Quality and all deterministic lifecycle
 and Guardrail controls remain available. `GOVERNANCE_CONFIG.ai_enrichment.enabled=False`
-disables AI actions. Opening the selector never invokes AI. See the
+disables AI actions. AI Settings and usage reporting remain accessible from the sidebar. See the
 [configuration exercise](guided-demo/03-author-and-freeze-data-contract.md#choose-the-ai-settings-or-author-manually).
 
 ??? info "Built-in models, reasoning, billing and usage monitoring"
@@ -149,7 +156,7 @@ disables AI actions. Opening the selector never invokes AI. See the
 
 ### Sensitive data decisions { #sensitive-data-discovery-classification-and-treatment }
 
-![AI-assisted Direct and Indirect PII review and treatment](assets/AiDatacontract.png){ .fabricops-section-evidence }
+![Sensitive Data governance from classification to deterministic treatment](assets/sensitive-data-governance.svg){ .fabricops-section-evidence }
 
 Governance can classify a column as Direct PII, Indirect PII or Not PII, choose **Mask**, **Bucket**, **Tokenize** or **Remove**, and record the post-treatment information classification. AI can suggest from governed schema and bounded profile evidence; a person reviews the decision. Runtime treatment is deterministic and does not call AI.
 
@@ -163,7 +170,7 @@ Governance can classify a column as Direct PII, Indirect PII or Not PII, choose 
 
 ### Business rules and Data Quality
 
-![Natural-language business rules converted into reviewable Data Quality rules](assets/BusinessRuletoDQ.png){ .fabricops-section-evidence }
+![Business rules become approved deterministic Data Quality checks](assets/business-rules-data-quality.svg){ .fabricops-section-evidence }
 
 Governance can author supported Data Quality rules directly or ask AI to translate a business requirement into explicit proposals. A person reviews every proposal. Approved rules run deterministically through internal [`check_dq()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L13); AI is not involved during pipeline execution.
 
@@ -181,7 +188,7 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | --- | --- | --- |
 | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
 | [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
-| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing, profiling and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
+| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
 | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | Select one frozen Contract and applicable Agreement for one physical workspace/table | Reviewed activation history in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
 | [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review an exact saved Engineering submission and approve, reject or revoke it independently | Protected decision history and accepted package in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md); approval does not deploy |
 

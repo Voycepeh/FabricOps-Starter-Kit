@@ -92,7 +92,9 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 
 dict
     Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
-    write metrics, publication state and profiling outcome. Dry Run returns
+    write metrics, publication state and profiling outcome. Per-source
+    Source Drift results remain under ``source_drift_results``; the independent
+    pipeline decision is under ``source_drift_decision``. Dry Run returns
     processing diagnostics without publication; persistent modes return the
     actual publication outcome. The DataFrame includes Sensitive Data treatment,
     row hash and target audit columns, plus SCD2 lifecycle columns where applicable.
@@ -126,10 +128,19 @@ available. The result includes publication metrics and Guardrail diagnostics.
 A successful Write does not imply successful completion of the notebook.
 
 Dry Run profiles the prepared DataFrame in memory without publishing the target.
-Persistent modes profile the complete target after successful publication.
-Frozen profiling policies apply when a contract is selected; Dry Run observations
+Persistent modes profile the physical target after successful publication,
+bounded only by setup_pipeline(profiling_max_rows=...).
+Pipeline-owned settings apply independently of selected Contracts; Dry Run observations
 do not consume persisted schedules. Guardrail checks run regardless
 of profiling eligibility.
+
+When statistical profiling completes, the operation summary is followed by a
+readable profile table even with ``verbose=False``. Native Fabric display has
+a text fallback; the preview shows at most 100 columns and 120 characters per
+text cell. Complete-table, bounded-selection and Dry Run scopes are labelled.
+Skipped or not-due profiling shows no historical results. Presentation reuses
+current aggregates and cannot fail a successful operation. ``verbose=True``
+adds operational diagnostics. Returned profiling structures are unchanged.
 
 </div>
 
@@ -140,9 +151,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:29`
+`fabricops_kit/pipeline/orchestrate_write.py:30`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L272">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L284">View on GitHub</a>
 </div>
 
 
@@ -158,7 +169,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 258 |
+| Live-critical dependencies | 257 |
 
 ### Release history
 
@@ -168,6 +179,7 @@ No related guides documented.
 | Live | 0.3.0 |
 | Live | 0.3.1 |
 | Live | 0.4.0 |
+| Live | 0.4.1 |
 
 ### Live-critical dependencies
 
@@ -267,7 +279,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
-<li><code>fabricops_kit.pipeline.check_source_drift.check_source_drift</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._physical_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
@@ -303,6 +314,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
@@ -321,9 +333,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
-<li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
-<li><code>fabricops_kit.pipeline.shared._previous_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
@@ -332,7 +342,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._read_pipeline_run_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared._record_source_drift_result</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_frequency_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
@@ -352,7 +362,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
-<li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_frequency_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_percentile_query</code></li>
@@ -368,23 +377,21 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.capture_profile_presentation</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_sensitive_data_rules</code></li>
-<li><code>fabricops_kit.pipeline.shared.check_source_drift_for_target</code></li>
 <li><code>fabricops_kit.pipeline.shared.commit_pipeline_write_success</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.contract_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.default_profiling_policy</code></li>
+<li><code>fabricops_kit.pipeline.shared.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
-<li><code>fabricops_kit.pipeline.shared.evaluate_source_drift_guardrail</code></li>
+<li><code>fabricops_kit.pipeline.shared.evaluate_pipeline_source_drift</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_lakehouse_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.get_current_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
@@ -395,6 +402,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
@@ -403,6 +411,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>
+<li><code>fabricops_kit.pipeline.shared.record_pipeline_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared.record_profiling_outcome</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
@@ -418,15 +427,17 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.skip_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.snapshot_pipeline_write_observations</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_drift_requires_intervention</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_guardrail_results</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_target_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>

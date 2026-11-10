@@ -54,9 +54,9 @@ retry handling. An uncertain target commit must be reconciled, not replayed.
 | `METADATA_DATA_LINEAGE` | Retry workspace/lineage-ID MERGE. |
 | `METADATA_GUARDRAIL_RESULTS` | Retry canonical Metadata append of aggregate results. |
 | `METADATA_DATA_ACCESS` | Retry canonical Metadata append of scanner observations. |
-| `METADATA_DATA_STEWARD` | Retry canonical Metadata append from authoring widgets. |
-| `METADATA_DATA_AGREEMENT` | Retry canonical Metadata append of authored versions. |
-| `METADATA_DATA_CONTRACT` | Retry authored-version append and conditional draft-save/freeze MERGEs; frozen versions remain immutable. |
+| `METADATA_DATA_STEWARD` | Retry canonical Metadata append from authoring widgets, including configured Steward table aliases. |
+| `METADATA_DATA_AGREEMENT` | Retry canonical Metadata append of authored versions, including configured Agreement table aliases. |
+| `METADATA_DATA_CONTRACT` | Retry authored-version append, including alternate authoring stores, and conditional draft-save/freeze MERGEs; frozen versions remain immutable. |
 | `METADATA_DATA_CONTRACT_ACTIVATION` | Retry a fresh Serializable transaction and recheck expected activation identity. |
 | `METADATA_PIPELINE_ACTIVATION` | Retry a fresh Serializable submission/decision transaction and recheck exact expected review revision. |
 | `METADATA_PIPELINE_REGISTRY` | Retry a fresh Serializable promotion transaction and recheck expected active version. |
@@ -66,10 +66,34 @@ an exact canonical table name. Arbitrary business-table append/overwrite calls
 retain their existing single-attempt behavior. Metadata setup/schema evolution
 remains a maintenance task; it must complete before concurrent pipeline execution.
 
+### Configured authoring destinations
+
+The generic Lakehouse writer recognizes canonical names only in the `Metadata`
+store. The widget and Data Contract owners also guard their known metadata appends
+when using configured Steward/Agreement table aliases or an alternate Contract
+authoring store. The row, typed DataFrame, audit values and destination are prepared
+once; only the append is retried. Draft discovery and version selection are not
+replayed. Canonical writes continue to use the generic writer's single 32-attempt
+budget, without a second nested retry loop.
+
+### Maintenance and non-runtime writes
+
+The runtime retry policy does not make every possible write to a Metadata
+Lakehouse safe to replay. Empty table creation uses error-if-exists semantics;
+JSON schema migration pins and tracks the whole-table read and commits schema
+and replacement files atomically, rejecting concurrent changes rather than
+overwriting them. Schema/protocol conflicts are not retryable runtime errors.
+Run setup and upgrades before starting pipelines. Arbitrary direct overwrites
+remain caller-owned operations, outside the runtime metadata writer paths.
+
 ## Verification and Fabric acceptance
 
 Local tests exercise structured conflict classification, retry exhaustion,
 non-retryable failures, all canonical append routes and business-write isolation.
+Configured authoring-destination tests exercise transient conflicts, exact
+32-attempt exhaustion, permission failures and unknown commit outcomes through
+the physical write boundary. They verify that retries preserve the same prepared
+DataFrame and do not repeat draft reads, audit generation or version selection.
 Real Delta tests exercise Run/stale-state/lost-acknowledgement behavior and shared
 Run, Catalogue, profiling, Frequency, Lineage and Processing State records at
 5/10/20 simultaneous workspace identities. Governance tests preserve stale-review

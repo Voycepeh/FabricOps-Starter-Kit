@@ -1,0 +1,18 @@
+/* Generated from design/brand.json by scripts/sync_brand_tokens.py. Do not edit by hand. */
+:root {
+  --fabricops-blue: #2563EB;
+  --fabricops-blue-deep: #1D4ED8;
+  --fabricops-purple: #7C3AED;
+  --fabricops-purple-deep: #6D28D9;
+  --fabricops-ink: #19243A;
+  --fabricops-muted: #52627A;
+  --fabricops-canvas: #FFFFFF;
+  --fabricops-surface: #F6F8FF;
+  --fabricops-border: #DDE3F3;
+  --fabricops-success: #15803D;
+  --fabricops-warning: #B45309;
+  --fabricops-danger: #B91C1C;
+  --fabricops-brand-gradient: linear-gradient(110deg, #2563EB, #7C3AED);
+  --fabricops-font-ui: "Segoe UI", Arial, sans-serif;
+  --fabricops-font-code: "Cascadia Code", Consolas, monospace;
+}

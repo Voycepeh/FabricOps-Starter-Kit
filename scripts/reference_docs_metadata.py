@@ -118,7 +118,7 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column "
-    "containing authored Guardrails, Enrichment and profiling policies for each contract version."
+    "containing authored Guardrails and Enrichment for each contract version; profiling is configured by setup_pipeline."
 )
 
 METADATA_TABLE_MODELS = {
@@ -192,7 +192,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT": {
         "purpose": "Defines one global immutable table contract history. Workspace observations supply authoring evidence; workspace activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table.",
-        "implementation_notes": "Reusable immutable frozen table definition with Enrichment, executable Guardrails and independent profiling policies. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
+        "implementation_notes": "Reusable immutable frozen table definition with Enrichment and executable Guardrails. Engineering owns profiling through setup_pipeline. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [],
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
@@ -210,7 +210,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PROCESSING_STATE": {
         "purpose": "Stores source observations, accepted checkpoints, Source Drift baselines and publication receipts so pipelines can resume and recover processing safely.",
         "grain": "One source snapshot partition/header, source-to-target progress member, or exact target publication receipt.",
-        "implementation_notes": "record_type distinguishes source_observation, incremental_checkpoint, drift_baseline, full_source_baseline and publication_receipt. Pipeline-level full observation ignores incremental predicates; full_source_baseline records are accepted only after verified target publication. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.",
+        "implementation_notes": "Stores incremental source observations/checkpoints and target publication receipts, plus pipeline-owned complete-source snapshots. source_snapshot manifests and source_row_evidence hash multiplicities are immutable; source_drift_baseline heads are shared by execution workspace and physical workspace/item/table. source_snapshot_acceptance retains successful history. Source Drift heads advance together only after confirmed whole-run finalization and verified required publications through a Serializable conditional transaction. Historical drift_baseline and full_source_baseline records are retained without new Contract authority. Hash rows stay distributed and are excluded before compact checkpoint history is collected.",
         "primary_key": ["record_id"],
 
         "foreign_keys": [
@@ -525,7 +525,9 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
             "fabricops_kit.pipeline.check_schema.check_schema",
             "fabricops_kit.pipeline.check_freshness.check_freshness",
-            "fabricops_kit.pipeline.check_source_drift.check_source_drift",
+            "fabricops_kit.pipeline.shared.observe_full_source",
+            "fabricops_kit.pipeline.shared.evaluate_pipeline_source_drift",
+            "fabricops_kit.pipeline.shared.accept_pipeline_source_snapshots",
             "fabricops_kit.pipeline.check_dq.check_dq",
             "fabricops_kit.pipeline.shared.write_guardrail_result_row",
             "fabricops_kit.pipeline.shared.check_dq_runtime",
@@ -939,7 +941,7 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Source read capability',
  'use_when': 'Use for an explicit full source read or a target-aware incremental source read.',
  'do_not_use_when': 'Use orchestrate_read for the standard governed Read lifecycle, including Guardrails; use foundational file readers for raw Lakehouse Files.',
- 'parameters': 'Canonical source table_id or configured store, schema, and table_name; explicit read_mode; target_table_id required for incremental mode; optional full-read Warehouse query.',
+ 'parameters': 'Canonical source table_id or configured store, schema, and table_name; explicit read_mode; target_table_id required for incremental mode; optional full-read Spark SQL on a Lakehouse or T-SQL on a Warehouse.',
  'returns': 'DataFrame, canonical source table_id, read mode, custom-query and contract signals, has_data/should_process, and a compact resolved scope summary.',
  'side_effects': 'Captures current Source Observation state for governed full reads and stages target-specific incremental state; accepted progress advances only after successful target publication.',
  'preferred_example': 'source = pipeline_read(store="Bronze", schema="demo", table_name="orders")',
@@ -1770,6 +1772,21 @@ PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipe
     'template_notebook': '02_pipeline', 'template_segment': 'Finalize Pipeline',
     'related_functions': ['setup_pipeline', 'orchestrate_read', 'orchestrate_write'],
     'use_when': 'Call after all Reads, transformations and Writes, including read-only runs.'})
+
+PUBLIC_SYMBOL_DOCS.append({
+    'kind': 'function', 'module': 'config.orchestrate_demo_reset',
+    'function_type': 'callable', 'symbol_name': 'orchestrate_demo_reset',
+    'summary_override': 'Preview or reset the dedicated Guided Demo to Day 1.',
+    'template_notebook': '00C_demo_setup', 'template_segment': 'Reset demo',
+    'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
+    'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
+    'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.',
+    'side_effects': 'With reset=True, clears all 14 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
+    'fabric_context': 'Requires successful setup_notebook, a manually created schema-enabled demo_metadata Lakehouse and configured Bronze/Silver/Gold stores with uploaded Files/demo fixtures.',
+    'preferred_example': 'from fabricops_kit import setup_notebook, orchestrate_demo_reset\n\ncontext = setup_notebook()\nRESET_DEMO = False\norchestrate_demo_reset(reset=RESET_DEMO)',
+    'related_functions': ['setup_notebook', 'setup_metadata_tables'],
+    'related_guides': [{'title': 'Prepare and reset the demo', 'path': '../../guided-demo/00C-prepare-demo-data-with-fabricops-io.md'}],
+})
 
 for _row in PUBLIC_SYMBOL_DOCS:
     _update = FOCUSED_FUNCTION_DOC_UPDATES.get(_row.get("symbol_name"))

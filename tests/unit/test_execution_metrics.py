@@ -123,7 +123,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"target": None}))
     frame = SimpleNamespace(columns=["id", "value"])
     with ExitStack() as stack:
-        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
+        for name in ("resolve_table_id", "check_schema", "evaluate_pipeline_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
         stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append_all", "append_new_only", "overwrite"} else None}}))
@@ -170,7 +170,7 @@ def test_write_summary_uses_data_engineering_load_status(
         "write_metrics": {"rows_committed": 0},
     }
     with ExitStack() as stack:
-        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
+        for name in ("resolve_table_id", "check_schema", "evaluate_pipeline_source_drift", "check_dq"):
             stack.enter_context(
                 patch.object(
                     module, name,
@@ -395,3 +395,22 @@ def isolated_operation_journal(monkeypatch):
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
                             lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
+
+
+@pytest.mark.parametrize("verbose", [True, False])
+def test_summary_groups_numeric_values_without_changing_fields(verbose, capsys):
+    from decimal import Decimal
+
+    fields = [("Rows loaded", 333298), ("Columns", 1234),
+              ("Metric", Decimal("12345.670")), ("Change", -1234.5),
+              ("Zero", 0), ("Missing", None), ("Target", "Table123456"),
+              ("Flag", True)]
+    with patch("fabricops_kit.pipeline.shared.time.perf_counter", side_effect=[0, 1]):
+        summary = ExecutionSummary("WRITE", verbose=verbose)
+        summary.details(fields)
+        summary.finish(fields)
+    output = capsys.readouterr().out
+    for expected in ["333,298", "1,234", "12,345.670", "-1,234.5", "Not captured", "Table123456", "True"]:
+        assert expected in output
+    assert fields[0][1] == 333298
+    assert "00:00:01" in output

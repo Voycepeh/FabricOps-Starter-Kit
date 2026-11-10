@@ -38,7 +38,7 @@ print(json.dumps(metadata_table_schema_rows(metadata_table_schema_registry()['ME
     assert types['scheduled_refresh_json'] == (
         'struct<status:string,schedules:array<struct<enabled:boolean,frequency:string,times:array<string>,timezone:string>>>')
     assert types['profile_key_candidates_json'] == (
-        'struct<status:string,max_combination_width:int,candidates:array<struct<columns:array<string>,'
+        'struct<status:string,profile_scope:string,profiling_max_rows:bigint,max_combination_width:int,candidates:array<struct<columns:array<string>,'
         'column_count:int,row_count:bigint,distinct_count:bigint,uniqueness_percent:double,null_count:bigint>>>')
 
 

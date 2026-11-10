@@ -132,7 +132,8 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
         assert after['load_strategy_parameters_json'] == {name: params.get(name) for name in
             ('watermark_column', 'key_columns', 'effective_column', 'tracked_columns')}
         assert after['scheduled_refresh_json'] == SCHEDULE
-        assert after['profile_key_candidates_json'] == json.loads(rows[index]['profile_key_candidates_json'])
+        assert after['profile_key_candidates_json'] == {**json.loads(rows[index]['profile_key_candidates_json']),
+            'profile_scope': None, 'profiling_max_rows': None}
     new_detail = DeltaTable.forPath(rt.spark, rt.path).detail().first().asDict()
     assert new_detail['id'] == detail['id'] and new_detail['properties'] == detail['properties']
     assert rt.read().schema['extension'].metadata == {'comment': 'keep'}
@@ -162,9 +163,9 @@ def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
     rows = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in frame.collect()}
     for i in range(4):
         assert rows[str(i)]['profile_key_candidates_json'] is None
-    assert rows['4']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': None}
-    assert rows['5']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': []}
-    assert rows['6']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': [CANDIDATE]}
+    assert rows['4']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': None}
+    assert rows['5']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': []}
+    assert rows['6']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': [CANDIDATE]}
     assert rows['7']['profile_key_candidates_json']['status'] == 'not_evaluated'
     assert rows['8']['profile_key_candidates_json']['status'] == 'unresolved'
     assert all(r['load_strategy_parameters_json']['key_columns'] == [] for r in rows.values())
@@ -289,11 +290,10 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
         assert rt.read().schema['load_strategy_parameters_json'].dataType.simpleString().startswith('struct<')
 
 
-def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue_delta, monkeypatch):
+def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgrade(catalogue_delta, monkeypatch):
     """Production writers and processing resolution use persisted structs directly."""
     from fabricops_kit.pipeline import shared
     write = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
-    drift = importlib.import_module('fabricops_kit.pipeline.check_source_drift')
     rt = catalogue_delta
     original_row = rt.row(load_strategy_parameters_json='{}', extension='keep')
     rt.seed([original_row])
@@ -327,18 +327,10 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json'] == profile_row['profile_key_candidates_json']
-    seen = []
-    monkeypatch.setattr(drift, 'resolve_pipeline_data_contract', lambda *a, **kw: {'contract_id': 'contract'})
-    monkeypatch.setattr(drift, 'resolve_catalogue_table_identity', lambda *a, **kw: decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True)))
-    def processing(*args, **kwargs):
-        value = shared.validated_processing(kwargs['authored_processing'])
-        seen.append(value)
-        return value
-    monkeypatch.setattr(drift, 'resolve_table_processing_definition', processing)
-    monkeypatch.setattr(drift, 'check_source_drift_for_target', lambda **kw: {'can_continue': True})
-    assert call_with_spark(rt.spark, drift.check_source_drift, 'table', target_table_id='table',
-                                    verbose=False, context=context)['can_continue']
-    assert seen == [{'load_strategy': 'scd2', **parameters}]
+    from types import SimpleNamespace
+    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: current)
+    plan = SimpleNamespace(contracts_json='{}', workspace_id='dev')
+    assert shared._source_snapshot_keys(identity, {**context, 'execution_plan': plan}) == ['tenant', 'id']
 
 
 # Reuse the actual widget hydration fixture; only Fabric UI/backend routing is mocked.

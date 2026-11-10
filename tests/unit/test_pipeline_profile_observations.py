@@ -9,7 +9,8 @@ from fabricops_kit.pipeline import shared
 from tests.unit.test_pipeline_session import runtime  # noqa: F401
 
 
-def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(runtime, spark_session, monkeypatch):
+@pytest.mark.parametrize("max_rows", [None, 1])
+def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(runtime, spark_session, monkeypatch, max_rows):
     """Use real aggregates and distributions; only runtime and metadata transport are mocked."""
     source = spark_session.createDataFrame([(1, 'private'), (2, 'private'), (3, 'private')], ['id', 'secret'])
     prepared = spark_session.createDataFrame([(10, 'masked'), (20, 'masked')], ['id', 'secret'])
@@ -28,7 +29,7 @@ def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(r
     monkeypatch.setattr(shared, 'execute_table_profile', calculate)
     published = []
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', lambda plan, row, **kw: published.append(row))
-    session = setup_pipeline(pipeline_mode="Dry Run")
+    session = setup_pipeline(pipeline_mode="Dry Run", grain_discovery_enabled=True, frequency_enabled=True, profiling_max_rows=max_rows)
     read = orchestrate_read(store='Bronze', schema='demo', table_name='source')
     write = orchestrate_write(source, store='Silver', schema='demo', table_name='target', write_mode='overwrite')
     assert not write['published'] and write['dataframe'] is prepared
@@ -40,13 +41,17 @@ def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(r
     for result, count in ((read, 3), (write, 2)):
         profile = result['profile_result']
         assert {'profile', 'frequency_profile', 'activities', 'row_count'} <= profile.keys()
-        assert profile['row_count'] == count
+        assert profile['row_count'] == (count if max_rows is None else None)
+        assert profile['profiled_row_count'] == (count if max_rows is None else 1)
         assert profile['activities']['grain']['frequency_profile'] is None
         assert profile['activities']['frequency']['grain_candidates'] == []
     stats = {row.COLUMN_NAME: row for row in write['profile_result']['profile'].collect()}
-    assert stats['id'].MIN_VALUE == '10' and stats['id'].MAX_VALUE == '20'
+    assert stats['id'].MIN_VALUE == '10' and stats['id'].MAX_VALUE == ('20' if max_rows is None else '10')
     assert stats['secret'].MIN_VALUE == 'masked'
-    assert {row.VALUE for row in write['profile_result']['frequency_profile'].collect()} == {'masked'}
+    if max_rows is None:
+        assert {row.VALUE for row in write['profile_result']['frequency_profile'].collect()} == {'masked'}
+    else:
+        assert write['profile_result']['frequency_profile'] is None  # 100% distinct in one selected row.
     assert 'profile_observations' not in session.plan.evidence
     save = Mock(return_value={})
     monkeypatch.setattr(shared, '_persist_profile_observation', save)
@@ -62,7 +67,7 @@ def test_read_and_prepared_write_profile_once_then_finalize_without_rescanning(r
 @pytest.mark.parametrize('failed', [False, True])
 def test_failed_or_incomplete_close_discards_pending_observations(runtime, monkeypatch, failed):
     """An interrupted run cannot retain or publish pending value-bearing aggregates."""
-    session = setup_pipeline(pipeline_mode="Dry Run")
+    session = setup_pipeline(pipeline_mode="Dry Run", grain_discovery_enabled=True, frequency_enabled=True)
     session.plan.evidence['profile_observations'] = [object()]
     save = Mock(side_effect=AssertionError('must not publish unsuccessful observations'))
     monkeypatch.setattr(shared, '_persist_profile_observation', save)
@@ -76,7 +81,7 @@ def test_failed_or_incomplete_close_discards_pending_observations(runtime, monke
 
 def test_dry_run_finalization_never_publishes_profile_observations(runtime, monkeypatch):
     """Dry Run profile observations remain session-only."""
-    session = setup_pipeline(pipeline_mode="Dry Run")
+    session = setup_pipeline(pipeline_mode="Dry Run", grain_discovery_enabled=True, frequency_enabled=True)
     orchestrate_read(store='Bronze', schema='demo', table_name='source')
     session.plan.evidence['profile_observations'] = [{'profile_snapshot_id': 'stable-profile-id'}]
     save = Mock(side_effect=PermissionError('metadata unavailable'))
@@ -96,7 +101,7 @@ def test_dry_run_finalization_never_publishes_profile_observations(runtime, monk
 @pytest.mark.parametrize('query', [None, 'SELECT id FROM demo.source'])
 def test_test_read_reuses_only_the_unfiltered_source(runtime, monkeypatch, query):
     """A projected query must still profile the complete physical table."""
-    setup_pipeline(pipeline_mode="Dry Run")
+    setup_pipeline(pipeline_mode="Dry Run", grain_discovery_enabled=True, frequency_enabled=True)
     profile = Mock(return_value={'row_count': 2})
     monkeypatch.setattr(runtime.read, 'schedule_table_profiling', profile)
     result = orchestrate_read(store='Bronze', schema='demo', table_name='source', query=query)
@@ -104,3 +109,23 @@ def test_test_read_reuses_only_the_unfiltered_source(runtime, monkeypatch, query
         assert profile.call_args.kwargs['dataframe'] is result['dataframe']
     else:
         assert 'dataframe' not in profile.call_args.kwargs
+
+
+def test_disabled_bounded_profiling_does_not_disable_or_sample_guardrails(runtime, monkeypatch):
+    """Read boundary checks receive the original input even with a profiling bound."""
+    setup_pipeline(pipeline_mode='Dry Run', profiling_enabled=False, profiling_max_rows=1)
+    monkeypatch.setattr(runtime.read, 'pipeline_guardrail_types', lambda *a: {'schema', 'grain', 'data_quality'})
+    monkeypatch.setattr(runtime.read, 'schedule_table_profiling', shared.schedule_table_profiling)
+    monkeypatch.setattr(shared, 'profiling_completion_history', lambda *a, **kw: {})
+    calculate = Mock(side_effect=AssertionError('profiling disabled'))
+    monkeypatch.setattr(shared, 'execute_table_profile', calculate)
+    checks = []
+    for name in ('check_schema', 'check_grain', 'check_dq'):
+        check = Mock(return_value={'status': 'passed', 'can_continue': True, 'checks': []})
+        monkeypatch.setattr(runtime.read, name, check)
+        checks.append(check)
+    result = orchestrate_read(store='Bronze', schema='demo', table_name='source')
+    assert result['dataframe'] is runtime.frame
+    for check in checks:
+        assert check.call_args.args[0] is runtime.frame
+    calculate.assert_not_called()

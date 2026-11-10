@@ -73,7 +73,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
         },
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
-        "profiling": {**service.default_profiling_policy(), "grain": {"frequency": "every", "trigger": "write"}},
+        "profiling": {"grain": {"frequency": "every", "trigger": "write"}},
     }
     frozen = {
         "contract_id": lifecycle_id, "contract_version": 1, "table_id": "orders",
@@ -102,7 +102,7 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     )
     inherited_payload = json.loads(inherited["contract_payload_json"])
     assert "scheduled_refresh" not in inherited_payload["table"]
-    assert inherited_payload["profiling"] == previous_payload["profiling"]
+    assert "profiling" not in inherited_payload
     assert json.loads(frozen["contract_payload_json"]) == previous_payload
     assert inherited["contract_version"] == 2
     assert inherited_payload["table"]["processing"] == {
@@ -270,7 +270,7 @@ def test_canonical_enrichment_state_removes_non_descriptive_rows():
     assert [row["enrichment_type"] for row in service.canonical_enrichment_state(rows)] == ["Description", "Classification"]
 
 
-@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "source_drift", "data_quality"])
+@pytest.mark.parametrize("guardrail_type", ["schema", "freshness", "data_quality"])
 @pytest.mark.parametrize("action", ["Warn", "Block"])
 def test_guardrail_service_normalizes_all_supported_types_and_actions(
     monkeypatch, guardrail_type, action
@@ -596,9 +596,9 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
     assert rule["action"] == "Warn"
 
 
-def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
-    """Profiling shares contract immutability without editing enforcement."""
-    policy = service.default_profiling_policy()
+def test_new_freeze_omits_profiling_and_preserves_historical_record():
+    """Historical profiling settings do not enter newly frozen governance definitions."""
+    policy = {}
     policy['standard'] = {'frequency': 'interval', 'days': 7, 'trigger': 'write'}
     payload = {'contract': {'contract_id': 'c', 'contract_version': 2, 'status': 'draft'},
                'table': {'table_id': 'orders', 'processing': {'load_strategy': 'append_all'}, 'columns': []},
@@ -607,12 +607,64 @@ def test_profiling_policy_freezes_exactly_and_cannot_be_saved_when_frozen():
              'contract_payload_json': json.dumps(payload)}
     frozen = service.freeze_contract_record(draft=draft, audit={})
     saved = json.loads(frozen['contract_payload_json'])
-    assert saved['profiling'] == policy and saved['guardrails'] == []
+    assert 'profiling' not in saved and saved['guardrails'] == []
     assert draft['status'] == 'draft' and json.loads(draft['contract_payload_json']) == payload
     with pytest.raises(ValueError, match='Only a draft'):
         service.save_contract_draft(draft=frozen, payload=payload, config={}, active_workspace_id='dev', spark_session=None)
     with pytest.raises(ValueError, match='Only a draft'):
         service.freeze_contract_record(draft=frozen, audit={})
     payload['profiling']['standard']['days'] = 0
-    with pytest.raises(ValueError, match='positive integer'):
-        service.validate_contract_definitions(payload)
+    service.validate_contract_definitions(payload)
+    assert json.loads(draft['contract_payload_json'])['profiling']['standard']['days'] == 7
+
+
+def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
+    """A wide table needs one read per metadata table, including older column snapshots."""
+    profiles = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
+                 "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                 "_committed_at": "2026-09-26T01:00:00Z", "row_count": 10}
+                for index in range(60)]
+    profiles.append({**profiles[0], "profile_id": "failed", "status": "failed",
+                     "_committed_at": "2026-09-27T01:00:00Z"})
+    frequency = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
+                  "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                  "value": f"v-{rank}", "frequency_count": 10 - rank,
+                  "frequency_rank": rank, "frequency_percent": 10}
+                 for index in range(60) for rank in (4, 2, 1, 3)]
+    frequency.extend([{**frequency[0], "workspace_id": "other", "value": "foreign"},
+                      {**frequency[0], "profile_id": "old", "profile_snapshot_id": "old", "value": "old"}])
+    reads = []
+    def read(name, **_kwargs):
+        reads.append(name)
+        return {"METADATA_DATA_PROFILED": profiles,
+                "METADATA_DATA_PROFILED_FREQUENCY": frequency,
+                "METADATA_DATA_LINEAGE": []}[name]
+    monkeypatch.setattr(service, "read_lakehouse_table", read)
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+    kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
+    bulk = service.get_table_runtime_context(**kwargs)["profile_contexts"]
+    assert len(reads) == 3
+    assert len(bulk) == 60
+    for column_id, context in bulk.items():
+        assert context == service.get_column_profile_context(column_id=column_id, **kwargs)
+        assert [row["value"] for row in context["values"]] == ["v-1", "v-2", "v-3"]
+
+
+def test_historical_source_drift_is_retained_but_not_inherited_or_authorable(monkeypatch):
+    """Frozen bytes survive while new freezes omit retired Contract execution policy."""
+    historical_rule = {'guardrail_type': 'source_drift', 'rule_parameters': {'partition_column': 'day'},
+        'guardrail_rule_id': 'old', 'guardrail_version': 1, 'action': 'Block', 'is_active': True}
+    payload = {'contract': {'contract_id': 'c', 'contract_version': 2, 'status': 'draft'},
+        'table': {'table_id': 'orders', 'processing': {'load_strategy': 'append_all'}, 'columns': []},
+        'enrichment': {'table': [], 'columns': []}, 'guardrails': [historical_rule]}
+    original = json.dumps(payload)
+    draft = {'contract_id': 'c', 'contract_version': 2, 'table_id': 'orders', 'status': 'draft',
+        'contract_payload_json': original}
+    service.validate_contract_definitions(payload)
+    frozen = service.freeze_contract_record(draft=draft, audit={})
+    assert json.loads(frozen['contract_payload_json'])['guardrails'] == []
+    assert draft['contract_payload_json'] == original and payload['guardrails'] == [historical_rule]
+    monkeypatch.setattr(service, 'build_runtime_audit_fields', lambda **kw: {})
+    with pytest.raises(ValueError, match='guardrail_type must be'):
+        service.canonical_guardrail_rule_record({'contract_id': 'c', 'contract_version': 2,
+            'guardrail_type': 'source_drift'}, config={}, active_workspace_id='dev')

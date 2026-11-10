@@ -1,8 +1,6 @@
 # 0C. Prepare the demo data with FabricOps I/O
 
-### Before you begin
-
-Complete [Step 0B](00B-configure-environment-and-load-assets.md) before preparing the demo data.
+Start with [00B](00B-configure-environment-and-load-assets.md), including your manually created, schema-enabled **`demo_metadata`** Lakehouse and uploaded Bronze **`Files/demo`** fixtures. The logical store remains `Metadata`; use the existing configuration fields. The `00_env_config` template is unchanged.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -15,7 +13,7 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 </div>
 </div>
 
-1. If you havent done so , download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
+1. Download [`00C_demo_setup.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/DemoData/00C_demo_setup.ipynb) and import it into Fabric Engineering Workspace (Dev).
 
 2. Attach the same Fabric Environment used by the other notebooks.
 
@@ -23,9 +21,60 @@ Import the setup notebook and connect it to the configured Fabric Environment.
 
 ![File upload](../assets/00C/File%20Upload.png)
 
-### Load the shared 00_env_config notebook that is in the same workspace via our helper function (Or if you did want to point to a notebook in another workpace just pass the workpace id into the helper funciton)
+### Load the shared configuration
+
+Run `setup_notebook()` to load the existing `00_env_config`.
 
 ![Demo setup](../assets/00C/Demo%20Set%20Up.png)
+
+## Reset, rerun and validate a package
+
+**Run the reset cell before the file-reading examples.** Install/publish the package being validated, start fresh notebook sessions and confirm its version in `setup_notebook()` output.
+
+The notebook uses the public `orchestrate_demo_reset()` Preview API, with one switch:
+
+```python
+RESET_DEMO = False  # Preview only. Set True to reset the dedicated demo environment.
+
+from fabricops_kit import orchestrate_demo_reset
+
+orchestrate_demo_reset(reset=RESET_DEMO)
+```
+
+1. Run with `False` to inspect metadata counts. No data is changed.
+2. Stop all demo schedules and executions, including earlier promoted copies. Set `True` and run the cell to reset.
+3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate reads of the restored data.
+
+!!! warning "Dedicated demo environment only"
+
+    `True` deletes **all rows in the 14 metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores five Day 1 sources and removes six outputs. Stop demo jobs first. Never use shared or production assets.
+
+??? info "Checks before deletion and reset scope"
+
+    The orchestrator checks the configured and actual Metadata item name (`demo_metadata`), store separation, installed metadata schemas, exact demo table/workspace references, lifecycle artifact contents, active notebook jobs and all five fixture row counts. Unexpected references or unreadable evidence block deletion. A lakehouse name alone does not prove ownership: reserve this item and the eleven business tables exclusively for the walkthrough. Do not share it with production or unrelated projects.
+
+    All current metadata tables are cleared together, with dependent records before their parents; schemas remain in place. The orchestrator reports rows removed per table, including zero, and checks that tables and lifecycle artifact folders are empty afterward. Missing/incompatible metadata tables require the existing 00B metadata setup first; the orchestrator does not migrate schemas. If a future package changes the metadata inventory, the reset stops for review.
+
+    | Restore from Day 1 fixtures | Rows |
+    | --- | --- |
+    | Bronze `demo.orders` | 120 |
+    | Bronze `demo.products` | 8 |
+    | Gold `demo.order_history` | 180 |
+    | Bronze `demo.inventory_movements` | 8 |
+    | Bronze `demo.product_master_updates` | 8 |
+
+    | Remove output | Store |
+    | --- | --- |
+    | `demo.curated_orders` | Silver |
+    | `demo.customer_summary` | Gold |
+    | `demo.inventory_movements_append_all` | Silver |
+    | `demo.inventory_movements_append_new_only` | Silver |
+    | `demo.product_master_scd1` | Silver |
+    | `demo.product_master_scd2` | Silver |
+
+    The reset clears saved submissions, Dry Run evidence and notebook snapshots. Source files and other business tables are preserved. Deployed notebooks and schedules are not deleted; stop or retire old copies before restarting.
+
+    Verification compares full source content with the fixtures and checks all six outputs are absent. Missing outputs are OK. If preparation fails partway, fix the reported cause and rerun the same reset cell. Repeated resets return to the same Day 1 state. To retain old Contracts/history, use a separate demo environment instead of clearing this one.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -111,9 +160,9 @@ display(orders_csv_df)
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Write Orders table to the Bronze lakehouse
+## Read the restored Orders table
 
-Prepare the Orders baseline that feeds the Full Refresh demo.
+Inspect the Orders baseline restored by the reset cell.
 
 </div>
 </div>
@@ -124,9 +173,9 @@ Prepare the Orders baseline that feeds the Full Refresh demo.
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Read and Write Products table to the Bronze lakehouse 
+## Read the restored Products table
 
-Prepare the product records needed for the retail pipeline.
+Inspect the product records restored by the reset cell.
 
 </div>
 </div>
@@ -137,10 +186,9 @@ Prepare the product records needed for the retail pipeline.
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-dev.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Create the Warehouse schema, 
+## Check the Gold Warehouse schema
 
-Create the Warehouse schema required before the demo writes its summary.
-Do not skip this step ! Unlike lakehouse warehouse requires the schema to be created before you can write to it. 
+The reset cell uses the existing FabricOps Warehouse writer to create the `demo` schema when needed.
 
 </div>
 </div>
@@ -151,9 +199,9 @@ Do not skip this step ! Unlike lakehouse warehouse requires the schema to be cre
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Read and Write the Order history table to the Bronze Lakehouse
+## Read the restored Gold Order History
 
-Prepare the history source used for the governed retail reads.
+Inspect the restored history source with the existing Warehouse read helpers.
 
 </div>
 </div>
@@ -173,27 +221,25 @@ Prepare the history source used for the governed retail reads.
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-scanning.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Prepare Day 1 for Append and SCD Demos
+## Inspect Day 1 for Append and SCD Demos
 
-Initialize the Day 1 Bronze source tables for the Incremental Append vs Full Hash Append (02B) and SCD1/SCD2 (02C) demos.
+Inspect the Day 1 Bronze source tables for the Incremental Append vs Full Hash Append (02B) and SCD1/SCD2 (02C) demos.
 
 </div>
 </div>
 
-This step prepares two dedicated Bronze tables using the sample CSV files:
+The reset cell prepares these two Bronze sources:
 
 | Source file | Bronze table | Used by |
 |---|---|---|
-| `Demo/inventory_day1.csv` | `demo.inventory_movements` | 02B incremental/full append comparison |
-| `Demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
+| `demo/inventory_day1.csv` | `demo.inventory_movements` | 02B incremental/full append comparison |
+| `demo/products_day1.csv` | `demo.product_master_updates` | 02C SCD1/SCD2 |
 
-### Run the **5. Prepare Day 1 for append and SCD demos** block in `00C_demo_setup`.
+### Inspect the restored sources after `RESET COMPLETE`
 
 ![Step 5: Prepare Day 1 for append and SCD demos](../assets/00C/step5.png)
 
-The notebook reads each CSV file using `read_lakehouse_csv()` and writes it to the Bronze Lakehouse using `write_lakehouse_table()` with `mode="overwrite"`.
-
-This initializes the Day 1 source tables before the first execution of the 02B and 02C notebooks.
+The reset cell uses `read_lakehouse_csv()` and `write_lakehouse_table(mode="overwrite")`. The following inspection cells only read those tables.
 
 
 ### Expected result
@@ -210,5 +256,27 @@ bronze Lakehouse
 gold Warehouse
   demo.order_history
 ```
+
+## Execute the engineering regression
+
+After `RESET COMPLETE`, begin [Step 1](01-establish-governance-context.md), then follow Steps 2–7. Run these engineering scenarios in **Ungoverned** mode before Contract authoring. Do not run 00C between days.
+
+| Day | Execute in order | Expected persisted results |
+| --- | --- | --- |
+| 1 | 02A → 02B (`DEMO_DAY = 1`) → 02C (`DEMO_DAY = 1`) | 02A: 120 orders, 30 customers. 02B: 8 rows per target. 02C: 8 SCD1 rows, 8 SCD2 versions. |
+| 2 | 02B (`DEMO_DAY = 2`) → 02C (`DEMO_DAY = 2`) | 02B: 12 rows per target. 02C: 8 SCD1 rows, 9 SCD2 versions. |
+| 3 | 02B (`DEMO_DAY = 3`) → 02C (`DEMO_DAY = 3`) | 02B: both targets stay at 12. 02C: 8 SCD1 rows, 10 SCD2 versions; 8 current products. |
+
+Day 3 is supported: 02B stages no new file; 02C stages `demo/products_day3.csv`. Run each notebook from staging through Finalize; 02B finalizes two separate executions. The existing governed admission restrictions in Steps 5–6 still apply.
+
+## Validate outputs and metadata
+
+- [ ] Inspect persisted keys, values, hashes and history using the checks on [02A](02A-full-refresh-demo.md), [02B](02B-build-and-run-incremental-append-etl.md) and [02C](02C-build-and-run-scd-etl.md). Source content must remain intact after orchestration.
+- [ ] Inspect the dedicated Metadata Lakehouse: expect 10 finalized Pipeline Runs before replays (one 02A, six 02B, three 02C), with `ungoverned_completed` status, `execution_mode = ungoverned`, `boundary_completed = true` and completion times. Both 02B paths share a Pipeline ID but have distinct Run IDs.
+- [ ] Check exact source/target IDs in Run operations, Catalogue definitions, applicable profiles/frequencies and Lineage roles. Processing State checkpoints, baselines and committed receipts must link to the correct workspace, source, target and publication; failed/skipped publication must not advance progress.
+- [ ] Use the same Metadata item and fresh sessions for Contract authoring. Only this walkthrough's observations and saved submissions should be visible.
+- [ ] Replay each current day: 02A stays at 120/30; 02B adds no accepted movements/hashes; 02C keeps eight current products without duplicate unchanged versions. Then reset twice with `True`; both must print `RESET COMPLETE`.
+
+For another package baseline, stop demo jobs, install/publish the new wheel, start fresh sessions and repeat 00C → Steps 1–7. Record the package version, date, tester, Metadata item ID, reset summary and Run IDs. Fabric job checks, cross-workspace routing, Lakehouse catalog removal, Warehouse I/O and Governance gates require actual Fabric acceptance; local tests do not establish that result.
 
 **Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)

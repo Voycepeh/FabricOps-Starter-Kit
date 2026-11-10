@@ -2,7 +2,7 @@
 
 **Run the FabricOps operating model yourself in Microsoft Fabric, from initial setup through governed Production consumption.**
 
-`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. The seven numbered steps then walk you through the implementation.
+`00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. Use a dedicated, initially empty Metadata Lakehouse shared only by these demo workspaces. The seven numbered steps then walk you through the implementation. For a complete restart, stop demo jobs and run the single reset cell in 00C with `RESET_DEMO = True`; this clears the dedicated demo metadata and restores Day 1.
 
 !!! info "Want the conceptual operating model first?"
 
@@ -34,7 +34,7 @@ Start with <strong>0A–0C</strong> to prepare your Fabric environment, configur
 | Setup | What you do | Why it matters |
 | --- | --- | --- |
 | [0A. Prepare Fabric artifacts](guided-demo/00A-prepare-fabric-artifacts.md) | Create the workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
-| [0B. Load and configure the Guided Demo assets](guided-demo/00B-configure-environment-and-load-assets.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create the metadata tables, and upload the packaged demo files to Bronze `Files/Demo`. | Every notebook can resolve the configured Fabric stores and the raw demo assets are in place. |
+| [0B. Load and configure the Guided Demo assets](guided-demo/00B-configure-environment-and-load-assets.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create empty tables in the dedicated demo Metadata Lakehouse, and upload the packaged demo files to Bronze `Files/demo`. | Every notebook can resolve the configured Fabric stores and the raw demo assets are in place. |
 | [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
 <div class="fabricops-section-banner" markdown="1">

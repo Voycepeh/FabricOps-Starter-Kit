@@ -5,13 +5,15 @@ description: Design, polish, and visually verify FabricOps ipywidgets, including
 
 # FabricOps Widget UI
 
-Read [Frontend Design](../frontend-design/SKILL.md) first. Apply its design planning and screenshot critique to the existing Microsoft Fabric notebook product. Follow `AGENTS.md` and use [Public API Change](../fabricops-public-api-change/SKILL.md) for callable source changes.
+Read [Frontend Design](../frontend-design/SKILL.md) and [FabricOps Visual Design](../fabricops-visual-design/SKILL.md) first. Apply its design planning and screenshot critique to the existing Microsoft Fabric notebook product. Follow `AGENTS.md` and use [Public API Change](../fabricops-public-api-change/SKILL.md) for callable source changes.
 
 ## Brief and design direction
 
 The audience is data engineers and governance authors completing governed notebook workflows. Prioritize task clarity, stable form geometry, and readable data over decorative novelty. Keep native ipywidgets and Fabric-native DataFrame display. Do not replace the runtime with a web framework or require external fonts or assets.
 
 Before editing, inventory exported widgets and embedded notebook widget flows. Inspect shared composers, owner layouts, and relevant tests. Write a compact design plan covering tokens, typography, alignment, and expansion behavior. Critique it against the actual workflows before coding.
+
+Use the canonical semantic roles in `design/brand.json` as the design identity. Preserve native widget geometry, focus and light surfaces; module-specific pastel backgrounds may remain where they aid readability. The table below describes existing widget surface treatments, not a competing global brand palette:
 
 Use a restrained Fabric-inspired palette:
 

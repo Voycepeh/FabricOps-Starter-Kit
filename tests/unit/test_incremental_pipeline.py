@@ -463,7 +463,6 @@ def test_next_activity_recovers_staged_progress_from_materialized_target(monkeyp
         lambda records, **_kwargs: merged.extend(records),
     )
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     shared._INCREMENTAL_SOURCE_SCOPES.clear()
 
     scope_a = shared.resolve_incremental_source_scope(

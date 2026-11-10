@@ -7,7 +7,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 
 `table_id` connects the same governed asset across both schemas. `contract_id` and `contract_version` identify one exact Data Contract version.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails, Enrichment and profiling policies for each contract version.
+`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails and Enrichment for each contract version; profiling is configured by setup_pipeline.
 
 ## Metadata relationships
 

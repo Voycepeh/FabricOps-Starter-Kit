@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.shared import get_spark_session, retry_delta_metadata
 
 import json
 from typing import Any
@@ -23,6 +23,7 @@ from fabricops_kit.pipeline.shared import (
     validate_target_row_hash,
     catalogue_authored_processing,
     incremental_publication_scopes,
+    record_pipeline_publication,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
     resolve_table_processing_definition,
@@ -131,9 +132,8 @@ def _persist_target_processing(
         metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context={"config": config, "scope_workspace_id": active_workspace_id},
     )
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        target.alias("target")
+    retry_delta_metadata(lambda: (
+        DeltaTable.forPath(spark_session, path).alias("target")
         .merge(
             source.alias("source"),
             "target.workspace_id = source.workspace_id "
@@ -166,7 +166,7 @@ def _persist_target_processing(
         )
         .whenNotMatchedInsert(values={name: f"source.{name}" for name in row})
         .execute()
-    )
+    ))
 
 
 def _write_scope() -> dict[str, Any]:
@@ -658,6 +658,7 @@ def pipeline_write(
         if batch.input_rows == 0 and incremental_scopes and all(
             not value.get("has_data", True) for value in incremental_scopes.values()
         ):
+            record_pipeline_publication(target_table_id, "empty_incremental_scope", context=context)
             write_metrics.update(rows_committed=0, measurement_source="empty_incremental_scope")
             if verbose:
                 print("FabricOps Write → empty incremental scope; no publication or checkpoint commit")
@@ -667,11 +668,6 @@ def pipeline_write(
                     "dataframe": batch.transfer_caller_snapshot()}
         success_context["publication"] = batch.receipt
         success_context["publication_snapshot"] = batch.publication_snapshot
-        if batch.already_applied:
-            # Recovery accepts the original source membership, never a newer
-            # diagnostic full observation captured after that physical publication.
-            for captured in success_context["observation_snapshot"].values():
-                captured["full"] = []
         io_context["_fabricops_publication_receipt"] = batch.receipt
         if store_kind == "lakehouse" and strategy == "overwrite":
             physical_options["overwriteSchema"] = "true"
@@ -703,6 +699,7 @@ def pipeline_write(
             batch.filtered_dataframe = prepared_df
             output_rows = prepared_df.count()
             if output_rows == 0:
+                record_pipeline_publication(target_table_id, "no_unseen_hashes", context=context)
                 write_metrics.update(rows_committed=0, rows_inserted=0, measurement_source="no_unseen_hashes")
                 prepared_df = batch.materialize_caller_snapshot(prepared_df)
                 return {"table_id": target_table_id, "strategy": strategy, "published": False,
@@ -825,8 +822,6 @@ def pipeline_write(
             if store_kind == "lakehouse":
                 physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             success_context["publication_snapshot"] = batch.publication_snapshot
-            for captured in success_context["observation_snapshot"].values():
-                captured["full"] = []
             stage_pipeline_write_observations(success_context)
             write_metrics.update(rows_committed=0, measurement_source="already_applied")
             if strategy == "scd1":

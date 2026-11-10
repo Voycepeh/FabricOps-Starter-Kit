@@ -42,11 +42,20 @@ The selector and editor show the effective model, reasoning and verbosity before
 Stronger models and higher reasoning can increase consumption and latency; see
 [AI consumption and monitoring](../governance.md#optional-ai-authoring-and-consumption).
 
-To complete the entire exercise manually, choose **Open without AI**, or set
-`ai_enrichment.enabled=False` to disable all AI actions. This makes zero AI requests
-and does not initialize AI Functions. Author Description, Grain and Row Key, Sensitive Data
+Choose **Open Data Contract** to open the manual-first editor. Opening, switching
+sections or columns, and lifecycle actions make zero AI requests and do not initialize
+AI Functions. To disable all AI actions, set `ai_enrichment.enabled=False`. Author Description, Grain and Row Key, Sensitive Data
 and all nine Data Quality rule types manually, then use the same Save, Freeze and
-activation steps. AI suggestions always require explicit human review before addition.
+activation steps. Each contextual **Generate**, **Suggest** or **Re-run** requests only
+that suggestion and consumes Fabric AI capacity. Suggestions remain in the authoring
+session during navigation and require explicit human review before addition.
+
+Use the persistent left sidebar to switch between **Table**, **Columns**, **Data Quality**,
+**Review** and **AI Settings**. It shows the contract identity and collapsed Read/Write
+Guardrail summaries. **Save draft**, **Discard changes**, **Freeze** and **Exit** are in
+the same sidebar, together with action feedback. The main content scrolls independently;
+long column and rule lists retain bounded selection controls. Discard and Exit confirm
+unsaved changes; Freeze confirms and saves staged changes before freezing the version.
 
 ??? info "Inspect a failure from the widget you actually opened"
 
@@ -76,7 +85,7 @@ This walkthrough validates frozen contracts for every participating table in the
 
 | Pipeline role | Table | Guardrails exercised |
 | --- | --- | --- |
-| Source | `orders` | Freshness, Schema, Source Drift |
+| Source | `orders` | Freshness, Schema |
 | Source | `products` | Schema |
 | Source | `order_history` | Schema |
 | Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
@@ -92,7 +101,7 @@ widget_data_contract()
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
 
-For `orders`, enable **Freshness**, **Schema**, and **Source Drift**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Configure Source Drift for the source's normal overwrite behavior. Keep Freshness and Source Drift on **Warn** for the first integration run. Schema blocks missing Required columns and contracted datatype mismatches.
+For `orders`, enable **Freshness** and **Schema**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Keep Freshness on **Warn** for the first integration run. Engineering configures optional Source Drift in `setup_pipeline()`, independently of the Contract. Schema blocks missing Required columns and contracted datatype mismatches.
 
 For `products`, `order_history`, and the `customer_summary` target, a Schema rule is sufficient for this exercise. Their purpose is to make both source → target paths Guardrail-ready without inventing unrelated business rules.
 
@@ -117,7 +126,6 @@ Open **Table** and review:
 * Grain & Row Key — describe one row and select the actual table key: `order_id` for Orders/Curated Orders, `product_id` for Products, `historical_order_id` for Order History, and `customer_id` for Customer Summary. Leave **Enforce Grain** off for the main DQ exercise; Step 4 adds a focused Grain check separately.
 * Processing
 * Freshness, when applicable
-* Source Drift, when applicable
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
@@ -140,7 +148,7 @@ A composite key is unique as a combination. Any SQL null in any key component fa
 
     Grain does not read existing targets or simulate merges. Append, SCD1, and SCD2 can therefore produce a different table state from the checked input. Resulting-table uniqueness would require strategy-specific validation and concurrency handling beyond this change. Configure physical row Grain appropriately; a business key alone is not a unique physical row key for SCD2 history. Existing SCD processing still requires unique incoming business keys.
 
-The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Source Drift, Grain, Data Quality). Source Drift belongs to the source → consuming target relationship and runs during that target's Write orchestration. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
+The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Grain, Data Quality). Pipeline-owned Source Drift observes complete sources during Read and consolidates decisions before any Write. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
 
 Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. Use **Table**, **Column**, and **Data Quality** to author or edit settings, including unconfigured Guardrails. Disabled Grain remains visible with its disabled state; its description and key selection remain editable in **Grain & Row Key**. Summaries update as edits are staged, before Save.
 
@@ -247,9 +255,9 @@ Open **Review** and inspect the complete contract, including the DQ rules above,
 
 A saved draft keeps the schema captured when it was created. A new draft excludes columns removed from the latest workspace observation. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
 
-Choose **Save Data Contract** while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection, Processing, and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
+Choose **Save draft** in the sidebar while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection, Processing, and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Source contracts support five Guardrails: Schema, Grain, Freshness, Source Drift, and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data. `orchestrate_read` runs four checks (Freshness, Schema, Grain, Data Quality); `orchestrate_write` runs five (Schema, Sensitive Data, Source Drift on sources, Grain, Data Quality). Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks and exports resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
+`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Source contracts support four Guardrails: Schema, Grain, Freshness and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data. `orchestrate_read` runs four checks (Freshness, Schema, Grain, Data Quality); `orchestrate_write` runs four Contract checks (Schema, Sensitive Data, Grain, Data Quality), after the independent pipeline Source Drift decision. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks and exports resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 

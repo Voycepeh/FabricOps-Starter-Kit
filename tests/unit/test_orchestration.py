@@ -50,7 +50,8 @@ def planned_stages(monkeypatch):
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "resolve_table_id", lambda **_kwargs: "source-id")
 
-def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
+@pytest.mark.parametrize("query", [None, "SELECT id FROM demo.orders LIMIT 100"])
+def test_orchestrate_read_orders_stages_and_preserves_source(capsys, query):
     """Read stages run in order and retain source identity."""
     from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
     dataframe = object()
@@ -59,7 +60,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
         def call(*args, **kwargs): calls.append(name); return value
         return call
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling", result("profile", {"profile": object()})):
-        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
+        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", query=query, verbose=False)
     assert calls == ["read", "freshness", "schema", "dq", "profile"]
     assert actual["dataframe"] is dataframe
     assert actual["table_id"] == "source-id"
@@ -194,14 +195,14 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
         patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"),
         patch("fabricops_kit.pipeline.orchestrate_write.check_schema", effect("schema", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", effect("sensitive", {"status":"passed", "dataframe":prepared})),
-        patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", effect("drift", {"status":"passed"})),
+        patch("fabricops_kit.pipeline.orchestrate_write.evaluate_pipeline_source_drift", effect("drift", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.check_dq", effect("dq", {"status":"passed"})),
         patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write", side_effect=effect("write", {"table_id":"target-id"})),
         patch("fabricops_kit.pipeline.orchestrate_write.schedule_table_profiling", side_effect=effect("profile", {"profile":object()})),
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6] as profile:
         actual = run_pipeline_operation(orchestrate_write, dataframe, plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
-    assert calls == ["schema", "sensitive", "drift", "dq", "write", "profile"]
+    assert calls == ["drift", "sensitive", "schema", "dq", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
@@ -239,7 +240,7 @@ def test_orchestrate_write_forwards_scd_write_parameters(capsys):
         "fabricops_kit.pipeline.orchestrate_write.check_sensitive_data",
         return_value={"status": "passed", "dataframe": prepared},
     ), patch(
-        "fabricops_kit.pipeline.orchestrate_write.check_source_drift",
+        "fabricops_kit.pipeline.orchestrate_write.evaluate_pipeline_source_drift",
         return_value={"status": "passed"},
     ), patch(
         "fabricops_kit.pipeline.orchestrate_write.check_dq",
@@ -276,7 +277,7 @@ def test_orchestrate_write_preserves_guardrail_failure_and_does_not_write():
     """Write failures retain the Guardrail cause and prevent publication."""
     from fabricops_kit.pipeline.orchestrate_write import orchestrate_write
     cause = RuntimeError("blocking DQ rule: completeness 96.7%")
-    with patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"), patch("fabricops_kit.pipeline.orchestrate_write.check_schema", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", return_value={"status":"passed", "dataframe":object()}), patch("fabricops_kit.pipeline.orchestrate_write.check_source_drift", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_dq", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
+    with patch("fabricops_kit.pipeline.orchestrate_write.resolve_table_id", return_value="target-id"), patch("fabricops_kit.pipeline.orchestrate_write.check_schema", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_sensitive_data", return_value={"status":"passed", "dataframe":object()}), patch("fabricops_kit.pipeline.orchestrate_write.evaluate_pipeline_source_drift", return_value={"status":"passed"}), patch("fabricops_kit.pipeline.orchestrate_write.check_dq", side_effect=cause), patch("fabricops_kit.pipeline.orchestrate_write.pipeline_write") as write:
         with pytest.raises(RuntimeError, match="WRITE 'physical_target' failed during Data Quality") as raised:
             run_pipeline_operation(orchestrate_write, object(), plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite", verbose=False)
     assert raised.value.__cause__ is cause

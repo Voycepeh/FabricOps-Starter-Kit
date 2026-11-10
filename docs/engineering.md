@@ -13,11 +13,16 @@
 
 A FabricOps pipeline is the standard notebook flow **Setup → Read → Transform → Write → Finalize**. FabricOps owns the repeatable boundaries; the PySpark transformation remains project code.
 
+![Setup, Read, Transform, Write, and Finalize with project-owned PySpark.](assets/engineering/pipeline-lifecycle.svg){ .fabricops-section-evidence }
+
 ```python
 context = setup_notebook()
 pipeline = setup_pipeline(pipeline_mode="Ungoverned")
 
-orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+orders = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders",
+    query="SELECT * FROM demo.orders",  # Optional Full Read SQL; None reads the whole table.
+)
 products = orchestrate_read(store="Bronze", schema="demo", table_name="products")
 
 prepared = transform(orders["dataframe"], products["dataframe"])
@@ -36,7 +41,7 @@ One execution can register multiple reads and publish multiple targets. FabricOp
 
 ??? info "Under the Hood — execution ownership"
 
-    [`setup_pipeline()`](api/reference/setup_pipeline.md) fixes the stable Pipeline ID, execution mode and session plan. [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves and evaluates each source. [`orchestrate_write()`](api/reference/orchestrate_write.md) prepares and evaluates each target, then previews or publishes it. [`finalize_pipeline()`](api/reference/finalize_pipeline.md) records the complete outcome and releases any reservation.
+    [`setup_pipeline()`](api/reference/setup_pipeline.md) fixes the stable Pipeline ID, execution mode and session plan. [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves and evaluates each source. [`orchestrate_write()`](api/reference/orchestrate_write.md) prepares and evaluates each target, then previews or publishes it. [`finalize_pipeline()`](api/reference/finalize_pipeline.md) records the complete outcome.
 
     The original Fabric Notebook ID establishes the logical identity. The Pipeline Registry maps every promoted physical Notebook ID back to that identity; no Pipeline ID is declared in notebook source.
 
@@ -60,9 +65,15 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
+![Logical store resolution and distinct Lakehouse file helper APIs.](assets/engineering/fabric-sources.svg){ .fabricops-section-evidence }
+
 - Lakehouse tables use OneLake Delta paths.
 - Warehouse tables use the Fabric Spark connector.
-- Full Warehouse reads can use a read-only `query`; Incremental Warehouse reads use a framework-built bounded predicate.
+- Full reads accept `query`: Spark SQL for Lakehouses and T-SQL pushed down to Warehouses. Incremental reads retain framework-owned bounds and reject caller SQL.
+- Lakehouse SQL uses the declared `table_name` or `schema.table_name`, with optional aliases, CTEs and self joins. FabricOps binds it to the configured OneLake source, including cross-workspace stores, instead of the notebook's default Lakehouse. Other physical sources, paths and table functions are rejected.
+- A simple `SELECT TOP (100) id FROM demo.orders ORDER BY id` on a Lakehouse can become Spark `LIMIT 100`. `TOP PERCENT`, `WITH TIES`, functions and compound T-SQL are rejected with a source-specific error. Write native Spark SQL for these cases. SQL endpoint fallback is not available because the store configuration does not identify a Lakehouse SQL endpoint. Use Spark backticks for quoted identifiers; bracket conversion is limited to simple TOP queries.
+
+The pipeline example above uses `SELECT * FROM demo.orders` to demonstrate the optional Full Read SQL argument without filtering the source. Set `query=None` to use a plain table read. For a narrowed Lakehouse read, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
 
 Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
 
@@ -75,6 +86,8 @@ Lakehouse files are a separate foundational I/O surface because they need a rela
 ## How do Full, Incremental, Append and SCD processing work?
 
 Read Mode controls which source rows enter this run. Write Mode controls how prepared rows change the target. They are independent.
+
+![Independent Read modes and Write strategies.](assets/engineering/read-write-modes.svg){ .fabricops-section-evidence }
 
 | Side | Mode | Use it when |
 | --- | --- | --- |
@@ -100,6 +113,8 @@ Use the [Read & Write Modes reference](reference/read-and-load-strategies.md) fo
 
 There are two protections for different failure modes:
 
+![Append New Only hashing and independent retry publication receipts.](assets/engineering/duplicate-prevention.svg){ .fabricops-section-evidence }
+
 1. **Append New Only** removes duplicate hashes inside the incoming batch and anti-joins them against target `_row_hash` values. Unchanged content is not appended again.
 2. **Publication receipts and checkpoints** identify the exact prepared batch and accept incremental progress only after physical publication can be verified. A retry can finalize metadata without publishing the same verified batch again.
 
@@ -109,32 +124,76 @@ Every managed output receives a lowercase SHA256 `_row_hash` through internal [`
 
     The publication identity includes the prepared business-row multiset, Processing definition, source membership, workspace and target. Lakehouse recovery verifies Delta commit evidence. Warehouse recovery requires the exact audit-marker row count. Partial or unverifiable publication fails closed instead of advancing the checkpoint.
 
-    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). A target lease in [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) coordinates competing FabricOps writers, but it cannot stop an external writer that bypasses FabricOps.
+    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). Each business target has one owning pipeline; scheduling prevents overlapping writes, including old and new notebook versions. Stop that pipeline before changing its Contract Activation. Runtime does not acquire target leases or use a publication coordination Files ledger.
+
+## What happens when pipelines write to the same Metadata table?
+
+**Pipelines across engineers and workspaces share the configured Governance-owned Metadata Lakehouse. Confirmed aborted metadata conflicts are retried automatically.** Even when business targets differ, updates to shared tables such as [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) and [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) can touch the same Delta files.
+
+Delta checks for conflicts at commit. If another writer's change causes a recognized aborted concurrency exception, FabricOps waits briefly and retries that metadata mutation against a fresh transaction. The intended rows and workspace scope stay fixed. Conditional Governance decisions and Pipeline Promotion updates re-read current state and recheck their expected revision; an outdated approval cannot overwrite a newer decision.
+
+### How many attempts, and how long between them?
+
+**Each metadata mutation gets up to 32 total attempts: one initial attempt and at most 31 retries.** This is a per-mutation retry budget, not a limit of 32 parallel pipelines or a request to run the whole pipeline 32 times. The first attempt starts immediately. After each retryable failure, a fresh random delay spreads competing writers apart:
+
+| Failed attempt | Delay before the next attempt |
+| --- | --- |
+| 1 | 0.1–0.2 seconds |
+| 2 | 0.1–0.4 seconds |
+| 3 | 0.1–0.8 seconds |
+| 4 | 0.1–1.6 seconds |
+| 5 | 0.1–3.2 seconds |
+| 6 | 0.1–6.4 seconds |
+| 7–31 | 0.1–8.0 seconds each |
+| 32 | Propagate the failure; no further retry or delay |
+
+The delay ceiling doubles until it reaches eight seconds; the randomly selected delay itself can be shorter than the previous one. Permission errors, stale approvals, schema/protocol changes and unknown commit outcomes are not retried by this policy. Business-table publication, SCD processing, Sensitive Data mapping writes and complete workflows are outside the metadata retry boundary.
+
+### Why can otherwise similar runs have different durations?
+
+Elapsed time includes metadata work and any retry waits within the measured operation. With no conflict there is no backoff. One conflict adds 0.1–0.2 seconds of waiting plus the cost of another metadata attempt; two conflicts add 0.2–0.6 seconds of waiting plus two additional attempts. Different writers can encounter different numbers of conflicts and draw different delays, so they need not finish together.
+
+Across all 31 possible waits, the scheduled waiting budget is **3.1–212.6 seconds per metadata mutation**, excluding transaction execution and storage latency. This is not a pipeline timeout: a run can perform several metadata mutations, and reads, transformations, target writes, profiling and Spark scheduling add their own time. A longer run alone does not establish a metadata conflict; these are policy-derived timing ranges, not measured Fabric performance results.
+
+!!! important "Recover metadata without repeating a business write"
+
+    Retrying an aborted metadata transaction does not replay the business publication. Existing publication receipts and physical target markers govern recovery. An uncertain target commit requires reconciliation; exhausting the metadata retry budget surfaces a failure even if an earlier business publication succeeded.
+
+??? info "Under the Hood — retry implementation and validation"
+
+    Internal [`retry_delta_metadata()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py) recognizes five aborted Delta concurrency exception classes and structured Fabric error conditions, including `DELTA_CONCURRENT_APPEND.WITHOUT_HINT`. It does not infer retryability from message text. After failed attempt `n` (1–31), it samples `uniform(0.1, min(8.0, 0.2 * 2 ** (n - 1)))` seconds. Metadata setup and schema evolution must finish before concurrent execution.
+
+    Local Delta workloads passed at 5, 10 and 20 simultaneous synthetic workspace/user identities; the earlier 12-attempt budget was insufficient at width 20. These results do not establish a supported maximum concurrency or signed-in Fabric acceptance. See [Shared Metadata Lakehouse concurrency](maintainer/concurrent-metadata-reliability-plan.md) for writer coverage, retained record checks and the outstanding Fabric acceptance procedure.
 
 ## How does FabricOps detect Source Drift?
 
-Source Drift is **not the same mechanism as target `_row_hash` de-duplication**.
+Engineering opts in through `setup_pipeline(source_drift_enabled=True, source_drift_interval_days=1, source_drift_block=True)`. Source Drift is independent of Standard profiling, Grain discovery, Frequency and the profiling row limit. An enabled due Read observes its **complete physical source**, including rows outside a SQL query or incremental watermark scope.
 
-Set `observe_source=True` for a manual complete observation, or set `source_observation_days` to a positive interval. FabricOps fingerprints the complete physical source independently of an Incremental predicate. At Write time, the Source Drift Guardrail compares the current source-to-target relationship with the last accepted baseline and reports inserted, updated and deleted change counts according to the source Processing definition.
+Read all sources before any Write. The first Write consolidates every source observation and closes the Read set; later Reads require a new pipeline execution. Additions alone never block publication, so normal upstream growth can continue through incremental ETL. Blocking stops confirmed removals, modifications, typed-schema changes or unavailable observations. `source_drift_block=False` permits warnings, while baseline acceptance still waits for successful finalization and every required verified publication.
 
-The new baseline is accepted only after verified target publication. Observation alone is diagnostic; publication blocks only when the selected Data Contract contains a blocking Source Drift policy.
+The first successful exact snapshot establishes history; changes before it are unknown. Distributed SHA256 identity/content hashes preserve row multiplicities without storing historical business values. Validated authored unique keys support exact modified-row counts. Without trustworthy keys, added/missing content is measurable but modifications remain unknown; unrelated rows are never paired. Diagnostics retain at most ten hash-only examples per category.
 
-??? info "Under the Hood — full-source observation cost and limitations"
+`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, DQ, Freshness, Sensitive Data and Processing requirements, without Source Drift execution policy.
 
-    Internal [`observe_full_source()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1077) performs the independent full scan and [`check_source_drift()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L15) evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan. Accepted baselines are stored in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
+??? info "Scope, cost and recovery"
 
-    A changed fingerprint is evidence, not an automatic delete or update instruction. The configured Write strategy still determines target behaviour.
+    A SQL result of 100 rows and a profiling cap of 100,000 rows do not restrict Source Drift observation. Due complete-source hashing scans the full source and uses distributed aggregation/shuffles. For a billion-row table with mostly distinct content, each due snapshot can retain close to a billion hash-evidence records. Repeated snapshots accumulate; automatic retention/pruning is not provided. Validate Fabric capacity, metadata storage and a retention policy before enabling this at that scale. Disabled Source Drift performs no additional observation scan. Freshness and incremental Processing retain their independent required scopes.
+
+    A candidate becomes accepted only after successful finalization and verified required target publications. Warning mode does not bypass that boundary. Baseline acceptance failure is reported separately from already completed publications. If acknowledgement cannot be verified, `acceptance_unknown` means the transaction may already have committed; inspect immutable acceptance history before retrying. For a confirmed failure, repeat from Read and inspect retained `METADATA_GUARDRAIL_RESULTS` and `METADATA_PROCESSING_STATE` before relying on the next interval. See [pipeline configuration and Source Drift boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#read--write-modes).
+
 
 ## How does a Governance Data Contract affect my ETL?
 
 Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract affects both the allowed operation and the checks around it:
+
+![Contract checks at pipeline boundaries and execution-mode distinctions.](assets/engineering/data-contract-boundaries.svg){ .fabricops-section-evidence }
 
 | Pipeline boundary | Contract effect |
 | --- | --- |
 | Setup | Selects the exact contract version and approved Processing definition. |
 | Read | Applies Freshness, Schema, Grain and Data Quality where configured. |
 | Transform | Leaves project PySpark visible and project-owned. |
-| Write preparation | Applies target Schema, Sensitive Data treatment, Source Drift, Grain and Data Quality. |
+| Write preparation | Consolidates pipeline Source Drift, then applies target Schema, Sensitive Data treatment, Grain and Data Quality. |
 | Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
 | Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
 
@@ -147,7 +206,7 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Location | Required Engineering configuration |
 | --- | --- |
 | `00_env_config` | Workspace IDs, logical store aliases, item IDs/names, store types and the shared Metadata target |
-| Pipeline setup | Stable `pipeline_id`, `pipeline_mode`, and optional full Source Observation policy |
+| Pipeline setup | `pipeline_mode` and optional full Source Observation policy; the Fabric Notebook ID establishes the stable Pipeline ID |
 | Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
 | Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
@@ -157,9 +216,11 @@ Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeli
 
 ## How do I move the same pipeline between Development and Production?
 
-![The same FabricOps pipeline resolving Development and Production stores through environment configuration](assets/05/PipelinesDeploymentOverview.png){ .fabricops-section-evidence }
+
 
 Keep the same notebook flow and stable Pipeline ID, but give each workspace its own `00_env_config` mapping. The logical names—such as Bronze, Silver and Gold—stay in the notebook while each workspace resolves its own Fabric items.
+
+![Preview notebook promotion and independent review/deployment.](assets/engineering/pipeline-promotion.svg){ .fabricops-section-evidence }
 
 For the Preview promotion path, save the Development notebook with `PIPELINE_MODE = "Dry Run"` and run through [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md). FabricOps saves the complete submission in the Metadata Lakehouse. Governance reviews that exact package in [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md); after approval, Engineering uses the controls below Finalize to deploy the accepted snapshot as a separate Governed notebook.
 
@@ -180,6 +241,8 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
     To reopen controls in the same kernel, rerun `finalize_pipeline(pipeline)`. After a restart, run [`setup_notebook()`](api/reference/setup_notebook.md) and call `finalize_pipeline()`; this does not rerun the Dry Run or deploy automatically.
 
 ## What evidence do I get after a run?
+
+![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
 
 - technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);

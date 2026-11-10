@@ -97,6 +97,7 @@ _PROCESSING_STATE_COLUMNS = [
     "publication_at",
     "publication_input_rows",
     "publication_strategy",
+    "snapshot_payload_json",
     *_AUDIT_COLUMNS,
 ]
 
@@ -320,3 +321,17 @@ def test_source_observation_uses_standard_audit_timestamp_only() -> None:
     assert _field_names("METADATA_PROCESSING_STATE") == _PROCESSING_STATE_COLUMNS
     assert "observed_at" in _PROCESSING_STATE_COLUMNS
     assert "_committed_at" in _PROCESSING_STATE_COLUMNS
+
+
+@pytest.mark.parametrize('quiet', [False, True])
+def test_aggregate_diagnostic_persistence_preserves_io_reporting_policy(monkeypatch, quiet):
+    """Source Drift quiet reporting must survive the aggregate writer boundary."""
+    monkeypatch.setattr(guardrails_shared, 'build_runtime_audit_fields', lambda **kw: _audit())
+    writes = []
+    monkeypatch.setattr(guardrails_shared, 'write_lakehouse_table', lambda *a, **kw: writes.append(kw))
+    guardrails_shared.write_guardrail_result_row(spark_session=FakeSpark(), config=framework_config(),
+        active_workspace_id='dev', run_id='run', dataset_name='', table_name='orders', store_type='', layer='',
+        guardrail_type='source_drift', rule_type='pipeline_observation', context={'_fabricops_suppress_io_log': quiet},
+        result={'guardrail_rule_id': 'pipeline_source_drift_v2', 'guardrail_version': 2,
+            'status': 'no_change', 'can_continue': True, 'rule_context': {'rule_type': 'pipeline_observation'}})
+    assert writes[0]['context']['_fabricops_suppress_io_log'] is quiet

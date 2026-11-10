@@ -32,8 +32,8 @@ via `profile_id`
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">23</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">15</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">25</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">17</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -59,6 +59,8 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>frequency_rank</code></td><td><code>integer</code></td><td>Metadata Data Profiled Frequency field <code>frequency_rank</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>profiled_row_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_row_count</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>profiled_non_null_count</code></td><td><code>long</code></td><td>Metadata Data Profiled Frequency field <code>profiled_non_null_count</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profile_scope</code></td><td><code>string</code></td><td>Profile input scope: full_table, bounded_selection (sampled selection-only statistics), or supplied_dataframe (physical coverage unverified). Historical rows may have null scope.</td></tr>
+<tr class="metadata-column--engineering"><td><code>profiling_max_rows</code></td><td><code>long</code></td><td>Requested positive row bound for bounded profiling; null means no row bound. Does not guarantee a physical scan of only this many rows.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
 <tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>

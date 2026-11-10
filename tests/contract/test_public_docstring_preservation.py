@@ -6,7 +6,6 @@ import inspect
 import fabricops_kit
 
 from fabricops_kit import profile_table
-from fabricops_kit.pipeline.check_source_drift import check_source_drift
 from fabricops_kit.pipeline.check_freshness import check_freshness
 
 

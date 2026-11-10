@@ -21,6 +21,7 @@ def write_workflow(monkeypatch):
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     identity = {"table_id": "target-id", "table_name": "customers", "store_type": "lakehouse", "store": "Silver", "schema": "dbo"}
+    monkeypatch.setattr(write_module, "evaluate_pipeline_source_drift", lambda *a, **kw: {"status": "disabled", "can_continue": True})
     monkeypatch.setattr(write_module, "resolve_table_id", lambda **_kwargs: "target-id")
     monkeypatch.setattr(write_module, "check_schema", lambda *_args, **_kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(write_module, "skip_table_profiling", lambda *args, **kwargs: {"status": "skipped"})

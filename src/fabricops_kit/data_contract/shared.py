@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from fabricops_kit.io.shared import retry_delta_metadata
 
-from fabricops_kit.pipeline.shared import default_profiling_policy, validate_profiling_policy
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
@@ -30,7 +29,7 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"})
+GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
@@ -205,10 +204,11 @@ def create_contract_draft(
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
             },
         },
-        "profiling": seed.get("profiling", default_profiling_policy()),
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
         "guardrails": list(seed.get("guardrails") or []),
     }
+    payload.pop("profiling", None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
     payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
@@ -232,11 +232,15 @@ def create_contract_draft(
         "status": "draft",
         **audit,
     })
-    write_lakehouse_table(
-        spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE]),
-        DATA_CONTRACT_TABLE, store=store, schema=schema,
-        context=runtime_context, mode="append",
-    )
+    frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE])
+    write_options = {"store": store, "schema": schema, "context": runtime_context, "mode": "append"}
+    if store == "Metadata":
+        # Canonical appends already own their retry budget in foundational I/O.
+        write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
+    else:
+        # Alternate authoring stores still contain metadata. Retry the fixed
+        # append, never draft discovery/version selection or the whole workflow.
+        retry_delta_metadata(lambda: write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options))
     return row
 
 def _sql_literal(value: Any) -> str:
@@ -348,8 +352,6 @@ def validate_contract_definitions(
     only while disabled.
     """
     obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
-    if "profiling" in payload:
-        validate_profiling_policy(payload["profiling"])
     definitions = [payload, payload.get("table")]
     if isinstance(payload.get("guardrails"), list):
         definitions.extend(payload["guardrails"])
@@ -391,6 +393,8 @@ def validate_contract_definitions(
     seen = set()
     active_policies = set()
     for rule in rules:
+        if isinstance(rule, dict) and rule.get("guardrail_type") == "source_drift":
+            continue  # Retained historical definitions have no runtime authority.
         if not isinstance(rule, dict) or rule.get("guardrail_type") not in GUARDRAIL_TYPES:
             raise ValueError("Data Contract contains an unsupported Guardrail definition.")
         if not isinstance(rule.get("rule_parameters"), dict):
@@ -503,6 +507,8 @@ def save_contract_draft(
         raise ValueError("Only a draft Data Contract version can be saved.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
+    canonical.pop("profiling", None)
+    canonical["guardrails"] = [rule for rule in canonical.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     canonical["contract"] = {
         "contract_id": contract_id,
         "contract_version": contract_version,
@@ -683,7 +689,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, a
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
         raise ValueError(
-            "guardrail_type must be Schema, Grain, Freshness, Source Drift, Data Quality, or Sensitive Data."
+            "guardrail_type must be Schema, Grain, Freshness, Data Quality, or Sensitive Data."
         )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
@@ -943,14 +949,26 @@ def get_table_runtime_context(
                 return []
             raise
         return [
-            row for row in row_dicts(_scoped_rows(
-                frame, f"table_id = {_sql_literal(table_identity)}"
-            ))
+            row for row in _scoped_rows(
+                frame, f"table_id = {_sql_literal(table_identity)}",
+                "" if table_name == "METADATA_DATA_LINEAGE"
+                else f"workspace_id = {_sql_literal(active_workspace_id)}",
+            )
             if str(row.get("table_id") or "") == table_identity
             and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
         ]
 
     profiled = table_rows("METADATA_DATA_PROFILED")
+    latest_by_column: dict[str, dict[str, Any]] = {}
+    for row in profiled:
+        column_id = str(row.get("column_id") or "")
+        if not column_id or str(row.get("status") or "completed").lower() != "completed":
+            continue
+        previous = latest_by_column.get(column_id)
+        if previous is None or metadata_timestamp_sort_key(
+            row.get("profiled_at") or row.get("_committed_at")
+        ) > metadata_timestamp_sort_key(previous.get("profiled_at") or previous.get("_committed_at")):
+            latest_by_column[column_id] = row
     latest_profile_row = max(
         profiled,
         key=lambda row: (
@@ -964,6 +982,7 @@ def get_table_runtime_context(
     latest_profile_rows: list[dict[str, Any]] = []
     if latest_profile_row is not None:
         latest_profile = {
+            **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
             "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
             "pipeline_name": str(
@@ -992,6 +1011,7 @@ def get_table_runtime_context(
             ]
 
     profile_fields = (
+        "profile_scope", "profiling_max_rows",
         "data_type", "row_count", "null_count", "null_percent",
         "distinct_count", "distinct_percent", "min_value", "max_value",
     )
@@ -1002,7 +1022,18 @@ def get_table_runtime_context(
         for row in latest_profile_rows if str(row.get("column_id") or "")
     }
     latest_snapshot_id = str((latest_profile or {}).get("profile_snapshot_id") or "")
-    if latest_snapshot_id:
+    frequency_rows: list[dict[str, Any]] = []
+    if latest_snapshot_id or latest_by_column:
+        selected_profile_ids = {
+            row.get("profile_id") or row.get("profile_snapshot_id")
+            for row in latest_by_column.values()
+        }
+        frequency_predicate = ""
+        if None not in selected_profile_ids and (selected_profile_ids or latest_snapshot_id):
+            identities = ", ".join(_sql_literal(value) for value in sorted(
+                {str(value) for value in selected_profile_ids} | ({latest_snapshot_id} if latest_snapshot_id else set())
+            ))
+            frequency_predicate = f"(profile_id IN ({identities}) OR profile_snapshot_id IN ({identities}))"
         profile_columns = {
             str(row.get("profile_id") or ""): str(row.get("column_id") or "")
             for row in latest_profile_rows
@@ -1016,7 +1047,7 @@ def get_table_runtime_context(
             )
             frequency_rows = row_dicts(_scoped_rows(
                 frequency_frame,
-                f"profile_snapshot_id = {_sql_literal(latest_snapshot_id)}",
+                frequency_predicate,
                 f"workspace_id = {_sql_literal(active_workspace_id)}",
                 f"table_id = {_sql_literal(table_identity)}",
             ))
@@ -1030,19 +1061,24 @@ def get_table_runtime_context(
                 raise
         frequency_rows = [
             row for row in frequency_rows
+            if str(row.get("workspace_id") or "") == active_workspace_id
+            and str(row.get("table_id") or "") == table_identity
+        ]
+        summary_frequency_rows = [
+            row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
             and str(row.get("workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "") == table_identity
         ]
-        frequency_rows.sort(
+        summary_frequency_rows.sort(
             key=lambda row: (
                 profile_columns.get(str(row.get("profile_id") or ""), ""),
                 int(row.get("frequency_rank") or 2_147_483_647),
                 -int(row.get("frequency_count") or 0),
             )
         )
-        for row in frequency_rows:
+        for row in summary_frequency_rows:
             column_id = profile_columns.get(str(row.get("profile_id") or ""), "")
             if column_id not in column_profiles:
                 continue
@@ -1050,6 +1086,29 @@ def get_table_runtime_context(
             value = row.get("value")
             if value not in (None, "") and value not in examples and len(examples) < 3:
                 examples.append(value)
+
+    # Keep the same per-column latest-completed selection and frequency join as
+    # get_column_profile_context, including columns absent from the latest snapshot.
+    profile_contexts = {}
+    frequency_by_column: dict[str, list[dict[str, Any]]] = {}
+    for row in frequency_rows:
+        frequency_by_column.setdefault(str(row.get("column_id") or ""), []).append(row)
+    for column_id, profile in latest_by_column.items():
+        snapshot = profile.get("profile_id") or profile.get("profile_snapshot_id")
+        values = [
+            row for row in frequency_by_column.get(column_id, [])
+            if snapshot is None or row.get("profile_id") == snapshot
+            or row.get("profile_snapshot_id") == snapshot
+        ]
+        values.sort(key=lambda row: (
+            int(row.get("frequency_rank") or 2_147_483_647),
+            -int(row.get("frequency_count") or 0),
+        ))
+        profile_contexts[column_id] = {
+            "kind": "profile", "profile": profile,
+            "values": [{"value": row.get("value"), "count": row.get("frequency_count"),
+                        "percent": row.get("frequency_percent")} for row in values[:3]],
+        }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
     for row in table_rows("METADATA_DATA_LINEAGE"):
@@ -1097,6 +1156,7 @@ def get_table_runtime_context(
     return {
         "latest_profile": latest_profile,
         "column_profiles": column_profiles,
+        "profile_contexts": profile_contexts,
         "writer_count": len(writers),
         "reader_count": len(readers),
         "lineage": lineage,
@@ -1284,7 +1344,8 @@ def freeze_contract_record(
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
     payload.get("table", {}).pop("scheduled_refresh", None)
-    payload.setdefault("profiling", default_profiling_policy())
+    payload.pop("profiling", None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
@@ -1378,7 +1439,7 @@ def assemble_contract_payload(
         for row in enrichment
     ]
     guardrails = _latest(
-        [row for row in row_dicts(guardrail_rows) if owned(row)],
+        [row for row in row_dicts(guardrail_rows) if owned(row) and row.get("guardrail_type") != "source_drift"],
         ("guardrail_rule_id",),
     )
     guardrail_docs = []
@@ -1429,7 +1490,6 @@ def assemble_contract_payload(
             "columns": [row for row in enrichment_docs if row.get("column_id")],
         },
         "guardrails": guardrail_docs,
-        "profiling": validate_profiling_policy(draft_payload.get("profiling", default_profiling_policy())),
     }
     payload["table"].pop("scheduled_refresh", None)
     if not allow_incomplete_grain:

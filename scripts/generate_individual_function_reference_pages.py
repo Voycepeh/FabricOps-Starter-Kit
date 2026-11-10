@@ -58,10 +58,12 @@ AUDIT_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_FIELD_DESCRIPTIONS = {
+    "profile_scope": "Profile input scope: full_table, bounded_selection (sampled selection-only statistics), or supplied_dataframe (physical coverage unverified). Historical rows may have null scope.",
+    "profiling_max_rows": "Requested positive row bound for bounded profiling; null means no row bound. Does not guarantee a physical scan of only this many rows.",
     "destination_json": "Validated JSON STRING containing the reviewed physical workspace_id, item_id, kind, schema and table_name for a table Contract activation. Alias protection uses this frozen binding independently of caller workspace mappings.",
     "load_strategy_parameters_json": "Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.",
     "scheduled_refresh_json": "Validated JSON STRING containing captured status and ordered schedules (enabled, frequency, times and timezone); decoded to a logical object in application code.",
-    "profile_key_candidates_json": "Validated JSON STRING containing discovery status, maximum combination width and ordered candidate metrics; decoded to a logical object in application code. Historical list-only candidates have null status and null maximum width.",
+    "profile_key_candidates_json": "Validated JSON STRING containing discovery status, profile scope, optional row bound, maximum combination width and ordered candidate metrics; decoded to a logical object in application code. Historical list-only candidates have null status and null maximum width.",
     "agreement_version": "Canonical agreement version associated with the row.",
     "agreement_id": "Stable identifier for the agreement lifecycle.",
     "agreement_name": "Human-readable name for the agreement.",
@@ -275,10 +277,11 @@ METADATA_JSON_EXAMPLES = {
 }
 
 PROCESSING_STATE_FIELD_DESCRIPTIONS = {
-    "record_id": "Stable SHA-256 primary key for one typed record; acceptance updates the same staged record.",
-    "record_type": "source_observation, incremental_checkpoint, drift_baseline, full_source_baseline, or publication_receipt.",
-    "status": "observed for captured source observations; staged before target publication; committed only after exact physical publication verification.",
-    "observation_id": "Identifier grouping the partitions of one captured source snapshot.",
+    "record_id": "Stable SHA-256 primary key. Publication acceptance updates staged records; source baseline heads update conditionally while snapshot manifests, hash rows and acceptance history remain immutable.",
+    "record_type": "source_observation, incremental_checkpoint and publication_receipt for processing; source_snapshot, source_row_evidence, source_drift_baseline and source_snapshot_acceptance for complete-source history. Historical drift_baseline/full_source_baseline records remain retained.",
+    "snapshot_payload_json": "Versioned complete-source manifest: physical context, schema, validated authored keys, parent observation and hash completeness totals. Row hash evidence is distributed, never a driver-collected business snapshot.",
+    "status": "observed for source observations and complete-source snapshots; staged for publication members; committed for verified publication receipts/checkpoints and successfully finalized Source Drift acceptance.",
+    "observation_id": "Identifier grouping one source observation or a complete-source manifest and its distributed hash rows.",
     "run_id": "Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.",
     "pipeline_id": "Stable pipeline identity when execution uses a pipeline plan.",
     "source_table_name": "Physical source table name captured with the observation; null on publication receipts.",
@@ -288,11 +291,11 @@ PROCESSING_STATE_FIELD_DESCRIPTIONS = {
     "partition_column": "Column defining observed source partitions, or the incremental watermark column.",
     "change_column": "Source column supplying minimum and maximum change values.",
     "watermark_type": "Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries.",
-    "partition_value": "Canonical source partition text; SQL null remains null and is distinct from an empty string. Null also applies to receipt and empty-source header rows.",
-    "row_count": "Observed source-partition row count, or zero for an empty source/removal tombstone.",
+    "partition_value": "Canonical partition text for incremental/historical partition records; SHA256 identity hash for source_row_evidence. Null applies to receipts and complete-source manifests/heads.",
+    "row_count": "Partition row count for incremental observations, exact hash multiplicity for source_row_evidence, or total complete-source rows for manifests and accepted heads.",
     "min_change_value": "Lossless minimum change value encoded according to watermark_type; null for empty observations/removals.",
     "max_change_value": "Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records.",
-    "content_fingerprint": "Source partition content fingerprint for Source Drift comparison; independent of the publication batch fingerprint.",
+    "content_fingerprint": "Partition fingerprint for incremental/historical records, typed SHA256 content hash for source_row_evidence, or multiset completeness fingerprint for complete-source manifests/heads. Independent of publication batch fingerprints.",
     "is_present": "True for a present source partition; false for an absent partition or empty incremental aggregate; null when no source partition applies, including empty-source headers and receipts.",
     "publication_id": "Reference to the exact target-specific publication_receipt record_id; a receipt references itself.",
     "publication_batch_id": "Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt.",
@@ -310,7 +313,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_GUARDRAIL_RESULTS": [
-        "check_schema", "check_freshness", "check_source_drift", "check_dq",
+        "check_schema", "check_freshness", "orchestrate_read", "orchestrate_write", "finalize_pipeline", "check_dq",
     ],
     "METADATA_PROCESSING_STATE": ["pipeline_read"],
 }
@@ -5760,6 +5763,14 @@ def main() -> None:
             },
             "open": False,
         },
+        {
+            "key": "demo",
+            "title": "Demo",
+            "note": "Dedicated demo environment only",
+            "description": "Preview or reset the disposable Guided Demo to Day 1.",
+            "functions": {"orchestrate_demo_reset"},
+            "open": False,
+        },
     ]
     group_items: dict[str, list[str]] = {group["key"]: [] for group in reference_groups}
     for node in catalogue_nodes:
@@ -5844,7 +5855,7 @@ def main() -> None:
                 (
                     "<summary>"
                     f'<span class="reference-function-group-title">{_esc(group["title"])}</span>'
-                    f'<span class="reference-function-group-meta">{count} functions · {_esc(group["note"])}</span>'
+                    f'<span class="reference-function-group-meta">{count} {"function" if count == 1 else "functions"} · {_esc(group["note"])}</span>'
                     "</summary>"
                 ),
                 f'<p class="reference-function-group-description">{_esc(group["description"])}</p>',

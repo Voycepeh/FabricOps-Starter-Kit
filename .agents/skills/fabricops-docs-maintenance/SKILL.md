@@ -5,6 +5,10 @@ description: Use when cleaning up, reorganizing, or updating FabricOps documenta
 
 # FabricOps Documentation Maintenance Skill
 
+## Visual-design dependency
+
+For any illustration, SVG, diagram, screenshot, architecture, or visual brand change, first load `.agents/skills/fabricops-visual-design/SKILL.md` and the external Diagram Design skill. Use `design/brand.json` tokens, not a page-specific palette. Technical diagrams must be verified against actual exported APIs and metadata schemas, rendered, and visually inspected. Avoid duplicated titles, invented logos, placeholder metrics, and excessive callout boxes.
+
 ## Content classification
 
 Classify the requested content before creating or moving files:

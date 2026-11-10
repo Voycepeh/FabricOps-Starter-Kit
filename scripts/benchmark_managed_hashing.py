@@ -5,7 +5,6 @@ import argparse
 import json
 import tempfile
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -45,18 +44,22 @@ def benchmark(spark, size):
         assert unseen == size - size // 2
         measure(seconds, 'cached_publication_multiset_aggregate', lambda: shared.row_hash_totals(hashed))
         hashed.unpersist()
-        plan = SimpleNamespace(plan_id='benchmark', pipeline_id='benchmark-pipeline', permits_persistence=True,
-            evidence={'source_observation_policy': {'manual': True, 'days': None}})
+        plan = SimpleNamespace(plan_id='benchmark', pipeline_id='benchmark-pipeline', permits_persistence=True, evidence={})
         context = dict(config=object(), scope_workspace_id='benchmark', execution_plan=plan)
-        identity = dict(table_id='source', table_name='source', store='Bronze', store_type='lakehouse')
+        def snapshot(frame):
+            evidence, _metadata = shared.source_snapshot_projection(frame, ['id'])
+            evidence.cache()
+            try:
+                return shared.row_hash_totals(evidence.withColumn("_row_hash",
+                    F.sha2(F.to_json(F.struct(*[F.col(name) for name in evidence.columns])), 256)))
+            finally:
+                evidence.unpersist()
+        observed = measure(seconds, 'complete_source_hash_snapshot_cached_read', lambda: snapshot(base))
+        assert observed['rows'] == size
         with patch.object(shared, 'read_lakehouse_table', return_value=[]), \
              patch.object(shared, 'metadata_table_physical_schema', return_value=None), \
              patch.object(shared, '_merge_source_observation_records'), \
-             patch.object(shared, '_find_applied_publication', return_value=None), \
-             patch.object(shared, 'build_pipeline_audit_fields', return_value={'_committed_at': datetime.now(UTC)}):
-            observed = measure(seconds, 'full_source_observation_cached_read',
-                lambda: shared.observe_full_source(identity, dataframe=base, context=context))
-            assert observed['row_count'] == size
+             patch.object(shared, '_find_applied_publication', return_value=None):
             def publication():
                 with shared.PublicationBatch(base, identity={'table_id': 'target'}, processing={'load_strategy': 'append_all'},
                     source_table_ids=[], audit={'_activity_id': 'benchmark'}, context=context) as batch:
@@ -75,19 +78,11 @@ def benchmark(spark, size):
             assert measure(seconds, 'parquet_target_hash_scan_and_comparison',
                 lambda: hashed.dropDuplicates(['_row_hash']).join(cold_target, '_row_hash', 'left_anti').count()) == unseen
             cold_source = spark.read.parquet(str(root / 'plain'))
-            with patch.object(shared, 'read_lakehouse_table', return_value=[]), \
-                 patch.object(shared, 'metadata_table_physical_schema', return_value=None), \
-                 patch.object(shared, '_merge_source_observation_records'), \
-                 patch.object(shared, 'build_pipeline_audit_fields', return_value={'_committed_at': datetime.now(UTC)}):
-                cold_observed = measure(seconds, 'full_source_observation_parquet_read',
-                    lambda: shared.observe_full_source(identity, dataframe=cold_source, context=context))
-                assert cold_observed['content_fingerprint'] == observed['content_fingerprint']
+            cold_observed = measure(seconds, 'complete_source_hash_snapshot_parquet_read', lambda: snapshot(cold_source))
+            assert cold_observed == observed
         result['unseen_rows'] = unseen
         return result
     finally:
-        if plan is not None:
-            for frame in plan.evidence.pop("source_observation_caches", []):
-                frame.unpersist()
         hashed.unpersist()
         base.unpersist()
 

@@ -364,18 +364,18 @@ def _print_setup_summary(
     if failed:
         successful_count = len(created) + len(evolved) + len(validated)
         print("\nFabricOps metadata setup completed with failures.")
-        print(f"Successful: {successful_count}/{total}")
-        print(f"Failed: {len(failed)}/{total}\n")
+        print(f"Successful: {successful_count:,}/{total:,}")
+        print(f"Failed: {len(failed):,}/{total:,}\n")
         print("Failed tables:")
         for table_name in failed:
             print(f"- {table_name}: {table_results[table_name].get('message', '')}")
         print(f"Active steward present: {active_label}")
         return
     if created or evolved:
-        print(f"\nFabricOps metadata setup complete ({total}/{total}).")
-        print(f"Created: {len(created)}")
-        print(f"Evolved: {len(evolved)}")
-        print(f"Validated: {len(validated)}")
+        print(f"\nFabricOps metadata setup complete ({total:,}/{total:,}).")
+        print(f"Created: {len(created):,}")
+        print(f"Evolved: {len(evolved):,}")
+        print(f"Validated: {len(validated):,}")
         if created:
             print("Created tables:")
             for table_name in created:
@@ -386,7 +386,7 @@ def _print_setup_summary(
                 print(f"- {table_name}")
         print(f"Active steward present: {active_label}")
         return
-    print(f"\nFabricOps metadata tables ready ({total}/{total}).")
+    print(f"\nFabricOps metadata tables ready ({total:,}/{total:,}).")
     print(f"Active steward present: {active_label}")
 
 
@@ -432,7 +432,9 @@ def setup_metadata_tables(
     Notes
     -----
     Missing tables are created empty with error-if-exists semantics. Registry
-    and Contract Activation use Serializable isolation. Setup never manufactures
+    and Contract Activation use Serializable isolation; Processing State is
+    created or upgraded to Serializable for atomic Source Drift acceptance.
+    Setup never manufactures
     approvals, populates business metadata, deletes rows or replaces business
     targets. Governance definitions and activation are independent workflows.
 
@@ -507,12 +509,21 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None,
+                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
+            if table_name == "METADATA_PROCESSING_STATE" and not created and hasattr(table, "sparkSession"):
+                from delta.tables import DeltaTable
+                from fabricops_kit.io.shared import resolve_configured_lakehouse_table
+                from fabricops_kit.io.shared import retry_delta_metadata
+                _, _, _, state_path = resolve_configured_lakehouse_table("Metadata", table_name,
+                    resolved_metadata_schema, context=context)
+                properties = DeltaTable.forPath(spark, state_path).detail().select("properties").first()["properties"]
+                if properties.get("delta.isolationLevel") != "Serializable":
+                    retry_delta_metadata(lambda: spark.sql(f"ALTER TABLE delta.`{state_path.replace('`', '``')}` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')"))
             upgrade = None
             if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)
@@ -560,7 +571,7 @@ def setup_metadata_tables(
                 created_tables.append(table_name)
                 table_results[table_name] = _result(table_name, "created", "Metadata table was created and validated.")
                 if verbose:
-                    print(f"[{index}/{total_tables}] Created {table_name}\n")
+                    print(f"[{index:,}/{total_tables:,}] Created {table_name}\n")
             elif upgrade:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
@@ -568,7 +579,7 @@ def setup_metadata_tables(
                     **upgrade,
                 }
                 if verbose:
-                    print(f"[{index}/{total_tables}] Automatically upgraded {table_name} to SQL-compatible JSON strings\n")
+                    print(f"[{index:,}/{total_tables:,}] Automatically upgraded {table_name} to SQL-compatible JSON strings\n")
             elif evolved_columns:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
@@ -580,7 +591,7 @@ def setup_metadata_tables(
                     "added_columns": evolved_columns,
                 }
                 if verbose:
-                    print(f"[{index}/{total_tables}] Evolved {table_name}")
+                    print(f"[{index:,}/{total_tables:,}] Evolved {table_name}")
                     print(f"       Added columns: {', '.join(evolved_columns)}\n")
             else:
                 validated_tables.append(table_name)
@@ -591,7 +602,7 @@ def setup_metadata_tables(
             failed_tables.append(table_name)
             table_results[table_name] = _result(table_name, "failed", f"{exc}", error_type=type(exc).__name__)
             if verbose:
-                print(f"[{index}/{total_tables}] Failed {table_name}")
+                print(f"[{index:,}/{total_tables:,}] Failed {table_name}")
                 print(f"       {exc}\n")
 
     active_stewards = _active_steward_presence(steward_table)

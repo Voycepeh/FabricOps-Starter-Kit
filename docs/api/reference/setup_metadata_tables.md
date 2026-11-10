@@ -115,7 +115,9 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Missing tables are created empty with error-if-exists semantics. Registry
-and Contract Activation use Serializable isolation. Setup never manufactures
+and Contract Activation use Serializable isolation; Processing State is
+created or upgraded to Serializable for atomic Source Drift acceptance.
+Setup never manufactures
 approvals, populates business metadata, deletes rows or replaces business
 targets. Governance definitions and activation are independent workflows.
 
@@ -150,7 +152,7 @@ read as canonical authority or automatically deleted.
 
 `fabricops_kit/config/setup_metadata_tables.py:393`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L675">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L686">View on GitHub</a>
 </div>
 
 
@@ -166,7 +168,7 @@ read as canonical authority or automatically deleted.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 44 |
+| Live-critical dependencies | 45 |
 
 ### Release history
 
@@ -178,6 +180,7 @@ read as canonical authority or automatically deleted.
 | Live | 0.3.0 |
 | Live | 0.3.1 |
 | Live | 0.4.0 |
+| Live | 0.4.1 |
 
 ### Live-critical dependencies
 
@@ -225,6 +228,7 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 

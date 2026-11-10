@@ -1,6 +1,6 @@
 # Step 4. Preview and enforce frozen Data Contracts
 
-Set `PIPELINE_MODE = "Dry Run"` to preview real reads and transformations without writing target data or operational state. In the setup interface, optionally choose an exact frozen Data Contract for each relevant table before the first Read. Expand a selection to inspect Schema, Grain, Data Quality, Freshness, Source Drift and Sensitive Data rules.
+Set `PIPELINE_MODE = "Dry Run"` to preview real reads and transformations without writing target data or operational state. In the setup interface, optionally choose an exact frozen Data Contract for each relevant table before the first Read. Expand a selection to inspect Schema, Grain, Data Quality, Freshness and Sensitive Data rules. Configure optional Source Drift independently in `setup_pipeline()`.
 
 Run **Read → Transform → Write → Finalize**. Dry Run returns validation, profiling, processing and inspection outputs, marks publication as skipped, and returns a session-only `dry_run_completed` summary when the whole workflow succeeds. It does not register a new pipeline, update a target, advance a checkpoint, persist a profile, record lineage or write pipeline-run metadata.
 

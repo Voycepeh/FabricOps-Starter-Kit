@@ -127,7 +127,7 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
         return {'dataframe': frame, 'published': has_rows}
 
     def setup_pipeline(**kwargs):
-        assert kwargs == {'pipeline_mode': 'Ungoverned', 'observe_source': False, 'source_observation_days': None}
+        assert kwargs == {'pipeline_mode': 'Ungoverned', 'source_drift_enabled': False, 'source_drift_interval_days': 1, 'source_drift_block': True}
         return object()
 
     def finalize_pipeline(pipeline):

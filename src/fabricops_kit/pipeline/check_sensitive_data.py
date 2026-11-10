@@ -92,7 +92,7 @@ def check_sensitive_data(
     if verbose:
         checks = result["checks"]
         treatments = [str(check.get("treatment") or "unknown") for check in checks]
-        print(f"  Contract selected; evaluated {len(checks)} active Sensitive Data rule(s).")
+        print(f"  Contract selected; evaluated {len(checks):,} active Sensitive Data rule(s).")
         print(f"  Treatments applied/evaluated: {', '.join(treatments) if treatments else 'none'}.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS without raw sensitive values.")
         print(

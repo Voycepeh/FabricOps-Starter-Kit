@@ -16,7 +16,6 @@ io_package = import_module("fabricops_kit.io")
 io_shared = import_module("fabricops_kit.io.shared")
 read_module = import_module("fabricops_kit.pipeline.pipeline_read")
 freshness_module = import_module("fabricops_kit.pipeline.check_freshness")
-source_drift_module = import_module("fabricops_kit.pipeline.check_source_drift")
 shared_module = import_module("fabricops_kit.pipeline.shared")
 write_module = import_module("fabricops_kit.pipeline.pipeline_write")
 lakehouse_writer = import_module("fabricops_kit.io.write_lakehouse_table")
@@ -152,24 +151,6 @@ def test_freshness_baseline_skips_before_observation_or_catalogue(monkeypatch):
     assert result["reason"] == "Explicit No Contract selected."
 
 
-def test_source_drift_baseline_skips_before_catalogue(monkeypatch):
-    monkeypatch.setattr(source_drift_module, "resolve_fabric_context", lambda: ("config", "dev", {}))
-    monkeypatch.setattr(source_drift_module, "resolve_pipeline_data_contract", lambda *_a, **_k: None)
-    monkeypatch.setattr(
-        source_drift_module,
-        "resolve_catalogue_table_identity",
-        lambda *_a, **_k: pytest.fail("baseline Source Drift must not require Catalogue"),
-    )
-
-    result = call_with_spark(object(), source_drift_module.check_source_drift,
-        "source-id",
-        target_table_id="target-id",
-        verbose=False,
-    )
-
-    assert result["status"] == "skipped"
-    assert result["source_table_id"] == "source-id"
-    assert result["target_table_id"] == "target-id"
 
 
 def test_pipeline_read_verbose_false_prints_nothing(monkeypatch, capsys):
@@ -579,13 +560,30 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
     assert persisted[0]["dataframe"] is dataframe
 
 
-def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch):
+@pytest.mark.parametrize("conflict", [None, "python", "jvm", "structured"])
+def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkeypatch, conflict):
     """Write only governed processing fields into the target's table-level Catalogue row."""
     import json
     import sys
     import types
 
     rows = []
+    attempts = []
+    targets = []
+    monkeypatch.setattr("time.sleep", lambda _: None)
+
+    class FabricConflict(Exception):
+        def getErrorClass(self):  # noqa: N802
+            return "DELTA_CONCURRENT_APPEND.WITHOUT_HINT"
+
+    error = type("ConcurrentAppendException", (Exception,), {})()
+    if conflict == "jvm":
+        error = Exception()
+        error.java_exception = types.SimpleNamespace(
+            getClass=lambda: types.SimpleNamespace(getSimpleName=lambda: "ConcurrentAppendException")
+        )
+    elif conflict == "structured":
+        error = FabricConflict()
 
     class Source:
         def alias(self, _name):
@@ -614,10 +612,18 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
             return self
 
         def execute(self):
+            attempts.append(self)
+            if conflict and len(attempts) == 1:
+                raise error
             return None
 
+    def for_path(*_args):
+        target = Merge()
+        targets.append(target)
+        return target
+
     tables_module = types.ModuleType("delta.tables")
-    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(lambda *_args: Merge())})
+    tables_module.DeltaTable = type("DeltaTable", (), {"forPath": staticmethod(for_path)})
     monkeypatch.setitem(sys.modules, "delta", types.ModuleType("delta"))
     monkeypatch.setitem(sys.modules, "delta.tables", tables_module)
     metadata_audit = {
@@ -672,6 +678,10 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         "watermark_column": "updated_at",
         "tracked_columns": None,
     }
+
+    assert len(attempts) == (2 if conflict else 1)
+    assert len(targets) == len(attempts)
+    assert len(rows) == 1
 
 
 @pytest.mark.parametrize(

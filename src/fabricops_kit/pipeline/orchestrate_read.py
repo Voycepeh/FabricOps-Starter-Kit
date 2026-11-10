@@ -8,6 +8,7 @@ from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    display_profile_presentations,
     current_pipeline_session,
     schedule_table_profiling,
     PipelineOperation,
@@ -32,12 +33,24 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
-    Profiling uses the complete source with frozen contract policies and shared
+    Profiling uses pipeline-owned settings and shared
     persisted completion history. Full table reads reuse the exact returned DataFrame;
-    query and incremental Reads still profile the complete physical source. Successful
+    query and incremental Reads profile the physical source when due, bounded only
+    by setup_pipeline(profiling_max_rows=...).
+    A restricted query never replaces full-source observations or profile snapshots.
+    Disabled or not-due activities cause no separate profiling scan; configured
+    Source Observation, Freshness and Source Drift checks retain their physical scope. Successful
     Dry Run retains calculated observations only in the session without consuming
     persisted schedules. Guardrail
     checks run regardless of profiling eligibility.
+
+    When statistical profiling completes, the operation summary is followed by a
+    readable profile table even with ``verbose=False``. Native Fabric display has
+    a text fallback; the preview shows at most 100 columns and 120 characters per
+    text cell. Complete-table, bounded-selection and Dry Run scopes are labelled.
+    Skipped or not-due profiling shows no historical results. Presentation reuses
+    current aggregates and cannot fail a successful operation. ``verbose=True``
+    adds operational diagnostics. Returned profiling structures are unchanged.
 
     Parameters
     ----------
@@ -54,7 +67,10 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id : str, optional
         Required target for incremental reads, also a participant in the plan.
     query : str, optional
-        Read-only Warehouse query, supported for full reads only.
+        Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full
+        reads only. Lakehouse SQL binds the declared source through configured
+        OneLake routing. Simple integer TOP projections can convert to LIMIT;
+        complex T-SQL requires native Spark SQL and otherwise raises ValueError.
     verbose : bool
         Print concise stage outcomes and summary.
     dq_diagnostics : {"sample", "none", "full"}
@@ -91,6 +107,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("READ", verbose=verbose)
+        presentations = []
         table_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([table_id], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
@@ -130,8 +147,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         for recovered in source.get("source_observation_recovery", []):
             summary.details([("Source Observation", recovered["status"].replace("_", " ")), ("Exact batches verified", recovered["batches"])])
         full_observation = source.get("full_source_observation", {})
-        if full_observation.get("status") not in {None, "skipped"}:
-            summary.details([("Full Source Observation", full_observation["status"])])
+        if full_observation.get("status") not in {None, "skipped", "disabled", "not_due"}:
+            summary.details([("Source Drift observation", full_observation["status"])])
         if source.get("has_data") is False:
             summary.details([("Scope", "Empty incremental scope")])
         dataframe, table_id = source["dataframe"], source["table_id"]
@@ -140,7 +157,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session,
+        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", verbose=verbose, presentations=presentations, context=context, spark_session=spark_session,
             **({"dataframe": dataframe} if read_mode == "full" and query is None and not source.get("is_query") else {})))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):
@@ -151,5 +168,6 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             ("Rows read", metrics["rows_read"]),
             ("Columns", metrics["columns"]),
         ])
+        display_profile_presentations(presentations)
         operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
         return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

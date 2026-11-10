@@ -20,6 +20,7 @@ from fabricops_kit.config import shared as config_shared
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
+    retry_delta_metadata,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
@@ -255,7 +256,8 @@ class WidgetStartup:
             f'<div style="font-size:21px;font-weight:650">{_html_escape(title)}</div></div>'
         )
         if self.html_available:
-            loading = '<p role="status" aria-live="polite">Initializing FabricOps…</p>'
+            loading = ('<p role="status" aria-live="polite">Initializing FabricOps…</p>'
+                       '<progress aria-label="Initializing FabricOps" style="width:100%;height:6px"></progress>')
             # Keep the banner in its own stable output. Replacing a plain HTML
             # loading view with a widget view in the same output can flicker in
             # notebook frontends, especially when the placeholder also owns the banner.
@@ -281,7 +283,9 @@ class WidgetStartup:
         """Time one synchronous stage and retain actionable failure output."""
         began = perf_counter()
         if self.html_available:
-            content = f'<p role="status">{_html_escape(message)}</p>'
+            content = (f'<p role="status">{_html_escape(message)}</p>'
+                       f'<progress aria-label="{_html_escape(message)}" '
+                       'style="width:100%;height:6px"></progress>')
             self.ip.update_display(self.ip.HTML(self._reserved_html(content) if self.reserved_height else content),
                                    display_id=self.display_id)
         try:
@@ -958,7 +962,16 @@ def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: s
     }.get(table, table)
     canonical_schema = metadata_table_schema_registry().get(canonical_table)
     typed_row = coerce_metadata_row_types(canonical_table, row)
-    write_lakehouse_table(spark.createDataFrame([typed_row], schema=canonical_schema), table, store="Metadata", schema=metadata_table_physical_schema(config, canonical_table), context={"config": config, "scope_workspace_id": active_workspace_id}, mode="append")
+    frame = spark.createDataFrame([typed_row], schema=canonical_schema)
+    write_options = {"store": "Metadata", "schema": metadata_table_physical_schema(config, canonical_table),
+                     "context": {"config": config, "scope_workspace_id": active_workspace_id}, "mode": "append"}
+    if table.strip() in CANONICAL_METADATA_TABLES:
+        # Foundational I/O already retries canonical appends; keep one budget.
+        write_lakehouse_table(frame, table, **write_options)
+    else:
+        # Configured Steward/Agreement aliases are known metadata even though
+        # their physical names cannot be recognized by the generic writer.
+        retry_delta_metadata(lambda: write_lakehouse_table(frame, table, **write_options))
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""

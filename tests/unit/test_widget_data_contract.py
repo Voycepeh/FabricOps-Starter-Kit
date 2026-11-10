@@ -73,6 +73,7 @@ def widget_runtime(monkeypatch):
             self._dom_classes = []
             self.description = description
             self.placeholder = kwargs.get("placeholder", "")
+            self.continuous_update = kwargs.get("continuous_update", True)
             self.tooltip = kwargs.get("tooltip", "")
             self.disabled = disabled
             self.layout = layout or Layout()
@@ -153,13 +154,17 @@ def widget_runtime(monkeypatch):
                     callback(self)
 
     class Tab(Box):
+        def __init__(self, *args, selected_index=None, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.selected_index = selected_index
+
         def set_title(self, index, title):
             pass
 
     ipywidgets = types.SimpleNamespace(
         Layout=lambda **kwargs: Layout(**kwargs), HTML=Widget, Text=Widget, Textarea=Widget, IntText=Widget,
         Dropdown=Dropdown, Combobox=Widget, Checkbox=Widget, Select=Widget, SelectMultiple=Widget,
-        ToggleButtons=Widget, ToggleButton=Widget,
+        ToggleButtons=Widget, ToggleButton=Widget, Accordion=Tab,
         Button=Button, VBox=Box, HBox=Box, GridBox=Box, Tab=Tab,
     )
     catalogue = _catalogue_rows()
@@ -766,9 +771,9 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Column", "Data Quality", "Review", "AI settings"
+        "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
+    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -901,7 +906,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
 
     controls["save_data_contract"].click()
     assert widget_runtime["calls"]["draft"]
-    assert any(
+    assert not any(
         rule["guardrail_type"] == "source_drift"
         for rule in widget_runtime["calls"]["guardrails"][-1]
     )
@@ -943,12 +948,12 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     assert reopened_completeness["parameters"][1].value is True
 
 
-def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
-    """Use the prototype contract: top nav plus one 27/73 left/right workspace."""
+def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime):
+    """Keep top navigation separate from the widened sidebar and editor pane."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    for label in ("Table", "Column", "Review"):
+    for label in ("Table", "Columns", "Review"):
         controls["top_nav"].value = label
         assert len(controls["left_pane"].children) > 0
         assert len(controls["right_pane"].children) > 0
@@ -984,25 +989,23 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert "Row Key" in table_summary
     assert "Load strategy" in table_summary
     assert "Scheduled refresh" not in table_summary
-    assert "Guardrails" in table_summary
+    assert controls["guardrail_disclosure"].selected_index is None
     page_style = controls["page"].children[0].value
     assert ".fabricops-lineage-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
     assert table_summary.index("Row Key") < table_summary.index("Load strategy")
-    assert table_summary.index("Load strategy") < table_summary.index("Guardrails")
     assert "table_save" not in controls
-    table_sections = controls["right_pane"].children
-    assert [section.children[0].value for section in table_sections[:5]] == [
+    table_sections = controls["right_pane"].children[1:]
+    assert [section.children[0].value for section in table_sections[:4]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
-        "<div class=\"fabricops-section-heading\">Profiling</div>",
         "<div class=\"fabricops-section-heading\">Processing</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
     ]
 
-    grain_section = controls["right_pane"].children[0]
+    grain_section = controls["right_pane"].children[1]
     grain_controls = grain_section.children[1]
     assert grain_controls.children == (controls["grain_enabled"], controls["grain_policy"])
     assert "fabricops-grain-controls" in grain_controls._dom_classes
@@ -1015,8 +1018,8 @@ def test_v38_top_navigation_switches_one_two_pane_workspace(widget_runtime):
     assert len(grain_section.children[3].children) == 1
     assert controls["table_grain"].layout.max_width == "560px"
 
-    controls["top_nav"].value = "Column"
-    assert controls["column_search"] in controls["left_pane"].children
+    controls["top_nav"].value = "Columns"
+    assert controls["column_search"] in controls["right_pane"].children
     assert controls["dq_panel"] not in controls["right_pane"].children
     assert list(controls["dq_family_controls"]) == [
         "completeness", "uniqueness", "value_set", "range",
@@ -1084,7 +1087,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 
     assert widget_runtime["calls"]["profiles"] == []
 
-    controls["top_nav"].value = "Column"
+    controls["top_nav"].value = "Columns"
     assert widget_runtime["calls"]["profiles"].count("col-0") == 1
 
     controls["column_select"].value = "col-1"
@@ -1095,7 +1098,7 @@ def test_profile_context_is_lazy_and_cached_per_table_and_column(widget_runtime)
 
     state["load_profile_context"]("col-0")
     assert widget_runtime["calls"]["profiles"].count("col-0") == 1
-    assert ("orders", "col-0") in state["_profile_cache"]
+    assert ("dev", "orders", "col-0") in state["_profile_cache"]
 
 
 def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime):
@@ -1109,14 +1112,16 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert id(controls["column_description"]) == editor_identity
     assert "column_249" in controls["column_context"].value
     assert widget_runtime["calls"]["profiles"] == []
-    controls["top_nav"].value = "Column"
+    controls["top_nav"].value = "Columns"
     assert "col-249" in controls["profile_context"].value
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
-    assert controls["left_pane"].children[-1] is controls["column_select"]
-    assert controls["column_search"] in controls["left_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "minmax(250px, 27fr) minmax(0, 73fr)"
-    assert controls["column_select"].layout.height == "660px"
-    assert controls["column_select"].layout.max_height == "840px"
+    assert controls["column_select"] in controls["right_pane"].children
+    assert controls["column_search"] in controls["right_pane"].children
+    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["column_select"].layout.height == "180px"
+    assert controls["column_select"].layout.min_height == "130px"
+    assert controls["column_select"].layout.flex == "0 0 auto"
+    assert controls["column_select"].layout.max_height == "180px"
     assert "fabricops-contract-list" in controls["column_select"]._dom_classes
 
 
@@ -1271,19 +1276,19 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
-def test_shared_footer_saves_and_clears_from_every_tab(
+def test_sidebar_saves_and_clears_from_every_section(
     widget_runtime, monkeypatch, tab
 ):
-    """One footer persists the complete staged draft from every authoring tab."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    """One sidebar persists the complete staged draft from every authoring section."""
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["top_nav"].value = tab
     controls["table_description"].value = f"Saved from {tab}"
 
-    assert controls["editor_shell"].children[-1] is controls["authoring_footer"]
-    assert controls["authoring_footer"].layout.display == ""
+    assert controls["sidebar_actions"] in controls["left_pane"].children
+    assert controls["sidebar_actions"].layout.display == ""
     controls["save_data_contract"].click()
 
     saved_description = next(
@@ -1297,13 +1302,13 @@ def test_shared_footer_saves_and_clears_from_every_tab(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
-def test_shared_footer_preserves_state_when_save_fails(
+def test_sidebar_preserves_state_when_save_fails(
     widget_runtime, monkeypatch, tab
 ):
     """A failed save remains in the editor with all staged changes intact."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["top_nav"].value = tab
     controls["table_description"].value = f"Unsaved from {tab}"
@@ -1323,14 +1328,14 @@ def test_shared_footer_preserves_state_when_save_fails(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Column", "Data Quality", "Review", "AI settings"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
 )
 def test_shared_footer_discards_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
 ):
     """Confirmed discard clears only staged state from every authoring tab."""
     persisted = widget_runtime["contract"]["contract_payload_json"]
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["top_nav"].value = tab
     controls["table_description"].value = f"Discarded from {tab}"
@@ -1371,7 +1376,8 @@ def test_guardrail_edits_stage_then_final_save_persists(widget_runtime):
     saved = widget_runtime["calls"]["guardrails"][-1]
 
     by_type = {record["guardrail_type"] for record in saved}
-    assert {"freshness", "source_drift", "sensitive_data", "data_quality"} <= by_type
+    assert {"freshness", "sensitive_data", "data_quality"} <= by_type
+    assert "source_drift" not in by_type
     assert any(
         record["rule_type"] == "completeness"
         and module._parameters(record)["treat_blank_as_missing"] is True
@@ -1416,11 +1422,15 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
     return captures
 
 
-def _open_with_ai(widget_runtime, monkeypatch, *, captures=None):
-    """Open one contract and explicitly opt in to scoped AI suggestions."""
+def _generate_initial_suggestions(widget_runtime, monkeypatch, *, captures=None):
+    """Open manually, then explicitly request initial suggestions for AI review tests."""
     captures = _enable_ai(widget_runtime, monkeypatch, captures=captures)
     state = widget_runtime["start"]()
-    state["_controls"]["open_with_ai"].click()
+    state["_controls"]["open"].click()
+    controls = state["_controls"]
+    controls["suggest_grain"].click()
+    controls["rerun_column_description"].click()
+    controls["rerun_sensitive"].click()
     return state, captures
 
 
@@ -1434,71 +1444,33 @@ def test_sensitive_ai_is_disabled_by_configuration(widget_runtime):
     assert all(not drafts for drafts in state["_column_drafts"].values())
 
 
-def test_ai_startup_is_explicit_and_scoped_to_current_table_and_column(widget_runtime, monkeypatch):
-    """Choose AI before opening; the editor then renders the complete contract."""
+def test_opening_and_navigation_never_generate_ai(widget_runtime, monkeypatch):
+    """Opening, rendering, navigation and refresh cannot submit an AI request."""
     captures = _enable_ai(widget_runtime, monkeypatch)
     state = widget_runtime["start"]()
     controls = state["_controls"]
-
-    assert captures["enrichment"] == []
-    assert captures["sensitive"] == []
-    assert controls["selector_panel"].layout.display != "none"
-
-    controls["open_with_ai"].click()
-    controls = state["_controls"]
-    assert len(captures["enrichment"]) == 1  # existing table Description is reused; current column is suggested
-    assert captures["enrichment"][0]["metadata_level"] == "column"
-    assert len(captures["sensitive"]) == 1
-    assert captures["sensitive"][0]["table_description"] == "Orders table"
-    assert captures["sensitive"][0]["columns"][0]["description"] == "Suggested column description"
-    assert all(not drafts for drafts in state["_column_drafts"].values())
-    assert state["_ai_suggestions"]
-    assert captures["grain"]
-    assert "Saved description retained" in controls["table_description_ai"].value
-    assert "Suggested column description" in controls["column_description_ai"].value
-    assert "Direct PII" in controls["sensitive_ai"].value
-    assert controls["selector_panel"].layout.display == "none"
-    assert controls["editor_shell"].layout.display == ""
-    grain_section = controls["right_pane"].children[0]
-    assert grain_section.children[1].children == (controls["grain_enabled"], controls["grain_policy"])
-    assert grain_section.children[3].layout.grid_template_columns == (
-        "minmax(0, 68fr) minmax(240px, 32fr)"
-    )
-    assert len(grain_section.children[3].children) == 2
-    grain_primary = grain_section.children[3].children[0]
-    assert controls["grain_profile_evidence"] in grain_primary.children
-    controls["top_nav"].value = "Column"
-    assert controls["dq_panel"] not in controls["right_pane"].children
-    assert "dq_ai_panel" not in controls
-    assert "Data Quality" in tuple(controls["top_nav"].options)
-    controls["top_nav"].value = "Data Quality"
-    assert controls["business_requirement"] in controls["business_ai_panel"].children
-    assert controls["business_requirement"].description == ""
-    assert controls["business_columns"].description == ""
-    assert controls["business_rule_controls"].layout.display == "none"
-    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
-    assert "Data Quality Rules" in controls["left_pane"].children[0].children[0].value
-    assert controls["business_saved"].options[0] == (
-        "Select a rule to edit, or click here to create a new rule",
-        "__new_rule__",
-    )
-    assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
-    assert controls["ai_rule_editor"] in controls["new_rule_editor"].children
-    assert controls["manual_rule_editor"] in controls["new_rule_editor"].children
-    assert "fabricops-dq-ai-create" in controls["ai_rule_editor"]._dom_classes
-    for label in ("Table", "Column", "Data Quality", "Review", "AI settings"):
-        controls["top_nav"].value = label
-        assert len(controls["left_pane"].children) > 0
-        assert len(controls["right_pane"].children) > 0
-    assert widget_runtime["calls"]["enrichment"] == []
-    assert widget_runtime["calls"]["guardrails"] == []
+    assert controls["open"].description == "Open Data Contract"
+    assert "open_with_ai" not in controls and "open_without_ai" not in controls
+    controls["open"].click()
+    assert state["current"] is not None
+    assert widget_runtime["calls"]["profiles"] == []
+    sidebar = controls["left_pane"].children
+    for section in module._TABS:
+        controls["top_nav"].value = section
+        assert controls["left_pane"].children == sidebar
+    controls["column_select"].value = "col-1"
+    state["refresh_manifest"]()
+    state["discard_data_contract"]()
+    assert captures == {"enrichment": [], "sensitive": [], "grain": []}
+    assert state["ai_usage"] == []
+    assert not state["dirty"]
 
 
 def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     widget_runtime, monkeypatch
 ):
     """Desktop panes scroll in place while section content and compact layouts flow naturally."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     style = controls["page"].children[0].value
 
@@ -1506,24 +1478,14 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert controls["page"].layout.overflow == "visible"
     assert "height:500px" not in style
     assert "max-height:500px" not in style
-    assert "height:clamp(520px, calc(100vh - 220px), 720px)" in style
-    assert ".fabricops-data-contract * { overflow-anchor:none !important; }" in style
-    assert "align-items:stretch !important; overflow:hidden !important" in style
-    assert "height:100%; min-height:0; max-height:100%; overflow-x:hidden; overflow-y:auto" in style
-    assert "gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable" in style
-    assert "align-content:start; overflow-x:hidden !important; overflow-y:auto !important" in style
-    assert "scrollbar-gutter:stable; overscroll-behavior:contain" in style
-    assert "overflow:visible; overscroll-behavior:auto" in style
-    assert "height:auto; max-height:none; overflow:visible !important" in style
-    assert ".fabricops-contract-columns { height:660px !important; }" in style
+    assert "max-height:max(680px, calc(100vh - 200px))" in style
+    assert "position:sticky; top:0; align-self:start" in style
+    assert "flex-direction:row; flex-wrap:wrap" in style
+    assert "align-items:stretch !important; overflow:hidden !important" not in module._CONTRACT_STYLE
+    assert "overflow-y:auto !important" not in module._CONTRACT_STYLE
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
-    assert ".fabricops-business-body {\n    flex:0 1 auto" in style
-    assert "overflow-x:hidden; overflow-y:auto" in style
-
     controls["top_nav"].value = "Data Quality"
-    current_panel = controls["left_pane"].children[0]
-    workspace_panel = controls["right_pane"].children[0]
-    for panel in (current_panel, workspace_panel):
+    for panel in (controls["current_dq_rules_section"], controls["right_pane"].children[-1]):
         assert panel.layout.height == "auto"
         assert panel.layout.overflow == "visible"
     assert getattr(controls["business_saved"].layout, "height", None) is None
@@ -1570,36 +1532,25 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     ]
 
     controls["top_nav"].value = "Review"
-    exact_json = controls["right_pane"].children[1].children[1]
+    exact_json = controls["right_pane"].children[2].children[1]
     assert exact_json.layout.height == "auto"
     assert exact_json.layout.overflow == "visible"
 
 
-def test_shared_draft_footer_stays_outside_tabs_and_freeze_stays_on_review(
-    widget_runtime, monkeypatch
-):
-    """Draft actions remain global while the lifecycle freeze action remains review-only."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+def test_persistent_sidebar_owns_lifecycle_actions_in_every_section(widget_runtime, monkeypatch):
+    """One sidebar keeps lifecycle actions and feedback visible across navigation."""
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
-
     def contains(root, target):
-        return root is target or any(
-            contains(child, target) for child in getattr(root, "children", ())
-        )
-
-    for tab in ("Table", "Column", "Data Quality"):
-        controls["top_nav"].value = tab
-        assert not contains(controls["workspace"], controls["save_data_contract"])
-        assert not contains(controls["workspace"], controls["discard_data_contract"])
-        assert not contains(controls["workspace"], controls["freeze"])
-
-    controls["top_nav"].value = "Review"
-    assert contains(controls["right_pane"], controls["freeze"])
-    assert not contains(controls["workspace"], controls["save_data_contract"])
-    assert not contains(controls["workspace"], controls["discard_data_contract"])
-    assert contains(controls["authoring_footer"], controls["save_data_contract"])
-    assert contains(controls["authoring_footer"], controls["discard_data_contract"])
-
+        return root is target or any(contains(child, target) for child in getattr(root, "children", ()))
+    for section in module._TABS:
+        controls["top_nav"].value = section
+        assert contains(controls["editor_shell"].children[0], controls["top_nav"])
+        for key in ("save_data_contract", "discard_data_contract", "freeze", "change_table", "status", "operation_progress"):
+            assert contains(controls["left_pane"], controls[key])
+            assert not contains(controls["right_pane"], controls[key])
+    assert controls["sidebar_actions"] not in controls["editor_shell"].children
+    assert "authoring_footer" not in controls
 
 
 def test_missing_profiled_key_candidate_shows_no_suggestion_without_profile_fallback(
@@ -1625,7 +1576,7 @@ def test_ai_suggestions_use_schema_context_when_table_has_never_been_profiled(
         lambda **_kwargs: {"kind": "unavailable", "message": "Not yet profiled."},
     )
 
-    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     assert captures["grain"]
@@ -1656,7 +1607,7 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
             "null_count": 0,
         }],
     }
-    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     assert tuple(controls["row_key_columns"].value) == ("column_0", "column_1")
@@ -1679,7 +1630,7 @@ def test_profiled_key_candidate_preselects_row_key_and_feeds_grain_ai(widget_run
 
 def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runtime, monkeypatch):
     """AI can suggest Grain wording, but Engineering/manual evidence owns the row key."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
@@ -1704,7 +1655,7 @@ def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_
         rule for rule in widget_runtime["guardrails"]
         if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}
     ]
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     controls["load_strategy"].value = "scd1"
@@ -1742,7 +1693,7 @@ def test_business_rule_delete_requires_confirmation_and_stages_removal(
     widget_runtime, monkeypatch
 ):
     """Delete removes only the selected draft Business Rule after explicit confirmation."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["top_nav"].value = "Data Quality"
 
@@ -1787,65 +1738,37 @@ def test_table_description_ai_uses_grain_and_manual_classification(widget_runtim
             and row.get("enrichment_type") in {"Description", "Grain"}
         )
     ]
-    _state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    _state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    _state["_controls"]["rerun_table_description"].click()
 
-    table_context = captures["enrichment"][0]
+    table_context = captures["enrichment"][-1]
     assert table_context["grain"] == "One row represents a single order line."
     assert table_context["classification"] == "Confidential"
     assert captures["grain"]
 
 
-def test_ai_open_reports_granular_progress(widget_runtime, monkeypatch):
-    """Slow AI startup reports the real stage before each blocking suggestion call."""
-    widget_runtime["ai_enrichment"]["enabled"] = True
-    widget_runtime["enrichment"][:] = [
-        row for row in widget_runtime["enrichment"]
-        if not (
-            not row.get("column_id")
-            and row.get("enrichment_type") in {"Description", "Grain"}
-        )
-    ]
+def test_ai_requests_report_progress_only_after_explicit_click(widget_runtime, monkeypatch):
+    """Opening records its own timing; each requested suggestion has separate progress."""
+    _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
     progress = []
-    state = widget_runtime["start"]()
-
-    def enrichment(context, **_kwargs):
-        progress.append(state["_controls"]["open_progress"].value)
-        level = context["metadata_level"]
-        return {"Description": f"Suggested {level} description"}
-
-    def sensitive(context, **_kwargs):
-        progress.append(state["_controls"]["open_progress"].value)
-        column = context["columns"][0]
-        return [{
-            "column_name": column["column_name"], "column_id": column["column_id"],
-            "pii_type": "none", "pii_label": "Not PII",
-            "reason": "No sensitive evidence.", "treatment": "mask",
-            "action": "Warn", "parameters": {}, "is_active": False,
-        }]
-
+    def enrichment(context, **kwargs):
+        progress.append(controls["operation_progress"].value)
+        return {"Description": "Requested description"}
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
-    monkeypatch.setattr(
-        module,
-        "suggest_grain_key",
-        lambda *_args, **_kwargs: {
-            "grain": "One row represents a single order line.",
-            "key_columns": ["column_0"],
-            "rationale": "Profile grounded.",
-        },
-    )
-    monkeypatch.setattr(module, "suggest_sensitive_data", sensitive)
-
-    state["_controls"]["open_with_ai"].click()
-
+    assert progress == []
+    controls["rerun_table_description"].click()
+    controls["rerun_column_description"].click()
     assert "Generating table description" in progress[0]
-    assert "Generating first-column description" in progress[1]
-    assert "Assessing first column for sensitive data" in progress[2]
-    assert state["_controls"]["open_progress"].value == ""
+    assert "Generating column description" in progress[1]
+    assert controls["open_progress"].value == ""
+    assert any(t["operation"] == "Opening Data Contract…" for t in state["_operation_timings"])
 
 
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
     """Description and Sensitive Data acceptance stay isolated from manual Classification."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
     controls["dq_whitelist_values"].value = "keep-me"
@@ -1884,7 +1807,7 @@ def test_manual_description_change_marks_dependent_ai_stale_and_requests_rerun(
     widget_runtime, monkeypatch
 ):
     """Changing Description invalidates dependent AI advice without changing manual controls."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     scope = next(iter(state["_ai_suggestions"]))
     column_id = str(controls["column_select"].value)
@@ -1901,7 +1824,7 @@ def test_accepting_description_does_not_invalidate_matching_ai_context(
     widget_runtime, monkeypatch
 ):
     """Accepting the exact AI Description keeps dependent advice current."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     scope = next(iter(state["_ai_suggestions"]))
     column_id = str(controls["column_select"].value)
@@ -1915,7 +1838,7 @@ def test_accepting_description_does_not_invalidate_matching_ai_context(
 
 def test_table_context_change_marks_loaded_sensitive_ai_stale(widget_runtime, monkeypatch):
     """Table Description and Classification changes invalidate column-level dependent advice."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     scope = next(iter(state["_ai_suggestions"]))
     column_id = str(controls["column_select"].value)
@@ -1928,7 +1851,7 @@ def test_table_context_change_marks_loaded_sensitive_ai_stale(widget_runtime, mo
 
 def test_description_rerun_failure_replaces_stale_success(widget_runtime, monkeypatch):
     """A recoverable Description failure replaces stale output and supports retry."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     responses = iter([
         RuntimeError("temporary provider timeout"),
@@ -1964,7 +1887,7 @@ def test_provider_failure_shows_actionable_retry_and_retains_detail(widget_runti
     """Provider errors remain retryable and expose their detail only in diagnostic state."""
     from fabricops_kit.widgets.enrichment_shared import AIProviderError
 
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     monkeypatch.setattr(
         module, "suggest_enrichment",
@@ -1994,7 +1917,7 @@ def test_configuration_failure_disables_ai_and_keeps_manual_authoring(
     widget_runtime, monkeypatch, button, service, pane
 ):
     """Configuration failures disable AI while preserving diagnostics and manual editing."""
-    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     attempts = []
     failure = ModuleNotFoundError("No module named 'synapse.ml.spark.aifunc'")
@@ -2012,7 +1935,7 @@ def test_configuration_failure_disables_ai_and_keeps_manual_authoring(
     assert "not configured" in controls[pane].value
     assert str(failure) not in controls[pane].value
     for name in (
-        "open_with_ai", "rerun_table_description", "rerun_column_description",
+        "rerun_table_description", "rerun_column_description",
         "rerun_sensitive", "suggest_grain", "resolve_business_rule",
     ):
         assert controls[name].disabled, name
@@ -2036,7 +1959,7 @@ def test_unavailable_ai_clears_previous_business_generation_validation(
     widget_runtime, monkeypatch, failure_action
 ):
     """An earlier AI response error must not block manual saves after AI becomes unavailable."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     failures = iter([ValueError("Invalid AI response"), ModuleNotFoundError("AI runtime missing")])
 
@@ -2060,41 +1983,25 @@ def test_unavailable_ai_clears_previous_business_generation_validation(
     assert widget_runtime["calls"]["draft"]
 
 
-def test_unavailable_ai_during_open_stops_further_calls(widget_runtime, monkeypatch):
-    """A configuration failure stops automatic AI work and preserves manual authoring."""
+def test_unavailable_ai_is_discovered_on_demand_and_never_blocks_opening(widget_runtime, monkeypatch):
+    """A missing provider is discovered only on explicit generation; reopening stays manual."""
     captures = _enable_ai(widget_runtime, monkeypatch)
     attempts = []
-
-    def unavailable(*_args, **_kwargs):
+    def unavailable(*args, **kwargs):
         attempts.append("grain")
         raise ModuleNotFoundError("No module named 'synapse.ml.spark.aifunc'")
-
     monkeypatch.setattr(module, "suggest_grain_key", unavailable)
-    state = widget_runtime["start"]()
-    state["_controls"]["open_with_ai"].click()
+    state = widget_runtime["open"]()
     controls = state["_controls"]
-
+    assert attempts == []
+    controls["suggest_grain"].click()
     assert attempts == ["grain"]
-    assert captures == {"enrichment": [], "sensitive": [], "grain": []}
-    assert state["current"] is not None
-    assert "not configured" in state["message"]
-    assert "synapse" not in state["message"]
-    assert controls["open_with_ai"].disabled
-    assert controls["rerun_table_description"].disabled
+    assert not controls["open"].disabled
     assert controls["rerun_column_description"].disabled
-    assert controls["rerun_sensitive"].disabled
-    assert controls["resolve_business_rule"].disabled
-    assert controls["column_description"].disabled is False
-
     controls["change_table"].click()
-    controls["open_without_ai"].click()
-    controls = state["_controls"]
+    controls["open"].click()
     assert state["current"] is not None
-    assert controls["open_with_ai"].disabled
-    assert controls["rerun_table_description"].disabled
-    assert controls["rerun_column_description"].disabled
-    assert controls["rerun_sensitive"].disabled
-    assert controls["column_description"].disabled is False
+    assert not controls["column_description"].disabled
     assert attempts == ["grain"]
     assert captures == {"enrichment": [], "sensitive": [], "grain": []}
 
@@ -2119,7 +2026,7 @@ def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
 
 def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):
     """Regress PR 1375: PII generation never overwrites unrelated draft fields."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
     controls["column_classification"].value = "Restricted"
@@ -2136,7 +2043,7 @@ def test_sensitive_generation_preserves_existing_unsaved_column_draft(widget_run
 
 def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monkeypatch):
     """Lazy suggestions and user drafts survive bounded column navigation."""
-    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["column_description"].value = "First draft"
     controls["column_select"].value = "col-1"
@@ -2144,16 +2051,23 @@ def test_switching_columns_preserves_suggestions_and_drafts(widget_runtime, monk
     controls["column_select"].value = "col-0"
 
     assert controls["column_description"].value == "First draft"
-    assert set(next(iter(state["_ai_suggestions"].values()))["columns"]) == {"col-0", "col-1"}
+    assert set(next(iter(state["_ai_suggestions"].values()))["columns"]) == {"col-0"}
     calls_before = len(captures["sensitive"])
     controls["column_select"].value = "col-1"
     assert controls["column_description"].value == "Second draft"
     assert len(captures["sensitive"]) == calls_before
+    assert controls["rerun_column_description"].description == "Generate"
+    assert controls["rerun_sensitive"].description == "Generate"
+    controls["rerun_column_description"].click()
+    controls["rerun_sensitive"].click()
+    assert captures["enrichment"][-1]["column_name"] == "column_1"
+    assert len(captures["sensitive"]) == calls_before + 1
+    assert controls["rerun_sensitive"].description == "Re-run"
 
 
 def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runtime, monkeypatch):
     """Manual Description and Classification edits mark Sensitive Data advice stale."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["column_description"].value = "Manual description"
     assert "Needs refresh" in controls["sensitive_ai"].value
@@ -2165,7 +2079,7 @@ def test_manual_enrichment_changes_mark_dependent_suggestions_stale(widget_runti
 
 def test_rerun_uses_current_editable_context_and_never_persists(widget_runtime, monkeypatch):
     """Explicit refresh reads unsaved Enrichment values without invoking save paths."""
-    state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["table_description"].value = "Current unsaved table description"
     controls["column_description"].value = "Current unsaved description"
@@ -2199,7 +2113,7 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     )
     state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
-    state["_controls"]["open_with_ai"].click()
+    state["_controls"]["open"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
     controls["column_description"].value = "Manual still works"
@@ -2579,13 +2493,13 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
     controls = state["_controls"]
 
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Column", "Data Quality", "Review", "AI settings"
+        "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    controls["top_nav"].value = "Column"
+    controls["top_nav"].value = "Columns"
     assert controls["dq_panel"] not in controls["right_pane"].children
 
     controls["top_nav"].value = "Data Quality"
-    assert controls["current_dq_rules_section"] in controls["left_pane"].children
+    assert controls["current_dq_rules_section"] in controls["right_pane"].children
     assert controls["business_saved"].value == "__new_rule__"
     assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
     assert controls["new_rule_editor"].children == (controls["manual_rule_editor"],)
@@ -2662,7 +2576,7 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
     widget_runtime, monkeypatch
 ):
     """Resolve natural-language intent and Apply it into normal staged Guardrail state."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     def resolve(_context, **kwargs):
@@ -2709,7 +2623,7 @@ def test_business_rule_resolve_apply_stages_existing_guardrail_model(
 
 def test_multiple_business_rules_remain_independent(widget_runtime, monkeypatch):
     """Applying a new Business Rule must append rather than replace another rule."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     requirements = [
         "End date must be on or after start date.",
@@ -2753,7 +2667,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
     widget_runtime, monkeypatch
 ):
     """Repeatable uniqueness constraints stay separate from the singular Grain & Row Key."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["row_key_columns"].value = ("column_0",)
 
@@ -2798,7 +2712,7 @@ def test_multiple_uniqueness_business_rules_do_not_replace_table_grain(
 
 def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch):
     """Create Pattern through the Data Quality workflow without a column regex editor."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     requirement = "Order ID must start with ORD- followed by digits."
 
@@ -2838,7 +2752,7 @@ def test_pattern_business_rule_is_owned_by_dq_rules(widget_runtime, monkeypatch)
 
 def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkeypatch):
     """A simple resolved rule belongs to Columns and hydrates its normal DQ editor."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     def resolve(_context, **kwargs):
@@ -2871,7 +2785,7 @@ def test_single_column_business_rule_hydrates_column_rule(widget_runtime, monkey
     assert staged["column_id"] == "col-0"
     assert controls["business_saved"].value
 
-    controls["top_nav"].value = "Column"
+    controls["top_nav"].value = "Columns"
     assert float(controls["dq_completeness_failure"].value) == 0
     assert controls["dq_family_controls"]["completeness"]["enabled"].value is True
     assert "DQ Rule added to the current draft" in state["message"]
@@ -2881,7 +2795,7 @@ def test_custom_business_rule_requires_engineering_review_before_freeze(
     widget_runtime, monkeypatch
 ):
     """Custom Expressions stage pending review and require an explicit engineer approval."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     def resolve(_context, **kwargs):
@@ -3065,7 +2979,7 @@ def test_range_is_directly_authored_and_saves_without_ai(widget_runtime):
 
 def test_business_rule_tolerance_control_follows_selected_rule(widget_runtime, monkeypatch):
     """Data Quality exposes the applicable percentage and keeps prohibited values strict."""
-    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     monkeypatch.setattr(module, "suggest_business_rule", lambda *_args, **_kwargs: [
         {"rule_type": "pattern", "columns": ["column_0"],
@@ -3215,12 +3129,12 @@ def test_required_schema_authors_block_and_reaches_runtime(widget_runtime):
 
 def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
     """Table Description uses the same primary/AI split as Grain & Row Key."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     expected_ai_grid = "minmax(0, 68fr) minmax(240px, 32fr)"
     table_content = controls["table_definition"].children[1]
-    grain_content = controls["right_pane"].children[0].children[3]
+    grain_content = controls["right_pane"].children[1].children[3]
     assert table_content.layout.grid_template_columns == expected_ai_grid
     assert grain_content.layout.grid_template_columns == expected_ai_grid
     assert table_content.children[1].children[0].value == "<b>AI suggestion</b>"
@@ -3945,7 +3859,7 @@ def test_saved_numeric_bucket_restores_after_viewing_text_column(widget_runtime)
 
 def test_sensitive_ai_receives_approved_profile_and_frequency_samples(widget_runtime, monkeypatch):
     """The authoring widget passes min/max and frequent values into AI context."""
-    _state, captures = _open_with_ai(widget_runtime, monkeypatch)
+    _state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     column = captures['sensitive'][0]['columns'][0]
     assert column['profile_evidence']['min_value'] == '1'
     assert column['profile_evidence']['max_value'] == '9'
@@ -3968,7 +3882,7 @@ def test_categorical_columns_offer_mask_tokenize_remove_without_bucket(widget_ru
 
 def test_invalid_ai_acceptance_leaves_all_authored_fields_unchanged(widget_runtime, monkeypatch):
     """Even malformed advice bypassing the decoder cannot partially mutate the form."""
-    state, _captures = _open_with_ai(widget_runtime, monkeypatch)
+    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state['_controls']
     controls['column_select'].value = 'col-1'
     def bucket(context, **kwargs):
@@ -4005,7 +3919,7 @@ def test_saved_incompatible_treatment_requires_explicit_repair(widget_runtime):
 
 def test_business_rule_list_selects_ai_drafts_for_review_without_persisting(widget_runtime, monkeypatch):
     """AI drafts enter the shared rule list and use the same staged editor as saved rules."""
-    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     monkeypatch.setattr(module, "suggest_business_rule", lambda *a, **kw: [{
         "rule_type": "range", "columns": ["column_0"],
@@ -4035,7 +3949,7 @@ def test_business_rule_list_selects_ai_drafts_for_review_without_persisting(widg
 
 def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_runtime, monkeypatch):
     """A failed generation leaves no stale actionable result and restores the Generate CTA."""
-    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
 
     def fail(*args, **kwargs):
@@ -4055,32 +3969,14 @@ def test_business_generation_busy_state_and_failure_restore_the_reviewer(widget_
     assert widget_runtime["calls"]["draft"] == []
 
 
-def test_profiling_edits_use_normal_draft_save_and_preserve_guardrails(widget_runtime):
-    """Table policy edits remain draft state until the normal contract Save action."""
+@pytest.mark.parametrize('status', ['draft', 'frozen'])
+def test_contract_authoring_has_no_profiling_execution_controls(widget_runtime, status):
+    """Engineering owns profiling; contract definitions retain their Guardrails."""
+    widget_runtime['contract']['status'] = status
     state = widget_runtime['open']()
-    before = json.loads(json.dumps(state['manifest']))
-    controls = state['_profiling_editor'].profiling_controls
-    controls['standard']['days'].value = 7
-    controls['grain']['frequency'].value = 'every'
-    controls['grain']['trigger'].value = 'write'
-    assert state['dirty'] is True
-    assert widget_runtime['calls']['draft'] == []
-    state['save_data_contract'](return_to_selector_after=False)
-    saved = widget_runtime['calls']['draft'][-1]
-    assert saved['profiling']['standard']['days'] == 7
-    assert saved['profiling']['grain'] == {'frequency': 'every', 'trigger': 'write'}
-    assert saved['guardrails'] == before['guardrails']
-    reopened = widget_runtime['open']()
-    assert reopened['_profiling_editor'].profiling_controls['standard']['days'].value == 7
-
-
-def test_frozen_profiling_controls_cannot_edit_policy(widget_runtime):
-    """An immutable version exposes disabled policy controls and no separate Save."""
-    widget_runtime['contract']['status'] = 'frozen'
-    state = widget_runtime['open']()
-    section = state['_profiling_editor']
-    assert all(control.disabled for values in section.profiling_controls.values() for control in values.values())
-    assert not hasattr(section, 'profiling_save')
+    assert '_profiling_editor' not in state
+    assert 'profiling' not in state['manifest']
+    assert 'guardrails' in state['manifest']
 
 
 @pytest.mark.parametrize('uniqueness', [None, 0.0, 100.0])
@@ -4138,19 +4034,23 @@ def test_ai_information_is_contained_in_its_own_editor_tab(widget_runtime):
     assert controls["editor_ai_information"] not in controls["editor_shell"].children
     assert controls["ai_usage"] not in controls["editor_shell"].children
 
-    controls["top_nav"].value = "AI settings"
+    controls["top_nav"].value = "AI Usage"
 
-    assert controls["left_pane"].children == (controls["editor_ai_information"],)
-    assert controls["right_pane"].children == (controls["ai_usage"],)
+    assert controls["editor_ai_information"] in controls["right_pane"].children
+    assert controls["ai_usage"] in controls["right_pane"].children
+    assert controls["top_nav"] in controls["contract_nav_row"].children
 
 
 @pytest.mark.parametrize("override", [
     {"ai_model": "gpt-6"}, {"ai_reasoning_effort": "extreme"}, {"ai_verbosity": "minimal"},
 ])
-def test_invalid_widget_ai_override_rejected_before_editor(widget_runtime, override):
-    """A bad explicit override raises an actionable configuration error."""
-    with pytest.raises(ValueError, match="ai_enrichment"):
-        module.widget_data_contract(table_id="orders", **override)
+def test_invalid_widget_ai_override_preserves_manual_editor(widget_runtime, override):
+    """A bad AI override disables assistance and preserves the manual editor."""
+    state = module.widget_data_contract(table_id="orders", **override)
+    state["_controls"]["open"].click()
+    assert state["current"] is not None
+    assert state["_controls"]["rerun_table_description"].disabled
+    assert "ai_enrichment" in state["_ai_unavailable"]
 
 
 def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(widget_runtime, monkeypatch):
@@ -4179,9 +4079,11 @@ def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(
         ai_model="gpt-5.1", ai_reasoning_effort="high", ai_verbosity="medium",
     )
     assert calls == []
-    state["_controls"]["open_with_ai"].click()
+    state["_controls"]["open"].click()
     controls = state["_controls"]
-    controls["rerun_table_description"].click()
+    assert calls == []
+    for button in ("suggest_grain", "rerun_column_description", "rerun_sensitive", "rerun_table_description"):
+        controls[button].click()
     controls["business_columns"].value = ()
     controls["business_requirement"].value = "column_0 must be positive"
     controls["resolve_business_rule"].click()
@@ -4209,8 +4111,12 @@ def test_manual_path_never_initializes_or_invokes_ai_even_when_callbacks_clicked
     monkeypatch.setattr(enrichment, "_invoke_fabric_ai", lambda *a, **k: pytest.fail("Unexpected AI request"))
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    for key in ("rerun_table_description", "rerun_column_description", "rerun_sensitive", "suggest_grain", "resolve_business_rule"):
-        controls[key].click()
+    if not enabled:
+        for key in ("rerun_table_description", "rerun_column_description", "rerun_sensitive", "suggest_grain", "resolve_business_rule"):
+            controls[key].click()
+    for section in module._TABS:
+        controls["top_nav"].value = section
+    controls["column_select"].value = "col-1"
     controls["table_description"].value = "Manual business description"
     controls["column_description"].value = "Manual column description"
     assert not controls["table_description"].disabled
@@ -4222,7 +4128,7 @@ def test_manual_path_never_initializes_or_invokes_ai_even_when_callbacks_clicked
 
 def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtime, monkeypatch):
     """Recovering one operation preserves another failure and never mutates a second widget."""
-    state, _ = _open_with_ai(widget_runtime, monkeypatch)
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
     second = widget_runtime["start"]()
     controls = state["_controls"]
 
@@ -4242,3 +4148,532 @@ def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtim
     controls["rerun_column_description"].click()
     assert state["_ai_diagnostics"][scope] == {}
     assert not state["_ai_failure"] and not state["_ai_failure_diagnostic"]
+
+
+@pytest.mark.parametrize("value, expected", [
+    ("2026-09-26T02:45:00Z", "26 Sep 2026, 10:45"),
+    ("2026-09-26T04:45:00+02:00", "26 Sep 2026, 10:45"),
+    ("2026-09-26T02:45:00", "26 Sep 2026, 02:45"),
+    (None, "Unknown"),
+    ("unparseable", "unparseable"),
+])
+def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, value, expected):
+    """Profile provenance and lineage use the same configured audit zone."""
+    widget_runtime["config"].audit_timezone = "Asia/Singapore"
+    module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "latest_profile": {"committed_at": value},
+        "lineage": [{"last_seen": value}],
+    })
+    controls = widget_runtime["open"]()["_controls"]
+    controls["load_table_context"].click()
+    summary = controls["left_pane"].children[0].value
+    assert f" · {expected}</div>" in summary
+    assert f"title='{expected}'>{expected}</td>" in summary
+
+
+def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
+    """Opening the editor leaves collapsed runtime context unread until requested."""
+    reads = []
+    original = module.contracts.get_table_runtime_context
+
+    def load_context(**kwargs):
+        reads.append(kwargs)
+        return original(**kwargs)
+
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
+    controls = widget_runtime["open"]()["_controls"]
+    assert reads == []
+    assert "have not been loaded" in controls["left_pane"].children[0].value
+
+    controls["load_table_context"].click()
+    assert len(reads) == 1
+    assert controls["load_table_context"].layout.display == "none"
+    assert "Pipeline usage" in controls["left_pane"].children[0].value
+
+
+def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, monkeypatch):
+    """Navigating sixty columns adds neither Spark profile reads nor AI requests."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
+    widget_runtime["catalogue"][:] = _catalogue_rows(60)
+    _capture_fixture_columns(widget_runtime)
+    profiles = {f"col-{index}": {"kind": "profile", "profile": {"row_count": 10},
+                "values": [{"value": f"sample-{index}", "count": 1, "percent": 10}]}
+                for index in range(59)}
+    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+        "profile_contexts": profiles,
+    })
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Columns"
+    before = {key: len(value) for key, value in captures.items()}
+    for index in range(60):
+        controls["column_select"].value = f"col-{index}"
+        if index < 59:
+            assert f"sample-{index}" in controls["profile_context"].value
+    assert "Not yet profiled" in controls["profile_context"].value
+    assert widget_runtime["calls"]["profiles"] == []
+    assert {key: len(value) for key, value in captures.items()} == before
+
+
+def test_spark_datetime_uses_process_zone_before_audit_zone(widget_runtime, monkeypatch):
+    """A naive Spark collection is process-local even when the audit zone differs."""
+    import time
+    from datetime import datetime
+
+    monkeypatch.setenv("TZ", "America/New_York")
+    time.tzset()
+    try:
+        # 22:45 in New York is 02:45 UTC and 10:45 in Singapore.
+        test_runtime_timestamps_use_audit_timezone(
+            widget_runtime, monkeypatch, datetime(2026, 9, 25, 22, 45), "26 Sep 2026, 10:45"
+        )
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+
+
+def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, monkeypatch):
+    """Blocking AI stays on the notebook thread with visible progress and safe retry controls."""
+    import threading
+
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    caller_thread = threading.get_ident()
+    observed = []
+    def fail(*_args, **_kwargs):
+        progress = controls["operation_progress"].value
+        assert "Generating column description" in progress
+        assert "<progress " in progress and "aria-busy='true'" in progress
+        assert "value=" not in progress  # Unknown duration uses indeterminate progress.
+        assert controls["rerun_column_description"].disabled
+        assert controls["column_select"].disabled
+        assert controls["top_nav"].disabled
+        assert threading.get_ident() == caller_thread
+        observed.append(progress)
+        raise RuntimeError("temporary timeout")
+    monkeypatch.setattr(module, "suggest_enrichment", fail)
+    controls["rerun_column_description"].click()
+    assert len(observed) == 1
+    assert state["_busy_depth"] == 0
+    assert not controls["rerun_column_description"].disabled
+    assert not controls["column_select"].disabled
+    assert not controls["top_nav"].disabled
+    assert controls["accept_column_description"].disabled
+    assert "Ready." in controls["operation_progress"].value
+    assert state["_operation_timings"][-1]["seconds"] >= 0
+
+
+def test_save_progress_precedes_write_and_restores_controls(widget_runtime, monkeypatch):
+    """A failed Metadata write leaves the draft editable and clears its busy state."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_description"].value = "Unsaved draft"
+    def fail(**_kwargs):
+        assert "Saving Data Contract" in controls["operation_progress"].value
+        assert "<progress " in controls["operation_progress"].value
+        assert controls["save_data_contract"].disabled
+        assert controls["change_table"].disabled
+        raise RuntimeError("write unavailable")
+    monkeypatch.setattr(module.contracts, "save_contract_draft", fail)
+    controls["save_data_contract"].click()
+    assert "write unavailable" in state["message"]
+    assert state["dirty"]
+    assert controls["table_description"].value == "Unsaved draft"
+    assert not controls["save_data_contract"].disabled
+    assert not controls["change_table"].disabled
+    assert state["_busy_depth"] == 0
+
+
+def test_review_is_built_only_when_opened_and_refreshes_after_edits(widget_runtime, monkeypatch):
+    """Opening and editing skip the full Review representation until it is visible."""
+    builds = []
+    original = module._manifest_sections
+    def build(*args, **kwargs):
+        builds.append(True)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(module, "_manifest_sections", build)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert builds == []
+    controls["top_nav"].value = "Review"
+    assert len(builds) == 1
+    controls["top_nav"].value = "Table"
+    controls["column_description"].value = "Updated description for Review"
+    assert len(builds) == 1
+    controls["top_nav"].value = "Review"
+    assert len(builds) == 2
+    assert "Updated description for Review" in controls["manifest_preview"].value
+
+
+def test_reopening_releases_old_editor_models(widget_runtime):
+    """Repeated editor sessions close old controls and keep live model counts bounded."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    counts = []
+    for _ in range(4):
+        previous = controls["column_description"]
+        controls["change_table"].click()
+        controls["open"].click()
+        assert previous.closed
+        assert previous.layout.closed
+        assert not controls["column_description"].closed
+        counts.append(len(widget_runtime["models"]))
+    assert max(counts) - min(counts) <= 2
+    assert not controls["change_table"].closed
+    assert not controls["editor_ai_information"].closed
+
+
+def test_discard_and_clear_does_not_reload_or_generate_ai(widget_runtime, monkeypatch):
+    """Clearing the editor must not load profiles or make billable AI requests."""
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["table_description"].value = "Discard this change"
+    reads = len(widget_runtime["calls"]["review"])
+    ai_calls = {key: len(value) for key, value in captures.items()}
+    controls["discard_data_contract"].click()
+    controls["confirm_discard_data_contract"].click()
+    assert state["current"] is None
+    assert not state["dirty"]
+    assert len(widget_runtime["calls"]["review"]) == reads
+    assert {key: len(value) for key, value in captures.items()} == ai_calls
+
+
+def test_authoring_text_commits_on_blur_while_search_stays_live(widget_runtime):
+    """Typing a long description must not assemble a complete contract per character."""
+    controls = widget_runtime["open"]()["_controls"]
+    for key in ("table_description", "table_grain", "column_description", "pii_reason",
+                "manual_expression", "business_requirement"):
+        assert controls[key].continuous_update is False
+    assert controls["column_search"].continuous_update is True
+
+
+def test_column_search_avoids_transient_selection_and_preserves_edits(monkeypatch):
+    """Real selection widgets reset their index when options change; hydrate only the final choice."""
+    real_widgets = pytest.importorskip("ipywidgets")
+    runtime = widget_runtime.__wrapped__(monkeypatch)
+    runtime["catalogue"][:] = _catalogue_rows(60)
+    _capture_fixture_columns(runtime)
+    monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: real_widgets)
+    state = runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Columns"
+    controls["column_select"].value = "col-11"
+    controls["column_description"].value = "Retain this column description"
+    rendered = []
+    original = module._profile_html
+    def render_profile(value):
+        rendered.append(value)
+        return original(value)
+    monkeypatch.setattr(module, "_profile_html", render_profile)
+    try:
+        controls["column_search"].value = "column_1"
+        assert controls["column_select"].value == "col-11"
+        assert controls["column_description"].value == "Retain this column description"
+        assert rendered == []
+        controls["column_search"].value = "column_2"
+        assert controls["column_select"].value == "col-2"
+        assert len(rendered) == 1
+        controls["column_search"].value = ""
+        assert len(rendered) == 1
+        controls["column_select"].value = "col-11"
+        assert controls["column_description"].value == "Retain this column description"
+    finally:
+        state["_dispose_editor"]()
+        controls["page"].close()
+
+
+def test_datatype_change_keeps_profile_visible_without_new_reads(widget_runtime):
+    """Rehydrating the active Column editor must not leave the profile placeholder behind."""
+    widget_runtime["catalogue"][1]["data_type"] = "string"
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Columns"
+    before = controls["profile_context"].value
+    reads = list(widget_runtime["calls"]["profiles"])
+    assert "Row count" in before
+    controls["datatype_choice"].value = "string"
+    assert controls["profile_context"].value == before
+    assert widget_runtime["calls"]["profiles"] == reads
+
+
+def test_profile_without_metrics_explains_empty_display():
+    """A metadata-only profile record must not render as a blank paragraph."""
+    assert "no metrics were recorded" in module._profile_html({
+        "kind": "profile", "profile": {"profile_id": "profile-1", "column_id": "col-0"},
+    })
+    assert "&lt;workspace&gt;" in module._profile_html({
+        "kind": "unavailable", "message": "No profile found in <workspace>.",
+    })
+
+
+def test_profile_cache_keeps_workspace_results_separate(widget_runtime, monkeypatch):
+    """A missing profile in one observation must not hide a profile in another workspace."""
+    original = module.contracts.list_contract_governance_state
+    def list_state(**kwargs):
+        result = original(**kwargs)
+        result["tables"] = [*result["tables"], {**result["tables"][0], "workspace_id": "prod"}]
+        return result
+    calls = []
+    def profile_context(*, active_workspace_id, **_kwargs):
+        calls.append(active_workspace_id)
+        if active_workspace_id == "dev":
+            return {"kind": "unavailable", "message": "No profile in dev."}
+        return {"kind": "profile", "profile": {"row_count": 42}}
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", list_state)
+    monkeypatch.setattr(module.contracts, "get_column_profile_context", profile_context)
+    state = widget_runtime["open"]()
+    assert state["load_profile_context"]("col-0")["kind"] == "unavailable"
+    state["_controls"]["workspace_select"].value = "prod"
+    assert state["load_profile_context"]("col-0")["profile"]["row_count"] == 42
+    assert calls == ["dev", "prod"]
+
+
+@pytest.mark.parametrize("action", ["change_table", "discard_data_contract"])
+def test_invalid_unstaged_edits_require_discard_confirmation(widget_runtime, action):
+    """Invalid text is still unsaved work, even before a valid record can be staged."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][4]
+    maximum_age.value = "invalid age"
+    assert not state["dirty"]
+    assert "table.freshness" in state["_validation_errors"]
+    controls[action].click()
+    assert state["current"] is not None
+    assert maximum_age.value == "invalid age"
+    confirmation = "table_exit_confirm" if action == "change_table" else "discard_data_contract_confirm"
+    assert controls[confirmation].layout.display == ""
+    assert widget_runtime["calls"]["draft"] == []
+
+
+@pytest.mark.parametrize("action", ["save_data_contract", "freeze"])
+def test_notebook_actions_cannot_bypass_editor_validation(widget_runtime, action):
+    """Returned notebook actions enforce the same validation as the visible buttons."""
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["table_guardrails"]["freshness"]["parameters"][4].value = "invalid age"
+    with pytest.raises(ValueError, match="Complete the current draft configuration"):
+        state[action]()
+    assert widget_runtime["calls"]["draft"] == []
+    assert widget_runtime["calls"]["freeze"] == 0
+    assert state["current"] is not None
+
+
+@pytest.mark.parametrize("action", ["save", "freeze"])
+def test_optional_ai_failure_does_not_block_valid_manual_work(widget_runtime, monkeypatch, action):
+    """An unaccepted AI request must not become a validation error on the authored contract."""
+    state, _ = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    def fail(*_args, **_kwargs):
+        raise RuntimeError("temporary provider timeout")
+    monkeypatch.setattr(module, "suggest_business_rule", fail)
+    controls["resolve_business_rule"].click()
+    assert "business_rule_ai" in state["_validation_errors"]
+    if action == "save":
+        controls["table_description"].value = "Valid manually authored description"
+        controls["save_data_contract"].click()
+        assert len(widget_runtime["calls"]["draft"]) == 1
+        saved = widget_runtime["calls"]["draft"][0]
+        assert any(row.get("value") == "Valid manually authored description"
+                   for row in saved["enrichment"]["table"])
+    else:
+        controls["freeze"].click()
+        controls["freeze_confirm"].click()
+        assert widget_runtime["calls"]["freeze"] == 1, state["message"]
+
+
+def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkeypatch):
+    """No matching column means no editable stale column and no model requests for an empty identity."""
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    controls = state["_controls"]
+    controls["top_nav"].value = "Columns"
+    controls["column_description"].value = "Keep this authored description"
+    before = {key: len(value) for key, value in captures.items()}
+    controls["column_search"].value = "no-such-column"
+    assert controls["column_select"].value is None
+    assert controls["right_pane"].children[-1] is controls["empty_column"]
+    assert controls["column_select"] in controls["right_pane"].children
+    for key in ("rerun_column_description", "rerun_sensitive", "accept_column_description", "accept_sensitive"):
+        assert controls[key].disabled
+        controls[key].click()
+    assert {key: len(value) for key, value in captures.items()} == before
+    assert "" not in next(iter(state["_ai_suggestions"].values()))["columns"]
+    controls["top_nav"].value = "Table"
+    controls["top_nav"].value = "Columns"
+    assert controls["right_pane"].children[-1] is controls["empty_column"]
+    assert controls["column_select"] in controls["right_pane"].children
+    controls["column_search"].value = ""
+    assert controls["column_select"].value == "col-0"
+    assert controls["column_description"].value == "Keep this authored description"
+    assert controls["right_pane"].children != (controls["empty_column"],)
+    assert not controls["rerun_column_description"].disabled
+
+
+def test_ai_usage_totals_cached_pricing_and_reasoning_are_not_double_counted():
+    """Price each model separately and treat cached/reasoning tokens as included breakdowns."""
+    usage = module._ai_usage_html([
+        {"operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{
+            "input_tokens": 1000, "output_tokens": 100, "cached_tokens": 200, "reasoning_tokens": 80,
+        }]},
+        {"operation": "table_enrichment", "model": "gpt-5.1", "statistics": [{
+            "input_tokens": 2000, "output_tokens": 200, "cached_tokens": 0, "reasoning_tokens": 0,
+        }]},
+    ])
+    assert "<strong>Total input tokens: 3,000</strong>" in usage
+    assert "<strong>Total output tokens: 300</strong>" in usage
+    assert "164.877 CU-seconds" in usage
+    assert "13.611</td>" in usage
+    assert "151.266</td>" in usage
+    assert "Column description" in usage
+    assert "cached input: 200; reasoning output: 80" in usage
+    assert "partial estimate" not in usage
+
+
+def test_ai_usage_missing_statistics_are_partial_not_zero():
+    """Unavailable usage must not look like free requests or complete totals."""
+    records = [
+        {"operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{
+            "input_tokens": 1000, "output_tokens": 100, "cached_tokens": 0,
+        }]},
+        {"operation": "sensitive_data", "model": "gpt-5-mini", "statistics": None},
+    ]
+    usage = module._ai_usage_html(records)
+    assert "Total input tokens: 1,000 (partial)" in usage
+    assert "Total output tokens: 100 (partial)" in usage
+    assert "15.123 CU-seconds" in usage
+    assert "partial estimate" in usage
+    assert "Unavailable" in usage
+    unavailable = module._ai_usage_html(records[1:])
+    assert "Total input tokens: Unavailable" in unavailable
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in unavailable
+
+
+def test_ai_usage_missing_cache_is_explicit_and_unknown_models_are_not_priced():
+    """Avoid a fabricated rate for unknown models and disclose the no-cache assumption."""
+    usage = module._ai_usage_html([{
+        "operation": "<script>", "model": "unknown", "statistics": [{"input_tokens": 0, "output_tokens": 0}],
+    }])
+    assert "Total input tokens: 0" in usage
+    assert "Total output tokens: 0" in usage
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in usage
+    assert "&lt;script&gt;" in usage and "<script>" not in usage
+    usage = module._ai_usage_html([{
+        "operation": "column_enrichment", "model": "gpt-5-mini", "statistics": [{"input_tokens": 1000, "output_tokens": 100}],
+    }])
+    assert "15.123 CU-seconds" in usage
+    assert "assumes no cached-input discount" in usage
+
+
+@pytest.mark.parametrize("value", [None, -1, 1.5, float("nan"), True])
+def test_ai_usage_invalid_counts_do_not_become_measured_tokens(value):
+    """Keep missing, malformed and negative counts out of measured totals and estimates."""
+    usage = module._ai_usage_html([{
+        "operation": "table_enrichment", "model": "gpt-5.1", "statistics": [{"input_tokens": value, "output_tokens": 10}],
+    }])
+    assert "Total input tokens: Unavailable" in usage
+    assert "Estimated AI capacity: <strong>Unavailable</strong>" in usage
+
+
+def test_ai_usage_without_requests_shows_zero_and_no_calls():
+    """A new widget reports zero usage without requiring a provider request."""
+    usage = module._ai_usage_html([])
+    assert "Total input tokens: 0" in usage
+    assert "Total output tokens: 0" in usage
+    assert "No AI requests made" in usage
+    assert "0.000 CU-seconds" in usage
+
+
+def test_ai_usage_reports_unconfirmed_audit_without_exposing_storage_details():
+    """Audit outages are visible in the widget's existing usage area."""
+    usage = module._ai_usage_html([{
+        "model": "gpt-5-mini", "statistics": [{"input_tokens": 5, "output_tokens": 2}],
+        "persistence_status": "unconfirmed", "persistence_error_type": "PermissionError",
+    }])
+    assert "1 AI usage audit write(s) unconfirmed" in usage
+    assert "private storage error" not in usage
+    assert "Total input tokens: 5" in usage
+
+
+@pytest.mark.parametrize("button,expected", [
+    ("suggest_grain", "grain"),
+    ("rerun_table_description", "enrichment"),
+    ("rerun_column_description", "enrichment"),
+    ("rerun_sensitive", "sensitive"),
+])
+def test_contextual_ai_click_generates_only_its_own_suggestion(widget_runtime, monkeypatch, button, expected):
+    """An explicit contextual request must not fan out into other billable operations."""
+    captures = _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls[button].click()
+    assert {key: len(items) for key, items in captures.items()} == {
+        key: int(key == expected) for key in captures
+    }
+    assert not state["dirty"]
+    assert widget_runtime["calls"]["draft"] == []
+    before = {key: list(items) for key, items in captures.items()}
+    scope = next(iter(state["_ai_suggestions"]))
+    cached = json.loads(json.dumps(state["_ai_suggestions"][scope]))
+    for section in module._TABS:
+        controls["top_nav"].value = section
+    controls["column_select"].value = "col-1"
+    controls["column_select"].value = "col-0"
+    assert captures == before
+    assert state["_ai_suggestions"][scope] == cached
+    controls[button].click()
+    assert len(captures[expected]) == 2
+
+
+@pytest.mark.parametrize("button,service", [
+    ("suggest_grain", "suggest_grain_key"),
+    ("rerun_table_description", "suggest_enrichment"),
+    ("rerun_column_description", "suggest_enrichment"),
+    ("rerun_sensitive", "suggest_sensitive_data"),
+    ("resolve_business_rule", "suggest_business_rule"),
+])
+def test_running_ai_action_rejects_duplicate_dispatch(widget_runtime, monkeypatch, button, service):
+    """Disabled buttons and the busy guard reject reentrant generation callbacks."""
+    _enable_ai(widget_runtime, monkeypatch)
+    state = widget_runtime["open"]()
+    control = state["_controls"][button]
+    attempts = []
+    def generate(*args, **kwargs):
+        attempts.append(service)
+        assert control.disabled
+        control.click()
+        # Also exercise a queued/direct callback dispatch that bypasses disabled UI.
+        for callback in control._click_handlers:
+            callback(control)
+        raise RuntimeError("Temporary provider failure")
+    monkeypatch.setattr(module, service, generate)
+    control.click()
+    assert attempts == [service]
+    assert not control.disabled
+    assert state["_busy_depth"] == 0
+    assert not state["_controls"]["table_description"].disabled
+
+
+def test_cached_grain_and_column_suggestions_survive_editor_refresh(widget_runtime, monkeypatch):
+    """Reconstructing controls reuses session proposals without new inference."""
+    state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+    counts = {key: len(items) for key, items in captures.items()}
+    state["discard_data_contract"]()
+    controls = state["_controls"]
+    assert "One row represents a single order line" in controls["grain_ai"].value
+    assert "Suggested column description" in controls["column_description_ai"].value
+    assert "Direct PII" in controls["sensitive_ai"].value
+    assert {key: len(items) for key, items in captures.items()} == counts
+
+
+@pytest.mark.parametrize('candidates', [[], [{'columns': ['column_0'], 'row_count': 10,
+    'distinct_count': 10, 'uniqueness_percent': 100.0, 'null_count': 0}]])
+def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widget_runtime, candidates):
+    """A sample may suggest no keys or appear unique without proving physical Grain."""
+    widget_runtime['catalogue'][0]['profile_key_candidates_json'] = {
+        'status': 'resolved' if candidates else 'unresolved', 'max_combination_width': 3,
+        'profile_scope': 'bounded_selection', 'profiling_max_rows': 10, 'candidates': candidates}
+    state = widget_runtime['open']()
+    controls = state['_controls']
+    assert 'bounded selection' in controls['grain_profile_evidence'].value
+    assert 'full-table uniqueness is unverified' in controls['grain_profile_evidence'].value
+    assert tuple(controls['row_key_columns'].value) == ()
