@@ -10,7 +10,7 @@
 Run the observable standard governed target lifecycle.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">`02_pipeline`</span>
 </p>
 
 ## Usage notes
