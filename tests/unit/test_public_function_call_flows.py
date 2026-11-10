@@ -13,6 +13,7 @@ import pytest
 
 from scripts import generate_public_function_call_flows_dashboard as dashboard
 from scripts import generate_public_function_call_flows_json as flows
+from scripts import public_function_call_flows_analysis as analysis
 
 
 @pytest.fixture(scope="module")
@@ -1462,3 +1463,40 @@ def test_dashboard_uses_shared_generated_artifact_metadata() -> None:
     assert 'href="../function-call-graph/"' in html
     assert "How this dashboard is generated" in html
     assert "DATA.metadata||{}).generated_at_sgt" not in html
+
+def test_current_preview_registry_overrides_historical_live_manifest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Current Preview registry status wins without rewriting historical release evidence."""
+    from fabricops_kit import public_api
+
+    qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
+    historical = analysis.ReleaseFunctionLifecycle(
+        "live", "0.4.0", None,
+        ({"version": "0.4.0", "status": "live"}, {"version": "0.4.1", "status": "live"}),
+        ("0.4.0", "0.4.1"),
+    )
+    monkeypatch.setattr(public_api, "PREVIEW_PUBLIC_API", (qn,))
+    monkeypatch.setattr(public_api, "SUPPORTED_PUBLIC_API", ())
+
+    current = analysis.public_lifecycle(qn, "widget_activate_data_contract", {qn: historical})
+
+    assert current.lifecycle_status == "preview"
+    assert current.live_since is None
+    assert current.release_history == historical.release_history
+
+
+def test_current_supported_registry_requires_live_release_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A current supported function cannot silently inherit a Preview-only history."""
+    from fabricops_kit import public_api
+
+    qn = "fabricops_kit.pipeline.example.example"
+    historical = analysis.ReleaseFunctionLifecycle(
+        "preview", None, None,
+        ({"version": "0.4.1", "status": "preview"},),
+        ("0.4.1",),
+    )
+    monkeypatch.setattr(public_api, "PREVIEW_PUBLIC_API", ())
+    monkeypatch.setattr(public_api, "SUPPORTED_PUBLIC_API", (qn,))
+
+    with pytest.raises(ValueError, match="lacks a Live release record"):
+        analysis.public_lifecycle(qn, "example", {qn: historical})
+
