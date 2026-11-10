@@ -1,13 +1,16 @@
 # `widget_activate_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview — Not Yet Released</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 </p>
 
-> **Preview — Not Yet Released.** This capability is under development and is not part of the current supported FabricOps release. Its interface and behaviour may change before general availability.
+> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
 Review and activate an exact frozen Contract in its physical workspace.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">01_governance</span>
+</p>
 
 ## Usage notes
 
@@ -109,10 +112,10 @@ No related guides documented.
 | --- | --- |
 | Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
 | Live since | — |
-| Discontinued in | 0.3.0 |
+| Discontinued in | — |
 | Contract classification | Preview public function |
 | Contract risk | Preview |
-| Live-critical dependencies | — |
+| Live-critical dependencies | 0 |
 
 ### Release history
 
@@ -122,80 +125,8 @@ No related guides documented.
 | Preview | 0.2.5 |
 | Discontinued | 0.3.0 |
 | Discontinued | 0.3.1 |
-| Preview implementation present | 0.4.0 |
-| Preview implementation present | 0.4.1 |
-
-### Live-critical dependencies
-
-<ul class="reference-compact-list">
-<li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.check_contract_agreement</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.exact_record</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.manifest_digest</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.metadata_path</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.metadata_records</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.mutate_metadata</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.read_activation_history</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.replace_metadata_transaction</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.set_table_contract_activation</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
-<li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
-<li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
-<li><code>fabricops_kit.config.audit._context_get</code></li>
-<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
-<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
-<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
-<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
-<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
-<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
-<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
-<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.get_store</code></li>
-<li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
-<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
-<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
-<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
-<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
-<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
-<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
-<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
-<li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
-<li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
-<li><code>fabricops_kit.widgets.shared._html_escape</code></li>
-<li><code>fabricops_kit.widgets.shared.form_page</code></li>
-<li><code>fabricops_kit.widgets.shared.require_ipywidgets</code></li>
-</ul>
+| Live | 0.4.0 |
+| Live | 0.4.1 |
 
 
 </details>
