@@ -10,7 +10,7 @@
 Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">00_env_config</span>
+<span class="reference-chip">`00_env_config`</span>
 </p>
 
 ## Usage notes
