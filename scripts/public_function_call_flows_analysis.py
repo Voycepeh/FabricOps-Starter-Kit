@@ -624,7 +624,7 @@ def public_lifecycle(qn: str, function_name: str, lifecycle_by_qn: dict[str, Rel
             "preview", None, None, lifecycle.release_history, lifecycle.release_versions
         )
     if qn in SUPPORTED_PUBLIC_API:
-        if lifecycle.lifecycle_status != "live":
+        if lifecycle.lifecycle_status != "live" and lifecycle.release_history:
             raise ValueError(
                 f"Current supported public function {qn} lacks a Live release record"
             )
