@@ -21,6 +21,8 @@ def test_setup_stores_pipeline_configuration(monkeypatch, overrides):
     monkeypatch.setattr(shared, 'start_pipeline_session', lambda *a, **kw: session)
     assert setup.setup_pipeline(**overrides) is session
     assert session.plan.evidence['profiling_configuration'] == validate_pipeline_profiling(overrides)
+    assert session.plan.evidence['pipeline_parameters'] == {
+        'manual': False, 'days': None, **validate_pipeline_profiling(overrides)}
 
 
 @pytest.mark.parametrize('name,values', [

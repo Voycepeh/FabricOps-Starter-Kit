@@ -159,7 +159,9 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
         Enable Standard profiling independently of Grain discovery and Frequency.
     profiling_interval_days : int, default=1
         Positive integer interval since the latest confirmed physical-table
-        Standard completion, shared across pipelines.
+        Standard completion with sufficient scope, shared across pipelines.
+        Full-table requests ignore bounded completions; bounded requests may reuse
+        full completions or completions with an equal or larger requested bound.
     profiling_max_rows : int or None, default=None
         None profiles the complete physical table (the prepared DataFrame for
         Dry Run Writes). A positive integer bounds each
@@ -168,10 +170,10 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
         rows. Saved results carry their scope. Guardrails and Source Observation
         always use their own required input, independently of this limit.
     grain_discovery_enabled : bool, default=False
-        Discover candidate Grain keys once per physical table after completion.
+        Discover candidate Grain keys once per physical table and sufficient scope.
         Does not control mandatory Grain Guardrails.
     frequency_enabled : bool, default=False
-        Profile value frequencies once per physical table after completion.
+        Profile value frequencies once per physical table and sufficient scope.
 
     Returns
     -------
@@ -232,6 +234,7 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != {**policy, **profiling}:
         session.close(failed=True)
         raise RuntimeError("Governed parameter overrides differ from the frozen notebook; Dry Run and promote a new version.")
+    session.plan.evidence["pipeline_parameters"] = {**policy, **profiling}
     session.plan.evidence["profiling_configuration"] = profiling
     session.plan.evidence["source_observation_policy"] = policy
     return session

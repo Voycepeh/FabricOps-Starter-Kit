@@ -858,7 +858,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
         raise ValueError("Saved executable notebook changed since execution; save and repeat the Dry Run.")
     executed, raw = raw, current
     snapshot, parameters = promoted_notebook(raw)
-    if parameters != plan.evidence.get("source_observation_policy"):
+    if parameters != plan.evidence.get("pipeline_parameters"):
         raise ValueError("Executed parameter overrides differ from the saved definition.")
     config, _, runtime = resolve_fabric_context(context=context or plan.runtime_context)
     routed = {**runtime, "config": config, "scope_workspace_id": destination_workspace_id,
@@ -1434,7 +1434,7 @@ def persist_engineering_dry_run(plan, *, spark_session=None):
         executable_sha256=notebook_executable_digest(raw), dry_run=run, contracts=json.loads(plan.contracts_json),
         operations=[{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
             "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]],
-        parameters=plan.evidence["source_observation_policy"],
+        parameters=plan.evidence["pipeline_parameters"],
         created_by=plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name"),
         created_at=run["completed_at"])
     if not record["created_by"]:

@@ -6736,6 +6736,14 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
         .select("event.*")
         .filter((F.col("context_key") == key) & (F.col("status") == "passed")
                 & F.col("results_persisted") & F.col("completed_at").isNotNull()))
+    requested_limit = validate_pipeline_profiling(context["execution_plan"].evidence.get("profiling_configuration"))["profiling_max_rows"]
+    # Historical scheduler completions predate bounded profiling and covered full
+    # physical tables. Supplied DataFrames never establish physical coverage.
+    sufficient_scope = F.col("profile_scope").isNull() | (F.col("profile_scope") == "full_table")
+    if requested_limit is not None:
+        sufficient_scope = sufficient_scope | ((F.col("profile_scope") == "bounded_selection")
+            & (F.col("profiling_max_rows") >= requested_limit))
+    events = events.filter(sufficient_scope)
     if activity is not None:
         events = events.filter(F.col("activity") == activity)
     markers = events.filter((F.col("activity") == "grain") |
@@ -6778,7 +6786,7 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
     return {"status": "skipped", "reason": reason, "activities": activities}
 
 
-def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None):
+def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False):
     """Profile due work using successful completion history as the schedule."""
     if operation not in {"read", "write"}:
         raise ValueError("Profiling operation must be read or write.")
@@ -6789,7 +6797,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
     scope_message = (f"bounded selection of at most {max_rows} rows; physical reads may exceed the limit."
         if max_rows is not None else "prepared Dry Run DataFrame; no physical target publication or complete-table coverage asserted."
         if scope == "supplied_dataframe" else "complete physical table when due; may scan all physical source rows, including rows outside the SQL query.")
-    print("Profiling scope → " + scope_message)
+    scope_reported = False
     outcomes = {}
     if not persistence_permitted(context):
         # Dry Run can inspect due work, but never consumes successful intervals.
@@ -6798,6 +6806,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
         key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
         due = {activity for activity in PROFILING_ACTIVITIES
                if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
+        if due and verbose:
+            print("Profiling scope → " + scope_message)
         profile = (execute_table_profile(table_id=table_id, dataframe=dataframe,
             context={**context, "_profile_trigger": operation, "_profile_scope": profile_scope}, spark_session=spark_session,
             verbose=False, activities=due) if due else {})
@@ -6838,6 +6848,9 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             outcomes[activity] = skipped
             record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
             continue
+        if verbose and not scope_reported:
+            print("Profiling scope → " + scope_message)
+            scope_reported = True
         profile_snapshot_id = str(uuid4())
         outcome = None
         completion_recorded = False

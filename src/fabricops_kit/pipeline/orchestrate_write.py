@@ -189,7 +189,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                                 "dry_run": {"status": "blocked", "reason": str(exc), "fully_evaluated": [],
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
-                profile = run("Profile", lambda: schedule_table_profiling(target_id, "write", dataframe=prepared, context=context, spark_session=spark_session))
+                profile = run("Profile", lambda: schedule_table_profiling(target_id, "write", verbose=verbose, dataframe=prepared, context=context, spark_session=spark_session))
                 metrics = dict(dry_run.get("write_metrics") or {})
                 for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated", "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
                     metrics.setdefault(key, None)
@@ -221,7 +221,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             metrics.setdefault("input_columns", len(columns) if columns is not None else None)
             operation.capture_metrics(metrics)
             try:
-                profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", context=context, spark_session=spark_session))
+                profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", verbose=verbose, context=context, spark_session=spark_session))
                            if published else skip_table_profiling(target_id, "write", "No successful publication", context=context, spark_session=spark_session))
             except RuntimeError as exc:
                 exc.published = published

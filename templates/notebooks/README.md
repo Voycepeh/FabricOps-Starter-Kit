@@ -185,7 +185,7 @@ pipeline = setup_pipeline(
 | Grain Discovery | Disabled | Once per physical table after successful completion |
 | Frequency Profiling | Disabled | Once per physical table after successful completion |
 
-The three flags are independent. Disabling Standard does not disable either opt-in activity or any Guardrail. Each pipeline compares its own Standard interval with the latest shared confirmed completion. The integer settings reject booleans, zero, negative and noninteger inputs. `profiling_max_rows=None` means complete-table profiling.
+The three flags are independent. Disabling Standard does not disable either opt-in activity or any Guardrail. Each pipeline compares its own Standard interval with the latest shared confirmed completion whose scope satisfies its request. Full-table requests ignore bounded completions. A full completion can satisfy a bounded request; a bounded completion can satisfy an equal or smaller requested row limit. This also applies to first-only Grain discovery and Frequency, so a previous sample cannot suppress later complete-table work. The integer settings reject booleans, zero, negative and noninteger inputs. `profiling_max_rows=None` means complete-table profiling.
 
 A positive `profiling_max_rows` applies a Spark `limit` before aggregates, Grain search and distributions; Warehouse uses `SELECT TOP (n)` followed by bounded Spark computation. This arbitrary selection is **not a random or representative sample**, and does not guarantee that only n physical rows are read. The selection is cached for the activity and released afterward. Counts, uniqueness, ranges and distributions describe only selected rows; the full table may differ.
 

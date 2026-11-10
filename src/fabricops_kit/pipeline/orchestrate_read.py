@@ -147,7 +147,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
         grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
-        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", context=context, spark_session=spark_session,
+        profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", verbose=verbose, context=context, spark_session=spark_session,
             **({"dataframe": dataframe} if read_mode == "full" and query is None and not source.get("is_query") else {})))
 
         if metrics["rows_read"] is None and read_mode == "full" and not source.get("is_query"):

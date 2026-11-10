@@ -47,6 +47,10 @@ def metadata(monkeypatch):
                 continue
             for event in run.get('profiling', []):
                 kind = event['activity']
+                requested = shared.validate_pipeline_profiling(context['execution_plan'].evidence.get('profiling_configuration'))['profiling_max_rows']
+                scope = event.get('profile_scope')
+                if scope not in (None, 'full_table') and not (scope == 'bounded_selection' and requested is not None and event.get('profiling_max_rows', 0) >= requested):
+                    continue
                 if event.get('context_key') != key or event['status'] != 'passed' or not event.get('results_persisted'):
                     continue
                 if activity is not None and activity != kind:
@@ -499,3 +503,78 @@ def test_bounded_selection_limits_real_computation_and_labels_saved_metrics(kind
     assert result['row_count'] == 2
     if kind == 'warehouse':
         assert warehouse.call_args.args[0] == 'SELECT TOP (2) * FROM [demo].[orders]'
+
+
+@pytest.mark.parametrize('persistent', [True, False])
+@pytest.mark.parametrize('verbose', [True, False])
+@pytest.mark.parametrize('state', ['due', 'disabled', 'not_due'])
+def test_scope_output_only_for_verbose_due_work(metadata, capsys, persistent, verbose, state):
+    if state == 'not_due':
+        shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    if state == 'disabled':
+        metadata.context['execution_plan'].evidence['profiling_configuration'] = {
+            'profiling_enabled': False, 'grain_discovery_enabled': False, 'frequency_enabled': False}
+    metadata.context['execution_plan'].permits_persistence = persistent
+    capsys.readouterr()
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context, verbose=verbose)
+    output = capsys.readouterr().out
+    assert output.count('Profiling scope') == (1 if state == 'due' and verbose else 0)
+
+
+@pytest.mark.parametrize('first_limit,next_limit,expected_runs', [
+    (100, None, 6), (100, 1000, 6), (100, 50, 3), (100, 100, 3), (None, 100, 3), (None, None, 3)])
+def test_scope_switching_does_not_suppress_stronger_requests(metadata, first_limit, next_limit, expected_runs):
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = first_limit
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    other = metadata.make_context('second-pipeline')
+    other['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = next_limit
+    shared.schedule_table_profiling('orders', 'write', context=other)
+    assert metadata.profiler.call_count == expected_runs
+    assert len(metadata.rows['METADATA_DATA_PROFILED']) == expected_runs // 3
+    assert len(metadata.rows['METADATA_DATA_PROFILED_FREQUENCY']) == expected_runs // 3
+
+
+@pytest.mark.parametrize('requested_limit,eligible', [(None, False), (101, False), (100, True), (50, True)])
+@pytest.mark.parametrize('activity', ['standard', 'grain', 'frequency'])
+def test_real_history_filters_bounded_completion_scope_in_spark(metadata, spark_session, monkeypatch, requested_limit, eligible, activity):
+    """Filter before MAX so a newer sample cannot hide an older complete snapshot."""
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = 100
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    tables = {table: spark_session.createDataFrame(
+        [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
+        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        for table, rows in metadata.rows.items()}
+    metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = requested_limit
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
+    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
+    history = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session, activity=activity)
+    assert bool(history) is eligible
+
+
+def test_newer_sample_does_not_replace_latest_full_completion_for_history(metadata, spark_session, monkeypatch):
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    earlier = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    sample_events = []
+    for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling']:
+        if event['status'] == 'passed':
+            event['completed_at'] = earlier
+            sample_events.append({**event, 'profile_scope': 'bounded_selection', 'profiling_max_rows': 100,
+                'completed_at': datetime.now(UTC).isoformat(), 'profile_snapshot_id': 'sample-' + event['activity']})
+            if event['activity'] != 'grain':
+                table = 'METADATA_DATA_PROFILED' if event['activity'] == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
+                metadata.rows[table].append({'table_id': 'orders', 'workspace_id': 'dev',
+                    'profile_snapshot_id': 'sample-' + event['activity']})
+    metadata.rows['METADATA_PIPELINE_RUN']['sample'] = {
+        'run_id': 'sample', 'workspace_id': 'dev', 'execution_mode': 'live', 'profiling': sample_events}
+    tables = {table: spark_session.createDataFrame(
+        [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
+        'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
+        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        for table, rows in metadata.rows.items()}
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
+    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
+    history = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session)
+    assert {value['last_success'] for value in history.values()} == {earlier}
+    assert shared.profiling_due(shared.pipeline_profiling_policy(context=metadata.context)['standard'],
+        history['standard'], 'read', datetime.now(UTC))
