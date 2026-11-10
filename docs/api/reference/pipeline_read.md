@@ -260,7 +260,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 146 |
+| Live-critical dependencies | 147 |
 
 ### Release history
 
@@ -413,6 +413,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared.row_hash_totals</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_drift_investigation_query</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_drift_requires_intervention</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_context</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_projection</code></li>

@@ -150,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 239 |
+| Live-critical dependencies | 240 |
 
 ### Release history
 
@@ -395,6 +395,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_drift_investigation_query</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_drift_requires_intervention</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_context</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_projection</code></li>

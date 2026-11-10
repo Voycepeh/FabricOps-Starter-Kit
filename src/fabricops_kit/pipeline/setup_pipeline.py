@@ -174,9 +174,11 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned",
         physical source, shared across pipelines. Failed or incomplete runs and
         nonpublishing Writes do not advance observation history.
     source_drift_block : bool, default=True
-        Block publication on confirmed additions, removals, modifications, schema
-        changes or unavailable observations. False permits warnings; new baselines
-        still require successful finalization and verified required publications.
+        Block publication on confirmed removals, modifications, schema changes
+        or unavailable observations. Additions alone are reported and never block
+        publication, including normal incremental source growth. False permits
+        warnings; new baselines still require successful finalization and verified
+        required publications.
         The first exact snapshot does not invent historical changes.
 
     Returns
