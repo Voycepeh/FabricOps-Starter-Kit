@@ -126,10 +126,10 @@ def test_notebook_usage_only_counts_executable_direct_calls(tmp_path: Path) -> N
         "cells": [
             {"cell_type": "markdown", "source": ["setup_pipeline()"]},
             {"cell_type": "code", "source": [
-                "from fabricops_kit import setup_pipeline, finalize_pipeline\\n",
-                "# finalize_pipeline()\\n",
-                "pipeline = setup_pipeline()\\n",
-                "other.setup_pipeline()\\n",
+                "from fabricops_kit import setup_pipeline, finalize_pipeline\n",
+                "# finalize_pipeline()\n",
+                "pipeline = setup_pipeline()\n",
+                "other.setup_pipeline()\n",
             ]},
         ],
     }
@@ -145,7 +145,7 @@ def test_notebook_usage_supports_multiple_direct_callers(tmp_path: Path, monkeyp
     """One exported symbol can appear in multiple real notebook usage tags."""
     for key, invocation in [
         ("01_governance", "setup_notebook()"),
-        ("02_pipeline", "setup_notebook()\\nfinalize_pipeline()"),
+        ("02_pipeline", "setup_notebook()\nfinalize_pipeline()"),
     ]:
         path = tmp_path / "templates" / "notebooks" / f"{key}.ipynb"
         path.parent.mkdir(parents=True, exist_ok=True)
