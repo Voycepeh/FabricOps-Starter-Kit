@@ -260,7 +260,7 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 136 |
+| Live-critical dependencies | 146 |
 
 ### Release history
 
@@ -365,30 +365,37 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared._latest_source_target_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._max_column_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_source_observation_records</code></li>
+<li><code>fabricops_kit.pipeline.shared._metadata_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared._observe_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._observe_lakehouse</code></li>
 <li><code>fabricops_kit.pipeline.shared._observe_partition_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
+<li><code>fabricops_kit.pipeline.shared._persist_source_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._physical_target_has_publication</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._progress_key</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_receipt</code></li>
 <li><code>fabricops_kit.pipeline.shared._publication_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._record_source_drift_result</code></li>
 <li><code>fabricops_kit.pipeline.shared._recover_completed_source_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
+<li><code>fabricops_kit.pipeline.shared._source_evidence_totals</code></li>
 <li><code>fabricops_kit.pipeline.shared._source_observation_signature</code></li>
+<li><code>fabricops_kit.pipeline.shared._source_snapshot_keys</code></li>
+<li><code>fabricops_kit.pipeline.shared._source_snapshot_state</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared._validated_source_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_observation_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
-<li><code>fabricops_kit.pipeline.shared.add_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.capture_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
+<li><code>fabricops_kit.pipeline.shared.compare_source_snapshot_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
@@ -402,16 +409,19 @@ With ``verbose=True``, a Warehouse table read reports a line such as
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_source_drift_observation_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_totals</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>
-<li><code>fabricops_kit.pipeline.shared.set_current_source_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_drift_investigation_query</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_snapshot_context</code></li>
+<li><code>fabricops_kit.pipeline.shared.source_snapshot_projection</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
+<li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>
 
 

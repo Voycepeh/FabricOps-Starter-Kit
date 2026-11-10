@@ -324,10 +324,8 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _PROCESSING_STATE_TABLE = "METADATA_PROCESSING_STATE"
-_CURRENT_SOURCE_OBSERVATIONS: dict[tuple[str, str, str], Any] = {}
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
-_PENDING_SOURCE_DRIFT_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
 _ACTIVE_PUBLICATION_SOURCES: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _CURRENT_TABLE_IDENTITIES: dict[str, dict[str, str | None]] = {}
@@ -410,25 +408,6 @@ def print_guardrail_result(
     if target_table_id:
         print(f"  Target {_display_label(target_table_id)}")
     print(f"  Result {status}")
-
-
-def set_current_source_observation(
-    *, workspace_id: str, activity_id: str, table_id: str, observation: Any
-) -> None:
-    """Keep one source observation in private current-run pipeline state."""
-    _CURRENT_SOURCE_OBSERVATIONS[(workspace_id, activity_id, table_id)] = observation
-
-
-def get_current_source_observation(
-    *, workspace_id: str, activity_id: str, table_id: str
-) -> Any:
-    """Return current-run source observation state for one governed table."""
-    key = (workspace_id, activity_id, table_id)
-    if key not in _CURRENT_SOURCE_OBSERVATIONS:
-        raise ValueError(
-            f"No current source observation exists for {table_id!r}; call orchestrate_read() first."
-        )
-    return _CURRENT_SOURCE_OBSERVATIONS[key]
 
 
 def get_current_freshness_evidence(
@@ -830,29 +809,6 @@ def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in values or []]
 
 
-def _previous_source_target_observation(
-    history: Any,
-    *,
-    source_table_id: str,
-    target_table_id: str,
-    workspace_id: str,
-    committed_at: Any,
-) -> list[dict[str, Any]]:
-    """Return the latest baseline for one source-to-target relationship."""
-    candidates = [
-        row
-        for row in _processing_state_rows(history)
-        if str(row.get("source_table_id") or "") == source_table_id
-        and str(row.get("target_table_id") or "") == target_table_id
-        and str(row.get("workspace_id") or "") == workspace_id
-        and row.get("record_type") == "drift_baseline"
-        and row.get("status") == "committed"
-        and row.get("_committed_at") < committed_at
-    ]
-    previous_at = max((row["_committed_at"] for row in candidates), default=None)
-    return [row for row in candidates if row["_committed_at"] == previous_at]
-
-
 def _latest_source_target_observation(
     history: Any,
     *,
@@ -1073,71 +1029,464 @@ def row_hash_totals(dataframe):
     ]).first().asDict()
 
 
-def observe_full_source(identity, *, dataframe=None, context):
-    """Observe the physical source independently of read scope and Guardrail policy."""
-    plan = context.get("execution_plan")
-    policy = getattr(plan, "evidence", {}).get("source_observation_policy", {})
-    if not policy.get("manual") and policy.get("days") is None:
-        return {"status": "skipped", "reason": "automatic observation disabled"}
+def validate_source_drift_configuration(configuration=None):
+    """Validate independent, opt-in Engineering Source Drift settings."""
+    result = {"source_drift_enabled": False, "source_drift_interval_days": 1, "source_drift_block": True}
+    if configuration is not None:
+        if not isinstance(configuration, dict) or set(configuration) - set(result):
+            raise ValueError("Invalid Source Drift configuration.")
+        result.update(configuration)
+    for name in ("source_drift_enabled", "source_drift_block"):
+        if type(result[name]) is not bool:
+            raise ValueError(f"{name} must be a boolean.")
+    if type(result["source_drift_interval_days"]) is not int or result["source_drift_interval_days"] <= 0:
+        raise ValueError("source_drift_interval_days must be a positive integer.")
+    return result
+
+
+def source_snapshot_context(identity, *, context):
+    """Bind shared history to an execution workspace and exact physical source."""
+    plan = context["execution_plan"]
+    physical = pipeline_physical_bindings({identity["table_id"]: identity},
+        config=context["config"], workspace_id=plan.workspace_id)[identity["table_id"]]
+    descriptor = {"workspace_id": plan.workspace_id, "table_id": identity["table_id"], "physical": physical}
+    return _metadata_hash(descriptor), descriptor
+
+
+def _source_snapshot_state(context):
+    """Keep source hash rows distributed and history independent of Pipeline ID."""
+    from pyspark.sql import functions as F
     try:
-        state = read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
-        if hasattr(state, "where"):
-            from pyspark.sql import functions as F
-            state = state.where((F.col("workspace_id") == context["scope_workspace_id"])
-                                & (F.col("pipeline_id") == plan.pipeline_id))
-        history = _processing_state_rows(state)
+        return read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
+            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context).where(
+                F.col("workspace_id") == context["execution_plan"].workspace_id)
     except Exception as exc:
         if not is_table_not_found_error(exc):
             raise
-        history = []
-    source_id = str(identity["table_id"])
-    relevant = [row for row in history if row.get("record_type") == "full_source_baseline"
-                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
-                and row.get("workspace_id") == context["scope_workspace_id"]]
-    for target_id in {row["target_table_id"] for row in relevant if row.get("status") == "staged"}:
-        history = _recover_completed_source_observations(history, config=context["config"],
-            active_workspace_id=context["scope_workspace_id"], context=context,
-            source_table_id=source_id, target_table_id=target_id)
-    accepted = [row for row in history if row.get("record_type") == "full_source_baseline"
-                and row.get("source_table_id") == source_id and row.get("pipeline_id") == plan.pipeline_id
-                and row.get("workspace_id") == context["scope_workspace_id"] and row.get("status") == "committed"]
-    previous = max(accepted, key=lambda row: _watermark_timestamp(row.get("observed_at") or row["accepted_at"]), default=None)
-    now = datetime.now(UTC)
-    if previous is not None and not policy["manual"]:
-        last = datetime.fromisoformat(_watermark_timestamp(previous.get("observed_at") or previous["accepted_at"]).replace("Z", "+00:00"))
-        if last.tzinfo is None:
-            last = last.replace(tzinfo=UTC)
-        if now - last < timedelta(days=policy["days"]):
-            return {"status": "skipped", "reason": "interval not elapsed"}
-    from fabricops_kit.io import read_warehouse_table
-    reuse_frame = dataframe is not None
-    if dataframe is None:
-        if identity["store_type"] == "lakehouse":
-            dataframe = read_lakehouse_table(identity["table_name"], store=identity["store"], schema=identity.get("schema"), context=context)
-        else:
-            # Deliberately use the physical table, never the normal Read SQL WHERE.
-            dataframe = read_warehouse_table(identity["schema"], identity["table_name"], store=identity["store"], context=context)
+        return get_spark_session(context=context).createDataFrame([], metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+
+
+def _source_snapshot_keys(identity, context):
+    """Use authored Grain or source processing keys without inferring identity from values."""
+    plan = context["execution_plan"]
+    contract = json.loads(plan.contracts_json).get(identity["table_id"])
+    payload = (contract or {}).get("contract_payload") or {}
+    if not payload and (contract or {}).get("contract_payload_json"):
+        payload = json.loads(contract["contract_payload_json"])
+    names = {column["column_id"]: column["column_name"] for column in payload.get("table", {}).get("columns", [])}
+    for rule in payload.get("guardrails", []):
+        if rule.get("guardrail_type") == "grain" and rule.get("is_active", True):
+            return [names.get(name, name) for name in rule.get("rule_parameters", {}).get("columns", [])]
+    processing_identity = identity
+    if "load_strategy_parameters_json" not in identity:
+        try:
+            processing_identity = resolve_catalogue_table_identity(context["config"], plan.workspace_id,
+                identity["table_id"], spark_session=get_spark_session(context=context),
+                context={**context, "_pipeline_identities": None})
+        except Exception as exc:
+            if not (is_table_not_found_error(exc) or (isinstance(exc, ValueError) and
+                    str(exc).startswith("No active registered Catalogue table exists for table_id"))):
+                raise
+            processing_identity = {}
+    processing = processing_identity.get("load_strategy_parameters_json") or {}
+    if isinstance(processing, str):
+        processing = json.loads(processing)
+    return list(processing.get("key_columns") or payload.get("table", {}).get("processing", {}).get("key_columns") or [])
+
+
+def source_snapshot_projection(dataframe, keys=()):
+    """Project deterministic SHA256 identity/content multiplicities in Spark.
+
+    Validated keys identify historical rows. Missing/null/nonunique keys fall
+    back to content multisets; no arbitrary old/new pairing claims modifications.
+    """
+    from functools import reduce
+    from pyspark.sql import functions as F
+    columns = sorted(name for name in dataframe.columns
+                     if name not in {*_TARGET_AUDIT_COLUMNS, *_SCD2_LIFECYCLE_COLUMNS, "_row_hash"}
+                     and not name.startswith(_DEFAULT_PROFILE_EXCLUDE_PREFIXES))
+    content = dataframe.select(*[F.col("`" + name.replace("`", "``") + "`") for name in columns])
+    schema = [(name, content.schema[name].dataType.json()) for name in columns]
+    keys = list(keys)
+    reason = "No authored row key; content multiset comparison."
+    if keys and len(keys) == len(set(keys)) and set(keys) <= set(columns):
+        key_frame = content.select(*[F.col("`" + name.replace("`", "``") + "`").alias(name) for name in keys])
+        nulls = reduce(lambda left, right: left | right, [F.col("`" + name.replace("`", "``") + "`").isNull() for name in keys])
+        if key_frame.where(nulls).limit(1).count() or key_frame.groupBy(*[F.col("`" + name.replace("`", "``") + "`") for name in key_frame.columns]).count().where("count > 1").limit(1).count():
+            keys = []
+            reason = "Authored keys contain null or duplicate values; content multiset comparison."
+    else:
+        if keys:
+            reason = "Authored keys are missing or invalid; content multiset comparison."
+        keys = []
+    content_hash = row_hash_expression(content)
+    if keys:
+        key_frame = content.select(*[F.col("`" + name.replace("`", "``") + "`") for name in keys])
+        identity_hash = row_hash_expression(key_frame)
+        reason = "Historical rows compared by validated unique authored keys."
+    else:
+        identity_hash = content_hash
+    evidence = content.select(identity_hash.alias("partition_value"), content_hash.alias("content_fingerprint"))
+    evidence = evidence.groupBy("partition_value", "content_fingerprint").count().withColumnRenamed("count", "row_count")
+    return evidence, {"version": 1, "schema": schema, "keys": keys, "identity_reason": reason}
+
+
+def _source_evidence_totals(evidence):
+    """Fingerprint the compact hash multiset and count source rows without driver collection."""
+    from pyspark.sql import functions as F
+    hashes = evidence.withColumn("_row_hash", F.sha2(F.to_json(F.struct(
+        "partition_value", "content_fingerprint", "row_count")), 256))
+    totals = row_hash_totals(hashes)
+    rows = evidence.agg(F.sum("row_count").alias("rows")).first()["rows"] or 0
+    return {"groups": totals["rows"], "rows": rows,
+            "fingerprint": hashlib.sha256(json.dumps(totals, sort_keys=True, default=str).encode()).hexdigest()}
+
+
+def compare_source_snapshot_evidence(current, previous, *, keyed):
+    """Compare compact historical row evidence, retaining only ten hash samples per category."""
+    from pyspark.sql import functions as F
+    if not keyed:
+        current = current.groupBy("content_fingerprint").agg(F.sum("row_count").alias("row_count"))
+        previous = previous.groupBy("content_fingerprint").agg(F.sum("row_count").alias("row_count"))
+        join_key = "content_fingerprint"
+    else:
+        join_key = "partition_value"
+    before, after = previous.alias("p"), current.alias("c")
+    changes = before.join(after, F.col("p." + join_key) == F.col("c." + join_key), "full_outer")
+    if keyed:
+        categories = {
+            "added": (F.col("p.partition_value").isNull(), F.col("c.row_count")),
+            "removed": (F.col("c.partition_value").isNull(), F.col("p.row_count")),
+            "modified": (F.col("p.partition_value").isNotNull() & F.col("c.partition_value").isNotNull()
+                         & (F.col("p.content_fingerprint") != F.col("c.content_fingerprint")), F.lit(1)),
+        }
+    else:
+        delta = F.coalesce(F.col("c.row_count"), F.lit(0)) - F.coalesce(F.col("p.row_count"), F.lit(0))
+        categories = {"added": (delta > 0, delta), "removed": (delta < 0, -delta)}
+    counts, samples = {"modified_count": 0 if keyed else None}, {}
+    for category, (condition, amount) in categories.items():
+        affected = changes.where(condition).select(
+            F.coalesce(F.col("p." + join_key), F.col("c." + join_key)).alias("identity_hash"),
+            F.col("p.content_fingerprint").alias("previous_hash"),
+            F.col("c.content_fingerprint").alias("current_hash"), amount.cast("long").alias("affected_rows"))
+        counts[category + "_count"] = affected.agg(F.sum("affected_rows").alias("n")).first()["n"] or 0
+        samples[category] = [row.asDict() for row in affected.orderBy("identity_hash").limit(10).collect()]
+    counts["ambiguous_count"] = counts.get("ambiguous_count", 0) if keyed else counts["removed_count"]
+    return {**counts, "samples": samples, "samples_limit": 10,
+            "ambiguous_count_overlaps_removed": not keyed}
+
+
+def _persist_source_snapshot(evidence, header, *, context):
+    """Append immutable distributed row evidence, then its completeness manifest."""
+    from pyspark.sql import functions as F
+    schema = metadata_table_schema_registry()[_PROCESSING_STATE_TABLE]
+    row_fields = {**header, "record_type": "source_row_evidence", "snapshot_payload_json": None}
+    identity = F.sha2(F.concat_ws(":", F.lit(header["observation_id"]), F.col("partition_value"), F.col("content_fingerprint")), 256)
+    frame = evidence.select(*[
+        (identity if field.name == "record_id" else F.col(field.name) if field.name in evidence.columns else
+         F.lit(row_fields.get(field.name))).cast(field.dataType).alias(field.name) for field in schema])
+    write_lakehouse_table(frame, _PROCESSING_STATE_TABLE, store="Metadata",
+        schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context, mode="append", options={"mergeSchema": "true"})
+    write_lakehouse_table(get_spark_session(context=context).createDataFrame([header], schema),
+        _PROCESSING_STATE_TABLE, store="Metadata", schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE),
+        context=context, mode="append")
+
+
+def _validated_source_snapshot(state, observation_id, *, context_key):
+    """Require a complete immutable manifest and matching distributed hash multiset."""
+    from pyspark.sql import functions as F
+    headers = state.where((F.col("record_type") == "source_snapshot")
+        & (F.col("observation_id") == observation_id)).limit(2).collect()
+    if len(headers) != 1:
+        raise RuntimeError("Source snapshot manifest is missing or ambiguous.")
+    header = headers[0].asDict()
+    metadata = json.loads(header["snapshot_payload_json"])
+    if metadata.get("version") != 2 or metadata.get("context_key") != context_key:
+        raise RuntimeError("Source snapshot physical context or version changed.")
+    evidence = state.where((F.col("record_type") == "source_row_evidence")
+        & (F.col("observation_id") == observation_id)).select("partition_value", "content_fingerprint", "row_count")
+    invalid = evidence.where(F.col("row_count").isNull() | (F.col("row_count") <= 0)
+        | F.col("partition_value").isNull() | ~F.col("partition_value").rlike("^[0-9a-f]{64}$")
+        | F.col("content_fingerprint").isNull() | ~F.col("content_fingerprint").rlike("^[0-9a-f]{64}$"))
+    if invalid.limit(1).count() or _source_evidence_totals(evidence) != metadata.get("totals"):
+        raise RuntimeError("Source snapshot hash evidence is corrupt or incomplete.")
+    if evidence.groupBy("partition_value", "content_fingerprint").count().where("count > 1").limit(1).count():
+        raise RuntimeError("Duplicate source hash evidence.")
+    if metadata.get("keys") and evidence.groupBy("partition_value").agg(F.sum("row_count").alias("n")).where("n != 1").limit(1).count():
+        raise RuntimeError("Keyed source snapshot contains ambiguous identities.")
+    return evidence, metadata, header
+
+
+def _record_source_drift_result(result, *, context, table_id="", table_name="", rule_type="historical_source_content"):
+    """Use existing aggregate Guardrail Results without any Contract policy authority."""
+    context = {**context, "_fabricops_suppress_io_log": True}
+    plan = context["execution_plan"]
+    write_guardrail_result_row(spark_session=get_spark_session(context=context), config=context["config"],
+        active_workspace_id=plan.workspace_id, run_id=plan.plan_id, dataset_name="", table_name=table_name,
+        store_type="", layer="", table_id=table_id, guardrail_type="source_drift", rule_type=rule_type,
+        result={**result, "guardrail_rule_id": "pipeline_source_drift_v2:" + rule_type, "guardrail_version": 2,
+            "guardrail_type": "source_drift", "rule_context": {"rule_type": rule_type}}, context=context)
+
+
+def observe_full_source(identity, *, dataframe=None, context):
+    """Automatically observe a complete source, never the profiling or query scope."""
+    plan = context.get("execution_plan")
+    policy = validate_source_drift_configuration(getattr(plan, "evidence", {}).get("source_drift_policy"))
+    if not policy["source_drift_enabled"]:
+        return {"status": "disabled", "can_continue": True, "reason": "Source Drift disabled."}
     from pyspark import StorageLevel
-    if reuse_frame and not dataframe.is_cached:
-        dataframe.persist(StorageLevel.MEMORY_AND_DISK)
-        plan.evidence.setdefault("source_observation_caches", []).append(dataframe)
-    totals = row_hash_totals(add_row_hash(dataframe))
-    fingerprint = hashlib.sha256(json.dumps(totals, sort_keys=True, default=str).encode()).hexdigest()
-    observation_id = str(uuid4())
-    audit = build_pipeline_audit_fields(config=context["config"], active_workspace_id=context["scope_workspace_id"], runtime_context=context)
-    row = {**audit, "record_id": _processing_state_id(context["scope_workspace_id"], source_id, observation_id),
-           "record_type": "source_observation", "status": "observed", "observation_id": observation_id,
-           "run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "workspace_id": context["scope_workspace_id"],
-           "source_table_id": source_id, "source_table_name": identity["table_name"], "observed_at": now,
-           "partition_column": None, "partition_value": None, "row_count": totals["rows"],
-           "content_fingerprint": fingerprint, "is_present": True}
-    if persistence_permitted(context):
-        _merge_source_observation_records([row], config=context["config"], context=context)
-    plan.evidence.setdefault("full_source_observations", {})[source_id] = [row]
-    changed = previous is not None and previous["content_fingerprint"] != fingerprint
-    return {"status": "changed" if changed else "unchanged" if previous else "first_observation",
-            "changed": changed if previous else None, "row_count": totals["rows"], "content_fingerprint": fingerprint}
+    from pyspark.sql import functions as F
+    from fabricops_kit.io import read_warehouse_table
+    source_id = identity["table_id"]
+    observations = plan.evidence.setdefault("source_drift_observations", {})
+    if source_id in observations:
+        return observations[source_id]
+    context = {**context, "_fabricops_suppress_io_log": True}
+    candidates = plan.evidence.setdefault("source_drift_candidates", {})
+    evidence = None
+    owned_cache = False
+    result = {"table_id": source_id, "table_name": identity["table_name"], "pipeline_id": plan.pipeline_id,
+              "run_id": plan.plan_id, "added_count": None, "removed_count": None, "modified_count": None,
+              "ambiguous_count": None, "samples_limit": 10}
+    try:
+        context_key, descriptor = source_snapshot_context(identity, context=context)
+        state = _source_snapshot_state(context).where(F.col("source_table_id") == source_id)
+        head_id = _processing_state_id("source_drift_head", context_key)
+        heads = state.where((F.col("record_type") == "source_drift_baseline")
+            & (F.col("record_id") == head_id)).limit(2).collect()
+        if len(heads) > 1:
+            raise RuntimeError("Ambiguous shared source baseline.")
+        head = heads[0].asDict() if heads else None
+        now = datetime.now(UTC)
+        if head:
+            if head.get("status") != "committed" or not head.get("observation_id") or head.get("accepted_at") is None:
+                raise RuntimeError("Accepted source baseline is incomplete.")
+            last = head["accepted_at"]
+            last = last.replace(tzinfo=UTC) if last.tzinfo is None else last
+            if now - last < timedelta(days=policy["source_drift_interval_days"]):
+                result.update(status="not_due", reason="Confirmed source observation interval has not elapsed.",
+                    historical_checked=False, context_key=context_key)
+                observations[source_id] = {**result, "can_continue": True}
+                return observations[source_id]
+        previous, previous_meta = None, None
+        if head:
+            previous, previous_meta, _ = _validated_source_snapshot(state, head["observation_id"], context_key=context_key)
+        if dataframe is None:
+            dataframe = (read_lakehouse_table(identity["table_name"], store=identity["store"], schema=identity.get("schema"), context=context)
+                if (identity.get("store_type") or identity.get("store_kind")) == "lakehouse" else
+                read_warehouse_table(identity["schema"], identity["table_name"], store=identity["store"], context=context))
+        owned_cache = not dataframe.is_cached
+        if owned_cache:
+            dataframe.persist(StorageLevel.MEMORY_AND_DISK)
+        evidence, metadata = source_snapshot_projection(dataframe, _source_snapshot_keys(identity, context))
+        evidence.persist(StorageLevel.MEMORY_AND_DISK)
+        metadata.update(version=2, context_key=context_key, physical=descriptor["physical"],
+            parent_observation_id=head["observation_id"] if head else None, totals=_source_evidence_totals(evidence))
+        metadata = json.loads(json.dumps(metadata))
+        schema_changed = bool(previous_meta and metadata["schema"] != previous_meta["schema"])
+        keyed = bool(previous_meta and metadata["keys"] and metadata["keys"] == previous_meta["keys"]
+            and all(dict(metadata["schema"]).get(key) == dict(previous_meta["schema"]).get(key) for key in metadata["keys"]))
+        comparison = (compare_source_snapshot_evidence(evidence, previous, keyed=keyed) if previous is not None else
+            {"added_count": None, "removed_count": None, "modified_count": None, "ambiguous_count": None, "samples": {}})
+        changed = previous is not None and (schema_changed or any(comparison.get(key) for key in
+            ("added_count", "removed_count", "modified_count")))
+        observation_id = str(uuid4())
+        audit = build_pipeline_audit_fields(config=context["config"], active_workspace_id=plan.workspace_id, runtime_context=context)
+        header = {**audit, "record_id": _processing_state_id(context_key, observation_id), "record_type": "source_snapshot",
+            "status": "observed", "observation_id": observation_id, "pipeline_id": plan.pipeline_id, "run_id": plan.plan_id,
+            "workspace_id": plan.workspace_id, "source_table_id": source_id, "source_table_name": identity["table_name"],
+            "observed_at": now, "row_count": metadata["totals"]["rows"], "content_fingerprint": metadata["totals"]["fingerprint"],
+            "snapshot_payload_json": json.dumps(metadata, sort_keys=True)}
+        if persistence_permitted(context):
+            _persist_source_snapshot(evidence, header, context=context)
+        candidates[source_id] = header
+        result.update(comparison, status="changes_detected" if changed else "no_change" if previous is not None else "baseline_pending",
+            changed=bool(changed), historical_checked=previous is not None, schema_changed=schema_changed,
+            identity_strategy="key" if keyed or (previous is None and metadata["keys"]) else "content_multiset",
+            row_count=metadata["totals"]["rows"], context_key=context_key, observation_id=observation_id,
+            reason=("Initial exact snapshot; no historical change counts are known. " if previous is None else
+                    "Complete-source comparison. ") + metadata["identity_reason"], baseline_status="pending_finalization")
+    except Exception as exc:
+        candidates.pop(source_id, None)
+        result.update(status="observation_failed", changed=None, historical_checked=False,
+            reason="Complete source or accepted snapshot could not be verified; inspect access and snapshot integrity.",
+            error_type=type(exc).__name__)
+    finally:
+        if evidence is not None:
+            evidence.unpersist()
+        if owned_cache:
+            dataframe.unpersist()
+    result.update(can_continue=not (policy["source_drift_block"] and result["status"] in {"changes_detected", "observation_failed"}),
+        action="Block" if policy["source_drift_block"] else "Warn", severity="blocking" if policy["source_drift_block"] else "warning")
+    if result["status"] in {"changes_detected", "observation_failed"}:
+        result["investigation_query"] = source_drift_investigation_query(plan, source_id)
+    try:
+        _record_source_drift_result(result, context=context, table_id=source_id, table_name=identity["table_name"])
+    except Exception as exc:
+        candidates.pop(source_id, None)
+        result.update(status="observation_failed", can_continue=not policy["source_drift_block"],
+            reason="Source Drift diagnostics could not be persisted; no baseline will be accepted.", error_type=type(exc).__name__)
+    observations[source_id] = result
+    return result
+
+
+def source_drift_investigation_query(plan, source_id, *, evaluation_id=None):
+    """Build an executable, scoped next-cell query with actual runtime identifiers."""
+    schema = metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_GUARDRAIL_RESULTS")
+    return ("from fabricops_kit import read_lakehouse_table\nfrom pyspark.sql import functions as F\n"
+            f"diagnostics = read_lakehouse_table('METADATA_GUARDRAIL_RESULTS', store='Metadata', schema={schema!r})\n"
+            "display(diagnostics.where(\n"
+            f"    (F.col('workspace_id') == {plan.workspace_id!r})\n"
+            f"    & (F.col('run_id') == {plan.plan_id!r})\n"
+            f"    & ((F.col('table_id') == {source_id!r}) | (F.col('rule_type') == 'pipeline_observation'))\n"
+            "    & (F.col('guardrail_type') == 'source_drift')\n"
+            f"    & (F.get_json_object('result_payload_json', '$.pipeline_id') == {plan.pipeline_id!r})\n"
+            + (f"    & (F.get_json_object('result_payload_json', '$.evaluation_id') == {evaluation_id!r})\n" if evaluation_id else "")
+            + ").select('table_name', 'table_id', 'rule_type', 'status', 'can_continue', 'reason', 'result_payload_json', '_committed_at'))")
+
+
+def evaluate_pipeline_source_drift(plan, *, verbose=False, spark_session=None):
+    """Close the Read set and consolidate every source before any target publication."""
+    policy = validate_source_drift_configuration(plan.evidence.get("source_drift_policy"))
+    if not policy["source_drift_enabled"]:
+        return {"status": "disabled", "can_continue": True, "sources": []}
+    if "source_drift_decision" in plan.evidence:
+        decision = plan.evidence["source_drift_decision"]
+        if not decision["can_continue"]:
+            error = RuntimeError("Source Drift blocks publication; restore the source or review source_drift_block=False in a new run.")
+            error.result = decision
+            raise error
+        return decision
+    identities = json.loads(plan.participants_json)
+    source_ids = {tid for tid, identity in identities.items() if "source" in identity["roles"]}
+    observations = plan.evidence.get("source_drift_observations", {})
+    missing = source_ids - set(observations)
+    results = [observations[tid] for tid in sorted(source_ids & set(observations))]
+    unavailable = bool(missing) or any(row["status"] == "observation_failed" for row in results)
+    changed = any(row.get("changed") for row in results)
+    allowed = not missing and not (policy["source_drift_block"] and (unavailable or changed))
+    decision = {"status": "blocked" if not allowed else "warning" if unavailable or changed else "not_due"
+        if not results or all(row["status"] == "not_due" for row in results) else "baseline_pending"
+        if any(row["status"] == "baseline_pending" for row in results) else "no_change",
+        "can_continue": allowed, "sources": results, "source_ids": sorted(source_ids),
+        "missing_source_ids": sorted(missing), "enabled": True, "interval_days": policy["source_drift_interval_days"],
+        "block": policy["source_drift_block"], "observed": sum(row["status"] != "not_due" for row in results),
+        "skipped": sum(row["status"] == "not_due" for row in results), "baseline_status": "pending_finalization"}
+    for name in ("added_count", "removed_count", "modified_count", "ambiguous_count"):
+        decision[name] = sum(row[name] for row in results) if results and all(row.get(name) is not None for row in results) else None
+    plan.evidence["source_drift_reads_closed"] = True
+    context = {**plan.runtime_context, "execution_plan": plan, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}
+    try:
+        _record_source_drift_result({**decision, "sources": [{k: v for k, v in row.items() if k not in {"samples", "investigation_query"}} for row in results],
+            "pipeline_id": plan.pipeline_id, "action": "Block" if not allowed else "Warn",
+            "severity": "blocking" if not allowed else "warning", "reason": "All required sources must be read before Write." if missing else "Consolidated complete-source decision."},
+            context=context, rule_type="pipeline_observation")
+    except Exception as exc:
+        unavailable = True
+        decision.update(status="observation_failed", can_continue=not policy["source_drift_block"] and not missing,
+            diagnostics_error_type=type(exc).__name__)
+    if unavailable or not decision["can_continue"]:
+        plan.evidence["source_drift_candidates"] = {}
+        decision["baseline_status"] = "not_eligible"
+    plan.evidence["source_drift_decision"] = decision
+    if verbose:
+        counts = " · ".join(name.removesuffix("_count").title() + ": " +
+            (str(decision[name]) if decision[name] is not None else "unknown") for name in
+            ("added_count", "removed_count", "modified_count"))
+        print(f"FabricOps SOURCE DRIFT · Sources: {len(source_ids)} · Observed: {decision['observed']} · Skipped: {decision['skipped']}")
+        print(counts + f" · Decision: {decision['status']} · Publication: {'Allowed' if decision['can_continue'] else 'Blocked'}")
+    if not decision["can_continue"]:
+        error = RuntimeError("Source Drift blocks publication. Read every source before any Write; review complete-source diagnostics in a new execution.")
+        error.result = decision
+        raise error
+    return decision
+
+
+def record_pipeline_publication(target_table_id, status, *, receipt=None, context=None):
+    """Retain exact publication outcomes for the final source baseline boundary."""
+    plan = (context or {}).get("execution_plan")
+    if plan is not None:
+        plan.evidence.setdefault("publication_outcomes", {})[target_table_id] = {"status": status, "receipt": receipt}
+
+
+def accept_pipeline_source_snapshots(plan, *, spark_session=None):
+    """Conditionally accept all complete source candidates after verified finalization."""
+    candidates = plan.evidence.get("source_drift_candidates", {})
+    if not candidates or not plan.permits_persistence:
+        plan.evidence.setdefault("source_snapshot_acceptance", {"status": "diagnostic_only" if not plan.permits_persistence else
+            "not_due" if plan.evidence.get("source_drift_decision", {}).get("status") == "not_due" else "not_eligible"})
+        return
+    if (plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed"}
+            or plan.evidence["final_result"].get("boundary_completed") is not True):
+        raise RuntimeError("Successful confirmed whole-run finalization is required for source baseline acceptance.")
+    if not plan.evidence.get("source_drift_decision", {}).get("can_continue"):
+        raise RuntimeError("A consolidated Source Drift decision is required.")
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    context = {**plan.runtime_context, "execution_plan": plan, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}
+    identities = json.loads(plan.participants_json)
+    observations = plan.evidence.get("source_drift_observations", {})
+    expected_sources = {tid for tid, identity in identities.items() if "source" in identity["roles"]}
+    expected_candidates = {tid for tid, row in observations.items() if row["status"] != "not_due"}
+    if (set(observations) != expected_sources or expected_candidates != set(candidates)
+            or any(not row.get("can_continue", True) or row["status"] == "observation_failed" for row in observations.values())):
+        raise RuntimeError("Partial or blocked source observations cannot accept a baseline.")
+    for tid, identity in identities.items():
+        if "target" not in identity["roles"]:
+            continue
+        outcome = plan.evidence.get("publication_outcomes", {}).get(tid, {})
+        receipt = outcome.get("receipt")
+        if ((not receipt and outcome.get("status") in {"empty_incremental_scope", "no_unseen_hashes"})
+                or (receipt and receipt.get("run_id") != plan.plan_id)):
+            plan.evidence["source_snapshot_acceptance"] = {"status": "not_eligible",
+                "reason": "A required Write has no publication from this execution; prior-run recovery cannot accept a new source snapshot.",
+                "target_table_id": tid}
+            return
+        if not receipt or not _physical_target_has_publication({**identity,
+                "store_type": identity.get("store_type") or identity.get("store_kind")}, receipt, context=context):
+            raise RuntimeError("All required target publications must be confirmed; nonpublishing Writes cannot accept source baselines.")
+    records = []
+    for source_id, header in candidates.items():
+        metadata = json.loads(header["snapshot_payload_json"])
+        key = metadata["context_key"]
+        state = _source_snapshot_state(context).where(F.col("source_table_id") == source_id)
+        _, actual_meta, actual_header = _validated_source_snapshot(state, header["observation_id"], context_key=key)
+        if actual_meta != metadata or actual_header["content_fingerprint"] != header["content_fingerprint"]:
+            raise RuntimeError("Candidate source snapshot changed before acceptance.")
+        head = {**header, "record_id": _processing_state_id("source_drift_head", key),
+            "record_type": "source_drift_baseline", "status": "committed", "accepted_at": datetime.now(UTC)}
+        records.extend([head, {**head, "record_id": _processing_state_id(head["record_id"], header["observation_id"], "acceptance"),
+            "record_type": "source_snapshot_acceptance"}])
+    spark = get_spark_session(spark_session, context=context)
+    frame = spark.createDataFrame(records, metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+    _, _, _, path = resolve_configured_lakehouse_table("Metadata", _PROCESSING_STATE_TABLE,
+        metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
+    target = DeltaTable.forPath(spark, path)
+    if target.detail().select("properties").first()["properties"].get("delta.isolationLevel") != "Serializable":
+        raise RuntimeError("Source baseline acceptance requires Serializable Processing State; run metadata setup before enabling Source Drift.")
+    parent = "get_json_object(source.snapshot_payload_json, '$.parent_observation_id')"
+    same = f"target.observation_id <=> {parent}"
+    values = {name: f"source.`{name}`" for name in frame.columns}
+    values["observation_id"] = f"CASE WHEN ({same}) OR target.observation_id = source.observation_id THEN source.observation_id ELSE raise_error('Source baseline advanced concurrently; repeat from Read.') END"
+    inserted = {name: f"source.`{name}`" for name in frame.columns}
+    inserted["observation_id"] = f"CASE WHEN source.record_type <> 'source_drift_baseline' OR {parent} IS NULL THEN source.observation_id ELSE raise_error('Source baseline disappeared; repeat from Read.') END"
+    try:
+        retry_delta_metadata(lambda: target.alias("target").merge(frame.alias("source"), "target.record_id = source.record_id")
+            .whenMatchedUpdate(condition="source.record_type = 'source_drift_baseline' AND NOT (target.observation_id <=> source.observation_id)", set=values)
+            .whenNotMatchedInsert(values=inserted).execute())
+    except Exception:
+        # Immutable acceptance receipts survive a later legitimate head advance.
+        expected = {row["record_id"]: row["observation_id"] for row in records if row["record_type"] == "source_snapshot_acceptance"}
+        try:
+            accepted = _source_snapshot_state(context).where(F.col("record_id").isin(*expected)
+                & (F.col("status") == "committed")).select("record_id", "observation_id").collect()
+        except Exception as verification_error:
+            error = RuntimeError("Source baseline acceptance outcome is unknown; inspect immutable acceptance records before retrying.")
+            error.outcome_unknown = True
+            raise error from verification_error
+        if len(accepted) != len(expected) or {row["record_id"]: row["observation_id"] for row in accepted} != expected:
+            raise
+    plan.evidence["source_snapshot_acceptance"] = {"status": "accepted", "source_ids": sorted(candidates)}
 
 
 class PublicationBatch:
@@ -1360,7 +1709,6 @@ def _verify_retry_observations(batch, history):
         key = (batch.context["scope_workspace_id"], source_observation_run_id(batch.context) or str(batch.audit["_activity_id"]), source_id, batch.identity["table_id"])
         for pending, record_type in (
             (_PENDING_SOURCE_OBSERVATIONS.get(key, []), "incremental_checkpoint"),
-            (_PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []), "drift_baseline"),
         ):
             if not pending:
                 continue
@@ -1448,12 +1796,16 @@ def _find_applied_publication(identity, batch_id, *, context, spark_session):
 
 def _processing_state_rows(history):
     """Reject unsupported Preview layouts before interpreting any persisted progress."""
-    required = set(metadata_table_schema_registry()[_PROCESSING_STATE_TABLE].fieldNames())
+    required = set(metadata_table_schema_registry()[_PROCESSING_STATE_TABLE].fieldNames()) - {"snapshot_payload_json"}
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
     ):
         raise RuntimeError("Incompatible METADATA_PROCESSING_STATE schema; existing progress is preserved and cannot be inferred safely.")
-    rows = observation_rows(history)
+    snapshot_types = {"source_snapshot", "source_row_evidence", "source_drift_baseline", "source_snapshot_acceptance"}
+    if hasattr(history, "where"):
+        from pyspark.sql import functions as F
+        history = history.where(F.col("record_type").isNull() | ~F.col("record_type").isin(*snapshot_types))
+    rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types]
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
@@ -1800,154 +2152,6 @@ def incremental_publication_scopes(
     }
 
 
-def check_source_drift_for_target(
-    *,
-    source_table_id: str,
-    target_table_id: str,
-    source_processing: Mapping[str, Any],
-    spark_session=None,
-    context=None,
-) -> dict[str, Any]:
-    """Evaluate source-governed drift against a target-specific baseline."""
-    config, active_workspace_id, context = resolve_fabric_context() if context is None else (context["config"], context["scope_workspace_id"], context)
-    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
-    activity_id = source_observation_run_id(context) or str(audit["_activity_id"])
-    rules_df = load_table_guardrail_rules(
-        config,
-        active_workspace_id,
-        spark_session=spark_session,
-        table_id=source_table_id,
-        context=context,
-    )
-    selected_rule = select_table_guardrail_rule(
-        rules_df,
-        guardrail_type="source_drift",
-        table_id=source_table_id,
-        workspace_id=active_workspace_id,
-    )
-    if selected_rule is None:
-        raise ValueError(f"No active approved Source Drift rule exists for {source_table_id!r}.")
-    observation = get_current_source_observation(
-        workspace_id=active_workspace_id, activity_id=activity_id, table_id=source_table_id
-    )
-    current = observation_rows(observation)
-    if not current:
-        raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
-    committed_at = current[0]["_committed_at"]
-    try:
-        history = read_lakehouse_table(
-            _PROCESSING_STATE_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
-            context={**(context or {}), "_spark_session": spark_session},
-        )
-        history = _recover_completed_source_observations(
-            history, config=config, active_workspace_id=active_workspace_id, context=context,
-            source_table_id=source_table_id, target_table_id=target_table_id,
-        )
-        previous = _previous_source_target_observation(
-            history,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-            workspace_id=active_workspace_id,
-            committed_at=committed_at,
-        )
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise RuntimeError(
-                f"Unable to load Source Observation history for {source_table_id!r}: {exc}"
-            ) from exc
-        previous = []
-
-    # An empty-source header has no partition identity; NULL partitions remain ordinary partitions.
-    current_by = {row["partition_value"]: row for row in current if row.get("is_present", True)}
-    previous_by = {row["partition_value"]: row for row in previous if row.get("is_present") is not None}
-    new, changed, reappeared = [], [], []
-    for value, row in current_by.items():
-        prior = previous_by.get(value)
-        if prior is None:
-            new.append(row["partition_value"])
-        elif not prior.get("is_present", True):
-            reappeared.append(row["partition_value"])
-        elif any(
-            prior.get(field) != row.get(field)
-            for field in ("row_count", "min_change_value", "max_change_value", "content_fingerprint")
-        ):
-            changed.append(row["partition_value"])
-    removed = [
-        row["partition_value"]
-        for value, row in previous_by.items()
-        if row.get("is_present", True) and value not in current_by
-    ]
-    pending = [dict(row) for row in current]
-    # Retain absent partitions so repeated empty snapshots and reappearance checks stay stable.
-    pending.extend(
-        {
-            **current[0],
-            "partition_value": value,
-            "row_count": 0,
-            "min_change_value": None,
-            "max_change_value": None,
-            "content_fingerprint": None,
-            "is_present": False,
-        }
-        for value in previous_by
-        if value not in current_by
-    )
-    parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
-    first_observation = not previous
-    has_changes = first_observation or bool(new or changed or removed or reappeared)
-    result = evaluate_source_drift_guardrail(
-        {
-            "table_id": source_table_id,
-            "target_table_id": target_table_id,
-            "workspace_id": active_workspace_id,
-            "observation_id": str(current[0].get("observation_id") or ""),
-            "status": "changed" if has_changes else "unchanged",
-            "can_continue": True,
-            "check_type": "source_drift",
-            "guardrail_type": "source_drift",
-            "changed": has_changes,
-            "first_observation": first_observation,
-            "new_partitions": new,
-            "changed_partitions": changed,
-            "removed_partitions": removed,
-            "reappeared_partitions": reappeared,
-            "affected_partitions": [*new, *changed, *removed, *reappeared],
-            "partition_column": parameters.get("partition_column"),
-            "reason": "First target consumption." if first_observation else "Source comparison complete.",
-        },
-        rules_df=rules_df,
-        workspace_id=active_workspace_id,
-        table_id=source_table_id,
-        load_strategy=str(source_processing["load_strategy"]),
-    )
-    key = (active_workspace_id, activity_id, source_table_id, target_table_id)
-    if result.get("can_continue"):
-        _PENDING_SOURCE_DRIFT_OBSERVATIONS[key] = pending
-    else:
-        _PENDING_SOURCE_DRIFT_OBSERVATIONS.pop(key, None)
-    if result.get("guardrail_rule_id"):
-        write_guardrail_result_row(
-            spark_session=getattr(observation, "sparkSession", None),
-            config=config,
-            active_workspace_id=active_workspace_id,
-            run_id=activity_id,
-            dataset_name="",
-            table_name="",
-            store_type="",
-            layer="",
-            schema_name=None,
-            guardrail_type="source_drift",
-            rule_type="historical_mutation",
-            result=result,
-            table_id=source_table_id,
-            contract_id=str(selected_rule.get("contract_id") or ""),
-            contract_version=int(selected_rule.get("contract_version") or 0),
-
-            context=context,
-        )
-    return result
 
 
 def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids, context=None):
@@ -1955,8 +2159,6 @@ def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_ta
     return {
         source_id: {
             "incremental": [dict(row) for row in _PENDING_SOURCE_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
-            "drift": [dict(row) for row in _PENDING_SOURCE_DRIFT_OBSERVATIONS.get((workspace_id, activity_id, source_id, target_table_id), [])],
-            "full": [dict(row) for row in getattr((context or {}).get("execution_plan"), "evidence", {}).get("full_source_observations", {}).get(source_id, [])],
         }
         for source_id in source_table_ids
     }
@@ -1992,7 +2194,7 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
         captured = success_context["observation_snapshot"][source_id]
         source_name = _CURRENT_TABLE_IDENTITIES.get(source_id, {}).get("table_name") or resolve_catalogue_table_identity(
             context["config"], active_workspace_id, source_id, context=context).get("table_name")
-        for kind, record_type in (("incremental", "incremental_checkpoint"), ("drift", "drift_baseline"), ("full", "full_source_baseline")):
+        for kind, record_type in (("incremental", "incremental_checkpoint"),):
             for row in captured.get(kind, []):
                 records.append({**{name: row.get(name) for name in (
                     "observation_id", "partition_value", "row_count", "min_change_value", "max_change_value",
@@ -2036,14 +2238,13 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         context=context,
     )
     _merge_source_observation_records(records, config=config, context=context)
+    record_pipeline_publication(target_table_id, "committed", receipt=success_context.get("publication"), context=context)
     for source_table_id in source_table_ids:
         key = (active_workspace_id, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
         captured = snapshot[source_table_id]
         if _PENDING_SOURCE_OBSERVATIONS.get(key, []) == captured["incremental"]:
             _PENDING_SOURCE_OBSERVATIONS.pop(key, None)
             _INCREMENTAL_SOURCE_SCOPES.pop(key, None)
-        if _PENDING_SOURCE_DRIFT_OBSERVATIONS.get(key, []) == captured["drift"]:
-            _PENDING_SOURCE_DRIFT_OBSERVATIONS.pop(key, None)
     return records
 
 
@@ -2485,7 +2686,8 @@ def write_guardrail_result_row(
         results_table,
         store="Metadata",
         schema=metadata_table_physical_schema(config, results_table),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+        context={"config": config, "scope_workspace_id": active_workspace_id,
+                 "_fabricops_suppress_io_log": (context or {}).get("_fabricops_suppress_io_log", False)},
         mode="append",
     )
 
@@ -2746,114 +2948,6 @@ def _changes_content_columns(columns, keys, non_key_columns):
         if column not in keys
     )
 
-def source_drift_check_core(
-    dataframe,
-    previous_dataframe=None,
-    *,
-    partition_columns: list[str] | tuple[str, ...] | None = None,
-    key_columns: list[str] | tuple[str, ...] | None = None,
-    non_key_columns: list[str] | tuple[str, ...] | None = None,
-    range_column: str | None = None,
-    comparison_scope: str = "complete",
-    refresh_days: int = 0,
-    reference_date: date | datetime | str | None = None,
-    include_row_changes: bool = False,
-) -> dict:
-    """Compare current and previous observations using tiered deterministic checks."""
-    scope, refresh_days = _validate_changes_configuration(comparison_scope, refresh_days)
-    keys = tuple(key_columns or ())
-    if not keys:
-        raise ValueError("key_columns must contain at least one logical key column")
-    partitions = tuple(partition_columns or ([range_column] if range_column else []))
-    today = _coerce_date(reference_date) if reference_date is not None else date.today()
-    if today is None:
-        raise ValueError("reference_date must be a date, datetime, or ISO date string")
-    recent_start = today - timedelta(days=refresh_days)
-    spark_mode = _is_spark_dataframe(dataframe)
-    if spark_mode != _is_spark_dataframe(previous_dataframe) and previous_dataframe is not None:
-        raise ValueError("current and previous observations must both be Spark DataFrames or both be local iterables")
-
-    if spark_mode:
-        current = dataframe
-        previous = previous_dataframe if previous_dataframe is not None else dataframe.sparkSession.createDataFrame([], dataframe.schema)
-        columns = sorted(set(current.columns) | set(previous.columns))
-        required = (*partitions, *keys)
-        missing = [column for column in required if column not in columns]
-        if missing:
-            raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = _changes_content_columns(columns, keys, non_key_columns)
-        _validate_spark_logical_keys(current, keys)
-        _validate_spark_logical_keys(previous, keys)
-        current_prepared, current_grouped = _spark_partition_frame(current, partitions, range_column, columns)
-        previous_prepared, previous_grouped = _spark_partition_frame(previous, partitions, range_column, columns)
-        current_observations = _collect_spark_observations(current_grouped, partitions)
-        previous_observations = _collect_spark_observations(previous_grouped, partitions)
-    else:
-        current, previous = _local_source_rows(dataframe), _local_source_rows(previous_dataframe)
-        columns = sorted({str(column) for row in current + previous for column in row})
-        required = (*partitions, *keys)
-        missing = [column for column in required if column not in columns]
-        if missing:
-            raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = _changes_content_columns(columns, keys, non_key_columns)
-        _validate_local_logical_keys(current, keys)
-        _validate_local_logical_keys(previous, keys)
-        current_observations = _local_partition_observations(current, partitions, range_column, columns)
-        previous_observations = _local_partition_observations(previous, partitions, range_column, columns)
-
-    changed_ids, new_ids, missing_ids = _changed_partition_sets(current_observations, previous_observations, scope)
-    current_ids = changed_ids | new_ids
-    previous_ids = changed_ids | (missing_ids if scope == "complete" else set())
-    if scope == "partitions":
-        previous_ids = changed_ids
-    row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
-    counts = {"inserted": 0, "updated": 0, "deleted": 0}
-    ages = {"recent": 0, "historical": 0}
-    if current_ids or previous_ids:
-        if spark_mode:
-            counts, ages, row_changes = _spark_row_comparison(
-                current_prepared, previous_prepared, relevant_current_partitions=current_ids,
-                relevant_previous_partitions=previous_ids, keys=keys, content_columns=content_columns,
-                range_column=range_column, scope=scope, recent_start=recent_start,
-                include_row_changes=include_row_changes,
-            )
-        else:
-            changes, recent, historical = _local_row_comparison(
-                current, previous, relevant_current_partitions=current_ids,
-                relevant_previous_partitions=previous_ids, partitions=partitions, keys=keys,
-                content_columns=content_columns, range_column=range_column, scope=scope,
-                recent_start=recent_start,
-            )
-            counts = {name: len(values) for name, values in changes.items()}
-            ages = {"recent": len(recent), "historical": len(historical)}
-            row_changes = {**changes, "recent": recent, "historical": historical}
-
-    current_values = [item["min_value"] for item in current_observations if item["min_value"] is not None] + [item["max_value"] for item in current_observations if item["max_value"] is not None]
-    previous_values = [item["min_value"] for item in previous_observations if item["min_value"] is not None] + [item["max_value"] for item in previous_observations if item["max_value"] is not None]
-    previous_max = max(previous_values) if previous_values else None
-    unseen_values = [value for value in current_values if previous_max is None or value > previous_max]
-    changed = bool(changed_ids or new_ids or missing_ids)
-    current_by_id = {item["_partition_id"]: item for item in current_observations}
-    result = {
-        "status": "changed" if changed else "unchanged", "can_continue": True,
-        "check_type": "source_drift", "guardrail_type": "source_drift", "changed": changed,
-        "comparison_scope": scope,
-        "partition_observations": _strip_internal_observation_fields(current_observations),
-        "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
-        "new_partitions": [current_by_id[key]["partition"] for key in sorted(new_ids)],
-        "recent_changes": ages.get("recent", 0), "historical_changes": ages.get("historical", 0),
-        "inserted_count": counts.get("inserted", 0), "updated_count": counts.get("updated", 0),
-        "deleted_count": counts.get("deleted", 0),
-        "deletions_provable": scope == "complete" or (scope == "partitions" and bool(partitions)),
-        "current_observed_range": {"min": min(current_values) if current_values else None, "max": max(current_values) if current_values else None},
-        "previous_observed_range": {"min": min(previous_values) if previous_values else None, "max": previous_max},
-        "recent_mutable_range": {"start": recent_start.isoformat(), "end": today.isoformat(), "refresh_days": refresh_days},
-        "new_unseen_range": {"min": min(unseen_values) if unseen_values else None, "max": max(unseen_values) if unseen_values else None},
-        "message": "Source changes detected." if changed else "Source is unchanged.",
-    }
-    if include_row_changes:
-        result["row_changes"] = row_changes
-    return result
 
 def _rule_review_status(row: dict) -> str:
     return _string_value(_catalogue_value(row, "review_state", "review_status")).lower()
@@ -3334,7 +3428,7 @@ def contract_guardrail_rows(contract: dict[str, Any], *, workspace_id: str, tabl
         "rule_parameters": {"required_columns": required_columns},
     }
     adapted = []
-    for raw in [structural, *[rule for rule in rules if rule.get("guardrail_type") != "schema"]]:
+    for raw in [structural, *[rule for rule in rules if rule.get("guardrail_type") not in {"schema", "source_drift"} ]]:
         if not isinstance(raw, dict):
             raise ValueError("Active Data Contract contains an invalid Guardrail definition.")
         if raw.get("is_active", True) is False:
@@ -3756,18 +3850,6 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
         workspace_id=workspace_id, table_id=table_id,
     )
 
-def resolve_source_drift_observation_columns(rule: dict) -> tuple[str, str]:
-    """Return validated observation columns from an active Source Drift rule."""
-    parameters = _parse_rule_parameters(rule)
-    resolved = []
-    for name in ("partition_column", "change_column"):
-        value = str(parameters.get(name) or "").strip()
-        if not value:
-            raise ValueError(f"Active Source Drift rule is invalid: {name} is missing.")
-        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-            raise ValueError(f"Active Source Drift rule is invalid: {name} must be a simple identifier.")
-        resolved.append(value)
-    return resolved[0], resolved[1]
 
 
 def resolve_freshness_observation_column(rule: dict) -> str:
@@ -3809,82 +3891,6 @@ def resolve_incremental_observation_columns(
         "in the governed processing definition."
     )
 
-def evaluate_source_drift_guardrail(
-    result: dict,
-    *,
-    rules_df,
-    dataset_name: str = "",
-    table_name: str = "",
-    workspace_id: str = "",
-    table_id: str = "",
-    load_strategy: str,
-) -> dict:
-    """Validate detected historical mutation against a governed load strategy."""
-    rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="source_drift", dataset_name=dataset_name,
-        table_name=table_name, workspace_id=workspace_id,
-        table_id=table_id,
-    )
-    if not rule:
-        raise ValueError(
-            f"No active approved Source Drift rule exists for {table_id!r}; "
-            "Governance must author and activate one first."
-        )
-    strategy = _string_value(load_strategy).lower()
-    if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
-        raise ValueError("load_strategy must be one of: overwrite, append, scd1, scd2")
-    severity = _string_value(("blocking" if str(_catalogue_value(rule, "action") or "Block").casefold() == "block" else "warning")).lower()
-    if severity not in {"blocking", "warning"}:
-        raise ValueError("severity must be one of: blocking, warning")
-    result.update({
-        "rule_type": "historical_mutation",
-        "load_strategy": strategy,
-        "severity": severity,
-        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
-        "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
-        "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
-        "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
-    })
-    changed = bool(result.get("changed"))
-    historical_mutation = bool(
-        result.get("changed_partitions")
-        or result.get("removed_partitions")
-        or result.get("reappeared_partitions")
-        or result.get("updated_count")
-        or result.get("deleted_count")
-    )
-    result["historical_mutation"] = historical_mutation
-    result["expected"] = {"load_strategy": strategy}
-    result["actual"] = {
-        "changed": changed,
-        **{name: result.get(name, []) for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")},
-    }
-    if result.get("first_observation"):
-        result.update(
-            status="baseline_created",
-            can_continue=True,
-            changed=False,
-            reason="First Source Drift baseline created.",
-        )
-        result["actual"]["changed"] = None
-        result["message"] = result["reason"]
-        return _apply_bypass_post_review_warning(result, rule)
-    compatible = strategy not in {"append_all", "append_new_only"} or not historical_mutation
-    if compatible:
-        result.update(
-            status="passed",
-            can_continue=True,
-            reason=f"Observed source drift is compatible with governed {strategy!r} processing.",
-        )
-    else:
-        blocking = severity == "blocking"
-        result.update(
-            status="failed" if blocking else "warning",
-            can_continue=not blocking,
-            reason="Previously processed source data changed; configured append processing cannot reconcile historical mutation.",
-        )
-    result["message"] = result["reason"]
-    return _apply_bypass_post_review_warning(result, rule)
 
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":
@@ -5687,12 +5693,6 @@ def capture_source_observation(
         table_id=governed_table_id,
         context=context,
     )
-    drift_rule = select_table_guardrail_rule(
-        rules_df,
-        guardrail_type="source_drift",
-        table_id=governed_table_id,
-        workspace_id=active_workspace_id,
-    )
     freshness_rule = select_table_guardrail_rule(
         rules_df,
         guardrail_type="freshness",
@@ -5794,20 +5794,9 @@ def capture_source_observation(
         _merge_source_observation_records(values, config=config, context=context)
         return spark.createDataFrame(values, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
 
-    drift_observation = None
-    if drift_rule is not None:
-        drift_observation = capture_columns(
-            *resolve_source_drift_observation_columns(drift_rule)
-        )
-        set_current_source_observation(
-            workspace_id=active_workspace_id,
-            activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
-            table_id=governed_table_id,
-            observation=drift_observation,
-        )
     if incremental_columns is not None:
         return capture_columns(*incremental_columns, watermark_only=True)
-    return drift_observation
+    return None
 
 
 def _summary_value(value):
@@ -6281,6 +6270,11 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
+        if plan.evidence.get("boundary_completed") and not failed and not plan.evidence["failures"]:
+            try:
+                evaluate_pipeline_source_drift(plan, spark_session=spark_session)
+            except RuntimeError:
+                plan.evidence["failures"].append({"code": "source_drift_blocked"})
         operations = plan.evidence["operations"]
         blocked = failed or bool(plan.evidence["failures"]) or any(
             row.get("can_continue") is False for row in plan.results) or any(
@@ -6295,6 +6289,25 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         elif status == "succeeded" and plan.execution_mode == "ungoverned":
             status = "ungoverned_completed"
         row = persist_pipeline_run(plan, spark_session=spark_session, status=status, completed_at=datetime.now(UTC))
+        plan.evidence["final_result"] = row
+        if status in {"succeeded", "ungoverned_completed", "dry_run_completed"} and plan.evidence.get("source_drift_policy", {}).get("source_drift_enabled"):
+            if not plan.permits_persistence:
+                plan.evidence["source_snapshot_acceptance"] = {"status": "diagnostic_only"}
+            else:
+                try:
+                    accept_pipeline_source_snapshots(plan, spark_session=spark_session)
+                except Exception as exc:
+                    unknown = bool(getattr(exc, "outcome_unknown", False))
+                    reason = ("Baseline acceptance outcome is unknown; inspect shared heads and immutable acceptance records before retrying. Do not assume rollback."
+                        if unknown else "Baseline acceptance was not confirmed; inspect snapshot integrity and concurrent acceptance before a new execution from Read.")
+                    plan.evidence["source_snapshot_acceptance"] = {"status": "acceptance_unknown" if unknown else "acceptance_failed",
+                        "error_type": type(exc).__name__, "reason": reason}
+                    try:
+                        _record_source_drift_result({"status": "warning", "can_continue": True, "action": "Warn", "severity": "warning",
+                            "pipeline_id": plan.pipeline_id, "reason": reason},
+                            context={**plan.runtime_context, "execution_plan": plan, "_spark_session": spark_session}, rule_type="baseline_acceptance")
+                    except Exception:
+                        plan.evidence["source_snapshot_acceptance"]["diagnostics_persisted"] = False
         plan.evidence.update(sealed=True, final_result=row)
         if plan.execution_mode == "dry_run" and status == "dry_run_completed" and plan.evidence.get("notebook_snapshot") is not None:
             from fabricops_kit.activated_pipeline.shared import persist_engineering_dry_run
@@ -6393,6 +6406,8 @@ class PipelineSession:
         if self.closed:
             raise RuntimeError("Pipeline execution is closed; run Setup Pipeline again.")
         with self.plan.lock:
+            if role == "source" and self.plan.evidence.get("source_drift_reads_closed"):
+                raise RuntimeError("Source Drift requires all Reads before any Write. Start a new pipeline and read every source first.")
             if self.plan.execution_mode in {"dry_run", "ungoverned"}:
                 identities = json.loads(self.plan.participants_json)
                 requested = [(role, resolve_physical_table_identity(
@@ -6505,8 +6520,8 @@ class PipelineSession:
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
             self.sources.clear()
-            for cache in (_CURRENT_SOURCE_OBSERVATIONS, _CURRENT_FRESHNESS_EVIDENCE,
-                          _PENDING_SOURCE_OBSERVATIONS, _PENDING_SOURCE_DRIFT_OBSERVATIONS,
+            for cache in (_CURRENT_FRESHNESS_EVIDENCE,
+                          _PENDING_SOURCE_OBSERVATIONS,
                           _INCREMENTAL_SOURCE_SCOPES, _ACTIVE_PUBLICATION_SOURCES):
                 for key in list(cache):
                     if key[:2] == (self.plan.workspace_id, self.plan.plan_id):

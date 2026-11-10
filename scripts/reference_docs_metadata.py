@@ -210,7 +210,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PROCESSING_STATE": {
         "purpose": "Stores source observations, accepted checkpoints, Source Drift baselines and publication receipts so pipelines can resume and recover processing safely.",
         "grain": "One source snapshot partition/header, source-to-target progress member, or exact target publication receipt.",
-        "implementation_notes": "record_type distinguishes source_observation, incremental_checkpoint, drift_baseline, full_source_baseline and publication_receipt. Pipeline-level full observation ignores incremental predicates; full_source_baseline records are accepted only after verified target publication. Only committed checkpoints and baselines are accepted progress. Each exact target publication has one typed receipt; source members reference it through publication_id and are acknowledged together in one Delta merge. Empty-source headers remain distinct from absent NULL/empty-string partitions. The metadata v2 maintainer guide documents the Preview cutover and recovery protocol.",
+        "implementation_notes": "Stores incremental source observations/checkpoints and target publication receipts, plus pipeline-owned complete-source snapshots. source_snapshot manifests and source_row_evidence hash multiplicities are immutable; source_drift_baseline heads are shared by execution workspace and physical workspace/item/table. source_snapshot_acceptance retains successful history. Source Drift heads advance together only after confirmed whole-run finalization and verified required publications through a Serializable conditional transaction. Historical drift_baseline and full_source_baseline records are retained without new Contract authority. Hash rows stay distributed and are excluded before compact checkpoint history is collected.",
         "primary_key": ["record_id"],
 
         "foreign_keys": [
@@ -525,7 +525,9 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
             "fabricops_kit.pipeline.check_schema.check_schema",
             "fabricops_kit.pipeline.check_freshness.check_freshness",
-            "fabricops_kit.pipeline.check_source_drift.check_source_drift",
+            "fabricops_kit.pipeline.shared.observe_full_source",
+            "fabricops_kit.pipeline.shared.evaluate_pipeline_source_drift",
+            "fabricops_kit.pipeline.shared.accept_pipeline_source_snapshots",
             "fabricops_kit.pipeline.check_dq.check_dq",
             "fabricops_kit.pipeline.shared.write_guardrail_result_row",
             "fabricops_kit.pipeline.shared.check_dq_runtime",

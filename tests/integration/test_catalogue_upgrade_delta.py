@@ -290,11 +290,10 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
         assert rt.read().schema['load_strategy_parameters_json'].dataType.simpleString().startswith('struct<')
 
 
-def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue_delta, monkeypatch):
+def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgrade(catalogue_delta, monkeypatch):
     """Production writers and processing resolution use persisted structs directly."""
     from fabricops_kit.pipeline import shared
     write = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
-    drift = importlib.import_module('fabricops_kit.pipeline.check_source_drift')
     rt = catalogue_delta
     original_row = rt.row(load_strategy_parameters_json='{}', extension='keep')
     rt.seed([original_row])
@@ -328,18 +327,10 @@ def test_native_writers_merge_discovery_and_source_drift_after_upgrade(catalogue
     current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json'] == profile_row['profile_key_candidates_json']
-    seen = []
-    monkeypatch.setattr(drift, 'resolve_pipeline_data_contract', lambda *a, **kw: {'contract_id': 'contract'})
-    monkeypatch.setattr(drift, 'resolve_catalogue_table_identity', lambda *a, **kw: decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True)))
-    def processing(*args, **kwargs):
-        value = shared.validated_processing(kwargs['authored_processing'])
-        seen.append(value)
-        return value
-    monkeypatch.setattr(drift, 'resolve_table_processing_definition', processing)
-    monkeypatch.setattr(drift, 'check_source_drift_for_target', lambda **kw: {'can_continue': True})
-    assert call_with_spark(rt.spark, drift.check_source_drift, 'table', target_table_id='table',
-                                    verbose=False, context=context)['can_continue']
-    assert seen == [{'load_strategy': 'scd2', **parameters}]
+    from types import SimpleNamespace
+    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: current)
+    plan = SimpleNamespace(contracts_json='{}', workspace_id='dev')
+    assert shared._source_snapshot_keys(identity, {**context, 'execution_plan': plan}) == ['tenant', 'id']
 
 
 # Reuse the actual widget hydration fixture; only Fabric UI/backend routing is mocked.

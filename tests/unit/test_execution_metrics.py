@@ -123,7 +123,7 @@ def test_write_summary_keeps_profile_total_separate_from_committed(mode, profile
     monkeypatch.setattr(module, "prepare_pipeline_execution", lambda *_args, **_kwargs: execution_context_stub({"target": None}))
     frame = SimpleNamespace(columns=["id", "value"])
     with ExitStack() as stack:
-        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
+        for name in ("resolve_table_id", "check_schema", "evaluate_pipeline_source_drift", "check_dq"):
             stack.enter_context(patch.object(module, name, return_value="target" if name == "resolve_table_id" else {"status": "passed"}))
         stack.enter_context(patch.object(module, "check_sensitive_data", return_value={"dataframe": frame}))
         stack.enter_context(patch.object(module, "pipeline_write", return_value={"table_id": "target", "strategy": mode, "write_metrics": {"total_target_rows": 42, "rows_committed": 8 if mode in {"append_all", "append_new_only", "overwrite"} else None}}))
@@ -170,7 +170,7 @@ def test_write_summary_uses_data_engineering_load_status(
         "write_metrics": {"rows_committed": 0},
     }
     with ExitStack() as stack:
-        for name in ("resolve_table_id", "check_schema", "check_source_drift", "check_dq"):
+        for name in ("resolve_table_id", "check_schema", "evaluate_pipeline_source_drift", "check_dq"):
             stack.enter_context(
                 patch.object(
                     module, name,

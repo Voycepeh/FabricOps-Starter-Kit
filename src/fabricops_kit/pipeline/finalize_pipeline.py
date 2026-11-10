@@ -232,6 +232,11 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     dict
         Final execution summary. For persistent modes this is the
         METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
+        When pipeline Source Drift is enabled, adds a source_drift diagnostic
+        summary and separate baseline acceptance status without altering the
+        immutable Run record. Failed or unconfirmed baseline acceptance does
+        not roll back completed target publications. An unconfirmed outcome
+        requires inspection of immutable acceptance history before retrying.
         Each operation retains legacy rows_read/rows_written plus its available
         detailed Read or strategy-specific Write metrics. Missing fields on
         historical records remain valid and display as not captured.
@@ -291,4 +296,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
                     context=pipeline.plan.runtime_context)
             except Exception as exc:
                 print(f"Submission/deployment controls unavailable: {exc}. Run finalize_pipeline(pipeline) again to retry; the run outcome is unchanged.")
+        if pipeline.plan.evidence.get("source_drift_policy", {}).get("source_drift_enabled"):
+            acceptance = pipeline.plan.evidence.get("source_snapshot_acceptance", {"status": "not_accepted"})
+            drift = {**pipeline.plan.evidence.get("source_drift_decision", {}), "baseline": acceptance}
+            print(f"Source Drift · Decision: {drift.get('status', 'incomplete')} · Baseline: {acceptance['status']}")
+            return {**result, "source_drift": drift}
         return result

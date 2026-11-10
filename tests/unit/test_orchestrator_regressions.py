@@ -141,6 +141,7 @@ def test_query_schedules_whole_table_instead_of_query_output(read_runtime):
 def test_profile_failure_exposes_completed_publication_and_original_cause(monkeypatch, capsys):
     """Post-commit failure preserves diagnostics without suggesting the write rolled back."""
     context = execution_context_stub({"target": None})
+    monkeypatch.setattr(write, "evaluate_pipeline_source_drift", lambda *a, **kw: {"status": "disabled", "can_continue": True})
     monkeypatch.setattr(write, "resolve_table_id", lambda **_kwargs: "target")
     monkeypatch.setattr(write, "prepare_pipeline_execution", lambda *_args, **_kwargs: context)
     publish = Mock(return_value={"table_id": "target", "strategy": "append_all", "write_metrics": {"rows_committed": 4}})
@@ -181,6 +182,7 @@ def test_write_preserves_final_preparation_after_sensitive_data(monkeypatch, mod
     masked = SimpleNamespace(columns=["secret"])
     final = SimpleNamespace(columns=["secret", "_row_hash", "_committed_at"])
     monkeypatch.setattr(write, "prepare_pipeline_execution", lambda *a, **kw: context)
+    monkeypatch.setattr(write, "evaluate_pipeline_source_drift", lambda *a, **kw: {"status": "disabled", "can_continue": True})
     monkeypatch.setattr(write, "resolve_table_id", lambda **kw: "target")
     sensitive = Mock(return_value={"dataframe": masked, "status": "passed", "can_continue": True})
     publish = Mock(return_value={"table_id": "target", "dataframe": final, "published": mode != "dry_run"})

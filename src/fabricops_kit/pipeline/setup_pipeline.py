@@ -39,7 +39,7 @@ def _table(rows, columns):
 def _applicability(kind, roles):
     boundaries = {
         "schema": "Read and Write", "grain": "Read and Write", "data_quality": "Read and Write",
-        "freshness": "Read", "source_drift": "Write (source/target relationship; Read captures observation)",
+        "freshness": "Read", "source_drift": "Historical definition only; setup_pipeline controls Source Drift",
         "sensitive_data": "Write",
     }
     boundary = boundaries.get(kind, "Unsupported by current evaluator; retained for review")
@@ -84,7 +84,7 @@ def _contract_review(row, roles=("source", "target")):
 def _inspector(row, roles, results=()):
     review = _contract_review(row, roles)
     labels = {"schema": "Schema", "grain": "Grain", "data_quality": "Data Quality", "freshness": "Freshness",
-              "source_drift": "Source Drift", "sensitive_data": "Sensitive Data"}
+              "source_drift": "Historical Source Drift (pipeline-owned)", "sensitive_data": "Sensitive Data"}
     sections = []
     for kind, rules in review["categories"].items():
         content = ""
@@ -127,11 +127,11 @@ def _inspector(row, roles, results=()):
     return "".join(sections) + f'<details><summary>Raw frozen definition</summary><pre>{raw}</pre></details>'
 
 
-def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = False,
-                   source_observation_days: int | None = None,
+def setup_pipeline(*, pipeline_mode: str = "Ungoverned",
                    profiling_enabled: bool = True, profiling_interval_days: int = 1,
                    profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False,
-                   frequency_enabled: bool = False):
+                   frequency_enabled: bool = False, source_drift_enabled: bool = False,
+                   source_drift_interval_days: int = 1, source_drift_block: bool = True):
     """Start a pipeline using the current Fabric notebook identity and one execution mode.
 
     Dry Run previews transformations, optional Contract checks and profiling without
@@ -144,16 +144,6 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     ----------
     pipeline_mode : {"Dry Run", "Ungoverned", "Governed"}, default="Ungoverned"
         Preview, publish without governance, or enforce activated governance.
-
-    observe_source : bool, default=False
-        Manually request a full physical Source Observation for this execution.
-    source_observation_days : int or None, default=None
-        Automatically observe after this many days since the last accepted full
-        observation. None disables automatic observation. Manual requests override
-        the interval. Incremental SQL scope does not restrict observation. Baselines
-        are accepted only with verified target publication; failed or no-op writes
-        do not consume the interval. Changed fingerprints are diagnostic unless
-        a separately configured Source Drift policy blocks publication.
 
     profiling_enabled : bool, default=True
         Enable Standard profiling independently of Grain discovery and Frequency.
@@ -174,6 +164,20 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
         Does not control mandatory Grain Guardrails.
     frequency_enabled : bool, default=False
         Profile value frequencies once per physical table and sufficient scope.
+
+    source_drift_enabled : bool, default=False
+        Observe complete physical sources automatically during Read, independently
+        of profiling limits and incremental checkpoints. Read every source before
+        any Write; the first Write closes the participating Read set.
+    source_drift_interval_days : int, default=1
+        Positive interval since the latest confirmed successful acceptance for the
+        physical source, shared across pipelines. Failed or incomplete runs and
+        nonpublishing Writes do not advance observation history.
+    source_drift_block : bool, default=True
+        Block publication on confirmed additions, removals, modifications, schema
+        changes or unavailable observations. False permits warnings; new baselines
+        still require successful finalization and verified required publications.
+        The first exact snapshot does not invent historical changes.
 
     Returns
     -------
@@ -200,7 +204,7 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
     Raises
     ------
     ValueError
-        If the mode, observation or profiling configuration is invalid.
+        If the mode, Source Drift or profiling configuration is invalid.
     RuntimeError
         If notebook setup or Spark is unavailable, or signed-in Fabric validation
         remains pending. Governed fails before admission and publication.
@@ -216,25 +220,21 @@ def setup_pipeline(*, pipeline_mode: str = "Ungoverned", observe_source: bool = 
 
     if pipeline_mode not in {"Dry Run", "Ungoverned", "Governed"}:
         raise ValueError("pipeline_mode must be exactly Dry Run, Ungoverned or Governed.")
-    if not isinstance(observe_source, bool):
-        raise ValueError("observe_source must be a boolean.")
-    if source_observation_days is not None and (isinstance(source_observation_days, bool)
-            or not isinstance(source_observation_days, int) or source_observation_days <= 0):
-        raise ValueError("source_observation_days must be a positive integer or None to disable automatic observation.")
     profiling = {
         "profiling_enabled": profiling_enabled, "profiling_interval_days": profiling_interval_days,
         "profiling_max_rows": profiling_max_rows, "grain_discovery_enabled": grain_discovery_enabled,
         "frequency_enabled": frequency_enabled,
     }
-    from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+    from fabricops_kit.pipeline.shared import validate_pipeline_profiling, validate_source_drift_configuration
 
     profiling = validate_pipeline_profiling(profiling)
+    policy = validate_source_drift_configuration({"source_drift_enabled": source_drift_enabled,
+        "source_drift_interval_days": source_drift_interval_days, "source_drift_block": source_drift_block})
     session = start_pipeline_session(pipeline_mode, inspector=_inspector)
-    policy = {"manual": observe_source, "days": source_observation_days}
     if pipeline_mode == "Governed" and session.plan.evidence.get("approved_parameters") != {**policy, **profiling}:
         session.close(failed=True)
         raise RuntimeError("Governed parameter overrides differ from the frozen notebook; Dry Run and promote a new version.")
     session.plan.evidence["pipeline_parameters"] = {**policy, **profiling}
     session.plan.evidence["profiling_configuration"] = profiling
-    session.plan.evidence["source_observation_policy"] = policy
+    session.plan.evidence["source_drift_policy"] = policy
     return session

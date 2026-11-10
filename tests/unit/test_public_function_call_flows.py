@@ -585,7 +585,7 @@ def test_pipeline_read_flow_stops_at_foundational_io_boundaries() -> None:
     }
 
     assert {row["function_name"] for row in flow if row["qualified_name"] in foundational_qns} == {
-        "read_lakehouse_table", "read_warehouse_query", "read_warehouse_table",
+        "read_lakehouse_table", "read_warehouse_query", "read_warehouse_table", "write_lakehouse_table",
     }
     assert not any(row["parent_qualified_name"] in foundational_qns for row in flow)
 

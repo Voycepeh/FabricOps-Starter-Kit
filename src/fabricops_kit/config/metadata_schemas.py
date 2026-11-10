@@ -517,6 +517,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("publication_at", "timestamp"),
                 ("publication_input_rows", "long"),
                 ("publication_strategy", "string"),
+                ("snapshot_payload_json", "string"),
                 *audit,
             ],
         ),

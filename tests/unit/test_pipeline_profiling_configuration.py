@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+from fabricops_kit.pipeline.shared import validate_pipeline_profiling, validate_source_drift_configuration
 
 setup = importlib.import_module('fabricops_kit.pipeline.setup_pipeline')
 shared = importlib.import_module('fabricops_kit.pipeline.shared')
@@ -22,7 +22,7 @@ def test_setup_stores_pipeline_configuration(monkeypatch, overrides):
     assert setup.setup_pipeline(**overrides) is session
     assert session.plan.evidence['profiling_configuration'] == validate_pipeline_profiling(overrides)
     assert session.plan.evidence['pipeline_parameters'] == {
-        'manual': False, 'days': None, **validate_pipeline_profiling(overrides)}
+        **validate_source_drift_configuration(), **validate_pipeline_profiling(overrides)}
 
 
 @pytest.mark.parametrize('name,values', [
@@ -42,7 +42,7 @@ def test_invalid_setup_rejected_before_start(monkeypatch, name, values):
 
 
 def test_governed_configuration_cannot_override_approved_settings(monkeypatch):
-    approved = {'manual': False, 'days': None, **validate_pipeline_profiling({'profiling_max_rows': 100})}
+    approved = {**validate_source_drift_configuration(), **validate_pipeline_profiling({'profiling_max_rows': 100})}
     session = SimpleNamespace(plan=SimpleNamespace(evidence={'approved_parameters': approved}), close=Mock())
     monkeypatch.setattr(shared, 'start_pipeline_session', lambda *a, **kw: session)
     with pytest.raises(RuntimeError, match='parameter overrides'):
@@ -56,7 +56,7 @@ def test_promotion_freezes_all_profiling_parameters():
     # promoted_notebook performs the same saved-literal extraction used for approval.
     notebook = {'cells': [{'cell_type': 'code', 'source': 'pipeline = setup_pipeline(pipeline_mode="Dry Run", profiling_enabled=False, grain_discovery_enabled=True, frequency_enabled=True, profiling_interval_days=3, profiling_max_rows=17)'}]}
     cloned, parameters = activation.promoted_notebook(json.dumps(notebook))
-    assert parameters == {'manual': False, 'days': None, **validate_pipeline_profiling({
+    assert parameters == {**validate_source_drift_configuration(), **validate_pipeline_profiling({
         'profiling_enabled': False, 'grain_discovery_enabled': True, 'frequency_enabled': True,
         'profiling_interval_days': 3, 'profiling_max_rows': 17})}
     assert b'Governed' in cloned

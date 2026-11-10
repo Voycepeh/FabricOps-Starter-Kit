@@ -4223,7 +4223,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": null
         },
         {
@@ -7907,7 +7907,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": null
         },
         {
@@ -11468,7 +11468,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": null
         },
         {
@@ -13305,13 +13305,14 @@
             "Parameter removed: previous_workspace_id.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
-            "Optional parameter added: observe_source.",
             "Optional parameter added: profiling_enabled.",
             "Optional parameter added: profiling_interval_days.",
             "Optional parameter added: profiling_max_rows.",
-            "Optional parameter added: source_observation_days."
+            "Optional parameter added: source_drift_block.",
+            "Optional parameter added: source_drift_enabled.",
+            "Optional parameter added: source_drift_interval_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
@@ -15092,13 +15093,14 @@
             "Parameter removed: previous_workspace_id.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
-            "Optional parameter added: observe_source.",
             "Optional parameter added: profiling_enabled.",
             "Optional parameter added: profiling_interval_days.",
             "Optional parameter added: profiling_max_rows.",
-            "Optional parameter added: source_observation_days."
+            "Optional parameter added: source_drift_block.",
+            "Optional parameter added: source_drift_enabled.",
+            "Optional parameter added: source_drift_interval_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)"
         },
         {
@@ -16844,26 +16846,31 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: profiling_enabled.",
             "Optional parameter added: profiling_interval_days.",
-            "Optional parameter added: profiling_max_rows."
+            "Optional parameter added: profiling_max_rows.",
+            "Optional parameter added: source_drift_block.",
+            "Optional parameter added: source_drift_enabled.",
+            "Optional parameter added: source_drift_interval_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 1,
         "modified": 2,
-        "nonbreaking": 2,
-        "potentially_breaking": 0,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
         "total": 3
@@ -18563,26 +18570,31 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: profiling_enabled.",
             "Optional parameter added: profiling_interval_days.",
-            "Optional parameter added: profiling_max_rows."
+            "Optional parameter added: profiling_max_rows.",
+            "Optional parameter added: source_drift_block.",
+            "Optional parameter added: source_drift_enabled.",
+            "Optional parameter added: source_drift_interval_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 1,
         "modified": 2,
-        "nonbreaking": 2,
-        "potentially_breaking": 0,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
         "total": 3
@@ -20282,26 +20294,31 @@
         },
         {
           "change_type": "modified",
-          "classification": "nonbreaking",
+          "classification": "potentially_breaking",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "reasons": [
+            "Parameter removed: observe_source.",
+            "Parameter removed: source_observation_days.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: grain_discovery_enabled.",
             "Optional parameter added: profiling_enabled.",
             "Optional parameter added: profiling_interval_days.",
-            "Optional parameter added: profiling_max_rows."
+            "Optional parameter added: profiling_max_rows.",
+            "Optional parameter added: source_drift_block.",
+            "Optional parameter added: source_drift_enabled.",
+            "Optional parameter added: source_drift_interval_days."
           ],
-          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
         }
       ],
       "summary": {
         "added": 1,
         "modified": 2,
-        "nonbreaking": 2,
-        "potentially_breaking": 0,
+        "nonbreaking": 1,
+        "potentially_breaking": 1,
         "removed": 0,
         "review_required": 1,
         "total": 3
@@ -20673,7 +20690,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         },
         {
           "change_type": "added",
@@ -21245,7 +21262,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         },
         {
           "change_type": "modified",
@@ -21732,7 +21749,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         },
         {
           "change_type": "modified",
@@ -21877,18 +21894,19 @@
           "reasons": [
             "Parameter removed: frequency_enabled.",
             "Parameter removed: grain_discovery_enabled.",
-            "Parameter removed: observe_source.",
             "Parameter removed: profiling_enabled.",
             "Parameter removed: profiling_interval_days.",
             "Parameter removed: profiling_max_rows.",
-            "Parameter removed: source_observation_days.",
+            "Parameter removed: source_drift_block.",
+            "Parameter removed: source_drift_enabled.",
+            "Parameter removed: source_drift_interval_days.",
             "Optional parameter added: new_pipeline.",
             "Optional parameter added: pipeline_id.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         },
         {
           "change_type": "removed",
@@ -21977,18 +21995,19 @@
           "reasons": [
             "Parameter removed: frequency_enabled.",
             "Parameter removed: grain_discovery_enabled.",
-            "Parameter removed: observe_source.",
             "Parameter removed: profiling_enabled.",
             "Parameter removed: profiling_interval_days.",
             "Parameter removed: profiling_max_rows.",
-            "Parameter removed: source_observation_days.",
+            "Parameter removed: source_drift_block.",
+            "Parameter removed: source_drift_enabled.",
+            "Parameter removed: source_drift_interval_days.",
             "Optional parameter added: new_pipeline.",
             "Optional parameter added: pipeline_id.",
             "Optional parameter added: previous_notebook_id.",
             "Optional parameter added: previous_workspace_id."
           ],
           "signature_after": "setup_pipeline(*, pipeline_id: str | None = None, pipeline_mode: str = 'Ungoverned', new_pipeline: bool = False, previous_workspace_id: str | None = None, previous_notebook_id: str | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         },
         {
           "change_type": "removed",
@@ -22079,10 +22098,15 @@
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: profiling_enabled.",
             "Parameter removed: profiling_interval_days.",
-            "Parameter removed: profiling_max_rows."
+            "Parameter removed: profiling_max_rows.",
+            "Parameter removed: source_drift_block.",
+            "Parameter removed: source_drift_enabled.",
+            "Parameter removed: source_drift_interval_days.",
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         }
       ],
       "summary": {
@@ -22135,10 +22159,15 @@
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: profiling_enabled.",
             "Parameter removed: profiling_interval_days.",
-            "Parameter removed: profiling_max_rows."
+            "Parameter removed: profiling_max_rows.",
+            "Parameter removed: source_drift_block.",
+            "Parameter removed: source_drift_enabled.",
+            "Parameter removed: source_drift_interval_days.",
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         }
       ],
       "summary": {
@@ -22191,10 +22220,15 @@
             "Parameter removed: grain_discovery_enabled.",
             "Parameter removed: profiling_enabled.",
             "Parameter removed: profiling_interval_days.",
-            "Parameter removed: profiling_max_rows."
+            "Parameter removed: profiling_max_rows.",
+            "Parameter removed: source_drift_block.",
+            "Parameter removed: source_drift_enabled.",
+            "Parameter removed: source_drift_interval_days.",
+            "Optional parameter added: observe_source.",
+            "Optional parameter added: source_observation_days."
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
-          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)"
+          "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
         }
       ],
       "summary": {
@@ -37368,22 +37402,6 @@
             },
             {
               "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "observe_source",
-              "required": false
-            },
-            {
-              "annotation": "int | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "source_observation_days",
-              "required": false
-            },
-            {
-              "annotation": "bool",
               "default": "True",
               "has_default": true,
               "kind": "keyword_only",
@@ -37421,11 +37439,35 @@
               "kind": "keyword_only",
               "name": "frequency_enabled",
               "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "source_drift_enabled",
+              "required": false
+            },
+            {
+              "annotation": "int",
+              "default": "1",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "source_drift_interval_days",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "source_drift_block",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
           "return_annotation": null,
-          "signature": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None, profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False)",
+          "signature": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "source_path": "src/fabricops_kit/pipeline/setup_pipeline.py",
           "source_qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
         },
@@ -37616,7 +37658,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:f40485c6f7665b745c989ec0baeb5fa4a0e97894374113ccab89967bec7eb596",
+      "source_digest": "sha256:7925f8c6f2e6d7e41b85b8cafa4b02817e3d15d22fca81a9f99ce3a620ce6e1f",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

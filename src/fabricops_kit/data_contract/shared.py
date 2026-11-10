@@ -29,7 +29,7 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "source_drift", "data_quality", "sensitive_data"})
+GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "data_quality", "sensitive_data"})
 GUARDRAIL_ACTIONS = frozenset({"Warn", "Block"})
 SENSITIVE_DATA_TREATMENTS = frozenset({"tokenize", "mask", "bucket", "remove"})
 ENRICHMENT_TYPES_BY_LEVEL = {
@@ -208,6 +208,7 @@ def create_contract_draft(
         "guardrails": list(seed.get("guardrails") or []),
     }
     payload.pop("profiling", None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
     payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
@@ -392,6 +393,8 @@ def validate_contract_definitions(
     seen = set()
     active_policies = set()
     for rule in rules:
+        if isinstance(rule, dict) and rule.get("guardrail_type") == "source_drift":
+            continue  # Retained historical definitions have no runtime authority.
         if not isinstance(rule, dict) or rule.get("guardrail_type") not in GUARDRAIL_TYPES:
             raise ValueError("Data Contract contains an unsupported Guardrail definition.")
         if not isinstance(rule.get("rule_parameters"), dict):
@@ -505,6 +508,7 @@ def save_contract_draft(
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
     canonical.pop("profiling", None)
+    canonical["guardrails"] = [rule for rule in canonical.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     canonical["contract"] = {
         "contract_id": contract_id,
         "contract_version": contract_version,
@@ -685,7 +689,7 @@ def canonical_guardrail_rule_record(record: Mapping[str, Any], *, config: Any, a
     guardrail_type = str(record.get("guardrail_type") or "").strip().casefold().replace(" ", "_")
     if guardrail_type not in GUARDRAIL_TYPES:
         raise ValueError(
-            "guardrail_type must be Schema, Grain, Freshness, Source Drift, Data Quality, or Sensitive Data."
+            "guardrail_type must be Schema, Grain, Freshness, Data Quality, or Sensitive Data."
         )
     raw_parameters = record.get("rule_parameters_json") or "{}"
     try:
@@ -1341,6 +1345,7 @@ def freeze_contract_record(
     payload = json.loads(json.dumps(payload))
     payload.get("table", {}).pop("scheduled_refresh", None)
     payload.pop("profiling", None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
@@ -1434,7 +1439,7 @@ def assemble_contract_payload(
         for row in enrichment
     ]
     guardrails = _latest(
-        [row for row in row_dicts(guardrail_rows) if owned(row)],
+        [row for row in row_dicts(guardrail_rows) if owned(row) and row.get("guardrail_type") != "source_drift"],
         ("guardrail_rule_id",),
     )
     guardrail_docs = []

@@ -6,19 +6,6 @@ from fabricops_kit.pipeline import shared
 
 
 
-class Frame:
-    """Minimal local metadata frame."""
-
-    def __init__(self, rows):
-        self.rows = rows
-
-    def collect(self):
-        return self.rows
-
-    def alias(self, _name):
-        return self
-
-
 def _observation(source, *, target="target-x", notebook="02_pipeline"):
     return {
         "observation_id": f"{source}-observation",
@@ -77,11 +64,8 @@ def _configure_commit(monkeypatch, observations=None):
         "source-b": {"table_name": "source_customers"},
         "target-x": {"table_name": "target_orders"},
     })
-    shared._CURRENT_SOURCE_OBSERVATIONS.clear()
     shared._PENDING_SOURCE_OBSERVATIONS.clear()
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS.clear()
     for observation in observations:
-        shared.set_current_source_observation(workspace_id="dev", activity_id="run-1", table_id=observation["source_table_id"], observation=Frame([observation]))
         shared._PENDING_SOURCE_OBSERVATIONS[("dev", "run-1", observation["source_table_id"], "target-x")] = [observation]
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: _audit())
@@ -146,19 +130,16 @@ def test_write_without_source_drift_still_commits_lineage(monkeypatch):
     ]
 
 
-def test_successful_write_commits_progress_and_source_drift_independently(monkeypatch):
+def test_successful_write_commits_only_incremental_progress(monkeypatch):
     observation = _observation("source-a")
     written, _ = _configure_commit(monkeypatch, [observation])
-    shared._PENDING_SOURCE_DRIFT_OBSERVATIONS[
-        ("dev", "run-1", "source-a", "target-x")
-    ] = [{**observation, "partition_value": "drift-partition"}]
 
     records = shared.commit_pipeline_write_success(
         _context(sources=("source-a",))
     )
 
     assert [row["record_type"] for row in records] == [
-        "publication_receipt", "incremental_checkpoint", "drift_baseline",
+        "publication_receipt", "incremental_checkpoint",
     ]
     assert {row["status"] for row in records} == {"committed"}
     assert written == records

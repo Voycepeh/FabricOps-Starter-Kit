@@ -38,13 +38,14 @@ preview = setup_pipeline(pipeline_mode="Dry Run")
 def setup_pipeline(
     *,
     pipeline_mode: str='Ungoverned',
-    observe_source: bool=False,
-    source_observation_days: int | None=None,
     profiling_enabled: bool=True,
     profiling_interval_days: int=1,
     profiling_max_rows: int | None=None,
     grain_discovery_enabled: bool=False,
     frequency_enabled: bool=False,
+    source_drift_enabled: bool=False,
+    source_drift_interval_days: int=1,
+    source_drift_block: bool=True,
 ):
 ```
 
@@ -61,13 +62,14 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
-| `observe_source` | `bool` | No | `False` | Manually request a full physical Source Observation for this execution. |
-| `source_observation_days` | `int \| None` | No | `None` | Automatically observe after this many days since the last accepted full observation. None disables automatic observation. Manual requests override the interval. Incremental SQL scope does not restrict observation. Baselines are accepted only with verified target publication; failed or no-op writes do not consume the interval. Changed fingerprints are diagnostic unless a separately configured Source Drift policy blocks publication. |
 | `profiling_enabled` | `bool` | No | `True` | Enable Standard profiling independently of Grain discovery and Frequency. |
 | `profiling_interval_days` | `int` | No | `1` | Positive integer interval since the latest confirmed physical-table Standard completion with sufficient scope, shared across pipelines. Full-table requests ignore bounded completions; bounded requests may reuse full completions or completions with an equal or larger requested bound. |
 | `profiling_max_rows` | `int \| None` | No | `None` | None profiles the complete physical table (the prepared DataFrame for Dry Run Writes). A positive integer bounds each enabled activity using an arbitrary row selection; statistics describe only that selection. This does not guarantee a physical read of only that many rows. Saved results carry their scope. Guardrails and Source Observation always use their own required input, independently of this limit. |
 | `grain_discovery_enabled` | `bool` | No | `False` | Discover candidate Grain keys once per physical table and sufficient scope. Does not control mandatory Grain Guardrails. |
 | `frequency_enabled` | `bool` | No | `False` | Profile value frequencies once per physical table and sufficient scope. |
+| `source_drift_enabled` | `bool` | No | `False` | Observe complete physical sources automatically during Read, independently of profiling limits and incremental checkpoints. Read every source before any Write; the first Write closes the participating Read set. |
+| `source_drift_interval_days` | `int` | No | `1` | Positive interval since the latest confirmed successful acceptance for the physical source, shared across pipelines. Failed or incomplete runs and nonpublishing Writes do not advance observation history. |
+| `source_drift_block` | `bool` | No | `True` | Block publication on confirmed additions, removals, modifications, schema changes or unavailable observations. False permits warnings; new baselines still require successful finalization and verified required publications. The first exact snapshot does not invent historical changes. |
 
 </div>
 
@@ -84,7 +86,7 @@ Returns a context-local session exposing the Registry-resolved logical Pipeline 
 ## Raises / Errors
 
 ValueError
-    If the mode, observation or profiling configuration is invalid.
+    If the mode, Source Drift or profiling configuration is invalid.
 RuntimeError
     If notebook setup or Spark is unavailable, or signed-in Fabric validation
     remains pending. Governed fails before admission and publication.
@@ -152,7 +154,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 80 |
+| Live-critical dependencies | 81 |
 
 ### Release history
 
@@ -242,6 +244,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>

@@ -588,7 +588,7 @@ def promoted_notebook(raw):
                     raise ValueError("Promotion requires one unconditional module-level setup_pipeline call.")
                 found += 1
                 values = {kw.arg: kw.value for kw in call.keywords}
-                if call.args or None in values or set(values) - {"pipeline_mode", "observe_source", "source_observation_days", "profiling_enabled", "profiling_interval_days", "profiling_max_rows", "grain_discovery_enabled", "frequency_enabled"}:
+                if call.args or None in values or set(values) - {"pipeline_mode", "source_drift_enabled", "source_drift_interval_days", "source_drift_block", "profiling_enabled", "profiling_interval_days", "profiling_max_rows", "grain_discovery_enabled", "frequency_enabled"}:
                     raise ValueError("Promotion requires literal setup_pipeline parameters without argument overrides.")
                 try:
                     literal = {key: constants[node.id] if isinstance(node, ast.Name) else ast.literal_eval(node)
@@ -601,7 +601,11 @@ def promoted_notebook(raw):
 
                 profiling = validate_pipeline_profiling({key: value for key, value in literal.items()
                     if key in {"profiling_enabled", "profiling_interval_days", "profiling_max_rows", "grain_discovery_enabled", "frequency_enabled"}})
-                parameters = {"manual": literal.get("observe_source", False), "days": literal.get("source_observation_days"), **profiling}
+                from fabricops_kit.pipeline.shared import validate_source_drift_configuration
+
+                drift = validate_source_drift_configuration({key: value for key, value in literal.items()
+                    if key in {"source_drift_enabled", "source_drift_interval_days", "source_drift_block"}})
+                parameters = {**profiling, **drift}
                 for key, node in values.items():
                     if key == "pipeline_mode":
                         replacements.append((node, '"Governed"'))

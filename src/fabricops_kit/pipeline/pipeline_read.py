@@ -588,7 +588,7 @@ def pipeline_read(
         observation_label = (
             "captured current-run state"
             if observation is not None
-            else "no Source Drift observation configured"
+            else "no observation required"
         )
     elif observation is not None:
         scope_label = "bootstrap full read" if scope.get("first_run") else scope["type"]
@@ -599,7 +599,7 @@ def pipeline_read(
     recovery = context.get("_fabricops_source_observation_recovery", [])[recovery_start:]
     if verbose:
         print(f"4. Source Observation → {observation_label}")
-        if full_observation["status"] != "skipped":
+        if full_observation["status"] not in {"skipped", "disabled", "not_due"}:
             print(f"   Full physical source → {full_observation['status']}")
         for recovered in recovery:
             print(f"   Recovery → {recovered['status'].replace('_', ' ')}; {recovered['batches']} exact batch(es) verified")

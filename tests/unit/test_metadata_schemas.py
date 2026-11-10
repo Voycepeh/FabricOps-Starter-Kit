@@ -217,6 +217,7 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "publication_at",
         "publication_input_rows",
         "publication_strategy",
+        "snapshot_payload_json",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {"metadata_table_key", "guardrail_rule_version_id", "publication_payload_json", "observation_status"}.isdisjoint(fields)

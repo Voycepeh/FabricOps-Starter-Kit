@@ -45,7 +45,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     assert namespace['finalize_pipeline'].call_count == expected_sessions
     assert [call.args[0] for call in namespace['finalize_pipeline'].call_args_list] == sessions[:expected_sessions]
     notebook_setup.assert_called_once_with()
-    observation = dict(observe_source=False, source_observation_days=None)
+    observation = dict(source_drift_enabled=False, source_drift_interval_days=1, source_drift_block=True)
     if path.stem == '02_pipeline':
         from fabricops_kit.pipeline.shared import validate_pipeline_profiling
         observation.update(validate_pipeline_profiling())
@@ -82,7 +82,7 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == expected_executions
     assert len(calls['finalize_pipeline']) == expected_executions
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_mode', 'observe_source', 'source_observation_days'}
+    expected_setup = {'pipeline_mode', 'source_drift_enabled', 'source_drift_interval_days', 'source_drift_block'}
     if path.stem == '02_pipeline':
         expected_setup |= {'profiling_enabled', 'profiling_interval_days', 'profiling_max_rows', 'grain_discovery_enabled', 'frequency_enabled'}
     assert all({arg.arg for arg in call.keywords} == expected_setup for call in calls['setup_pipeline'])
