@@ -127,10 +127,10 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         drift_ids = [source_id for source_id in source_ids if "source_drift" in pipeline_guardrail_types(context, source_id)]
         source_checks = source_guardrail_results(context, sources)
         names = []
-        if "schema" in active:
-            names.append("Schema")
         if "sensitive_data" in active:
             names.append("Sensitive Data")
+        if "schema" in active:
+            names.append("Schema")
         if drift_ids:
             names.append("Source Drift")
         if "grain" in active:
@@ -152,10 +152,10 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
         sensitive = {**skipped, "dataframe": dataframe, "support_mapping": None}
         try:
-            schema_result = run("Schema", lambda: check_schema(dataframe, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
             if "sensitive_data" in active:
                 sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             prepared = sensitive["dataframe"]
+            schema_result = run("Schema", lambda: check_schema(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
             evaluated_drift = run("Source Drift", lambda: [check_source_drift(source_id, target_table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}) for source_id in drift_ids]) if drift_ids else []
             drift_by_source = dict(zip(drift_ids, evaluated_drift, strict=True))
             drift = [drift_by_source.get(source_id, dict(skipped)) for source_id in source_ids]

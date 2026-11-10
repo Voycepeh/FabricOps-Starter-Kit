@@ -201,7 +201,7 @@ def test_orchestrate_write_orders_stages_and_profiles_after_write(capsys):
     ]
     with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5] as write, patches[6] as profile:
         actual = run_pipeline_operation(orchestrate_write, dataframe, plan=LIVE_PLAN, sources=[{"table_id":"source-id", "execution_plan_id":"plan"}], store="Silver", schema="demo", table_name="physical_target", write_mode="overwrite")
-    assert calls == ["schema", "sensitive", "drift", "dq", "write", "profile"]
+    assert calls == ["sensitive", "schema", "drift", "dq", "write", "profile"]
     assert actual["published"] is True
     assert actual["table_id"] == "target-id"
     assert write.call_args.args[0] is prepared
