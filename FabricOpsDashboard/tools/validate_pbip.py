@@ -45,6 +45,7 @@ for pid in pages['pageOrder']:
   check(page.get('type')=='Drillthrough' and page.get('pageBinding',{}).get('type')=='Drillthrough',f'{pid}: native drillthrough missing')
 
 all_tmdl='\n'.join(p.read_text() for p in MODEL.rglob('*.tmdl'))
+check(not re.search(r'(?m)^\s*Query = "WITH\b',all_tmdl),'native SQL queries must not start with a CTE')
 check(not re.search(r'\bSELECT\s+\*',all_tmdl,re.I),'SELECT * found')
 check('HistoryWindowDays = 180' in (MODEL/'expressions.tmdl').read_text(),'history-window parameter missing')
 check(all_tmdl.count('DATEADD(day,-')>=5,'history filter missing from run/diagnostic queries')

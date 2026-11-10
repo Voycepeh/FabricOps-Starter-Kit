@@ -53,7 +53,7 @@ table 'Profiled Column'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "WITH p AS (SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,_committed_at profiled_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id,column_id ORDER BY _committed_at DESC,profile_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,profiled_at FROM p WHERE rn=1",
+			    Query = "SELECT column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,profiled_at FROM (SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,profile_snapshot_id,row_count,null_percent,distinct_percent,min_value,max_value,_committed_at profiled_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id,column_id ORDER BY _committed_at DESC,profile_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p WHERE rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

@@ -45,7 +45,7 @@ table 'Data Contract'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(contract_id,'|',contract_version) contract_key,contract_id,contract_version,evidence_workspace_id,JSON_VALUE(contract_payload_json,'$.table.processing.load_strategy') processing_strategy,(SELECT COUNT(1) FROM OPENJSON(contract_payload_json,'$.guardrails')) guardrail_count,(SELECT TOP(1) JSON_VALUE(value,'$.value') FROM OPENJSON(contract_payload_json,'$.enrichment.table') WHERE JSON_VALUE(value,'$.enrichment_type')='Description') table_description FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT]",
+			    Query = "SELECT CONCAT(c.contract_id,'|',c.contract_version) contract_key,c.contract_id,c.contract_version,c.evidence_workspace_id,CASE WHEN p.is_valid=1 THEN JSON_VALUE(p.safe_json,'$.table.processing.load_strategy') END processing_strategy,CASE WHEN p.is_valid=1 THEN (SELECT COUNT(1) FROM OPENJSON(p.safe_json,'$.guardrails')) END guardrail_count,CASE WHEN p.is_valid=1 THEN (SELECT TOP(1) CASE WHEN ISJSON(e.value)=1 THEN JSON_VALUE(e.value,'$.value') END FROM OPENJSON(p.safe_json,'$.enrichment.table') e WHERE CASE WHEN ISJSON(e.value)=1 THEN JSON_VALUE(e.value,'$.enrichment_type') END='Description') END table_description FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT] c CROSS APPLY (VALUES (CASE WHEN ISJSON(c.contract_payload_json)=1 THEN c.contract_payload_json ELSE N'{}' END,ISJSON(c.contract_payload_json))) p(safe_json,is_valid)",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

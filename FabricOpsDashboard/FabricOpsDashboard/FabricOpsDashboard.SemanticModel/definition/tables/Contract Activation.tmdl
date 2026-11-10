@@ -44,7 +44,7 @@ table 'Contract Activation'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "WITH a AS (SELECT CONCAT(workspace_id,'|',table_id) table_key,CONCAT(contract_id,'|',contract_version) contract_key,CASE WHEN agreement_id IS NULL THEN NULL ELSE CONCAT(agreement_id,'|',agreement_version) END agreement_key,activation_id,revision,status,activated_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY revision DESC,activated_at DESC) rn FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) SELECT table_key,contract_key,agreement_key,activation_id,revision,status,activated_at FROM a WHERE rn=1",
+			    Query = "SELECT table_key,contract_key,agreement_key,activation_id,revision,status,activated_at FROM (SELECT CONCAT(workspace_id,'|',table_id) table_key,CONCAT(contract_id,'|',contract_version) contract_key,CASE WHEN agreement_id IS NULL THEN NULL ELSE CONCAT(agreement_id,'|',agreement_version) END agreement_key,activation_id,revision,status,activated_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY revision DESC,activated_at DESC) rn FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) a WHERE rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows
