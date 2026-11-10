@@ -8,8 +8,8 @@ import re
 import sys
 from pathlib import Path
 
-HERE=Path(__file__).resolve(); ROOT=HERE.parents[3]; PRODUCT=HERE.parents[1]; PBIP=PRODUCT/'FabricOpsObservability'
-MODEL=PBIP/'FabricOpsObservability.SemanticModel/definition'; REPORT=PBIP/'FabricOpsObservability.Report/definition'
+HERE=Path(__file__).resolve(); ROOT=HERE.parents[2]; PRODUCT=HERE.parents[1]; PBIP=PRODUCT/'FabricOpsDashboard'
+MODEL=PBIP/'FabricOpsDashboard.SemanticModel/definition'; REPORT=PBIP/'FabricOpsDashboard.Report/definition'
 errors=[]
 def check(ok,msg):
  if not ok: errors.append(msg)
@@ -17,13 +17,13 @@ def check(ok,msg):
 for p in PBIP.rglob('*.json'):
  try: json.loads(p.read_text())
  except Exception as exc: errors.append(f'invalid JSON {p.relative_to(ROOT)}: {exc}')
-for p in [PBIP/'FabricOpsObservability.pbip',PBIP/'FabricOpsObservability.Report/definition.pbir',REPORT/'version.json',MODEL.parent/'definition.pbism',MODEL/'database.tmdl',MODEL/'model.tmdl',MODEL/'relationships.tmdl']:
+for p in [PBIP/'FabricOpsDashboard.pbip',PBIP/'FabricOpsDashboard.Report/definition.pbir',REPORT/'version.json',MODEL.parent/'definition.pbism',MODEL/'database.tmdl',MODEL/'model.tmdl',MODEL/'relationships.tmdl']:
  check(p.exists(),f'missing {p.relative_to(ROOT)}')
-project=json.loads((PBIP/'FabricOpsObservability.pbip').read_text()); pbir=json.loads((PBIP/'FabricOpsObservability.Report/definition.pbir').read_text()); pbism=json.loads((MODEL.parent/'definition.pbism').read_text()); version=json.loads((REPORT/'version.json').read_text())
+project=json.loads((PBIP/'FabricOpsDashboard.pbip').read_text()); pbir=json.loads((PBIP/'FabricOpsDashboard.Report/definition.pbir').read_text()); pbism=json.loads((MODEL.parent/'definition.pbism').read_text()); version=json.loads((REPORT/'version.json').read_text())
 check(project.get('$schema')=='https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','PBIP schema reference mismatch')
-check(project.get('artifacts')==[{'report':{'path':'FabricOpsObservability.Report'}}],'PBIP must reference only its report folder')
+check(project.get('artifacts')==[{'report':{'path':'FabricOpsDashboard.Report'}}],'PBIP must reference only its report folder')
 check(pbir.get('$schema')=='https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','PBIR schema reference mismatch')
-check(pbir.get('datasetReference',{}).get('byPath',{}).get('path')=='../FabricOpsObservability.SemanticModel','PBIR semantic-model path mismatch')
+check(pbir.get('datasetReference',{}).get('byPath',{}).get('path')=='../FabricOpsDashboard.SemanticModel','PBIR semantic-model path mismatch')
 check(pbism.get('$schema')=='https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','PBISM schema reference mismatch')
 check(version=={'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json','version':'2.0.0'},'PBIR version metadata mismatch')
 

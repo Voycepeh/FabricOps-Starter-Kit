@@ -1,6 +1,6 @@
-# FabricOps Observability v1
+# FabricOps Dashboard v1
 
-This directory contains a source-controlled Power BI Project (PBIP), not a design-only specification. Open [`FabricOpsObservability/FabricOpsObservability.pbip`](FabricOpsObservability/FabricOpsObservability.pbip) in Power BI Desktop with the Power BI Project save format enabled.
+This directory contains a source-controlled Power BI Project (PBIP), not a design-only specification. Open [`FabricOpsDashboard/FabricOpsDashboard.pbip`](FabricOpsDashboard/FabricOpsDashboard.pbip) in Power BI Desktop with the Power BI Project save format enabled.
 
 ## What is included
 
@@ -48,5 +48,5 @@ Pipeline Detail exposes conditional Fabric web links for recorded governed noteb
 
 ## Regeneration
 
-Run `python observability/powerbi/tools/build_pbip.py` after editing the generator, then `python observability/powerbi/tools/validate_pbip.py`. Generated PBIP files are committed so reviewers do not need Python to open the project.
+Run `python FabricOpsDashboard/tools/build_pbip.py` after editing the generator, then `python FabricOpsDashboard/tools/validate_pbip.py`. Generated PBIP files are committed so reviewers do not need Python to open the project.
 

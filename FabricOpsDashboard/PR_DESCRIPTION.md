@@ -1,4 +1,4 @@
-# FabricOps Observability v1 PBIP
+# FabricOps Dashboard v1 PBIP
 
 ## Implemented functionality
 
@@ -10,7 +10,9 @@
 
 ## Preview
 
-See `observability/powerbi/assets/report-preview.svg`, `all-pages-preview.svg`, and `semantic-model-preview.svg`. They are labelled static previews with illustrative values, not production-data screenshots or evidence of Desktop rendering.
+See `FabricOpsDashboard/assets/report-preview.svg`, `all-pages-preview.svg`, and `semantic-model-preview.svg`. They are labelled static previews with illustrative values, not production-data screenshots or evidence of Desktop rendering.
+
+The source-controlled project is named **FabricOps Dashboard** and lives under `FabricOpsDashboard/`.
 
 ## Verified repository metadata mappings
 

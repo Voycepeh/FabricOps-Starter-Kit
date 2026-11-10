@@ -3,8 +3,8 @@
 Run on the repository branch with:
 
 ```bash
-python observability/powerbi/tools/build_pbip.py
-python observability/powerbi/tools/validate_pbip.py
+python FabricOpsDashboard/tools/build_pbip.py
+python FabricOpsDashboard/tools/validate_pbip.py
 uv run pytest -q tests/unit/test_pipeline_handoff.py tests/unit/test_metadata_schemas.py
 ```
 

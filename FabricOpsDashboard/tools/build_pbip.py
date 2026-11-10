@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # ruff: noqa: D103, E731
-"""Generate the committed FabricOps Observability PBIP sources."""
+"""Generate the committed FabricOps Dashboard PBIP sources."""
 from __future__ import annotations
 import json
 import shutil
 import uuid
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[1]; PROJECT=ROOT/'FabricOpsObservability'
-MODEL=PROJECT/'FabricOpsObservability.SemanticModel'; REPORT=PROJECT/'FabricOpsObservability.Report'
+ROOT=Path(__file__).resolve().parents[1]; PROJECT=ROOT/'FabricOpsDashboard'
+MODEL=PROJECT/'FabricOpsDashboard.SemanticModel'; REPORT=PROJECT/'FabricOpsDashboard.Report'
 RS='https://developer.microsoft.com/json-schemas/fabric/item/report/definition'
 NS=uuid.UUID('8e42a289-b2d5-4e75-8c4a-130514f2e663')
 def gid(s): return str(uuid.uuid5(NS,s))
@@ -56,9 +56,9 @@ PAGES={
  vis('columns','tableEx',25,485,385,200,{'Values':C('Catalogue Column','Column ID','Column Name','Data Type')+C('Profiled Column','Profile Snapshot ID','Row Count','Null Percent','Distinct Percent','Minimum Value','Maximum Value','Profiled At')},'Latest selected column profile'),vis('access','tableEx',425,485,250,200,{'Values':C('Data Access','Access Snapshot ID','User Principal','User Type','Access Level','Access Value','Access State','Role Name','Permission Source','Observed At')},'Latest recorded access observations'),vis('guardrails','tableEx',690,485,275,200,{'Values':C('Guardrail Result','Run ID','Table Name','Contract ID','Contract Version','Severity','Guardrail Type','Rule Type','Status','Can Continue','Action','Reason','Committed At')},'Related recorded Guardrail outcomes'),vis('activity','tableEx',980,485,210,200,{'Values':C('Pipeline Run','Pipeline ID','Run ID','Started At')+C('Run Operation','Pipeline Role','Read Mode','Write Mode','Rows Read','Input Rows','Rows Committed','Measurement Source','Status')},'Related recorded pipeline activity and execution metrics')])}
 
 def report():
- d=REPORT/'definition'; put(REPORT/'definition.pbir',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','version':'4.0','datasetReference':{'byPath':{'path':'../FabricOpsObservability.SemanticModel'}}}); put(REPORT/'.platform',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json','metadata':{'type':'Report','displayName':'FabricOps Observability','description':'FabricOps operational and governance observability.'},'config':{'version':'2.0','logicalId':gid('report')}})
+ d=REPORT/'definition'; put(REPORT/'definition.pbir',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json','version':'4.0','datasetReference':{'byPath':{'path':'../FabricOpsDashboard.SemanticModel'}}}); put(REPORT/'.platform',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json','metadata':{'type':'Report','displayName':'FabricOps Dashboard','description':'FabricOps operational and governance dashboard.'},'config':{'version':'2.0','logicalId':gid('report')}})
  put(d/'version.json',{'$schema':f'{RS}/versionMetadata/1.0.0/schema.json','version':'2.0.0'})
- put(d/'report.json',{'$schema':f'{RS}/report/3.0.0/schema.json','themeCollection':{'customTheme':{'name':'FabricOpsObservability.json','reportVersionAtImport':{'visual':'2.9.0','page':'2.0.0','report':'3.0.0'},'type':'RegisteredResources'}}}); put(d/'pages/pages.json',{'$schema':f'{RS}/pagesMetadata/1.0.0/schema.json','pageOrder':list(PAGES),'activePageName':'overview'})
+ put(d/'report.json',{'$schema':f'{RS}/report/3.0.0/schema.json','themeCollection':{'customTheme':{'name':'FabricOpsDashboard.json','reportVersionAtImport':{'visual':'2.9.0','page':'2.0.0','report':'3.0.0'},'type':'RegisteredResources'}}}); put(d/'pages/pages.json',{'$schema':f'{RS}/pagesMetadata/1.0.0/schema.json','pageOrder':list(PAGES),'activePageName':'overview'})
  for pid,(name,hidden,vs) in PAGES.items():
   q=[v for v in vs if v['visual'].get('query')]; pg={'$schema':f'{RS}/page/2.0.0/schema.json','name':pid,'displayName':name,'displayOption':'FitToPage','height':720,'width':1280,'visualInteractions':[{'source':a['name'],'target':b['name'],'type':'DataFilter'} for a in q for b in q if a is not b]}
   if hidden:
@@ -68,8 +68,8 @@ def report():
    pg['pageBinding']={'name':pid+'_drillthrough','type':'Drillthrough','referenceScope':'Default','acceptsFilterContext':'Default','parameters':[{'name':c,'fieldExpr':expr(t,c)} for t,c in fields]}
   put(d/f'pages/{pid}/page.json',pg)
   for v in vs:put(d/f"pages/{pid}/visuals/{v['name']}/visual.json",v)
- theme={'name':'FabricOps Observability','dataColors':['#0F766E','#14B8A6','#475569','#F59E0B','#DC2626'],'background':'#F8FAFC','foreground':'#172033','tableAccent':'#0F766E','visualStyles':{'*':{'*':{'background':[{'color':{'solid':{'color':'#FFFFFF'}},'transparency':0}],'border':[{'show':True,'color':{'solid':{'color':'#E2E8F0'}},'radius':4}],'title':[{'fontColor':{'solid':{'color':'#172033'}},'fontSize':11,'fontFamily':'Segoe UI Semibold'}]}}}}
- put(d/'StaticResources/RegisteredResources/FabricOpsObservability.json',theme)
+ theme={'name':'FabricOps Dashboard','dataColors':['#0F766E','#14B8A6','#475569','#F59E0B','#DC2626'],'background':'#F8FAFC','foreground':'#172033','tableAccent':'#0F766E','visualStyles':{'*':{'*':{'background':[{'color':{'solid':{'color':'#FFFFFF'}},'transparency':0}],'border':[{'show':True,'color':{'solid':{'color':'#E2E8F0'}},'radius':4}],'title':[{'fontColor':{'solid':{'color':'#172033'}},'fontSize':11,'fontFamily':'Segoe UI Semibold'}]}}}}
+ put(d/'StaticResources/RegisteredResources/FabricOpsDashboard.json',theme)
 
 TABLES={
 'Pipeline':([('Pipeline Key','string'),('Workspace ID','string'),('Pipeline ID','string')],"SELECT DISTINCT CONCAT(p.workspace_id,'|',p.pipeline_id) pipeline_key,p.workspace_id,p.pipeline_id FROM (SELECT execution_workspace_id workspace_id,pipeline_id FROM {E}.[METADATA_PIPELINE_REGISTRY] WHERE ({WF}='' OR execution_workspace_id={WF}) UNION SELECT workspace_id,pipeline_id FROM {E}.[METADATA_PIPELINE_RUN] WHERE started_at>=DATEADD(day,-{HD},SYSUTCDATETIME()) AND ({WF}='' OR workspace_id={WF}) UNION SELECT execution_workspace_id workspace_id,pipeline_id FROM {G}.[METADATA_PIPELINE_ACTIVATION] WHERE ({WF}='' OR execution_workspace_id={WF})) p"),
@@ -178,7 +178,7 @@ MEASURES=r'''table Measures
 		source = ROW("Value",1)
 '''
 def model():
- d=MODEL/'definition';put(MODEL/'.platform',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json','metadata':{'type':'SemanticModel','displayName':'FabricOps Observability','description':'Selective FabricOps observability semantic model.'},'config':{'version':'2.0','logicalId':gid('model')}});put(MODEL/'definition.pbism',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','version':'4.0','settings':{'qnaEnabled':False}});put(d/'database.tmdl','database FabricOpsObservability\n\tcompatibilityLevel: 1604\n');put(d/'model.tmdl','model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n')
+ d=MODEL/'definition';put(MODEL/'.platform',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json','metadata':{'type':'SemanticModel','displayName':'FabricOps Dashboard','description':'FabricOps dashboard semantic model.'},'config':{'version':'2.0','logicalId':gid('model')}});put(MODEL/'definition.pbism',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/item/semanticModel/definitionProperties/1.0.0/schema.json','version':'4.0','settings':{'qnaEnabled':False}});put(d/'database.tmdl','database FabricOpsDashboard\n\tcompatibilityLevel: 1604\n');put(d/'model.tmdl','model Model\n\tculture: en-US\n\tdefaultPowerBIDataSourceVersion: powerBI_V3\n\tsourceQueryCulture: en-US\n')
  put(d/'expressions.tmdl','expression MetadataServer = "<your-sql-endpoint>.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression MetadataDatabase = "<metadata-lakehouse-or-warehouse>" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression WorkspaceFilter = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]\n\nexpression HistoryWindowDays = 180 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]\n\nexpression GovernanceSchema = "governance" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression EngineeringSchema = "engineering" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]\n\nexpression GovernanceSchemaSql = if Text.Select(GovernanceSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = GovernanceSchema then GovernanceSchema else error "GovernanceSchema must be a SQL identifier."\n\nexpression EngineeringSchemaSql = if Text.Select(EngineeringSchema, {"A".."Z", "a".."z", "0".."9", "_"}) = EngineeringSchema then EngineeringSchema else error "EngineeringSchema must be a SQL identifier."\n')
  for n,(c,q) in TABLES.items():put(d/f'tables/{n}.tmdl',table(n,c,q))
  put(d/'tables/Measures.tmdl',MEASURES)
@@ -194,5 +194,5 @@ def main():
   if child.is_dir(): shutil.rmtree(child)
   else: child.unlink()
  put(PROJECT/'.gitignore','.pbi/\n*.pbix\n*.pbit\n')
- put(PROJECT/'FabricOpsObservability.pbip',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','version':'1.0','artifacts':[{'report':{'path':'FabricOpsObservability.Report'}}],'settings':{'enableAutoRecovery':True}});report();model()
+ put(PROJECT/'FabricOpsDashboard.pbip',{'$schema':'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json','version':'1.0','artifacts':[{'report':{'path':'FabricOpsDashboard.Report'}}],'settings':{'enableAutoRecovery':True}});report();model()
 if __name__=='__main__':main()
