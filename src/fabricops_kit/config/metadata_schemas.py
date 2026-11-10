@@ -123,7 +123,7 @@ PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string",
                         ("status", "string", False), ("results_persisted", "boolean"),
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
                         ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
-                        ("row_count", "long"), ("trigger", "string"), ("workspace_id", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
+                        ("row_count", "long"), ("profile_scope", "string"), ("profiling_max_rows", "long"), ("trigger", "string"), ("workspace_id", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
                         ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]})]
 # Dicts denote structs; tuples denote native arrays. Lists retain the existing
 # array-of-struct contract used by other metadata tables.
@@ -139,7 +139,7 @@ CATALOGUE_NESTED_FIELDS = {
         ]),
     },
     "profile_key_candidates_json": {
-        "status": "string", "max_combination_width": "integer", "candidates": ("array", [
+        "status": "string", "profile_scope": "string", "profiling_max_rows": "long", "max_combination_width": "integer", "candidates": ("array", [
             ("columns", ("array", "string")), ("column_count", "integer"),
             ("row_count", "long"), ("distinct_count", "long"),
             ("uniqueness_percent", "double"), ("null_count", "long"),
@@ -333,6 +333,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("median_value", "double"),
                 ("percentile_75_value", "double"),
                 ("max_value", "string"),
+                ("profile_scope", "string"),
+                ("profiling_max_rows", "long"),
                 *audit,
             ],
         ),
@@ -354,6 +356,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("frequency_rank", "integer"),
                 ("profiled_row_count", "long"),
                 ("profiled_non_null_count", "long"),
+                ("profile_scope", "string"),
+                ("profiling_max_rows", "long"),
                 *audit,
             ],
         ),
@@ -679,6 +683,8 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
 
     Native logical values are accepted for application calls, not as a physical
     schema fallback. Missing nullable struct members retain their explicit nulls.
+    Additive profiling scope members stay absent in retained Run JSON so historical
+    approved content hashes remain stable.
     """
     result = dict(row)
     required = table_name == "METADATA_PIPELINE_RUN"
@@ -691,6 +697,13 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         if value is None and required:
             raise ValueError(f"{table_name}.{name} cannot be null.")
         result[name] = validate_metadata_value(value, kind, field=name)
+        if required and name == "profiling":
+            # Scope fields are additive JSON members. Do not inject them into
+            # retained Run content and change a previously approved content hash.
+            for original, decoded in zip(value, result[name]):
+                for field in ("profile_scope", "profiling_max_rows"):
+                    if field not in original:
+                        decoded.pop(field, None)
     return result
 
 

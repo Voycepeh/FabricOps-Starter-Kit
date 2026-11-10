@@ -112,11 +112,12 @@ exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never c
 target_table_id preserves incremental checkpoint and SCD processing support.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
-Profiling uses the complete source with frozen contract policies and shared
+Profiling uses pipeline-owned settings and shared
 persisted completion history. Full table reads reuse the exact returned DataFrame;
-query and incremental Reads still profile the complete physical source when due.
+query and incremental Reads profile the physical source when due, bounded only
+by setup_pipeline(profiling_max_rows=...).
 A restricted query never replaces full-source observations or profile snapshots.
-Not-due or trigger-mismatched schedules cause no separate profiling scan; configured
+Disabled or not-due activities cause no separate profiling scan; configured
 Source Observation, Freshness and Source Drift checks retain their physical scope. Successful
 Dry Run retains calculated observations only in the session without consuming
 persisted schedules. Guardrail
@@ -133,7 +134,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:24`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L161">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L162">View on GitHub</a>
 </div>
 
 
@@ -149,7 +150,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 232 |
+| Live-critical dependencies | 231 |
 
 ### Release history
 
@@ -350,9 +351,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.contract_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
-<li><code>fabricops_kit.pipeline.shared.default_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.dq_tolerance_parameter</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
@@ -367,6 +366,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
+<li><code>fabricops_kit.pipeline.shared.pipeline_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_run_row</code></li>
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
@@ -393,8 +393,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>
 

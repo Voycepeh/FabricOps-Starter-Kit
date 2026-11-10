@@ -6,6 +6,8 @@ import json
 
 import pytest
 
+from fabricops_kit.pipeline.shared import validate_pipeline_profiling
+
 from fabricops_kit.activated_pipeline import shared as service
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_owner
 
@@ -160,7 +162,7 @@ def test_promotion_only_switches_literal_mode_and_retains_full_content():
     expected = json.loads(raw)
     expected["cells"][1]["source"] = expected["cells"][1]["source"].replace('"Dry Run"', '"Governed"')
     assert json.loads(promoted) == expected
-    assert parameters == {"manual": False, "days": None}
+    assert parameters == {"manual": False, "days": None, **validate_pipeline_profiling()}
 
 
 @pytest.mark.parametrize("code", ["x = 1", 'setup_pipeline(pipeline_id=ID, pipeline_mode="Dry Run")',

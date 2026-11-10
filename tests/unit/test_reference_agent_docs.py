@@ -750,7 +750,8 @@ def test_metadata_reference_overview_renders_interactive_explorer() -> None:
     for name in CANONICAL_METADATA_TABLES:
         assert f'href="{name.lower()}/"' in text
     assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
-    assert "containing authored Guardrails, Enrichment and profiling policies" in text
+    assert "containing authored Guardrails and Enrichment" in text
+    assert "profiling is configured by setup_pipeline" in text
     script = (ROOT / "docs" / "javascripts" / "metadata-explorer.js").read_text(encoding="utf-8")
     for name in CANONICAL_METADATA_TABLES:
         assert name.removeprefix("METADATA_") in script

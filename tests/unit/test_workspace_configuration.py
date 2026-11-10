@@ -168,7 +168,7 @@ def test_pipeline_reuses_workspace_initialization(configuration_runtime, monkeyp
             config, active_workspace_id, runtime = resolve_fabric_context()
             plan = shared.PipelineExecutionPlan('governed', active_workspace_id, '00000000-0000-4000-8000-000000000002', 'approved-run',
                                                '{}', '{}', '{}', runtime, pipeline_id='00000000-0000-4000-8000-000000000002')
-            plan.evidence['approved_parameters'] = {'manual': False, 'days': None}
+            plan.evidence['approved_parameters'] = {'manual': False, 'days': None, **shared.validate_pipeline_profiling()}
             return plan
         monkeypatch.setattr(live, 'build_governed_pipeline_plan', approved)
     import IPython

@@ -40,6 +40,11 @@ def setup_pipeline(
     pipeline_mode: str='Ungoverned',
     observe_source: bool=False,
     source_observation_days: int | None=None,
+    profiling_enabled: bool=True,
+    profiling_interval_days: int=1,
+    profiling_max_rows: int | None=None,
+    grain_discovery_enabled: bool=False,
+    frequency_enabled: bool=False,
 ):
 ```
 
@@ -58,6 +63,11 @@ Required describes the Python signature. An optional parameter may still be need
 | `pipeline_mode` | `str` | No | `'Ungoverned'` | Preview, publish without governance, or enforce activated governance. |
 | `observe_source` | `bool` | No | `False` | Manually request a full physical Source Observation for this execution. |
 | `source_observation_days` | `int \| None` | No | `None` | Automatically observe after this many days since the last accepted full observation. None disables automatic observation. Manual requests override the interval. Incremental SQL scope does not restrict observation. Baselines are accepted only with verified target publication; failed or no-op writes do not consume the interval. Changed fingerprints are diagnostic unless a separately configured Source Drift policy blocks publication. |
+| `profiling_enabled` | `bool` | No | `True` | Enable Standard profiling independently of Grain discovery and Frequency. |
+| `profiling_interval_days` | `int` | No | `1` | Positive integer interval since the latest confirmed physical-table Standard completion, shared across pipelines. |
+| `profiling_max_rows` | `int \| None` | No | `None` | None profiles the complete physical table (the prepared DataFrame for Dry Run Writes). A positive integer bounds each enabled activity using an arbitrary row selection; statistics describe only that selection. This does not guarantee a physical read of only that many rows. Saved results carry their scope. Guardrails and Source Observation always use their own required input, independently of this limit. |
+| `grain_discovery_enabled` | `bool` | No | `False` | Discover candidate Grain keys once per physical table after completion. Does not control mandatory Grain Guardrails. |
+| `frequency_enabled` | `bool` | No | `False` | Profile value frequencies once per physical table after completion. |
 
 </div>
 
@@ -74,7 +84,7 @@ Returns a context-local session exposing the Registry-resolved logical Pipeline 
 ## Raises / Errors
 
 ValueError
-    If the mode or observation configuration is invalid.
+    If the mode, observation or profiling configuration is invalid.
 RuntimeError
     If notebook setup or Spark is unavailable, or signed-in Fabric validation
     remains pending. Governed fails before admission and publication.
@@ -126,7 +136,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/setup_pipeline.py:130`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L207">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/setup_pipeline.py#L130-L237">View on GitHub</a>
 </div>
 
 
@@ -230,8 +240,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
-<li><code>fabricops_kit.pipeline.shared.validate_profiling_policy</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>

@@ -166,29 +166,40 @@ See [Read & Write Modes](https://voycepeh.github.io/FabricOps-Starter-Kit/refere
 
 ## Shared table profiling
 
-Profiling policies belong to `METADATA_DATA_CONTRACT.contract_payload_json.profiling`. The **Profiling** section in Data Contract Authoring edits the selected draft through the normal Save action. Freeze, validate and activate the new version before Governed execution uses it. Frozen payloads and existing activation snapshots are immutable. A profiling change changes the contract fingerprint and requires the existing approval workflow. Profiling policies remain separate from `guardrails` and never enable, disable or change enforcement.
+Engineering configures profiling once in `setup_pipeline()`. All Read and Write calls inherit these settings. Data Contract Authoring contains no profiling scheduling or enablement controls. New saved/frozen payloads omit `profiling`; historical immutable Contracts and saved profiles remain intact. Governance reviews the saved notebook settings with the existing Pipeline Activation and Pipeline Promotion package. Governed execution rejects changed runtime settings. Existing promotions without these approved settings require a newly tested submission and promotion; retained historical rows are not rewritten.
 
-| Activity | Default frequency | Trigger |
-| --- | --- | --- |
-| Standard Profiling | First eligible run after 1 day | Read or Write |
-| Grain Discovery | First eligible run only | Read or Write |
-| Frequency Profiling | First eligible run only | Read or Write |
-
-Each activity independently supports `every`, `first` or `interval` (a positive integer `days`), and `read`, `write` or `read_or_write`. Intervals measure elapsed time from successful completion. For example:
-
-```json
-{"profiling":{"standard":{"frequency":"interval","days":1,"trigger":"read_or_write"},"grain":{"frequency":"first","trigger":"read_or_write"},"frequency":{"frequency":"first","trigger":"read_or_write"}}}
+```python
+pipeline = setup_pipeline(
+    pipeline_mode="Ungoverned",
+    profiling_enabled=True,
+    profiling_interval_days=1,
+    profiling_max_rows=None,
+    grain_discovery_enabled=False,
+    frequency_enabled=False,
+)
 ```
 
-Explicit No Contract execution uses these fixed defaults without creating a contract. Existing frozen versions without a profiling section use the same defaults; they are never rewritten. New drafts and newly frozen versions contain explicit policies. Activation continues to require frozen contracts for all participants.
+| Activity | Default | Schedule when enabled |
+| --- | --- | --- |
+| Standard Profiling | Enabled | First eligible Read or successful Write, then after `profiling_interval_days` |
+| Grain Discovery | Disabled | Once per physical table after successful completion |
+| Frequency Profiling | Disabled | Once per physical table after successful completion |
 
-Read-triggered profiling scans the complete persisted table, including when the Read uses a query, filter or incremental scope. Write-triggered profiling follows successful publication. Failed, blocked and empty nonpublishing Writes do not consume intervals. Dry Run computes eligible diagnostics without claims or metadata writes; it cannot consume a schedule or profile an unpublished target as published data.
+The three flags are independent. Disabling Standard does not disable either opt-in activity or any Guardrail. Each pipeline compares its own Standard interval with the latest shared confirmed completion. The integer settings reject booleans, zero, negative and noninteger inputs. `profiling_max_rows=None` means complete-table profiling.
 
-`METADATA_PIPELINE_RUN.profiling` records independent activity events with Table ID, workspace, physical workspace/item/schema/table bindings, context key, activity, trigger, Pipeline Run ID, timestamp, status, safe failure/skip reason and result snapshot ID. Running events distinguish attempts from completion. Skips distinguish trigger mismatch, first-only completion, an unelapsed interval and claim contention. Pipeline completion remains a separate field; a skipped activity permits pipeline success. Multiple tables retain independent activity events in the same logical run row.
+A positive `profiling_max_rows` applies a Spark `limit` before aggregates, Grain search and distributions; Warehouse uses `SELECT TOP (n)` followed by bounded Spark computation. This arbitrary selection is **not a random or representative sample**, and does not guarantee that only n physical rows are read. The selection is cached for the activity and released afterward. Counts, uniqueness, ranges and distributions describe only selected rows; the full table may differ.
+
+`METADATA_DATA_PROFILED` and `METADATA_DATA_PROFILED_FREQUENCY` add nullable `profile_scope` and `profiling_max_rows` columns through normal additive metadata setup. New snapshots use `full_table`, `bounded_selection` or `supplied_dataframe`; historical null scope remains unchanged. Pipeline activity JSON and Catalogue `profile_key_candidates_json` also retain scope. Full snapshots remain stored separately; bounded snapshots never become indistinguishable full-table statistics. Data Contract Authoring labels sampled profiles and Grain candidates. Read/Write full-table totals remain unavailable when only bounded counts exist. Sampled results never drive Guardrails, Source Observation, checkpoints or publication decisions. No new metadata tables are introduced.
+
+Contracts can be authored, frozen, activated and enforced without profiles. The authoring UI shows **Not yet profiled** until measurements exist. `profile_table()` remains a standalone explicit call, with Grain discovery and Frequency disabled by default and their existing opt-in limits retained.
+
+Read-triggered profiling selects from the physical table, including when the Read uses a query, filter or incremental scope. With no profiling row limit, due work may scan the complete persisted table independently of the SQL query limit; execution reports that scope and potential cost. Write-triggered profiling follows successful publication. Failed, blocked and empty nonpublishing Writes do not consume intervals. Dry Run computes eligible diagnostics without claims or metadata writes; it cannot consume a schedule or profile an unpublished target as published data.
+
+`METADATA_PIPELINE_RUN.profiling` records independent activity events with Table ID, workspace, physical workspace/item/schema/table bindings, context key, activity, trigger, Pipeline Run ID, timestamp, status, safe failure/skip reason and result snapshot ID. Running events distinguish attempts from completion. Skips distinguish disabled activities, first-only completion and an unelapsed interval. Pipeline completion remains a separate field; a skipped activity permits pipeline success. Multiple tables retain independent activity events in the same logical run row.
 
 Successful Standard and nonempty Frequency history is derived by joining confirmed successful activity events to `METADATA_DATA_PROFILED` and `METADATA_DATA_PROFILED_FREQUENCY` snapshots. Missing results or an unconfirmed/failed attempt cannot consume an interval. Catalogue candidate-key JSON is overwritten and cannot reliably establish per-destination historical Grain completion, including successful discovery with no candidates. Grain therefore uses a minimal durable success marker in the Pipeline Run activity event. Frequency with no eligible columns uses the same marker rather than inventing distribution rows. A failed pipeline may still contain an earlier successfully completed profiling activity.
 
-Spark filters activity events to the exact physical context, joins result snapshots and aggregates the latest completion before collecting at most three activity timestamps. Claiming checks each activity once; trigger mismatches require no history query. History is shared across pipelines using the same Table ID, workspace and physical destination. Pipeline ID is never a schedule key. Development, Production, other workspaces and other physical items remain isolated. Independent Frequency snapshots retain their own snapshot ID and leave `profile_id` null. Existing metrics, snapshots and Catalogue candidates are preserved. Source Observation retains incremental source-state responsibility; profiling never advances watermarks or changes Guardrails.
+Spark filters activity events to the exact physical context, joins result snapshots and aggregates the latest completion before collecting at most three activity timestamps. Claiming checks each activity once; disabled activities require no history query. History is shared across pipelines using the same Table ID, workspace and physical destination. Pipeline ID is never a schedule key. Development, Production, other workspaces and other physical items remain isolated. Independent Frequency snapshots retain their own snapshot ID and leave `profile_id` null. Existing metrics, snapshots and Catalogue candidates are preserved. Source Observation retains incremental source-state responsibility; profiling never advances watermarks or changes Guardrails.
 
 Profiling eligibility uses the configured trigger and frequency policy together with successful completion history in `METADATA_PIPELINE_RUN`. Profiling does not reserve or update `METADATA_PIPELINE_REGISTRY`. Concurrent executions are allowed and use isolated snapshot IDs; Delta merges make each snapshot write idempotent, and only a successfully journaled Pipeline Run completion advances first-run or periodic scheduling. A failed or unconfirmed attempt remains eligible for retry. Two executions can both observe profiling as due and publish duplicate snapshots. Metadata transactions across profile results, Catalogue and Pipeline Run remain separate, so an interrupted attempt can leave an unreferenced snapshot that later history ignores; this bounded duplication is preferred to a profiling lock or lease framework.
 

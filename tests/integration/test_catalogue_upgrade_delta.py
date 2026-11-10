@@ -132,7 +132,8 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
         assert after['load_strategy_parameters_json'] == {name: params.get(name) for name in
             ('watermark_column', 'key_columns', 'effective_column', 'tracked_columns')}
         assert after['scheduled_refresh_json'] == SCHEDULE
-        assert after['profile_key_candidates_json'] == json.loads(rows[index]['profile_key_candidates_json'])
+        assert after['profile_key_candidates_json'] == {**json.loads(rows[index]['profile_key_candidates_json']),
+            'profile_scope': None, 'profiling_max_rows': None}
     new_detail = DeltaTable.forPath(rt.spark, rt.path).detail().first().asDict()
     assert new_detail['id'] == detail['id'] and new_detail['properties'] == detail['properties']
     assert rt.read().schema['extension'].metadata == {'comment': 'keep'}
@@ -162,9 +163,9 @@ def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
     rows = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in frame.collect()}
     for i in range(4):
         assert rows[str(i)]['profile_key_candidates_json'] is None
-    assert rows['4']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': None}
-    assert rows['5']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': []}
-    assert rows['6']['profile_key_candidates_json'] == {'status': None, 'max_combination_width': None, 'candidates': [CANDIDATE]}
+    assert rows['4']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': None}
+    assert rows['5']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': []}
+    assert rows['6']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': [CANDIDATE]}
     assert rows['7']['profile_key_candidates_json']['status'] == 'not_evaluated'
     assert rows['8']['profile_key_candidates_json']['status'] == 'unresolved'
     assert all(r['load_strategy_parameters_json']['key_columns'] == [] for r in rows.values())

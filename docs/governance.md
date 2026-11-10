@@ -21,14 +21,13 @@ A FabricOps Data Contract is the versioned definition for one governed `table_id
 - business descriptions and information classification;
 - the expected schema and required columns;
 - the approved processing strategy;
-- profiling schedules;
 - Grain, Freshness, Source Drift, Data Quality and Sensitive Data Guardrails.
 
 Saving keeps a draft editable. **Freezing creates an immutable version.** Engineering can select that exact frozen payload in Dry Run and validate it against real reads, transformations and prepared writes. Later profile observations never silently rewrite the frozen contract.
 
 ??? info "Under the Hood — contract identity and immutable payload"
 
-    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing, profiling policy and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
+    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
 
     [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, globally stable `table_id`, authoring provenance and exact JSON payload. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
@@ -55,7 +54,7 @@ An independently activated table contract protects that Table ID and physical de
 
 1. **Record accountability.** Use [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), then create the versioned Data Agreement with [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) to explain ownership, purpose and approved use.
 2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue, profiles, processing definition and pipeline participation describe the real table.
-3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing, profiling and Guardrails.
+3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing and Guardrails.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
 6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data outcomes allow continuation.
@@ -73,14 +72,13 @@ An independently activated table contract protects that Table ID and physical de
 | Table and columns | Stable table identity, observed columns, data types and required/optional presence | Schema checks compare the real DataFrame with the frozen definition. |
 | Enrichment | Table and column descriptions plus governed classification | Supplies business context to reviewers and downstream consumers. |
 | Processing | Overwrite, Append All, Append New Only, SCD1 or SCD2, including required watermark and key parameters | The proposed Engineering operation must agree with the selected contract. |
-| Profiling | Standard, Grain and Frequency profiling schedules | Controls when evidence is collected; it does not itself block the pipeline. |
 | Guardrails | Schema, Grain, Freshness, Source Drift, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
 
-Each profiling activity independently supports `every`, `first` or `interval` with a positive number of days, and a `read`, `write` or `read_or_write` trigger. Successful completion history determines when it is next due. A failed attempt does not consume the interval.
+Engineering owns Standard, Grain discovery and Frequency execution through `setup_pipeline()`. See [Shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for defaults and scope. Data Contracts can be authored, frozen and activated without saved profiles; missing measurements display **Not yet profiled**. Profiling controls never enable, disable or weaken Guardrails.
 
 ??? info "Under the Hood — payload structure and profiling state"
 
-    The frozen payload contains `table`, `enrichment`, `guardrails` and `profiling`. Processing lives under `table.processing`; profiling remains separate from Guardrails and cannot enable, disable or change enforcement.
+    New frozen payloads contain `table`, `enrichment` and `guardrails`. Processing lives under `table.processing`. Historical frozen records retain their original bytes; any historical `profiling` object has no execution authority. Pipeline profiling settings are reviewed and retained in the approved notebook package. Bounded measurements are labelled as sampled and do not establish full-table uniqueness or counts.
 
     [`orchestrate_read()`](api/reference/orchestrate_read.md) and [`orchestrate_write()`](api/reference/orchestrate_write.md) call the profiling scheduler. Standard results are stored in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), and independent activity events in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) record when each table, workspace, physical destination, activity and trigger completed. Concurrent runs can both find profiling due, so duplicate snapshots are possible; only a successfully journaled completion advances the schedule.
 
@@ -190,7 +188,7 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | --- | --- | --- |
 | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
 | [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
-| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing, profiling and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
+| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
 | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | Select one frozen Contract and applicable Agreement for one physical workspace/table | Reviewed activation history in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
 | [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review an exact saved Engineering submission and approve, reject or revoke it independently | Protected decision history and accepted package in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md); approval does not deploy |
 

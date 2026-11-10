@@ -40,8 +40,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     A successful Write does not imply successful completion of the notebook.
 
     Dry Run profiles the prepared DataFrame in memory without publishing the target.
-    Persistent modes profile the complete target after successful publication.
-    Frozen profiling policies apply when a contract is selected; Dry Run observations
+    Persistent modes profile the physical target after successful publication,
+    bounded only by setup_pipeline(profiling_max_rows=...).
+    Pipeline-owned settings apply independently of selected Contracts; Dry Run observations
     do not consume persisted schedules. Guardrail checks run regardless
     of profiling eligibility.
 

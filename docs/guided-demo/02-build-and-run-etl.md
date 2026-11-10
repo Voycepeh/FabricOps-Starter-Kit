@@ -79,7 +79,7 @@ pipeline = setup_pipeline(
 | `"Ungoverned"` | Yes | Runs without contract-dependent checks and records observations for Governance. It cannot write to a destination that is already governed. |
 | `"Governed"` | Yes, when required checks pass | Resolves and enforces the activated Data Contracts for the current workspace. |
 
-Profiling is controlled by the active Data Contract profiling policy and execution triggers. Standard pipeline calls do not need separate profiling calls or a manually constructed execution plan.
+Profiling is configured once in `setup_pipeline()`: Standard daily by default, Grain discovery and Frequency disabled unless explicitly enabled. A positive `profiling_max_rows` selects bounded rows and labels the saved results as sampled; None profiles the complete physical table when due. Guardrails retain their required scope independently. Standard pipeline calls do not need separate profiling calls or a manually constructed execution plan.
 
 !!! note "A typical adoption path"
     An initial Ungoverned execution can publish data and record the observations Governance needs for Data Contract authoring. Governance can then author, freeze, validate, and activate exact Contract versions before the same pipeline is used in Governed mode. Ungoverned execution cannot bypass an already-governed destination.

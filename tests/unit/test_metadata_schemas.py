@@ -163,6 +163,8 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "frequency_rank",
         "profiled_row_count",
         "profiled_non_null_count",
+        "profile_scope",
+        "profiling_max_rows",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert {"metadata_column_key", "profiled_at"}.isdisjoint(fields)

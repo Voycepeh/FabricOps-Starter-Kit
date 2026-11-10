@@ -124,3 +124,19 @@ def test_historical_append_run_facts_keep_their_exact_hash():
     assert after['operations'][0]['write_mode'] == 'append'
     with pytest.raises(ValueError, match='invalid load_strategy'):
         validated_processing({'load_strategy': 'append'})
+
+
+def test_retained_profile_events_do_not_acquire_scope_fields_or_change_hashes():
+    """Additive profiling scope must preserve exact historical logical Run content."""
+    retained = logical_run()
+    for event in retained['profiling']:
+        event.pop('profile_scope', None)
+        event.pop('profiling_max_rows', None)
+    expected_digest = manifest_digest(retained)
+    encoded = encode_metadata_row(RUN, retained)
+    decoded = validate_pipeline_run(encoded)
+    assert decoded == retained
+    assert manifest_digest(decoded) == expected_digest
+    scoped = {**retained, 'profiling': [{**retained['profiling'][0],
+        'profile_scope': 'bounded_selection', 'profiling_max_rows': 100}]}
+    assert decode_metadata_row(RUN, encode_metadata_row(RUN, scoped)) == scoped

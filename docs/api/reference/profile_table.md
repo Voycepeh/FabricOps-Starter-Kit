@@ -42,11 +42,11 @@ def profile_table(
     schema: str | None=None,
     table_name: str | None=None,
     table_id: str | None=None,
-    grain_discovery_enabled: bool=True,
+    grain_discovery_enabled: bool=False,
     grain_discovery_max_columns: int=3,
     grain_discovery_max_candidates: int=8,
     frequency_columns=None,
-    frequency_enabled: bool=True,
+    frequency_enabled: bool=False,
     frequency_top_n: int | None=5,
     frequency_max_distinct_percent: float | None=80.0,
     context=None,
@@ -71,11 +71,11 @@ Required describes the Python signature. An optional parameter may still be need
 | `schema` | `str \| None` | No | `None` | Physical schema when the configured store uses schemas. |
 | `table_name` | `str \| None` | No | `None` | Physical table name. Required with ``store`` when ``table_id`` is omitted. |
 | `table_id` | `str \| None` | No | `None` | Canonical governed table identity, mutually exclusive with physical coordinates. |
-| `grain_discovery_enabled` | `bool` | No | `True` | Whether to discover candidate Grain keys for a governed table. False skips discovery queries and preserves saved Catalogue candidates. The caller controls when to enable discovery; no scheduling is applied. This option does not disable contract Grain checks. DataFrame-only profiling does not discover or persist candidates. |
+| `grain_discovery_enabled` | `bool` | No | `False` | Whether to discover candidate Grain keys for a governed table. False skips discovery queries and preserves saved Catalogue candidates. The caller controls when to enable discovery; no scheduling is applied. This option does not disable contract Grain checks. DataFrame-only profiling does not discover or persist candidates. |
 | `grain_discovery_max_columns` | `int` | No | `3` | Maximum columns in a candidate key. 1 checks single columns only; 2 also checks pairs. Must be a positive integer. Wider searches can be costly. |
 | `grain_discovery_max_candidates` | `int` | No | `8` | Maximum candidate keys to retain at the smallest valid key width. Must be a positive integer. Discovery stops after enough keys are found; this limit does not cap work when no valid key exists. |
 | `frequency_columns` | `sequence of str` | No | `None` | Columns to frequency profile. ``None`` automatically selects eligible scalar columns; an empty sequence skips frequency profiling. |
-| `frequency_enabled` | `bool` | No | `True` | Whether to calculate frequency distributions for this call. False skips all frequency columns. The caller controls when to enable frequency profiling. |
+| `frequency_enabled` | `bool` | No | `False` | Whether to calculate frequency distributions for this call. False skips all frequency columns. The caller controls when to enable frequency profiling. |
 | `frequency_top_n` | `int \| None` | No | `5` | Ranked values to retain per frequency column. ``None`` retains all. |
 | `frequency_max_distinct_percent` | `float \| None` | No | `80.0` | Maximum distinct-per-non-null percentage for automatically selected columns. ``None`` disables the cardinality filter. |
 | `context` | `dict` | No | `None` | Explicit pipeline context; Testing returns profiles without persistence. |
@@ -112,6 +112,7 @@ Limit discovery to single columns and pairs, retaining up to two candidates:
 ```python
 result = profile_table(
     table_id=target_table_id,
+    grain_discovery_enabled=True,
     grain_discovery_max_columns=2, grain_discovery_max_candidates=2,
 )
 ```
@@ -173,7 +174,7 @@ Spark is resolved automatically from the existing execution session (or the
 supplied DataFrame). No session is created; Spark-dependent work raises
 ``RuntimeError`` when no session is available.
 
-FabricOps calculates the canonical statistical profile and applicable
+FabricOps calculates the canonical statistical profile and, when enabled,
 frequency distribution close to the data. Supplied DataFrames and physical
 Lakehouse tables use PySpark; physical Warehouse tables use SQL pushdown for
 the calculations while normalizing reported ``DATA_TYPE`` values to the
@@ -196,7 +197,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L191">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L192">View on GitHub</a>
 </div>
 
 
@@ -238,7 +239,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 114 |
+| Live-critical dependencies | 115 |
 
 ### Release history
 
@@ -367,6 +368,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 

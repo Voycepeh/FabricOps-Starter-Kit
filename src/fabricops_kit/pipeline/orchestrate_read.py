@@ -32,11 +32,12 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     target_table_id preserves incremental checkpoint and SCD processing support.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
-    Profiling uses the complete source with frozen contract policies and shared
+    Profiling uses pipeline-owned settings and shared
     persisted completion history. Full table reads reuse the exact returned DataFrame;
-    query and incremental Reads still profile the complete physical source when due.
+    query and incremental Reads profile the physical source when due, bounded only
+    by setup_pipeline(profiling_max_rows=...).
     A restricted query never replaces full-source observations or profile snapshots.
-    Not-due or trigger-mismatched schedules cause no separate profiling scan; configured
+    Disabled or not-due activities cause no separate profiling scan; configured
     Source Observation, Freshness and Source Drift checks retain their physical scope. Successful
     Dry Run retains calculated observations only in the session without consuming
     persisted schedules. Guardrail

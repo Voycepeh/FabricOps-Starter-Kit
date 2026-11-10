@@ -25,8 +25,8 @@ def test_profile_table_public_signature_and_removed_symbols():
 
     assert str(inspect.signature(profile_table)) == (
         "(*, dataframe=None, store: 'str | None' = None, schema: 'str | None' = None, "
-        "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = True, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
-        "frequency_enabled: 'bool' = True, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
+        "table_name: 'str | None' = None, table_id: 'str | None' = None, grain_discovery_enabled: 'bool' = False, grain_discovery_max_columns: 'int' = 3, grain_discovery_max_candidates: 'int' = 8, frequency_columns=None, "
+        "frequency_enabled: 'bool' = False, frequency_top_n: 'int | None' = 5, frequency_max_distinct_percent: 'float | None' = 80.0, "
         "context=None, verbose: 'bool' = True)"
     )
     for name in ("profile_dataframe", "profile_frequency_distribution", "profile_and_register_table"):
@@ -41,7 +41,7 @@ def test_dataframe_only_profiles_without_metadata_writes_and_prints(spark_sessio
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: pytest.fail("must not resolve metadata"))
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: pytest.fail("must not write"))
 
-    result = profile_table(dataframe=source, frequency_columns=["status"])
+    result = profile_table(dataframe=source, frequency_enabled=True, frequency_columns=["status"])
 
     assert set(result) == {"profile", "frequency_profile", "row_count"}
     assert _rows(result["profile"])["amount"]["ROW_COUNT"] == 3
@@ -169,12 +169,12 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
     monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
 
-    result = profile_table(table_id=identity["table_id"], frequency_columns=["status"], frequency_top_n=2)
+    result = profile_table(table_id=identity["table_id"], frequency_enabled=True, frequency_columns=["status"], frequency_top_n=2)
 
     assert result["row_count"] == 3
     assert _rows(result["profile"])["amount"]["NULL_COUNT"] == 1
     assert {(row.VALUE, row.FREQUENCY_RANK) for row in result["frequency_profile"].collect()} == {("A", 1), (None, 2)}
-    assert len(queries) == 5
+    assert len(queries) == 4
     assert all(context and context.get("_fabricops_suppress_io_log") is True for context in query_contexts)
     assert all("SELECT *" not in query.upper() for query in queries)
     assert "ORDINAL_POSITION" not in queries[0]
@@ -735,8 +735,8 @@ def test_profile_table_frequency_top_n_defaults_to_five():
 
     for function in (profile_table,):
         assert inspect.signature(function).parameters["frequency_top_n"].default == 5
-        assert inspect.signature(function).parameters["frequency_enabled"].default is True
-        assert inspect.signature(function).parameters["grain_discovery_enabled"].default is True
+        assert inspect.signature(function).parameters["frequency_enabled"].default is False
+        assert inspect.signature(function).parameters["grain_discovery_enabled"].default is False
         assert inspect.signature(function).parameters["grain_discovery_max_columns"].default == 3
         assert inspect.signature(function).parameters["grain_discovery_max_candidates"].default == 8
 
