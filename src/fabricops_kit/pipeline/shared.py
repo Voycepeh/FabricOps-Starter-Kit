@@ -1219,6 +1219,7 @@ def _validated_source_snapshot(state, observation_id, *, context_key):
 
 def _record_source_drift_result(result, *, context, table_id="", table_name="", rule_type="historical_source_content"):
     """Use existing aggregate Guardrail Results without any Contract policy authority."""
+    context = {**context, "_fabricops_suppress_io_log": True}
     plan = context["execution_plan"]
     write_guardrail_result_row(spark_session=get_spark_session(context=context), config=context["config"],
         active_workspace_id=plan.workspace_id, run_id=plan.plan_id, dataset_name="", table_name=table_name,
@@ -2675,7 +2676,8 @@ def write_guardrail_result_row(
         results_table,
         store="Metadata",
         schema=metadata_table_physical_schema(config, results_table),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+        context={"config": config, "scope_workspace_id": active_workspace_id,
+                 "_fabricops_suppress_io_log": (context or {}).get("_fabricops_suppress_io_log", False)},
         mode="append",
     )
 
