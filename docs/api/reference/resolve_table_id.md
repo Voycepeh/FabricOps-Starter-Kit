@@ -9,6 +9,9 @@
 
 Resolve deterministic target identity before its first Development write.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">02B_incremental_append_demo</span>
+</p>
 
 ## Usage notes
 
