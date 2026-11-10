@@ -124,3 +124,20 @@ def test_declared_unread_source_blocks_even_warning_mode(monkeypatch, block):
         shared.evaluate_pipeline_source_drift(plan)
     assert plan.evidence['source_drift_decision']['missing_source_ids'] == ['unread']
     assert plan.evidence['source_drift_candidates'] == {}
+
+
+@pytest.mark.parametrize('unknown', [True, False])
+def test_finalization_reports_acceptance_failure_separately_from_committed_run(runtime, monkeypatch, unknown):
+    session = setup_pipeline(source_drift_enabled=True)
+    monkeypatch.setattr(shared, '_record_source_drift_result', Mock())
+    orchestrate_read(store='Bronze', schema='demo', table_name='orders', verbose=False)
+    session.plan.evidence['source_drift_observations'] = {'orders': result(table_id='orders')}
+    error = RuntimeError('acceptance could not be confirmed')
+    error.outcome_unknown = unknown
+    monkeypatch.setattr(shared, 'accept_pipeline_source_snapshots', Mock(side_effect=error))
+    runtime.publication.return_value = {'published': True, 'table_id': 'target', 'status': 'passed'}
+    orchestrate_write(runtime.frame, store='Silver', schema='demo', table_name='target', write_mode='overwrite', verbose=False)
+    summary = finalize_pipeline(session)
+    assert summary['status'] == 'ungoverned_completed'
+    assert summary['source_drift']['baseline']['status'] == ('acceptance_unknown' if unknown else 'acceptance_failed')
+    assert 'source_drift' not in session.plan.evidence['final_result']

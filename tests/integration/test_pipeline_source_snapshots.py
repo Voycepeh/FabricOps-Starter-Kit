@@ -193,7 +193,7 @@ def test_every_required_target_requires_physical_confirmation(snapshots, monkeyp
     shared.observe_full_source(identity, context=context)
     plan.participants_json = json.dumps({'orders-id': identity, 'a': {**identity, 'roles': ['target']},
         'b': {**identity, 'roles': ['target']}})
-    plan.evidence['publication_outcomes'] = {tid: {'status': 'committed', 'receipt': {'strategy': mode, 'target': tid}}
+    plan.evidence['publication_outcomes'] = {tid: {'status': 'committed', 'receipt': {'strategy': mode, 'target': tid, 'run_id': plan.plan_id}}
         for tid in ['a', 'b']}
     verify = Mock(side_effect=[True, False])
     monkeypatch.setattr(shared, '_physical_target_has_publication', verify)
@@ -203,3 +203,41 @@ def test_every_required_target_requires_physical_confirmation(snapshots, monkeyp
     verify.side_effect = [True, True]
     shared.accept_pipeline_source_snapshots(plan, spark_session=rt.spark)
     assert rt.state().where("record_type = 'source_drift_baseline'").count() == 1
+
+
+@pytest.mark.parametrize('verification_available', [True, False])
+def test_committed_acceptance_with_lost_acknowledgement_is_not_reported_as_rollback(snapshots, monkeypatch, verification_available):
+    rt = snapshots
+    plan, context, identity = rt.run()
+    shared.observe_full_source(identity, context=context)
+    retry = shared.retry_delta_metadata
+    def lose_acknowledgement(operation):
+        retry(operation)
+        if not verification_available:
+            monkeypatch.setattr(shared, '_source_snapshot_state', Mock(side_effect=OSError('read-back unavailable')))
+        raise OSError('acknowledgement lost')
+    monkeypatch.setattr(shared, 'retry_delta_metadata', lose_acknowledgement)
+    if verification_available:
+        shared.accept_pipeline_source_snapshots(plan, spark_session=rt.spark)
+        assert plan.evidence['source_snapshot_acceptance']['status'] == 'accepted'
+    else:
+        with pytest.raises(RuntimeError, match='outcome is unknown') as raised:
+            shared.accept_pipeline_source_snapshots(plan, spark_session=rt.spark)
+        assert raised.value.outcome_unknown is True
+    assert rt.state().where("record_type = 'source_snapshot_acceptance'").count() == 1
+    assert rt.state().where("record_type = 'source_drift_baseline'").count() == 1
+
+
+def test_prior_execution_publication_cannot_accept_new_source_snapshot(snapshots, monkeypatch):
+    rt = snapshots
+    plan, context, identity = rt.run('new-execution')
+    shared.observe_full_source(identity, context=context)
+    plan.participants_json = json.dumps({'orders-id': identity, 'target': {**identity, 'roles': ['target']}})
+    plan.evidence['publication_outcomes'] = {'target': {'status': 'committed',
+        'receipt': {'run_id': 'original-publication', 'strategy': 'append_new_only'}}}
+    verify = Mock(return_value=True)
+    monkeypatch.setattr(shared, '_physical_target_has_publication', verify)
+    shared.accept_pipeline_source_snapshots(plan, spark_session=rt.spark)
+    verify.assert_not_called()
+    assert plan.evidence['source_snapshot_acceptance']['status'] == 'not_eligible'
+    assert rt.state().where("record_type = 'source_drift_baseline'").count() == 0

@@ -1436,8 +1436,11 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
             continue
         outcome = plan.evidence.get("publication_outcomes", {}).get(tid, {})
         receipt = outcome.get("receipt")
-        if not receipt and outcome.get("status") in {"empty_incremental_scope", "no_unseen_hashes"}:
-            plan.evidence["source_snapshot_acceptance"] = {"status": "not_eligible", "reason": "A required Write did not publish.", "target_table_id": tid}
+        if ((not receipt and outcome.get("status") in {"empty_incremental_scope", "no_unseen_hashes"})
+                or (receipt and receipt.get("run_id") != plan.plan_id)):
+            plan.evidence["source_snapshot_acceptance"] = {"status": "not_eligible",
+                "reason": "A required Write has no publication from this execution; prior-run recovery cannot accept a new source snapshot.",
+                "target_table_id": tid}
             return
         if not receipt or not _physical_target_has_publication({**identity,
                 "store_type": identity.get("store_type") or identity.get("store_kind")}, receipt, context=context):
@@ -1472,9 +1475,16 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
             .whenMatchedUpdate(condition="source.record_type = 'source_drift_baseline' AND NOT (target.observation_id <=> source.observation_id)", set=values)
             .whenNotMatchedInsert(values=inserted).execute())
     except Exception:
-        expected = {row["record_id"]: row["observation_id"] for row in records if row["record_type"] == "source_drift_baseline"}
-        heads = _source_snapshot_state(context).where(F.col("record_id").isin(*expected)).select("record_id", "observation_id").collect()
-        if len(heads) != len(expected) or {row["record_id"]: row["observation_id"] for row in heads} != expected:
+        # Immutable acceptance receipts survive a later legitimate head advance.
+        expected = {row["record_id"]: row["observation_id"] for row in records if row["record_type"] == "source_snapshot_acceptance"}
+        try:
+            accepted = _source_snapshot_state(context).where(F.col("record_id").isin(*expected)
+                & (F.col("status") == "committed")).select("record_id", "observation_id").collect()
+        except Exception as verification_error:
+            error = RuntimeError("Source baseline acceptance outcome is unknown; inspect immutable acceptance records before retrying.")
+            error.outcome_unknown = True
+            raise error from verification_error
+        if len(accepted) != len(expected) or {row["record_id"]: row["observation_id"] for row in accepted} != expected:
             raise
     plan.evidence["source_snapshot_acceptance"] = {"status": "accepted", "source_ids": sorted(candidates)}
 
@@ -1794,7 +1804,7 @@ def _processing_state_rows(history):
     snapshot_types = {"source_snapshot", "source_row_evidence", "source_drift_baseline", "source_snapshot_acceptance"}
     if hasattr(history, "where"):
         from pyspark.sql import functions as F
-        history = history.where(~F.col("record_type").isin(*snapshot_types))
+        history = history.where(F.col("record_type").isNull() | ~F.col("record_type").isin(*snapshot_types))
     rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types]
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
@@ -6287,10 +6297,14 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
                 try:
                     accept_pipeline_source_snapshots(plan, spark_session=spark_session)
                 except Exception as exc:
-                    plan.evidence["source_snapshot_acceptance"] = {"status": "acceptance_failed", "error_type": type(exc).__name__}
+                    unknown = bool(getattr(exc, "outcome_unknown", False))
+                    reason = ("Baseline acceptance outcome is unknown; inspect shared heads and immutable acceptance records before retrying. Do not assume rollback."
+                        if unknown else "Baseline acceptance was not confirmed; inspect snapshot integrity and concurrent acceptance before a new execution from Read.")
+                    plan.evidence["source_snapshot_acceptance"] = {"status": "acceptance_unknown" if unknown else "acceptance_failed",
+                        "error_type": type(exc).__name__, "reason": reason}
                     try:
                         _record_source_drift_result({"status": "warning", "can_continue": True, "action": "Warn", "severity": "warning",
-                            "pipeline_id": plan.pipeline_id, "reason": "Baseline acceptance failed; previous history remains authoritative. Repeat from Read and inspect source snapshot integrity or concurrent acceptance."},
+                            "pipeline_id": plan.pipeline_id, "reason": reason},
                             context={**plan.runtime_context, "execution_plan": plan, "_spark_session": spark_session}, rule_type="baseline_acceptance")
                     except Exception:
                         plan.evidence["source_snapshot_acceptance"]["diagnostics_persisted"] = False

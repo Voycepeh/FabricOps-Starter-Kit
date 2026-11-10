@@ -63,8 +63,9 @@ dict
     METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.
     When pipeline Source Drift is enabled, adds a source_drift diagnostic
     summary and separate baseline acceptance status without altering the
-    immutable Run record. Acceptance failure leaves prior baselines in force
-    and does not roll back completed target publications.
+    immutable Run record. Failed or unconfirmed baseline acceptance does
+    not roll back completed target publications. An unconfirmed outcome
+    requires inspection of immutable acceptance history before retrying.
     Each operation retains legacy rows_read/rows_written plus its available
     detailed Read or strategy-specific Write metrics. Missing fields on
     historical records remain valid and display as not captured.
@@ -123,7 +124,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/finalize_pipeline.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L303">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L304">View on GitHub</a>
 </div>
 
 

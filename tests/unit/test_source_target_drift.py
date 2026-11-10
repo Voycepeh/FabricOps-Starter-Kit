@@ -64,3 +64,16 @@ def test_sampled_discovery_never_supplies_source_drift_identity(authored, expect
     identity = {'table_id': 'source', 'load_strategy_parameters_json': {},
         'grain_candidates_json': {'profile_scope': 'bounded_sample', 'candidates': [{'columns': ['id']}]}}
     assert shared._source_snapshot_keys(identity, {'execution_plan': plan}) == expected
+
+
+def test_snapshot_filter_keeps_invalid_legacy_rows_for_fail_closed_validation(spark_session):
+    from pyspark.sql.types import StructField, StructType
+    schema = StructType([StructField(field.name, field.dataType, True)
+        for field in shared.metadata_table_schema_registry()[shared._PROCESSING_STATE_TABLE]])
+    legacy = {'workspace_id': 'dev', 'record_id': 'checkpoint', 'record_type': 'incremental_checkpoint', 'status': 'committed'}
+    snapshot = {'workspace_id': 'dev', 'record_id': 'hash', 'record_type': 'source_row_evidence', 'status': 'observed'}
+    corrupt = {'workspace_id': 'dev', 'record_id': 'invalid', 'record_type': None, 'status': 'committed'}
+    valid = spark_session.createDataFrame([legacy, snapshot], schema)
+    assert [row['record_id'] for row in shared._processing_state_rows(valid)] == ['checkpoint']
+    with pytest.raises(RuntimeError, match='invalid METADATA_PROCESSING_STATE'):
+        shared._processing_state_rows(spark_session.createDataFrame([legacy, snapshot, corrupt], schema))
