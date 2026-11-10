@@ -4,6 +4,9 @@
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.3.0</span>
 </p>
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">`02_pipeline`</span>
+</p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
