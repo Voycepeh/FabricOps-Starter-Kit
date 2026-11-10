@@ -50,7 +50,8 @@ def planned_stages(monkeypatch):
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_write"), "prepare_pipeline_execution", prepare)
     monkeypatch.setattr(importlib.import_module("fabricops_kit.pipeline.orchestrate_read"), "resolve_table_id", lambda **_kwargs: "source-id")
 
-def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
+@pytest.mark.parametrize("query", [None, "SELECT id FROM demo.orders LIMIT 100"])
+def test_orchestrate_read_orders_stages_and_preserves_source(capsys, query):
     """Read stages run in order and retain source identity."""
     from fabricops_kit.pipeline.orchestrate_read import orchestrate_read
     dataframe = object()
@@ -59,7 +60,7 @@ def test_orchestrate_read_orders_stages_and_preserves_source(capsys):
         def call(*args, **kwargs): calls.append(name); return value
         return call
     with patch("fabricops_kit.pipeline.orchestrate_read.pipeline_read", result("read", {"dataframe": dataframe, "table_id": "source-id"})), patch("fabricops_kit.pipeline.orchestrate_read.check_freshness", result("freshness", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_schema", result("schema", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.check_dq", result("dq", {"status": "passed"})), patch("fabricops_kit.pipeline.orchestrate_read.schedule_table_profiling", result("profile", {"profile": object()})):
-        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", verbose=False)
+        actual = run_pipeline_operation(orchestrate_read, plan=LIVE_PLAN, store="Bronze", schema="demo", table_name="orders", query=query, verbose=False)
     assert calls == ["read", "freshness", "schema", "dq", "profile"]
     assert actual["dataframe"] is dataframe
     assert actual["table_id"] == "source-id"

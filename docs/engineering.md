@@ -66,7 +66,11 @@ For registered table pipelines, the same [`orchestrate_read()`](api/reference/or
 
 - Lakehouse tables use OneLake Delta paths.
 - Warehouse tables use the Fabric Spark connector.
-- Full Warehouse reads can use a read-only `query`; Incremental Warehouse reads use a framework-built bounded predicate.
+- Full reads accept `query`: Spark SQL for Lakehouses and T-SQL pushed down to Warehouses. Incremental reads retain framework-owned bounds and reject caller SQL.
+- Lakehouse SQL uses the declared `table_name` or `schema.table_name`, with optional aliases, CTEs and self joins. FabricOps binds it to the configured OneLake source, including cross-workspace stores, instead of the notebook's default Lakehouse. Other physical sources, paths and table functions are rejected.
+- A simple `SELECT TOP (100) id FROM demo.orders ORDER BY id` on a Lakehouse can become Spark `LIMIT 100`. `TOP PERCENT`, `WITH TIES`, functions and compound T-SQL are rejected with a source-specific error. Write native Spark SQL for these cases. SQL endpoint fallback is not available because the store configuration does not identify a Lakehouse SQL endpoint. Use Spark backticks for quoted identifiers; bracket conversion is limited to simple TOP queries.
+
+For example, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
 
 Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
 
@@ -171,6 +175,10 @@ The new baseline is accepted only after verified target publication. Observation
 ??? info "Under the Hood — full-source observation cost and limitations"
 
     Internal [`observe_full_source()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L1077) performs the independent full scan and [`check_source_drift()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_source_drift.py#L15) evaluates each contributing source before the target Write. This catches changes outside the current incremental window, but it adds a full-source scan. Accepted baselines are stored in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
+
+    A query returning 100 rows measures and caches that result scope. It does not itself request a complete-source fingerprint or profiling scan. A manual observation or an elapsed `source_observation_days` interval still scans the complete physical source. Selected Freshness and Source Drift rules can also require physical-source aggregates. These mandatory checks are independent of the query predicate and cannot use its partial result as a physical baseline.
+
+    Profiling uses the complete physical source only when its activity schedule is due. Explicit No Contract retains the defaults: Standard daily, Grain and Frequency on their first successful run; selected Contracts own their frozen schedules. A trigger mismatch or a successful unexpired interval performs no profile scan. Due Standard, Grain and Frequency activities may each perform their own aggregates; a SQL row limit does not reduce those costs. Full non-query reads supply their existing DataFrame to due profiling in both Dry Run and persistent modes; query and incremental results never replace the complete physical source for profiling. Tune the approved schedules rather than skipping governance checks in query mode.
 
     A changed fingerprint is evidence, not an automatic delete or update instruction. The configured Write strategy still determines target behaviour.
 

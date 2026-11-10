@@ -424,3 +424,20 @@ def test_test_activity_selection_and_supplied_frame_do_not_override_policy(metad
     assert metadata.profiler.call_args.kwargs['dataframe'] is frame
     assert metadata.profiler.call_args.kwargs['activities'] == {'grain', 'frequency'}
     assert result['activities']['standard']['status'] == 'skipped'
+
+
+def test_persistent_full_read_reuses_supplied_source_frame(metadata):
+    """Due persistent profiling must not reopen an already supplied complete source."""
+    frame = object()
+    shared.schedule_table_profiling('orders', 'read', dataframe=frame, context=metadata.context)
+    assert metadata.profiler.call_count == 3
+    assert all(call.kwargs['dataframe'] is frame for call in metadata.profiler.call_args_list)
+
+
+def test_not_due_profiling_does_not_scan_source(metadata):
+    """A repeated restricted read cannot consume scans when all activities are current."""
+    shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    metadata.profiler.reset_mock()
+    result = shared.schedule_table_profiling('orders', 'read', context=metadata.context)
+    metadata.profiler.assert_not_called()
+    assert all(activity['status'] == 'skipped' for activity in result['activities'].values())

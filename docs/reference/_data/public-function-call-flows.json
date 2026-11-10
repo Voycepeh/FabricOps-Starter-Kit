@@ -6156,6 +6156,7 @@
         "fabricops_kit.data_contract.shared.get_table_runtime_context",
         "fabricops_kit.data_contract.shared.list_contract_governance_state",
         "fabricops_kit.pipeline.check_schema.check_schema",
+        "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
         "fabricops_kit.pipeline.pipeline_read.pipeline_read",
         "fabricops_kit.pipeline.pipeline_write._target_has_rows",
         "fabricops_kit.pipeline.shared._build_token_mapping",
@@ -7605,7 +7606,8 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
-        "fabricops_kit.io.read_warehouse_query.read_warehouse_query"
+        "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read"
       ],
       "function_name": "validate_select_query",
       "function_type": "shared_function",
@@ -7615,7 +7617,9 @@
         "fabricops_kit.access_scanner.shared.read_discovered_sql_endpoint_query",
         "fabricops_kit.access_scanner.shared::<module>",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
-        "fabricops_kit.io.read_warehouse_query::<module>"
+        "fabricops_kit.io.read_warehouse_query::<module>",
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+        "fabricops_kit.pipeline.pipeline_read::<module>"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
@@ -7624,6 +7628,9 @@
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 260,
       "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
+      ],
       "usage": "public_flow_reachable"
     },
     {
@@ -8222,7 +8229,7 @@
           "type": "str"
         },
         {
-          "description": "Read-only Warehouse query, supported for full reads only.",
+          "description": "Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full reads only. Lakehouse SQL binds the declared source through configured OneLake routing. Simple integer TOP projections can convert to LIMIT; complex T-SQL requires native Spark SQL and otherwise raises ValueError.",
           "name": "query",
           "required": "No",
           "type": "str | None"
@@ -8279,7 +8286,7 @@
       ],
       "returns_documentation": "dict\n    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.\n    ``read_metrics.rows_read`` and the notebook summary describe the exact\n    returned scope. For incremental reads this is the target-specific batch,\n    never the complete physical Source Observation count.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
       "signature": "def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str='full', query: str | None=None, read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, verbose: bool=False, dq_diagnostics: str='sample') -> dict[str, Any]",
-      "source_end_line": 155,
+      "source_end_line": 161,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
       "source_start_line": 24,
       "summary": "Read a source using the active pipeline's contracts and runtime.",
@@ -8424,6 +8431,29 @@
       "direct_live_dependents": [
         "fabricops_kit.pipeline.pipeline_read.pipeline_read"
       ],
+      "function_name": "_lakehouse_query",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "direct_live_dependency",
+      "qualified_name": "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
+      "source_end_line": 229,
+      "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
+      "source_start_line": 135,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
+      ],
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+      ],
       "function_name": "_measure_returned_rows",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -8549,7 +8579,7 @@
           "type": "str | None"
         },
         {
-          "description": "Read-only SQL for a configured Warehouse source in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Warehouse.",
+          "description": "Read-only Spark SQL for a Lakehouse or T-SQL for a Warehouse in full mode only; incremental mode rejects caller-owned SQL. The supplied source identity remains the governed source participant even when the result is a projection, filter, join, or aggregation. FabricOps does not infer arbitrary source identity by parsing SQL. A query may accompany either physical coordinates or ``table_id`` when the resolved store is a Lakehouse or Warehouse. Lakehouse queries bind only the declared source, using table or schema.table names, including CTEs and self joins. Simple integer TOP projection/filter/order queries are converted to LIMIT; complex T-SQL raises ValueError rather than risking a changed meaning. SQL endpoint fallback is not configured by this API.",
           "name": "query",
           "required": "No",
           "type": "str | None"
@@ -8587,7 +8617,7 @@
       ],
       "public_import_path": "fabricops_kit.pipeline_read",
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-      "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, the source is not\n    registered, its configured store kind is unsupported, or a query is\n    supplied for a Lakehouse source, incremental mode has no target, or\n    project-owned Warehouse SQL is combined with incremental mode.\nRuntimeError\n    If a different source state is already awaiting publication for this\n    source and target. Finish or retry that Read's prepared batch before\n    reading newer data. The rejected Read preserves the pending checkpoint.",
+      "raises_documentation": "ValueError\n    If identity inputs conflict or are incomplete, the source is not\n    registered, its configured store kind is unsupported, a Lakehouse query contains unsupported SQL or other physical sources,\n    incremental mode has no target, or caller-owned SQL is combined with incremental mode.\nRuntimeError\n    If a different source state is already awaiting publication for this\n    source and target. Finish or retry that Read's prepared batch before\n    reading newer data. The rejected Read preserves the pending checkpoint.",
       "release_history": [
         {
           "status": "live",
@@ -8614,11 +8644,11 @@
           "version": "0.4.1"
         }
       ],
-      "returns_documentation": "dict\n    ``read_metrics`` contains the rows actually returned by this full,\n    query, bootstrap, or target-specific incremental scope, plus ``columns``\n    from schema metadata. A known empty incremental scope is exactly zero;\n    an unavailable runtime measurement remains None. It never substitutes\n    the complete physical source's observation count for a smaller\n    incremental batch.\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom Warehouse query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an workspace_id-selected immutable Data\n      Contract applies. The contract record itself is not exposed.\n    - ``read_mode``: the explicit source read mode.\n    - ``has_data`` and ``should_process``: whether this read contributes\n      unconsumed work. Full reads return ``True``.\n    - ``scope``: a compact summary of the resolved full, bootstrap, or\n      watermark scope; no metadata rows are exposed.",
+      "returns_documentation": "dict\n    ``read_metrics`` contains the rows actually returned by this full,\n    query, bootstrap, or target-specific incremental scope, plus ``columns``\n    from schema metadata. A known empty incremental scope is exactly zero;\n    an unavailable runtime measurement remains None. It never substitutes\n    the complete physical source's observation count for a smaller\n    incremental batch.\n    A deliberately small result with these fields:\n\n    - ``dataframe``: the Spark DataFrame returned by the selected\n      foundational Fabric I/O reader.\n    - ``table_id``: the canonical identity of the governed physical source.\n    - ``is_query``: whether ``dataframe`` is a custom SQL query\n      result rather than the complete physical table.\n    - ``has_contract``: whether an workspace_id-selected immutable Data\n      Contract applies. The contract record itself is not exposed.\n    - ``read_mode``: the explicit source read mode.\n    - ``has_data`` and ``should_process``: whether this read contributes\n      unconsumed work. Full reads return ``True``.\n    - ``scope``: a compact summary of the resolved full, bootstrap, or\n      watermark scope; no metadata rows are exposed.",
       "signature": "def pipeline_read(*, store: str | None=None, schema: str | None=None, table_name: str | None=None, table_id: str | None=None, query: str | None=None, read_mode: str='full', read_parameters: dict[str, Any] | None=None, target_table_id: str | None=None, verbose: bool=True, context=None) -> dict[str, Any]",
-      "source_end_line": 546,
+      "source_end_line": 658,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
-      "source_start_line": 135,
+      "source_start_line": 232,
       "summary": "Read one governed pipeline source through the appropriate Fabric store.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -16782,11 +16812,13 @@
         "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.io.shared.retry_delta_metadata",
+        "fabricops_kit.io.shared.validate_select_query",
         "fabricops_kit.pipeline.check_dq.check_dq",
         "fabricops_kit.pipeline.check_freshness.check_freshness",
         "fabricops_kit.pipeline.check_grain.check_grain",
         "fabricops_kit.pipeline.check_schema.check_schema",
         "fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental",
+        "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
         "fabricops_kit.pipeline.pipeline_read._measure_returned_rows",
         "fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns",
         "fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query",
@@ -16941,7 +16973,7 @@
       ],
       "metrics": {
         "depth": 18,
-        "scope": 236,
+        "scope": 238,
         "width": 13
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -17348,7 +17380,9 @@
         "fabricops_kit.io.shared.resolve_warehouse_name",
         "fabricops_kit.io.shared.resolve_warehouse_table_location",
         "fabricops_kit.io.shared.retry_delta_metadata",
+        "fabricops_kit.io.shared.validate_select_query",
         "fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental",
+        "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
         "fabricops_kit.pipeline.pipeline_read._measure_returned_rows",
         "fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns",
         "fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query",
@@ -17413,8 +17447,8 @@
       ],
       "metrics": {
         "depth": 17,
-        "scope": 136,
-        "width": 15
+        "scope": 138,
+        "width": 17
       },
       "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
       "refactor_signals": [
@@ -17422,7 +17456,7 @@
           "evidence": [
             {
               "depth": 17,
-              "width": 15
+              "width": 17
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -22180,6 +22214,16 @@
       "caller_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
     },
     {
+      "architecture_signals": [
+        {
+          "detail": "Calls foundational Fabric I/O.",
+          "type": "Type 0"
+        }
+      ],
+      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read._lakehouse_query"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.pipeline.shared.resolve_incremental_observation_columns",
       "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns"
     },
@@ -22226,7 +22270,15 @@
       "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
     },
     {
+      "callee_qualified_name": "fabricops_kit.io.shared.validate_select_query",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.pipeline.pipeline_read._filter_lakehouse_incremental",
+      "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
       "caller_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
     },
     {
