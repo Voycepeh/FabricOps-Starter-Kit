@@ -8,9 +8,9 @@ from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
-from fabricops_kit.pipeline.profile_presentation import display_profile_presentations
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    display_profile_presentations,
     current_pipeline_session,
     schedule_table_profiling,
     evaluate_pipeline_source_drift,

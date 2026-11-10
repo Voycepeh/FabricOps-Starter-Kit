@@ -8,7 +8,7 @@ import IPython
 import pytest
 
 from fabricops_kit import orchestrate_read, orchestrate_write, profile_table, setup_pipeline
-from fabricops_kit.pipeline import profile_presentation as presentation
+from fabricops_kit.pipeline import shared as presentation
 from fabricops_kit.pipeline import shared
 from tests.unit.test_pipeline_session import runtime  # noqa: F401
 

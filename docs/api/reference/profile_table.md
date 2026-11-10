@@ -333,14 +333,12 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
-<li><code>fabricops_kit.pipeline.profile_presentation._format_value</code></li>
-<li><code>fabricops_kit.pipeline.profile_presentation.capture_profile_presentation</code></li>
-<li><code>fabricops_kit.pipeline.profile_presentation.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
 <li><code>fabricops_kit.pipeline.shared._delete_profile_snapshot</code></li>
+<li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_payload</code></li>
@@ -370,6 +368,8 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.capture_profile_presentation</code></li>
+<li><code>fabricops_kit.pipeline.shared.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>

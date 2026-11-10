@@ -6,9 +6,9 @@ from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
-from fabricops_kit.pipeline.profile_presentation import display_profile_presentations
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    display_profile_presentations,
     current_pipeline_session,
     schedule_table_profiling,
     PipelineOperation,
