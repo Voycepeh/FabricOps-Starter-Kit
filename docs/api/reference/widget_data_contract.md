@@ -9,7 +9,7 @@
 Create or reopen and author one agreement-free, table-centric Data Contract draft.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">`01_governance`</span>
+<span class="reference-chip">01_governance</span>
 </p>
 
 ## Usage notes
