@@ -1355,7 +1355,9 @@ def _derive_template_usage_by_kind(
     for relative in sorted(paths):
         path = ROOT / relative
         if not path.exists():
-            raise RuntimeError(f"Template notebook missing: {relative}")
+            # Legacy curated flow entries can outlive a removed example notebook.
+            # Only current, existing templates are eligible for usage tags.
+            continue
         notebook_key = declared.get(relative, path.stem)
         target = core_usage if (
             notebook_key in CORE_TEMPLATE_KEYS or relative.startswith("templates/DemoData/")
