@@ -246,7 +246,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 129 |
+| Live-critical dependencies | 138 |
 
 ### Release history
 
@@ -280,6 +280,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
@@ -331,9 +332,13 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
@@ -377,10 +382,14 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared.capture_profile_presentation</code></li>
 <li><code>fabricops_kit.pipeline.shared.display_profile_presentations</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>

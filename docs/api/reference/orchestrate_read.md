@@ -43,8 +43,8 @@ source = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
 def orchestrate_read(
     *,
     store: str,
-    schema: str | None,
-    table_name: str,
+    schema: str | None=None,
+    table_name: str | None=None,
     read_mode: str='full',
     query: str | None=None,
     read_parameters: dict[str, Any] | None=None,
@@ -53,6 +53,9 @@ def orchestrate_read(
     target_table_name: str | None=None,
     verbose: bool=False,
     dq_diagnostics: str='sample',
+    relative_path: str | None=None,
+    file_format: str | None=None,
+    read_options: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -69,8 +72,8 @@ Required describes the Python signature. An optional parameter may still be need
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `store` | `str` | Yes | `—` | Configured source store key. |
-| `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
-| `table_name` | `str` | Yes | `—` | Physical source table name. |
+| `schema` | `str \| None` | No | `None` | Explicit physical schema; pass None for a schemaless store. |
+| `table_name` | `str \| None` | No | `None` | Physical source table name. |
 | `read_mode` | `str` | No | `'full'` | Full reads profile the source; incremental reads retain checkpoint bounds. |
 | `query` | `str \| None` | No | `None` | Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full reads only. Lakehouse SQL binds the declared source through configured OneLake routing. Simple integer TOP projections can convert to LIMIT; complex T-SQL requires native Spark SQL and otherwise raises ValueError. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Required for incremental reads; Engineering watermark_column captured by Pipeline Activation. |
@@ -79,6 +82,9 @@ Required describes the Python signature. An optional parameter may still be need
 | `target_table_name` | `str \| None` | No | `None` | Physical target table name; required for incremental reads. The resolved target must be an authorized target participant in the active plan. Source and target stores may route to different workspaces. |
 | `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
+| `relative_path` | `str \| None` | No | `None` | File, folder or wildcard selector beneath the configured Lakehouse Files root. Brace expansion is unsupported because alternatives can escape that root. Mutually exclusive with table_name, schema, query and target coordinates. |
+| `file_format` | `str \| None` | No | `None` | Required for file reads. Uses the corresponding foundational reader. |
+| `read_options` | `dict[str, Any] \| None` | No | `None` | Format-specific reader keyword settings, retained exactly for approval. Options cannot override the source location or execution context. |
 
 </div>
 
@@ -116,14 +122,21 @@ Not documented yet
 <div class="reference-docstring-intro" markdown="1">
 
 Define store, schema, table_name and any full/incremental/query options.
+Alternatively select a Lakehouse file, folder or wildcard using relative_path,
+file_format and read_options. Files support full reads only and retain their
+stable Source ID, with no Table ID. Foundational readers remain independent.
+File profiles are calculated in memory per execution (including persistent
+modes), using the pipeline row limit; no table profile snapshot is persisted.
+A replaced file can be read again in a new execution; no exactly-once or
+immutable-file guarantee is provided.
 Spark, execution authority and reporting come from setup_pipeline. The result
-retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
+retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
 register pipeline-level participation for subsequent Writes; this is not
 exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
 FabricOps resolves source and target Table IDs through configured workspace routing.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
-Profiling uses pipeline-owned settings and shared
+Table profiling uses pipeline-owned settings and shared
 persisted completion history. Full table reads reuse the exact returned DataFrame;
 query and incremental Reads profile the physical source when due, bounded only
 by setup_pipeline(profiling_max_rows=...).
@@ -151,9 +164,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_read.py:24`
+`fabricops_kit/pipeline/orchestrate_read.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L24-L189">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L27-L225">View on GitHub</a>
 </div>
 
 
@@ -169,7 +182,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 252 |
+| Live-critical dependencies | 263 |
 
 ### Release history
 
@@ -202,6 +215,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
@@ -256,9 +270,13 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
 <li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
@@ -393,11 +411,14 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.evaluate_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.freshness_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.observe_full_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>
@@ -411,14 +432,17 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>
+<li><code>fabricops_kit.pipeline.shared.read_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.record_profiling_outcome</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_incremental_source_scope</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_data_contract</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_totals</code></li>
+<li><code>fabricops_kit.pipeline.shared.schedule_file_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.select_table_guardrail_rule</code></li>

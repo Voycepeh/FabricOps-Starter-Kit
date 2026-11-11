@@ -66,7 +66,7 @@ def check_freshness(
         spark_session=spark_session,
         context=context,
     )
-    table_id = identity["table_id"]
+    table_id = requested_table_id
     rules_df = load_table_guardrail_rules(
         config,
         active_workspace_id,
@@ -106,7 +106,16 @@ def check_freshness(
     import json
     from fabricops_kit.pipeline.shared import collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters
     parameters = validate_freshness_parameters(json.loads(freshness_rule["rule_parameters_json"]))
-    if parameters["evaluation_scope"] == "incremental_batch":
+    if identity.get("source_type") == "file":
+        from fabricops_kit.io.shared import resolve_configured_file_path
+        from fabricops_kit.pipeline.shared import file_participant_source
+        _, _, path = resolve_configured_file_path(identity["store"], identity["relative_path"], context=context)
+        evidence = (collect_freshness_evidence(parameters, dataframe=dataframe,
+            source={**file_participant_source(identity), "resolved_path": path}, spark_session=spark_session)
+            if parameters["evaluation_scope"] == "full_dataset" else
+            {"evidence_method": parameters["evidence_method"], "evaluation_scope": parameters["evaluation_scope"],
+             "outcome": "unavailable", "reason": "Incremental batch scope is unavailable for full file Reads."})
+    elif parameters["evaluation_scope"] == "incremental_batch":
         evidence = collect_freshness_evidence(parameters,
             dataframe=dataframe if read_mode == "incremental" else None,
             source={"source_type": "table", "table_id": table_id}, spark_session=spark_session)

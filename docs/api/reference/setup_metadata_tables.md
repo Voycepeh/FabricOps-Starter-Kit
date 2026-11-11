@@ -168,7 +168,7 @@ read as canonical authority or automatically deleted.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 45 |
+| Live-critical dependencies | 49 |
 
 ### Release history
 
@@ -217,6 +217,8 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
 <li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
@@ -229,6 +231,8 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 </ul>
 

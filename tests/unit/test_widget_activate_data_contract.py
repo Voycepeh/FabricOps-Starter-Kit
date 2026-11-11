@@ -86,3 +86,36 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     assert action.call_args.args == ('orders', 'contract', 2)
     ui['controls']['contract'].value = None
     assert ui['state']['review'] is None and ui['controls']['activate'].disabled
+
+
+def test_named_file_activation_never_uses_a_table_id(monkeypatch):
+    """The shared activation widget passes exact file source/configuration to its service."""
+    import json
+    from fabricops_kit.data_contract import shared as contracts
+    module = importlib.import_module('fabricops_kit.widgets.widget_activate_data_contract')
+    source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    frozen = dict(table_id=None, source_id=source['source_id'], contract_id='file-contract', contract_version=1,
+                  status='frozen', contract_payload_json=json.dumps({'source': source, 'table': {'columns': []}}))
+    from IPython import display as ip
+    monkeypatch.setattr(ip, 'display', lambda *a, **kw: None)
+    monkeypatch.setattr(module, 'resolve_fabric_context', lambda **kw: ({}, 'w', {}))
+    monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
+    monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
+    monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
+    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
+    action = Mock(return_value={'status': 'active', 'source_id': source['source_id'], 'table_id': None})
+    monkeypatch.setattr(module, 'set_table_contract_activation', action)
+    ui = module.widget_activate_data_contract()
+    ui['controls']['workspace'].value = 'w'
+    choices = ui['controls']['table'].options
+    assert any('demo/orders.csv' in label and value == source['source_id'] for label, value in choices)
+    ui['controls']['table'].value = source['source_id']
+    ui['controls']['contract'].value = ('file-contract', 1)
+    reviewed = ui['actions']['review']()
+    assert reviewed['table_id'] is None and reviewed['source_id'] == source['source_id']
+    ui['controls']['confirm'].value = True
+    assert ui['actions']['activate']()['table_id'] is None
+    assert action.call_args.args[0] is None
+    assert action.call_args.kwargs['file_source'] == source
+    assert action.call_args.kwargs['file_store'] == 'Bronze'
+    assert action.call_args.kwargs['file_configuration_workspace_id'] == 'engineering-route'

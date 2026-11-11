@@ -52,6 +52,10 @@ def file_source_identity(*, workspace_id, item_id, relative_path, file_format, r
         raise ValueError("File source requires workspace_id, item_id and relative_path.")
     if relative_path.startswith(("/", "\\")) or ":" in relative_path or "\\" in relative_path or ".." in relative_path.split("/"):
         raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
+    if any(ord(character) < 32 for character in relative_path) or "%" in relative_path:
+        raise ValueError("File selector cannot contain control characters or encoded path components.")
+    if "{" in relative_path or "}" in relative_path:
+        raise ValueError("File selector cannot contain brace expansion; use a file, folder or wildcard path without braces.")
     path = str(PurePosixPath(relative_path))
     if path in {"", "."}:
         raise ValueError("Select a file, folder or wildcard beneath Files.")
@@ -110,6 +114,55 @@ def observation_selector_options(rows, *, table_id=None, workspace_id=None):
         "workspaces": sorted({str(row["workspace_id"]) for row in tables
                               if not table_id or str(row["table_id"]) == table_id}),
     }
+
+
+def contract_file_datasets(rows, *, config, workspace_id):
+    """List readable file datasets from authored Contracts without Catalogue table rows."""
+    from fabricops_kit.config.shared import get_store
+    paths = config.get("path_config", {}) if isinstance(config, Mapping) else config.path_config
+    paths = paths.get("paths", paths) if isinstance(paths, Mapping) else paths.paths
+    datasets, versions = {}, {}
+    for row in rows:
+        payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default={})
+        source = payload.get("source", {})
+        if source.get("source_type") != "file":
+            continue
+        validate_contract_source(payload)
+        if versions.get(source["source_id"], -1) >= int(row.get("contract_version") or 0):
+            continue
+        versions[source["source_id"]] = int(row.get("contract_version") or 0)
+        stores = []
+        for route in paths:
+            for key in paths[route]:
+                store = get_store(config, route, key)
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                    stores.append((str(route), key))
+        if not stores:
+            continue
+        route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
+        datasets[source["source_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
+            "columns": payload.get("table", {}).get("columns", [])}
+    return list(datasets.values())
+
+
+def dataset_selector_options(tables, files, *, table_id=None, workspace_id=None):
+    """Combine typed dataset choices while preserving the table observation selector."""
+    options = observation_selector_options(tables, table_id=table_id, workspace_id=workspace_id)
+    return {"tables": sorted(set(options["tables"]) | {row["source_id"] for row in files
+                if not workspace_id or row["workspace_id"] == workspace_id}),
+            "workspaces": sorted(set(options["workspaces"]) | {row["workspace_id"] for row in files
+                if not table_id or row["source_id"] == table_id})}
+
+
+def dataset_display_name(dataset):
+    """Describe a dataset with its readable name, store, schema/path and physical context."""
+    if dataset.get("source_type") == "file":
+        path = dataset["relative_path"]
+        kind = "Folder" if path.endswith("/") else "File selector" if any(char in path for char in "*?[") else "File"
+        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset['workspace_id']} / {dataset['item_id']}"
+    name = dataset.get("table_name") or dataset.get("table_id") or ""
+    location = " / ".join(str(value) for value in (dataset.get("layer") or dataset.get("store"), dataset.get("schema_name") or dataset.get("schema")) if value)
+    return f"{name} — {location} — Table · {dataset.get('_workspace_name') or dataset.get('workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
 
 
 def contract_lifecycle_id(table_id: str) -> str:
@@ -857,16 +910,19 @@ def get_contract_authoring_state(
         draft = matches[0]
 
     table_id = str(draft.get("table_id") or "")
-    catalogue_frame = read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        context={**(context or {}), "_spark_session": spark_session},
-    )
-    catalogue_rows = _scoped_rows(
-        catalogue_frame,
-        f"table_id = {_sql_literal(table_id)}",
-        f"workspace_id = {_sql_literal(active_workspace_id)}",
-    )
+    if draft.get("source_id"):
+        catalogue_rows = []
+    else:
+        catalogue_frame = read_lakehouse_table(
+            "METADATA_DATA_CATALOGUE", store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+            context={**(context or {}), "_spark_session": spark_session},
+        )
+        catalogue_rows = _scoped_rows(
+            catalogue_frame,
+            f"table_id = {_sql_literal(table_id)}",
+            f"workspace_id = {_sql_literal(active_workspace_id)}",
+        )
     payload = _json_value(
         draft.get("contract_payload_json"), field="contract_payload_json", default=None
     )

@@ -146,7 +146,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 114 |
+| Live-critical dependencies | 121 |
 
 ### Release history
 
@@ -177,6 +177,8 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.mutate_metadata</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.normalized_destination</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.notebook_executable_digest</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.operation_activation_identity</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.operation_configuration</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.persist_engineering_dry_run</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.persist_engineering_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.promoted_notebook</code></li>
@@ -195,6 +197,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
@@ -263,8 +266,12 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>

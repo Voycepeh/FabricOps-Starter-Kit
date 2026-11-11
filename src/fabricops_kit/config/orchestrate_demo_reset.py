@@ -38,6 +38,7 @@ _DEMO_OUTPUTS = (
     ("Silver", "product_master_scd1"),
     ("Silver", "product_master_scd2"),
 )
+_DEMO_REMOVALS = (*_DEMO_OUTPUTS, ("Bronze", "orders"))
 _DEMO_NAMES = {"02A_full_refresh_demo", "02B_incremental_append_demo", "02C_scd_demo"}
 
 
@@ -137,6 +138,12 @@ def _demo_check_metadata_scope(_state, value):
             if key in {"table_id", "source_table_id", "target_table_id", "incremental_target_table_id"}:
                 if item and item not in _state._demo_table_ids:
                     raise RuntimeError(f"Non-demo table reference in {key}; metadata is preserved.")
+            elif key == "source_id" and item:
+                if item not in _state._demo_source_ids:
+                    raise RuntimeError("Non-demo file source reference; metadata is preserved.")
+            elif key == "source_ids" and item:
+                if not set(item).issubset(_state._demo_source_ids):
+                    raise RuntimeError("Non-demo file source references; metadata is preserved.")
             elif key == "source_table_ids" and item:
                 if not set(item).issubset(_state._demo_table_ids):
                     raise RuntimeError("Non-demo source references; metadata is preserved.")
@@ -192,7 +199,7 @@ def _demo_remove_outputs(_state, *, preview=False):
     """Remove exact configured output objects and their physical publication markers."""
     import notebookutils
 
-    for store, table in _DEMO_OUTPUTS:
+    for store, table in _DEMO_REMOVALS:
         if store == "Gold":
             if preview:
                 continue
@@ -205,7 +212,8 @@ def _demo_remove_outputs(_state, *, preview=False):
             )
         else:
             _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
-            qualified = f"{_state._demo_silver_catalog}.`{table}`"
+            catalog = _state._demo_bronze_catalog if store == "Bronze" else _state._demo_silver_catalog
+            qualified = f"{catalog}.`{table}`"
             if _state.spark.catalog.tableExists(qualified):
                 location_rows = (
                     _state.spark.sql(f"DESCRIBE TABLE EXTENDED {qualified}").where("col_name = 'Location'").collect()
@@ -221,10 +229,10 @@ def _demo_remove_outputs(_state, *, preview=False):
 
 
 def _demo_verify_outputs(_state):
-    """Fail if any of the six physical outputs still exists."""
+    """Fail if any output or the obsolete Bronze Orders table still exists."""
     import notebookutils
 
-    for store, table in _DEMO_OUTPUTS:
+    for store, table in _DEMO_REMOVALS:
         if store == "Gold":
             exists = (
                 read_warehouse_query(
@@ -236,7 +244,7 @@ def _demo_verify_outputs(_state):
         else:
             _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
             exists = notebookutils.fs.exists(path) or _state.spark.catalog.tableExists(
-                f"{_state._demo_silver_catalog}.`{table}`"
+                f"{_state._demo_bronze_catalog if store == 'Bronze' else _state._demo_silver_catalog}.`{table}`"
             )
         if exists:
             raise RuntimeError(f"Reset incomplete: {store}.demo.{table} remains. Check permissions and rerun 00C.")
@@ -298,7 +306,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     snapshots in its three native lifecycle folders are removed too. Table
     definitions remain; no metadata migration is performed.
 
-    Five Day 1 sources are overwritten and six outputs removed in the reserved
+    Four Day 1 tables are overwritten, Orders CSV is validated and retained,
+    and six outputs plus the obsolete Bronze Orders table are removed in the reserved
     ``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
     tables and source files are preserved. Exact demo table/workspace references,
     relevant jobs, artifact contents, fixture counts and catalog locations are
@@ -342,7 +351,9 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     for _table, _count in _demo_counts.items():
         print(f"{_table}: {_count} rows")
     for _store, _table in _DEMO_SOURCES:
-        print(f"Restore Day 1: {_store}.demo.{_table}")
+        if (_store, _table) != ("Bronze", "orders"):
+            print(f"Restore Day 1: {_store}.demo.{_table}")
+    print("Validate and retain Files/demo/orders.csv (120 rows); remove obsolete Bronze.demo.orders on full reset.")
     for _store, _table in _DEMO_OUTPUTS:
         print(f"Remove output: {_store}.demo.{_table}")
     if not reset:
@@ -371,6 +382,13 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         for workspace, stores in _demo._demo_config.path_config.paths.items()
         for store, table in [*_DEMO_SOURCES, *_DEMO_OUTPUTS]
         if store in stores
+    }
+    from fabricops_kit.data_contract.shared import file_source_identity
+    _demo._demo_source_ids = {
+        file_source_identity(workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
+            relative_path=f"demo/orders.{extension}", file_format=kind)["source_id"]
+        for stores in _demo._demo_config.path_config.paths.values() if "Bronze" in stores
+        for extension, kind in (("csv", "csv"), ("json", "json"), ("parquet", "parquet"), ("xlsx", "excel"))
     }
     _demo._demo_workspaces = {workspace.casefold() for workspace in _demo._demo_config.path_config.paths}
     _demo._demo_workspaces.update((store.workspace_id.casefold() for store in _demo.context.paths.values()))
@@ -409,6 +427,10 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo._demo_silver_catalog = ".".join(
         ("`" + name.replace("`", "``") + "`" for name in (_workspace_name, _item_name, "demo"))
     )
+    _bronze = _demo.context.paths["Bronze"]
+    _bronze_workspace = _demo._demo_client.request("GET", f"/workspaces/{_bronze.workspace_id}")["displayName"]
+    _bronze_item = _demo._demo_client.request("GET", f"/workspaces/{_bronze.workspace_id}/items/{_bronze.item_id}")["displayName"]
+    _demo._demo_bronze_catalog = ".".join("`" + name.replace("`", "``") + "`" for name in (_bronze_workspace, _bronze_item, "demo"))
     _demo_day1 = {}
     for (_store, _table), (_file, _count) in _DEMO_SOURCES.items():
         _frame = read_lakehouse_csv(_file, store="Bronze", header=True, inferSchema=True).cache()
@@ -426,6 +448,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         print(f"Metadata Files/{_folder}: removed {_count}")
     _demo_remove_outputs(_demo)
     for (_store, _table), _expected in _demo_day1.items():
+        if (_store, _table) == ("Bronze", "orders"):
+            continue  # Validated CSV is the source; never recreate its redundant table.
         _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
         _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
         _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")

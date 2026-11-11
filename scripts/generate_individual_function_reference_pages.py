@@ -190,6 +190,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "bypass_reason": "Reason recorded when governance review was bypassed.",
     "superseded_by_rule_key": "Rule key that supersedes the current guardrail row.",
     "supersedes_rule_id": "Rule identifier superseded by the current row.",
+    "source_id": "Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.",
     "guardrail_result_id": "Stable identifier for the aggregate Guardrail result row.",
     "execution_type": "Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.",
     "result_id": "Stable identifier for the runtime result payload.",
@@ -249,7 +250,7 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
     "failures": "Validated JSON STRING containing safe failure codes and exception class names; decoded to a logical array in application code. Never raw exception messages.",
     "boundary_completed": "Whether the explicit whole-run completion boundary finished; independent of operation success.",
-    "operations": "Validated JSON STRING containing Read/Write operation facts: table ID, role, exact contract version/hash, destination, modes, source associations, status, timing and stages; decoded to a logical array in application code. Parse JSON before expanding operations in Spark or Power Query; no configuration join is required.",
+    "operations": "Validated JSON STRING containing Read/Write operation facts: canonical table ID or typed file Source ID, role, exact contract version/hash, destination, modes, separate table/file source associations, status, timing and stages; decoded to a logical array in application code. Parse JSON before expanding operations in Spark or Power Query; no configuration join is required.",
 }
 
 METADATA_JSON_EXAMPLES = {

@@ -26,11 +26,21 @@ def test_identity_is_stable_case_sensitive_and_independent_of_reader_options():
         validate_contract_source({"source": original, "table": {"table_id": "fake"}})
 
 
-@pytest.mark.parametrize("path", ["../secret", "/absolute", "abfss://other", "a/../../b", ".", "a\\b"])
+@pytest.mark.parametrize("path", [
+    "../secret", "/absolute", "abfss://other", "a/../../b", ".", "a\\b",
+    "{../outside.csv,safe/*.csv}", "{../,safe/}*.csv", "{safe/,{../../,nested/}}*.csv",
+    ".{.,/safe}/outside.csv",
+])
 def test_selectors_cannot_escape_the_files_area(path):
     """Source authorization cannot be widened through a path escape."""
     with pytest.raises(ValueError):
         source(path)
+
+
+@pytest.mark.parametrize("path", ["incoming/orders.csv", "incoming", "incoming/*.csv", "incoming/part-?.csv", "incoming/[ab]*.csv"])
+def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
+    """Confinement validation preserves ordinary Spark file selection."""
+    assert source(path)["relative_path"] == path
 
 
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
@@ -99,14 +109,21 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
     monkeypatch.setattr(activation, "build_runtime_audit_fields", lambda **kwargs: {"_committed_by": "reviewer"})
     monkeypatch.setattr(activation, "check_contract_agreement", lambda *args, **kwargs: None)
     store = SimpleNamespace(workspace_id="workspace", item_id="item")
-    monkeypatch.setattr(io, "resolve_configured_file_path", lambda *args, **kwargs: (store, "incoming/*.csv", "resolved"))
+    file_scopes = []
+    def resolve_file(*args, **kwargs):
+        file_scopes.append(kwargs["context"]["scope_workspace_id"])
+        return store, "incoming/*.csv", "resolved"
+    monkeypatch.setattr(io, "resolve_configured_file_path", resolve_file)
     def mutate(table, mutation, **kwargs):
         rows, result = mutation([])
         activation.validate_activations(rows)
         return result
     monkeypatch.setattr(activation, "mutate_metadata", mutate)
     result = activation.set_table_contract_activation(None, "files", 1, expected_activation_id=None,
-        activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context)
+        activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context,
+        file_configuration_workspace_id="configuration-route")
+    assert file_scopes == ["configuration-route"]
+    assert result["workspace_id"] == "workspace"
     assert result["table_id"] is None and result["source_id"] == descriptor["source_id"]
     assert json.loads(result["destination_json"]) == descriptor
     store.item_id = "other-item"

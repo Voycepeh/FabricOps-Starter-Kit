@@ -3578,7 +3578,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3591,18 +3591,6 @@
             "Public API added."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -3639,18 +3627,6 @@
             "Public API added."
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
           "signature_before": null
         },
         {
@@ -3861,13 +3837,13 @@
         }
       ],
       "summary": {
-        "added": 17,
+        "added": 15,
         "modified": 12,
-        "nonbreaking": 17,
+        "nonbreaking": 15,
         "potentially_breaking": 12,
         "removed": 14,
         "review_required": 14,
-        "total": 43
+        "total": 41
       },
       "target": "main"
     },
@@ -4139,7 +4115,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -7330,7 +7306,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -7346,17 +7322,15 @@
           "signature_before": null
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Parameter removed: spark_session.",
-            "Optional parameter added: context.",
-            "Optional parameter added: read_parameters."
+            "Live public API removed."
           ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -7391,15 +7365,15 @@
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_top_n: int | None = None, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
           "reasons": [
-            "Optional parameter added: context."
+            "Live public API removed."
           ],
-          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_after": null,
           "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str"
         },
         {
@@ -7523,10 +7497,10 @@
       ],
       "summary": {
         "added": 12,
-        "modified": 15,
-        "nonbreaking": 13,
-        "potentially_breaking": 15,
-        "removed": 11,
+        "modified": 13,
+        "nonbreaking": 12,
+        "potentially_breaking": 16,
+        "removed": 13,
         "review_required": 10,
         "total": 38
       },
@@ -7826,7 +7800,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -10914,10 +10888,14 @@
             "Parameter removed: frequency_enabled.",
             "Parameter removed: frequency_top_n.",
             "Parameter removed: spark_session.",
+            "Parameter removed: target_table_id.",
             "Optional parameter added: dq_diagnostics.",
+            "Optional parameter added: target_schema.",
+            "Optional parameter added: target_store.",
+            "Optional parameter added: target_table_name.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -10941,16 +10919,15 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Parameter removed: spark_session.",
-            "Optional parameter added: context."
+            "Live public API removed."
           ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -10984,15 +10961,15 @@
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, spark_session = None)"
         },
         {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
           "reasons": [
-            "Optional parameter added: context."
+            "Live public API removed."
           ],
-          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_after": null,
           "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str"
         },
         {
@@ -11104,10 +11081,10 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 22,
-        "nonbreaking": 5,
-        "potentially_breaking": 22,
-        "removed": 9,
+        "modified": 20,
+        "nonbreaking": 4,
+        "potentially_breaking": 23,
+        "removed": 11,
         "review_required": 8,
         "total": 35
       },
@@ -11391,12 +11368,18 @@
             "Parameter removed: spark_session.",
             "Parameter removed: target_table_id.",
             "Optional parameter added: dq_diagnostics.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
             "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -13225,6 +13208,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_table_id.",
+            "Optional parameter added: target_schema.",
+            "Optional parameter added: target_store.",
+            "Optional parameter added: target_table_name."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -13235,6 +13245,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
         },
         {
           "change_type": "modified",
@@ -13300,12 +13322,12 @@
       ],
       "summary": {
         "added": 2,
-        "modified": 4,
+        "modified": 5,
         "nonbreaking": 3,
-        "potentially_breaking": 1,
-        "removed": 0,
+        "potentially_breaking": 4,
+        "removed": 2,
         "review_required": 2,
-        "total": 6
+        "total": 9
       },
       "target": "main"
     },
@@ -13332,11 +13354,17 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -15083,6 +15111,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_table_id.",
+            "Optional parameter added: target_schema.",
+            "Optional parameter added: target_store.",
+            "Optional parameter added: target_table_name."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -15093,6 +15148,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
         },
         {
           "change_type": "modified",
@@ -15158,12 +15225,12 @@
       ],
       "summary": {
         "added": 2,
-        "modified": 4,
+        "modified": 5,
         "nonbreaking": 3,
-        "potentially_breaking": 1,
-        "removed": 0,
+        "potentially_breaking": 4,
+        "removed": 2,
         "review_required": 2,
-        "total": 6
+        "total": 9
       },
       "target": "main"
     },
@@ -15190,11 +15257,17 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -16973,6 +17046,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_table_id.",
+            "Optional parameter added: target_schema.",
+            "Optional parameter added: target_store.",
+            "Optional parameter added: target_table_name."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -16983,6 +17083,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
         },
         {
           "change_type": "modified",
@@ -17008,12 +17120,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 1,
-        "potentially_breaking": 1,
-        "removed": 0,
+        "potentially_breaking": 4,
+        "removed": 2,
         "review_required": 1,
-        "total": 3
+        "total": 6
       },
       "target": "main"
     },
@@ -17040,11 +17152,17 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -18783,6 +18901,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_table_id.",
+            "Optional parameter added: target_schema.",
+            "Optional parameter added: target_store.",
+            "Optional parameter added: target_table_name."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -18793,6 +18938,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
         },
         {
           "change_type": "modified",
@@ -18818,12 +18975,12 @@
       ],
       "summary": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 1,
-        "potentially_breaking": 1,
-        "removed": 0,
+        "potentially_breaking": 4,
+        "removed": 2,
         "review_required": 1,
-        "total": 3
+        "total": 6
       },
       "target": "main"
     },
@@ -18850,11 +19007,17 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -19196,7 +19359,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -19209,18 +19372,6 @@
           ],
           "signature_after": null,
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -19257,18 +19408,6 @@
           ],
           "signature_after": null,
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
         },
         {
           "change_type": "added",
@@ -19481,10 +19620,10 @@
         "added": 14,
         "modified": 12,
         "nonbreaking": 14,
-        "potentially_breaking": 20,
-        "removed": 17,
+        "potentially_breaking": 18,
+        "removed": 15,
         "review_required": 9,
-        "total": 43
+        "total": 41
       },
       "target": "v0.1.0"
     },
@@ -19783,7 +19922,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -19798,18 +19937,16 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Parameter removed: context.",
-            "Parameter removed: read_parameters.",
-            "Optional parameter added: spark_session."
+            "Public API added."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -19843,16 +19980,16 @@
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
           "reasons": [
-            "Parameter removed: context."
+            "Public API added."
           ],
           "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str",
-          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -19974,10 +20111,10 @@
         }
       ],
       "summary": {
-        "added": 11,
-        "modified": 15,
-        "nonbreaking": 11,
-        "potentially_breaking": 19,
+        "added": 13,
+        "modified": 13,
+        "nonbreaking": 13,
+        "potentially_breaking": 17,
         "removed": 12,
         "review_required": 8,
         "total": 38
@@ -20258,13 +20395,17 @@
           "reasons": [
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
+            "Parameter removed: target_schema.",
+            "Parameter removed: target_store.",
+            "Parameter removed: target_table_name.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: frequency_top_n.",
             "Optional parameter added: spark_session.",
+            "Optional parameter added: target_table_id.",
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -20287,17 +20428,16 @@
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
           "reasons": [
-            "Parameter removed: context.",
-            "Optional parameter added: spark_session."
+            "Public API added."
           ],
           "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -20330,16 +20470,16 @@
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
           "reasons": [
-            "Parameter removed: context."
+            "Public API added."
           ],
           "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str) -> str",
-          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -20449,10 +20589,10 @@
         }
       ],
       "summary": {
-        "added": 9,
-        "modified": 22,
-        "nonbreaking": 10,
-        "potentially_breaking": 23,
+        "added": 11,
+        "modified": 20,
+        "nonbreaking": 12,
+        "potentially_breaking": 21,
         "removed": 4,
         "review_required": 2,
         "total": 35
@@ -20476,6 +20616,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_schema.",
+            "Parameter removed: target_store.",
+            "Parameter removed: target_table_name.",
+            "Optional parameter added: target_table_id."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -20486,6 +20653,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -20550,13 +20729,13 @@
         }
       ],
       "summary": {
-        "added": 0,
-        "modified": 4,
-        "nonbreaking": 0,
-        "potentially_breaking": 2,
+        "added": 2,
+        "modified": 5,
+        "nonbreaking": 2,
+        "potentially_breaking": 3,
         "removed": 2,
         "review_required": 4,
-        "total": 6
+        "total": 9
       },
       "target": "v0.3.0"
     },
@@ -20577,6 +20756,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_schema.",
+            "Parameter removed: target_store.",
+            "Parameter removed: target_table_name.",
+            "Optional parameter added: target_table_id."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -20587,6 +20793,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -20651,13 +20869,13 @@
         }
       ],
       "summary": {
-        "added": 0,
-        "modified": 4,
-        "nonbreaking": 0,
-        "potentially_breaking": 2,
+        "added": 2,
+        "modified": 5,
+        "nonbreaking": 2,
+        "potentially_breaking": 3,
         "removed": 2,
         "review_required": 4,
-        "total": 6
+        "total": 9
       },
       "target": "v0.3.1"
     },
@@ -20678,6 +20896,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_schema.",
+            "Parameter removed: target_store.",
+            "Parameter removed: target_table_name.",
+            "Optional parameter added: target_table_id."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -20688,6 +20933,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -20712,13 +20969,13 @@
         }
       ],
       "summary": {
-        "added": 0,
-        "modified": 2,
-        "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "added": 2,
+        "modified": 3,
+        "nonbreaking": 2,
+        "potentially_breaking": 2,
         "removed": 1,
         "review_required": 2,
-        "total": 3
+        "total": 6
       },
       "target": "v0.4.0"
     },
@@ -20739,6 +20996,33 @@
         },
         {
           "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
+          "reasons": [
+            "Parameter removed: target_schema.",
+            "Parameter removed: target_store.",
+            "Parameter removed: target_table_name.",
+            "Optional parameter added: target_table_id."
+          ],
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
@@ -20749,6 +21033,18 @@
           ],
           "signature_after": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = True, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "signature_before": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -20773,13 +21069,13 @@
         }
       ],
       "summary": {
-        "added": 0,
-        "modified": 2,
-        "nonbreaking": 0,
-        "potentially_breaking": 1,
+        "added": 2,
+        "modified": 3,
+        "nonbreaking": 2,
+        "potentially_breaking": 2,
         "removed": 1,
         "review_required": 2,
-        "total": 3
+        "total": 6
       },
       "target": "v0.4.1"
     },
@@ -20788,52 +21084,30 @@
       "changes": [
         {
           "change_type": "modified",
-          "classification": "potentially_breaking",
+          "classification": "review_required",
           "lifecycle_after": "Live",
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
-            "Parameter removed: target_table_id.",
-            "Optional parameter added: target_schema.",
-            "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str"
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         }
       ],
       "summary": {
         "added": 0,
         "modified": 1,
         "nonbreaking": 0,
-        "potentially_breaking": 3,
-        "removed": 2,
-        "review_required": 0,
-        "total": 3
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 1,
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -21106,7 +21380,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -21669,7 +21943,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -22142,6 +22416,9 @@
           "reasons": [
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
@@ -22149,10 +22426,13 @@
             "Optional parameter added: frequency_top_n.",
             "Optional parameter added: spark_session.",
             "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str.",
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -22368,13 +22648,19 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22508,13 +22794,19 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22648,13 +22940,19 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22748,13 +23046,19 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22836,47 +23140,25 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
-            "Parameter removed: target_schema.",
-            "Parameter removed: target_store.",
-            "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
-          "signature_before": null
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 2,
+        "added": 0,
         "modified": 1,
-        "nonbreaking": 2,
+        "nonbreaking": 0,
         "potentially_breaking": 1,
         "removed": 0,
         "review_required": 0,
-        "total": 3
+        "total": 1
       },
       "target": "main"
     }
@@ -36013,7 +36295,23 @@
               "default": "None",
               "has_default": true,
               "kind": "keyword_only",
-              "name": "target_table_id",
+              "name": "target_store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "target_schema",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "target_table_name",
               "required": false
             },
             {
@@ -36035,7 +36333,7 @@
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
         },
@@ -36130,98 +36428,6 @@
           "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Live",
-          "parameters": [
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "store",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "schema",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "table_name",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "table_id",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "query",
-              "required": false
-            },
-            {
-              "annotation": "str",
-              "default": "'full'",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "read_mode",
-              "required": false
-            },
-            {
-              "annotation": "dict[str, Any] | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "read_parameters",
-              "required": false
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "target_table_id",
-              "required": false
-            },
-            {
-              "annotation": "bool",
-              "default": "True",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "verbose",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "context",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-          "return_annotation": "dict[str, Any]",
-          "signature": "pipeline_read(*, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, query: str | None = None, read_mode: str = 'full', read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = True, context = None) -> dict[str, Any]",
-          "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
-          "source_qualified_name": "fabricops_kit.pipeline.pipeline_read.pipeline_read"
         },
         {
           "certainty": "certain",
@@ -36346,50 +36552,6 @@
           "signature": "profile_table(*, dataframe = None, store: str | None = None, schema: str | None = None, table_name: str | None = None, table_id: str | None = None, grain_discovery_enabled: bool = False, grain_discovery_max_columns: int = 3, grain_discovery_max_candidates: int = 8, frequency_columns = None, frequency_enabled: bool = False, frequency_top_n: int | None = 5, frequency_max_distinct_percent: float | None = 80.0, context = None, verbose: bool = True)",
           "source_path": "src/fabricops_kit/pipeline/profile_table.py",
           "source_qualified_name": "fabricops_kit.pipeline.profile_table.profile_table"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Live",
-          "parameters": [
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "store",
-              "required": true
-            },
-            {
-              "annotation": "str | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "schema",
-              "required": false
-            },
-            {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
-              "kind": "keyword_only",
-              "name": "table_name",
-              "required": true
-            },
-            {
-              "annotation": null,
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "context",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
-          "return_annotation": "str",
-          "signature": "resolve_table_id(*, store: str, schema: str | None = None, table_name: str, context = None) -> str",
-          "source_path": "src/fabricops_kit/pipeline/resolve_table_id.py",
-          "source_qualified_name": "fabricops_kit.pipeline.resolve_table_id.resolve_table_id"
         },
         {
           "certainty": "certain",
@@ -36659,7 +36821,7 @@
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "b3d8517b778ec97e8f804894c8af6df8aaa4e006",
+      "revision": "b8cbe1adc245f193754ed3bd898d93a90b7d2b99",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -37672,19 +37834,19 @@
             },
             {
               "annotation": "str | None",
-              "default": null,
-              "has_default": false,
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "schema",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "table_name",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
@@ -37749,11 +37911,35 @@
               "kind": "keyword_only",
               "name": "dq_diagnostics",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "relative_path",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_options",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
         },
@@ -38244,7 +38430,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:e8fe8f476c00f2575cc6b2da4ae084dc076ff4047ac58b268d63ba7029449f4f",
+      "source_digest": "sha256:7e67444c6ebf12278557d41aecac299c1eb8640292476797f5428dcf0a55e9f0",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

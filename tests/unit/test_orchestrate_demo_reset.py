@@ -166,10 +166,10 @@ def test_active_demo_job_blocks_reset(monkeypatch, status):
 def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     import sys
     state = _environment(monkeypatch).state
-    paths = {f'/configured/{store}/demo/{table}' for store, table in API._DEMO_OUTPUTS if store == 'Silver'}
+    paths = {f'/configured/{store}/demo/{table}' for store, table in API._DEMO_REMOVALS if store != 'Gold'}
     existing = set(paths) if initially_present else set()
     existing.add('/configured/Silver/demo/unrelated')
-    catalog = {f'catalog.`{table}`' for store, table in API._DEMO_OUTPUTS if store == 'Silver'} if initially_present else set()
+    catalog = {f'catalog.`{table}`' for store, table in API._DEMO_REMOVALS if store != 'Gold'} if initially_present else set()
     sql, warehouse = [], []
     def spark_sql(query):
         sql.append(query)
@@ -177,13 +177,14 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
         if query.startswith('DESCRIBE'):
             table = qualified.split('`')[1]
             return SimpleNamespace(where=lambda _: SimpleNamespace(collect=lambda: [
-                {'data_type': f'/configured/Silver/demo/{table}'}]))
+                {'data_type': f'/configured/{"Bronze" if table == "orders" else "Silver"}/demo/{table}'}]))
         catalog.remove(qualified)
     def remove(path, recursive):
         assert path in paths and recursive is True
         existing.remove(path); return True
     monkeypatch.setitem(sys.modules, 'notebookutils', SimpleNamespace(fs=SimpleNamespace(exists=lambda path: path in existing, rm=remove)))
     state._demo_silver_catalog = 'catalog'
+    state._demo_bronze_catalog = 'catalog'
     state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda qualified: qualified in catalog), sql=spark_sql)
     monkeypatch.setattr(API, 'resolve_warehouse_name', lambda *_: 'physical-gold')
     monkeypatch.setattr(API, 'execute_warehouse_sql', lambda *a, **kw: warehouse.append((a, kw)))
@@ -197,7 +198,7 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     assert not catalog and len(warehouse) == 2
     assert all('DROP TABLE [demo].[customer_summary]' in call[0][2] for call in warehouse)
     assert all(call[1]['database_name'] == 'physical-gold' for call in warehouse)
-    assert sum(q.startswith('DROP TABLE') for q in sql) == (5 if initially_present else 0)
+    assert sum(q.startswith('DROP TABLE') for q in sql) == (6 if initially_present else 0)
 
 
 def test_true_clears_all_tables_children_first_and_repeated_reset_is_safe(monkeypatch, capsys):
@@ -262,3 +263,32 @@ def test_inventory_addition_requires_dependency_review_before_clearing(monkeypat
     with pytest.raises(RuntimeError, match='Metadata inventory changed'):
         API.orchestrate_demo_reset(reset=True)
     assert env.rows['METADATA_DATA_CATALOGUE'] and not env.removed
+
+
+def test_orders_csv_is_validated_without_recreating_its_table(monkeypatch):
+    env = _ready(monkeypatch)
+    seen, written = [], []
+    reader = API.read_lakehouse_csv
+    def observe(path, **kwargs):
+        seen.append(path)
+        return reader(path, **kwargs)
+    def write(frame, *, table_name, store, **kwargs):
+        written.append((store, table_name))
+    monkeypatch.setattr(API, 'read_lakehouse_csv', observe)
+    monkeypatch.setattr(API, 'write_lakehouse_table', write)
+    monkeypatch.setattr(API, 'write_warehouse_table', write)
+    API.orchestrate_demo_reset(reset=True)
+    assert 'demo/orders.csv' in seen
+    assert ('Bronze', 'orders') not in written
+    assert set(written) == set(API._DEMO_SOURCES) - {('Bronze', 'orders')}
+    assert len(written) == 4
+    assert not any(env.rows.values())
+
+
+def test_reset_scope_rejects_foreign_file_source_ids(monkeypatch):
+    state = _environment(monkeypatch).state
+    state._demo_source_ids = {'file:demo-orders'}
+    state._demo_workspaces = {'dev'}
+    API._demo_check_metadata_scope(state, {'source_id': 'file:demo-orders', 'workspace_id': 'dev'})
+    with pytest.raises(RuntimeError, match='Non-demo file source'):
+        API._demo_check_metadata_scope(state, {'source_ids': ['file:another-project']})

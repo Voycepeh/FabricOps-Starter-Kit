@@ -18,13 +18,17 @@ from fabricops_kit.widgets import shared
 def widget_activate_data_contract(table_id: str | None = None, contract_id: str | None = None,
                                   contract_version: int | None = None, *,
                                   workspace_id: str | None = None, context=None) -> dict:
-    """Select and review a physical table, frozen Contract and applicable Agreement.
+    """Select and review a table or file dataset, frozen Contract and applicable Agreement.
+
+    The existing selector lists readable table and file names with physical
+    context. File Activation uses its exact frozen Source ID and reader settings,
+    without a Table ID. Opening and reviewing never activate a dataset.
 
     Parameters
     ----------
     table_id, contract_id : str | None, optional
         Preselect an exact logical table and frozen Contract. With no arguments,
-        select from registered physical workspaces/tables and frozen versions.
+        select from named physical tables/files and exact frozen versions.
     contract_version : int | None, optional
         Exact positive frozen version to preselect; never a latest fallback.
     workspace_id : str | None, optional
@@ -55,23 +59,26 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
     ...     workspace_id=PHYSICAL_WORKSPACE_ID)
 
     """
-    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings
+    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings, participant_id
+    from fabricops_kit.data_contract.shared import contract_file_datasets, dataset_display_name
     startup = shared.WidgetStartup("Data Contract Activation", tone="governance", reserved_height="560px")
     config, current_workspace, runtime = resolve_fabric_context(context=context)
     metadata_workspace = runtime.get("metadata_workspace_id") or current_workspace
     base = {**runtime, "config": config, "scope_workspace_id": current_workspace, "metadata_workspace_id": metadata_workspace}
     spark = get_spark_session(context=runtime)
     selected_workspace = workspace_id or (current_workspace if table_id is not None else None)
-    with startup.phase("metadata_loading", "Loading registered tables, frozen Contracts and Governance history…"):
+    with startup.phase("metadata_loading", "Loading datasets, frozen Contracts and Governance history…"):
         catalogue = metadata_records("METADATA_DATA_CATALOGUE", context=base, spark_session=spark)
         contracts = metadata_records("METADATA_DATA_CONTRACT", context=base, spark_session=spark)
         agreements = metadata_records("METADATA_DATA_AGREEMENT", context=base, spark_session=spark)
         initial_context = {**base, "scope_workspace_id": selected_workspace or current_workspace}
         history_rows = read_activation_history(context=initial_context, spark_session=spark)
     tables = [row for row in catalogue if row.get("metadata_level") == "table" and row.get("is_active") is not False]
+    files = contract_file_datasets(contracts, config=config, workspace_id=current_workspace)
+    datasets = [*tables, *files]
     frozen = [row for row in contracts if row.get("status") == "frozen"]
     widgets = shared.require_ipywidgets()
-    workspaces = sorted({row["workspace_id"] for row in tables} | ({selected_workspace} if selected_workspace else set()))
+    workspaces = sorted({row["workspace_id"] for row in datasets} | ({selected_workspace} if selected_workspace else set()))
     workspace = widgets.Dropdown(options=[("Select physical workspace", None)] + [(value, value) for value in workspaces],
         value=selected_workspace, layout=widgets.Layout(width="100%"))
     table = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
@@ -100,7 +107,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
             return
         invalidate()
         options = [(f'{row["contract_id"]} / v{row["contract_version"]}', (row["contract_id"], row["contract_version"]))
-            for row in frozen if row["table_id"] == table.value]
+            for row in frozen if participant_id(row) == table.value]
         contract.options = [("Select frozen Contract/version", None)] + options
         wanted = (contract_id, contract_version)
         if wanted in [value for _label, value in options]:
@@ -108,10 +115,11 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
     def table_choices(_event=None):
         state["changing"] = True
         try:
-            values = {row["table_id"] for row in tables if row["workspace_id"] == workspace.value}
+            values = {participant_id(row) for row in datasets if row["workspace_id"] == workspace.value}
             if table_id is not None and workspace.value == selected_workspace:
                 values.add(table_id)
-            table.options = [("Select physical Table ID", None)] + [(value, value) for value in sorted(values)]
+            labels = {participant_id(row): dataset_display_name(row) for row in datasets}
+            table.options = [("Select dataset", None)] + [(labels.get(value, value), value) for value in sorted(values)]
             if table_id in values:
                 table.value = table_id
         finally:
@@ -122,16 +130,20 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         return render_history()
     def render_history():
         scoped = [row for row in state["history"] if (not workspace.value or row["workspace_id"] == workspace.value)
-            and (not table.value or row["table_id"] == table.value)]
+            and (not table.value or (row.get("source_id") or row.get("table_id")) == table.value)]
         history.value = "<details><summary>Contract Activation history and current state</summary><pre style='white-space:pre-wrap'>" + html.escape(json.dumps(scoped, indent=2, default=str)) + "</pre></details>"
         return scoped
     def selection_binding():
         if not table.value or not contract.value:
-            raise ValueError("Select an exact physical Table ID and frozen Contract/version.")
+            raise ValueError("Select an exact dataset and frozen Contract/version.")
         row = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=routed(), spark_session=spark),
-            table_id=table.value, contract_id=contract.value[0], contract_version=contract.value[1], status="frozen")
-        identity = resolve_catalogue_table_identity(config, workspace.value, table.value, context=routed(), spark_session=spark)
-        destination = pipeline_physical_bindings({table.value: identity}, config=config, workspace_id=workspace.value)[table.value]
+            **({"source_id": table.value} if str(table.value).startswith("file:") else {"table_id": table.value}),
+            contract_id=contract.value[0], contract_version=contract.value[1], status="frozen")
+        if row.get("source_id"):
+            destination = json.loads(row["contract_payload_json"])["source"]
+        else:
+            identity = resolve_catalogue_table_identity(config, workspace.value, table.value, context=routed(), spark_session=spark)
+            destination = pipeline_physical_bindings({table.value: identity}, config=config, workspace_id=workspace.value)[table.value]
         if str(destination["workspace_id"]).casefold() != workspace.value.casefold():
             raise ValueError("Select the physical table workspace before review.")
         state["destination"] = destination
@@ -147,7 +159,8 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
             agreement_id=reference[0], agreement_version=reference[1]) if reference else None
         if terms:
             validate_agreement(terms)
-        state["review"] = {"workspace_id": workspace.value, "table_id": table.value, "contract": contract.value,
+        state["review"] = {"workspace_id": workspace.value, "dataset_id": table.value,
+            "table_id": row.get("table_id"), "source_id": row.get("source_id"), "contract": contract.value,
             "reference": reference, "agreement_sha256": manifest_digest(agreement_definition(terms)) if terms else None,
             "destination": destination, "payload_sha256": hashlib.sha256(row["contract_payload_json"].encode()).hexdigest(),
             "expected_activation_id": current[0]["activation_id"] if current else None, "activation_id": str(uuid4())}
@@ -159,7 +172,12 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         if not reviewed or not confirm.value:
             raise ValueError("Review and explicitly confirm the exact frozen Contract first.")
         terms = reviewed["reference"]
-        state["result"] = set_table_contract_activation(reviewed["table_id"], *reviewed["contract"],
+        is_file = reviewed["destination"].get("source_type") == "file"
+        file_dataset = next((item for item in files if item["source_id"] == reviewed["source_id"]), {}) if is_file else {}
+        file_store = file_dataset.get("store")
+        state["result"] = set_table_contract_activation(None if is_file else reviewed["table_id"], *reviewed["contract"],
+            **({"file_source": reviewed["destination"], "file_store": file_store,
+                "file_configuration_workspace_id": file_dataset.get("configuration_workspace_id", reviewed["workspace_id"])} if is_file else {}),
             expected_activation_id=reviewed["expected_activation_id"], activation_id=reviewed["activation_id"], governance_confirmed=True,
             context=routed(), spark_session=spark, expected_destination=reviewed["destination"],
             expected_payload_sha256=reviewed["payload_sha256"], agreement_id=terms[0] if terms else None,

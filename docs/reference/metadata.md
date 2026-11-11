@@ -5,7 +5,7 @@ FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` connects physical table assets across both schemas. File-backed contracts and activations use a distinct stable `source_id` and have no Table ID. `contract_id` and `contract_version` identify one exact Data Contract version.
+`table_id` connects physical table assets across both schemas. File-backed contracts, activations and Guardrail results use a distinct stable `source_id` and have no Table ID. `contract_id` and `contract_version` identify one exact Data Contract version.
 
 `METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails and Enrichment for each contract version; profiling is configured by setup_pipeline.
 

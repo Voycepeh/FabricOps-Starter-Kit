@@ -442,9 +442,12 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("promotion_id", "string"), ("governed_notebook_id", "string"), ("execution_identity", "string"),
              ("run_schema_version", "integer"),
              ("operations", [("operation_key", "string", False),
-                 ("table_id", "string", False), ("pipeline_role", "string", False),
+                 ("table_id", "string"), ("source_type", "string"), ("source_id", "string"),
+                 ("source_ids", "strings"), ("pipeline_role", "string", False),
                  ("contract_id", "string"), ("contract_version", "integer"), ("payload_sha256", "string"),
-                 ("destination", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
+                 ("destination", {"struct": [(n,t,True if n in {"kind", "table_name"} else z) for n,t,z in BINDING_FIELDS if n != "table_id"] +
+                     [("source_type", "string"), ("source_id", "string"), ("relative_path", "string"),
+                      ("file_format", "string"), ("reader_options_json", "string")]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
                  ("read_parameters", {"struct": [("watermark_column", "string")]}),
                  ("write_parameters", {"struct": [(key, kind) for key, kind in CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"].items()]}),
@@ -471,7 +474,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("guardrail_result_id", "string", False),
                 ("guardrail_rule_id", "string", False),
                 ("guardrail_version", "integer", False),
-                ("table_id", "string", False),
+                ("table_id", "string"), ("source_id", "string"),
                 ("table_name", "string"),
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
@@ -708,11 +711,12 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         result[name] = validate_metadata_value(value, kind, field=name)
         if required and name == "operations":
             for original, decoded in zip(value, result[name]):
-                for field in ("read_parameters", "write_parameters", "repartition_by"):
+                for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids"):
                     if field not in original:
                         decoded.pop(field, None)
                     elif isinstance(original[field], dict):
                         decoded[field] = {key: decoded[field][key] for key in original[field]}
+                decoded["destination"] = {key: decoded["destination"][key] for key in original["destination"]}
         if required and name == "profiling":
             # Scope fields are additive JSON members. Do not inject them into
             # retained Run content and change a previously approved content hash.

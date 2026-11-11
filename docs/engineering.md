@@ -63,6 +63,10 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 ## How do I read Lakehouses, Warehouses and files?
 
+Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, a distinct file `source_id`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
+
+Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; they do not place file paths in table lineage or prove transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, remain in memory per execution and do not consume durable table profiling schedules. Bounded profile counts do not claim total file rows read.
+
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
 ![Logical store resolution and distinct Lakehouse file helper APIs.](assets/engineering/fabric-sources.svg){ .fabricops-section-evidence }

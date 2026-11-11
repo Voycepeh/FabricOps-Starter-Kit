@@ -25,8 +25,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
         assert kwargs.get('verbose') is True
-        reads.append(kwargs['table_name'])
-        return {'dataframe': frame, 'table_name': kwargs['table_name']}
+        reads.append(kwargs.get('relative_path') or kwargs['table_name'])
+        return {'dataframe': frame, **({'source_id': 'file:orders', 'source_type': 'file'} if kwargs.get('relative_path') else {'table_name': kwargs['table_name']})}
     def write(dataframe, **kwargs):
         assert not {'execution_plan', 'sources', 'spark_session'}.intersection(kwargs)
         writes.append((kwargs['table_name'], kwargs['write_mode']))
@@ -59,6 +59,8 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     }
     count, modes = expected[path.stem]
     assert len(reads) == count and [mode for name, mode in writes] == modes
+    if path.stem == '02A_full_refresh_demo':
+        assert reads == ['demo/orders.csv', 'products', 'order_history']
 
 
 
