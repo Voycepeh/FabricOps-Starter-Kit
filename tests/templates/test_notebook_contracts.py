@@ -688,6 +688,16 @@ def test_current_notebook_examples_omit_explicit_spark_arguments():
 def test_finalization_is_one_call_without_manual_observation_profiling(notebook_path):
     """Every maintained 02 variant delegates observation publication to finalization."""
     notebook = _load_notebook(notebook_path)
+    # Commented exploratory examples are allowed; executable profiling is not.
+    manual_profile_calls = [
+        node
+        for cell in notebook.cells if cell.cell_type == "code"
+        for node in ast.walk(ast.parse(cell.source))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "profile_table"
+    ]
+    assert not manual_profile_calls
     if notebook_path.name == "02B_incremental_append_demo.ipynb":
         finalize_calls = []
         for code_cell in (cell for cell in notebook.cells if cell.cell_type == "code"):
@@ -700,7 +710,6 @@ def test_finalization_is_one_call_without_manual_observation_profiling(notebook_
         assert all(len(call.args) == 1 for call in finalize_calls)
         source = "\n".join(cell.source for cell in notebook.cells)
         assert "persist_source_observations" not in source
-        assert "profile_table" not in source
         return
     cell = next(cell for cell in notebook.cells if cell.get("id") == "finalize-run")
     pipeline, result = object(), {"status": "ungoverned_completed"}
@@ -711,7 +720,7 @@ def test_finalization_is_one_call_without_manual_observation_profiling(notebook_
     tree = ast.parse(cell.source)
     assert [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call)] == ["finalize_pipeline"]
     source = "\n".join("".join(cell.source) for cell in notebook.cells)
-    assert "observation_profiles" not in source and "profile_table(" not in source
+    assert "observation_profiles" not in source
 
 
 def test_02_templates_and_demo_variants_enable_orchestration_progress():
