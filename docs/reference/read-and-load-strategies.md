@@ -90,7 +90,7 @@ The standard choices are:
 
     `read_mode="incremental"` resolves work not yet committed for the **exact source-to-target relationship**.
 
-    A `target_table_id` is required because two targets can consume the same source to different points.
+    `target_store` and `target_table_name` are required because two targets can consume the same source to different points. Supply `target_schema` when needed by the configured store; omit it for schemaless stores. FabricOps resolves both Table IDs internally, using each store’s configured workspace routing, and validates target participation in the active pipeline plan.
 
     ### When to use it
 
@@ -126,7 +126,9 @@ The standard choices are:
         schema="demo",
         table_name="orders",
         read_mode="incremental",
-        target_table_id=TARGET_TABLE_ID,
+        target_store="Silver",
+        target_schema="demo",
+        target_table_name="orders_clean",
         read_parameters={"watermark_column": "modified_datetime"},
     )
     ```

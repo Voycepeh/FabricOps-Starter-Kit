@@ -17,10 +17,8 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.pipeline.profile_table.profile_table",
     "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
     "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-    "fabricops_kit.pipeline.pipeline_read.pipeline_read",
     "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
     "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-    "fabricops_kit.pipeline.resolve_table_id.resolve_table_id",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
 )

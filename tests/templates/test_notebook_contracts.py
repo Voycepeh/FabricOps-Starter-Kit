@@ -500,19 +500,16 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     assert source.count('read_mode="incremental"') == 1
 
     incremental_tree = ast.parse(_demo_cell(name, "read-1").source)
-    resolve_call = next(node for node in ast.walk(incremental_tree) if isinstance(node, ast.Call)
-                        and isinstance(node.func, ast.Name) and node.func.id == "resolve_table_id")
-    resolve_keywords = {keyword.arg: ast.literal_eval(keyword.value) for keyword in resolve_call.keywords}
-    assert resolve_keywords == {
-        "store": "Silver", "schema": "demo", "table_name": "inventory_movements_append_all",
-    }
     incremental_call = next(node for node in ast.walk(incremental_tree) if isinstance(node, ast.Call)
                             and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_read")
     incremental_keywords = {keyword.arg: keyword.value for keyword in incremental_call.keywords}
     assert ast.literal_eval(incremental_keywords["read_mode"]) == "incremental"
     assert ast.literal_eval(incremental_keywords["read_parameters"]) == {"watermark_column": "modified_datetime"}
-    assert isinstance(incremental_keywords["target_table_id"], ast.Name)
-    assert incremental_keywords["target_table_id"].id == "append_all_target_id"
+    assert ast.literal_eval(incremental_keywords["target_store"]) == "Silver"
+    assert ast.literal_eval(incremental_keywords["target_schema"]) == "demo"
+    assert ast.literal_eval(incremental_keywords["target_table_name"]) == "inventory_movements_append_all"
+    assert "target_table_id" not in incremental_keywords
+    assert "resolve_table_id" not in source
 
     full_tree = ast.parse(_demo_cell(name, "read-2").source)
     full_call = next(node for node in ast.walk(full_tree) if isinstance(node, ast.Call)

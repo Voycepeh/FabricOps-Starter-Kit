@@ -6,7 +6,6 @@ Stores source observations, accepted checkpoints, Source Drift baselines and pub
 
 * [`orchestrate_read`](../../api/reference/orchestrate_read.md)
 * [`orchestrate_write`](../../api/reference/orchestrate_write.md)
-* [`pipeline_read`](../../api/reference/pipeline_read.md)
 
 ## Used in Workflow Template
 

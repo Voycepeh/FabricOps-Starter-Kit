@@ -48,7 +48,7 @@ Run the generator whenever public exports change (add/remove/rename) so GitHub P
 
 Use `orchestrate_read()` and `orchestrate_write()` for governed pipeline execution. The orchestrators own the Read/Write stages, Guardrail evaluation, Sensitive Data treatment, result persistence, and failure decisions.
 
-The standalone `pipeline_read()`, `pipeline_write()`, `check_schema()`, `check_freshness()`, `check_source_drift()`, `check_dq()`, `check_sensitive_data()` entrypoints have been removed from the public API. Current owner modules contain internal implementation stages; the obsolete Contract Source Drift evaluator has been removed. These names are not supported notebook imports.
+The standalone `pipeline_read()`, `resolve_table_id()`, `pipeline_write()`, `check_schema()`, `check_freshness()`, `check_source_drift()`, `check_dq()`, `check_sensitive_data()` entrypoints have been removed from the public API. Current owner modules contain internal implementation stages; the obsolete Contract Source Drift evaluator has been removed. These names are not supported notebook imports.
 
 Use the orchestrator calls in `templates/notebooks/02_pipeline.ipynb`. Keep transformations between Read and Write. Read check results come back under `freshness_result`, `schema_result`, `grain_result`, and `dq_result`; Write also returns `sensitive_result`, `source_drift_results` and `source_guardrail_results`. Governed execution stops on Block before publication. Dry Run returns blocking outcomes for inspection without publishing, while Ungoverned skips contract-dependent checks and refuses writes to governed targets.
 

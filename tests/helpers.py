@@ -169,9 +169,9 @@ def run_pipeline_operation(function, *args, plan, sources=(), spark_session=None
     replace physical planning and use their own operation-journal fixtures.
     """
     from importlib import import_module
-    from unittest.mock import patch
+    from unittest.mock import Mock, patch
 
-    session = SimpleNamespace(closed=False, owns_current_execution=lambda: True, spark=spark_session, sources=list(sources),
+    session = SimpleNamespace(closed=False, close=Mock(), owns_current_execution=lambda: True, spark=spark_session, sources=list(sources),
                               operation_plan=lambda *unused: plan,
                               register_source=lambda result: result)
     with patch.object(import_module(function.__module__), "current_pipeline_session", return_value=session):

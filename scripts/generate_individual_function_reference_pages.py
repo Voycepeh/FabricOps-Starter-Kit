@@ -5738,13 +5738,11 @@ def main() -> None:
         },
         {
             "key": "pipeline-capabilities",
-            "title": "Read, Profiling & Table Identity",
+            "title": "Standalone Profiling",
             "note": "Standalone pipeline capabilities",
-            "description": "Read governed sources, profile registered tables, and resolve canonical table identities. The standard Read and Write lifecycles and Guardrails belong to the orchestrators.",
+            "description": "Profile arbitrary DataFrames or transformed data independently. Automatic profiling in the standard Read and Write lifecycles belongs to the orchestrators.",
             "functions": {
-                "pipeline_read",
                 "profile_table",
-                "resolve_table_id",
             },
             "open": False,
         },

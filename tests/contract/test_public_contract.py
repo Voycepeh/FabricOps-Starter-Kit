@@ -50,11 +50,9 @@ EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
     "finalize_pipeline",
     "orchestrate_read",
     "orchestrate_write",
-    "pipeline_read",
     "setup_metadata_tables",
     "profile_table",
     "read_lakehouse_json",
-    "resolve_table_id",
     "setup_pipeline",
     "widget_render_data_agreement",
     "widget_render_data_steward",
@@ -141,16 +139,16 @@ def _signature_snapshot(function):
     return {"parameters": parameters}
 
 
-def test_supported_public_api_contract_includes_restored_read_capability():
-    """Verify the current Live API includes the governed source-read capability."""
+def test_supported_public_api_contract_uses_orchestrated_reads():
+    """Verify the current Live API exposes orchestrated reads and standalone profiling."""
     message = (
-        "The current supported API includes pipeline_read and retains the "
+        "The current supported API uses orchestrate_read and retains the "
         "remaining engineering and governance functions. Update SUPPORTED_PUBLIC_API "
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 20, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 20
+    assert len(SUPPORTED_PUBLIC_API) == 18, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 18
     assert APPROVED_V1_CALLABLES == EXPECTED_CURRENT_LIVE_CALLABLES
 
 
@@ -166,24 +164,28 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
         assert getattr(fabricops_kit, function_name) is function
 
 
-def test_pipeline_read_is_exported_and_discovered_as_a_public_capability():
-    """Keep both notebook import paths and static API discovery aligned."""
-    from fabricops_kit import pipeline_read
+@pytest.mark.parametrize("name", ["pipeline_read", "resolve_table_id"])
+def test_read_implementation_stages_are_internal(name):
+    """Retain implementation while removing public exports, catalogue and classification."""
     from fabricops_kit.pipeline import __all__ as pipeline_exports
-    from fabricops_kit.pipeline import pipeline_read as package_read
+    from scripts.reference_docs_metadata import PUBLIC_SYMBOL_DOCS
 
-    assert callable(pipeline_read)
-    assert pipeline_read is package_read
-    assert "pipeline_read" in pipeline_exports
-    assert "pipeline_read" in flows.read_public_export_names()
+    assert name not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, name)
+    assert name not in pipeline_exports
+    assert name not in flows.read_public_export_names()
+    module = importlib.import_module(f"fabricops_kit.pipeline.{name}")
+    assert callable(getattr(module, name))
+    assert not any(item.get("symbol_name") == name for item in PUBLIC_SYMBOL_DOCS)
     contract = json.loads(
         (Path(__file__).parents[2] / "docs/reference/_data/public-function-call-flows.json").read_text()
     )
-    qualified_name = "fabricops_kit.pipeline.pipeline_read.pipeline_read"
+    qualified_name = f"fabricops_kit.pipeline.{name}.{name}"
     row = next(item for item in contract["functions"] if item["qualified_name"] == qualified_name)
-    assert row["architecture_classification"] == "capability"
-    assert row["lifecycle_status"] == "live"
-    assert any(item["qualified_name"] == qualified_name for item in contract["public_analysis"])
+    assert row["architecture_classification"] == "internal"
+    assert row["lifecycle_status"] == "internal"
+    assert row["contract_classification"] != "live_public_function"
+    assert not any(item["qualified_name"] == qualified_name for item in contract["public_analysis"])
 
 
 def test_supported_public_api_matches_generated_call_flow_contract():
@@ -444,3 +446,18 @@ assert "fabricops_kit.widgets.widget_render_data_agreement" in sys.modules
     result = subprocess.run([sys.executable, "-c", code], env=active_workspace_id, text=True, capture_output=True, check=False)
 
     assert result.returncode == 0, result.stderr or result.stdout
+
+
+
+def test_active_engineering_templates_do_not_call_internal_read_stages():
+    """Standard templates and teaching demos use the simplified public interface."""
+    root = Path(__file__).parents[2]
+    for folder in ("notebooks", "DemoData"):
+        for path in (root / "templates" / folder).glob("*.ipynb"):
+            notebook = json.loads(path.read_text())
+            for cell in notebook["cells"]:
+                if cell["cell_type"] != "code":
+                    continue
+                code = _clean_notebook_code("".join(cell["source"]))
+                assert "resolve_table_id" not in code, path.name
+                assert "pipeline_read" not in code, path.name

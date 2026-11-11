@@ -13,6 +13,10 @@ from fabricops_kit import setup_pipeline, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline import shared
 
 
+PHYSICAL_RESOLVER = shared.resolve_physical_table_identity
+PHYSICAL_BINDINGS = shared.pipeline_physical_bindings
+
+
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep session, journal and orchestrators real; replace physical runtime boundaries."""
@@ -550,3 +554,101 @@ def test_finalize_reopens_persisted_handoff_without_execution(runtime, monkeypat
         finalize_pipeline(failed=True)
     with pytest.raises(ValueError):
         finalize_pipeline(object())
+
+
+@pytest.fixture
+def coordinate_runtime(runtime, monkeypatch):
+    """Exercise physical routing, participant registration and journal together."""
+    from tests.helpers import framework_config
+    from fabricops_kit.config import FabricStore
+
+    config = framework_config()
+    config.path_config.paths["dev"]["Silver"] = FabricStore(
+        workspace_id="remote-target-workspace", item_id="remote-target-item",
+        kind="lakehouse", schema_enabled=True, schema="demo",
+    )
+    context = shared.get_default_fabric_context()
+    context["config"] = config
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context))
+    monkeypatch.setattr(shared, "resolve_physical_table_identity", PHYSICAL_RESOLVER)
+    monkeypatch.setattr(shared, "pipeline_physical_bindings", PHYSICAL_BINDINGS)
+    resolver = importlib.import_module("fabricops_kit.pipeline.resolve_table_id")
+    monkeypatch.setattr(resolver, "resolve_fabric_context", lambda context=None: (config, "dev", context))
+    monkeypatch.setattr(runtime.read, "resolve_table_id", resolver.resolve_table_id)
+    reader = Mock(side_effect=lambda **kwargs: {
+        "dataframe": runtime.frame,
+        "table_id": resolver.resolve_table_id(store=kwargs["store"], schema=kwargs["schema"],
+                                              table_name=kwargs["table_name"], context=kwargs["context"]),
+    })
+    monkeypatch.setattr(runtime.read, "pipeline_read", reader)
+    return SimpleNamespace(config=config, reader=reader)
+
+
+@pytest.mark.parametrize("store,schema", [("Silver", "demo"), ("Silver", None), ("Bronze", None)])
+def test_incremental_coordinates_register_new_target_and_preserve_routing(coordinate_runtime, store, schema):
+    """Bootstrap needs no Catalogue record and each store owns its physical workspace."""
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    result = orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental",
+                              target_store=store, target_schema=schema, target_table_name="orders_clean")
+    identities = json.loads(session.plan.participants_json)
+    source_id = result["table_id"]
+    target_id = next(key for key, value in identities.items() if "target" in value["roles"])
+    assert identities[target_id]["schema"] == ("demo" if store == "Silver" else None)
+    assert coordinate_runtime.reader.call_args.kwargs["target_table_id"] == target_id
+    bindings = session.plan.runtime_context["_pipeline_bindings"]
+    assert bindings[source_id]["workspace_id"] == "dev"
+    assert bindings[target_id]["workspace_id"] == ("remote-target-workspace" if store == "Silver" else "dev")
+    assert session.plan.evidence["operations"]["source:Bronze/orders"]["incremental_target_table_id"] == target_id
+    runtime_context = coordinate_runtime.reader.call_args.kwargs["context"]
+    assert runtime_context["scope_workspace_id"] == "dev"
+
+
+@pytest.mark.parametrize("target", [
+    {}, {"target_schema": "demo"}, {"target_store": "Silver"}, {"target_table_name": "orders_clean"},
+    {"target_store": "", "target_table_name": "orders_clean"},
+    {"target_store": "Silver", "target_table_name": " "},
+    {"target_store": "Unknown", "target_table_name": "orders_clean"},
+    {"target_store": "Silver", "target_schema": "other", "target_table_name": "demo.orders_clean"},
+])
+def test_incremental_coordinates_fail_closed_before_physical_read(coordinate_runtime, target):
+    """Missing coordinates, an unknown store and ambiguous qualified names cannot read."""
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    with pytest.raises(ValueError):
+        orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental", **target)
+    coordinate_runtime.reader.assert_not_called()
+    assert session.closed
+
+
+def test_full_read_needs_no_target_coordinates(coordinate_runtime):
+    """Full Reads retain their source-only interface and participation."""
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    orchestrate_read(store="Bronze", schema=None, table_name="orders")
+    identities = json.loads(session.plan.participants_json)
+    assert len(identities) == 1
+    assert next(iter(identities.values()))["roles"] == ["source"]
+    assert coordinate_runtime.reader.call_args.kwargs["target_table_id"] is None
+
+
+
+def test_incremental_reads_resolve_distinct_targets_for_same_source(coordinate_runtime):
+    """Separate executions retain one source identity and independent target IDs."""
+    source_ids, target_ids = [], []
+    for name in ("orders_clean", "orders_archive"):
+        session = setup_pipeline(pipeline_mode="Dry Run")
+        result = orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental",
+                                  target_store="Silver", target_table_name=name)
+        source_ids.append(result["table_id"])
+        target_ids.append(coordinate_runtime.reader.call_args.kwargs["target_table_id"])
+        session.close()
+    assert source_ids[0] == source_ids[1]
+    assert target_ids[0] != target_ids[1]
+
+
+def test_incremental_read_never_selects_from_multiple_planned_targets(coordinate_runtime):
+    """Even an existing plan cannot supply an omitted target implicitly."""
+    session = setup_pipeline(pipeline_mode="Dry Run")
+    for name in ("orders_clean", "orders_archive"):
+        session.operation_plan("target", {"store": "Silver", "schema": "demo", "table_name": name})
+    with pytest.raises(ValueError, match="target_store and target_table_name"):
+        orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental")
+    coordinate_runtime.reader.assert_not_called()
