@@ -220,10 +220,9 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     assert row["column_name"] == "order_id"
 
 
-def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> None:
+def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fake_notebookutils) -> None:
     """Verify runtime result persistence identifies the exact Guardrail revision."""
     writes = []
-    monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
     monkeypatch.setattr(guardrails_shared, "metadata_table_physical_schema", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
         guardrails_shared,
@@ -263,6 +262,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
 
     table_name, row = writes[0]
     assert table_name == "METADATA_GUARDRAIL_RESULTS"
+    assert row["_metadata_lakehouse_name"] == "GovernanceMetadata"
     assert list(row) == _RESULT_COLUMNS
     assert row["guardrail_rule_id"] == "rule-1"
     assert row["guardrail_version"] == 3

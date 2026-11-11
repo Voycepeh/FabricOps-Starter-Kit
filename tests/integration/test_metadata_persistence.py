@@ -34,6 +34,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     """Verify central metadata setup preserves existing valid tables."""
     registry = metadata_table_schema_registry()
     reads = []
+    historical = {name: {"_metadata_lakehouse_name": "Metadata"} for name in registry}
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
@@ -44,7 +45,9 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
         if table_name not in registry:
             raise RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")
         reads.append(table_name)
-        return Table(registry[table_name].fieldNames())
+        table = Table(registry[table_name].fieldNames())
+        table.rows = [historical[table_name]]
+        return table
 
     def write_table(*_args, **_kwargs) -> None:
         raise AssertionError("metadata setup must not write existing valid tables")
@@ -62,6 +65,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     assert result["created_or_checked_tables"] == CANONICAL_METADATA_TABLES
     # The steward table read during schema validation is reused for readiness checks.
     assert reads == CANONICAL_METADATA_TABLES
+    assert all(row["_metadata_lakehouse_name"] == "Metadata" for row in historical.values())
 
 
 def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import replace
 
 import pytest
 
@@ -12,9 +13,62 @@ import fabricops_kit.widgets.widget_render_data_steward as steward_widget
 from fabricops_kit.config import audit as audit_helpers
 from fabricops_kit.config import shared as config_shared
 from fabricops_kit.config import metadata_keys
+from fabricops_kit.config.metadata_schemas import (
+    CANONICAL_METADATA_TABLES,
+    coerce_metadata_row_types,
+    decode_metadata_row,
+    encode_metadata_row,
+    metadata_table_schema_registry,
+)
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.mark.parametrize("table", CANONICAL_METADATA_TABLES)
+def test_all_metadata_tables_retain_physical_name_in_new_rows(table, fake_notebookutils):
+    """Every canonical schema/codec keeps the shared builder's physical name."""
+    config = framework_config()
+    metadata = config_shared.get_store(config, "dev", "Metadata")
+    assert metadata.key == "Metadata"
+    assert metadata.workspace_id == "dev-workspace"  # Metadata is outside the caller workspace.
+    assert metadata.item_id == "dev-lakehouse-item"
+    assert metadata.name == "GovernanceMetadata"
+    # A runtime/default Lakehouse or another workspace mapping must not win.
+    config.path_config.paths["dev-workspace"] = {
+        "Metadata": replace(metadata, name="OtherMetadata", item_id="other-item"),
+    }
+    audit = audit_helpers.build_runtime_audit_fields(
+        config=config, active_workspace_id="dev",
+        runtime_context={"workspace_id": "dev-workspace", "defaultLakehouseName": "AttachedLakehouse"},
+    )
+    row = coerce_metadata_row_types(table, audit)
+    persisted = encode_metadata_row(table, row)
+    assert persisted["_metadata_lakehouse_name"] == "GovernanceMetadata"
+    assert decode_metadata_row(table, persisted)["_metadata_lakehouse_name"] == "GovernanceMetadata"
+    assert "_metadata_lakehouse_name" in metadata_table_schema_registry()[table].fieldNames()
+
+
+@pytest.mark.parametrize("name", [None, "unknown", "None", "unknown_notebook"])
+def test_metadata_audit_requires_configured_physical_name(name, fake_notebookutils):
+    """A logical key and complete Fabric runtime cannot hide a missing physical name."""
+    config = framework_config()
+    configured = config.path_config.paths["dev"]["Metadata"]
+    config.path_config.paths["dev"]["Metadata"] = replace(configured, name=name)
+    with pytest.raises(ValueError, match="_metadata_lakehouse_name requires a physical Lakehouse name") as exc:
+        audit_helpers.build_runtime_audit_fields(config=config, active_workspace_id="dev")
+    assert "FabricStore.name" in str(exc.value)
+    assert "00_env_config" in str(exc.value)
+    assert configured.workspace_id in str(exc.value)
+    assert configured.item_id in str(exc.value)
+
+
+def test_metadata_audit_preserves_explicit_name_override(fake_notebookutils):
+    """Controlled writers can still supply a deterministic physical name."""
+    audit = audit_helpers.build_runtime_audit_fields(
+        config=framework_config(), active_workspace_id="dev", metadata_lakehouse_name="LocalMetadata",
+    )
+    assert audit["_metadata_lakehouse_name"] == "LocalMetadata"
 
 
 def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_notebookutils):
@@ -27,7 +81,7 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
     assert audit["_workspace_name"] == "FabricOps Test Workspace"
     assert audit["_committed_by"] == "fabricops.test@example.com"
-    assert audit["_metadata_lakehouse_name"] == "Metadata"
+    assert audit["_metadata_lakehouse_name"] == "GovernanceMetadata"
     assert audit["_activity_id"] == "manual-activity"
 
 
@@ -114,6 +168,9 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     def write_table(df, table, *, store, context, **kwargs):
         assert context["scope_workspace_id"] == "dev"
         assert store == "Metadata"
+        target = config_shared.get_store(context["config"], context["scope_workspace_id"], store)
+        assert (target.workspace_id, target.item_id) == ("dev-workspace", "dev-lakehouse-item")
+        assert df.rows[0]["_metadata_lakehouse_name"] == target.name == "GovernanceMetadata"
         writes.append((table, df.rows, context["scope_workspace_id"], store, kwargs))
         if table == agreement.DATA_STEWARD_TABLE:
             steward_rows.extend(df.rows)
