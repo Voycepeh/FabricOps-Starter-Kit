@@ -104,9 +104,7 @@ The selected Catalogue observation remains the contract evidence owner. Activati
 and governed pipeline execution still require a configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
-Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
-then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
-or manually saved processing remains editable until the draft is frozen.
+Engineering processing is reviewed through Pipeline Activation and is not authored in contracts.
 Profile context remains read-only and is never added
 to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
@@ -190,7 +188,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:989`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7695">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7325">View on GitHub</a>
 </div>
 
 

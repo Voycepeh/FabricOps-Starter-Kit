@@ -76,7 +76,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', audit)
     monkeypatch.setattr(shared, 'get_spark_session', lambda *_args, **_kwargs: spark_session)
     monkeypatch.setattr(writer, 'resolve_target_audit_fields', lambda _c: audit())
-    monkeypatch.setattr(writer, 'resolve_table_processing_definition', lambda *a, **k: (
+    monkeypatch.setattr(writer, 'validated_processing', lambda *a, **k: (
         state['processing'] if state.get('processing') else {'load_strategy': state['mode']} if state['mode'] in {'append_all', 'append_new_only'} else
         {'load_strategy': state['mode'], 'key_columns': ['id'], **({'effective_column': 'modified', 'tracked_columns': ['value']} if state['mode'] == 'scd2' else {})}))
     monkeypatch.setattr(writer, '_writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})

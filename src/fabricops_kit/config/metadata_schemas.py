@@ -275,7 +275,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
             [
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
-                ("table_id", "string", False),
+                ("table_id", "string"),
+                ("source_id", "string"),
                 ("table_name", "string"),
                 ("evidence_workspace_id", "string", False),
                 ("contract_payload_json", "string"),
@@ -396,7 +397,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         ),
         "METADATA_DATA_CONTRACT_ACTIVATION": build_metadata_schema(
             "METADATA_DATA_CONTRACT_ACTIVATION",
-            [("workspace_id", "string", False), ("table_id", "string", False),
+            [("workspace_id", "string", False), ("table_id", "string"), ("source_id", "string"),
              ("contract_id", "string", False), ("contract_version", "integer", False),
              ("payload_sha256", "string", False), ("activation_id", "string", False),
              ("revision", "integer", False), ("status", "string", False),
@@ -445,6 +446,9 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                  ("contract_id", "string"), ("contract_version", "integer"), ("payload_sha256", "string"),
                  ("destination", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
+                 ("read_parameters", {"struct": [("watermark_column", "string")]}),
+                 ("write_parameters", {"struct": [(key, kind) for key, kind in CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"].items()]}),
+                 ("repartition_by", "integer"),
                  ("source_table_ids", "strings", False), ("incremental_target_table_id", "string"),
                  ("rows_read", "long"), ("rows_written", "long"),
                  ("metrics", {"struct": [
@@ -640,7 +644,7 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
             if field.name in METADATA_JSON_COLUMNS.get(table_name, ()):
-                coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
+                coerced[field.name] = decode_metadata_row(table_name, {field.name: coerced[field.name]})[field.name]
             elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:
@@ -698,6 +702,13 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         if value is None and required:
             raise ValueError(f"{table_name}.{name} cannot be null.")
         result[name] = validate_metadata_value(value, kind, field=name)
+        if required and name == "operations":
+            for original, decoded in zip(value, result[name]):
+                for field in ("read_parameters", "write_parameters", "repartition_by"):
+                    if field not in original:
+                        decoded.pop(field, None)
+                    elif isinstance(original[field], dict):
+                        decoded[field] = {key: decoded[field][key] for key in original[field]}
         if required and name == "profiling":
             # Scope fields are additive JSON members. Do not inject them into
             # retained Run content and change a previously approved content hash.

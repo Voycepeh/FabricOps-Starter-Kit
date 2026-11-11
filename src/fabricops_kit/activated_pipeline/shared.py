@@ -29,7 +29,7 @@ FABRIC_VALIDATION_PENDING = "Governed execution is unavailable: signed-in Fabric
 FABRIC_GOVERNED_VALIDATED = False
 OPERATION_FIELDS = (
     "operation_key", "table_id", "pipeline_role", "destination", "read_mode", "write_mode",
-    "query_sha256", "incremental_target_table_id", "source_table_ids", "requested_schema",
+    "query_sha256", "incremental_target_table_id", "source_table_ids", "requested_schema", "write_parameters", "read_parameters", "repartition_by",
 )
 RUN_PROVENANCE_FIELDS = (
     "pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version",
@@ -73,6 +73,11 @@ def validate_agreement(row):
 
 def normalized_destination(destination):
     """Compare physical aliases independently of logical Table ID and case."""
+    if isinstance(destination, dict) and destination.get("source_type") == "file":
+        from fabricops_kit.data_contract.source_identity import validate_contract_source
+        validate_contract_source({"source": destination, "table": {}})
+        return ("file", destination["workspace_id"], destination["item_id"], destination["relative_path"],
+                destination["file_format"], canonical_pipeline_json(destination["reader_options"]))
     if not isinstance(destination, dict) or set(destination) != {"workspace_id", "item_id", "kind", "schema", "table_name"}:
         raise ValueError("A complete exact physical destination is required.")
     if any(not isinstance(destination.get(key), str) or not destination[key].strip()
@@ -108,6 +113,9 @@ def activation_operations(value):
         if (role == "source" and (read not in {"full", "incremental"} or write is not None)
                 or role == "target" and (write not in {"append_all", "append_new_only", "overwrite", "scd1", "scd2"} or read is not None)):
             raise ValueError("Unsupported activated read/write strategy.")
+        from fabricops_kit.pipeline.shared import validated_pipeline_processing
+        validated_pipeline_processing(role=role, **{key: operation[key] for key in
+            ("read_mode", "write_mode", "read_parameters", "write_parameters", "repartition_by")})
         sources = operation["source_table_ids"]
         if not isinstance(sources, list) or any(not isinstance(item, str) or not item for item in sources) or len(sources) != len(set(sources)):
             raise ValueError("Invalid activated source associations.")
@@ -123,7 +131,7 @@ def resolve_activation_contract(activation, *, context, spark_session=None):
     """Resolve a separately frozen exact Contract; never copy its payload into Registry."""
     row = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=context, spark_session=spark_session),
         contract_id=activation["contract_id"], contract_version=activation["contract_version"])
-    if (row["table_id"] != activation["table_id"] or row["status"] != "frozen" or
+    if (row.get("table_id") != activation.get("table_id") or row.get("source_id") != activation.get("source_id") or row["status"] != "frozen" or
             hashlib.sha256(row["contract_payload_json"].encode("utf-8")).hexdigest() != activation["payload_sha256"]):
         raise ValueError("Activated frozen Data Contract changed or does not match its Table ID.")
     return {**row, "contract_payload": parse_metadata_json(row["contract_payload_json"], field="contract_payload_json")}
@@ -190,9 +198,14 @@ def validate_activations(rows):
     """Enforce one frozen Contract per physical workspace/Table ID, including aliases."""
     identities, bindings, ids, revisions = set(), set(), set(), set()
     for row in rows:
-        identity = row.get("workspace_id"), row.get("table_id")
+        identity = row.get("workspace_id"), row.get("table_id") or row.get("source_id")
         destination = parse_metadata_json(row.get("destination_json"), field="destination_json")
         physical = normalized_destination(destination)
+        if destination.get("source_type") == "file":
+            if row.get("table_id") is not None or row.get("source_id") != destination["source_id"]:
+                raise ValueError("File Activation must retain its source_id without a Table ID.")
+        elif row.get("source_id") is not None:
+            raise ValueError("Physical table Activation cannot use a file source_id.")
         if (not all(identity) or row.get("status") not in {"active", "superseded"} or type(row.get("revision")) is not int
                 or row["revision"] < 1 or not row.get("activation_id") or not row.get("contract_id")
                 or type(row.get("contract_version")) is not int or row["contract_version"] < 1
@@ -348,7 +361,8 @@ def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
 def set_table_contract_activation(table_id, contract_id, contract_version, *, expected_activation_id, activation_id,
                                   governance_confirmed, context, spark_session=None,
                                   expected_destination=None, expected_payload_sha256=None,
-                                  agreement_id=None, agreement_version=None, expected_agreement_sha256=None):
+                                  agreement_id=None, agreement_version=None, expected_agreement_sha256=None,
+                                  file_source=None, file_store=None):
     """Activate an exact frozen Contract with replay-safe CAS and physical protection."""
     if governance_confirmed is not True:
         raise ValueError("Explicit Governance confirmation is required; actual storage permissions authorize the mutation.")
@@ -357,15 +371,25 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     config, workspace, runtime = resolve_fabric_context(context=context)
     contract = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=context, spark_session=spark_session),
         contract_id=contract_id, contract_version=contract_version)
-    if contract["status"] != "frozen" or contract["table_id"] != table_id or type(contract_version) is not int or contract_version < 1:
+    if contract["status"] != "frozen" or contract.get("table_id") != table_id or type(contract_version) is not int or contract_version < 1:
         raise ValueError("Activation requires the exact frozen Contract for this Table ID.")
-    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings, validated_processing
+    from fabricops_kit.pipeline.shared import resolve_catalogue_table_identity, pipeline_physical_bindings
     payload = parse_metadata_json(contract["contract_payload_json"], field="contract_payload_json")
-    if payload.get("table", {}).get("table_id") != table_id:
-        raise ValueError("Frozen payload Table ID does not match.")
-    validated_processing(payload["table"].get("processing") or {})
-    identity = resolve_catalogue_table_identity(config, workspace, table_id, context=context, spark_session=spark_session)
-    destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=workspace)[table_id]
+    from fabricops_kit.data_contract.shared import validate_contract_definitions
+    validate_contract_definitions(payload)
+    if file_source is not None:
+        from fabricops_kit.io.shared import resolve_configured_file_path
+        if table_id is not None or payload.get("source") != file_source or contract.get("source_id") != file_source.get("source_id"):
+            raise ValueError("File Activation requires the exact frozen file source identity and reader configuration.")
+        configured, relative_path, _path = resolve_configured_file_path(file_store, file_source["relative_path"], context=context)
+        if (configured.workspace_id.lower(), configured.item_id.lower(), relative_path) != (file_source["workspace_id"], file_source["item_id"], file_source["relative_path"]):
+            raise ValueError("Configured file source differs from the reviewed physical authorization.")
+        destination = dict(file_source)
+    else:
+        if not table_id or payload.get("source", {}).get("source_type") == "file" or payload.get("table", {}).get("table_id") != table_id:
+            raise ValueError("Frozen payload Table ID does not match.")
+        identity = resolve_catalogue_table_identity(config, workspace, table_id, context=context, spark_session=spark_session)
+        destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=workspace)[table_id]
     if str(destination["workspace_id"]).casefold() != workspace.casefold():
         raise ValueError("Select the physical table workspace for Contract Activation.")
     if expected_destination is not None and normalized_destination(expected_destination) != normalized_destination(destination):
@@ -374,7 +398,7 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     if expected_payload_sha256 is not None and payload_sha256 != expected_payload_sha256:
         raise ValueError("Frozen Contract payload changed after review; activation rejected.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
-    record = dict(workspace_id=workspace, table_id=table_id, contract_id=contract_id, contract_version=contract_version,
+    record = dict(workspace_id=workspace, table_id=table_id, source_id=file_source["source_id"] if file_source else None, contract_id=contract_id, contract_version=contract_version,
         payload_sha256=payload_sha256, activation_id=activation_id,
         status="active", destination_json=canonical_pipeline_json(destination),         activated_at=datetime.now(UTC).replace(tzinfo=None), **audit)
     record.update(agreement_id=agreement_id, agreement_version=agreement_version, agreement_sha256=None)
@@ -387,11 +411,11 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
             raise ValueError("Agreement changed after Contract review; refresh before activation.")
     check_contract_agreement(record, execution_workspace_id=workspace, context=context, spark_session=spark_session)
     def mutate(rows):
-        matches = [row for row in rows if (row["workspace_id"], row["table_id"]) == (workspace, table_id) and row["status"] == "active"]
+        matches = [row for row in rows if (row["workspace_id"], row.get("table_id"), row.get("source_id")) == (workspace, table_id, record["source_id"]) and row["status"] == "active"]
         current = matches[0] if matches else None
         replay = [row for row in rows if row["activation_id"] == activation_id]
         if replay:
-            if any(replay[0].get(key) != record[key] for key in ("workspace_id", "table_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
+            if any(replay[0].get(key) != record.get(key) for key in ("workspace_id", "table_id", "source_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
                 raise ValueError("Activation operation ID was reused with different content.")
             return rows, replay[0]
         if (current["activation_id"] if current else None) != expected_activation_id:
@@ -684,7 +708,7 @@ def resolve_promoted_operations(operations, *, context, spark_session=None):
 
 def reviewed_contracts(operations, *, context, spark_session=None):
     """Resolve every source and target Contract in its physical workspace, with exact bindings."""
-    from fabricops_kit.pipeline.shared import validated_processing, contract_guardrail_rows
+    from fabricops_kit.pipeline.shared import contract_guardrail_rows
     from fabricops_kit.data_contract.shared import validate_contract_definitions
     activations = read_activations(context=context, spark_session=spark_session)
     contracts = {}
@@ -695,8 +719,6 @@ def reviewed_contracts(operations, *, context, spark_session=None):
         contract = resolve_activation_contract(active, context=context, spark_session=spark_session)
         validate_contract_definitions(contract["contract_payload"])
         contract_guardrail_rows(contract, workspace_id=active["workspace_id"], table_id=op["table_id"])
-        if op["pipeline_role"] == "target" and validated_processing(contract["contract_payload"]["table"].get("processing") or {})["load_strategy"] != op["write_mode"]:
-            raise ValueError("Active Contract write strategy differs from the promoted notebook.")
         _, execution_workspace, _ = resolve_fabric_context(context=context)
         check_contract_agreement(active, execution_workspace_id=execution_workspace, context=context, spark_session=spark_session)
         contracts[op["table_id"]] = contract
@@ -765,7 +787,7 @@ def validate_submission(package):
             "manifest", "source_notebook_base64", "executed_notebook_base64", "notebook_base64", "dry_run", "contracts", "submission_sha256"}:
         raise ValueError("Incomplete or unsupported portable submission package.")
     manifest = package["manifest"]
-    if not isinstance(manifest, dict) or set(manifest) != SUBMISSION_FIELDS or manifest["format_version"] != 1:
+    if not isinstance(manifest, dict) or set(manifest) - {"file_authorizations"} != SUBMISSION_FIELDS or manifest["format_version"] != 1:
         raise ValueError("Unsupported submission manifest fields or version.")
     UUID(manifest["submission_id"])
     validate_pipeline_id(manifest["pipeline_id"])
@@ -804,7 +826,7 @@ def validate_submission(package):
     by_key = {op["operation_key"]: op for op in operations}
     for op in tested:
         approved = by_key.get(op["operation_key"])
-        fields = {"operation_key", "pipeline_role", "read_mode", "write_mode", "query_sha256", "requested_schema"}
+        fields = {"operation_key", "pipeline_role", "read_mode", "write_mode", "query_sha256", "requested_schema", "write_parameters", "read_parameters", "repartition_by"}
         if approved is None or any(op[key] != approved[key] for key in fields):
             raise ValueError("Submitted behavior differs from recorded Dry Run operations.")
         if op["table_id"] in mappings and mappings[op["table_id"]] != approved["table_id"]:
@@ -836,13 +858,39 @@ def validate_submission(package):
                     contract["contract_version"] != op["contract_version"] or
                     hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != op["payload_sha256"]):
                 raise ValueError("Dry Run Contract evidence is missing or inconsistent.")
+    file_authorizations = manifest.get("file_authorizations", [])
+    if not isinstance(file_authorizations, list):
+        raise ValueError("file_authorizations must be a list.")
+    seen_files = set()
+    for authorization in file_authorizations:
+        if not isinstance(authorization, dict) or set(authorization) != {"source", "store", "contract_id", "contract_version", "payload_sha256"}:
+            raise ValueError("Incomplete file source authorization.")
+        if (not isinstance(authorization["store"], str) or not authorization["store"].strip()
+                or not isinstance(authorization["contract_id"], str) or not authorization["contract_id"].strip()
+                or type(authorization["contract_version"]) is not int or authorization["contract_version"] < 1):
+            raise ValueError("File authorization requires a store and exact positive Contract version.")
+        source = authorization["source"]
+        normalized_destination(source)
+        if source.get("source_type") != "file" or source["source_id"] in seen_files:
+            raise ValueError("Duplicate or invalid file source authorization.")
+        seen_files.add(source["source_id"])
+        contract = package["contracts"].get(source["source_id"])
+        if (not contract or contract.get("source_id") != source["source_id"] or contract.get("table_id") is not None
+                or contract.get("status") != "frozen" or any(contract.get(key) != authorization[key] for key in ("contract_id", "contract_version"))
+                or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != authorization["payload_sha256"]):
+            raise ValueError("File authorization requires an exact frozen file Contract.")
+        from fabricops_kit.data_contract.shared import validate_contract_definitions
+        payload = parse_metadata_json(contract["contract_payload_json"], field="contract_payload_json")
+        validate_contract_definitions(payload)
+        if payload.get("source") != source:
+            raise ValueError("File selector or reader configuration differs from its frozen Contract.")
     content = {key: value for key, value in package.items() if key != "submission_sha256"}
     if manifest_digest(content) != package["submission_sha256"]:
         raise ValueError("Complete submission canonical digest mismatch.")
     return package
 
 
-def export_pipeline_submission(dry_run, *, destination_workspace_id, context=None, spark_session=None):
+def export_pipeline_submission(dry_run, *, destination_workspace_id, file_authorizations=None, context=None, spark_session=None):
     """Persist Engineering-owned complete evidence and return a portable JSON package."""
     import base64
     from fabricops_kit.pipeline.shared import PipelineSession
@@ -884,10 +932,16 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, context=Non
         operations=resolve_promoted_operations(tested, context=routed, spark_session=spark_session), tested_operations=tested,
         parameters=parameters, dry_run_id=plan.plan_id, created_by=audit["_committed_by"], created_at=datetime.now(UTC).isoformat(),
         expected_active_version=active[0]["pipeline_version"] if active else None,
-        intent="deploy", retained_promotion_id=None, retained_version=None)
+        intent="deploy", retained_promotion_id=None, retained_version=None,
+        file_authorizations=deepcopy(file_authorizations or []))
     package = dict(manifest=manifest, source_notebook_base64=base64.b64encode(raw).decode(),
         executed_notebook_base64=base64.b64encode(executed).decode(),
         notebook_base64=base64.b64encode(snapshot).decode(), dry_run=run, contracts=json.loads(plan.contracts_json))
+    for authorization in manifest["file_authorizations"]:
+        source = authorization["source"]
+        activation = exact_record(read_activations(context=routed, spark_session=spark_session),
+            workspace_id=source["workspace_id"], source_id=source["source_id"])
+        package["contracts"][source["source_id"]] = resolve_activation_contract(activation, context=routed, spark_session=spark_session)
     package["submission_sha256"] = manifest_digest(package)
     package = validate_submission(canonical_pipeline_json(package))
     persist_engineering_submission(package, context=routed, spark_session=spark_session)
@@ -1051,6 +1105,22 @@ def review_submission_policy(package, *, context, spark_session=None):
             ("activation_id", "contract_id", "contract_version", "payload_sha256", "agreement_id", "agreement_version", "agreement_sha256")}
         if contract["contract_id"] != activation["contract_id"]:
             raise ValueError("Contract changed during policy review.")
+    for authorization in manifest.get("file_authorizations", []):
+        from fabricops_kit.io.shared import resolve_configured_file_path
+        source = authorization["source"]
+        configured, relative_path, _path = resolve_configured_file_path(authorization["store"], source["relative_path"], context=routed)
+        if (configured.workspace_id.lower(), configured.item_id.lower(), relative_path) != (source["workspace_id"], source["item_id"], source["relative_path"]):
+            raise ValueError("File physical authorization changed after submission.")
+        activation = exact_record(read_activations(context=routed, spark_session=spark_session),
+            workspace_id=source["workspace_id"], source_id=source["source_id"])
+        if any(activation.get(key) != authorization[key] for key in ("contract_id", "contract_version", "payload_sha256")):
+            raise ValueError("File Contract selection changed after submission.")
+        if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != normalized_destination(source):
+            raise ValueError("File selector or reader authorization differs from its activation.")
+        resolve_activation_contract(activation, context=routed, spark_session=spark_session)
+        check_contract_agreement(activation, execution_workspace_id=manifest["execution_workspace_id"], context=routed, spark_session=spark_session)
+        policy[source["source_id"]] = {key: activation.get(key) for key in
+            ("activation_id", "contract_id", "contract_version", "payload_sha256", "agreement_id", "agreement_version", "agreement_sha256")}
     return policy
 
 
@@ -1165,6 +1235,8 @@ def deploy_approved_submission(approval_id, *, context, spark_session=None):
             expected_active_version=manifest["expected_active_version"], approval_id=approval_id,
             context=context, spark_session=spark_session)
     review_submission_policy(package, context=context, spark_session=spark_session)
+    if package["manifest"].get("file_authorizations"):
+        raise RuntimeError("Governed file execution requires an implemented file orchestration boundary; file authorization alone is insufficient.")
     rows = read_registry(context=context, spark_session=spark_session)
     promotion_id = str(uuid5(NAMESPACE_URL, "fabricops:deployment:" + approval_id))
     replay = [row for row in rows if row["promotion_id"] == promotion_id]
@@ -1238,6 +1310,8 @@ def verify_promotion_integrity(row, *, context, spark_session=None, captured=Fal
     remains closed until the signed-in integration checklist has been completed.
     """
     _, approved_package = verify_registry_approval(row, context=context, spark_session=spark_session, captured=captured)
+    if approved_package["manifest"].get("file_authorizations"):
+        raise RuntimeError("Governed file execution requires an implemented file orchestration boundary; file authorization alone is insufficient.")
     import base64
     spark = get_spark_session(spark_session, context=context)
     try:

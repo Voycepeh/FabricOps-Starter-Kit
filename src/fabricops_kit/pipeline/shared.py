@@ -252,7 +252,7 @@ from fabricops_kit.config.shared import (
     normalize_audit_datetime,
     resolve_fabric_context,
 )
-from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
     resolve_configured_lakehouse_table,
@@ -1091,7 +1091,7 @@ def _source_snapshot_keys(identity, context):
     processing = processing_identity.get("load_strategy_parameters_json") or {}
     if isinstance(processing, str):
         processing = json.loads(processing)
-    return list(processing.get("key_columns") or payload.get("table", {}).get("processing", {}).get("key_columns") or [])
+    return list(processing.get("key_columns") or [])
 
 
 def source_snapshot_projection(dataframe, keys=()):
@@ -3350,60 +3350,6 @@ def validate_grain_parameters(parameters, *, active=True):
     return {"columns": list(columns)}
 
 
-def grain_check_core(dataframe, rule, *, scope):
-    """Evaluate non-null composite-key uniqueness within exactly the supplied rows.
-
-    Missing columns and invalid definitions always block, including empty inputs.
-    A null in any component fails that row; blank strings are ordinary values.
-    Every member of a duplicate combination is a violation. No target is read.
-    """
-    from pyspark.sql import Window, functions as F
-
-    action = rule.get("action") or "Block"
-    result = {
-        "guardrail_type": "grain", "rule_type": "uniqueness", "action": action,
-        "guardrail_rule_id": rule.get("guardrail_rule_id"),
-        "guardrail_version": rule.get("guardrail_version", 1),
-        "validation_scope": scope,
-        "expected": {"null_policy": "reject", "uniqueness": "combination"},
-    }
-    try:
-        parameters = json.loads(rule.get("rule_parameters_json") or "{}")
-        columns = validate_grain_parameters(parameters)["columns"]
-        if action not in {"Warn", "Block"} or rule.get("column_id") or rule.get("rule_type") != "uniqueness":
-            raise ValueError("Grain requires a table-level uniqueness rule with Warn or Block policy.")
-        missing = [name for name in columns if name not in dataframe.columns]
-        if missing:
-            raise ValueError("Grain key columns are missing: " + ", ".join(missing))
-    except (TypeError, ValueError) as exc:
-        return {**result, "status": "failed", "can_continue": False, "reason": str(exc), "checks": []}
-    # Quote names literally, including dots and embedded backticks.
-    keys = [F.col("`" + name.replace("`", "``") + "`") for name in columns]
-    null_key = keys[0].isNull()
-    for key in keys[1:]:
-        null_key = null_key | key.isNull()
-    duplicate = F.count(F.lit(1)).over(Window.partitionBy(*keys)) > 1
-    violations = dataframe.select(
-        F.when(null_key, 1).otherwise(0).alias("null_key"),
-        F.when(duplicate, 1).otherwise(0).alias("duplicate_key"),
-        F.when(null_key | duplicate, 1).otherwise(0).alias("failed_key"),
-    )
-    counts = violations.agg(F.count(F.lit(1)).alias("total_count"), *[
-        F.sum(F.col(name)).alias(name) for name in ("null_key", "duplicate_key", "failed_key")
-    ]).first()
-    actual = {name: int(counts[name] or 0) for name in ("total_count", "null_key", "duplicate_key", "failed_key")}
-    passed = actual["failed_key"] == 0
-    result.update({
-        "status": "passed" if passed else ("warning" if action == "Warn" else "failed"),
-        "can_continue": passed or action == "Warn", "columns": columns,
-        "severity": "warning" if action == "Warn" else "blocking",
-        "actual": actual, "expected": {**result["expected"], "columns": columns},
-        "reason": "Grain key passed within the evaluated rows." if passed else f"{actual['failed_key']} row(s) violate Grain.",
-    })
-    result["checks"] = [{"check": "grain", "columns": columns, "passed": passed, **actual}]
-    return result
-
-
 def contract_guardrail_rows(contract: dict[str, Any], *, workspace_id: str, table_id: str) -> list[dict[str, Any]]:
     """Adapt frozen contract Guardrails to the existing runtime rule shape."""
     payload = contract.get("contract_payload") or _contract_payload(contract)
@@ -3471,14 +3417,15 @@ def contract_guardrail_rows(contract: dict[str, Any], *, workspace_id: str, tabl
                 raise ValueError("Grain references columns outside the Data Contract.")
             if raw.get("action", "Block") not in {"Warn", "Block"}:
                 raise ValueError("Grain policy must be Warn or Block.")
-            if any(row.get("guardrail_type") == "grain" for row in adapted):
+            if any(row.get("managed_by") == "grain" for row in adapted):
                 raise ValueError("A Data Contract has one Grain definition.")
         adapted.append({
             **{name: value for name, value in raw.items() if name not in {"rule_parameters", "severity"}},
+            **({"guardrail_type": "data_quality", "managed_by": "grain"} if raw.get("guardrail_type") == "grain" else {}),
             "table_id": table_id,
             "column_name": column_names_by_id.get(str(raw.get("column_id") or ""), ""),
             "workspace_id": workspace_id,
-            "rule_parameters_json": json.dumps(params, sort_keys=True),
+            "rule_parameters_json": json.dumps({**params, **({"require_non_null": True, "maximum_failure_percent": 0} if raw.get("guardrail_type") == "grain" else {})}, sort_keys=True),
             "is_active": True,
             "activation_state": "active",
             "review_status": "governance_approved",
@@ -3488,21 +3435,20 @@ def contract_guardrail_rows(contract: dict[str, Any], *, workspace_id: str, tabl
 
 
 def validated_processing(processing: Any) -> dict[str, Any]:
-    """Return a valid frozen/current processing definition."""
+    """Return a valid Engineering-owned executable processing definition."""
     if not isinstance(processing, dict):
-        raise ValueError("Data Contract processing definition is missing or malformed.")
+        raise ValueError("Engineering processing definition is missing or malformed.")
     strategy = str(processing.get("load_strategy") or "").strip().lower()
     if strategy not in {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}:
         raise ValueError("Processing definition has an invalid load_strategy.")
     definition = {**processing, "load_strategy": strategy}
     allowed = {
-        "overwrite": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
-        "append_all": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
-        "append_new_only": {"load_strategy", "watermark_column", "source", "contract_id", "contract_version"},
-        "scd1": {"load_strategy", "key_columns", "watermark_column", "source", "contract_id", "contract_version"},
+        "overwrite": {"load_strategy", "watermark_column"},
+        "append_all": {"load_strategy", "watermark_column"},
+        "append_new_only": {"load_strategy", "watermark_column"},
+        "scd1": {"load_strategy", "key_columns", "watermark_column"},
         "scd2": {
             "load_strategy", "key_columns", "effective_column", "tracked_columns", "watermark_column",
-            "source", "contract_id", "contract_version",
         },
     }[strategy]
     unexpected = sorted(set(definition) - allowed)
@@ -3529,59 +3475,29 @@ def validated_processing(processing: Any) -> dict[str, Any]:
     return definition
 
 
-def resolve_table_processing_definition(
-    config,
-    active_workspace_id: str,
-    table_id: str,
-    *,
-    spark_session=None,
-    context: Mapping[str, Any] | None = None,
-    authored_processing: Mapping[str, Any] | None = None,
-) -> dict[str, Any]:
-    """Resolve authored processing and validate it against the applicable contract."""
-    authored = validated_processing(dict(authored_processing)) if authored_processing is not None else None
-    contract = resolve_pipeline_data_contract(config, active_workspace_id, table_id, spark_session=spark_session, context=context)
-    if contract is not None:
-        payload = contract.get("contract_payload") or _contract_payload(contract)
-        table_definition = payload.get("table") or {}
-        governed = validated_processing(table_definition.get("processing"))
-        if authored is None:
-            raise ValueError("Engineering processing must be supplied for governed validation.")
-        if authored != governed:
-            raise ValueError(
-                "Processing mismatch detected. "
-                f"Engineering proposes {authored!r}. "
-                f"The applicable Data Contract requires {governed!r}. "
-                "Author and freeze a new Data Contract version for the proposed processing change "
-                "before governed validation."
-            )
-        writer = table_definition.get("writer") or {}
-        if not isinstance(writer, Mapping):
-            raise ValueError("Data Contract table.writer must be an object.")
-        plan = (context or {}).get("execution_plan")
-        if plan is not None:
-            writer = {"notebook_id": plan.notebook_id,
-                      "notebook_name": plan.runtime_context.get("notebook_name")}
-        return {
-            **governed,
-            "source": "data_contract",
-            "processing_mode": "contract_governed",
-            "authored_processing": authored,
-            "governed_processing": governed,
-            "contract_id": contract["contract_id"],
-            "contract_version": int(contract["contract_version"]),
-            "owner_notebook_id": str(writer.get("notebook_id") or "").strip(),
-            "owner_notebook_name": str(writer.get("notebook_name") or "").strip(),
-        }
-    if authored_processing is None:
-        raise ValueError("Explicit No Contract processing requires an authored processing definition.")
-    return {
-        **authored,
-        "source": "current_authoring",
-        "processing_mode": "uncontracted",
-        "authored_processing": authored,
-        "governed_processing": None,
-    }
+def validated_pipeline_processing(*, role, read_mode, write_mode, read_parameters, write_parameters, repartition_by):
+    """Validate and snapshot the exact Engineering parameters retained for approval."""
+    if role == "source":
+        if read_mode not in {"full", "incremental"} or write_mode is not None or write_parameters is not None or repartition_by is not None:
+            raise ValueError("Invalid source processing configuration.")
+        parameters = read_parameters if read_parameters is not None else {}
+        if not isinstance(parameters, dict) or set(parameters) - {"watermark_column"}:
+            raise ValueError("Invalid read_parameters; only watermark_column is supported.")
+        if read_mode == "incremental":
+            if not isinstance(parameters.get("watermark_column"), str) or not parameters["watermark_column"].strip():
+                raise ValueError("Incremental reads require an explicit watermark_column.")
+        elif parameters:
+            raise ValueError("Full reads do not accept read_parameters.")
+        return {"read_parameters": dict(parameters), "write_parameters": None, "repartition_by": None}
+    if role != "target" or read_mode is not None or read_parameters is not None:
+        raise ValueError("Invalid target processing configuration.")
+    parameters = write_parameters if write_parameters is not None else {}
+    if not isinstance(parameters, dict) or set(parameters) - {"watermark_column", "key_columns", "effective_column", "tracked_columns"}:
+        raise ValueError("Invalid write_parameters.")
+    validated_processing({**parameters, "load_strategy": write_mode})
+    if repartition_by is not None and (type(repartition_by) is not int or repartition_by < 1):
+        raise ValueError("repartition_by must be a positive integer.")
+    return {"read_parameters": None, "write_parameters": json.loads(canonical_pipeline_json(parameters)), "repartition_by": repartition_by}
 
 
 def resolve_scd2_tracked_columns(columns: list[str], processing: Mapping[str, Any]) -> list[str]:
@@ -3863,46 +3779,6 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
         workspace_id=workspace_id, table_id=table_id,
     )
 
-
-
-def resolve_freshness_observation_column(rule: dict) -> str:
-    """Return the validated date-time column from an active Freshness rule."""
-    parameters = _parse_rule_parameters(rule)
-    value = str(
-        parameters.get("freshness_column")
-        or parameters.get("column_name")
-        or _catalogue_value(rule, "column_name")
-        or ""
-    ).strip()
-    if not value:
-        raise ValueError("Active Freshness rule is invalid: freshness_column is missing.")
-    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-        raise ValueError(
-            "Active Freshness rule is invalid: freshness_column must be a simple identifier."
-        )
-    return value
-
-
-def resolve_incremental_observation_columns(
-    identity: Mapping[str, Any], contract: Mapping[str, Any] | None
-) -> tuple[str, str]:
-    """Resolve incremental observation columns from governed processing."""
-    if contract is not None:
-        payload = contract.get("contract_payload") or _contract_payload(dict(contract))
-        processing = (payload.get("table") or {}).get("processing") or {}
-    else:
-        processing = catalogue_authored_processing(identity)
-    watermark_column = str(
-        processing.get("watermark_column")
-        or processing.get("effective_column")
-        or ""
-    ).strip()
-    if watermark_column:
-        return watermark_column, watermark_column
-    raise ValueError(
-        "Incremental processing requires a watermark_column or effective_column "
-        "in the governed processing definition."
-    )
 
 
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
@@ -4802,6 +4678,7 @@ def _load_active_dq_rules(metadata_df, table_id: str, active_workspace_id: str |
                 "severity": _normalize_dq_severity(row.get("action") or row.get("severity")),
                 "description": str(row.get("description") or ""),
                 "review_status": str(row.get("review_status") or ""),
+                **({"managed_by": "grain"} if row.get("managed_by") == "grain" else {}),
                 **params,
             }
         )
@@ -5107,8 +4984,11 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         failed = empty_string(col_name) if rule["treat_blank_as_missing"] else F.col(col_name).isNull()
     elif rtype == "uniqueness":
         failed = F.count(F.lit(1)).over(
-            Window.partitionBy(*[F.col(c) for c in sorted(set(cols))])
+            Window.partitionBy(*[F.col("`" + c.replace("`", "``") + "`") for c in sorted(set(cols))])
         ) > F.lit(1)
+        if rule.get("require_non_null"):
+            for column in cols:
+                failed = failed | F.col("`" + column.replace("`", "``") + "`").isNull()
     elif rtype == "value_set":
         contained = F.col(col_name).isin(list(rule["values"]))
         failed = F.col(col_name).isNotNull() & (contained if rule["mode"] == "block" else ~contained)
@@ -5312,6 +5192,7 @@ def _dq_checks_from_counts(table_name, rules, rule_flags, distinct_flags, applic
             metric, operator = "missing_percent" if parameter == "maximum_missing_percent" else "failure_percent", "<="
         severity = _normalize_dq_severity(rule.get("severity"))
         checks.append({
+            **({"managed_by": "grain", "label": "GRAIN — Uniqueness"} if rule.get("managed_by") == "grain" else {}),
             "check": "dq_rule", "table_name": table_name, "rule_id": str(rule.get("rule_id") or ""),
             "rule_type": rule["rule_type"], "columns": list(rule["columns"]), "severity": severity,
             "status": ("failed" if severity == "error" else "warning") if exceeded else "passed",
@@ -5718,37 +5599,22 @@ def capture_source_observation(
         freshness_rule is not None
         and str(_catalogue_value(freshness_rule, "rule_type") or "").strip().lower() != "skip"
     ):
-        freshness_column = resolve_freshness_observation_column(freshness_rule)
-        freshness_frame = dataframe
-        if freshness_frame is None and source_type == "warehouse":
-            query = (
-                f"SELECT MAX([{freshness_column}]) AS latest_value "
-                f"FROM [{schema_value}].[{table_value}]"
-            )
-            latest_value = _max_column_value(
-                read_warehouse_query(
-                    query, store=store_key, context={**(context or {}), "_spark_session": spark}
-                ),
-                "latest_value",
-            )
-        else:
-            if freshness_frame is None:
-                freshness_frame = read_lakehouse_table(
-                    table_value,
-                    store=store_key,
-                    schema=schema_value,
-                    context={**(context or {}), "_spark_session": spark},
-                )
-            latest_value = _max_column_value(freshness_frame, freshness_column)
-        _CURRENT_FRESHNESS_EVIDENCE[
-            (active_workspace_id, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
-        ] = {
-            "source_table_id": governed_table_id,
-            "workspace_id": active_workspace_id,
-            "freshness_column": freshness_column,
-            "latest_value": latest_value,
-            "_activity_id": str(audit["_activity_id"]),
-        }
+        from fabricops_kit.pipeline.freshness import collect_freshness_evidence, validate_freshness_parameters
+        parameters = validate_freshness_parameters(_parse_rule_parameters(freshness_rule))
+        # Batch scope is evaluated after the incremental filter by check_freshness.
+        if parameters["evaluation_scope"] == "full_dataset":
+            freshness_frame = dataframe
+            if parameters["evidence_method"] == "column" and freshness_frame is None:
+                freshness_frame = (read_lakehouse_table(table_value, store=store_key, schema=schema_value,
+                    context={**(context or {}), "_spark_session": spark}) if source_type == "lakehouse"
+                    else read_warehouse_table(schema_value, table_value, store=store_key,
+                    context={**(context or {}), "_spark_session": spark}))
+            evidence = collect_freshness_evidence(parameters, dataframe=freshness_frame,
+                source={"source_type": "table", "table_id": governed_table_id, "store_type": source_type,
+                        "resolved_path": _path if source_type == "lakehouse" else None}, spark_session=spark)
+            _CURRENT_FRESHNESS_EVIDENCE[
+                (active_workspace_id, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
+            ] = {**evidence, "_activity_id": str(audit["_activity_id"])}
 
     def capture_columns(partition_column: str, change_column: str, *, watermark_only: bool = False) -> Any:
         observation_columns = {partition_column, change_column}
@@ -6022,7 +5888,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "contract_version": contract["contract_version"] if contract else None,
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
-                **{name: actual.get(name) for name in ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
+                **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
                     "started_at", "completed_at", "rows_read", "rows_written")},
                 "metrics": dict(actual.get("metrics") or {}),
                 "source_table_ids": actual.get("source_table_ids", []),
@@ -6170,10 +6036,19 @@ class PipelineOperation:
                            "started_at": datetime.now(UTC).isoformat()}
             plan.evidence["operations"][key] = self.record
             # These are the notebook settings retained and compared in Governed mode.
-            # Processing parameters belong to the table contract; profiling belongs to setup_pipeline.
+            # Exact processing parameters are retained in the approved Pipeline Activation.
+            processing_parameters = validated_pipeline_processing(role=self.role,
+                read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
+                write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
+                read_parameters=args.get("read_parameters") if self.role == "source" else None,
+                write_parameters=args.get("write_parameters") if self.role == "target" else None,
+                repartition_by=args.get("repartition_by") if self.role == "target" else None)
             self.record.update(
                 store=str(identity["store"]),
                 requested_schema=args.get("schema"),
+                read_parameters=json.loads(canonical_pipeline_json(args.get("read_parameters") or {})) if self.role == "source" else None,
+                repartition_by=args.get("repartition_by") if self.role == "target" else None,
+                write_parameters=json.loads(canonical_pipeline_json(args.get("write_parameters") or {})) if self.role == "target" else None,
                 read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
                 query_sha256=hashlib.sha256(args["query"].encode()).hexdigest() if args.get("query") else None,
@@ -6183,6 +6058,7 @@ class PipelineOperation:
                 metrics={},
                 source_table_ids=[],
             )
+            self.record.update(processing_parameters)
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
                 self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
@@ -6191,7 +6067,7 @@ class PipelineOperation:
                 verify_governed_plan(plan, spark_session=args.get("spark_session"))
                 activated = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
                 selected = activated.get((table_id, self.role))
-                enforced = ("read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
+                enforced = ("read_parameters", "repartition_by", "write_parameters", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
                 if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
             elif plan.execution_mode == "ungoverned" and self.role == "target":

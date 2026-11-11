@@ -24,7 +24,7 @@ No starter template or solution is traced for the public writer functions.
 
 No immediate table relationship is defined in the current implementation.
 
-**Implementation details:** Governance selects saved Engineering packages directly from configured Metadata Files; Review saves an immutable copy under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, parameters, physical bindings and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.
+**Implementation details:** Governance selects saved Engineering packages directly from configured Metadata Files; Review saves an immutable copy under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, read/write parameters, repartitioning, physical bindings, file authorizations and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.
 
 ## Column summary
 

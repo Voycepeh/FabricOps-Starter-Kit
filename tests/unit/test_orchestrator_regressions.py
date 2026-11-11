@@ -18,7 +18,7 @@ write = import_module("fabricops_kit.pipeline.orchestrate_write")
 @pytest.fixture
 def read_runtime(monkeypatch):
     """Keep stage planning real while isolating physical source access."""
-    context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "grain"}]})
+    context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "data_quality"}]})
     monkeypatch.setattr(read, "resolve_table_id", Mock(side_effect=lambda **kw: "source" if kw["store"] == "Bronze" else "target"))
     monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
     frame = SimpleNamespace(columns=["id"])
@@ -29,7 +29,7 @@ def read_runtime(monkeypatch):
     grain = Mock(return_value={"status": "passed", "can_continue": True})
     profile = Mock(return_value={"row_count": 3})
     monkeypatch.setattr(read, "pipeline_read", reader)
-    monkeypatch.setattr(read, "check_grain", grain)
+    monkeypatch.setattr(read, "check_dq", grain)
     monkeypatch.setattr(read, "schedule_table_profiling", profile)
     return reader, grain, profile
 
@@ -41,7 +41,7 @@ def test_full_mode_normalized_for_reader_grain_profile_and_summary(read_runtime,
     result = run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode, verbose=False)
     assert result["read_mode"] == "full"
     assert reader.call_args.kwargs["read_mode"] == "full"
-    assert grain.call_args.kwargs["scope"] == "read_full"
+    grain.assert_called_once()
     profile.assert_called_once()
     assert result["orchestration_stages"][-1]["stage"] == "Profile"
     assert result["read_metrics"]["rows_read"] == 3
@@ -56,7 +56,7 @@ def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtim
                                    read_parameters=parameters, target_store="Silver", target_schema="demo", target_table_name="orders_clean", verbose=False)
     assert reader.call_args.kwargs["read_mode"] == "incremental"
     assert reader.call_args.kwargs["read_parameters"] is parameters
-    assert grain.call_args.kwargs["scope"] == "read_incremental_batch"
+    grain.assert_called_once()
     profile.assert_called_once()
     assert profile.call_args.args[:2] == ("source", "read")
 
@@ -64,7 +64,7 @@ def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtim
 def test_incremental_read_accepts_planned_target_on_first_run(read_runtime, monkeypatch):
     """A fresh target is included by coordinate planning before its first Read."""
     reader, _grain, profile = read_runtime
-    context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "grain"}]})
+    context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "data_quality"}]})
     monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
 
     result = run_pipeline_operation(

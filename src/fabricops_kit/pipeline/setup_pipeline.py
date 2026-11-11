@@ -59,14 +59,15 @@ def _contract_review(row, roles=("source", "target")):
     if not isinstance(columns, list) or not isinstance(rules, list):
         raise ValueError("Selected frozen payload requires table.columns and guardrails lists.")
     names = {column.get("column_id"): column.get("column_name") for column in columns}
-    groups = {kind: [] for kind in ("schema", "grain", "data_quality", "freshness", "source_drift", "sensitive_data")}
+    groups = {kind: [] for kind in ("schema", "data_quality", "freshness", "source_drift", "sensitive_data")}
     for rule in rules:
         if not isinstance(rule, dict):
             raise ValueError("Invalid saved Guardrail definition.")
         kind = str(rule.get("guardrail_type") or "unspecified")
         params = rule.get("rule_parameters")
-        groups.setdefault(kind, []).append({
+        groups.setdefault("data_quality" if kind == "grain" else kind, []).append({
             **rule,
+            **({"rule_type": "GRAIN — Uniqueness (managed; edit in Table tab)"} if kind == "grain" else {}),
             "column": names.get(rule.get("column_id"), rule.get("column_id")),
             "parameters": params,
             "classification": [entry.get("value") for entry in
@@ -114,7 +115,6 @@ def _inspector(row, roles, results=()):
         title = labels.get(kind, f"Other / {kind}")
         inactive = sum(rule.get("is_active") is False for rule in rules)
         sections.append(f'<details><summary>{html.escape(title)} · {len(rules)} checks · {inactive} inactive</summary>{content}</details>')
-    sections.append("<details><summary>Processing and ownership</summary>" + _value({key: review["payload"]["table"][key] for key in ("processing", "writer") if key in review["payload"]["table"]}) + "</details>")
     actual = [result for result in results if result.get("contract_id") == row.get("contract_id")
               and result.get("contract_version") == row.get("contract_version")
               and result.get("table_id") == row.get("table_id")]

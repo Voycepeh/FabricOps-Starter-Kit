@@ -211,7 +211,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
              ("grain", "uniqueness", "", {"columns": ["id"]}),
              ("data_quality", "completeness", f"{table_id}/id", {"columns": ["id"], "maximum_missing_percent": 0, "treat_blank_as_missing": False})]
     if source:
-        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "expected_refresh_frequency": 1, "expected_refresh_unit": "days", "maximum_age": 2, "maximum_age_unit": "days"})]
+        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "evidence_method": "column", "evaluation_scope": "full_dataset", "maximum_age": 2, "maximum_age_unit": "days"})]
     else:
         specs += [("sensitive_data", "mask", f"{table_id}/email", {"scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*"})]
     if schema_only:
@@ -281,7 +281,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     failed = run_pipeline_operation(orchestrate_write, invalid, plan=plan, sources=inputs, **coordinates["targets"][0],
         write_mode="overwrite", spark_session=state.spark, verbose=False)
     assert not failed["validation_passed"] and not failed["published"]
-    assert failed["grain_result"]["can_continue"] is False
+    assert failed["dq_result"]["can_continue"] is False
     assert_ordinary_metadata_unchanged(state.metadata, snapshot)
     assert "curated_orders" not in state.business
     from fabricops_kit.pipeline.shared import finalize_pipeline_run

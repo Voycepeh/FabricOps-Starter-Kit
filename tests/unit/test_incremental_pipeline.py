@@ -138,6 +138,7 @@ def test_incremental_pipeline_read_uses_processing_without_source_drift(monkeypa
     result = read_module.pipeline_read(
         table_id="source-orders",
         read_mode="incremental",
+        read_parameters={"watermark_column": "processed_at"},
         target_table_id="target-orders",
         verbose=False,
     )
@@ -161,40 +162,8 @@ def test_first_incremental_run_bootstraps_with_complete_scope(monkeypatch):
     assert result["observed_row_count"] == 1
 
 
-def test_incremental_columns_come_from_processing_without_source_drift():
-    identity = {
-        "load_strategy": "append_all",
-        "load_strategy_parameters_json": {'watermark_column': 'processed_at'},
-    }
-
-    assert shared.resolve_incremental_observation_columns(identity, None) == (
-        "processed_at",
-        "processed_at",
-    )
 
 
-def test_incremental_processing_column_can_differ_from_source_drift():
-    contract = {
-        "contract_payload": {
-            "table": {
-                "processing": {
-                    "load_strategy": "append_all",
-                    "watermark_column": "processed_at",
-                }
-            },
-            "guardrails": [
-                {
-                    "guardrail_type": "source_drift",
-                    "rule_parameters": {"change_column": "updated_at"},
-                }
-            ],
-        }
-    }
-
-    assert shared.resolve_incremental_observation_columns({}, contract) == (
-        "processed_at",
-        "processed_at",
-    )
 
 
 def test_partition_only_incremental_processing_is_rejected():
@@ -204,14 +173,6 @@ def test_partition_only_incremental_processing_is_rejected():
         )
 
 
-def test_incremental_observation_requires_governed_watermark():
-    identity = {
-        "load_strategy": "append_all",
-        "load_strategy_parameters_json": {'partition_column': 'business_date'},
-    }
-
-    with pytest.raises(ValueError, match="requires a watermark_column or effective_column"):
-        shared.resolve_incremental_observation_columns(identity, None)
 
 
 def test_lakehouse_incremental_filter_is_strictly_after_watermark(spark_session):
@@ -558,14 +519,12 @@ def test_incremental_read_parameters_override_missing_catalogue_watermark(monkey
     assert result["should_process"] is True
 
 
-def test_incremental_parameters_reject_selected_contract_conflict():
+def test_incremental_parameters_are_engineering_owned():
     contract = {"contract_payload": {"table": {"processing": {
         "load_strategy": "append_all", "watermark_column": "governed_date"
     }}}}
-    with pytest.raises(ValueError, match="conflicts with selected Data Contract"):
-        read_module._resolve_requested_incremental_columns(
-            {}, contract, {"watermark_column": "another_date"}
-        )
+    assert read_module._resolve_requested_incremental_columns(
+        {}, contract, {"watermark_column": "another_date"}) == ("another_date", "another_date")
 
 
 @pytest.mark.parametrize("parameters", [

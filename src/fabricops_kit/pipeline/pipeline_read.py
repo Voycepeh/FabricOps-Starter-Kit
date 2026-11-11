@@ -13,7 +13,6 @@ from fabricops_kit.pipeline.shared import (
     observe_full_source,
     resolve_catalogue_table_identity,
     resolve_incremental_source_scope,
-    resolve_incremental_observation_columns,
     resolve_pipeline_data_contract,
     resolve_physical_table_identity,
 )
@@ -118,17 +117,10 @@ def _resolve_requested_incremental_columns(
     contract: dict[str, Any] | None,
     read_parameters: dict[str, Any] | None,
 ) -> tuple[str, str]:
-    """Use explicit notebook authoring with the selected frozen contract authoritative."""
+    """Use Engineering-owned incremental authoring, captured by Pipeline Activation."""
     if not read_parameters:
-        return resolve_incremental_observation_columns(identity, contract)
+        raise ValueError("Incremental reads require explicit read_parameters.watermark_column.")
     requested = read_parameters["watermark_column"].strip()
-    if contract is not None:
-        governed, _ = resolve_incremental_observation_columns(identity, contract)
-        if requested != governed:
-            raise ValueError(
-                f"Incremental watermark {requested!r} conflicts with selected "
-                f"Data Contract watermark {governed!r}."
-            )
     return requested, requested
 
 
@@ -289,11 +281,11 @@ def pipeline_read(
         read. ``incremental`` resolves unconsumed work from the last Source
         Observation committed for this exact source-to-target relationship.
     read_parameters : dict, optional
-        Incremental read configuration. Supports only watermark_column. If a
-        Data Contract is selected, its watermark must match the requested one.
-        For incremental mode, provide ``{"watermark_column": "modified_at"}``
-        when no selected contract supplies the watermark. None is valid only
-        when the selected mode and contract provide the required configuration.
+        Required for incremental mode; supports only watermark_column.
+        Engineering owns this configuration and Pipeline Activation approves it.
+        For incremental mode, provide ``{"watermark_column": "modified_at"}``.
+        Data Contracts contain no watermark processing configuration.
+        None is valid for full reads, which accept no incremental parameters.
     target_table_id : str, optional
         Canonical governed target being prepared. It is accepted for both read
         modes so target flows can use one consistent call shape, and is required

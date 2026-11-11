@@ -59,3 +59,5 @@ For recovery, select a **Retained implementation**, choose **Restore the active 
 `METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes, exact Governance approval/submission references and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-fabric-acceptance.md).** Do not treat green local tests as secured Fabric execution.
 
 **Next:** [Step 6. Run Production](06-run-production.md)
+
+Processing is Engineering-owned. Review the exact read/write modes, read/write parameters, repartitioning and source-to-target associations in the submitted package. Any change requires a new Pipeline Activation approval. File source authorizations retain exact selectors, reader options and frozen Contract hashes; deployment remains blocked until a file orchestration boundary can enforce their Guardrails.

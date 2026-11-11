@@ -21,6 +21,8 @@ from fabricops_kit.pipeline.shared import (
 def check_freshness(
     table_id: str,
     *,
+    dataframe=None,
+    read_mode="full",
     verbose: bool = True,
     context=None,
 ) -> dict:
@@ -101,25 +103,24 @@ def check_freshness(
         if verbose:
             print("  No refresh is expected for this source; freshness age evaluation skipped.")
         return result
-    evidence = get_current_freshness_evidence(
-        workspace_id=active_workspace_id,
-        activity_id=source_observation_run_id(context) or str(audit["_activity_id"]),
-        table_id=table_id,
-    )
-    freshness_column = str(evidence["freshness_column"])
-    result = freshness_check_core(
-        [{freshness_column: evidence.get("latest_value")}],
-        config=config,
-        rules_df=rules_df,
-        workspace_id=active_workspace_id,
-        table_id=table_id,
-    )
+    import json
+    from fabricops_kit.pipeline.freshness import collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters
+    parameters = validate_freshness_parameters(json.loads(freshness_rule["rule_parameters_json"]))
+    if parameters["evaluation_scope"] == "incremental_batch":
+        evidence = collect_freshness_evidence(parameters,
+            dataframe=dataframe if read_mode == "incremental" else None,
+            source={"source_type": "table", "table_id": table_id}, spark_session=spark_session)
+    else:
+        try:
+            evidence = get_current_freshness_evidence(workspace_id=active_workspace_id,
+                activity_id=source_observation_run_id(context) or str(audit["_activity_id"]), table_id=table_id)
+        except ValueError:
+            evidence = {"evidence_method": parameters["evidence_method"], "evaluation_scope": parameters["evaluation_scope"],
+                        "outcome": "unavailable", "reason": "No current-run Source Observation is available."}
+    result = evaluate_freshness_evidence(evidence, parameters, action=freshness_rule["action"])
+    result.update(guardrail_rule_id=freshness_rule["guardrail_rule_id"],
+                  guardrail_version=freshness_rule.get("guardrail_version", 1))
     if result.get("guardrail_rule_id"):
-        result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}
-        result["actual"] = {
-            "latest_observed_change_value": result.get("latest_value"),
-            "required_min_value": result.get("required_min_value"),
-        }
         write_guardrail_result_row(
             spark_session=spark_session,
             config=config,
@@ -153,10 +154,6 @@ def check_freshness(
         print(
             f"  Rule {result.get('guardrail_rule_id', '')} v{result.get('guardrail_version', 1)} from the selected Data Contract."
         )
-        print(f"  Freshness column {freshness_column} from the active Freshness rule.")
-        print(
-            f"  Expected max lag {result.get('freshness_max_lag_days')} day(s); "
-            f"latest observed={result.get('latest_value')}, required minimum={result.get('required_min_value')}."
-        )
+        print(f"  Evidence method {parameters['evidence_method']}; scope {parameters['evaluation_scope']}; outcome {result['evidence_outcome']}.")
         print("  Evidence appended to METADATA_GUARDRAIL_RESULTS.")
     return result

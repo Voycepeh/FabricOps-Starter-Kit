@@ -101,7 +101,7 @@ widget_data_contract()
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
 
-For `orders`, enable **Freshness** and **Schema**. Use `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Keep Freshness on **Warn** for the first integration run. Engineering configures optional Source Drift in `setup_pipeline()`, independently of the Contract. Schema blocks missing Required columns and contracted datatype mismatches.
+For `orders`, enable **Freshness** and **Schema**. Choose **Column-based** evidence, **Full dataset** scope, and `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Keep Freshness on **Warn** for the first integration run. Engineering configures optional Source Drift in `setup_pipeline()`, independently of the Contract. Schema blocks missing Required columns and contracted datatype mismatches.
 
 For `products`, `order_history`, and the `customer_summary` target, a Schema rule is sufficient for this exercise. Their purpose is to make both source → target paths Guardrail-ready without inventing unrelated business rules.
 
@@ -124,16 +124,15 @@ Open **Table** and review:
 
 * Description and Classification
 * Grain & Row Key — describe one row and select the actual table key: `order_id` for Orders/Curated Orders, `product_id` for Products, `historical_order_id` for Order History, and `customer_id` for Customer Summary. Leave **Enforce Grain** off for the main DQ exercise; Step 4 adds a focused Grain check separately.
-* Processing
 * Freshness, when applicable
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
 ### Grain enforcement and the orchestration sidebar
 
-**Grain is a singular table Guardrail, independent of Data Quality.** The description remains table Enrichment; selected key columns and enforcement policy are separate choices. Selecting a profiled key or entering a description does not enable enforcement. **Enforce Grain** defaults to **Block** when enabled; choose **Warn** to record violations and continue. Turn it off to retain the description and keys without runtime validation or required Grain Results.
+**Grain enforcement is one managed Data Quality uniqueness rule.** The description remains table Enrichment; selected key columns and enforcement policy are separate choices. Selecting a profiled key or entering a description does not enable enforcement. **Enforce Grain** defaults to **Block** when enabled; choose **Warn** to record violations and continue. Turn it off to retain the description and keys without runtime validation or required Grain Results.
 
-A composite key is unique as a combination. Any SQL null in any key component fails that row; blank strings are ordinary values. All rows sharing a duplicate combination fail. An empty input passes only with a valid configured key and all configured columns present. Missing columns, duplicate/blank key names, unknown contract columns, and invalid configuration cannot pass; invalid configuration blocks even under Warn. No duplicate DQ Uniqueness rule is created for declared Grain. Existing authored DQ Uniqueness rules remain independent rules.
+A composite key is unique as a combination. Any SQL null in any key component fails that row; blank strings are ordinary values. All rows sharing a duplicate combination fail. An empty input passes only with a valid configured key and all configured columns present. Missing columns, duplicate/blank key names, unknown contract columns, and invalid configuration cannot pass; invalid configuration blocks even under Warn. The Data Quality section displays **GRAIN — Uniqueness**, selected columns, Warn/Block policy and enabled status. Edit it only through the Table controls. An active authored uniqueness rule for the same key is rejected as a duplicate.
 
 | Boundary or strategy | Grain validation scope |
 | --- | --- |
@@ -148,11 +147,11 @@ A composite key is unique as a combination. Any SQL null in any key component fa
 
     Grain does not read existing targets or simulate merges. Append, SCD1, and SCD2 can therefore produce a different table state from the checked input. Resulting-table uniqueness would require strategy-specific validation and concurrency handling beyond this change. Configure physical row Grain appropriately; a business key alone is not a unique physical row key for SCD2 history. Existing SCD processing still requires unique incoming business keys.
 
-The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Grain, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Grain, Data Quality). Pipeline-owned Source Drift observes complete sources during Read and consolidates decisions before any Write. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
+The sidebar groups configured rules under **When this table is read** (`orchestrate_read()`: Freshness, Schema, Data Quality) and **Before this table is written** (`orchestrate_write()`: Schema, Sensitive Data, Data Quality). Pipeline-owned Source Drift observes complete sources during Read and consolidates decisions before any Write. The same Schema, Grain, and DQ configuration applies to both paths; there are no separate Read/Write policies.
 
 Expand a Guardrail to inspect its columns, rules, parameters, and policy, then click a rule to open its existing editor. Use **Table**, **Column**, and **Data Quality** to author or edit settings, including unconfigured Guardrails. Disabled Grain remains visible with its disabled state; its description and key selection remain editable in **Grain & Row Key**. Summaries update as edits are staged, before Save.
 
-**Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records actual Grain evaluations with `guardrail_type=grain`, the exact contract version, continuation decision, counts, and validation scope. Configured Grain checks validate Read rows and prepared Write input independently; their authored Warn or Block action determines continuation. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
+**Warn/Block is policy, not an execution result.** The sidebar does not execute validation. `METADATA_GUARDRAIL_RESULTS` records the managed Grain DQ evaluation with `guardrail_type=data_quality`, the exact contract version, continuation decision, counts, and validation scope. Configured Grain checks validate Read rows and prepared Write input independently; their authored Warn or Block action determines continuation. Sensitive Data treatments must succeed before continuation. Profiling supplies observations and suggestions, not Guardrails.
 
 
 <div class="fabricops-section-banner" markdown="1">
@@ -255,9 +254,31 @@ Open **Review** and inspect the complete contract, including the DQ rules above,
 
 A saved draft keeps the schema captured when it was created. A new draft excludes columns removed from the latest workspace observation. In the **Table** workspace, review the unavailable definitions and choose **Remove unavailable definitions** to stage their removal. Correct any remaining references, such as Grain keys, before saving. Frozen versions remain unchanged. If another session freezes the draft before Save or Freeze completes, the operation reports a conflict and retains pending edits.
 
-Choose **Save draft** in the sidebar while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection, Processing, and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
+Choose **Save draft** in the sidebar while the version is still a draft. Close and reopen that exact draft to confirm its descriptions, classifications, key selection and configured Guardrails hydrate from the saved payload. Pending sidebar edits are not saved until Save succeeds. When it is ready for Engineering validation, choose **Freeze** and reopen the exact frozen version to review its immutable manifest.
 
-`METADATA_DATA_CONTRACT.contract_payload_json` is the single source of authored table and column Enrichment and the configured Guardrails. Source contracts support four Guardrails: Schema, Grain, Freshness and Data Quality. Target contracts support four: Schema, Grain, Data Quality, and Sensitive Data. `orchestrate_read` runs four checks (Freshness, Schema, Grain, Data Quality); `orchestrate_write` runs four Contract checks (Schema, Sensitive Data, Grain, Data Quality), after the independent pipeline Source Drift decision. Grain description is descriptive Enrichment; key selection and optional enforcement are stored as the Grain Guardrail in the same payload. Save replaces the draft payload, Freeze makes that exact version immutable, and the next draft inherits the previous frozen definition. Runtime checks and exports resolve the selected payload; actual evaluations remain in `METADATA_GUARDRAIL_RESULTS`.
+`METADATA_DATA_CONTRACT.contract_payload_json` stores authored Enrichment and Guardrails for an exact version. Grain description and key authoring remain in Table; enabled Grain is evaluated once by DQ. Read runs Freshness, Schema and DQ. Write runs Schema, Sensitive Data and DQ after the independent Source Drift decision. Save replaces the draft payload and Freeze makes the exact version immutable. Evaluations are retained in `METADATA_GUARDRAIL_RESULTS`.
+
+### Processing and source identity
+
+Engineering authors `read_mode`, `read_parameters`, `write_mode`, `write_parameters`, source-to-target associations and `repartition_by` in the pipeline. Pipeline Activation retains the exact configuration and runtime compares it before execution. Changing approved parameters requires a new pipeline submission and approval. Contracts contain no Processing controls or executable processing definition.
+
+Physical tables keep canonical Table IDs. File-backed contracts use a stable `source_id` based on physical workspace, Lakehouse item and case-sensitive relative Files selector. Reader format/options are frozen and reviewed separately; folders and wildcards retain selector identity as membership changes. The shared authoring service accepts an explicit observed file schema. File Contract Activation verifies the configured physical source, frozen payload and Agreement association. Pipeline approval packages can retain exact `file_authorizations`.
+
+The current authoring widget selects registered tables. A file selector in that widget and a file orchestration boundary are separate implementation work. Approved file declarations alone cannot authorize execution: deployment rejects packages with file authorizations until that boundary exists. No artificial Table IDs or file checkpoints are introduced.
+
+### Freshness evidence
+
+Choose an explicit method and age threshold, then select Warn or Block:
+
+| Method | Meaning and scope |
+| --- | --- |
+| Metadata-based | Full physical dataset only. Supported Lakehouse Delta sources use the latest data-changing history entry, excluding maintenance. Unsupported Warehouse metadata is unavailable. Files use modification timestamps from the resolved selector; folder/wildcard data members expand recursively, exclude hidden control files, and use the oldest member so a new file cannot hide stale members. |
+| Column-based | Latest non-null value in the configured timestamp column. Select Full dataset or Incremental batch explicitly. The aggregation scans data and checks invalid values; it is not metadata-only. An empty batch does not prove full-dataset freshness. |
+
+Every evaluated result retains the method, scope, observation time, source identity, threshold, continuation decision and current evidence in `METADATA_GUARDRAIL_RESULTS`. File evidence includes member timestamps and a membership hash. Missing metadata, failed access, no matched files and empty/all-null datasets are unavailable; invalid or future timestamps are invalid. Both follow Warn/Block. Reader options that change membership require an actual reader-resolved file set; until that boundary exists, metadata evidence reports unavailable rather than ignoring those filters. Freshness never switches methods or falls back to historical profiles. File modification time describes storage updates, not business-event time.
+
+No metadata tables are added. Nullable `source_id` fields distinguish file contracts and activations; a file row has no Table ID. Run operation JSON adds typed read/write parameters and repartitioning so approval can compare actual settings. Existing physical Run JSON storage and retained historical content hashes are preserved.
+
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 

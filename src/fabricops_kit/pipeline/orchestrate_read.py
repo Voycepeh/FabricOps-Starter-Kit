@@ -2,7 +2,6 @@
 from __future__ import annotations
 from typing import Any
 from fabricops_kit.pipeline.check_dq import check_dq
-from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.pipeline_read import pipeline_read
@@ -63,7 +62,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     read_mode : {"full", "incremental"}
         Full reads profile the source; incremental reads retain checkpoint bounds.
     read_parameters : dict, optional
-        Incremental watermark_column; must agree with the selected contract.
+        Required for incremental reads; Engineering watermark_column captured by Pipeline Activation.
     target_store : str, optional
         Configured target store key; required for incremental reads.
     target_schema : str, optional
@@ -135,7 +134,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         if target_table_id is not None and "target" not in context["_pipeline_identities"].get(target_table_id, {}).get("roles", []):
             raise ValueError("Incremental target must be an explicit target participant in the plan.")
         active = pipeline_guardrail_types(context, table_id)
-        labels = [("freshness", "Freshness"), ("schema", "Schema"), ("grain", "Grain"), ("data_quality", "Data Quality")]
+        labels = [("freshness", "Freshness"), ("schema", "Schema"), ("data_quality", "Data Quality")]
         # A new Read supersedes earlier evidence even if evaluation cannot complete.
         read_types = {kind for kind, _label in labels}
         execution_plan.results[:] = [row for row in execution_plan.results
@@ -170,9 +169,8 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
             summary.details([("Scope", "Empty incremental scope")])
         dataframe, table_id = source["dataframe"], source["table_id"]
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
-        freshness = run("Freshness", lambda: check_freshness(table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "freshness" in active else dict(skipped)
+        freshness = run("Freshness", lambda: check_freshness(table_id, dataframe=dataframe, read_mode=read_mode, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "freshness" in active else dict(skipped)
         schema_result = run("Schema", lambda: check_schema(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
-        grain_result = run("Grain", lambda: check_grain(dataframe, table_id=table_id, scope="read_full" if read_mode == "full" else "read_incremental_batch", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
         dq_result = run("Data Quality", lambda: check_dq(dataframe, table_id=table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
         profile = run("Profile", lambda: schedule_table_profiling(table_id, "read", verbose=verbose, presentations=presentations, context=context, spark_session=spark_session,
             **({"dataframe": dataframe} if read_mode == "full" and query is None and not source.get("is_query") else {})))
@@ -187,4 +185,5 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         ])
         display_profile_presentations(presentations)
         operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
-        return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "grain_result": grain_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})
+
+        return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

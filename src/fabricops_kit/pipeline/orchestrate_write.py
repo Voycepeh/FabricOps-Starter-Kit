@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Iterable
 from datetime import UTC, datetime
 from fabricops_kit.pipeline.check_dq import check_dq
-from fabricops_kit.pipeline.check_grain import check_grain
 from fabricops_kit.pipeline.check_schema import check_schema
 from fabricops_kit.pipeline.check_sensitive_data import check_sensitive_data
 from fabricops_kit.pipeline.pipeline_write import pipeline_write
@@ -66,7 +65,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     table_name : str
         Physical target table name.
     write_mode : {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
-        Proposed strategy; must match the selected contract processing definition.
+        Engineering write strategy, captured exactly by Pipeline Activation.
     write_parameters : dict, optional
         Strategy parameters including SCD key_columns and SCD2 effective_column.
     existing_mapping : object, optional
@@ -145,8 +144,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             names.append("Sensitive Data")
         if "schema" in active:
             names.append("Schema")
-        if "grain" in active:
-            names.append("Grain")
         if "data_quality" in active:
             names.append("Data Quality")
         if not execution_plan.permits_persistence:
@@ -168,7 +165,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 sensitive = run("Sensitive Data", lambda: check_sensitive_data(dataframe, table_id=target_id, existing_mapping=existing_mapping, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             prepared = sensitive["dataframe"]
             schema_result = run("Schema", lambda: check_schema(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
-            grain_result = run("Grain", lambda: check_grain(prepared, table_id=target_id, scope="write_prepared_input", verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "grain" in active else dict(skipped)
             dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
             common_results = {
                 "table_id": target_id,
@@ -177,7 +173,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 "sensitive_result": sensitive,
                 "source_drift_results": [drift_by_source.get(source_id, dict(skipped)) for source_id in source_ids],
                 "source_drift_decision": drift_decision,
-                "grain_result": grain_result,
                 "dq_result": dq_result,
                 "source_guardrail_results": source_checks,
                 "source_association": "pipeline_participation",

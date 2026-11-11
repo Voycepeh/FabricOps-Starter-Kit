@@ -160,7 +160,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 81 |
+| Live-critical dependencies | 85 |
 
 ### Release history
 
@@ -225,6 +225,8 @@ No related guides documented.
 <li><code>fabricops_kit.data_contract.shared.validate_contract_definitions</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_grain_contract</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_sensitive_data_parameters</code></li>
+<li><code>fabricops_kit.data_contract.source_identity.file_source_identity</code></li>
+<li><code>fabricops_kit.data_contract.source_identity.validate_contract_source</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
@@ -235,6 +237,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.freshness.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
@@ -251,6 +254,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
+<li><code>fabricops_kit.pipeline.shared.validated_pipeline_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>
