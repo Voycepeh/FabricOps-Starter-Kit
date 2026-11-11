@@ -615,11 +615,20 @@ def enrich_flow_candidates(flow: list[dict[str, Any]]) -> None:
 def public_lifecycle(qn: str, function_name: str, lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle]) -> ReleaseFunctionLifecycle:
     """Resolve current Preview reintroductions without rewriting release history."""
     lifecycle = lifecycle_by_qn.get(qn) or lifecycle_by_qn.get(function_name) or ReleaseFunctionLifecycle("preview", None, None, tuple(), tuple())
-    if lifecycle.lifecycle_status == "discontinued":
-        from fabricops_kit.public_api import PREVIEW_PUBLIC_API
+    # The current API registry is authoritative for current support status.
+    # Historical release manifests remain immutable evidence of past releases.
+    from fabricops_kit.public_api import PREVIEW_PUBLIC_API, SUPPORTED_PUBLIC_API
 
-        if qn in PREVIEW_PUBLIC_API:
-            return ReleaseFunctionLifecycle("preview", None, None, lifecycle.release_history, lifecycle.release_versions)
+    if qn in PREVIEW_PUBLIC_API:
+        return ReleaseFunctionLifecycle(
+            "preview", None, None, lifecycle.release_history, lifecycle.release_versions
+        )
+    if qn in SUPPORTED_PUBLIC_API:
+        if lifecycle.lifecycle_status != "live" and lifecycle.release_history:
+            raise ValueError(
+                f"Current supported public function {qn} lacks a Live release record"
+            )
+        return lifecycle
     return lifecycle
 
 

@@ -118,3 +118,51 @@ def test_release_source_ref_uses_current_tree_when_matching_tag_is_not_created(m
 
     assert payload["metadata"]["source_ref"] == "v0.1.0"
     assert payload["release_contract"]["source_ref"] == "v0.1.0"
+
+
+def test_notebook_usage_only_counts_executable_direct_calls(tmp_path: Path) -> None:
+    """Imports, comments, markdown and internal calls are not notebook usage."""
+    notebook = {
+        "cells": [
+            {"cell_type": "markdown", "source": ["setup_pipeline()"]},
+            {"cell_type": "code", "source": [
+                "from fabricops_kit import setup_pipeline, finalize_pipeline\n",
+                "# finalize_pipeline()\n",
+                "pipeline = setup_pipeline()\n",
+                "other.setup_pipeline()\n",
+            ]},
+        ],
+    }
+    path = tmp_path / "02_pipeline.ipynb"
+    path.write_text(json.dumps(notebook), encoding="utf-8")
+
+    assert pages._notebook_direct_public_calls(
+        path, {"setup_pipeline", "finalize_pipeline"}
+    ) == {"setup_pipeline"}
+
+
+def test_notebook_usage_supports_multiple_direct_callers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """One exported symbol can appear in multiple real notebook usage tags."""
+    for key, invocation in [
+        ("01_governance", "setup_notebook()"),
+        ("02_pipeline", "setup_notebook()\nfinalize_pipeline()"),
+    ]:
+        path = tmp_path / "templates" / "notebooks" / f"{key}.ipynb"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "cells": [{"cell_type": "code", "source": [invocation]}]
+        }), encoding="utf-8")
+
+    monkeypatch.setattr(pages, "ROOT", tmp_path)
+    flows = [
+        {
+            "notebook_key": key, "template_path": f"templates/notebooks/{key}.ipynb"
+        }
+        for key in ("01_governance", "02_pipeline")
+    ]
+    core, _ = pages._derive_template_usage_by_kind(
+        flows, {"setup_notebook": object(), "finalize_pipeline": object()}
+    )
+
+    assert core["setup_notebook"] == ["01_governance", "02_pipeline"]
+    assert core["finalize_pipeline"] == ["02_pipeline"]

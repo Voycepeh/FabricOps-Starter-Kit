@@ -1316,29 +1316,62 @@ def _render_example_usage(short_name: str, signature: str, metadata: dict[str, A
     return lines or ["Example usage not documented yet."]
 
 
+def _notebook_direct_public_calls(path: Path, public_names: set[str]) -> set[str]:
+    """Find explicitly invoked public functions in executable notebook cells only."""
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    found: set[str] = set()
+    for cell in notebook.get("cells", []):
+        if cell.get("cell_type") != "code":
+            continue
+        source = cell.get("source", [])
+        code = "".join(source) if isinstance(source, list) else str(source)
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            # IPython magics are not Python AST; never invent a call tag from text.
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                if node.func.id in public_names:
+                    found.add(node.func.id)
+    return found
+
+
 def _derive_template_usage_by_kind(
     template_flow_docs: list[dict[str, Any]],
     symbol_map: dict[str, Symbol],
 ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-    """Return curated core and example template usage from flow metadata."""
+    """Derive notebook tags from code cells, not curated conceptual flow segments."""
     template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
     core_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
     example_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
+    declared = {
+        str(flow["template_path"]): str(flow["notebook_key"])
+        for flow in template_flow_docs
+    }
+    paths = set(declared)
+    paths.update(path.relative_to(ROOT).as_posix() for path in (ROOT / "templates" / "notebooks").glob("*.ipynb"))
+    paths.update(path.relative_to(ROOT).as_posix() for path in (ROOT / "templates" / "DemoData").glob("*.ipynb"))
+    for relative in sorted(paths):
+        path = ROOT / relative
+        if not path.exists():
+            # Legacy curated flow entries can outlive a removed example notebook.
+            # Only current, existing templates are eligible for usage tags.
+            continue
+        notebook_key = declared.get(relative, path.stem)
+        target = core_usage if (
+            notebook_key in CORE_TEMPLATE_KEYS or relative.startswith("templates/DemoData/")
+        ) else example_usage
+        for name in _notebook_direct_public_calls(path, set(symbol_map)):
+            target[name].add(notebook_key)
 
-    for flow in template_flow_docs:
-        notebook_key = flow["notebook_key"]
-        target = core_usage if notebook_key in CORE_TEMPLATE_KEYS else example_usage
-        for segment in flow["segments"]:
-            for symbol in segment["symbols"]:
-                target[symbol].add(notebook_key)
-
-    def _sorted_usage(usage: dict[str, set[str]]) -> dict[str, list[str]]:
+    def sorted_usage(usage: dict[str, set[str]]) -> dict[str, list[str]]:
         return {
-            symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
-            for symbol, notebooks in usage.items()
+            name: sorted(notebooks, key=lambda n: (template_order.get(n, len(template_order)), n))
+            for name, notebooks in usage.items()
         }
 
-    return _sorted_usage(core_usage), _sorted_usage(example_usage)
+    return sorted_usage(core_usage), sorted_usage(example_usage)
 
 
 def generate_internal_reference_pages() -> bool:

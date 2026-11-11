@@ -13,6 +13,7 @@ import pytest
 
 from scripts import generate_public_function_call_flows_dashboard as dashboard
 from scripts import generate_public_function_call_flows_json as flows
+from scripts import public_function_call_flows_analysis as analysis
 
 
 @pytest.fixture(scope="module")
@@ -406,22 +407,23 @@ def test_repository_manifest_lifecycle_authority(repository_call_flow_payload) -
 
     assert "display_guardrail_results" not in {item["function_name"] for item in payload["public_functions"]}
 
-    manifest = flows.load_release_manifests()[-1]
-    current_names = {item["function_name"] for item in payload["public_functions"]}
-    expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live" and item["name"] in current_names)
+    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+
+    current_names = {item["qualified_name"] for item in payload["public_functions"]}
+    expected_live = len(current_names.intersection(SUPPORTED_PUBLIC_API))
     assert payload["release_contract"]["live_public_function_count"] == expected_live
 
 
 
-def test_reintroduced_activation_widget_is_live_with_unchanged_history(repository_call_flow_payload) -> None:
-    """The v0.4.0 promotion restores Live support and v0.4.1 retains that status."""
+def test_reintroduced_activation_widget_is_preview_with_unchanged_history(repository_call_flow_payload) -> None:
+    """Current Preview status preserves the historical Live manifest records."""
     qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
     history, _ = flows.read_function_lifecycle()
     assert history[qn].lifecycle_status == "live"
     current = flows.public_lifecycle(qn, "widget_activate_data_contract", history)
-    assert current.lifecycle_status == "live"
-    assert current.live_since == "0.4.0"
-    assert current.discontinued_in == "0.3.0"
+    assert current.lifecycle_status == "preview"
+    assert current.live_since is None
+    assert current.discontinued_in is None
     assert current.release_history == history[qn].release_history
     assert any(row["status"] == "discontinued" for row in current.release_history)
     assert current.release_history[-2:] == (
@@ -429,8 +431,8 @@ def test_reintroduced_activation_widget_is_live_with_unchanged_history(repositor
         {"version": "0.4.1", "status": "live"},
     )
     row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
-    assert row["lifecycle_status"] == "live"
-    assert row["contract_classification"] == "live_public_function"
+    assert row["lifecycle_status"] == "preview"
+    assert row["contract_classification"] == "preview_public_function"
 
 
 def test_unregistered_retired_callable_stays_discontinued() -> None:
@@ -1462,3 +1464,40 @@ def test_dashboard_uses_shared_generated_artifact_metadata() -> None:
     assert 'href="../function-call-graph/"' in html
     assert "How this dashboard is generated" in html
     assert "DATA.metadata||{}).generated_at_sgt" not in html
+
+def test_current_preview_registry_overrides_historical_live_manifest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Current Preview registry status wins without rewriting historical release evidence."""
+    from fabricops_kit import public_api
+
+    qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
+    historical = analysis.ReleaseFunctionLifecycle(
+        "live", "0.4.0", None,
+        ({"version": "0.4.0", "status": "live"}, {"version": "0.4.1", "status": "live"}),
+        ("0.4.0", "0.4.1"),
+    )
+    monkeypatch.setattr(public_api, "PREVIEW_PUBLIC_API", (qn,))
+    monkeypatch.setattr(public_api, "SUPPORTED_PUBLIC_API", ())
+
+    current = analysis.public_lifecycle(qn, "widget_activate_data_contract", {qn: historical})
+
+    assert current.lifecycle_status == "preview"
+    assert current.live_since is None
+    assert current.release_history == historical.release_history
+
+
+def test_current_supported_registry_requires_live_release_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A current supported function cannot silently inherit a Preview-only history."""
+    from fabricops_kit import public_api
+
+    qn = "fabricops_kit.pipeline.example.example"
+    historical = analysis.ReleaseFunctionLifecycle(
+        "preview", None, None,
+        ({"version": "0.4.1", "status": "preview"},),
+        ("0.4.1",),
+    )
+    monkeypatch.setattr(public_api, "PREVIEW_PUBLIC_API", ())
+    monkeypatch.setattr(public_api, "SUPPORTED_PUBLIC_API", (qn,))
+
+    with pytest.raises(ValueError, match="lacks a Live release record"):
+        analysis.public_lifecycle(qn, "example", {qn: historical})
+

@@ -8,6 +8,9 @@
 
 Preview or reset the dedicated Guided Demo to Day 1.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
 
 ## Usage notes
 

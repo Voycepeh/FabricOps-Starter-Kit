@@ -35,7 +35,7 @@ def _write_notebook(root: Path, source: str) -> None:
 def test_curated_flow_allows_additional_direct_public_notebook_calls(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Notebook calls outside curated flow metadata do not affect validation or rendering inputs."""
+    """Current notebook direct calls are included even outside curated flow metadata."""
     _write_notebook(tmp_path, "curated_function()\nadditional_public_function()\n")
     monkeypatch.setattr(generator, "ROOT", tmp_path)
     flows = [_flow()]
@@ -45,7 +45,7 @@ def test_curated_flow_allows_additional_direct_public_notebook_calls(
 
     _, example_usage = generator._derive_template_usage_by_kind(flows, symbols)
     assert example_usage["curated_function"] == ["example"]
-    assert example_usage["additional_public_function"] == []
+    assert example_usage["additional_public_function"] == ["example"]
 
 
 def test_curated_flow_does_not_parse_notebook_call_expressions(
