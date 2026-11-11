@@ -23,20 +23,6 @@
                       "Entity": "Pipeline Activation"
                     }
                   },
-                  "Property": "Approval ID"
-                }
-              },
-              "queryRef": "Pipeline Activation.Approval ID",
-              "nativeQueryRef": "Approval ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Activation"
-                    }
-                  },
                   "Property": "Revision"
                 }
               },
@@ -93,20 +79,6 @@
                       "Entity": "Pipeline Activation"
                     }
                   },
-                  "Property": "Restores Promotion ID"
-                }
-              },
-              "queryRef": "Pipeline Activation.Restores Promotion ID",
-              "nativeQueryRef": "Restores Promotion ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Activation"
-                    }
-                  },
                   "Property": "Expires At"
                 }
               },
@@ -149,11 +121,25 @@
                       "Entity": "Pipeline Activation"
                     }
                   },
-                  "Property": "Submitted Dry Run ID"
+                  "Property": "Committed By"
                 }
               },
-              "queryRef": "Pipeline Activation.Submitted Dry Run ID",
-              "nativeQueryRef": "Submitted Dry Run ID"
+              "queryRef": "Pipeline Activation.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Pipeline Activation.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

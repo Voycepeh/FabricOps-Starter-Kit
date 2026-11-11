@@ -34,6 +34,7 @@ relationship f29c22d5-e9fc-5bde-8f37-bdf7049b0a3c
 relationship 45f0bf43-2a7a-5361-be6c-8668588c9c6c
 	fromColumn: 'Guardrail Result'.'Table Key'
 	toColumn: 'Catalogue Table'.'Table Key'
+	isActive: false
 
 relationship 3eb96aa1-190c-5eac-b8c2-4d01531e1d25
 	fromColumn: 'Catalogue Column'.'Table Key'
@@ -70,3 +71,11 @@ relationship 305080ba-5f64-5c51-bf68-8ef2cfa947fa
 relationship 21e38829-ee5c-5a13-9d86-8cbf87f8ef26
 	fromColumn: 'Agreement Steward'.'Steward ID'
 	toColumn: 'Data Steward'.'Steward ID'
+
+relationship 461ed7f0-3431-5c58-bf13-75cba5d30751
+	fromColumn: 'Pipeline'.'Workspace ID'
+	toColumn: 'Workspace'.'Workspace ID'
+
+relationship 0a3fa360-48b0-544f-abc5-dcac35c2d6f7
+	fromColumn: 'Catalogue Table'.'Workspace ID'
+	toColumn: 'Data Workspace'.'Workspace ID'

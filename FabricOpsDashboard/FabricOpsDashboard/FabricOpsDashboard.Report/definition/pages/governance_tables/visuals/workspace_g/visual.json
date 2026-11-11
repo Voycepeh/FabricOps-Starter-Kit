@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Catalogue Table"
+                      "Entity": "Data Workspace"
                     }
                   },
-                  "Property": "Workspace ID"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Catalogue Table.Workspace ID",
-              "nativeQueryRef": "Workspace ID"
+              "queryRef": "Data Workspace.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             }
           ]
         }
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Workspace\""
+                  "Value": "\"Data workspace\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Workspace visual\""
+                  "Value": "\"Data workspace visual\""
                 }
               }
             }

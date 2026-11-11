@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Run ID"
+                  "Property": "Run Label"
                 }
               },
-              "queryRef": "Pipeline Run.Run ID",
-              "nativeQueryRef": "Run ID"
+              "queryRef": "Pipeline Run.Run Label",
+              "nativeQueryRef": "Run Label"
             }
           ]
         }

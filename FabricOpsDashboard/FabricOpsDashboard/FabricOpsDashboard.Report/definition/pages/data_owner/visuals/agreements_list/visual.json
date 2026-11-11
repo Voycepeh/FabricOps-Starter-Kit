@@ -23,20 +23,6 @@
                       "Entity": "Data Agreement"
                     }
                   },
-                  "Property": "Agreement ID"
-                }
-              },
-              "queryRef": "Data Agreement.Agreement ID",
-              "nativeQueryRef": "Agreement ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Data Agreement"
-                    }
-                  },
                   "Property": "Agreement Name"
                 }
               },
@@ -112,6 +98,34 @@
               },
               "queryRef": "Data Agreement.Expiry Date",
               "nativeQueryRef": "Expiry Date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Data Agreement.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Agreement"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Data Agreement.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

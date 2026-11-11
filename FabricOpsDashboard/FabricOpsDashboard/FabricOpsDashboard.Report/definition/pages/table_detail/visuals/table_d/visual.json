@@ -23,11 +23,11 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "Table Key"
+                  "Property": "Table Display Name"
                 }
               },
-              "queryRef": "Catalogue Table.Table Key",
-              "nativeQueryRef": "Table Key"
+              "queryRef": "Catalogue Table.Table Display Name",
+              "nativeQueryRef": "Table Display Name"
             }
           ]
         }

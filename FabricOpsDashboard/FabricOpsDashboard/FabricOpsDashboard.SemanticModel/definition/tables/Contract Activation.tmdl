@@ -39,12 +39,22 @@ table 'Contract Activation'
 		sourceColumn: activated_at
 		formatString: yyyy-MM-dd HH:mm
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 3651009c-417e-5026-81b3-f6dc542ee6ec
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 78ce4b88-29a7-563d-979c-3ba92b74ac04
+		sourceColumn: commit_notebook_name
+
 	partition 'Contract Activation' = m
 		mode: import
 		source =
 			let
-			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT table_key,contract_key,agreement_key,activation_id,revision,status,activated_at FROM (SELECT CONCAT(workspace_id,'|',table_id) table_key,CONCAT(contract_id,'|',contract_version) contract_key,CASE WHEN agreement_id IS NULL THEN NULL ELSE CONCAT(agreement_id,'|',agreement_version) END agreement_key,activation_id,revision,status,activated_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY revision DESC,activated_at DESC) rn FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) a WHERE rn=1",
-			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			    ActivationDatabase = Sql.Database(MetadataServer, MetadataDatabase),
+			    ActivationStatement = "SELECT table_key,contract_key,agreement_key,activation_id,revision,status,activated_at,committed_by,commit_notebook_name FROM (SELECT CONCAT(workspace_id,'|',table_id) table_key,CONCAT(contract_id,'|',contract_version) contract_key,CASE WHEN agreement_id IS NULL THEN NULL ELSE CONCAT(agreement_id,'|',agreement_version) END agreement_key,activation_id,revision,status,activated_at,_committed_by committed_by,_notebook_name commit_notebook_name,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY revision DESC,activated_at DESC) rn FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) a WHERE rn=1",
+			    ActivationResult = Value.NativeQuery(ActivationDatabase, ActivationStatement, null, [EnableFolding=false])
 			in
-			    Rows
+			    ActivationResult

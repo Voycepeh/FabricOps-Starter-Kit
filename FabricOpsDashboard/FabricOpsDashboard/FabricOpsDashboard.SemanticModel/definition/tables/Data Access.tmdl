@@ -6,6 +6,11 @@ table 'Data Access'
 		lineageTag: b4217844-59ad-5d84-9710-03a135b1269b
 		sourceColumn: table_key
 
+	column 'Table Name'
+		dataType: string
+		lineageTag: d86dc1bf-65d7-5b5c-8fdf-59f850337aec
+		sourceColumn: table_name
+
 	column 'Access Snapshot ID'
 		dataType: string
 		lineageTag: 9988e76b-5251-5c25-8dd9-10cd2968f19c
@@ -52,12 +57,22 @@ table 'Data Access'
 		sourceColumn: observed_at
 		formatString: yyyy-MM-dd HH:mm
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: d4da843a-779e-5426-9134-77969e534d9c
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 01aae18f-6717-5375-a303-d0a072ac0f40
+		sourceColumn: commit_notebook_name
+
 	partition 'Data Access' = m
 		mode: import
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(a.workspace_id,'|',a.table_id) table_key,a.access_snapshot_id,a.user_principal,a.user_type,a.access_level,a.access_value,a.access_state,a.role_name,a.permission_source,s.observed_at FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] a INNER JOIN (SELECT workspace_id,table_id,access_snapshot_id,MAX(_committed_at) observed_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY MAX(_committed_at) DESC,access_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') GROUP BY workspace_id,table_id,access_snapshot_id) s ON s.workspace_id=a.workspace_id AND s.table_id=a.table_id AND s.access_snapshot_id=a.access_snapshot_id AND s.rn=1",
+			    Query = "SELECT CONCAT(a.workspace_id,'|',a.table_id) table_key,a.table_name,a.access_snapshot_id,a.user_principal,a.user_type,a.access_level,a.access_value,a.access_state,a.role_name,a.permission_source,s.observed_at,a._committed_by committed_by,a._notebook_name commit_notebook_name FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] a INNER JOIN (SELECT workspace_id,table_id,access_snapshot_id,MAX(_committed_at) observed_at,ROW_NUMBER() OVER(PARTITION BY workspace_id,table_id ORDER BY MAX(_committed_at) DESC,access_snapshot_id DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') GROUP BY workspace_id,table_id,access_snapshot_id) s ON s.workspace_id=a.workspace_id AND s.table_id=a.table_id AND s.access_snapshot_id=a.access_snapshot_id AND s.rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

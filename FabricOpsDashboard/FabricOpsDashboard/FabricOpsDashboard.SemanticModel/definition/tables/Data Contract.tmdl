@@ -18,6 +18,21 @@ table 'Data Contract'
 		summarizeBy: none
 		formatString: #,0
 
+	column 'Table Name'
+		dataType: string
+		lineageTag: 684ab279-7e8c-5498-afd1-78f71a9bcb84
+		sourceColumn: table_name
+
+	column 'Committed By'
+		dataType: string
+		lineageTag: bd43fa91-5664-5d57-baa5-f5312e3809a9
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 4d386c67-c853-5bf0-8335-092661287e0f
+		sourceColumn: commit_notebook_name
+
 	column 'Evidence Workspace ID'
 		dataType: string
 		lineageTag: 2657bcb7-ae79-5719-a61c-6c37a930f177
@@ -45,7 +60,7 @@ table 'Data Contract'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(c.contract_id,'|',c.contract_version) contract_key,c.contract_id,c.contract_version,c.evidence_workspace_id,c.contract_payload_json FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT] c",
+			    Query = "SELECT CONCAT(c.contract_id,'|',c.contract_version) contract_key,c.contract_id,c.contract_version,c.table_name,c._committed_by committed_by,c._notebook_name commit_notebook_name,c.evidence_workspace_id,c.contract_payload_json FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_CONTRACT] c",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true]),
 			    Payload = Table.AddColumn(Rows, "_payload", each try Json.Document([contract_payload_json]) otherwise null),
 			    ReadField = (value as any, field as text) as any => if Value.Is(value, type record) then Record.FieldOrDefault(value, field, null) else null,

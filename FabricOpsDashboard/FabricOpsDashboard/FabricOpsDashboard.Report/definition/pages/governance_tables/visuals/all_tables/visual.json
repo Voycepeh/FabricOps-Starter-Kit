@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Catalogue Table"
+                      "Entity": "Data Workspace"
                     }
                   },
-                  "Property": "Table Key"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Catalogue Table.Table Key",
-              "nativeQueryRef": "Table Key"
+              "queryRef": "Data Workspace.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             },
             {
               "field": {
@@ -37,11 +37,11 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "Table ID"
+                  "Property": "Table Display Name"
                 }
               },
-              "queryRef": "Catalogue Table.Table ID",
-              "nativeQueryRef": "Table ID"
+              "queryRef": "Catalogue Table.Table Display Name",
+              "nativeQueryRef": "Table Display Name"
             },
             {
               "field": {
@@ -51,11 +51,11 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "Workspace ID"
+                  "Property": "Table Name"
                 }
               },
-              "queryRef": "Catalogue Table.Workspace ID",
-              "nativeQueryRef": "Workspace ID"
+              "queryRef": "Catalogue Table.Table Name",
+              "nativeQueryRef": "Table Name"
             },
             {
               "field": {
@@ -107,11 +107,39 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "Table Name"
+                  "Property": "Writer Notebook Name"
                 }
               },
-              "queryRef": "Catalogue Table.Table Name",
-              "nativeQueryRef": "Table Name"
+              "queryRef": "Catalogue Table.Writer Notebook Name",
+              "nativeQueryRef": "Writer Notebook Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Catalogue Table.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Catalogue Table.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

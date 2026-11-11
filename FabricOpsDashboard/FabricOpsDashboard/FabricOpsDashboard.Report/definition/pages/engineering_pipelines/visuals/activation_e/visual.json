@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Pipeline Activation"
+                      "Entity": "Pipeline"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline Activation.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
+              "queryRef": "Pipeline.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
             },
             {
               "field": {
@@ -93,11 +93,25 @@
                       "Entity": "Pipeline Activation"
                     }
                   },
-                  "Property": "Submitted Dry Run ID"
+                  "Property": "Committed By"
                 }
               },
-              "queryRef": "Pipeline Activation.Submitted Dry Run ID",
-              "nativeQueryRef": "Submitted Dry Run ID"
+              "queryRef": "Pipeline Activation.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Activation"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Pipeline Activation.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

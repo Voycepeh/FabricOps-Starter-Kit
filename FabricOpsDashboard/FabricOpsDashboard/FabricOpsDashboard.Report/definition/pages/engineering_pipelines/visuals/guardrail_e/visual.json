@@ -23,20 +23,6 @@
                       "Entity": "Guardrail Result"
                     }
                   },
-                  "Property": "Run ID"
-                }
-              },
-              "queryRef": "Guardrail Result.Run ID",
-              "nativeQueryRef": "Run ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Guardrail Result"
-                    }
-                  },
                   "Property": "Table Name"
                 }
               },
@@ -112,6 +98,34 @@
               },
               "queryRef": "Guardrail Result.Reason",
               "nativeQueryRef": "Reason"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Guardrail Result.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Guardrail Result.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             }
           ]
         }

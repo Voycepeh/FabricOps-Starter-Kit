@@ -67,6 +67,16 @@ table 'Pipeline Activation'
 		lineageTag: 08ade1ce-bde9-5696-811a-4868106bd8a5
 		sourceColumn: review_note
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: c4a0f3ac-d122-5218-8e74-cab7471abcb1
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 3b3f22e3-bdfe-5c81-8804-88e5f9b49bed
+		sourceColumn: commit_notebook_name
+
 	column 'Submitted Dry Run ID'
 		dataType: string
 		lineageTag: cde28f7c-a7bc-520d-9d60-252268ff6dd4
@@ -94,7 +104,7 @@ table 'Pipeline Activation'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(a.execution_workspace_id,'|',a.pipeline_id) pipeline_key,a.pipeline_id,a.approval_id,a.submission_id,a.revision,a.status,a.decision_kind,a.expected_active_version,a.restores_promotion_id,a.expires_at,a.decided_at,a.review_note,JSON_VALUE(a.package_json,'$.dry_run.run_id') submitted_dry_run_id,JSON_VALUE(a.package_json,'$.dry_run.status') submitted_dry_run_status,CASE JSON_VALUE(a.package_json,'$.dry_run.boundary_completed') WHEN 'true' THEN CAST(1 AS bit) WHEN 'false' THEN CAST(0 AS bit) END submitted_dry_run_boundary_completed,(SELECT COUNT(1) FROM OPENJSON(a.package_json,'$.dry_run.operations')) submitted_dry_run_operation_count FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] a WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR a.execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT CONCAT(a.execution_workspace_id,'|',a.pipeline_id) pipeline_key,a.pipeline_id,a.approval_id,a.submission_id,a.revision,a.status,a.decision_kind,a.expected_active_version,a.restores_promotion_id,a.expires_at,a.decided_at,a.review_note,a._committed_by committed_by,a._notebook_name commit_notebook_name,JSON_VALUE(a.package_json,'$.dry_run.run_id') submitted_dry_run_id,JSON_VALUE(a.package_json,'$.dry_run.status') submitted_dry_run_status,CASE JSON_VALUE(a.package_json,'$.dry_run.boundary_completed') WHEN 'true' THEN CAST(1 AS bit) WHEN 'false' THEN CAST(0 AS bit) END submitted_dry_run_boundary_completed,(SELECT COUNT(1) FROM OPENJSON(a.package_json,'$.dry_run.operations')) submitted_dry_run_operation_count FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] a WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR a.execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

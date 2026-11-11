@@ -43,12 +43,22 @@ table 'Data Agreement'
 		lineageTag: 9b875b7d-d77d-54f3-a537-adcc003f178f
 		sourceColumn: business_purpose
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 8df21b15-461e-52c9-95ca-ca8b1a23337b
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 5990ae16-5ab5-58bc-ab1a-05f2b3a2b1a6
+		sourceColumn: commit_notebook_name
+
 	partition 'Data Agreement' = m
 		mode: import
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(agreement_id,'|',agreement_version) agreement_key,agreement_id,agreement_version,agreement_name,domain,start_date,expiry_date,business_purpose FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_AGREEMENT]",
+			    Query = "SELECT CONCAT(agreement_id,'|',agreement_version) agreement_key,agreement_id,agreement_version,agreement_name,domain,start_date,expiry_date,business_purpose,_committed_by committed_by,_notebook_name commit_notebook_name FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_AGREEMENT]",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

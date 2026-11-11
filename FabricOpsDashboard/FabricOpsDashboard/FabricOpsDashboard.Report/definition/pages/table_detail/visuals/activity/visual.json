@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline Run.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
+              "queryRef": "Pipeline Run.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
             },
             {
               "field": {
@@ -37,11 +37,25 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Run ID"
+                  "Property": "Run Label"
                 }
               },
-              "queryRef": "Pipeline Run.Run ID",
-              "nativeQueryRef": "Run ID"
+              "queryRef": "Pipeline Run.Run Label",
+              "nativeQueryRef": "Run Label"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Pipeline Run.Committed By",
+              "nativeQueryRef": "Committed By"
             },
             {
               "field": {

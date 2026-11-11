@@ -23,11 +23,11 @@
                       "Entity": "Data Access"
                     }
                   },
-                  "Property": "Access Snapshot ID"
+                  "Property": "Table Name"
                 }
               },
-              "queryRef": "Data Access.Access Snapshot ID",
-              "nativeQueryRef": "Access Snapshot ID"
+              "queryRef": "Data Access.Table Name",
+              "nativeQueryRef": "Table Name"
             },
             {
               "field": {
@@ -140,6 +140,34 @@
               },
               "queryRef": "Data Access.Observed At",
               "nativeQueryRef": "Observed At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Data Access.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Access"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Data Access.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             }
           ]
         }

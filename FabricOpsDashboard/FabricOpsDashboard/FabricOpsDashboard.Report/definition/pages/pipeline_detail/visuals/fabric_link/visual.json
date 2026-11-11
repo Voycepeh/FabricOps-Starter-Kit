@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline Run.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
+              "queryRef": "Pipeline Run.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
             },
             {
               "field": {
@@ -42,20 +42,6 @@
               },
               "queryRef": "Pipeline Run.Pipeline Version",
               "nativeQueryRef": "Pipeline Version"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Run"
-                    }
-                  },
-                  "Property": "Promotion ID"
-                }
-              },
-              "queryRef": "Pipeline Run.Promotion ID",
-              "nativeQueryRef": "Promotion ID"
             },
             {
               "field": {

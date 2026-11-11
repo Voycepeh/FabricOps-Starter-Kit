@@ -21,12 +21,22 @@ table 'Data Steward'
 		lineageTag: 0c061ec2-201c-55a3-8e9f-6899df0ac07e
 		sourceColumn: steward_display
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 77993009-8c08-557f-843c-1b51a9dd7cd2
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 22e300a0-2e39-5c5f-824d-4eb88471f82e
+		sourceColumn: commit_notebook_name
+
 	partition 'Data Steward' = m
 		mode: import
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT steward_id,steward_name,contact,CONCAT(COALESCE(steward_name,steward_id),CASE WHEN contact IS NULL OR contact='' THEN '' ELSE CONCAT(' | ',contact) END) steward_display FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_STEWARD] WHERE is_active=1 OR is_active IS NULL",
+			    Query = "SELECT steward_id,steward_name,contact,CONCAT(COALESCE(NULLIF(steward_name,''),'Steward name not recorded'),CASE WHEN contact IS NULL OR contact='' THEN '' ELSE CONCAT(' | ',contact) END) steward_display,_committed_by committed_by,_notebook_name commit_notebook_name FROM [" & GovernanceSchemaSql & "].[METADATA_DATA_STEWARD] WHERE is_active=1 OR is_active IS NULL",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

@@ -60,7 +60,7 @@ table 'Dashboard Metrics'
 		formatString: #,0.0
 	measure 'Average Distinct Percent' = AVERAGE('Profiled Column'[Distinct Percent])
 		formatString: #,0.0
-	measure 'Selected Contract' = VAR ContractId=SELECTEDVALUE('Data Contract'[Contract ID]) RETURN IF(ISBLANK(ContractId), "No active Contract recorded", ContractId & " v" & FORMAT(SELECTEDVALUE('Data Contract'[Contract Version]), "0"))
+	measure 'Selected Contract' = VAR ContractTable=SELECTEDVALUE('Data Contract'[Table Name]) VAR ContractVersion=SELECTEDVALUE('Data Contract'[Contract Version]) RETURN IF(ISBLANK(ContractVersion), "No active Contract recorded", COALESCE(ContractTable,"Contract") & " v" & FORMAT(ContractVersion, "0"))
 		formatString: @
 	measure 'Selected Agreement' = VAR AgreementName=SELECTEDVALUE('Data Agreement'[Agreement Name]) RETURN IF(ISBLANK(AgreementName), "No Agreement recorded", AgreementName & " v" & SELECTEDVALUE('Data Agreement'[Agreement Version]))
 		formatString: @

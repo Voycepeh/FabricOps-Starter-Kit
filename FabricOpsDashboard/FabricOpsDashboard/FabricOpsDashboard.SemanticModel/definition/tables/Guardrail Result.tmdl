@@ -16,6 +16,16 @@ table 'Guardrail Result'
 		lineageTag: 44159885-a060-5db8-9ea3-cc0ffdab20ca
 		sourceColumn: table_name
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 34b7d41c-6302-5c5e-96e1-62cb4bcdb161
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 44851a67-89c6-5a51-88c6-f94663b41973
+		sourceColumn: commit_notebook_name
+
 	column 'Contract ID'
 		dataType: string
 		lineageTag: 2f2fb020-1ff4-503e-96ed-6da65bc0fffd
@@ -74,7 +84,7 @@ table 'Guardrail Result'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT run_id,CONCAT(workspace_id,'|',table_id) table_key,table_name,contract_id,contract_version,status,can_continue,severity,guardrail_type,rule_type,action,reason,_committed_at committed_at FROM [" & EngineeringSchemaSql & "].[METADATA_GUARDRAIL_RESULTS] WHERE _committed_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT run_id,CONCAT(workspace_id,'|',table_id) table_key,table_name,_committed_by committed_by,_notebook_name commit_notebook_name,contract_id,contract_version,status,can_continue,severity,guardrail_type,rule_type,action,reason,_committed_at committed_at FROM [" & EngineeringSchemaSql & "].[METADATA_GUARDRAIL_RESULTS] WHERE _committed_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

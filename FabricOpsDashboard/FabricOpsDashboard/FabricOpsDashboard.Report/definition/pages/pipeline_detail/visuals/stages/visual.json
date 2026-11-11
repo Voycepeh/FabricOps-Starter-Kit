@@ -23,20 +23,6 @@
                       "Entity": "Run Stage"
                     }
                   },
-                  "Property": "Operation Key"
-                }
-              },
-              "queryRef": "Run Stage.Operation Key",
-              "nativeQueryRef": "Operation Key"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Run Stage"
-                    }
-                  },
                   "Property": "Stage"
                 }
               },

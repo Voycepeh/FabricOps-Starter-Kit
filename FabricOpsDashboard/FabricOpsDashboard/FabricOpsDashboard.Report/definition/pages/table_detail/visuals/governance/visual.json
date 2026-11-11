@@ -23,20 +23,6 @@
                       "Entity": "Contract Activation"
                     }
                   },
-                  "Property": "Activation ID"
-                }
-              },
-              "queryRef": "Contract Activation.Activation ID",
-              "nativeQueryRef": "Activation ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Contract Activation"
-                    }
-                  },
                   "Property": "Revision"
                 }
               },
@@ -79,20 +65,6 @@
                       "Entity": "Data Agreement"
                     }
                   },
-                  "Property": "Agreement ID"
-                }
-              },
-              "queryRef": "Data Agreement.Agreement ID",
-              "nativeQueryRef": "Agreement ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Data Agreement"
-                    }
-                  },
                   "Property": "Agreement Name"
                 }
               },
@@ -121,6 +93,20 @@
                       "Entity": "Data Contract"
                     }
                   },
+                  "Property": "Table Name"
+                }
+              },
+              "queryRef": "Data Contract.Table Name",
+              "nativeQueryRef": "Table Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
                   "Property": "Contract Version"
                 }
               },
@@ -135,11 +121,25 @@
                       "Entity": "Data Contract"
                     }
                   },
-                  "Property": "Evidence Workspace ID"
+                  "Property": "Committed By"
                 }
               },
-              "queryRef": "Data Contract.Evidence Workspace ID",
-              "nativeQueryRef": "Evidence Workspace ID"
+              "queryRef": "Data Contract.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Data Contract"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Data Contract.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

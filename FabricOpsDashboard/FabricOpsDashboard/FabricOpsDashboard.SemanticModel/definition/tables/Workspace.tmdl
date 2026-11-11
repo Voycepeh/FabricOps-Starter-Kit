@@ -1,0 +1,22 @@
+table 'Workspace'
+	lineageTag: 79530e4d-b63a-5997-b5a7-c3f0977bd82f
+
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: de8fdf21-691c-57ff-b610-1a4bc7bd24d7
+		sourceColumn: workspace_id
+
+	column 'Workspace Name'
+		dataType: string
+		lineageTag: cb273cfc-f89b-5a19-893e-a0d47cc5bd91
+		sourceColumn: workspace_name
+
+	partition 'Workspace' = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database(MetadataServer, MetadataDatabase),
+			    Query = "SELECT w.workspace_id,MAX(NULLIF(w.workspace_name,'')) workspace_name FROM (SELECT workspace_id,_workspace_name workspace_name FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] WHERE _workspace_name IS NOT NULL AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION ALL SELECT workspace_id,_workspace_name FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_CATALOGUE] WHERE _workspace_id=workspace_id AND _workspace_name IS NOT NULL AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION ALL SELECT workspace_id,_workspace_name FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_PROFILED] WHERE _workspace_id=workspace_id AND _workspace_name IS NOT NULL AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION ALL SELECT workspace_id,_workspace_name FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_ACCESS] WHERE _workspace_id=workspace_id AND _workspace_name IS NOT NULL AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) w GROUP BY w.workspace_id",
+			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
+			in
+			    Rows

@@ -26,12 +26,22 @@ table 'Catalogue Column'
 		lineageTag: 126ce46c-8656-54c1-b886-9e89135a0e0c
 		sourceColumn: data_type
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 5b7de64c-6e53-5834-8ab8-7e721d561c0f
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: bff0db5a-4ab8-58f7-b241-0d834eb5d4c2
+		sourceColumn: commit_notebook_name
+
 	partition 'Catalogue Column' = m
 		mode: import
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,CONCAT(workspace_id,'|',table_id) table_key,column_id,column_name,data_type FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_CATALOGUE] WHERE column_id IS NOT NULL AND column_id<>'' AND is_active=1 AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT CONCAT(workspace_id,'|',table_id,'|',column_id) column_key,CONCAT(workspace_id,'|',table_id) table_key,column_id,column_name,data_type,_committed_by committed_by,_notebook_name commit_notebook_name FROM [" & EngineeringSchemaSql & "].[METADATA_DATA_CATALOGUE] WHERE column_id IS NOT NULL AND column_id<>'' AND is_active=1 AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

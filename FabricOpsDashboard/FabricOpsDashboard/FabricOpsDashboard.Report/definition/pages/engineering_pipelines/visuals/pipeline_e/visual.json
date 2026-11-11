@@ -23,11 +23,11 @@
                       "Entity": "Pipeline"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
+              "queryRef": "Pipeline.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
             }
           ]
         }
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipeline\""
+                  "Value": "\"Notebook\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipeline visual\""
+                  "Value": "\"Notebook visual\""
                 }
               }
             }

@@ -23,39 +23,11 @@
                       "Entity": "Guardrail Result"
                     }
                   },
-                  "Property": "Run ID"
-                }
-              },
-              "queryRef": "Guardrail Result.Run ID",
-              "nativeQueryRef": "Run ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Guardrail Result"
-                    }
-                  },
                   "Property": "Table Name"
                 }
               },
               "queryRef": "Guardrail Result.Table Name",
               "nativeQueryRef": "Table Name"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Guardrail Result"
-                    }
-                  },
-                  "Property": "Contract ID"
-                }
-              },
-              "queryRef": "Guardrail Result.Contract ID",
-              "nativeQueryRef": "Contract ID"
             },
             {
               "field": {
@@ -182,6 +154,34 @@
               },
               "queryRef": "Guardrail Result.Committed At",
               "nativeQueryRef": "Committed At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Guardrail Result.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Guardrail Result"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Guardrail Result.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             }
           ]
         }

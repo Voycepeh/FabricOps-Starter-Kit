@@ -23,20 +23,6 @@
                       "Entity": "Catalogue Column"
                     }
                   },
-                  "Property": "Column ID"
-                }
-              },
-              "queryRef": "Catalogue Column.Column ID",
-              "nativeQueryRef": "Column ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Catalogue Column"
-                    }
-                  },
                   "Property": "Column Name"
                 }
               },
@@ -56,20 +42,6 @@
               },
               "queryRef": "Catalogue Column.Data Type",
               "nativeQueryRef": "Data Type"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Profiled Column"
-                    }
-                  },
-                  "Property": "Profile Snapshot ID"
-                }
-              },
-              "queryRef": "Profiled Column.Profile Snapshot ID",
-              "nativeQueryRef": "Profile Snapshot ID"
             },
             {
               "field": {
@@ -154,6 +126,34 @@
               },
               "queryRef": "Profiled Column.Profiled At",
               "nativeQueryRef": "Profiled At"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Profiled Column.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Profiled Column"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Profiled Column.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             }
           ]
         }

@@ -29,6 +29,16 @@ table 'Pipeline Registry'
 		sourceColumn: promoted_at
 		formatString: yyyy-MM-dd HH:mm
 
+	column 'Committed By'
+		dataType: string
+		lineageTag: 7cee1b6f-d746-5c28-9ebf-468b20fa352b
+		sourceColumn: committed_by
+
+	column 'Commit Notebook Name'
+		dataType: string
+		lineageTag: 152fa38e-6025-56e7-ae93-d20b60aaa1a2
+		sourceColumn: commit_notebook_name
+
 	column 'Fabric Notebook URL'
 		dataType: string
 		lineageTag: 3636e13a-dc6c-52e8-9bdf-f6a27ab61e25
@@ -40,7 +50,7 @@ table 'Pipeline Registry'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT pipeline_key,pipeline_version,promotion_id,status,promoted_at,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',execution_workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM (SELECT CONCAT(execution_workspace_id,'|',pipeline_id) pipeline_key,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,execution_workspace_id,ROW_NUMBER() OVER(PARTITION BY execution_workspace_id,pipeline_id ORDER BY pipeline_version DESC,promoted_at DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p WHERE rn=1",
+			    Query = "SELECT pipeline_key,pipeline_version,promotion_id,status,promoted_at,_committed_by committed_by,_notebook_name commit_notebook_name,CASE WHEN governed_notebook_id IS NULL OR governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',execution_workspace_id,'/notebooks/',governed_notebook_id) END fabric_notebook_url FROM (SELECT CONCAT(execution_workspace_id,'|',pipeline_id) pipeline_key,pipeline_version,promotion_id,status,governed_notebook_id,promoted_at,execution_workspace_id,_committed_by,_notebook_name,ROW_NUMBER() OVER(PARTITION BY execution_workspace_id,pipeline_id ORDER BY pipeline_version DESC,promoted_at DESC) rn FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p WHERE rn=1",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

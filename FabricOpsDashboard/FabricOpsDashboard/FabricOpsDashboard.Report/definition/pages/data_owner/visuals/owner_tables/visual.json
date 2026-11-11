@@ -23,11 +23,11 @@
                       "Entity": "Catalogue Table"
                     }
                   },
-                  "Property": "Table Key"
+                  "Property": "Table Display Name"
                 }
               },
-              "queryRef": "Catalogue Table.Table Key",
-              "nativeQueryRef": "Table Key"
+              "queryRef": "Catalogue Table.Table Display Name",
+              "nativeQueryRef": "Table Display Name"
             },
             {
               "field": {
@@ -56,6 +56,48 @@
               },
               "queryRef": "Catalogue Table.Schema Name",
               "nativeQueryRef": "Schema Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Writer Notebook Name"
+                }
+              },
+              "queryRef": "Catalogue Table.Writer Notebook Name",
+              "nativeQueryRef": "Writer Notebook Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Catalogue Table.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Catalogue Table"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Catalogue Table.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

@@ -23,39 +23,25 @@
                       "Entity": "Pipeline"
                     }
                   },
-                  "Property": "Pipeline Key"
+                  "Property": "Notebook Name"
                 }
               },
-              "queryRef": "Pipeline.Pipeline Key",
-              "nativeQueryRef": "Pipeline Key"
+              "queryRef": "Pipeline.Notebook Name",
+              "nativeQueryRef": "Notebook Name"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Pipeline"
+                      "Entity": "Workspace"
                     }
                   },
-                  "Property": "Pipeline ID"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline.Pipeline ID",
-              "nativeQueryRef": "Pipeline ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline"
-                    }
-                  },
-                  "Property": "Workspace ID"
-                }
-              },
-              "queryRef": "Pipeline.Workspace ID",
-              "nativeQueryRef": "Workspace ID"
+              "queryRef": "Workspace.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
             },
             {
               "field": {
@@ -93,20 +79,6 @@
                       "Entity": "Pipeline Registry"
                     }
                   },
-                  "Property": "Promotion ID"
-                }
-              },
-              "queryRef": "Pipeline Registry.Promotion ID",
-              "nativeQueryRef": "Promotion ID"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Registry"
-                    }
-                  },
                   "Property": "Promoted At"
                 }
               },
@@ -121,11 +93,25 @@
                       "Entity": "Pipeline Registry"
                     }
                   },
-                  "Property": "Fabric Notebook URL"
+                  "Property": "Committed By"
                 }
               },
-              "queryRef": "Pipeline Registry.Fabric Notebook URL",
-              "nativeQueryRef": "Fabric Notebook URL"
+              "queryRef": "Pipeline Registry.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Registry"
+                    }
+                  },
+                  "Property": "Commit Notebook Name"
+                }
+              },
+              "queryRef": "Pipeline Registry.Commit Notebook Name",
+              "nativeQueryRef": "Commit Notebook Name"
             },
             {
               "field": {

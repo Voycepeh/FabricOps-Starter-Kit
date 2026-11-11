@@ -16,12 +16,17 @@ table 'Pipeline'
 		lineageTag: 9ea71b62-3867-5c6a-9ff5-082208c61bc2
 		sourceColumn: pipeline_id
 
+	column 'Notebook Name'
+		dataType: string
+		lineageTag: 6f02d64b-c418-51d0-aff0-c175c30e5dbf
+		sourceColumn: notebook_name
+
 	partition 'Pipeline' = m
 		mode: import
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT DISTINCT CONCAT(p.workspace_id,'|',p.pipeline_id) pipeline_key,p.workspace_id,p.pipeline_id FROM (SELECT execution_workspace_id workspace_id,pipeline_id FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION SELECT workspace_id,pipeline_id FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] WHERE started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION SELECT execution_workspace_id workspace_id,pipeline_id FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p",
+			    Query = "SELECT CONCAT(p.workspace_id,'|',p.pipeline_id) pipeline_key,p.workspace_id,p.pipeline_id,MAX(NULLIF(p.notebook_name,'')) notebook_name FROM (SELECT execution_workspace_id workspace_id,pipeline_id,CAST(NULL AS varchar(256)) notebook_name FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_REGISTRY] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION ALL SELECT workspace_id,pipeline_id,_notebook_name notebook_name FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] WHERE started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "') UNION ALL SELECT execution_workspace_id workspace_id,pipeline_id,CAST(NULL AS varchar(256)) notebook_name FROM [" & GovernanceSchemaSql & "].[METADATA_PIPELINE_ACTIVATION] WHERE ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR execution_workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')) p GROUP BY p.workspace_id,p.pipeline_id",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

@@ -23,25 +23,11 @@
                       "Entity": "Run Operation"
                     }
                   },
-                  "Property": "Operation Key"
+                  "Property": "Destination Table Name"
                 }
               },
-              "queryRef": "Run Operation.Operation Key",
-              "nativeQueryRef": "Operation Key"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Run Operation"
-                    }
-                  },
-                  "Property": "Table ID"
-                }
-              },
-              "queryRef": "Run Operation.Table ID",
-              "nativeQueryRef": "Table ID"
+              "queryRef": "Run Operation.Destination Table Name",
+              "nativeQueryRef": "Destination Table Name"
             },
             {
               "field": {
@@ -252,20 +238,6 @@
               },
               "queryRef": "Run Operation.Measurement Source",
               "nativeQueryRef": "Measurement Source"
-            },
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Run Operation"
-                    }
-                  },
-                  "Property": "Contract ID"
-                }
-              },
-              "queryRef": "Run Operation.Contract ID",
-              "nativeQueryRef": "Contract ID"
             },
             {
               "field": {
