@@ -53,14 +53,14 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.</td></tr>
-<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Nullable historical approval reference retained unchanged for audit; never new activation authority.</td></tr>
+<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Exact Governance approval ID authorizing the selected Pipeline Promotion; captured by governed Runs. Historical Run values are preserved.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_id</code></td><td><code>string</code></td><td>Identifier stored for <code>pipeline_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>execution_mode</code></td><td><code>string</code></td><td>Metadata Pipeline Run field <code>execution_mode</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>started_at</code></td><td><code>timestamp</code></td><td>Pipeline bootstrap timestamp captured when the pipeline context is initialized.</td></tr>
 <tr class="metadata-column--engineering"><td><code>completed_at</code></td><td><code>timestamp</code></td><td>Timestamp captured when the pipeline run summary is written. Pipeline duration is derived from the difference between <code>started_at</code> and <code>completed_at</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.</td></tr>
-<tr class="metadata-column--engineering"><td><code>activation_revision</code></td><td><code>string</code></td><td>Nullable historical workspace revision; retained for old Run audit only.</td></tr>
+<tr class="metadata-column--engineering"><td><code>activation_revision</code></td><td><code>string</code></td><td>Governance approval revision captured as a string for a governed Run; absent when no governed approval is captured. Historical Run values are preserved.</td></tr>
 <tr class="metadata-column--engineering"><td><code>boundary_completed</code></td><td><code>boolean</code></td><td>Whether the explicit whole-run completion boundary finished; independent of operation success.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_version</code></td><td><code>integer</code></td><td>Frozen per-workspace Pipeline version captured at Governed admission.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promotion_id</code></td><td><code>string</code></td><td>Exact immutable promotion ID captured at admission; superseded versions remain retained.</td></tr>
