@@ -146,8 +146,8 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         if (tree := _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, cell_source)) is not None
     )
     required_functions = {
-        "widget_render_data_steward",
-        "widget_render_data_agreement",
+        "widget_data_steward",
+        "widget_data_agreement",
         "widget_data_contract",
         "widget_activate_pipeline",
     }

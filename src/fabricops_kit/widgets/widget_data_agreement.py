@@ -1,4 +1,4 @@
-"""Public widget entrypoint for ``widget_render_data_agreement``."""
+"""Public widget entrypoint for ``widget_data_agreement``."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ from fabricops_kit.widgets.shared import (
 )
 
 
-def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render a wide, single-flow data-agreement editor.
 
     Spark is resolved automatically from the existing execution session.
@@ -76,7 +76,7 @@ def widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> di
 
     Examples
     --------
-    >>> state = widget_render_data_agreement()
+    >>> state = widget_data_agreement()
 
     """
     spark = get_spark_session(context=context)

@@ -4,8 +4,8 @@ __all__ = [
     "widget_data_contract",
     "widget_activate_pipeline",
     "widget_activate_data_contract",
-    "widget_render_data_agreement",
-    "widget_render_data_steward",
+    "widget_data_agreement",
+    "widget_data_steward",
 ]
 
 _WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in __all__}

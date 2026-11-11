@@ -1501,3 +1501,14 @@ def test_current_supported_registry_requires_live_release_evidence(monkeypatch: 
     with pytest.raises(ValueError, match="lacks a Live release record"):
         analysis.public_lifecycle(qn, "example", {qn: historical})
 
+
+
+@pytest.mark.parametrize("name", ["steward", "agreement"])
+def test_renamed_governance_widgets_preserve_live_badges(repository_call_flow_payload, name: str) -> None:
+    """Current names retain Live support without inventing historical releases."""
+    qn = f"fabricops_kit.widgets.widget_data_{name}.widget_data_{name}"
+    row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
+    assert row["lifecycle_status"] == "live"
+    assert row["live_since"] == "0.2.0"
+    assert row["release_history"] == []
+    assert row["release_versions"] == []

@@ -64,14 +64,14 @@
       "sidebar_include": false
     },
     {
-      "module_name": "widgets.widget_render_data_agreement",
+      "module_name": "widgets.widget_data_agreement",
       "visibility": "public",
       "module_summary": "Owns widget implementation details for agreement workflows.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false
     },
     {
-      "module_name": "widgets.widget_render_data_steward",
+      "module_name": "widgets.widget_data_steward",
       "visibility": "public",
       "module_summary": "Owns widget implementation details for agreement workflows.",
       "sidebar_group": "1. Governance steward",
@@ -403,12 +403,12 @@
       ]
     },
     {
-      "module_name": "widgets.widget_render_data_agreement",
+      "module_name": "widgets.widget_data_agreement",
       "visibility": "public",
       "module_summary": "Owns widget implementation details for agreement workflows.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false,
-      "callable_name": "widget_render_data_agreement",
+      "callable_name": "widget_data_agreement",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
@@ -419,12 +419,12 @@
       ]
     },
     {
-      "module_name": "widgets.widget_render_data_steward",
+      "module_name": "widgets.widget_data_steward",
       "visibility": "public",
       "module_summary": "Owns widget implementation details for agreement workflows.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false,
-      "callable_name": "widget_render_data_steward",
+      "callable_name": "widget_data_steward",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",

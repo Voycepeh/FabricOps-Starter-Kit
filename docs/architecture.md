@@ -45,7 +45,7 @@ FabricOps uses Microsoft Fabric workspaces to separate responsibilities and exec
 
     | Handoff | Functions | Persisted state |
     | --- | --- | --- |
-    | Governance context | [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
+    | Governance context | [`widget_data_steward()`](api/reference/widget_data_steward.md), [`widget_data_agreement()`](api/reference/widget_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
     | Observe and profile | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md), [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE` |
     | Author and freeze | [`widget_data_contract()`](api/reference/widget_data_contract.md) | `METADATA_DATA_CONTRACT.contract_payload_json` |
     | Preview enforcement | [`setup_pipeline()`](api/reference/setup_pipeline.md), [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | Dry Run keeps results in memory and commits no target or operational state |

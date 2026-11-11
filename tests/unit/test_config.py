@@ -1124,9 +1124,9 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
         "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
     )
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
-    assert rows["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["function_type"] == "widget_function"
+    assert rows["fabricops_kit.widgets.widget_data_steward.widget_data_steward"]["function_type"] == "widget_function"
     assert (
-        rows["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["function_type"]
+        rows["fabricops_kit.widgets.widget_data_agreement.widget_data_agreement"]["function_type"]
         == "widget_function"
     )
 

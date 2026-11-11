@@ -103,7 +103,7 @@ def repo_relative(path: Path, root: Path = ROOT) -> str:
 
 
 def read_function_lifecycle(manifests_dir: Path = MANIFESTS_DIR) -> tuple[dict[str, ReleaseFunctionLifecycle], list[str]]:
-    """Read public-function lifecycle metadata from release manifests only."""
+    """Read release history and scoped current-name lifecycle metadata."""
     manifests = load_release_manifests(manifests_dir)
     versions = [str(manifest.get("release_version", "")) for manifest in manifests if manifest.get("release_version")]
     history_by_qn: dict[str, list[dict[str, str]]] = {}
@@ -137,6 +137,15 @@ def read_function_lifecycle(manifests_dir: Path = MANIFESTS_DIR) -> tuple[dict[s
             name = item.get("name")
             if qn in lifecycle and name:
                 lifecycle.setdefault(str(name), lifecycle[str(qn)])
+    if manifests_dir.resolve() == MANIFESTS_DIR.resolve():
+        from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+        from scripts.reference_docs_metadata import CURRENT_PUBLIC_LIVE_SINCE
+
+        for qn, live_since in CURRENT_PUBLIC_LIVE_SINCE.items():
+            if qn not in SUPPORTED_PUBLIC_API:
+                raise ValueError(f"Current Live metadata requires a supported public function: {qn}")
+            if qn not in lifecycle:
+                lifecycle[qn] = ReleaseFunctionLifecycle("live", live_since, None, tuple(), tuple())
     return lifecycle, versions
 
 

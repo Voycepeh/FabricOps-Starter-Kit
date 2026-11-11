@@ -1,4 +1,4 @@
-# `widget_render_data_steward`
+# `widget_data_agreement`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
@@ -7,7 +7,7 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Render the standalone data-steward intake widget.
+Render the standalone data-agreement intake widget.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">01_governance</span>
@@ -15,7 +15,7 @@ Render the standalone data-steward intake widget.
 
 ## Usage notes
 
-Use in 01_governance when collecting or updating data steward details before creating a data agreement.
+Use in 01_governance after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.
 
 
 ## Example usage
@@ -23,7 +23,7 @@ Use in 01_governance when collecting or updating data steward details before cre
 <div class="reference-example-usage" markdown="1">
 
 ```python
-state = widget_render_data_steward()
+state = widget_data_agreement()
 ```
 
 </div>
@@ -36,7 +36,7 @@ state = widget_render_data_steward()
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_render_data_steward(*, context: dict[str, Any] | None=None) -> dict[str, Any]
+def widget_data_agreement(*, context: dict[str, Any] | None=None) -> dict[str, Any]
 ```
 
 </div>
@@ -58,11 +58,11 @@ Required describes the Python signature. An optional parameter may still be need
 ## Returns
 
 dict[str, Any]
-    Rendered widget controls keyed for notebook customization.
+    Stable root, section, field, document, steward, and save controls.
 
 ### Return interpretation
 
-The widget itself is the user interface; saved steward values are available to downstream agreement workflows only after the user completes the widget action.
+The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.
 
 ## Raises / Errors
 
@@ -76,9 +76,9 @@ RuntimeError
 ### Common failure causes
 
 - ipywidgets is not available in the runtime.
-- Required steward fields are left blank.
-- Widget state is cleared by rerunning cells out of order.
-- Metadata routing is unavailable when the widget tries to persist records.
+- Required agreement fields are missing.
+- Agreement identifiers conflict with existing metadata.
+- The metadata target cannot be written.
 
 ## Behavior and scope
 
@@ -87,6 +87,9 @@ RuntimeError
 Spark is resolved automatically from the existing execution session.
 No session is created; Spark-dependent work raises
 ``RuntimeError`` when no session is available.
+
+The editor caches active data stewards, keeps one in-memory draft, and
+appends one complete agreement row only after final validation.
 
 </div>
 
@@ -97,9 +100,9 @@ No session is created; Spark-dependent work raises
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_steward.py:39`
+`fabricops_kit/widgets/widget_data_agreement.py:47`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L39-L269">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_agreement.py#L47-L497">View on GitHub</a>
 </div>
 
 
@@ -115,19 +118,7 @@ No session is created; Spark-dependent work raises
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 58 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.1.0 |
-| Live | 0.2.0 |
-| Live | 0.2.5 |
-| Live | 0.3.0 |
-| Live | 0.3.1 |
-| Live | 0.4.0 |
-| Live | 0.4.1 |
+| Live-critical dependencies | 72 |
 
 ### Live-critical dependencies
 
@@ -164,12 +155,15 @@ No session is created; Spark-dependent work raises
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.widgets.shared._audit_date</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>
 <li><code>fabricops_kit.widgets.shared._is_table_not_found_error</code></li>
 <li><code>fabricops_kit.widgets.shared._latest_by_key</code></li>
+<li><code>fabricops_kit.widgets.shared._parse_agreement_version</code></li>
 <li><code>fabricops_kit.widgets.shared.action_row</code></li>
 <li><code>fabricops_kit.widgets.shared.active_steward</code></li>
+<li><code>fabricops_kit.widgets.shared.checkbox_group</code></li>
 <li><code>fabricops_kit.widgets.shared.collect_custom_fields</code></li>
 <li><code>fabricops_kit.widgets.shared.config_value</code></li>
 <li><code>fabricops_kit.widgets.shared.deserialize_custom_fields</code></li>
@@ -177,7 +171,11 @@ No session is created; Spark-dependent work raises
 <li><code>fabricops_kit.widgets.shared.form_page</code></li>
 <li><code>fabricops_kit.widgets.shared.form_section</code></li>
 <li><code>fabricops_kit.widgets.shared.get_widget_visible_fields</code></li>
+<li><code>fabricops_kit.widgets.shared.latest_agreement_versions</code></li>
+<li><code>fabricops_kit.widgets.shared.list_all_data_agreement_rows</code></li>
+<li><code>fabricops_kit.widgets.shared.list_data_agreements</code></li>
 <li><code>fabricops_kit.widgets.shared.list_data_stewards</code></li>
+<li><code>fabricops_kit.widgets.shared.parse_iso_date</code></li>
 <li><code>fabricops_kit.widgets.shared.render_custom_fields</code></li>
 <li><code>fabricops_kit.widgets.shared.render_searchable_selector</code></li>
 <li><code>fabricops_kit.widgets.shared.require_ipywidgets</code></li>
@@ -188,8 +186,15 @@ No session is created; Spark-dependent work raises
 <li><code>fabricops_kit.widgets.shared.to_iso_date</code></li>
 <li><code>fabricops_kit.widgets.shared.widget_common</code></li>
 <li><code>fabricops_kit.widgets.shared.write_widget_metadata_row</code></li>
-<li><code>fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward</code></li>
-<li><code>fabricops_kit.widgets.widget_render_data_steward._generate_steward_id</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._business_agreement_snapshot</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._deserialize_approved_usage</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._deserialize_supporting_documents</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._generate_agreement_id</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._next_minor_version</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._parse_agreement_version</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._serialize_approved_usage</code></li>
+<li><code>fabricops_kit.widgets.widget_data_agreement._serialize_supporting_documents</code></li>
 </ul>
 
 
