@@ -88,6 +88,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         complex T-SQL requires native Spark SQL and otherwise raises ValueError.
     relative_path : str, optional
         File, folder or wildcard selector beneath the configured Lakehouse Files root.
+        Brace expansion is unsupported because alternatives can escape that root.
         Mutually exclusive with table_name, schema, query and target coordinates.
     file_format : {"csv", "json", "parquet", "excel"}, optional
         Required for file reads. Uses the corresponding foundational reader.

@@ -1,7 +1,8 @@
 """Automatic multi-source decisions and publication/finalization boundaries."""
 # ruff: noqa: D103, F811
 import json
-from types import SimpleNamespace
+import sys
+from types import ModuleType, SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -77,6 +78,32 @@ def test_baseline_acceptance_requires_successful_lifecycle_status(status):
     if status != 'ungoverned_completed':
         with pytest.raises(RuntimeError, match='whole-run finalization'):
             shared.accept_pipeline_source_snapshots(plan)
+
+
+@pytest.mark.parametrize('missing_table', [False, True])
+def test_mixed_file_table_acceptance_requires_only_complete_table_observations(monkeypatch, missing_table):
+    delta = ModuleType('delta')
+    tables = ModuleType('delta.tables')
+    tables.DeltaTable = Mock()
+    monkeypatch.setitem(sys.modules, 'delta', delta)
+    monkeypatch.setitem(sys.modules, 'delta.tables', tables)
+    storage = Mock(side_effect=RuntimeError('snapshot storage boundary'))
+    monkeypatch.setattr(shared, '_source_snapshot_state', storage)
+    participants = {'orders': {'roles': ['source']},
+                    'file:orders-csv': {'source_type': 'file', 'roles': ['source']}}
+    if missing_table:
+        participants['unread-table'] = {'roles': ['source']}
+    plan = SimpleNamespace(permits_persistence=True, runtime_context={}, participants_json=json.dumps(participants),
+        evidence={'source_drift_candidates': {'orders': {'snapshot_payload_json': '{"context_key":"context"}',
+                                                       'observation_id': 'candidate'}},
+                  'source_drift_observations': {'orders': result('baseline_pending')},
+                  'source_drift_decision': {'can_continue': True},
+                  'final_result': {'status': 'ungoverned_completed', 'boundary_completed': True}})
+    # Stop at storage: complete table observations must pass the real acceptance
+    # gate despite the file participant; an unread table must still fail closed.
+    with pytest.raises(RuntimeError, match='Partial or blocked' if missing_table else 'snapshot storage boundary'):
+        shared.accept_pipeline_source_snapshots(plan)
+    assert storage.call_count == (0 if missing_table else 1)
 
 
 @pytest.mark.parametrize('mode', ['overwrite', 'append_all', 'append_new_only', 'scd1', 'scd2'])

@@ -71,6 +71,7 @@ def test_formats_participate_in_read_write_and_finalize(files, fmt):
     {'relative_path': None}, {'file_format': None}, {'file_format': 'xml'},
     {'relative_path': '../escape'}, {'relative_path': '/absolute'}, {'relative_path': 'a/../../b'},
     {'relative_path': 'abfss://elsewhere'}, {'read_mode': 'incremental'},
+    {'relative_path': '{../outside.csv,safe/*.csv}'}, {'relative_path': '{../,safe/}*.csv'},
     {'read_options': {'path': 'another.csv'}}, {'read_options': {'context': {}}},
     {'read_options': []},
 ])

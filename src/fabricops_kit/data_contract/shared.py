@@ -54,6 +54,8 @@ def file_source_identity(*, workspace_id, item_id, relative_path, file_format, r
         raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
     if any(ord(character) < 32 for character in relative_path) or "%" in relative_path:
         raise ValueError("File selector cannot contain control characters or encoded path components.")
+    if "{" in relative_path or "}" in relative_path:
+        raise ValueError("File selector cannot contain brace expansion; use a file, folder or wildcard path without braces.")
     path = str(PurePosixPath(relative_path))
     if path in {"", "."}:
         raise ValueError("Select a file, folder or wildcard beneath Files.")

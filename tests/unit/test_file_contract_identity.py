@@ -26,11 +26,21 @@ def test_identity_is_stable_case_sensitive_and_independent_of_reader_options():
         validate_contract_source({"source": original, "table": {"table_id": "fake"}})
 
 
-@pytest.mark.parametrize("path", ["../secret", "/absolute", "abfss://other", "a/../../b", ".", "a\\b"])
+@pytest.mark.parametrize("path", [
+    "../secret", "/absolute", "abfss://other", "a/../../b", ".", "a\\b",
+    "{../outside.csv,safe/*.csv}", "{../,safe/}*.csv", "{safe/,{../../,nested/}}*.csv",
+    ".{.,/safe}/outside.csv",
+])
 def test_selectors_cannot_escape_the_files_area(path):
     """Source authorization cannot be widened through a path escape."""
     with pytest.raises(ValueError):
         source(path)
+
+
+@pytest.mark.parametrize("path", ["incoming/orders.csv", "incoming", "incoming/*.csv", "incoming/part-?.csv", "incoming/[ab]*.csv"])
+def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
+    """Confinement validation preserves ordinary Spark file selection."""
+    assert source(path)["relative_path"] == path
 
 
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):

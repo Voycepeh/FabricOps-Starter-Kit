@@ -1608,7 +1608,8 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
     context = {**plan.runtime_context, "execution_plan": plan, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}
     identities = json.loads(plan.participants_json)
     observations = plan.evidence.get("source_drift_observations", {})
-    expected_sources = {tid for tid, identity in identities.items() if "source" in identity["roles"]}
+    expected_sources = {tid for tid, identity in identities.items()
+                        if "source" in identity["roles"] and identity.get("source_type") != "file"}
     expected_candidates = {tid for tid, row in observations.items() if row["status"] != "not_due"}
     if (set(observations) != expected_sources or expected_candidates != set(candidates)
             or any(not row.get("can_continue", True) or row["status"] == "observation_failed" for row in observations.values())):

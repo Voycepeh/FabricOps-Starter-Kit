@@ -82,7 +82,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `target_table_name` | `str \| None` | No | `None` | Physical target table name; required for incremental reads. The resolved target must be an authorized target participant in the active plan. Source and target stores may route to different workspaces. |
 | `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
-| `relative_path` | `str \| None` | No | `None` | File, folder or wildcard selector beneath the configured Lakehouse Files root. Mutually exclusive with table_name, schema, query and target coordinates. |
+| `relative_path` | `str \| None` | No | `None` | File, folder or wildcard selector beneath the configured Lakehouse Files root. Brace expansion is unsupported because alternatives can escape that root. Mutually exclusive with table_name, schema, query and target coordinates. |
 | `file_format` | `str \| None` | No | `None` | Required for file reads. Uses the corresponding foundational reader. |
 | `read_options` | `dict[str, Any] \| None` | No | `None` | Format-specific reader keyword settings, retained exactly for approval. Options cannot override the source location or execution context. |
 
@@ -166,7 +166,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L27-L224">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L27-L225">View on GitHub</a>
 </div>
 
 

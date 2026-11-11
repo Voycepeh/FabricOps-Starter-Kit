@@ -64,9 +64,14 @@ def expire(snapshots):
 
 
 @pytest.mark.parametrize('kind', ['lakehouse', 'warehouse'])
-def test_complete_source_first_baseline_shared_schedule_and_exact_changes(snapshots, kind):
+@pytest.mark.parametrize('include_file', [False, True])
+def test_complete_source_first_baseline_shared_schedule_and_exact_changes(snapshots, kind, include_file):
     rt = snapshots
     plan, context, identity = rt.run(kind=kind)
+    if include_file:
+        participants = json.loads(plan.participants_json)
+        participants['file:orders-csv'] = {'source_type': 'file', 'roles': ['source']}
+        plan.participants_json = json.dumps(participants)
     first = shared.observe_full_source(identity, context=context)
     assert first['status'] == 'baseline_pending' and first['added_count'] is None and first['row_count'] == 3
     assert rt.state().where("record_type = 'source_drift_baseline'").count() == 0
