@@ -1,0 +1,295 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 315.41854062806766,
+            "y": 0
+          },
+          "nodeIndex": "Agreement Steward",
+          "nodeLineageTag": "3a4daa0d-a181-5ee8-b4ec-67049509fa94",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 672.29622141265156,
+            "y": 776.18483436576128
+          },
+          "nodeIndex": "Catalogue Column",
+          "nodeLineageTag": "f6ddf828-7ef8-52f3-99ce-94c9f2860e79",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 956.14785969745787,
+            "y": 391.05650184168036
+          },
+          "nodeIndex": "Catalogue Table",
+          "nodeLineageTag": "780aec8a-fa1a-5c78-82fe-8e67005878de",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 622.4862759043757,
+            "y": 379.15587084717544
+          },
+          "nodeIndex": "Contract Activation",
+          "nodeLineageTag": "c6ff985c-9b67-5e6a-aad4-3c827c966e27",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1842.1566362142755,
+            "y": 1247.4968665951885
+          },
+          "nodeIndex": "Dashboard Metrics",
+          "nodeLineageTag": "00000000-0000-0000-0000-000000000001",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2144.3708041775653,
+            "y": 1251.2855786359216
+          },
+          "nodeIndex": "Dashboard Refresh",
+          "nodeLineageTag": "d38cc364-0131-5466-b6e2-a3d2df9962cf",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 905.52032076837611,
+            "y": 1208.7839616494525
+          },
+          "nodeIndex": "Data Access",
+          "nodeLineageTag": "af126be3-3f6e-55b1-bde8-e83d448d20e1",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 615.08299976167154,
+            "y": 0
+          },
+          "nodeIndex": "Data Agreement",
+          "nodeLineageTag": "aab3f8c6-7162-504c-8c8b-3d052edb7a94",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 323.45875532681515,
+            "y": 377.42094569439791
+          },
+          "nodeIndex": "Data Contract",
+          "nodeLineageTag": "ae24c1ee-6337-56cb-8b1b-d6635dda7558",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 0,
+            "y": 0
+          },
+          "nodeIndex": "Data Steward",
+          "nodeLineageTag": "e9970610-9763-544e-b01c-e7e0698f7e86",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1180.0982279743391,
+            "y": 1027.4588755030998
+          },
+          "nodeIndex": "Data Workspace",
+          "nodeLineageTag": "7a02c4d2-e4ae-5090-a7cc-b14e11ec06af",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1284.7988360953009,
+            "y": 388.20616736191613
+          },
+          "nodeIndex": "Guardrail Result",
+          "nodeLineageTag": "a0750854-3bd1-52f2-982c-453b43ae0918",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2099.5539901371421,
+            "y": 430.79844942964149
+          },
+          "nodeIndex": "Pipeline",
+          "nodeLineageTag": "363cb5e9-3c3c-52d1-bffc-2c07404870fe",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2272.7010645062069,
+            "y": 47.105643979633271
+          },
+          "nodeIndex": "Pipeline Activation",
+          "nodeLineageTag": "78458a14-c576-5bb0-b5ba-499e44b0dfe9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2468.6197329089096,
+            "y": 406.28972198906979
+          },
+          "nodeIndex": "Pipeline Registry",
+          "nodeLineageTag": "ef2ff250-31c8-5a70-b962-1b4c596e9795",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1583.9862415103669,
+            "y": 382.0320159966393
+          },
+          "nodeIndex": "Pipeline Run",
+          "nodeLineageTag": "82e1f5a1-db40-558e-8530-985d673ccc07",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 636.35786390529324,
+            "y": 1091.4915628422466
+          },
+          "nodeIndex": "Profiled Column",
+          "nodeLineageTag": "68c05119-03e2-5001-bef2-7de34e692e1b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1839.980407888454,
+            "y": 707.00570109058958
+          },
+          "nodeIndex": "Run Failure",
+          "nodeLineageTag": "97d97e16-f448-54c0-944f-c342d6088d94",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1456.7587608043104,
+            "y": 1009.0297862065747
+          },
+          "nodeIndex": "Run Operation",
+          "nodeLineageTag": "ac577b62-d389-5b4b-a2dd-efd3b6b8a98f",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1872.184878393753,
+            "y": 106.7263025053233
+          },
+          "nodeIndex": "Run Stage",
+          "nodeLineageTag": "dd84687a-ff68-58b5-8a4a-1e365fcca819",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 2187.4844550915113,
+            "y": 756.83067993944121
+          },
+          "nodeIndex": "Workspace",
+          "nodeLineageTag": "79530e4d-b63a-5997-b5a7-c3f0977bd82f",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 31.843317982204937,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}
