@@ -19,8 +19,8 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
     "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
     "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
-    "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-    "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+    "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+    "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
 )
 
 # Preview public functions remain importable for evaluation, but are not part of

@@ -4,7 +4,7 @@ Records who is sharing data, with whom, why it is shared, and the conditions of 
 
 ## Writer functions
 
-* [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
+* [`widget_data_agreement`](../../api/reference/widget_data_agreement.md)
 
 ## Used in Workflow Template
 

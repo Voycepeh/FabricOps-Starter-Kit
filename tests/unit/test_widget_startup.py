@@ -20,7 +20,7 @@ def outputs(monkeypatch):
     return events
 
 
-@pytest.mark.parametrize("name", ["widget_render_data_steward", "widget_render_data_agreement",
+@pytest.mark.parametrize("name", ["widget_data_steward", "widget_data_agreement",
                                   "widget_data_contract", "widget_activate_pipeline"])
 def test_public_widget_displays_before_services_without_duplicate_reads(name, monkeypatch, outputs):
     """Every public Governance entrypoint publishes loading before its first read."""

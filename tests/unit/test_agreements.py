@@ -14,8 +14,8 @@ import uuid
 import pytest
 
 import fabricops_kit.widgets.shared as agreement
-import fabricops_kit.widgets.widget_render_data_agreement as agreement_widget
-import fabricops_kit.widgets.widget_render_data_steward as steward_widget
+import fabricops_kit.widgets.widget_data_agreement as agreement_widget
+import fabricops_kit.widgets.widget_data_steward as steward_widget
 from tests.helpers import agreement_config, agreement_row, steward_row
 
 pytestmark = pytest.mark.unit
@@ -382,8 +382,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")])
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
 
-    agreement_controls = call_with_spark(spark, agreement_widget.widget_render_data_agreement, )
-    steward_controls = call_with_spark(spark, steward_widget.widget_render_data_steward, )
+    agreement_controls = call_with_spark(spark, agreement_widget.widget_data_agreement, )
+    steward_controls = call_with_spark(spark, steward_widget.widget_data_steward, )
 
     assert "identity_context" not in agreement_controls
     assert agreement_controls["provider_steward_selector"].options
@@ -399,7 +399,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert "fabricops-page-header" in agreement_header.value
     assert "--form-tint:#f1edf8" in agreement_header.value
     assert agreement_controls["container"].layout.kwargs["width"] == "100%"
-    assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)
+    assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_data_agreement)
     steward_section = form_flow.children[2]
     steward_panels_row = steward_section.children[1]
     assert len(steward_panels_row.children) == 2
@@ -453,7 +453,7 @@ def test_steward_widget_blocks_missing_required_fields_before_persistence(monkey
         lambda **kwargs: pytest.fail("missing required fields must not reach persistence"),
     )
 
-    controls = call_with_spark(object(), steward_widget.widget_render_data_steward, )
+    controls = call_with_spark(object(), steward_widget.widget_data_steward, )
     assert controls["save_button"].disabled is True
     controls["fields"]["steward_name"].value = "  "
     controls["fields"]["contact"].value = None
@@ -506,7 +506,7 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
     monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("must not write"))
 
-    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
+    controls = call_with_spark(object(), agreement_widget.widget_data_agreement, )
 
     assert controls["provider_steward_selector"].options
     assert controls["recipient_steward_selector"].options
@@ -538,7 +538,7 @@ def test_agreement_widget_disables_save_until_two_active_stewards_exist(monkeypa
     monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: stewards)
 
-    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
+    controls = call_with_spark(object(), agreement_widget.widget_data_agreement, )
 
     assert controls["container"] is not None
     assert controls["save_button"].disabled is save_disabled
@@ -557,7 +557,7 @@ def test_agreement_widget_refresh_updates_steward_prerequisite(monkeypatch):
     monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: list(active_rows))
 
-    controls = call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
+    controls = call_with_spark(object(), agreement_widget.widget_data_agreement, )
     active_rows.append(second)
     controls["provider_steward_selector"].value = steward_row()["steward_id"]
     controls["recipient_steward_selector"].value = second["steward_id"]
@@ -581,8 +581,8 @@ def test_widget_architecture_cleanup_contracts_hold():
     from pathlib import Path
 
     root = Path(__file__).parents[2]
-    agreement_source = (root / "src" / "fabricops_kit" / "widgets" / "widget_render_data_agreement.py").read_text(encoding="utf-8")
-    steward_source = (root / "src" / "fabricops_kit" / "widgets" / "widget_render_data_steward.py").read_text(encoding="utf-8")
+    agreement_source = (root / "src" / "fabricops_kit" / "widgets" / "widget_data_agreement.py").read_text(encoding="utf-8")
+    steward_source = (root / "src" / "fabricops_kit" / "widgets" / "widget_data_steward.py").read_text(encoding="utf-8")
     shared_source = (root / "src" / "fabricops_kit" / "widgets" / "shared.py").read_text(encoding="utf-8")
 
     assert "render_maintenance_widget_shared_workflow" not in agreement_source + steward_source + shared_source
@@ -594,7 +594,7 @@ def test_widget_architecture_cleanup_contracts_hold():
 
     for source in (agreement_source, steward_source):
         tree = ast.parse(source)
-        public_functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_render_data_")]
+        public_functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_data_")]
         assert len(public_functions) == 1
         public_names = {node.name for node in ast.walk(public_functions[0]) if isinstance(node, ast.FunctionDef)}
         assert "_save" in public_names

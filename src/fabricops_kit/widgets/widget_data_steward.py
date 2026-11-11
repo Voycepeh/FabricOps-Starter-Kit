@@ -1,4 +1,4 @@
-"""Public widget entrypoint for ``widget_render_data_steward``."""
+"""Public widget entrypoint for ``widget_data_steward``."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ from fabricops_kit.widgets.shared import (
 )
 
 
-def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
+def widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render append-only data steward create/update maintenance.
 
     Spark is resolved automatically from the existing execution session.
@@ -65,7 +65,7 @@ def widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict
 
     Examples
     --------
-    >>> state = widget_render_data_steward()
+    >>> state = widget_data_steward()
 
     """
     spark = get_spark_session(context=context)

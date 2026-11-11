@@ -10,8 +10,8 @@ import sys
 import pytest
 
 import fabricops_kit.widgets.shared as shared
-import fabricops_kit.widgets.widget_render_data_agreement as agreement_widget
-import fabricops_kit.widgets.widget_render_data_steward as steward_widget
+import fabricops_kit.widgets.widget_data_agreement as agreement_widget
+import fabricops_kit.widgets.widget_data_steward as steward_widget
 from tests.helpers import agreement_config, agreement_row, steward_row
 from tests.unit.test_agreements import _FakeWidget, _FakeWidgets
 
@@ -30,7 +30,7 @@ def _render(monkeypatch):
         "list_data_stewards",
         lambda *args, **kwargs: [steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")],
     )
-    return call_with_spark(object(), agreement_widget.widget_render_data_agreement, )
+    return call_with_spark(object(), agreement_widget.widget_data_agreement, )
 
 
 def _visible_text(widget):
@@ -49,7 +49,7 @@ def _render_steward(monkeypatch, *, custom_fields=None, stewards=None):
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: steward_rows)
-    return call_with_spark(object(), steward_widget.widget_render_data_steward, )
+    return call_with_spark(object(), steward_widget.widget_data_steward, )
 
 
 def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():

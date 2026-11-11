@@ -4,7 +4,7 @@ Identifies the people responsible for governing data.
 
 ## Writer functions
 
-* [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
+* [`widget_data_steward`](../../api/reference/widget_data_steward.md)
 
 ## Used in Workflow Template
 

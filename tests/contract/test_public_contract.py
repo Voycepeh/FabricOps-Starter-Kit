@@ -54,11 +54,13 @@ EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
     "profile_table",
     "read_lakehouse_json",
     "setup_pipeline",
-    "widget_render_data_agreement",
-    "widget_render_data_steward",
+    "widget_data_agreement",
+    "widget_data_steward",
 }
 
 REMOVED_LEGACY_ALIASES = {
+    "widget_render_data_steward",
+    "widget_render_data_agreement",
     "validate_schema",
     "validate_schema_rule",
     "monitor_data_changes",
@@ -380,7 +382,7 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert "Shared helpers:" not in function_text
     assert "Private helpers:" not in function_text
     reference_index = (root / "docs" / "reference" / "index.md").read_text(encoding="utf-8")
-    assert 'data-callable-group="standard-orchestration"' in reference_index
+    assert 'data-callable-group="engineering"' in reference_index
     assert 'reference-lifecycle-chip reference-lifecycle-live' in reference_index
     assert "Live since 0.1.0" in reference_index
     assert "api-chip-module" not in function_text
@@ -431,15 +433,15 @@ def test_package_root_widget_exports_are_lazy() -> None:
 import sys
 import fabricops_kit
 widget_modules = [
-    "fabricops_kit.widgets.widget_render_data_agreement",
-    "fabricops_kit.widgets.widget_render_data_steward",
+    "fabricops_kit.widgets.widget_data_agreement",
+    "fabricops_kit.widgets.widget_data_steward",
     "fabricops_kit.widgets.widget_review_guardrail_governance",
 ]
 assert not any(name in sys.modules for name in widget_modules), sorted(name for name in widget_modules if name in sys.modules)
-value = fabricops_kit.widget_render_data_agreement
+value = fabricops_kit.widget_data_agreement
 assert callable(value)
-assert fabricops_kit.__dict__["widget_render_data_agreement"] is value
-assert "fabricops_kit.widgets.widget_render_data_agreement" in sys.modules
+assert fabricops_kit.__dict__["widget_data_agreement"] is value
+assert "fabricops_kit.widgets.widget_data_agreement" in sys.modules
 """
     active_workspace_id = os.environ.copy()
     active_workspace_id["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "src")
@@ -461,3 +463,20 @@ def test_active_engineering_templates_do_not_call_internal_read_stages():
                 code = _clean_notebook_code("".join(cell["source"]))
                 assert "resolve_table_id" not in code, path.name
                 assert "pipeline_read" not in code, path.name
+
+
+@pytest.mark.parametrize("name", ["steward", "agreement"])
+def test_governance_widget_rename_has_no_compatibility_surface(name: str) -> None:
+    """New exports share one owner and removed modules cannot be imported."""
+    new_name = f"widget_data_{name}"
+    old_name = f"widget_render_data_{name}"
+    owner = importlib.import_module(f"fabricops_kit.widgets.{new_name}")
+    function = getattr(owner, new_name)
+    assert getattr(fabricops_kit, new_name) is function
+    assert getattr(widgets, new_name) is function
+    assert str(inspect.signature(function)) == "(*, context: 'dict[str, Any] | None' = None) -> 'dict[str, Any]'"
+    for package in (fabricops_kit, widgets):
+        assert old_name not in package.__all__
+        assert not hasattr(package, old_name)
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module(f"fabricops_kit.widgets.{old_name}")

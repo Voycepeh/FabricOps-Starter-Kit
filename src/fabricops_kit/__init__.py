@@ -89,8 +89,8 @@ WIDGET_EXPORTS = (
     "widget_data_contract",
     "widget_activate_pipeline",
     "widget_activate_data_contract",
-    "widget_render_data_steward",
-    "widget_render_data_agreement",
+    "widget_data_steward",
+    "widget_data_agreement",
 )
 
 _LAZY_WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in WIDGET_EXPORTS}

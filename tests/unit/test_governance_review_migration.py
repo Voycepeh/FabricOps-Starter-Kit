@@ -28,8 +28,8 @@ def test_widget_public_callables_live_under_widgets_package():
 
     widget_names = {
         'widget_data_contract',
-        'widget_render_data_agreement',
-        'widget_render_data_steward',
+        'widget_data_agreement',
+        'widget_data_steward',
     }
     for name in widget_names:
         value = getattr(widgets, name)
@@ -48,8 +48,8 @@ def test_widget_modules_do_not_call_public_widget_functions():
     public_widget_names = {
         'widget_data_contract',
         'widget_data_contract',
-        'widget_render_data_agreement',
-        'widget_render_data_steward',
+        'widget_data_agreement',
+        'widget_data_steward',
     }
     offenders = []
     for path in widgets_dir.glob("widget_*.py"):
