@@ -9,7 +9,7 @@ import pytest
 
 import fabricops_kit
 import fabricops_kit.widgets.shared as agreement
-import fabricops_kit.widgets.widget_render_data_steward as steward_widget
+import fabricops_kit.widgets.widget_data_steward as steward_widget
 from fabricops_kit.config import audit as audit_helpers
 from fabricops_kit.config import shared as config_shared
 from fabricops_kit.config import metadata_keys
@@ -275,8 +275,8 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'widget_data_contract',
         'widget_activate_pipeline',
         'widget_activate_data_contract',
-        'widget_render_data_steward',
-        'widget_render_data_agreement',
+        'widget_data_steward',
+        'widget_data_agreement',
     ]
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)

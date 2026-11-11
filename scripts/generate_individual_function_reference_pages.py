@@ -307,12 +307,12 @@ PROCESSING_STATE_FIELD_DESCRIPTIONS = {
 }
 
 METADATA_RELATED_FUNCTIONS = {
-    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
+    "METADATA_DATA_AGREEMENT": ["widget_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CATALOGUE": ["profile_table", "widget_data_contract"],
     "METADATA_DATA_PROFILED": ["profile_table"],
     "METADATA_DATA_LINEAGE": ["pipeline_read"],
-    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
+    "METADATA_DATA_STEWARD": ["widget_data_steward"],
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "orchestrate_read", "orchestrate_write", "finalize_pipeline", "check_dq",
     ],
@@ -2970,8 +2970,8 @@ ROLE_TAGS_BY_NAME = {
     "_normalize_path_config": ["internal_normalizer", "path_config_normalizer"],
     "_normalize_widget_config": ["internal_normalizer", "widget_config_normalizer"],
     "_list_data_stewards": ["internal_resolver", "data_steward_resolver"],
-    "widget_render_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
-    "widget_render_data_steward": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
+    "widget_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
+    "widget_data_steward": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "_render_agreement_evidence_widget_workflow": ["internal_workflow", "agreement_evidence_widget_workflow"],
     "_latest_metadata_catalogue_lookup_workflow": ["internal_workflow", "metadata_catalogue_lookup_workflow"],
     "_table_metadata_enrichment_widget_workflow": ["internal_workflow", "widget_workflow"],
@@ -5674,7 +5674,7 @@ def main() -> None:
         "",
         "Use this page to look up public notebook-facing Starter Kit functions used by the template notebooks.",
         "",
-        "**Start with Standard Orchestration for pipeline work. Expand another group only when you need that capability directly.**",
+        "**Start with Engineering Functions for pipeline work. Expand another group only when you need that capability directly.**",
         "",
         "Need the complete implementation-level dependency graph? Use the [Call Flow Dashboard](../assets/public-function-call-flows-dashboard.html).",
         "",
@@ -5723,58 +5723,32 @@ def main() -> None:
             '',
             "## Function catalogue",
             "",
-            "Expand a group to browse its public functions. Standard Orchestration is open by default.",
+            "Expand a group to browse its public functions. Engineering Functions is open by default.",
             "",
         ]
     )
     catalogue_nodes = [node_by_public_function_name[row["function_name"]] for row in dashboard_public_functions if row["function_name"] in node_by_public_function_name]
     reference_groups = [
         {
-            "key": "standard-orchestration",
-            "title": "Standard Orchestration",
-            "note": "Recommended",
-            "description": "Complete governed read and write lifecycle for the standard FabricOps pipeline.",
-            "functions": {"setup_pipeline", "finalize_pipeline", "orchestrate_read", "orchestrate_write"},
+            "key": "engineering",
+            "title": "Engineering Functions",
+            "note": "Recommended pipeline sequence",
+            "description": "Set up the notebook and pipeline, read, optionally profile transformed data, write, and finalize. Standard reads and writes already include automatic profiling.",
+            "functions": (
+                "setup_notebook", "setup_pipeline", "orchestrate_read",
+                "profile_table", "orchestrate_write", "finalize_pipeline",
+            ),
             "open": True,
         },
         {
-            "key": "pipeline-capabilities",
-            "title": "Standalone Profiling",
-            "note": "Standalone pipeline capabilities",
-            "description": "Profile arbitrary DataFrames or transformed data independently. Automatic profiling in the standard Read and Write lifecycles belongs to the orchestrators.",
-            "functions": {
-                "profile_table",
-            },
-            "open": False,
-        },
-        {
-            "key": "governance-metadata",
-            "title": "Governance & Metadata",
-            "note": "Author and inspect governed context",
-            "description": "Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows.",
-            "functions": {
-                "setup_notebook",
-                "setup_metadata_tables",
-                "widget_render_data_steward",
-                "widget_render_data_agreement",
-                "widget_activate_data_contract",
-                "widget_data_contract",
-                "widget_activate_pipeline",
-            },
-            "open": False,
-        },
-        {
-            "key": "access-consumption",
-            "title": "Access & Consumption",
-            "note": "Observe access or publish governed context",
-            "description": "Effective access scanners and the governed Production table to Data Agent handoff.",
-            "functions": {
-                "scan_effective_access",
-                "scan_workspace_access",
-                "scan_sql_access",
-                "scan_onelake_access",
-                "create_data_agent",
-            },
+            "key": "governance",
+            "title": "Governance Functions",
+            "note": "Author and review governed context",
+            "description": "Initialize metadata tables, then use the public Governance widgets. Each function retains its own lifecycle status.",
+            "functions": (
+                "setup_metadata_tables", "widget_data_steward", "widget_data_agreement",
+                "widget_data_contract", "widget_activate_data_contract", "widget_activate_pipeline",
+            ),
             "open": False,
         },
         {
@@ -5782,29 +5756,34 @@ def main() -> None:
             "title": "Foundational I/O",
             "note": "Direct physical reads and writes",
             "description": "Low-level Lakehouse and Warehouse reads and writes when direct physical I/O is required.",
-            "functions": {
-                "read_lakehouse_csv",
-                "read_lakehouse_excel",
-                "read_lakehouse_json",
-                "read_lakehouse_parquet",
-                "read_lakehouse_table",
-                "read_warehouse_query",
-                "read_warehouse_table",
-                "write_lakehouse_table",
-                "write_warehouse_table",
-            },
+            "functions": (
+                "read_lakehouse_csv", "read_lakehouse_excel", "read_lakehouse_json",
+                "read_lakehouse_parquet", "read_lakehouse_table", "read_warehouse_query",
+                "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table",
+            ),
             "open": False,
         },
         {
             "key": "demo",
-            "title": "Demo",
+            "title": "Demo Only",
             "note": "Dedicated demo environment only",
             "description": "Preview or reset the disposable Guided Demo to Day 1.",
-            "functions": {"orchestrate_demo_reset"},
+            "functions": ("orchestrate_demo_reset",),
+            "open": False,
+        },
+        {
+            "key": "preview",
+            "title": "Preview / In Development",
+            "note": "Access and consumption capabilities",
+            "description": "Evaluate effective access scanners and the governed Production table to Data Agent handoff.",
+            "functions": (
+                "scan_effective_access", "scan_workspace_access", "scan_sql_access",
+                "scan_onelake_access", "create_data_agent",
+            ),
             "open": False,
         },
     ]
-    group_items: dict[str, list[str]] = {group["key"]: [] for group in reference_groups}
+    catalogue_items: dict[str, list[str]] = {}
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
@@ -5838,6 +5817,7 @@ def main() -> None:
                 ),
                 f'  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="{_esc(symbol_link)}"><code>{_esc(name)}</code></a></h3>',
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
+                *(['  <p class="reference-catalogue-item-meta">Optional standalone profiling</p>'] if name == "profile_table" else []),
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_lifecycle_chip(lifecycle_status, prominent=True)}'
@@ -5851,13 +5831,7 @@ def main() -> None:
                 ),
                 "</article>",
             ]
-        group_key = next(
-            (group["key"] for group in reference_groups if name in group["functions"]),
-            None,
-        )
-        if group_key is None:
-            raise RuntimeError(f"Public function is not assigned to a Function Reference group: {name}")
-        group_items[group_key].extend(item_lines)
+        catalogue_items[name] = item_lines
 
     assigned_functions = {
         function_name
@@ -5865,7 +5839,8 @@ def main() -> None:
         for function_name in group["functions"]
     }
     generated_functions = {node["callable_name"] for node in catalogue_nodes}
-    if assigned_functions != generated_functions:
+    assignment_count = sum(len(group["functions"]) for group in reference_groups)
+    if assigned_functions != generated_functions or assignment_count != len(assigned_functions):
         missing = sorted(generated_functions - assigned_functions)
         stale = sorted(assigned_functions - generated_functions)
         raise RuntimeError(
@@ -5874,7 +5849,7 @@ def main() -> None:
         )
 
     for group in reference_groups:
-        items = group_items[group["key"]]
+        items = [line for name in group["functions"] for line in catalogue_items[name]]
         count = len(group["functions"])
         open_attribute = " open" if group["open"] else ""
         default_open = "true" if group["open"] else "false"

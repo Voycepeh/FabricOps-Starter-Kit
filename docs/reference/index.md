@@ -2,7 +2,7 @@
 
 Use this page to look up public notebook-facing Starter Kit functions used by the template notebooks.
 
-**Start with Standard Orchestration for pipeline work. Expand another group only when you need that capability directly.**
+**Start with Engineering Functions for pipeline work. Expand another group only when you need that capability directly.**
 
 Need the complete implementation-level dependency graph? Use the [Call Flow Dashboard](../assets/public-function-call-flows-dashboard.html).
 
@@ -47,15 +47,20 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 
 ## Function catalogue
 
-Expand a group to browse its public functions. Standard Orchestration is open by default.
+Expand a group to browse its public functions. Engineering Functions is open by default.
 
-<details class="reference-function-group" data-callable-group="standard-orchestration" data-default-open="true" open>
-<summary><span class="reference-function-group-title">Standard Orchestration</span><span class="reference-function-group-meta">4 functions · Recommended</span></summary>
-<p class="reference-function-group-description">Complete governed read and write lifecycle for the standard FabricOps pipeline.</p>
+<details class="reference-function-group" data-callable-group="engineering" data-default-open="true" open>
+<summary><span class="reference-function-group-title">Engineering Functions</span><span class="reference-function-group-meta">6 functions · Recommended pipeline sequence</span></summary>
+<p class="reference-function-group-description">Set up the notebook and pipeline, read, optionally profile transformed data, write, and finalize. Standard reads and writes already include automatic profiling.</p>
 <div class="reference-catalogue-list">
-<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Complete execution or reopen persisted Engineering submission, deployment and recovery controls.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Complete execution or reopen persisted Engineering submission, deployment and recovery controls.</p>
+<article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
+</article>
+<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span><span class="reference-chip">02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
 </article>
 <article id="pipeline.orchestrate_read-orchestrate_read" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_read" data-callable-module="pipeline.orchestrate_read" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed source lifecycle.">
@@ -63,44 +68,48 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <p class="reference-catalogue-item-purpose">Run the observable standard governed source lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
 </article>
+<article id="pipeline.profile_table-profile_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_table" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Profile a Spark DataFrame or complete governed table and return statistical and frequency results.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_table/"><code>profile_table</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Profile a Spark DataFrame or complete governed table and return statistical and frequency results.</p>
+  <p class="reference-catalogue-item-meta">Optional standalone profiling</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span></p>
+</article>
 <article id="pipeline.orchestrate_write-orchestrate_write" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_write" data-callable-module="pipeline.orchestrate_write" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Run the observable standard governed target lifecycle.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_write/"><code>orchestrate_write</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run the observable standard governed target lifecycle.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.5</span><span class="reference-chip">02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
 </article>
-<article id="pipeline.setup_pipeline-setup_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_pipeline" data-callable-module="pipeline.setup_pipeline" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_pipeline/"><code>setup_pipeline</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a pipeline using the current Fabric Notebook ID and the Pipeline Registry; Governed fails closed pending signed-in Fabric validation.</p>
+<article id="pipeline.finalize_pipeline-finalize_pipeline" class="reference-catalogue-item" data-callable-row="true" data-callable-name="finalize_pipeline" data-callable-module="pipeline.finalize_pipeline" data-callable-starter-path="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Complete execution or reopen persisted Engineering submission, deployment and recovery controls.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/finalize_pipeline/"><code>finalize_pipeline</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Complete execution or reopen persisted Engineering submission, deployment and recovery controls.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.3.0</span><span class="reference-chip">02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
 </article>
 </div>
 </details>
 
-<details class="reference-function-group" data-callable-group="pipeline-capabilities" data-default-open="false">
-<summary><span class="reference-function-group-title">Standalone Profiling</span><span class="reference-function-group-meta">1 function · Standalone pipeline capabilities</span></summary>
-<p class="reference-function-group-description">Profile arbitrary DataFrames or transformed data independently. Automatic profiling in the standard Read and Write lifecycles belongs to the orchestrators.</p>
-<div class="reference-catalogue-list">
-<article id="pipeline.profile_table-profile_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_table" data-callable-module="pipeline" data-function-type="public-starter-kit" data-callable-purpose="Profile a Spark DataFrame or complete governed table and return statistical and frequency results.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_table/"><code>profile_table</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Profile a Spark DataFrame or complete governed table and return statistical and frequency results.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span></p>
-</article>
-</div>
-</details>
-
-<details class="reference-function-group" data-callable-group="governance-metadata" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance &amp; Metadata</span><span class="reference-function-group-meta">7 functions · Author and inspect governed context</span></summary>
-<p class="reference-function-group-description">Notebook setup, metadata initialization, Data Steward and Agreement intake, Data Contract workflows.</p>
+<details class="reference-function-group" data-callable-group="governance" data-default-open="false">
+<summary><span class="reference-function-group-title">Governance Functions</span><span class="reference-function-group-meta">6 functions · Author and review governed context</span></summary>
+<p class="reference-function-group-description">Initialize metadata tables, then use the public Governance widgets. Each function retains its own lifecycle status.</p>
 <div class="reference-catalogue-list">
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables and check existing table columns and Spark data types.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables and check existing table columns and Spark data types.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00_env_config</span></p>
 </article>
-<article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving workspace targets, and returning reusable runtime context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup, 01_governance, 02_pipeline, 02A_full_refresh_demo, 02B_incremental_append_demo, 02C_scd_demo</span></p>
+<article id="widgets.widget_data_steward-widget_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_steward" data-callable-module="widgets.widget_data_steward" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-steward intake widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_steward/"><code>widget_data_steward</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span></p>
+</article>
+<article id="widgets.widget_data_agreement-widget_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_agreement" data-callable-module="widgets.widget_data_agreement" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_agreement/"><code>widget_data_agreement</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span></p>
+</article>
+<article id="widgets.widget_data_contract-widget_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_contract" data-callable-module="widgets.widget_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Create or reopen and author one agreement-free, table-centric Data Contract draft.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_contract/"><code>widget_data_contract</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Create or reopen and author one agreement-free, table-centric Data Contract draft.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span></p>
 </article>
 <article id="widgets.widget_activate_data_contract-widget_activate_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_activate_data_contract" data-callable-module="widgets.widget_activate_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Review and activate an exact frozen Contract in its physical workspace.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_data_contract/"><code>widget_activate_data_contract</code></a></h3>
@@ -111,53 +120,6 @@ Expand a group to browse its public functions. Standard Orchestration is open by
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_activate_pipeline/"><code>widget_activate_pipeline</code></a></h3>
   <p class="reference-catalogue-item-purpose">Select saved Engineering submissions and independently approve, reject or revoke them.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span></p>
-</article>
-<article id="widgets.widget_data_contract-widget_data_contract" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_contract" data-callable-module="widgets.widget_data_contract" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Create or reopen and author one agreement-free, table-centric Data Contract draft.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_contract/"><code>widget_data_contract</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create or reopen and author one agreement-free, table-centric Data Contract draft.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">01_governance</span></p>
-</article>
-<article id="widgets.widget_render_data_agreement-widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="widgets.widget_render_data_agreement" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span></p>
-</article>
-<article id="widgets.widget_render_data_steward-widget_render_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_steward" data-callable-module="widgets.widget_render_data_steward" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-steward intake widget.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">01_governance</span></p>
-</article>
-</div>
-</details>
-
-<details class="reference-function-group" data-callable-group="access-consumption" data-default-open="false">
-<summary><span class="reference-function-group-title">Access &amp; Consumption</span><span class="reference-function-group-meta">5 functions · Observe access or publish governed context</span></summary>
-<p class="reference-function-group-description">Effective access scanners and the governed Production table to Data Agent handoff.</p>
-<div class="reference-catalogue-list">
-<article id="data_agent.create_data_agent-create_data_agent" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_data_agent" data-callable-module="consumption.create_data_agent" data-function-type="public-starter-kit" data-callable-purpose="Complete the governed single-table Step 7 handoff without manually composing context or instructions.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_data_agent/"><code>create_data_agent</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="access_scanner.scan_effective_access-scan_effective_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_effective_access" data-callable-module="access_scanner.scan_effective_access" data-function-type="public-starter-kit" data-callable-purpose="Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_effective_access/"><code>scan_effective_access</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="access_scanner.scan_onelake_access-scan_onelake_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_onelake_access" data-callable-module="access_scanner.scan_onelake_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access granted through OneLake Security roles for configured Lakehouses.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_onelake_access/"><code>scan_onelake_access</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Observe table access granted through OneLake Security roles for configured Lakehouses.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="access_scanner.scan_sql_access-scan_sql_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_sql_access" data-callable-module="access_scanner.scan_sql_access" data-function-type="public-starter-kit" data-callable-purpose="Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_sql_access/"><code>scan_sql_access</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
-</article>
-<article id="access_scanner.scan_workspace_access-scan_workspace_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_workspace_access" data-callable-module="access_scanner.scan_workspace_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_workspace_access/"><code>scan_workspace_access</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
 </details>
@@ -215,13 +177,45 @@ Expand a group to browse its public functions. Standard Orchestration is open by
 </details>
 
 <details class="reference-function-group" data-callable-group="demo" data-default-open="false">
-<summary><span class="reference-function-group-title">Demo</span><span class="reference-function-group-meta">1 function · Dedicated demo environment only</span></summary>
+<summary><span class="reference-function-group-title">Demo Only</span><span class="reference-function-group-meta">1 function · Dedicated demo environment only</span></summary>
 <p class="reference-function-group-description">Preview or reset the disposable Guided Demo to Day 1.</p>
 <div class="reference-catalogue-list">
 <article id="config.orchestrate_demo_reset-orchestrate_demo_reset" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_demo_reset" data-callable-module="config.orchestrate_demo_reset" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Preview or reset the dedicated Guided Demo to Day 1.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_demo_reset/"><code>orchestrate_demo_reset</code></a></h3>
   <p class="reference-catalogue-item-purpose">Preview or reset the dedicated Guided Demo to Day 1.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">00C_demo_setup</span></p>
+</article>
+</div>
+</details>
+
+<details class="reference-function-group" data-callable-group="preview" data-default-open="false">
+<summary><span class="reference-function-group-title">Preview / In Development</span><span class="reference-function-group-meta">5 functions · Access and consumption capabilities</span></summary>
+<p class="reference-function-group-description">Evaluate effective access scanners and the governed Production table to Data Agent handoff.</p>
+<div class="reference-catalogue-list">
+<article id="access_scanner.scan_effective_access-scan_effective_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_effective_access" data-callable-module="access_scanner.scan_effective_access" data-function-type="public-starter-kit" data-callable-purpose="Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_effective_access/"><code>scan_effective_access</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="access_scanner.scan_workspace_access-scan_workspace_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_workspace_access" data-callable-module="access_scanner.scan_workspace_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_workspace_access/"><code>scan_workspace_access</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Observe table access inherited from Admin, Member, Contributor, and Viewer workspace roles.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="access_scanner.scan_sql_access-scan_sql_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_sql_access" data-callable-module="access_scanner.scan_sql_access" data-function-type="public-starter-kit" data-callable-purpose="Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_sql_access/"><code>scan_sql_access</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Collect direct and explicit role-based SQL permission evidence and resolve it to canonical FabricOps table_id values.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="access_scanner.scan_onelake_access-scan_onelake_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_onelake_access" data-callable-module="access_scanner.scan_onelake_access" data-function-type="public-starter-kit" data-callable-purpose="Observe table access granted through OneLake Security roles for configured Lakehouses.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/scan_onelake_access/"><code>scan_onelake_access</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Observe table access granted through OneLake Security roles for configured Lakehouses.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="data_agent.create_data_agent-create_data_agent" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_data_agent" data-callable-module="consumption.create_data_agent" data-function-type="public-starter-kit" data-callable-purpose="Complete the governed single-table Step 7 handoff without manually composing context or instructions.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_data_agent/"><code>create_data_agent</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>
 </details>

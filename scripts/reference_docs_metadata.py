@@ -5,6 +5,15 @@ from __future__ import annotations
 from typing import NotRequired, TypedDict
 
 
+# Preserve current lifecycle badges after an authorized public rename. Historical
+# manifests keep the released names; these entries do not claim releases of the
+# new spelling and do not provide import or callable compatibility.
+CURRENT_PUBLIC_LIVE_SINCE = {
+    "fabricops_kit.widgets.widget_data_steward.widget_data_steward": "0.2.0",
+    "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement": "0.2.0",
+}
+
+
 class PublicSymbolDocMetadata(TypedDict):
     """Documentation metadata for a public symbol exported in ``__all__``."""
 
@@ -284,8 +293,8 @@ METADATA_TABLE_MODELS = {
 # delegate the physical Delta write to internal helpers. Keep this separate from
 # per-column provenance; do not list read-only access resolution as a writer.
 METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
-    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
-    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
+    "METADATA_DATA_STEWARD": ["widget_data_steward"],
+    "METADATA_DATA_AGREEMENT": ["widget_data_agreement"],
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CONTRACT_ACTIVATION": ["widget_activate_data_contract"],
     "METADATA_PIPELINE_ACTIVATION": ["widget_activate_pipeline"],
@@ -335,52 +344,52 @@ _UNTRACED_AGREEMENT_STEWARD_OWNER = {
 METADATA_COLUMN_OWNERS = {
     "METADATA_DATA_STEWARD": {
         "__default__": [
-            "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+            "fabricops_kit.widgets.widget_data_steward._create_or_update_data_steward",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "table_name": ["fabricops_kit.data_contract.shared.create_contract_draft", "fabricops_kit.data_contract.shared.freeze_contract"],
         "steward_id": [
-            "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
-            "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
+            "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+            "fabricops_kit.widgets.widget_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.widget_data_steward._generate_steward_id",
         ],
         "is_active": [
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.widget_data_steward._create_or_update_data_steward",
             "fabricops_kit.widgets.shared.active_steward",
         ],
         "custom_fields_json": [
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.widget_data_steward._create_or_update_data_steward",
             "fabricops_kit.widgets.shared.serialize_custom_fields",
         ],
     },
     "METADATA_DATA_AGREEMENT": {
         "__default__": [
-            "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "agreement_id": [
-            "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
-            "fabricops_kit.widgets.widget_render_data_agreement._generate_agreement_id",
+            "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._generate_agreement_id",
         ],
         "agreement_version": [
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
-            "fabricops_kit.widgets.widget_render_data_agreement._next_minor_version",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._next_minor_version",
         ],
         "provider_steward_id": [_UNTRACED_AGREEMENT_STEWARD_OWNER],
         "recipient_steward_id": [_UNTRACED_AGREEMENT_STEWARD_OWNER],
         "start_date": [
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
             "fabricops_kit.widgets.shared.parse_iso_date",
         ],
         "expiry_date": [
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
             "fabricops_kit.widgets.shared.parse_iso_date",
         ],
         "custom_fields_json": [
-            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_data_agreement._create_or_update_data_agreement",
             "fabricops_kit.widgets.shared.serialize_custom_fields",
         ],
     },
@@ -594,12 +603,12 @@ MODULE_DOCS_METADATA = [
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_render_data_steward',
+ {'module_name': 'widgets.widget_data_steward',
   'visibility': 'public',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_render_data_agreement',
+ {'module_name': 'widgets.widget_data_agreement',
   'visibility': 'public',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
@@ -671,8 +680,8 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
  {'notebook_key': '01_governance',
   'notebook_label': '`01_governance`',
   'segment_intro': 'Persistent Governance lifecycle before and after Engineering evidence production.',
-  'segments': [{'symbols': ['setup_notebook', 'widget_render_data_steward',
-                            'widget_render_data_agreement',
+  'segments': [{'symbols': ['setup_notebook', 'widget_data_steward',
+                            'widget_data_agreement',
                             'widget_data_contract', 'widget_activate_data_contract',
                             'widget_activate_pipeline'],
                 'title': 'Agreement, Data Contract authoring, and activation'}],
@@ -1062,10 +1071,10 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
-  'module': 'widgets.widget_render_data_steward',
+  'module': 'widgets.widget_data_steward',
   'function_type': 'callable',
   'summary_override': 'Render the standalone data-steward intake widget.',
-  'symbol_name': 'widget_render_data_steward',
+  'symbol_name': 'widget_data_steward',
   'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
   'expanded_purpose': 'Renders the data steward intake widget so a notebook user can capture '
@@ -1086,10 +1095,10 @@ PUBLIC_SYMBOL_DOCS = [
   'related_guides': [{'title': 'Templates',
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}]},
  {'kind': 'function',
-  'module': 'widgets.widget_render_data_agreement',
+  'module': 'widgets.widget_data_agreement',
   'function_type': 'callable',
   'summary_override': 'Render the standalone data-agreement intake widget.',
-  'symbol_name': 'widget_render_data_agreement',
+  'symbol_name': 'widget_data_agreement',
   'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
   'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching '
@@ -1803,7 +1812,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'metadata routing.',
                                                      'The caller lacks permission to create or '
                                                      'update metadata tables.']},
- 'widget_render_data_steward': {'expanded_purpose': 'Renders the data steward intake widget so a '
+ 'widget_data_steward': {'expanded_purpose': 'Renders the data steward intake widget so a '
                                                     'notebook user can capture steward contact and '
                                                     'ownership details for an agreement workflow.',
                                 'when_to_use': 'Use in 01_governance when collecting or updating '
@@ -1821,7 +1830,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                           'cells out of order.',
                                                           'Metadata routing is unavailable when '
                                                           'the widget tries to persist records.']},
- 'widget_render_data_agreement': {'expanded_purpose': 'Renders the data agreement intake widget '
+ 'widget_data_agreement': {'expanded_purpose': 'Renders the data agreement intake widget '
                                                       'used to capture the overarching governance '
                                                       'arrangement between accountable producer and '
                                                       'consumer stewards, including purpose, scope, '
@@ -2076,9 +2085,9 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                             'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'},
                            {'title': 'Metadata Tables',
                             'path': '../../reference/metadata.md'}],
- 'widget_render_data_steward': [{'title': 'Templates',
+ 'widget_data_steward': [{'title': 'Templates',
                                  'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}],
- 'widget_render_data_agreement': [{'title': 'Templates',
+ 'widget_data_agreement': [{'title': 'Templates',
                                    'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}],
  'read_lakehouse_table': [{'title': 'Templates',
                            'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'}],

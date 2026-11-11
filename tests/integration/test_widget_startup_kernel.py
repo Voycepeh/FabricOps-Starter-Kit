@@ -32,11 +32,11 @@ def collect():
 '''
         if workflow == "governance":
             setup += '''
-m = importlib.import_module("fabricops_kit.widgets.widget_render_data_steward")
+m = importlib.import_module("fabricops_kit.widgets.widget_data_steward")
 m.resolve_fabric_context = lambda **kw: (agreement_config(), "dev", {})
 m.list_data_stewards = lambda *a, **kw: collect()
 m.get_spark_session = lambda **kw: object()
-state = m.widget_render_data_steward()
+state = m.widget_data_steward()
 '''
         else:
             setup += '''

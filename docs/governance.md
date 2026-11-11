@@ -52,7 +52,7 @@ An independently activated table contract protects that Table ID and physical de
 
 ## How do I author, freeze and activate one? { #data-contract-lifecycle }
 
-1. **Record accountability.** Use [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md), then create the versioned Data Agreement with [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) to explain ownership, purpose and approved use.
+1. **Record accountability.** Use [`widget_data_steward()`](api/reference/widget_data_steward.md), then create the versioned Data Agreement with [`widget_data_agreement()`](api/reference/widget_data_agreement.md) to explain ownership, purpose and approved use.
 2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue, profiles, processing definition and pipeline participation describe the real table.
 3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing and Guardrails.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
@@ -186,8 +186,8 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 
 | Tool | What you decide | What it records |
 | --- | --- | --- |
-| [`widget_render_data_steward()`](api/reference/widget_render_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
-| [`widget_render_data_agreement()`](api/reference/widget_render_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
+| [`widget_data_steward()`](api/reference/widget_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
+| [`widget_data_agreement()`](api/reference/widget_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
 | [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
 | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | Select one frozen Contract and applicable Agreement for one physical workspace/table | Reviewed activation history in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
 | [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review an exact saved Engineering submission and approve, reject or revoke it independently | Protected decision history and accepted package in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md); approval does not deploy |
