@@ -98,7 +98,8 @@ Runs and Processing State. Saved submissions, Dry Run evidence and notebook
 snapshots in its three native lifecycle folders are removed too. Table
 definitions remain; no metadata migration is performed.
 
-Five Day 1 sources are overwritten and six outputs removed in the reserved
+Four Day 1 tables are overwritten, Orders CSV is validated and retained,
+and six outputs plus the obsolete Bronze Orders table are removed in the reserved
 ``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
 tables and source files are preserved. Exact demo table/workspace references,
 relevant jobs, artifact contents, fixture counts and catalog locations are
@@ -130,9 +131,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:261`
+`fabricops_kit/config/orchestrate_demo_reset.py:269`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L261-L444">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L269-L468">View on GitHub</a>
 </div>
 
 

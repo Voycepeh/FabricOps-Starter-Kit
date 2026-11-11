@@ -6,22 +6,26 @@
 2. Download [`02A_full_refresh_demo.ipynb`](https://raw.githubusercontent.com/Voycepeh/FabricOps-Starter-Kit/main/templates/DemoData/02A_full_refresh_demo.ipynb) and import it into the Engineering Development workspace.
 3. Keep `00_env_config.ipynb` beside the demo notebook.
 4. Attach the same Fabric Environment configured in [Step 00B](00B-configure-environment-and-load-assets.md).
-5. Confirm these source tables exist:
+5. Confirm these source datasets exist:
 
 | Source | Location |
 | --- | --- |
-| Orders | Bronze Lakehouse · `demo.orders` |
+| Orders | Bronze Lakehouse Files · `demo/orders.csv` |
 | Products | Bronze Lakehouse · `demo.products` |
 | Order History | Gold Warehouse · `demo.order_history` |
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists table source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Orders CSV profiles remain session-only; select its path in the existing Data Contract editor to observe its schema. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
     Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
+
+This pipeline combines **CSV file, Lakehouse table and Warehouse table** Reads before its existing retail transformations and two table Writes. READ 1 calls `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"})`. The timestamp format preserves the fixture timestamp columns. Products and Order History keep their existing table reads, joins, aggregations and destinations.
+
+File Reads use execution planning, applicable Data Contract checks and Read-stage reporting. They return `dataframe` with a stable `source_id`, without a fabricated `table_id`. Full Read is the only supported file mode; file checkpoints, change detection, deduplication and exactly-once guarantees are outside this workflow.
 
 ## The big picture
 
@@ -80,7 +84,7 @@ This demo runs three governed Full Reads instead of the single example in Step 2
 
 | Block | Source | Saved result | Difference to notice |
 | --- | --- | --- | --- |
-| READ 1 — Orders | Bronze Lakehouse · `demo.orders` | `sources["orders"]` | Reads and profiles the complete table. |
+| READ 1 — Orders | Bronze Lakehouse Files · `demo/orders.csv` | `sources["orders"]` | Reads the complete CSV selection and profiles it in memory using pipeline settings. |
 | READ 2 — Products | Bronze Lakehouse · `demo.products` | `sources["products"]` | Adds a second Lakehouse source to the same transform. |
 | READ 3 — Order History | Gold Warehouse · `demo.order_history` | `sources["history"]` | Pushes a `SELECT` query to the Warehouse. |
 
@@ -184,7 +188,7 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 
 | Store | Table | What was saved |
 | --- | --- | --- |
-| Bronze Lakehouse | `demo.orders` | Existing source prepared in Step 00C; unchanged by this notebook. |
+| Bronze Lakehouse Files | `demo/orders.csv` | CSV retained and validated in Step 00C; Bronze `demo.orders` is intentionally absent. |
 | Bronze Lakehouse | `demo.products` | Existing source prepared in Step 00C; unchanged by this notebook. |
 | Gold Warehouse | `demo.order_history` | Existing source prepared in Step 00C; unchanged by this notebook. |
 | Silver Lakehouse | `demo.curated_orders` | Detailed order-level result, fully replaced by WRITE 1. |

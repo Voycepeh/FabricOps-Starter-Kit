@@ -1034,8 +1034,13 @@ def widget_data_contract(
     -----
     Authoring, review, and freezing route through the configured central Governance
     Metadata Lakehouse even when the notebook workspace is not a pipeline environment.
-    The selected Catalogue observation remains the contract evidence owner. Activation
-    and governed pipeline execution still require a configured environment mapping.
+    Tables retain their selected Catalogue observation. Named file datasets share
+    the selector; enter a validated configured Files path and reader settings to
+    observe a new file schema without registering a table. File contracts preserve
+    Source ID and exact format/options through Save, Freeze and Activation.
+    Returned state uses source_id for files and table_id for physical tables;
+    dataset_id identifies either selection. File profiles remain session-only.
+    Activation and governed execution still require configured environment mapping.
     Save overwrites the complete canonical JSON for the selected draft version, then reloads
     that exact version. A new draft is seeded from the previous frozen version when one exists.
     Engineering processing is reviewed through Pipeline Activation and is not authored in contracts.
@@ -1161,12 +1166,13 @@ def widget_data_contract(
             spark_session=spark, metadata_workspace_id=routing_workspace_id,
         )
         table_rows = catalogue["tables"]
+        file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
         if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
             raise ValueError("table_id has no active table-level Catalogue row in central governance metadata.")
     state: dict[str, Any] = {
         "authoring_workspace_id": authoring_workspace_id,
-        "workspace_id": None, "table_id": None, "contract_version": None,
-        "pending_table_id": table_id, "pending_contract_version": contract_version,
+        "workspace_id": None, "dataset_id": None, "table_id": None, "source_id": None, "contract_version": None,
+        "pending_dataset_id": table_id, "pending_table_id": table_id, "pending_source_id": None, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
@@ -1290,7 +1296,7 @@ def widget_data_contract(
         """Route usage to central Metadata while preserving notebook and asset identity."""
         contract = (state.get("current") or {}).get("contract") or {}
         return {**resolved, "config": config, "scope_workspace_id": routing_workspace_id,
-                "ai_usage_metadata": {"table_id": state.get("table_id"), "column_id": column_id,
+                "ai_usage_metadata": {"table_id": None if str(state.get("dataset_id")).startswith("file:") else state.get("dataset_id"), "column_id": column_id,
                                       "contract_id": contract.get("contract_id"),
                                       "contract_version": state.get("contract_version"),
                                       "evidence_workspace_id": active_workspace_id}}
@@ -1381,10 +1387,13 @@ def widget_data_contract(
     def select(selected_table: str, version: int | None = None) -> dict[str, Any] | None:
         state.pop("_refresh_guardrail_sidebar", None)
         state["_validation_errors"].clear()
-        state["table_id"] = str(selected_table or "").strip() or None
+        state["dataset_id"] = str(selected_table or "").strip() or None
+        is_file = str(state["dataset_id"]).startswith("file:")
+        state["table_id"] = None if is_file else state["dataset_id"]
+        state["source_id"] = state["dataset_id"] if is_file else None
         matches = [
             row for row in state["contracts"]
-            if str(row.get("table_id") or "") == str(state["table_id"] or "")
+            if str(row.get("source_id") or row.get("table_id") or "") == str(state["dataset_id"] or "")
         ]
         if not matches:
             state["current"] = None
@@ -1401,7 +1410,7 @@ def widget_data_contract(
             )
             if chosen is None:
                 raise ValueError(
-                    f"Data Contract v{int(version)} was not found for table {state['table_id']}."
+                    f"Data Contract v{int(version)} was not found for table {state['dataset_id']}."
                 )
         state["contract_version"] = int(chosen["contract_version"])
         began = perf_counter()
@@ -1426,10 +1435,13 @@ def widget_data_contract(
         return state["current"]
 
     def new_draft() -> dict[str, Any]:
-        if not state.get("table_id") or not state.get("workspace_id"):
-            raise ValueError("Select a table and workspace before creating a draft.")
+        if not state.get("dataset_id") or not state.get("workspace_id"):
+            raise ValueError("Select a dataset and workspace before creating a draft.")
         draft = contracts.create_contract_draft(
-            table_id=str(state["table_id"]), config=config, active_workspace_id=active_workspace_id,
+            **({"file_source": {key: value for key, value in next(row for row in file_rows if row["source_id"] == state["dataset_id"]).items()
+                 if key not in {"store", "columns"}}, "columns": next(row["columns"] for row in file_rows if row["source_id"] == state["dataset_id"])}
+                if str(state["dataset_id"]).startswith("file:") else {"table_id": str(state["dataset_id"])}),
+            config=config, active_workspace_id=active_workspace_id,
             spark_session=spark, context=resolved,
             metadata_workspace_id=routing_workspace_id,
         )
@@ -1440,7 +1452,7 @@ def widget_data_contract(
                 and row.get("contract_version") == draft.get("contract_version")
             )
         ]]
-        select(str(state["table_id"]), int(draft["contract_version"]))
+        select(str(state["dataset_id"]), int(draft["contract_version"]))
         return draft
 
     def stage_enrichment(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1539,11 +1551,11 @@ def widget_data_contract(
         if return_to_selector_after:
             return_to_selector = state.get("_return_to_selector")
             if callable(return_to_selector):
-                return_to_selector("Data Contract draft saved. Select a governed table and contract.")
+                return_to_selector("Data Contract draft saved. Select a dataset and contract.")
             else:
                 set_status("Data Contract draft saved.")
         else:
-            select(str(state["table_id"]), int(state["contract_version"]))
+            select(str(state["dataset_id"]), int(state["contract_version"]))
             set_status("Data Contract draft saved.")
 
     @busy_action("Discarding unsaved changes…")
@@ -1559,20 +1571,22 @@ def widget_data_contract(
         state["_column_dq_selection"].pop(scope, None)
         state["dirty"] = False
         if return_to_selector_after:
-            return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
+            return_to_selector("Unsaved changes discarded. Select a dataset and contract.")
         else:
-            select(str(state["table_id"]), int(state["contract_version"]))
+            select(str(state["dataset_id"]), int(state["contract_version"]))
             render()
             set_status("Unsaved Data Contract changes discarded.")
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
         """Load one column profile once per governed table and reuse it within the widget."""
-        selected_table = str(state.get("table_id") or "").strip()
+        selected_table = str(state.get("dataset_id") or "").strip()
         selected_column = str(column_id or "").strip()
         if not selected_table or not selected_column:
             raise ValueError("Select a governed table and column before loading profile context.")
         cache_key = (active_workspace_id, selected_table, selected_column)
         profile_cache: dict[tuple[str, str, str], dict[str, Any]] = state["_profile_cache"]
+        if selected_table.startswith("file:") and cache_key not in profile_cache:
+            profile_cache[cache_key] = {"kind": "unavailable", "message": "File profiles are session-only; no persisted table profile is available."}
         if cache_key not in profile_cache:
             began = perf_counter()
             try:
@@ -1605,7 +1619,7 @@ def widget_data_contract(
             metadata_workspace_id=routing_workspace_id,
         )
         state["contracts"] = latest["contracts"]
-        select(str(state["table_id"]), int(state["contract_version"]))
+        select(str(state["dataset_id"]), int(state["contract_version"]))
         return result
 
     state.update(
@@ -1667,7 +1681,7 @@ def widget_data_contract(
 
     table_selector = dynamic_selector(
         placeholder="Search governed tables...",
-        empty_label="Select governed table",
+        empty_label="Select dataset",
     )
     contract_selector = dynamic_selector(placeholder="Search contract versions...", empty_label="Select contract")
     workspace_selector = dynamic_selector(placeholder="Search workspaces...", empty_label="Select workspace")
@@ -1687,7 +1701,7 @@ def widget_data_contract(
         )
 
     workspace_selector_field = selector_field("Workspace", workspace_selector["container"])
-    table_selector_field = selector_field("Table", table_selector["container"])
+    table_selector_field = selector_field("Dataset", table_selector["container"])
     contract_selector_field = selector_field("Contract", contract_selector["container"])
     workspace_selector_field.layout.grid_area = "workspace"
     table_selector_field.layout.grid_area = "table"
@@ -1727,9 +1741,12 @@ def widget_data_contract(
         return f"{schema_name}.{table_name}" if schema_name else table_name
 
     def table_selector_label(row: Mapping[str, Any]) -> str:
-        table_name = qualified_table_name(row)
-        item_name = configured_item_name(row)
-        return f"{item_name} · {table_name}" if item_name else table_name
+        if row.get("source_type") == "file":
+            return contracts.dataset_display_name(row)
+        name = qualified_table_name(row)
+        item = configured_item_name(row)
+        workspace = row.get("_workspace_name") or row.get("workspace_id") or ""
+        return f"{item} · {name} — Table · {workspace}"
 
     rows_cache: dict[str, Any] = {}
 
@@ -1822,7 +1839,7 @@ def widget_data_contract(
             "right_pane": right, "status": status,
         })
         if not current:
-            prompt = widgets.HTML("<p>Select a governed table and contract.</p>")
+            prompt = widgets.HTML("<p>Select a dataset and contract.</p>")
             left.children = (prompt,)
             right.children = ()
             return
@@ -1901,6 +1918,8 @@ def widget_data_contract(
             table = (state.get("manifest") or {}).get("table", {})
         observed_names = {str(item.get("column_name")) for item in current.get("catalogue_rows", [])
                           if item.get("column_id") and item.get("is_active") is not False}
+        if current.get("payload", {}).get("source", {}).get("source_type") == "file":
+            observed_names = {str(item.get("column_name")) for item in current.get("available_columns", [])}
         contracted_names = {str(item.get("column_name")) for item in columns}
         state["observation_difference"] = {"unaccounted_columns": sorted(observed_names - contracted_names),
                                            "missing_contracted_columns": sorted(contracted_names - observed_names)}
@@ -2888,9 +2907,14 @@ def widget_data_contract(
             nonlocal runtime_context, runtime_summary_html
             if runtime_context:
                 return
+            if current.get("payload", {}).get("source", {}).get("source_type") == "file":
+                runtime_context = {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "pipeline_usage": []}
+                runtime_summary_html = runtime_context_html()
+                load_table_context_button.layout.display = "none"
+                return
             loaded = contracts.get_table_runtime_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-                table_id=str(state.get("table_id") or ""),
+                table_id=str(state.get("dataset_id") or ""),
                 metadata_workspace_id=routing_workspace_id,
             )
             runtime_context = loaded
@@ -2899,7 +2923,7 @@ def widget_data_contract(
                 profiles = loaded["profile_contexts"]
                 for column in authoring_columns:
                     column_id = str(column.get("column_id") or "")
-                    state["_profile_cache"][(active_workspace_id, str(state["table_id"]), column_id)] = profiles.get(
+                    state["_profile_cache"][(active_workspace_id, str(state["dataset_id"]), column_id)] = profiles.get(
                         column_id, {"kind": "unavailable", "message": (
                             f"Not yet profiled in workspace {active_workspace_id}. "
                             "Select the workspace where profiling ran, then reopen the contract to reload its profiles."
@@ -4115,7 +4139,7 @@ def widget_data_contract(
                 profile_value = load_profile_context(column_id)
                 profile = dict(profile_value.get("profile") or {})
                 context_value = build_ai_sensitive_data_context({
-                    "table_id": state.get("table_id"),
+                    "table_id": state.get("dataset_id"),
                     "table_name": table.get("table_name"),
                     "schema_name": table.get("schema_name"),
                     "layer": table.get("layer"),
@@ -7137,7 +7161,7 @@ def widget_data_contract(
     def refresh_table_options(*_args: Any) -> None:
         if state["_selector_refreshing"]:
             return
-        options = contracts.observation_selector_options(table_rows, workspace_id=state.get("workspace_id"))
+        options = contracts.dataset_selector_options(table_rows, file_rows, workspace_id=state.get("workspace_id"))
         eligible = [
             row for row in table_rows
             if str(row.get("table_id") or "") in options["tables"]
@@ -7150,7 +7174,10 @@ def widget_data_contract(
         for row in eligible:
             rows_by_table_id.setdefault(str(row["table_id"]), row)
 
-        selected = str(state.get("pending_table_id") or "")
+        rows_by_table_id.update({row["source_id"]: row for row in file_rows})
+        selected = str(state.get("pending_dataset_id") or "")
+        state["pending_table_id"] = None if selected.startswith("file:") else selected or None
+        state["pending_source_id"] = selected if selected.startswith("file:") else None
         state["_selector_refreshing"] = True
         try:
             table_control.refresh_rows(
@@ -7160,12 +7187,52 @@ def widget_data_contract(
                 ],
                 selected if selected in options["tables"] else "",
             )
-            workspaces = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
-            labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in table_rows}
+            workspaces = contracts.dataset_selector_options(table_rows, file_rows, table_id=selected)["workspaces"]
+            labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in [*table_rows, *file_rows]}
             workspace_control.refresh_rows([{"label": f"{labels[value]} ({value})", "value": value} for value in workspaces],
                                            state.get("workspace_id") or "")
         finally:
             state["_selector_refreshing"] = False
+
+    file_store = widgets.Text(description="", value="Bronze", layout=widgets.Layout(width="100%"))
+    file_path = widgets.Text(description="", placeholder="demo/orders.csv", layout=widgets.Layout(width="100%"))
+    file_format = widgets.Dropdown(description="", options=["csv", "json", "parquet", "excel"], layout=widgets.Layout(width="100%"))
+    file_options = widgets.Textarea(description="", value='{"header": true, "inferSchema": true}', layout=widgets.Layout(width="100%"))
+    file_add = widgets.Button(description="Select file source", button_style="primary")
+
+    @busy_action("Observing file schema…")
+    def select_file_source(_button=None):
+        nonlocal active_workspace_id
+        from fabricops_kit.pipeline.shared import resolve_file_participant, file_participant_source, read_file_participant
+        from uuid import uuid5, NAMESPACE_URL
+        identity = resolve_file_participant(store=file_store.value.strip(), relative_path=file_path.value.strip(),
+            file_format=file_format.value, read_options=json.loads(file_options.value),
+            context={**resolved, "config": config, "scope_workspace_id": authoring_workspace_id})
+        source = file_participant_source(identity)
+        frame = read_file_participant(identity, context={**resolved, "config": config, "scope_workspace_id": authoring_workspace_id}, spark_session=spark)["dataframe"]
+        columns = [{"column_id": str(uuid5(NAMESPACE_URL, source["source_id"] + ":" + field.name)),
+                    "column_name": field.name, "data_type": field.dataType.simpleString()} for field in frame.schema.fields]
+        file_rows[:] = [row for row in file_rows if row["source_id"] != source["source_id"]]
+        file_rows.append({**source, "store": identity["store"], "columns": columns})
+        state["workspace_id"] = source["workspace_id"]
+        active_workspace_id = source["workspace_id"]
+        state["pending_dataset_id"] = source["source_id"]
+        refresh_table_options()
+        table_changed({"new": source["source_id"]})
+
+    def file_clicked(button):
+        try:
+            select_file_source(button)
+        except Exception as exc:
+            set_status(str(exc), error=True)
+    file_add.on_click(file_clicked)
+    file_authoring = widgets.Accordion(children=[widgets.VBox([selector_field("Configured store", file_store), selector_field("Relative Files path", file_path),
+        selector_field("File format", file_format), selector_field("Reader options (JSON)", file_options), file_add], layout=widgets.Layout(width="100%"))])
+    file_authoring.set_title(0, "Select a Lakehouse file, folder or wildcard")
+    file_authoring.selected_index = None
+    selector_panel.children = (*selector_panel.children, file_authoring)
+    state["_controls"].update(file_store=file_store, file_path=file_path, file_format=file_format,
+                              file_options=file_options, select_file=file_add, file_source_panel=file_authoring)
 
     def table_changed(change: dict[str, Any]) -> None:
         if state["_selector_refreshing"]:
@@ -7175,14 +7242,14 @@ def widget_data_contract(
             str(state.get("pending_contract_version") or "")
             if change.get("initial") else ""
         )
-        state["pending_table_id"] = selected or None
+        state["pending_dataset_id"] = selected or None
         state["pending_contract_version"] = None
-        valid = contracts.observation_selector_options(table_rows, table_id=selected)["workspaces"]
+        valid = contracts.dataset_selector_options(table_rows, file_rows, table_id=selected)["workspaces"]
         if state.get("workspace_id") not in valid:
             state["workspace_id"] = None
         refresh_table_options()
         matches = sorted(
-            [row for row in state["contracts"] if str(row.get("table_id") or "") == selected],
+            [row for row in state["contracts"] if str(row.get("source_id") or row.get("table_id") or "") == selected],
             key=lambda row: -int(row.get("contract_version") or 0),
         )
         rows = [{"label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
@@ -7211,12 +7278,12 @@ def widget_data_contract(
         selected = str(change.get("new") or "")
         state["workspace_id"] = selected or None
         active_workspace_id = selected or routing_workspace_id
-        valid = contracts.observation_selector_options(table_rows, workspace_id=selected)["tables"]
-        if state.get("pending_table_id") not in valid:
-            state["pending_table_id"] = None
+        valid = contracts.dataset_selector_options(table_rows, file_rows, workspace_id=selected)["tables"]
+        if state.get("pending_dataset_id") not in valid:
+            state["pending_dataset_id"] = None
             state["pending_contract_version"] = None
         refresh_table_options()
-        table_changed({"new": state.get("pending_table_id")})
+        table_changed({"new": state.get("pending_dataset_id")})
 
     def contract_changed(change: dict[str, Any]) -> None:
         if state["_selector_refreshing"]:
@@ -7226,10 +7293,10 @@ def widget_data_contract(
 
     @busy_action("Opening Data Contract…")
     def open_selected() -> None:
-        selected_table = str(state.get("pending_table_id") or "")
+        selected_table = str(state.get("pending_dataset_id") or "")
         selected_contract = contract_control.value
         if not selected_table or not selected_contract:
-            set_status("Select a governed table and contract before opening.", error=True)
+            set_status("Select a dataset and contract before opening.", error=True)
             return
         open_button.disabled = True
         set_open_progress("Opening contract…")
@@ -7237,7 +7304,7 @@ def widget_data_contract(
             if selected_contract == "new":
                 if not state.get("workspace_id"):
                     raise ValueError("Select a workspace observation before creating a draft.")
-                state["table_id"] = selected_table
+                state["dataset_id"] = selected_table
                 new_draft()
             else:
                 select(selected_table, int(selected_contract))
@@ -7259,7 +7326,9 @@ def widget_data_contract(
     def return_to_selector(message: str) -> None:
         state["current"] = None
         state["manifest"] = None
+        state["dataset_id"] = None
         state["table_id"] = None
+        state["source_id"] = None
         state["contract_version"] = None
         editor_shell.layout.display = "none"
         selector_panel.layout.display = ""
@@ -7272,7 +7341,7 @@ def widget_data_contract(
         if has_pending_authoring_changes():
             table_exit_confirm.layout.display = ""
             return
-        return_to_selector("Select a governed table and contract.")
+        return_to_selector("Select a dataset and contract.")
 
     def cancel_exit_clicked(_button: Any) -> None:
         table_exit_confirm.layout.display = "none"
@@ -7282,7 +7351,7 @@ def widget_data_contract(
         if state.get("current"):
             discard_data_contract_session(return_to_selector_after=True)
         else:
-            return_to_selector("Unsaved changes discarded. Select a governed table and contract.")
+            return_to_selector("Unsaved changes discarded. Select a dataset and contract.")
 
     open_button.on_click(lambda _button: open_selected())
     change_table_button.on_click(change_table)
@@ -7290,15 +7359,15 @@ def widget_data_contract(
     confirm_exit_discard.on_click(confirm_exit_clicked)
 
     refresh_table_options()
-    if state.get("pending_table_id"):
-        table_changed({"new": state["pending_table_id"], "initial": True})
+    if state.get("pending_dataset_id"):
+        table_changed({"new": state["pending_dataset_id"], "initial": True})
     table_control.observe(table_changed, names="value")
     workspace_control.observe(workspace_changed, names="value")
     contract_control.observe(contract_changed, names="value")
     render()
     page = shared.form_page(
         widgets, title="Data Contract", tone="governance",
-        description="Select, author, review, and freeze one governed table contract.",
+        description="Select, author, review, and freeze one governed dataset contract.",
         children=[selector_panel, editor_shell],
     )
     page.layout.height = "auto"

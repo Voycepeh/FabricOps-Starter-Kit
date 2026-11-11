@@ -108,7 +108,7 @@ def execution_result(context, table_id, *, stages=()):
     return {
         "execution_mode": plan.execution_mode, "execution_plan_id": plan.plan_id,
         "execution_workspace_id": plan.workspace_id,
-        "guardrail_outcomes": [dict(row) for row in plan.results if row.get("table_id") == table_id],
+        "guardrail_outcomes": [dict(row) for row in plan.results if (row.get("source_id") or row.get("table_id")) == table_id],
         "simulation_outcomes": list(plan.simulations),
         "selected_contract": ({"contract_id": contract["contract_id"],
                                "contract_version": contract["contract_version"]} if contract else None),
@@ -1539,7 +1539,7 @@ def evaluate_pipeline_source_drift(plan, *, verbose=False, spark_session=None):
             raise error
         return decision
     identities = json.loads(plan.participants_json)
-    source_ids = {tid for tid, identity in identities.items() if "source" in identity["roles"]}
+    source_ids = {tid for tid, identity in identities.items() if "source" in identity["roles"] and identity.get("source_type") != "file"}
     observations = plan.evidence.get("source_drift_observations", {})
     missing = source_ids - set(observations)
     results = [observations[tid] for tid in sorted(source_ids & set(observations))]
@@ -2839,7 +2839,8 @@ def write_guardrail_result_row(
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
-        "table_id": str(table_id or result.get("table_id") or "").strip(),
+        **({"source_id": table_id, "table_id": None} if str(table_id).startswith("file:") else
+           {"table_id": str(table_id or result.get("table_id") or "").strip()}),
         "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
@@ -3241,7 +3242,7 @@ def resolve_data_contract_version(
             f"Data Contract integrity error: {contract_id!r} version {requested_version} has duplicate version rows."
         )
     row = dict(matches[0])
-    if str(row.get("table_id") or "") != table_id:
+    if (row.get("source_id") or str(row.get("table_id") or "")) != table_id:
         raise ValueError(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
@@ -3273,6 +3274,11 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
         from fabricops_kit.activated_pipeline.shared import verify_governed_plan
         verify_governed_plan(plan, spark_session=spark_session)
     for table_id in identities:
+        contract = context["_pipeline_contracts"].get(table_id)
+        if identities[table_id].get("source_type") == "file" and contract is not None:
+            payload = contract.get("contract_payload") or _contract_payload(contract)
+            if payload.get("source") != file_participant_source(identities[table_id]):
+                raise ValueError("File source or reader options differ from the exact frozen contract.")
         load_table_guardrail_rules(config, active_workspace_id, table_id=table_id, spark_session=spark_session, context=context)
     return context
 
@@ -3297,7 +3303,8 @@ def source_guardrail_results(context, sources):
     plan = context["execution_plan"]
     outcomes = []
     for source in sources:
-        table_id = source["table_id"]
+        table_id = participant_id(source)
+        identity_field = "source_id" if source.get("source_type") == "file" else "table_id"
         contract = context["_pipeline_contracts"].get(table_id)
         if contract is None:
             continue
@@ -3316,7 +3323,7 @@ def source_guardrail_results(context, sources):
                     if scope not in {"read_full", "read_incremental_batch"}:
                         return False
                 return all(row.get(key) == value for key, value in {
-                    "table_id": table_id, "contract_id": contract["contract_id"],
+                    identity_field: table_id, "contract_id": contract["contract_id"],
                     "contract_version": contract["contract_version"], "guardrail_type": kind,
                     "guardrail_rule_id": rule["guardrail_rule_id"],
                     "guardrail_version": rule.get("guardrail_version", 1),
@@ -3331,7 +3338,7 @@ def source_guardrail_results(context, sources):
                     "passed", "pass", "warning", "warn", "baseline_created"
                 } for row in rows if metadata_timestamp_sort_key(row.get("_committed_at")) == latest)
             allowed = permits(saved) and permits(current)
-            outcome = {"table_id": table_id, "guardrail_rule_id": rule["guardrail_rule_id"],
+            outcome = {identity_field: table_id, "guardrail_rule_id": rule["guardrail_rule_id"],
                        "guardrail_type": kind, "action": rule.get("action"), "can_continue": allowed,
                        "status": ("warning" if any(str(row.get("status")).lower() in {"warn", "warning"}
                                                   for row in saved) else "passed") if allowed else "blocked"}
@@ -4948,7 +4955,7 @@ def check_dq_runtime(
             "guardrail_result_id": str(uuid4()),
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "guardrail_version": rule["guardrail_version"],
-            "table_id": table_id,
+            **({"source_id": table_id, "table_id": None} if str(table_id).startswith("file:") else {"table_id": table_id}),
             "contract_id": str(contract_id or ""),
             "contract_version": int(contract_version or 0),
             "execution_type": execution_mode,
@@ -5467,7 +5474,7 @@ def _select_rule(
         row = _row_to_dict(raw)
         if str(row.get("guardrail_type") or "").lower() != guardrail_type.lower():
             continue
-        if str(row.get("table_id") or "") != table_id:
+        if (row.get("source_id") or str(row.get("table_id") or "")) != table_id:
             continue
         rule_workspace_id = str(row.get("workspace_id") or "")
         if workspace_id and rule_workspace_id != workspace_id:
@@ -5884,11 +5891,110 @@ class ExecutionSummary:
         return elapsed
 
 
+def participant_id(participant):
+    """Return a typed participant's canonical Table ID or distinct file Source ID."""
+    return participant.get("source_id") or participant["table_id"]
+
+
+def resolve_file_participant(*, store, relative_path, file_format, read_options=None, context):
+    """Resolve the configured Files root and reuse the canonical contract identity."""
+    from fabricops_kit.io.shared import resolve_configured_file_path
+    from fabricops_kit.data_contract.shared import file_source_identity
+    # Validate before path resolution, including traversal that a path normalizer could hide.
+    file_source_identity(workspace_id="validation", item_id="validation", relative_path=relative_path,
+                         file_format=file_format, reader_options=read_options)
+    options = dict(read_options or {})
+    if any(str(key).lower() in {"path", "paths", "context", "store", "relative_path"} for key in options):
+        raise ValueError("read_options cannot override the approved file location or runtime context.")
+    configured, path, _ = resolve_configured_file_path(store, relative_path, context=context)
+    if str(configured.kind).lower() != "lakehouse":
+        raise ValueError("File reads require a Lakehouse store; Warehouse file routing is unsupported.")
+    source = file_source_identity(workspace_id=configured.workspace_id, item_id=configured.item_id,
+        relative_path=path, file_format=file_format, reader_options=options)
+    return {**source, "store": store, "logical_id": f"{store}/Files/{source['relative_path']}"}
+
+
+def read_file_participant(identity, *, context, spark_session):
+    """Read a planned file using foundational I/O and the execution-owned Spark session."""
+    from fabricops_kit.io import read_lakehouse_csv, read_lakehouse_json, read_lakehouse_parquet, read_lakehouse_excel
+    from fabricops_kit.io.shared import resolve_configured_file_path
+    readers = {"csv": read_lakehouse_csv, "json": read_lakehouse_json,
+               "parquet": read_lakehouse_parquet, "excel": read_lakehouse_excel}
+    _, _, path = resolve_configured_file_path(identity["store"], identity["relative_path"], context=context)
+    frame = readers[identity["file_format"]](identity["relative_path"], store=identity["store"],
+        context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}, **identity["reader_options"])
+    return {**file_participant_source(identity), "store": identity["store"], "dataframe": frame,
+            "source_location": {"workspace_id": identity["workspace_id"], "item_id": identity["item_id"],
+                                "relative_path": identity["relative_path"]},
+            "resolved_path": path, "read_mode": "full", "is_query": False,
+            "_reader_name": readers[identity["file_format"]].__name__,
+            "read_metrics": {"rows_read": None, "columns": len(frame.columns), "measurement_source": None}}
+
+
+def schedule_file_profiling(dataframe, *, source_id, context, presentations):
+    """Run pipeline-owned profiling activities without creating table snapshots.
+
+    File completion history is session-local. No durable interval is consumed;
+    each new execution reevaluates eligibility because files may be replaced.
+    """
+    plan = context["execution_plan"]
+    settings = validate_pipeline_profiling(plan.evidence.get("profiling_configuration"))
+    history = plan.evidence.setdefault("file_profiles", {}).setdefault(source_id, {})
+    policy = pipeline_profiling_policy(context=context)
+    due = {activity for activity in PROFILING_ACTIVITIES
+           if profiling_due(policy[activity], history.get(activity, {}), "read", datetime.now(UTC))}
+    if not due:
+        return {"status": "not_due" if any(policy[name]["enabled"] for name in policy) else "disabled",
+                "source_id": source_id, "results_persisted": False}
+    limit = settings["profiling_max_rows"]
+    scope = {"profile_scope": "bounded_selection" if limit is not None else "supplied_dataframe", "profiling_max_rows": limit}
+    selected = dataframe.limit(limit) if limit is not None else dataframe
+    profile = build_profile_dataframe(selected).cache()
+    try:
+        row = profile.select("ROW_COUNT").first()
+        row_count = int(row["ROW_COUNT"]) if row is not None else 0
+        candidates = (_spark_profile_key_candidates(selected, profile, max_columns=3, max_candidates=8)
+                      if "grain" in due else [])
+        frequency_columns = _selected_frequency_columns(selected, profile, None, 80.0) if "frequency" in due else []
+        frequency = build_frequency_distribution_dataframe(selected, columns=frequency_columns, top_n=5) if frequency_columns else None
+        if "standard" in due:
+            presentation = capture_profile_presentation(profile, scope=scope, dry_run=not plan.permits_persistence)
+            if presentation:
+                presentation["title"] += " · File selection (session only)"
+                presentations.append(presentation)
+        for activity in due:
+            history[activity] = {"last_success": datetime.now(UTC).isoformat()}
+        return {"status": "completed", "source_id": source_id, "profile": profile, "row_count": row_count,
+                "results_persisted": False, **scope, "grain_candidates": candidates, "frequency_profile": frequency,
+                "activities": sorted(due)}
+    finally:
+        profile.unpersist()
+
+
+def file_participant_source(identity):
+    """Extract the exact PR #1818 source descriptor for approval comparison."""
+    return {key: identity[key] for key in ("source_type", "source_id", "workspace_id", "item_id",
+                                         "relative_path", "file_format", "reader_options")}
+
+
+def file_binding_source(binding):
+    """Decode the explicit reader-options JSON in a persisted file destination."""
+    if "reader_options_json" not in binding:
+        return dict(binding)
+    return {**{key: value for key, value in binding.items() if key != "reader_options_json"},
+            "reader_options": json.loads(binding["reader_options_json"])}
+
+
 def pipeline_physical_bindings(identities, *, config, workspace_id):
     """Capture each participant's configured physical destination independently of execution scope."""
     bindings = {}
     for table_id, item in identities.items():
         store = get_store(config, workspace_id, item["store"])
+        if item.get("source_type") == "file":
+            source = file_participant_source(item)
+            bindings[table_id] = {**{key: value for key, value in source.items() if key != "reader_options"},
+                                  "reader_options_json": canonical_pipeline_json(source["reader_options"])}
+            continue
         bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
@@ -5951,7 +6057,12 @@ def resolve_pipeline_participants(config, active_workspace_id, *, sources, targe
     identities = {}
     for role, participants in (("source", sources), ("target", targets)):
         for participant in participants:
-            if "store" in participant:
+            if participant.get("relative_path") is not None:
+                if role != "source":
+                    raise ValueError("Files participate only as Read sources.")
+                identity = resolve_file_participant(**{key: participant.get(key) for key in
+                    ("store", "relative_path", "file_format", "read_options")}, context={**(context or {}), "config": config, "scope_workspace_id": active_workspace_id})
+            elif "store" in participant:
                 identity = resolve_physical_table_identity(config, active_workspace_id, **{
                     key: participant[key] for key in ("store", "schema", "table_name")
                 })
@@ -5962,14 +6073,14 @@ def resolve_pipeline_participants(config, active_workspace_id, *, sources, targe
                     config, active_workspace_id, participant["table_id"], context=context, spark_session=spark_session,
                 )
             identity = {**identity, "store_type": identity.get("store_type") or identity.get("store_kind")}
-            table_id = identity["table_id"]
-            logical_id = participant.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
+            table_id = participant_id(identity)
+            logical_id = participant.get("logical_id") or identity.get("logical_id") or f"{identity['store']}/{identity['table_name']}"
             if table_id in identities and identities[table_id].get("logical_id") != logical_id:
                 raise ValueError("A participant must use the same logical_id in every role.")
             roles = list(identities.get(table_id, {}).get("roles", []))
             if role in roles:
                 raise ValueError(f"Duplicate {role} participant {table_id!r}.")
-            identities[table_id] = {**identity, "logical_id": participant.get("logical_id") or f"{identity['store']}/{identity['table_name']}", "roles": [*roles, role]}
+            identities[table_id] = {**identity, "logical_id": logical_id, "roles": [*roles, role]}
     if not identities:
         raise ValueError("Configure at least one actual source or target.")
     return identities
@@ -6015,12 +6126,20 @@ def validate_pipeline_run(row):
     elif row.get("execution_mode") == "governed" and any(row.get(key) in (None, "") for key in provenance):
         raise ValueError("Governed Run requires exact Pipeline Promotion and execution identity provenance.")
     operations = row["operations"]
-    keys = [(item["table_id"], item["pipeline_role"]) for item in operations]
+    keys = [(participant_id(item), item["pipeline_role"]) for item in operations]
     if len(keys) != len(set(keys)) or len({item["operation_key"] for item in operations}) != len(keys):
         raise ValueError("Duplicate Pipeline Run operation membership.")
     for item in operations:
-        if item["pipeline_role"] not in {"source", "target"} or not item["table_id"] or not item["destination"]:
-            raise ValueError("Pipeline Run requires exact table roles and destinations.")
+        if item["pipeline_role"] not in {"source", "target"} or not participant_id(item) or not item["destination"]:
+            raise ValueError("Pipeline Run requires exact participant roles and destinations.")
+        if item.get("source_type") == "file":
+            from fabricops_kit.data_contract.shared import validate_contract_source
+            source = file_binding_source(item["destination"])
+            validate_contract_source({"source": source, "table": {}})
+            if item.get("table_id") or item["source_id"] != source["source_id"] or item["pipeline_role"] != "source" or (item["read_mode"] != "full" and item["status"] != "not_started"):
+                raise ValueError("File operations require a full source Read without a Table ID.")
+        elif item.get("source_id") is not None or str(item["table_id"]).startswith("file:"):
+            raise ValueError("Table operations cannot use a file Source ID as a Table ID.")
         refs = [item.get(key) for key in ("contract_id", "contract_version", "payload_sha256")]
         if any(value is not None for value in refs) and not all(value is not None for value in refs):
             raise ValueError("Incomplete Pipeline Run contract reference.")
@@ -6051,7 +6170,9 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
         for role in identity["roles"]:
             key = f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
             actual = plan.evidence["operations"][key]
-            operations.append({"operation_key": key, "table_id": table_id, "pipeline_role": role,
+            operations.append({"operation_key": key,
+                **({"source_type": "file", "source_id": table_id, "table_id": None} if identity.get("source_type") == "file" else {"table_id": table_id}),
+                **({"source_ids": actual["source_ids"]} if actual.get("source_ids") else {}), "pipeline_role": role,
                 "contract_id": contract["contract_id"] if contract else None,
                 "contract_version": contract["contract_version"] if contract else None,
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
@@ -6182,10 +6303,12 @@ class PipelineOperation:
                 raise RuntimeError("Execution plan is closed or evidence persistence failed; create a new plan.")
             if plan.evidence["failures"] and plan.permits_persistence:
                 raise RuntimeError("Pipeline run previously failed; create a new plan.")
-            physical_identity = resolve_physical_table_identity(
-                plan.runtime_context["config"], plan.workspace_id,
-                **{key: args[key] for key in ("store", "schema", "table_name")})
-            table_id = physical_identity["table_id"]
+            physical_identity = (resolve_file_participant(**{key: args.get(key) for key in
+                ("store", "relative_path", "file_format", "read_options")}, context=plan.runtime_context)
+                if self.role == "source" and args.get("relative_path") is not None else
+                resolve_physical_table_identity(plan.runtime_context["config"], plan.workspace_id,
+                    **{key: args[key] for key in ("store", "schema", "table_name")}))
+            table_id = participant_id(physical_identity)
             identities = json.loads(plan.participants_json)
             identity = identities.get(table_id)
             if identity is None or self.role not in identity["roles"]:
@@ -6229,13 +6352,16 @@ class PipelineOperation:
             self.record.update(processing_parameters)
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
-                self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"])
+                self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"] if source.get("table_id"))
+                file_ids = sorted(source["source_id"] for source in args["sources"] if source.get("source_type") == "file")
+                if file_ids:
+                    self.record["source_ids"] = file_ids
             if plan.execution_mode == "governed":
                 from fabricops_kit.activated_pipeline.shared import verify_governed_plan
                 verify_governed_plan(plan, spark_session=args.get("spark_session"))
-                activated = {(item["table_id"], item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
+                activated = {(participant_id(item), item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
                 selected = activated.get((table_id, self.role))
-                enforced = ("read_parameters", "repartition_by", "write_parameters", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids")
+                enforced = ("read_parameters", "repartition_by", "write_parameters", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids", "source_ids")
                 if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
             elif plan.execution_mode == "ungoverned" and self.role == "target":
@@ -6446,7 +6572,7 @@ class PipelineSession:
             self.selected_contracts.pop(table_id, None)
             self.choices[table_id] = {"no_contract": True}
         else:
-            matches = [row for row in self.frozen_rows if row["table_id"] == table_id
+            matches = [row for row in self.frozen_rows if participant_id(row) == table_id
                        and row["contract_id"] == contract_id and row["contract_version"] == contract_version]
             if not matches and self.shell is None:
                 matches = [resolve_data_contract_version(self.plan.runtime_context["config"], self.plan.workspace_id,
@@ -6467,9 +6593,12 @@ class PipelineSession:
                 raise RuntimeError("Source Drift requires all Reads before any Write. Start a new pipeline and read every source first.")
             if self.plan.execution_mode in {"dry_run", "ungoverned"}:
                 identities = json.loads(self.plan.participants_json)
-                requested = [(role, resolve_physical_table_identity(
-                    self.plan.runtime_context["config"], self.plan.workspace_id,
-                    **{key: arguments[key] for key in ("store", "schema", "table_name")}))]
+                identity = (resolve_file_participant(**{key: arguments.get(key) for key in
+                    ("store", "relative_path", "file_format", "read_options")}, context=self.plan.runtime_context)
+                    if role == "source" and arguments.get("relative_path") is not None else
+                    resolve_physical_table_identity(self.plan.runtime_context["config"], self.plan.workspace_id,
+                        **{key: arguments[key] for key in ("store", "schema", "table_name")}))
+                requested = [(role, identity)]
                 if role == "source" and arguments.get("target_store") is not None:
                     requested.append(("target", resolve_physical_table_identity(
                         self.plan.runtime_context["config"], self.plan.workspace_id,
@@ -6478,7 +6607,7 @@ class PipelineSession:
                 selections = json.loads(self.plan.selections_json)
                 contracts = json.loads(self.plan.contracts_json)
                 for participant_role, identity in requested:
-                    table_id = identity["table_id"]
+                    table_id = participant_id(identity)
                     if (self.plan.execution_mode == "ungoverned" and participant_role == "target"
                             and table_id in self.plan.runtime_context.get("_governed_table_ids", ())):
                         raise ValueError(f"Ungoverned cannot write governed table {table_id!r}; use Governed mode with its activated Data Contract.")
@@ -6680,11 +6809,15 @@ def start_pipeline_session(pipeline_mode, *, inspector=None):
                         schema=metadata_table_physical_schema(config, "METADATA_DATA_CONTRACT"),
                         context={**(runtime or {}), "_spark_session": spark}).collect()
                     session.frozen_rows = [_row_to_dict(row) for row in rows if str(_row_to_dict(row).get("status", "")).lower() == "frozen"]
-                    for table_id in sorted({row["table_id"] for row in session.frozen_rows}):
-                        versions = [row for row in session.frozen_rows if row["table_id"] == table_id]
+                    for table_id in sorted({participant_id(row) for row in session.frozen_rows}):
+                        versions = [row for row in session.frozen_rows if participant_id(row) == table_id]
                         options = [("No Contract", "")] + [(f"{row.get('contract_name') or row['contract_id']} · v{row['contract_version']}",
                             f"{row['contract_id']}\n{row['contract_version']}") for row in versions]
-                        control = widgets.Dropdown(options=options, description=str(table_id), layout=widgets.Layout(width="100%"))
+                        payload = _contract_payload(versions[0])
+                        label = payload.get("source", {}).get("relative_path") or payload.get("table", {}).get("table_name") or versions[0].get("contract_name") or "Dataset"
+                        import html
+                        dataset_label = widgets.HTML("<b>" + html.escape(str(label)) + "</b>")
+                        control = widgets.Dropdown(options=options, description="Contract", layout=widgets.Layout(width="100%"))
                         detail = widgets.HTML("<p>No Contract selected.</p>")
                         def change(event, table_id=table_id, detail=detail, versions=versions):
                             value = event["new"]
@@ -6700,7 +6833,7 @@ def start_pipeline_session(pipeline_mode, *, inspector=None):
                                 detail.value = inspector(row, ("source", "target"), session.plan.results) if inspector else ""
                         control.observe(change, names="value")
                         session.controls.append(control)
-                        children.extend([control, detail])
+                        children.extend([dataset_label, control, detail])
                 root = form_page(widgets, title="Pipeline execution", description="", children=children)
                 session.refresh()
                 startup.display(root)

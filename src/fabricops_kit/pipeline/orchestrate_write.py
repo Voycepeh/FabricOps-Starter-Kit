@@ -9,6 +9,7 @@ from fabricops_kit.pipeline.pipeline_write import pipeline_write
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 from fabricops_kit.pipeline.shared import (
     ExecutionSummary,
+    participant_id,
     display_profile_presentations,
     current_pipeline_session,
     schedule_table_profiling,
@@ -31,7 +32,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
 
     Define the dataframe, destination, write_mode and processing parameters.
     All reads registered in this execution are associated with this target as
-    pipeline participants, not proven transformation dependencies. Dry Run evaluates
+    pipeline participants, not proven transformation dependencies. File participation
+    is returned under source_ids and retained separately from source_table_ids in
+    Run operations; it never manufactures table lineage. Dry Run evaluates
     processing and applicable Guardrails without publishing or committing metadata.
     Ungoverned writes without contract checks but cannot target an already governed
     table. Governed requires activated contracts, ownership and a pinned revision.
@@ -127,11 +130,13 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         sources = list(sources)
         if any(source.get("execution_plan_id") != execution_plan.plan_id for source in sources):
             raise ValueError("Every source must be a Read result from the same execution plan.")
-        source_ids = [source["table_id"] for source in sources]
+        participant_ids = [participant_id(source) for source in sources]
+        source_ids = [source["table_id"] for source in sources if source.get("table_id")]
+        file_source_ids = [source["source_id"] for source in sources if source.get("source_type") == "file"]
         target_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
-        context = prepare_pipeline_execution([target_id, *source_ids], execution_plan=execution_plan, spark_session=spark_session)
+        context = prepare_pipeline_execution([target_id, *participant_ids], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
-        if any("source" not in context["_pipeline_identities"][source_id]["roles"] for source_id in source_ids):
+        if any("source" not in context["_pipeline_identities"][source_id]["roles"] for source_id in participant_ids):
             raise ValueError("Every contributing source must have an explicit source role in the plan.")
         if "target" not in context["_pipeline_identities"][target_id]["roles"]:
             raise ValueError("Write requires an explicit target participant.")
@@ -176,6 +181,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                 "dq_result": dq_result,
                 "source_guardrail_results": source_checks,
                 "source_association": "pipeline_participation",
+                "source_ids": file_source_ids,
                 "orchestration_stages": stages,
             }
             if not execution_plan.permits_persistence:
@@ -213,7 +219,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
                         "publication_status": "not_published", "profile_result": profile,
                         "write_metrics": metrics,
                         "validation_passed": passed, "testing_completed_at": datetime.now(UTC).isoformat(),
-                        "tested_contracts": tested_contract_identities(context, [target_id, *source_ids]),
+                        "tested_contracts": tested_contract_identities(context, [target_id, *participant_ids]),
                         "total_duration_seconds": duration}
             write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
             published = write_result.get("published", True)

@@ -237,3 +237,9 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
     The [Metadata Tables reference](reference/metadata.md) exists for the report developer who needs exact fields. Governance users do not need to understand the physical table architecture to author or approve a Data Contract.
 
 </div>
+
+### File-backed Data Contracts
+
+The existing Data Contract editor selects human-readable table and file datasets. Files not yet authored can be selected by configured store and validated relative Files path, with explicit format and reader options. Schema is observed through the foundational reader; no synthetic Catalogue table or Table ID is created. Frozen file contracts and Contract Activation use the existing Source ID model, preserving the same Schema, Data Quality, managed Grain uniqueness, Freshness and descriptive Enrichment semantics. Sensitive Data treatment stays at the target Write boundary.
+
+Governed file Reads require the exact approved pipeline operation, physical selector, format, reader settings and frozen Contract. Changing any approved configuration requires review. Metadata Freshness covers every selected file using the oldest modification time; column Freshness scans the declared DataFrame scope. Missing or invalid evidence yields the existing explicit Warn/Block outcome. File operation support does not open the separate signed-in Fabric Governed-release gate.

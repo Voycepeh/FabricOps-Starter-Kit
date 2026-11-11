@@ -450,13 +450,13 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
     assert controls["table_search"].options == [
-        "Select governed table",
-        "Curated Lakehouse · sales.orders",
+        "Select dataset",
+        "Curated Lakehouse · sales.orders — Table · Development",
     ]
     assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New Draft"]
     selector = controls["selector_panel"].children[0]
     assert [field.children[0].value for field in selector.children] == [
-        "<b>Table</b>",
+        "<b>Dataset</b>",
         "<b>Workspace</b>",
         "<b>Contract</b>",
     ]
@@ -672,9 +672,9 @@ def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypat
     controls = state["_controls"]
     labels_by_value = {value: label for label, value in controls["table"].options}
 
-    assert labels_by_value["orders"] == "Curated Lakehouse · sales.orders"
-    assert labels_by_value["audit-orders"] == "Serving Warehouse · audit.orders"
-    assert "Development" not in labels_by_value["orders"]
+    assert labels_by_value["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
+    assert labels_by_value["audit-orders"] == "Serving Warehouse · audit.orders — Table · Development"
+    assert "Development" in labels_by_value["orders"]
     assert "Lakehouse:" not in labels_by_value["orders"]
     assert "Warehouse:" not in labels_by_value["audit-orders"]
     controls["table"].value = "audit-orders"

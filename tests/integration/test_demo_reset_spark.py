@@ -67,15 +67,15 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
         write(run.spark.createDataFrame([record], schema), table_name=table, store='Metadata', schema='metadata', mode='overwrite')
     sentinel = run.spark.createDataFrame([(77,)], 'id int')
     write(sentinel, table_name='unrelated', store='Silver', schema='other', mode='overwrite')
-    for store, table in API._DEMO_OUTPUTS:
+    for store, table in API._DEMO_REMOVALS:
         write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
     # Only remote Fabric catalog/warehouse removal is replaced by equivalent local filesystem IO.
     def remove(self, *, preview=False):
         if preview: return
-        for store, table in API._DEMO_OUTPUTS:
+        for store, table in API._DEMO_REMOVALS:
             shutil.rmtree(run.root / store / table, ignore_errors=True)
     def verify(self=None):
-        assert all(not (run.root / store / table).exists() for store, table in API._DEMO_OUTPUTS)
+        assert all(not (run.root / store / table).exists() for store, table in API._DEMO_REMOVALS)
     env.setup.paths['Metadata'].root = str(run.root / 'Metadata')
     env.state._metadata = env.setup.paths['Metadata']
     env.state.spark = run.spark
@@ -108,6 +108,10 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
         assert API._demo_metadata_files(env.state) == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
         for (store, table), (file, count) in API._DEMO_SOURCES.items():
             expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
+            if (store, table) == ('Bronze', 'orders'):
+                assert not (run.root / store / table).exists()
+                assert expected.count() == 120
+                continue
             actual = read(table, store=store, schema='demo')
             assert actual.count() == count
             API._demo_assert_source(env.state, actual, expected)

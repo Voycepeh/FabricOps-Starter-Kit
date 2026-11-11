@@ -2,7 +2,7 @@
 
 ### Before you begin
 
-Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts.
+Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the contracts. For Orders, select the CSV dataset by its configured store and relative Files path in the existing editor; Products, Order History and both destinations retain their table contract workflow.
 
 !!! warning "Enable Fabric AI Functions for the AI-assisted DQ exercise"
     All nine deterministic Data Quality rule types can be authored manually. This walkthrough also exercises natural-language generation, so enable AI to follow that assisted path; AI is not required for ordinary rule creation or enforcement.
@@ -73,7 +73,7 @@ Scheduled Refresh is operational metadata in `METADATA_DATA_CATALOGUE`, captured
 
 ## Cover the whole pipeline, not only the target
 
-This walkthrough validates frozen contracts for every participating table in the governed path:
+This walkthrough validates frozen contracts for every participating dataset in the governed path:
 
 </div>
 </div>
@@ -83,9 +83,9 @@ This walkthrough validates frozen contracts for every participating table in the
 
 
 
-| Pipeline role | Table | Guardrails exercised |
+| Pipeline role | Dataset | Guardrails exercised |
 | --- | --- | --- |
-| Source | `orders` | Freshness, Schema |
+| Source | `orders.csv` — Bronze / demo — File | Freshness, Schema |
 | Source | `products` | Schema |
 | Source | `order_history` | Schema |
 | Target | `curated_orders` | Schema, Sensitive Data, Data Quality |
@@ -101,7 +101,7 @@ widget_data_contract()
 
 The editor uses the selected table's Catalogue and latest Profile as authoring evidence.
 
-For `orders`, enable **Freshness** and **Schema**. Choose **Column-based** evidence, **Full dataset** scope, and `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Keep Freshness on **Warn** for the first integration run. Engineering configures optional Source Drift in `setup_pipeline()`, independently of the Contract. Schema blocks missing Required columns and contracted datatype mismatches.
+For `orders.csv`, enable **Freshness** and **Schema**. Choose **Column-based** evidence, **Full dataset** scope, and `modified_datetime` as the Freshness evidence column and keep the allowed age comfortably above the canonical baseline's normal age. Keep Freshness on **Warn** for the first integration run. Engineering configures optional Source Drift in `setup_pipeline()`, independently of the Contract. Schema blocks missing Required columns and contracted datatype mismatches.
 
 For `products`, `order_history`, and the `customer_summary` target, a Schema rule is sufficient for this exercise. Their purpose is to make both source → target paths Guardrail-ready without inventing unrelated business rules.
 
@@ -264,7 +264,9 @@ Engineering authors `read_mode`, `read_parameters`, `write_mode`, `write_paramet
 
 Physical tables keep canonical Table IDs. File-backed contracts use a stable `source_id` based on physical workspace, Lakehouse item and case-sensitive relative Files selector. Reader format/options are frozen and reviewed separately; folders and wildcards retain selector identity as membership changes. The shared authoring service accepts an explicit observed file schema. File Contract Activation verifies the configured physical source, frozen payload and Agreement association. Pipeline approval packages can retain exact `file_authorizations`.
 
-The current authoring widget selects registered tables. A file selector in that widget and a file orchestration boundary are separate implementation work. Approved file declarations alone cannot authorize execution: deployment rejects packages with file authorizations until that boundary exists. No artificial Table IDs or file checkpoints are introduced.
+The existing `widget_data_contract()` dataset selector includes named files alongside registered tables. Choose **Select a Lakehouse file, folder or wildcard**, enter store `Bronze`, relative path `demo/orders.csv`, format `csv`, and reader options matching 02A exactly (header, inferSchema and timestampFormat). Select file source observes the schema without registering a table. Open New Draft and use the same Table, Columns and Data Quality tabs, then Save and Freeze. Grain stays in the Table tab and executes as **GRAIN — Uniqueness** under Data Quality. Do not register or activate a Bronze Orders table.
+
+Use the existing Contract Activation widget to select the readable file dataset and exact frozen version. File activation preserves Source ID and reader configuration; target table activation still uses canonical Table IDs. Pipeline submission binds each file Read operation to its exact `file_authorizations`, frozen payload and physical location. Changed paths, reader options or configured locations require a new review. The orchestration boundary rejects missing or mismatched authorization. The separate signed-in Fabric Governed-release gate remains closed pending its integration acceptance checklist.
 
 ### Freshness evidence
 
@@ -277,12 +279,12 @@ Choose an explicit method and age threshold, then select Warn or Block:
 
 Every evaluated result retains the method, scope, observation time, source identity, threshold, continuation decision and current evidence in `METADATA_GUARDRAIL_RESULTS`. File evidence includes member timestamps and a membership hash. Missing metadata, failed access, no matched files and empty/all-null datasets are unavailable; invalid or future timestamps are invalid. Both follow Warn/Block. Reader options that change membership require an actual reader-resolved file set; until that boundary exists, metadata evidence reports unavailable rather than ignoring those filters. Freshness never switches methods or falls back to historical profiles. File modification time describes storage updates, not business-event time.
 
-No metadata tables are added. Nullable `source_id` fields distinguish file contracts and activations; a file row has no Table ID. Run operation JSON adds typed read/write parameters and repartitioning so approval can compare actual settings. Existing physical Run JSON storage and retained historical content hashes are preserved.
+No metadata tables are added. Nullable `source_id` fields distinguish file contracts, activations and Guardrail results; a file row has no Table ID. Run operation JSON adds typed read/write parameters and repartitioning so approval can compare actual settings. Existing physical Run JSON storage and retained historical content hashes are preserved.
 
 
 The frozen version is an immutable data contract and becomes the exact candidate Engineering selects in Step 4. Freezing does not activate it for Production.
 
 !!! warning "Breaking workspace architecture"
-    Contract definitions are global and immutable when frozen. Physical workspace/Table ID activations select exact versions independently; authoring observations and profile snapshots do not mutate frozen payloads.
+    Contract definitions are global and immutable when frozen. Physical workspace/Table ID or file Source ID activations select exact versions independently; authoring observations and profile snapshots do not mutate frozen payloads.
 
 **Next:** [Step 4. Preview and enforce the frozen Data Contract](04-validate-frozen-data-contract.md).

@@ -100,8 +100,13 @@ RuntimeError
 
 Authoring, review, and freezing route through the configured central Governance
 Metadata Lakehouse even when the notebook workspace is not a pipeline environment.
-The selected Catalogue observation remains the contract evidence owner. Activation
-and governed pipeline execution still require a configured environment mapping.
+Tables retain their selected Catalogue observation. Named file datasets share
+the selector; enter a validated configured Files path and reader settings to
+observe a new file schema without registering a table. File contracts preserve
+Source ID and exact format/options through Save, Freeze and Activation.
+Returned state uses source_id for files and table_id for physical tables;
+dataset_id identifies either selection. File profiles remain session-only.
+Activation and governed execution still require configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
 Engineering processing is reviewed through Pipeline Activation and is not authored in contracts.
@@ -188,7 +193,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:989`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7325">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7394">View on GitHub</a>
 </div>
 
 

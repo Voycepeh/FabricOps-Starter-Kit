@@ -67,16 +67,21 @@ def check_schema(
         context=context,
     )
     store_key = identity["store"]
-    schema = identity["schema"]
-    table_name = identity["table_name"]
+    schema = identity.get("schema")
+    table_name = identity.get("relative_path") or identity["table_name"]
     store = get_store(config, active_workspace_id, store_key)
     store_type = str(store.kind).lower()
-    if store_type != identity["store_type"]:
+    is_file = identity.get("source_type") == "file"
+    if not is_file and store_type != identity["store_type"]:
         raise ValueError(
             f"Catalogue table_id {table_id!r} declares store_type {identity['store_type']!r}, "
             f"but configured store {store_key!r} resolves to {store_type!r}."
         )
-    if store_type == "warehouse":
+    if is_file:
+        if dataframe is None:
+            raise ValueError("File Schema validation requires the loaded DataFrame.")
+        resolved_table, schema_name = table_name, None
+    elif store_type == "warehouse":
         schema_name, resolved_table, _ = resolve_warehouse_table_location(
             store,
             schema or getattr(store, "schema", None),
@@ -122,6 +127,9 @@ def check_schema(
         workspace_id=active_workspace_id,
         table_id=table_id,
     )
+    if is_file:
+        result.pop("table_id", None)
+        result["source_id"] = table_id
     result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
     result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
     result["expected"] = {"schema_rule": result.get("rule_type")}

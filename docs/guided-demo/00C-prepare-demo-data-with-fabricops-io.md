@@ -47,7 +47,7 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
 !!! warning "Dedicated demo environment only"
 
-    `True` deletes **all rows in the 14 metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores five Day 1 sources and removes six outputs. Stop demo jobs first. Never use shared or production assets.
+    `True` deletes **all rows in the 14 metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Stop demo jobs first. Never use shared or production assets.
 
 ??? info "Checks before deletion and reset scope"
 
@@ -57,7 +57,7 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
     | Restore from Day 1 fixtures | Rows |
     | --- | --- |
-    | Bronze `demo.orders` | 120 |
+    | Bronze `Files/demo/orders.csv` (validated file; no Orders table) | 120 |
     | Bronze `demo.products` | 8 |
     | Gold `demo.order_history` | 180 |
     | Bronze `demo.inventory_movements` | 8 |
@@ -244,11 +244,11 @@ The reset cell uses `read_lakehouse_csv()` and `write_lakehouse_table(mode="over
 
 ### Expected result
 
-After the notebook finishes, Engineering Development should contain the starting tables for all three Step 2 demos:
+After the notebook finishes, Engineering Development should contain the starting file and tables for all three Step 2 demos:
 
 ```text
 bronze Lakehouse
-  demo.orders
+  Files/demo/orders.csv         # 02A orchestrated file source; demo.orders is absent
   demo.products
   demo.inventory_movements      # 02B append Day 1 baseline
   demo.product_master_updates   # 02C SCD Day 1 baseline
@@ -280,3 +280,5 @@ Day 3 is supported: 02B stages no new file; 02C stages `demo/products_day3.csv`.
 For another package baseline, stop demo jobs, install/publish the new wheel, start fresh sessions and repeat 00C → Steps 1–7. Record the package version, date, tester, Metadata item ID, reset summary and Run IDs. Fabric job checks, cross-workspace routing, Lakehouse catalog removal, Warehouse I/O and Governance gates require actual Fabric acceptance; local tests do not establish that result.
 
 **Next:** [Step 1. Establish Governance context](01-establish-governance-context.md)
+
+The four foundational reader demonstrations remain independent of `setup_pipeline()`. They teach direct CSV, JSON, Parquet and Excel access. In 02A, Orders uses the same CSV fixture through `orchestrate_read()` to participate in Read → Transform → Write → Finalize. The reset validates the 120-row fixture and preserves Files while removing a previously materialized Bronze Orders table only during `reset=True`. Products, Order History, append and SCD source tables remain available.

@@ -105,7 +105,7 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` connects physical table assets across both schemas. File-backed contracts and activations use a distinct stable `source_id` and have no Table ID. `contract_id` and `contract_version` identify one exact Data Contract version."""
+`table_id` connects physical table assets across both schemas. File-backed contracts, activations and Guardrail results use a distinct stable `source_id` and have no Table ID. `contract_id` and `contract_version` identify one exact Data Contract version."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -269,7 +269,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
         "grain": "One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.",
-        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, captured table name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
+        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, canonical table_id or distinct file source_id, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
@@ -533,6 +533,7 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.shared.check_dq_runtime",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "source_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_result_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "table_name": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_type": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
@@ -942,9 +943,9 @@ PUBLIC_SYMBOL_DOCS = [
  'template_segment': 'Standard Read orchestration',
  'use_when': 'Use for the normal governed Read path before project PySpark transformation.',
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
- 'parameters': 'Source coordinates, read strategy and query options; incremental reads also require target_store and target_table_name, with optional target_schema. FabricOps resolves both Table IDs internally through configured routing.',
- 'returns': 'Governed source DataFrame and table identity together with every stage result.',
- 'side_effects': 'Test retains diagnostics and calculated source profiles in memory until successful finalize_pipeline commits the run, Guardrail results and Governance observations; business publication remains disabled. Live commits Guardrail Results and full-read '
+ 'parameters': 'Table coordinates and full/incremental/query options, or relative_path, file_format and read_options for full-only Lakehouse file reads. File selectors retain Source IDs and approved reader settings; incremental tables still require target coordinates.',
+ 'returns': 'Source DataFrame with canonical Table ID or distinct file Source ID, source location, metrics, profiling outcome and every stage result.',
+ 'side_effects': 'Dry Run retains diagnostics and profiles in memory without operational commits. Persistent modes record Run and Guardrail results. File profiles remain session-only. Table reads retain existing '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',

@@ -20,7 +20,7 @@ from fabricops_kit.config.metadata_schemas import (
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import read_lakehouse_table
 from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table
-from fabricops_kit.pipeline.shared import canonical_pipeline_json, pipeline_record_content, validate_pipeline_id, validate_pipeline_run
+from fabricops_kit.pipeline.shared import participant_id, file_binding_source, resolve_file_participant, canonical_pipeline_json, pipeline_record_content, validate_pipeline_id, validate_pipeline_run
 
 REGISTRY_TABLE = "METADATA_PIPELINE_REGISTRY"
 ACTIVATION_TABLE = "METADATA_DATA_CONTRACT_ACTIVATION"
@@ -75,6 +75,7 @@ def normalized_destination(destination):
     """Compare physical aliases independently of logical Table ID and case."""
     if isinstance(destination, dict) and destination.get("source_type") == "file":
         from fabricops_kit.data_contract.shared import validate_contract_source
+        destination = file_binding_source(destination)
         validate_contract_source({"source": destination, "table": {}})
         return ("file", destination["workspace_id"], destination["item_id"], destination["relative_path"],
                 destination["file_format"], canonical_pipeline_json(destination["reader_options"]))
@@ -88,6 +89,42 @@ def normalized_destination(destination):
     return tuple(str(destination.get(key) or "").strip().casefold()
         for key in ("workspace_id", "item_id", "kind", "schema", "table_name"))
 
+def operation_activation_identity(operation):
+    """Select Contract Activation by its typed physical participant identity."""
+    return {"workspace_id": operation["destination"]["workspace_id"],
+            **({"source_id": operation["source_id"]} if operation.get("source_type") == "file" else {"table_id": operation["table_id"]})}
+
+
+def operation_configuration(operation):
+    """Copy retained behavior and typed participation without altering historical manifests."""
+    return {key: operation[key] for key in (*OPERATION_FIELDS, "source_type", "source_id", "source_ids")
+            if key != "requested_schema" and key in operation}
+
+
+def validate_file_execution_authorizations(package):
+    """Bind every file operation to exact approved selector, reader settings and Contract.
+
+    File authorizations without a matching orchestrated source operation cannot
+    admit execution. The separate signed-in Fabric release gate remains closed.
+    """
+    operations = package["manifest"].get("operations", [])
+    files = {op["source_id"]: op for op in operations if op.get("source_type") == "file"}
+    authorizations = package["manifest"].get("file_authorizations", [])
+    if len(authorizations) != len(files):
+        raise RuntimeError("The file orchestration boundary requires exact approved file operations and authorizations.")
+    for authorization in authorizations:
+        source = authorization["source"]
+        op = files.get(source["source_id"])
+        contract = package.get("contracts", {}).get(source["source_id"])
+        if (op is None or file_binding_source(op["destination"]) != source or not contract
+                or op["pipeline_role"] != "source" or op["read_mode"] != "full"
+                or op["operation_key"] != "source:" + authorization["store"] + "/Files/" + source["relative_path"]
+                or contract["contract_id"] != authorization["contract_id"]
+                or contract["contract_version"] != authorization["contract_version"]
+                or hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != authorization["payload_sha256"]):
+            raise ValueError("Governed file source is not authorized by the exact approved pipeline plan.")
+
+
 def activation_operations(value):
     """Validate the supported operation manifest, without inventing write scopes."""
     operations = deepcopy(value) if isinstance(value, list) else parse_metadata_json(value, field="operations_json")
@@ -95,10 +132,10 @@ def activation_operations(value):
         raise ValueError("Pipeline activation requires nonempty operation configuration.")
     keys, roles = set(), set()
     for operation in operations:
-        if not isinstance(operation, dict) or set(operation) != set(OPERATION_FIELDS):
+        if not isinstance(operation, dict) or set(operation) - {"source_type", "source_id", "source_ids"} != set(OPERATION_FIELDS):
             raise ValueError("Unexpected or incomplete activated operation fields; write scopes are not supported.")
         key = operation["operation_key"]
-        role, table_id = operation["pipeline_role"], operation["table_id"]
+        role, table_id = operation["pipeline_role"], participant_id(operation)
         if role not in {"source", "target"} or not isinstance(table_id, str) or not table_id or not isinstance(key, str) or not key.startswith(role + ":"):
             raise ValueError("Invalid activated table, role or operation key.")
         if key in keys or (table_id, role) in roles:
@@ -106,6 +143,13 @@ def activation_operations(value):
         keys.add(key)
         roles.add((table_id, role))
         normalized_destination(operation["destination"])
+        if operation.get("source_type") == "file":
+            if (role != "source" or operation.get("table_id") is not None or operation["read_mode"] != "full"
+                    or operation.get("query_sha256") is not None or operation.get("incremental_target_table_id") is not None
+                    or operation["source_id"] != operation["destination"].get("source_id")):
+                raise ValueError("File authorization requires a full Read with a Source ID and exact file destination.")
+        elif operation.get("source_id") is not None or operation["destination"].get("source_type") == "file":
+            raise ValueError("File source must be an explicitly typed operation.")
         requested_schema = operation["requested_schema"]
         if requested_schema is not None and (not isinstance(requested_schema, str) or not requested_schema.strip()):
             raise ValueError("An operation schema must be an explicit nonblank name or None for its configured default.")
@@ -122,7 +166,12 @@ def activation_operations(value):
         query = operation["query_sha256"]
         if query is not None and (not isinstance(query, str) or len(query) != 64 or any(ch not in "0123456789abcdef" for ch in query)):
             raise ValueError("Invalid activated query SHA256.")
-    source_ids = {op["table_id"] for op in operations if op["pipeline_role"] == "source"}
+    source_ids = {op["table_id"] for op in operations if op["pipeline_role"] == "source" and op.get("source_type") != "file"}
+    file_ids = {op["source_id"] for op in operations if op.get("source_type") == "file"}
+    for op in operations:
+        files = op.get("source_ids", [])
+        if not isinstance(files, list) or len(files) != len(set(files)) or set(files) - file_ids:
+            raise ValueError("Invalid file pipeline participation.")
     if any(set(op["source_table_ids"]) - source_ids for op in operations):
         raise ValueError("Activated write references a source outside its pipeline.")
     return operations
@@ -688,16 +737,20 @@ def resolve_promoted_operations(operations, *, context, spark_session=None):
         if "/" not in logical:
             raise ValueError("Promotion requires a logical store/table operation key.")
         store, table = logical.split("/", 1)
-        identity = resolve_physical_table_identity(config, workspace, store=store,
-            schema=op["requested_schema"], table_name=table)
-        destination_id = identity["table_id"]
-        previous = table_ids.setdefault(op["table_id"], destination_id)
+        identity = (resolve_file_participant(store=store, relative_path=op["destination"]["relative_path"],
+            file_format=op["destination"]["file_format"], read_options=file_binding_source(op["destination"])["reader_options"], context=context)
+            if op.get("source_type") == "file" else
+            resolve_physical_table_identity(config, workspace, store=store, schema=op["requested_schema"], table_name=table))
+        destination_id = participant_id(identity)
+        previous = table_ids.setdefault(participant_id(op), destination_id)
         if previous != destination_id:
             raise ValueError("Different destination schema choices split one participant identity; review separate participants.")
         binding = pipeline_physical_bindings({destination_id: identity}, config=config, workspace_id=workspace)[destination_id]
-        resolved.append({**op, "table_id": destination_id, "destination": binding})
+        resolved.append({**op, **({"source_id": destination_id, "table_id": None} if op.get("source_type") == "file" else {"table_id": destination_id}), "destination": binding})
     for op in resolved:
         op["source_table_ids"] = sorted(table_ids[table_id] for table_id in op["source_table_ids"])
+        if op.get("source_ids"):
+            op["source_ids"] = sorted(table_ids[source_id] for source_id in op["source_ids"])
         target = op["incremental_target_table_id"]
         if target is not None:
             if target not in table_ids:
@@ -713,15 +766,15 @@ def reviewed_contracts(operations, *, context, spark_session=None):
     activations = read_activations(context=context, spark_session=spark_session)
     contracts = {}
     for op in operations:
-        active = exact_record(activations, workspace_id=op["destination"]["workspace_id"], table_id=op["table_id"])
+        active = exact_record(activations, **operation_activation_identity(op))
         if normalized_destination(parse_metadata_json(active["destination_json"], field="destination_json")) != normalized_destination(op["destination"]):
             raise ValueError("Contract physical binding differs from the reviewed operation.")
         contract = resolve_activation_contract(active, context=context, spark_session=spark_session)
         validate_contract_definitions(contract["contract_payload"])
-        contract_guardrail_rows(contract, workspace_id=active["workspace_id"], table_id=op["table_id"])
+        contract_guardrail_rows(contract, workspace_id=active["workspace_id"], table_id=participant_id(op))
         _, execution_workspace, _ = resolve_fabric_context(context=context)
         check_contract_agreement(active, execution_workspace_id=execution_workspace, context=context, spark_session=spark_session)
-        contracts[op["table_id"]] = contract
+        contracts[participant_id(op)] = contract
     return contracts
 
 
@@ -829,12 +882,13 @@ def validate_submission(package):
         fields = {"operation_key", "pipeline_role", "read_mode", "write_mode", "query_sha256", "requested_schema", "write_parameters", "read_parameters", "repartition_by"}
         if approved is None or any(op[key] != approved[key] for key in fields):
             raise ValueError("Submitted behavior differs from recorded Dry Run operations.")
-        if op["table_id"] in mappings and mappings[op["table_id"]] != approved["table_id"]:
+        if participant_id(op) in mappings and mappings[participant_id(op)] != participant_id(approved):
             raise ValueError("Ambiguous destination Table ID mapping.")
-        mappings[op["table_id"]] = approved["table_id"]
+        mappings[participant_id(op)] = participant_id(approved)
     for op in tested:
         approved = by_key[op["operation_key"]]
-        if (sorted(mappings[t] for t in op["source_table_ids"]) != approved["source_table_ids"] or
+        if (sorted(mappings[t] for t in op.get("source_ids", [])) != approved.get("source_ids", [])
+                or sorted(mappings[t] for t in op["source_table_ids"]) != approved["source_table_ids"] or
                 (mappings.get(op["incremental_target_table_id"]) if op["incremental_target_table_id"] else None)
                 != approved["incremental_target_table_id"]):
             raise ValueError("Submitted source/target associations differ from testing.")
@@ -849,11 +903,11 @@ def validate_submission(package):
         if (op["status"] != "succeeded" or not op["stages"] or
                 any(stage["status"] not in {"passed", "warning", "skipped"} or
                     stage.get("evaluation_status") == "not_fully_evaluated" for stage in op["stages"]) or
-                any(op[key] != tested_by_key.get(op["operation_key"], {}).get(key)
-                    for key in OPERATION_FIELDS if key != "requested_schema")):
+                any(op.get(key) != tested_by_key.get(op["operation_key"], {}).get(key)
+                    for key in (*OPERATION_FIELDS, "source_type", "source_id", "source_ids") if key != "requested_schema")):
             raise ValueError("Dry Run contains incomplete or inconsistent operation evidence.")
         if op["contract_id"] is not None:
-            contract = package["contracts"].get(op["table_id"])
+            contract = package["contracts"].get(participant_id(op))
             if (not contract or contract["contract_id"] != op["contract_id"] or
                     contract["contract_version"] != op["contract_version"] or
                     hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() != op["payload_sha256"]):
@@ -917,7 +971,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, file_author
         "metadata_workspace_id": runtime.get("metadata_workspace_id") or plan.workspace_id}
     from fabricops_kit.config.metadata_schemas import decode_metadata_row
     run = decode_metadata_row("METADATA_PIPELINE_RUN", plan.evidence["final_result"])
-    tested = [{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
+    tested = [{**operation_configuration(op),
         "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]]
     rows = read_registry(context=routed, spark_session=spark_session)
     active = [row for row in rows if row["execution_workspace_id"] == destination_workspace_id
@@ -934,6 +988,16 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, file_author
         expected_active_version=active[0]["pipeline_version"] if active else None,
         intent="deploy", retained_promotion_id=None, retained_version=None,
         file_authorizations=deepcopy(file_authorizations or []))
+    if file_authorizations is None:
+        manifest["file_authorizations"] = []
+        for op in manifest["operations"]:
+            if op.get("source_type") != "file":
+                continue
+            contract = reviewed_contracts([op], context=routed, spark_session=spark_session)[op["source_id"]]
+            manifest["file_authorizations"].append({"source": file_binding_source(op["destination"]),
+                "store": op["operation_key"].split(":", 1)[1].split("/", 1)[0],
+                "contract_id": contract["contract_id"], "contract_version": contract["contract_version"],
+                "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest()})
     package = dict(manifest=manifest, source_notebook_base64=base64.b64encode(raw).decode(),
         executed_notebook_base64=base64.b64encode(executed).decode(),
         notebook_base64=base64.b64encode(snapshot).decode(), dry_run=run, contracts=json.loads(plan.contracts_json))
@@ -1097,10 +1161,10 @@ def review_submission_policy(package, *, context, spark_session=None):
     policy = {}
     for operation in operations:
         activation = exact_record(read_activations(context=routed, spark_session=spark_session),
-            workspace_id=operation["destination"]["workspace_id"], table_id=operation["table_id"])
+            **operation_activation_identity(operation))
         check_contract_agreement(activation, execution_workspace_id=manifest["execution_workspace_id"],
             context=routed, spark_session=spark_session)
-        contract = contracts[operation["table_id"]]
+        contract = contracts[participant_id(operation)]
         policy[operation["operation_key"]] = {key: activation.get(key) for key in
             ("activation_id", "contract_id", "contract_version", "payload_sha256", "agreement_id", "agreement_version", "agreement_sha256")}
         if contract["contract_id"] != activation["contract_id"]:
@@ -1235,8 +1299,7 @@ def deploy_approved_submission(approval_id, *, context, spark_session=None):
             expected_active_version=manifest["expected_active_version"], approval_id=approval_id,
             context=context, spark_session=spark_session)
     review_submission_policy(package, context=context, spark_session=spark_session)
-    if package["manifest"].get("file_authorizations"):
-        raise RuntimeError("Governed file execution requires an implemented file orchestration boundary; file authorization alone is insufficient.")
+    validate_file_execution_authorizations(package)
     rows = read_registry(context=context, spark_session=spark_session)
     promotion_id = str(uuid5(NAMESPACE_URL, "fabricops:deployment:" + approval_id))
     replay = [row for row in rows if row["promotion_id"] == promotion_id]
@@ -1310,8 +1373,7 @@ def verify_promotion_integrity(row, *, context, spark_session=None, captured=Fal
     remains closed until the signed-in integration checklist has been completed.
     """
     _, approved_package = verify_registry_approval(row, context=context, spark_session=spark_session, captured=captured)
-    if approved_package["manifest"].get("file_authorizations"):
-        raise RuntimeError("Governed file execution requires an implemented file orchestration boundary; file authorization alone is insufficient.")
+    validate_file_execution_authorizations(approved_package)
     import base64
     spark = get_spark_session(spark_session, context=context)
     try:
@@ -1357,12 +1419,16 @@ def build_governed_pipeline_plan(*, pipeline_id, context=None, spark_session=Non
     participants = {"source": [], "target": []}
     for op in operations:
         store, table = op["operation_key"].split(":", 1)[1].split("/", 1)
-        participants[op["pipeline_role"]].append(dict(store=store, table_name=table, schema=op["requested_schema"],
-            logical_id=op["operation_key"].split(":", 1)[1], table_id=op["table_id"]))
+        if op.get("source_type") == "file":
+            participants["source"].append(dict(store=store, relative_path=op["destination"]["relative_path"],
+                file_format=op["destination"]["file_format"], read_options=file_binding_source(op["destination"])["reader_options"]))
+        else:
+            participants[op["pipeline_role"]].append(dict(store=store, table_name=table, schema=op["requested_schema"],
+                logical_id=op["operation_key"].split(":", 1)[1], table_id=participant_id(op)))
     identities = resolve_pipeline_participants(config, workspace, sources=participants["source"], targets=participants["target"],
         context=context, spark_session=spark_session)
     bindings = pipeline_physical_bindings(identities, config=config, workspace_id=workspace)
-    if any(bindings[op["table_id"]] != op["destination"] for op in operations):
+    if any(bindings[participant_id(op)] != op["destination"] for op in operations):
         raise RuntimeError("Governed integrity mismatch: ambiguous physical participants.")
     run_context = MappingProxyType({**runtime, "config": config, "scope_workspace_id": workspace,
         "_pipeline_spark": spark_session, "_pipeline_bindings": bindings})
@@ -1374,7 +1440,7 @@ def build_governed_pipeline_plan(*, pipeline_id, context=None, spark_session=Non
     plan.evidence["promotion"] = deepcopy(row)
     plan.evidence["governance_approval"] = deepcopy(verify_registry_approval(row, context=context, spark_session=spark_session, captured=True)[0])
     plan.evidence["contract_activations"] = [exact_record(read_activations(context=context, spark_session=spark_session),
-        workspace_id=op["destination"]["workspace_id"], table_id=op["table_id"]) for op in operations]
+        **operation_activation_identity(op)) for op in operations]
     plan.evidence["approved_parameters"] = parse_metadata_json(row["parameters_json"], field="parameters_json")
     return plan
 
@@ -1510,7 +1576,7 @@ def persist_engineering_dry_run(plan, *, spark_session=None):
         pipeline_id=plan.pipeline_id, source_workspace_id=plan.workspace_id, source_notebook_id=plan.notebook_id,
         source_notebook_base64=base64.b64encode(raw).decode(), source_snapshot_sha256=hashlib.sha256(raw).hexdigest(),
         executable_sha256=notebook_executable_digest(raw), dry_run=run, contracts=json.loads(plan.contracts_json),
-        operations=[{**{key: op[key] for key in OPERATION_FIELDS if key != "requested_schema"},
+        operations=[{**operation_configuration(op),
             "requested_schema": plan.evidence["operations"][op["operation_key"]]["requested_schema"]} for op in run["operations"]],
         parameters=plan.evidence["pipeline_parameters"],
         created_by=plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name"),

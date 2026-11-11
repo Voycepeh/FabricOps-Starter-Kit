@@ -59,7 +59,7 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `table_id` | `str \| None` | No | `None` | Preselect an exact logical table and frozen Contract. With no arguments, select from registered physical workspaces/tables and frozen versions. |
+| `table_id` | `str \| None` | No | `None` | Preselect an exact logical table and frozen Contract. With no arguments, select from named physical tables/files and exact frozen versions. |
 | `contract_id` | `str \| None` | No | `None` | Not documented yet |
 | `contract_version` | `int \| None` | No | `None` | Exact positive frozen version to preselect; never a latest fallback. |
 | `workspace_id` | `str \| None` | No | `None` | Physical table workspace. With a supplied table, defaults to the current configured scope. Governance metadata stays in its central Lakehouse. |
@@ -90,6 +90,16 @@ Retained revisions provide history independently of notebook promotion.
 
 </div>
 
+## Behavior and scope
+
+<div class="reference-docstring-intro" markdown="1">
+
+The existing selector lists readable table and file names with physical
+context. File Activation uses its exact frozen Source ID and reader settings,
+without a Table ID. Opening and reviewing never activate a dataset.
+
+</div>
+
 ## See also
 
 No related guides documented.
@@ -99,7 +109,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_data_contract.py:18`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L18-L202">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L18-L218">View on GitHub</a>
 </div>
 
 

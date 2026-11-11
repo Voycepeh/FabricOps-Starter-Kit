@@ -47,7 +47,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--governance"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--governance"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--governance"><td><code>source_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_id</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>source_id</code></td><td><code>string</code></td><td>Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
 <tr class="metadata-column--governance"><td><code>payload_sha256</code></td><td><code>string</code></td><td>Metadata Data Contract Activation field <code>payload_sha256</code>.</td></tr>
