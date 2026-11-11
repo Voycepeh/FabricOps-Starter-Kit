@@ -7,7 +7,7 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-Create missing FabricOps metadata tables and check existing table columns and Spark data types.
+Create missing FabricOps metadata tables, add compatible missing columns, and safely remove explicitly retired columns.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00_env_config</span>
@@ -121,7 +121,14 @@ Setup never manufactures
 approvals, populates business metadata, deletes rows or replaces business
 targets. Governance definitions and activation are independent workflows.
 
-Compatible missing columns are added automatically. Catalogue and Pipeline
+Compatible missing columns are added automatically. Only columns explicitly
+listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
+value is null or equals its declared canonical replacement. Other extension
+columns are preserved where the table's identity contract permits them.
+Unproven populated retirements fail with data preserved. Cleanup and supported
+JSON conversions commit atomically, with the pre-upgrade Delta version
+returned for recovery before VACUUM or further writes. Setup never vacuums.
+Catalogue and Pipeline
 Run collection fields are stored as validated JSON strings; supported native
 collections are converted atomically with tracked Delta reads and exact
 schema/data readback. Existing rows, audit values, extension fields, table
@@ -150,9 +157,9 @@ read as canonical authority or automatically deleted.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:393`
+`fabricops_kit/config/setup_metadata_tables.py:423`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L393-L686">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L423-L721">View on GitHub</a>
 </div>
 
 
@@ -206,7 +213,7 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_table_is_missing</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
-<li><code>fabricops_kit.config.setup_metadata_tables._upgrade_json_metadata</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._upgrade_metadata_table</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>

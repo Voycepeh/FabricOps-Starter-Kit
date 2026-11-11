@@ -242,10 +242,10 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
     "governed_notebook_id": "Physical Governed notebook item that started this Run.",
     "execution_identity": "Actual runtime principal identity captured independently of the promotion author.",
     "run_schema_version": "Version 3 includes notebook Pipeline Promotion provenance. Null retains the original Run hash projection.",
-    "activation_revision": "Nullable historical workspace revision; retained for old Run audit only.",
+    "activation_revision": "Governance approval revision captured as a string for a governed Run; absent when no governed approval is captured. Historical Run values are preserved.",
     "run_id": "Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.",
     "status": "Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.",
-    "approval_id": "Nullable historical approval reference retained unchanged for audit; never new activation authority.",
+    "approval_id": "Exact Governance approval ID authorizing the selected Pipeline Promotion; captured by governed Runs. Historical Run values are preserved.",
     "profiling": "Validated JSON STRING containing per-table activity outcomes and physical result snapshot completion markers; decoded to a logical array in application code.",
     "warnings_json": "Variable sanitized diagnostics; no configuration snapshots or activation authority.",
     "failures": "Validated JSON STRING containing safe failure codes and exception class names; decoded to a logical array in application code. Never raw exception messages.",
@@ -4726,6 +4726,7 @@ def generate_metadata_reference_pages() -> None:
     from fabricops_kit.config.metadata_schemas import (
         AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
+        RETIRED_METADATA_COLUMNS,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
@@ -4976,6 +4977,19 @@ def generate_metadata_reference_pages() -> None:
                 f'<td>{_metadata_inline_html(_metadata_field_description(table_name, column))}</td></tr>'
             )
         lines.extend(["</tbody></table>", "</div>"])
+        retirements = RETIRED_METADATA_COLUMNS[table_name]
+        if retirements:
+            lines.extend([
+                "", "## Automatic column cleanup", "",
+                "`setup_metadata_tables()` removes only the explicitly retired columns below. "
+                "It preserves canonical rows, all eight audit columns and other extension columns. "
+                "If a populated value cannot be proved redundant, setup fails for this table with data preserved.",
+                "", "| Retired column | Removal condition |", "| --- | --- |",
+                *(f"| `{name}` | SQL NULL or equal to `{replacement}` |" if replacement else
+                  f"| `{name}` | Every value is SQL NULL |" for name, replacement in retirements.items()),
+                "", "See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) "
+                "for transaction results and the Delta recovery boundary.",
+            ])
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )

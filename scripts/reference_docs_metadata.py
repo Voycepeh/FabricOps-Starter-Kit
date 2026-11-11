@@ -1027,7 +1027,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'config.setup_metadata_tables',
   'function_type': 'callable',
-  'summary_override': 'Create missing FabricOps metadata tables and check existing table columns and Spark data types.',
+  'summary_override': 'Create missing FabricOps metadata tables, add compatible missing columns, and safely remove explicitly retired columns.',
   'symbol_name': 'setup_metadata_tables',
   'template_notebook': '00_env_config',
   'template_segment': 'Workspace bootstrap',

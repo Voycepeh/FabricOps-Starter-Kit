@@ -370,3 +370,34 @@ def test_incomplete_pipeline_identity_schema_is_rejected(table):
     for existing in (StructType([]), StructType(expected.fields[:-1])):
         with pytest.raises(ValueError, match='Existing data has been preserved'):
             setup._validate_existing_metadata_schema(table, existing, expected, allow_missing=True)
+
+
+def test_explicit_column_retirements_exclude_live_audit_and_run_contracts():
+    """Every removal has an explicit policy and cannot remove canonical Run content."""
+    from fabricops_kit.config.metadata_schemas import RETIRED_METADATA_COLUMNS, AUDIT_SCHEMA_FIELDS
+    registry = metadata_table_schema_registry()
+    assert set(RETIRED_METADATA_COLUMNS) == set(registry)
+    assert RETIRED_METADATA_COLUMNS['METADATA_PIPELINE_RUN'] == {}
+    audit = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
+    for table, policies in RETIRED_METADATA_COLUMNS.items():
+        canonical = set(registry[table].fieldNames())
+        assert not (set(policies) & canonical)
+        assert audit <= canonical
+        for replacement in policies.values():
+            assert replacement is None or replacement in canonical
+
+
+@pytest.mark.parametrize('table,column', [
+    ('METADATA_DATA_PROFILED', '_committed_at'),
+    ('METADATA_PIPELINE_RUN', 'status'),
+])
+def test_setup_rejects_unsafe_retirement_declarations(monkeypatch, table, column):
+    """A mistaken declaration cannot retire canonical fields or Run hash inputs."""
+    import importlib
+    from types import SimpleNamespace
+    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
+    schema = metadata_table_schema_registry()[table]
+    monkeypatch.setitem(setup.RETIRED_METADATA_COLUMNS, table, {column: None})
+    with pytest.raises(ValueError, match='Unsafe column retirement declaration'):
+        setup._upgrade_metadata_table(spark=None, table=SimpleNamespace(schema=schema),
+            table_name=table, expected_schema=schema, metadata_schema='engineering', context={})

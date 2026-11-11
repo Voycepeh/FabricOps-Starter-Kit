@@ -61,7 +61,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>operations_json</code></td><td><code>string</code></td><td>Reviewed source/target operations with exact physical bindings and execution strategies.</td></tr>
 <tr class="metadata-column--engineering"><td><code>bindings_sha256</code></td><td><code>string</code></td><td>Canonical digest of exact approved operation bindings and execution descriptors.</td></tr>
 <tr class="metadata-column--engineering"><td><code>parameters_json</code></td><td><code>string</code></td><td>Exact approved behavior-affecting setup parameters; runtime overrides reject.</td></tr>
-<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Nullable historical approval reference retained unchanged for audit; never new activation authority.</td></tr>
+<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Exact Governance approval ID authorizing the selected Pipeline Promotion; captured by governed Runs. Historical Run values are preserved.</td></tr>
 <tr class="metadata-column--engineering"><td><code>submission_id</code></td><td><code>string</code></td><td>Identifier stored for <code>submission_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>submission_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Registry field <code>submission_sha256</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>restored_from_version</code></td><td><code>integer</code></td><td>Exact retained prior implementation version with matching reviewed executable content.</td></tr>

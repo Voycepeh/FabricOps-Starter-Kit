@@ -17,6 +17,7 @@ from .metadata_schemas import (
     encode_metadata_row,
     parse_metadata_json,
     RETIRED_PREVIEW_METADATA_TABLES,
+    RETIRED_METADATA_COLUMNS,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
     metadata_table_physical_schema,
@@ -97,8 +98,6 @@ def _validate_existing_metadata_schema(
     expected = _schema_fields_by_name(expected_schema)
     if not existing:
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
-    if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
-        raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
     provenance = {"pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version"}
     supported_run_addition = (table_name == "METADATA_PIPELINE_RUN" and allow_missing
         and not (set(existing) - set(expected)) and set(expected) - set(existing) <= provenance)
@@ -170,8 +169,8 @@ def _parse_catalogue_value(value, data_type, *, field, historical):
     return validate_metadata_value(value, data_type, field=field)
 
 
-def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadata_schema, context):
-    """Upgrade known Run/Catalogue nested fields in one pinned Delta transaction.
+def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metadata_schema, context):
+    """Convert JSON fields and remove declared retired columns atomically.
 
     Schema and replacement files commit together. Whole-table read tracking and
     metadata conflict checks prevent loss of concurrent updates/blind appends.
@@ -182,10 +181,18 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
 
     from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 
+    retirements = RETIRED_METADATA_COLUMNS.get(table_name, {})
+    retired = set(_table_column_names(table)) & set(retirements)
     if not hasattr(table, "schema"):
+        if retired:
+            raise ValueError(f"{table_name}: cannot verify retired column(s): {', '.join(sorted(retired))}; existing data preserved.")
         return table, None
     logical_fields = metadata_json_schema(table_name)
+    if not logical_fields and not retired:
+        return table, None
     expected = _schema_fields_by_name(expected_schema)
+    if set(retirements) & set(expected) or (table_name == "METADATA_PIPELINE_RUN" and retirements):
+        raise ValueError(f"Unsafe column retirement declaration for {table_name}.")
 
     def inspect(frame):
         actual = _schema_fields_by_name(frame.schema)
@@ -222,6 +229,8 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
         return encode_metadata_row(table_name, values)
 
     def validate(frame):
+        if not logical_fields:
+            return set()
         changed = set()
         has_rows = False
         for row in frame.toLocalIterator():
@@ -236,7 +245,7 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
     converted = inspect(table)
     # All-JSON schemas are validated on every setup, but never rewritten merely
     # to canonicalize whitespace/object-key order in retained evidence.
-    if not converted and not validate(table):
+    if not converted and not validate(table) and not retired:
         return table, None
 
     from pyspark.sql import functions as F
@@ -254,25 +263,45 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
     source = spark.read.format("delta").option("versionAsOf", version).load(path)
     converted = inspect(source)
     converted.update(validate(source))
-    if not converted:
-        return source, None
     actual = _schema_fields_by_name(source.schema)
+    retired = set(actual) & set(retirements)
+    if not converted and not retired:
+        return source, None
+    metadata = json.loads(txn.metadata().json())
+    physical_schema = StructType.fromJson(json.loads(metadata["metaData"]["schemaString"]))
+    if retired:
+        properties = metadata["metaData"].get("configuration", {})
+        if (retired & set(metadata["metaData"].get("partitionColumns", []))
+                or properties.get("delta.columnMapping.mode", "none") != "none"
+                or any(key.startswith("delta.constraints.") for key in properties)
+                or any("delta.generationExpression" in field.metadata for field in physical_schema)):
+            raise ValueError(f"{table_name}: retired columns require an unsupported partition, mapping or constraint migration; existing data preserved.")
+        for name in sorted(retired):
+            replacement_name = retirements[name]
+            column = F.col('`' + name.replace('`', '``') + '`')
+            safe = column.isNull()
+            if replacement_name is not None:
+                if replacement_name not in actual or actual[name].dataType != actual[replacement_name].dataType:
+                    raise ValueError(f"{table_name}.{name}: replacement type is incompatible; existing data preserved.")
+                safe = safe | column.eqNullSafe(F.col(replacement_name))
+            if source.where(~safe).limit(1).count():
+                raise ValueError(f"{table_name}.{name}: populated retired column is not provably redundant; existing data preserved.")
     target_schema = StructType([
         StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
-        if f.name in logical_fields else f for f in source.schema.fields
+        if f.name in logical_fields else f for f in source.schema.fields if f.name not in retired
     ] + [StructField(f.name, f.dataType, True, f.metadata) for f in expected_schema.fields if f.name not in actual])
-    stage = path.rstrip("/") + "_json_upgrade_staging/" + str(uuid4())
+    stage = path.rstrip("/") + "_metadata_upgrade_staging/" + str(uuid4())
     fs_path = jvm.org.apache.hadoop.fs.Path(stage)
     fs = fs_path.getFileSystem(spark._jsc.hadoopConfiguration())
     try:
-        replacement = spark.createDataFrame(source.rdd.map(convert), target_schema)
+        retained_names = target_schema.fieldNames()
+        replacement = spark.createDataFrame(
+            source.rdd.map(convert).map(lambda row: {name: row.get(name) for name in retained_names}), target_schema)
         replacement.write.mode("errorifexists").parquet(stage)
         replacement = spark.read.schema(target_schema).parquet(stage)
-        metadata = json.loads(txn.metadata().json())
-        physical_schema = StructType.fromJson(json.loads(metadata["metaData"]["schemaString"]))
         replacement_metadata_schema = StructType([
             StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
-            if f.name in logical_fields else f for f in physical_schema.fields
+            if f.name in logical_fields else f for f in physical_schema.fields if f.name not in retired
         ] + [f for f in target_schema.fields if f.name not in actual])
         metadata["metaData"]["schemaString"] = replacement_metadata_schema.json()
         txn.updateMetadata(delta.actions.Action.fromJson(json.dumps(metadata)), False)
@@ -283,7 +312,7 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
         for index in range(added.size()):
             actions.add(added.apply(index))
         seq = jvm.scala.collection.JavaConverters.asScalaBufferConverter(actions).asScala().toSeq()
-        recovery = json.dumps({"fabricops_json_upgrade": 1, "table": table_name, "pre_upgrade_version": version})
+        recovery = json.dumps({"fabricops_metadata_upgrade": 1, "removed_columns": sorted(retired), "table": table_name, "pre_upgrade_version": version})
         option = jvm.scala.Option
         from py4j.protocol import Py4JError
 
@@ -300,7 +329,7 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
         committed_version = int(txn.commit(seq, operation))
         committed = spark.read.format("delta").option("versionAsOf", committed_version).load(path)
         if committed.schema != replacement.schema:
-            raise RuntimeError(f"{table_name} upgrade committed but schema verification failed; inspect Delta history.")
+            raise RuntimeError(f"{table_name} upgrade committed but schema verification failed; inspect Delta history (pre-upgrade version {version}, committed version {committed_version}).")
 
         def serialized(frame):
             return frame.select(F.to_json(F.struct(*[F.col('`' + name.replace('`', '``') + '`')
@@ -310,10 +339,11 @@ def _upgrade_json_metadata(*, spark, table, table_name, expected_schema, metadat
 
         before, after = serialized(replacement), serialized(committed)
         if before.exceptAll(after).limit(1).count() or after.exceptAll(before).limit(1).count():
-            raise RuntimeError(f"{table_name} upgrade committed but data verification failed; inspect Delta history.")
+            raise RuntimeError(f"{table_name} upgrade committed but data verification failed; inspect Delta history (pre-upgrade version {version}, committed version {committed_version}).")
         return spark.read.format("delta").load(path), {
             "pre_upgrade_version": version, "upgrade_version": committed_version,
-            "converted_columns": sorted(converted),
+            "converted_columns": sorted(converted), "removed_columns": sorted(retired),
+            "added_columns": [f.name for f in expected_schema.fields if f.name not in actual],
         }
     finally:
         fs.delete(fs_path, True)
@@ -438,7 +468,14 @@ def setup_metadata_tables(
     approvals, populates business metadata, deletes rows or replaces business
     targets. Governance definitions and activation are independent workflows.
 
-    Compatible missing columns are added automatically. Catalogue and Pipeline
+    Compatible missing columns are added automatically. Only columns explicitly
+    listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
+    value is null or equals its declared canonical replacement. Other extension
+    columns are preserved where the table's identity contract permits them.
+    Unproven populated retirements fail with data preserved. Cleanup and supported
+    JSON conversions commit atomically, with the pre-upgrade Delta version
+    returned for recovery before VACUUM or further writes. Setup never vacuums.
+    Catalogue and Pipeline
     Run collection fields are stored as validated JSON strings; supported native
     collections are converted atomically with tracked Delta reads and exact
     schema/data readback. Existing rows, audit values, extension fields, table
@@ -527,15 +564,13 @@ def setup_metadata_tables(
             upgrade = None
             if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)
-            if metadata_json_schema(table_name):
-                table, upgrade = _upgrade_json_metadata(
+            if metadata_json_schema(table_name) or RETIRED_METADATA_COLUMNS.get(table_name):
+                table, upgrade = _upgrade_metadata_table(
                     spark=spark, table=table, table_name=table_name, expected_schema=schema,
                     metadata_schema=resolved_metadata_schema, context=context)
             evolved_columns: list[str] = []
             if not created:
                 columns = _table_column_names(table)
-                if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in columns:
-                    raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
                 if table is not None and hasattr(table, "schema"):
                     evolved_columns = _validate_existing_metadata_schema(
                         table_name, table.schema, schema, allow_missing=True
@@ -575,11 +610,11 @@ def setup_metadata_tables(
             elif upgrade:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
-                    **_result(table_name, "evolved", "JSON metadata automatically upgraded to SQL-compatible strings and verified."),
+                    **_result(table_name, "evolved", "Metadata schema automatically upgraded and verified."),
                     **upgrade,
                 }
                 if verbose:
-                    print(f"[{index:,}/{total_tables:,}] Automatically upgraded {table_name} to SQL-compatible JSON strings\n")
+                    print(f"[{index:,}/{total_tables:,}] Automatically upgraded {table_name}\n")
             elif evolved_columns:
                 evolved_tables.append(table_name)
                 table_results[table_name] = {
