@@ -19,7 +19,7 @@ write = import_module("fabricops_kit.pipeline.orchestrate_write")
 def read_runtime(monkeypatch):
     """Keep stage planning real while isolating physical source access."""
     context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "grain"}]})
-    monkeypatch.setattr(read, "resolve_table_id", Mock(return_value="source"))
+    monkeypatch.setattr(read, "resolve_table_id", Mock(side_effect=lambda **kw: "source" if kw["store"] == "Bronze" else "target"))
     monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
     frame = SimpleNamespace(columns=["id"])
     reader = Mock(side_effect=lambda **kwargs: {
@@ -53,7 +53,7 @@ def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtim
     reader, grain, profile = read_runtime
     parameters = {"watermark_column": "modified_at"}
     run_pipeline_operation(read.orchestrate_read, plan=PLAN, store="Bronze", schema="demo", table_name="orders", read_mode=mode,
-                                   read_parameters=parameters, target_table_id="target", verbose=False)
+                                   read_parameters=parameters, target_store="Silver", target_schema="demo", target_table_name="orders_clean", verbose=False)
     assert reader.call_args.kwargs["read_mode"] == "incremental"
     assert reader.call_args.kwargs["read_parameters"] is parameters
     assert grain.call_args.kwargs["scope"] == "read_incremental_batch"
@@ -61,8 +61,8 @@ def test_incremental_mode_normalized_for_reader_parameters_and_grain(read_runtim
     assert profile.call_args.args[:2] == ("source", "read")
 
 
-def test_incremental_read_allows_unregistered_target_on_first_run(read_runtime, monkeypatch):
-    """A fresh incremental target is registered by its first successful Write."""
+def test_incremental_read_accepts_planned_target_on_first_run(read_runtime, monkeypatch):
+    """A fresh target is included by coordinate planning before its first Read."""
     reader, _grain, profile = read_runtime
     context = execution_context_stub({"source": None}, {"source": [{"guardrail_type": "grain"}]})
     monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
@@ -75,12 +75,13 @@ def test_incremental_read_allows_unregistered_target_on_first_run(read_runtime, 
         table_name="orders",
         read_mode="incremental",
         read_parameters={"watermark_column": "modified_at"},
-        target_table_id="new-target",
+        target_store="Silver",
+        target_table_name="new-target",
         verbose=False,
     )
 
     assert result["table_id"] == "source"
-    assert reader.call_args.kwargs["target_table_id"] == "new-target"
+    assert reader.call_args.kwargs["target_table_id"] == "target"
     profile.assert_called_once()
 
 
@@ -195,3 +196,25 @@ def test_write_preserves_final_preparation_after_sensitive_data(monkeypatch, mod
     assert publish.call_args.args[0] is masked
     sensitive.assert_called_once()
     assert result["published"] == (mode != "dry_run")
+
+
+@pytest.mark.parametrize("roles", [None, ["source"]])
+def test_incremental_target_must_be_authorized_in_active_plan(read_runtime, monkeypatch, roles):
+    """A resolved ID alone cannot authorize incremental target participation."""
+    context = execution_context_stub({"source": None})
+    if roles is None:
+        context["_pipeline_identities"].pop("target")
+    else:
+        context["_pipeline_identities"]["target"] = {"roles": roles}
+    monkeypatch.setattr(read, "prepare_pipeline_execution", Mock(return_value=context))
+    with pytest.raises(ValueError, match="explicit target participant"):
+        run_pipeline_operation(read.orchestrate_read, plan=PLAN,
+            store="Bronze", schema="demo", table_name="orders", read_mode="incremental",
+            target_store="Silver", target_schema="demo", target_table_name="orders_clean")
+    read_runtime[0].assert_not_called()
+
+
+def test_orchestrate_read_rejects_removed_target_id_argument():
+    """The breaking interface has no legacy ID keyword or compatibility shim."""
+    with pytest.raises(TypeError, match="unexpected keyword argument 'target_table_id'"):
+        read.orchestrate_read(store="Bronze", schema=None, table_name="orders", target_table_id="target")

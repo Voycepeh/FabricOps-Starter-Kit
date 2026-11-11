@@ -48,7 +48,9 @@ def orchestrate_read(
     read_mode: str='full',
     query: str | None=None,
     read_parameters: dict[str, Any] | None=None,
-    target_table_id: str | None=None,
+    target_store: str | None=None,
+    target_schema: str | None=None,
+    target_table_name: str | None=None,
     verbose: bool=False,
     dq_diagnostics: str='sample',
 ) -> dict[str, Any]:
@@ -72,7 +74,9 @@ Required describes the Python signature. An optional parameter may still be need
 | `read_mode` | `str` | No | `'full'` | Full reads profile the source; incremental reads retain checkpoint bounds. |
 | `query` | `str \| None` | No | `None` | Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full reads only. Lakehouse SQL binds the declared source through configured OneLake routing. Simple integer TOP projections can convert to LIMIT; complex T-SQL requires native Spark SQL and otherwise raises ValueError. |
 | `read_parameters` | `dict[str, Any] \| None` | No | `None` | Incremental watermark_column; must agree with the selected contract. |
-| `target_table_id` | `str \| None` | No | `None` | Required target for incremental reads, also a participant in the plan. |
+| `target_store` | `str \| None` | No | `None` | Configured target store key; required for incremental reads. |
+| `target_schema` | `str \| None` | No | `None` | Physical target schema; omit for a schemaless store or configured default. |
+| `target_table_name` | `str \| None` | No | `None` | Physical target table name; required for incremental reads. The resolved target must be an authorized target participant in the active plan. Source and target stores may route to different workspaces. |
 | `verbose` | `bool` | No | `False` | Print concise stage outcomes and summary. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Rule metrics plus bounded examples, no examples, or lazy full failures. |
 
@@ -84,6 +88,10 @@ Required describes the Python signature. An optional parameter may still be need
 
 ```python
 orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+changes = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders", read_mode="incremental",
+    target_store="Silver", target_schema="demo", target_table_name="orders_clean",
+)
 ```
 
 </div>
@@ -112,7 +120,7 @@ Spark, execution authority and reporting come from setup_pipeline. The result
 retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
 register pipeline-level participation for subsequent Writes; this is not
 exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
-target_table_id preserves incremental checkpoint and SCD processing support.
+FabricOps resolves source and target Table IDs through configured workspace routing.
 dq_diagnostics accepts sample, none or full for explicit debugging.
 
 Profiling uses pipeline-owned settings and shared
@@ -145,7 +153,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:25`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L25-L173">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L25-L190">View on GitHub</a>
 </div>
 
 
@@ -161,7 +169,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 243 |
+| Live-critical dependencies | 245 |
 
 ### Release history
 
@@ -261,6 +269,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_read._resolve_requested_incremental_columns</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_incremental_query</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_read._warehouse_watermark_literal</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read.pipeline_read</code></li>
+<li><code>fabricops_kit.pipeline.resolve_table_id.resolve_table_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_bypass_post_review_warning</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>

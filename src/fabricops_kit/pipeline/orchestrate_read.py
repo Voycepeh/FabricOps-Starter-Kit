@@ -22,7 +22,7 @@ from fabricops_kit.pipeline.shared import (
 from fabricops_kit.pipeline.resolve_table_id import resolve_table_id
 
 
-def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
+def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = "full", query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
     """Read a source using the active pipeline's contracts and runtime.
 
     Define store, schema, table_name and any full/incremental/query options.
@@ -30,7 +30,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     retains its dataframe, canonical Table ID and Guardrail diagnostics. Reads
     register pipeline-level participation for subsequent Writes; this is not
     exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
-    target_table_id preserves incremental checkpoint and SCD processing support.
+    FabricOps resolves source and target Table IDs through configured workspace routing.
     dq_diagnostics accepts sample, none or full for explicit debugging.
 
     Profiling uses pipeline-owned settings and shared
@@ -64,8 +64,14 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         Full reads profile the source; incremental reads retain checkpoint bounds.
     read_parameters : dict, optional
         Incremental watermark_column; must agree with the selected contract.
-    target_table_id : str, optional
-        Required target for incremental reads, also a participant in the plan.
+    target_store : str, optional
+        Configured target store key; required for incremental reads.
+    target_schema : str, optional
+        Physical target schema; omit for a schemaless store or configured default.
+    target_table_name : str, optional
+        Physical target table name; required for incremental reads. The resolved
+        target must be an authorized target participant in the active plan.
+        Source and target stores may route to different workspaces.
     query : str, optional
         Read-only Spark SQL on a Lakehouse or T-SQL on a Warehouse, for full
         reads only. Lakehouse SQL binds the declared source through configured
@@ -90,20 +96,33 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
     Examples
     --------
     >>> orders = orchestrate_read(store="Bronze", schema="demo", table_name="orders")
+    >>> changes = orchestrate_read(
+    ...     store="Bronze", schema="demo", table_name="orders", read_mode="incremental",
+    ...     target_store="Silver", target_schema="demo", target_table_name="orders_clean",
+    ... )
 
     """
     session = current_pipeline_session()
     spark_session = session.spark
     try:
+        read_mode = str(read_mode or "").strip().lower()
+        if read_mode not in {"full", "incremental"}:
+            raise ValueError("read_mode must be 'full' or 'incremental'.")
+        has_target = any(value is not None for value in (target_store, target_schema, target_table_name))
+        if read_mode == "incremental" or has_target:
+            if (not isinstance(target_store, str) or not target_store.strip()
+                    or not isinstance(target_table_name, str) or not target_table_name.strip()):
+                raise ValueError("target_store and target_table_name are required for incremental reads or supplied target coordinates.")
         execution_plan = session.operation_plan("source", locals())
+        target_table_id = resolve_table_id(
+            store=target_store, schema=target_schema, table_name=target_table_name,
+            context=execution_plan.runtime_context,
+        ) if has_target else None
     except BaseException:
         session.close(failed=True)
         raise
     arguments = {key: value for key, value in locals().items() if key not in {"session"}}
     with PipelineOperation(execution_plan, "source", arguments) as operation:
-        read_mode = str(read_mode or "").strip().lower()
-        if read_mode not in {"full", "incremental"}:
-            raise ValueError("read_mode must be 'full' or 'incremental'.")
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("READ", verbose=verbose)
@@ -113,9 +132,7 @@ def orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mo
         context = {**context, "_fabricops_suppress_io_log": True}
         if "source" not in context["_pipeline_identities"][table_id]["roles"]:
             raise ValueError("Read requires an explicit source participant.")
-        if target_table_id is not None and target_table_id in context["_pipeline_identities"] and (
-            "target" not in context["_pipeline_identities"][target_table_id]["roles"]
-        ):
+        if target_table_id is not None and "target" not in context["_pipeline_identities"].get(target_table_id, {}).get("roles", []):
             raise ValueError("Incremental target must be an explicit target participant in the plan.")
         active = pipeline_guardrail_types(context, table_id)
         labels = [("freshness", "Freshness"), ("schema", "Schema"), ("grain", "Grain"), ("data_quality", "Data Quality")]

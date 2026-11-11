@@ -1,4 +1,4 @@
-"""Public owner for deterministic physical table identity resolution."""
+"""Internal implementation for deterministic physical table identity resolution."""
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.pipeline.shared import resolve_physical_table_identity

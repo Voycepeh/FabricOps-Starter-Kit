@@ -172,7 +172,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 257 |
+| Live-critical dependencies | 258 |
 
 ### Release history
 
@@ -291,6 +291,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write.pipeline_write</code></li>
+<li><code>fabricops_kit.pipeline.resolve_table_id.resolve_table_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_bypass_post_review_warning</code></li>
 <li><code>fabricops_kit.pipeline.shared._apply_token_mapping</code></li>

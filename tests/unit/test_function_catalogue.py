@@ -151,13 +151,14 @@ def test_format_specific_io_and_internal_guardrails_are_not_root_exported() -> N
     assert {"stop_if_failed", "write_catalogue_evidence"}.isdisjoint(root_exports)
 
 
-def test_pipeline_read_is_public_while_write_and_checks_stay_internal() -> None:
-    """Expose the governed read capability alongside the standard orchestrators."""
+def test_orchestrators_are_public_while_read_identity_write_and_checks_stay_internal() -> None:
+    """Expose orchestrators and keep implementation stages outside the public surface."""
     import fabricops_kit
     from fabricops_kit import pipeline
     from fabricops_kit.public_api import RELEASE_PUBLIC_API
 
     removed = {
+        "pipeline_read", "resolve_table_id",
         "check_schema", "check_freshness", "check_source_drift", "check_dq",
         "check_sensitive_data", "pipeline_write",
     }
@@ -165,11 +166,12 @@ def test_pipeline_read_is_public_while_write_and_checks_stay_internal() -> None:
     assert removed.isdisjoint(pipeline.__all__)
     assert removed.isdisjoint(name.rsplit(".", 1)[-1] for name in RELEASE_PUBLIC_API)
     assert all(not hasattr(fabricops_kit, name) for name in removed)
-    assert {"pipeline_read", "orchestrate_read", "orchestrate_write"} <= set(pipeline.__all__)
+    assert {"profile_table", "orchestrate_read", "orchestrate_write"} <= set(pipeline.__all__)
     data = json.loads((ROOT / "docs/reference/_data/public-function-call-flows.json").read_text())
     public = {row["qualified_name"].rsplit(".", 1)[-1] for row in data["public_analysis"]}
     assert removed.isdisjoint(public)
-    assert "pipeline_read" in public
+    assert "pipeline_read" not in public
+    assert "resolve_table_id" not in public
 
 
 def test_sensitive_data_reference_uses_orchestration() -> None:

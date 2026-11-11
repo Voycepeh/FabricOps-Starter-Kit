@@ -21,11 +21,10 @@ def _assert_numpy_parameter_contract(function) -> None:
 
 
 def test_orchestrators_are_the_public_pipeline_execution_entrypoints() -> None:
-    """Orchestrators and the read capability remain public; other stages stay internal."""
+    """Orchestrators remain public; implementation stages stay internal."""
     assert callable(fabricops_kit.orchestrate_read)
     assert callable(fabricops_kit.orchestrate_write)
-    assert callable(fabricops_kit.pipeline_read)
-    for name in ("pipeline_write", "check_freshness", "check_schema",
+    for name in ("pipeline_read", "resolve_table_id", "pipeline_write", "check_freshness", "check_schema",
                  "check_dq", "check_source_drift", "check_sensitive_data"):
         assert not hasattr(fabricops_kit, name)
 

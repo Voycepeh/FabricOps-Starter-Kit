@@ -213,8 +213,6 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'finalize_pipeline',
         'setup_pipeline',
         'profile_table',
-        'resolve_table_id',
-        'pipeline_read',
         'orchestrate_read',
         'orchestrate_write',
         'widget_data_contract',

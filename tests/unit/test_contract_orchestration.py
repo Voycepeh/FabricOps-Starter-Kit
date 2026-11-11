@@ -232,7 +232,8 @@ def test_testing_incremental_bootstrap_does_not_advance_checkpoints(runtime, spa
     """Incremental reads evaluate real bounds and all supported incremental strategies without writes."""
     make, _, spies, _ = runtime
     plan = make()
-    source = read(plan, spark_session, read_mode="incremental", read_parameters={"watermark_column": "id"}, target_table_id=TARGET_ID)
+    source = read(plan, spark_session, read_mode="incremental", read_parameters={"watermark_column": "id"},
+                  target_store=TARGET["store"], target_schema=TARGET["schema"], target_table_name=TARGET["table_name"])
     result = write(plan, source, spark_session, strategy=strategy, parameters=parameters)
     assert source["scope"]["first_run"]
     assert source["dataframe"].count() == 2

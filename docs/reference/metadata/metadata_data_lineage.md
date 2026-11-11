@@ -6,11 +6,9 @@ Shows which tables a pipeline reads and writes, so you can trace how data moves 
 
 * [`orchestrate_read`](../../api/reference/orchestrate_read.md)
 * [`orchestrate_write`](../../api/reference/orchestrate_write.md)
-* [`pipeline_read`](../../api/reference/pipeline_read.md)
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Source read capability
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
 * [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
 

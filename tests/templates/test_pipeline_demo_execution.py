@@ -33,7 +33,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         return {'dataframe': dataframe, 'published': False}
     namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
-                 'resolve_table_id': Mock(return_value='incremental-target'), 'read_lakehouse_table': Mock(return_value=MagicMock()),
+                 'read_lakehouse_table': Mock(return_value=MagicMock()),
                  'display': Mock()}
     for cell in notebook.cells:
         if cell.cell_type != 'code':
