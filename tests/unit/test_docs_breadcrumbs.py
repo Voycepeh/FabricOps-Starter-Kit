@@ -65,3 +65,21 @@ def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
         {"title": "Home", "url": "index.html"},
         {"title": "Generated Function", "url": None},
     ]
+
+
+def test_generated_function_breadcrumbs_link_to_reference_catalogue() -> None:
+    """Generated function pages should offer a working reference parent link."""
+    current = _page("orchestrate_read", "api/reference/orchestrate_read/")
+    nav = SimpleNamespace(items=[_page("Home", ""), _section(
+        "Reference Documentation", [_page("Function Reference", "reference/")]
+    )])
+    context: dict[str, object] = {}
+
+    on_page_context(context, current, {}, nav)
+
+    assert context["fabricops_breadcrumbs"] == [
+        {"title": "Home", "url": "index.html"},
+        {"title": "Reference Documentation", "url": "reference/"},
+        {"title": "Function Reference", "url": "reference/"},
+        {"title": "orchestrate_read", "url": None},
+    ]
