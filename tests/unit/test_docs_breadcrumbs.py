@@ -55,7 +55,7 @@ def test_breadcrumbs_keep_current_page_non_clickable() -> None:
 
 def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
     """Verify breadcrumbs fall back for pages outside nav."""
-    current = _page("Generated Function", "api/reference/generated-function/")
+    current = _page("Unlisted Page", "unlisted-page/")
     nav = SimpleNamespace(items=[_page("Home", "")])
     context: dict[str, object] = {}
 
@@ -63,7 +63,7 @@ def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
 
     assert context["fabricops_breadcrumbs"] == [
         {"title": "Home", "url": "index.html"},
-        {"title": "Generated Function", "url": None},
+        {"title": "Unlisted Page", "url": None},
     ]
 
 
