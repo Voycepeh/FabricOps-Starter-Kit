@@ -21,6 +21,7 @@ TABLES = [table for table, columns in RETIRED_METADATA_COLUMNS.items() if column
 def cleanup_delta(spark_session, monkeypatch, tmp_path):
     """Route the setup migration to actual Delta and isolate unrelated tables."""
     from fabricops_kit.io import shared as io
+    pytest.importorskip('delta.tables')
     from delta.tables import DeltaTable
     from pyspark.sql.types import StructField, StructType, StringType
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):

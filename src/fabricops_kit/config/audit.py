@@ -79,6 +79,8 @@ def build_runtime_audit_fields(
     ----------
     config : FrameworkConfig | dict, optional
         Framework config containing ``path_config.paths[active_workspace_id]["Metadata"]``.
+        Its ``FabricStore.name`` supplies the physical Metadata Lakehouse name,
+        including when the store routes to another workspace/item.
     active_workspace_id : str, optional
         Workspace key paired with ``config`` when resolving the metadata
         Lakehouse name.
@@ -106,6 +108,13 @@ def build_runtime_audit_fields(
         workspace ID/name, notebook ID/name, metadata Lakehouse name, and
         activity ID.
 
+    Raises
+    ------
+    ValueError
+        If required audit values are missing, including a physical Metadata
+        Lakehouse name. Configure ``Metadata`` with ``FabricStore.name`` in
+        ``00_env_config``; the logical store key is never used as its name.
+
     """
     context = resolve_runtime_context(context=runtime_context)
 
@@ -123,7 +132,14 @@ def build_runtime_audit_fields(
 
     resolved_metadata_lakehouse = metadata_lakehouse_name
     if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and active_workspace_id is not None:
-        resolved_metadata_lakehouse = get_store(config=config, active_workspace_id=active_workspace_id, store="Metadata").key
+        metadata_store = get_store(config=config, active_workspace_id=active_workspace_id, store="Metadata")
+        resolved_metadata_lakehouse = metadata_store.name
+        if not _valid_audit_value(resolved_metadata_lakehouse):
+            raise ValueError(
+                f"Cannot build metadata audit fields: {metadata_lakehouse_field} requires a physical Lakehouse name. "
+                f"Set FabricStore.name for the Metadata store under workspace '{active_workspace_id}' in 00_env_config "
+                f"(bound workspace_id='{metadata_store.workspace_id}', item_id='{metadata_store.item_id}')."
+            )
 
     values = {
         user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("user_name", "user_id"),

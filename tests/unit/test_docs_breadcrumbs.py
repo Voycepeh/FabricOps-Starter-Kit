@@ -55,7 +55,7 @@ def test_breadcrumbs_keep_current_page_non_clickable() -> None:
 
 def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
     """Verify breadcrumbs fall back for pages outside nav."""
-    current = _page("Generated Function", "api/reference/generated-function/")
+    current = _page("Unlisted Page", "unlisted-page/")
     nav = SimpleNamespace(items=[_page("Home", "")])
     context: dict[str, object] = {}
 
@@ -63,5 +63,23 @@ def test_breadcrumbs_fall_back_for_pages_outside_nav() -> None:
 
     assert context["fabricops_breadcrumbs"] == [
         {"title": "Home", "url": "index.html"},
-        {"title": "Generated Function", "url": None},
+        {"title": "Unlisted Page", "url": None},
+    ]
+
+
+def test_generated_function_breadcrumbs_link_to_reference_catalogue() -> None:
+    """Generated function pages should offer a working reference parent link."""
+    current = _page("orchestrate_read", "api/reference/orchestrate_read/")
+    nav = SimpleNamespace(items=[_page("Home", ""), _section(
+        "Reference Documentation", [_page("Function Reference", "reference/")]
+    )])
+    context: dict[str, object] = {}
+
+    on_page_context(context, current, {}, nav)
+
+    assert context["fabricops_breadcrumbs"] == [
+        {"title": "Home", "url": "index.html"},
+        {"title": "Reference Documentation", "url": "reference/"},
+        {"title": "Function Reference", "url": "reference/"},
+        {"title": "orchestrate_read", "url": None},
     ]
