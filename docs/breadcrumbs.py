@@ -76,6 +76,17 @@ def on_page_context(context, page, config, nav):
     """Add navigation-derived breadcrumbs to each rendered page context."""
     nav_path = _find_nav_path(getattr(nav, "items", []), page)
     if not nav_path:
+        # Generated function pages are not in the top-level MkDocs navigation.
+        # Link them back to their actual parent catalogue.
+        page_url = (getattr(page, "url", None) or "").lstrip("/")
+        if page_url.startswith("api/reference/"):
+            context["fabricops_breadcrumbs"] = [
+                _home_crumb(nav),
+                {"title": "Reference Documentation", "url": "reference/"},
+                {"title": "Function Reference", "url": "reference/"},
+                {"title": getattr(page, "title", ""), "url": None},
+            ]
+            return context
         context["fabricops_breadcrumbs"] = [
             _home_crumb(nav),
             {"title": getattr(page, "title", ""), "url": None},
