@@ -22,6 +22,34 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PROCESSING_STATE",
 ]
 
+# Explicit column retirements, never inferred from a schema difference. Values
+# name a canonical replacement that must equal every non-null retired value;
+# None permits removal only when the retired column is entirely SQL NULL.
+# These fields are absent from current writers. Retained Run fields are excluded:
+# even a duplicate field can participate in released execution content hashes.
+RETIRED_METADATA_COLUMNS = {
+    table: {} for table in CANONICAL_METADATA_TABLES
+}
+RETIRED_METADATA_COLUMNS.update({
+    "METADATA_DATA_CATALOGUE": {
+        "metadata_id": None, "metadata_key": None,
+        "metadata_table_key": None, "metadata_column_key": None,
+    },
+    "METADATA_DATA_PROFILED": {
+        "frequency_json": None, "profiled_at": "_committed_at",
+        "metadata_table_key": None, "metadata_column_key": None,
+        "store_type": None, "layer": None, "schema_name": None,
+        "schema_fingerprint": None,
+    },
+    "METADATA_DATA_PROFILED_FREQUENCY": {
+        "metadata_column_key": None, "profiled_at": "_committed_at",
+    },
+    "METADATA_DATA_LINEAGE": {
+        "lineage_event_id": None, "profile_role": None,
+        "profiled_at": "_committed_at", "recorded_at": "_committed_at",
+    },
+})
+
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 RETIRED_PREVIEW_METADATA_TABLES = {

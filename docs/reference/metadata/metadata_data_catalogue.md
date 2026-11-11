@@ -105,3 +105,16 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
+
+## Automatic column cleanup
+
+`setup_metadata_tables()` removes only the explicitly retired columns below. It preserves canonical rows, all eight audit columns and other extension columns. If a populated value cannot be proved redundant, setup fails for this table with data preserved.
+
+| Retired column | Removal condition |
+| --- | --- |
+| `metadata_id` | Every value is SQL NULL |
+| `metadata_key` | Every value is SQL NULL |
+| `metadata_table_key` | Every value is SQL NULL |
+| `metadata_column_key` | Every value is SQL NULL |
+
+See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

@@ -135,3 +135,46 @@ compilation, diff checks and a second no-diff reference generation passed. These
 are local Delta and mocked-identity results. No signed-in Fabric identity is
 configured in the implementation environment, so Fabric acceptance above remains
 outstanding.
+
+## Automatic metadata column cleanup
+
+After upgrading, run `setup_metadata_tables()` under the Metadata owner's identity,
+before starting pipelines. No table rebuild is required. The canonical
+`RETIRED_METADATA_COLUMNS` registry in `config/metadata_schemas.py` declares the
+only columns eligible for removal; a missing field in a new schema never grants
+permission to delete a physical column. Current writers already omit these fields.
+
+A retired value must be SQL NULL or exactly equal to its declared replacement.
+For example, `profiled_at` can be removed only when its populated timestamps equal
+`_committed_at`. A populated `frequency_json` is not assumed to have been copied
+into `METADATA_DATA_PROFILED_FREQUENCY`: setup fails for that table and preserves
+the original data. Resolve retained information through a separately reviewed
+migration, then rerun setup. Review `table_results` and `failed_tables`; setup
+continues checking the remaining tables. Each table commits independently.
+
+Cleanup uses one pinned Delta transaction with whole-table read tracking. Supported
+JSON conversions and compatible missing columns are included in that commit.
+Exact retained rows (including duplicates), extension fields, audit values, table
+identity and properties are verified on readback. Concurrent changes cause a
+conflict rather than being overwritten. Partitioned retired columns, column
+mapping and constraint-bearing cleanup layouts fail before mutation. Repeated
+setup does not rewrite an already compliant table.
+
+An evolved table result includes `removed_columns`, `added_columns`,
+`converted_columns`, `pre_upgrade_version` and `upgrade_version`. Delta commit
+user metadata also records the pre-upgrade version and removed columns, so an
+interrupted acknowledgement can be investigated in Delta history. Rerun setup to
+inspect the committed state; do not blindly replay a write. If readback fails
+after commit, setup reports the failure and the two version numbers.
+
+The rollback boundary is the recorded pre-upgrade Delta version, while its files
+remain retained. Stop writers, inspect subsequent history, and use Delta RESTORE
+only after accounting for newer writes; restoring an older version would also
+undo those writes. Setup never runs VACUUM, resets a table, or automatically rolls
+back another writer's records. Standard Delta retention still applies.
+
+All eight standard audit columns remain canonical. No Pipeline Run fields,
+nested execution facts, content-hash rules, Contract references or provenance are
+retired by this change. Registry, activation and Processing State identity layouts
+retain their existing fail-closed checks. Retired Preview tables remain advisory
+and are never deleted by this column cleanup.

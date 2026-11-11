@@ -33,13 +33,17 @@ def test_setup_preserves_retained_runs_and_processing_state(runs_delta, monkeypa
     retained = shared.validate_pipeline_run(retained)
     retained = {key: value for key, value in retained.items() if key not in PROVENANCE}
     retained['execution_mode'] = 'testing'  # Historical values are facts, not current modes.
-    digest = hashlib.sha256(shared.canonical_pipeline_json(shared.pipeline_record_content(retained)).encode()).hexdigest()
     schema = metadata_table_schema_registry(logical=native)[run_table]
     schema = StructType([field for field in schema if field.name not in PROVENANCE])
     stored = retained if native else encode_metadata_row(run_table, retained)
     if not native:
         stored['operations'] = json.dumps(retained['operations'], indent=2, default=str)
     r.spark.createDataFrame([stored], schema).write.format('delta').mode('overwrite').option('overwriteSchema', 'true').save(r.paths[run_table])
+    # Hash the actual retained Delta record before setup. Native StructType
+    # persistence materializes nullable members absent from the producer dict.
+    persisted_before = r.spark.read.format('delta').load(r.paths[run_table]).first().asDict(recursive=True)
+    digest = hashlib.sha256(shared.canonical_pipeline_json(
+        shared.pipeline_record_content(shared.validate_pipeline_run(persisted_before))).encode()).hexdigest()
     delta = DeltaTable.forPath(r.spark, r.paths[run_table])
     r.spark.sql(f"ALTER TABLE delta.`{r.paths[run_table]}` SET TBLPROPERTIES ('owner_note'='preserved')")
     before_detail = delta.detail().first().asDict()
@@ -49,7 +53,7 @@ def test_setup_preserves_retained_runs_and_processing_state(runs_delta, monkeypa
                  'source_table_id': 'table0', 'target_table_id': 'table1',
                  'max_change_value': '2025-01-02T00:00:00', 'watermark_type': 'timestamp'}
                 for kind in ('incremental_checkpoint', 'drift_baseline', 'publication_receipt')]
-    r.spark.createDataFrame(progress, registry[state_table]).write.format('delta').save(r.paths[state_table])
+    r.spark.createDataFrame(progress, registry[state_table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(r.paths[state_table])
     state_delta = DeltaTable.forPath(r.spark, r.paths[state_table])
     state_before = r.spark.read.format('delta').load(r.paths[state_table]).collect()
     state_version = state_delta.history(1).first()['version']

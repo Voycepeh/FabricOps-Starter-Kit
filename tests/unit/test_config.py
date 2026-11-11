@@ -783,8 +783,8 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
     )
 
 
-def test_profiled_validation_rejects_only_legacy_frequency_json_addition():
-    """Verify the breaking unexpected-column rule is scoped to the profiled parent."""
+def test_profiled_schema_allows_declared_retirement_for_data_checked_migration():
+    """Retirement value checks belong to the atomic migration, not schema validation."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     from fabricops_kit.config.setup_metadata_tables import _validate_existing_metadata_schema
 
@@ -795,8 +795,7 @@ def test_profiled_validation_rejects_only_legacy_frequency_json_addition():
     with_legacy = schema_type(
         [*profiled.fields, field_type("frequency_json", profiled.fields[0].dataType, True)]
     )
-    with pytest.raises(ValueError, match="unexpected legacy column: frequency_json"):
-        _validate_existing_metadata_schema("METADATA_DATA_PROFILED", with_legacy, profiled)
+    assert _validate_existing_metadata_schema("METADATA_DATA_PROFILED", with_legacy, profiled) == []
 
     catalogue = registry["METADATA_DATA_CATALOGUE"]
     additive_catalogue = schema_type(
@@ -1664,7 +1663,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     assert f"Successful: {len(names) - 1}/{len(names)}" in output
     assert f"Failed: 1/{len(names)}" in output
     assert f"- {failed_name}:" in output
-    assert "unexpected legacy column: frequency_json" in output
+    assert "cannot verify retired column(s): frequency_json" in output
 
 
 def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted(monkeypatch):

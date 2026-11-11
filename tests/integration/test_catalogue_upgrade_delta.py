@@ -48,6 +48,8 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
                                            'METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_ACTIVATION'} else 'custom_engineering'))
         if name == TABLE:
             return spark_session.read.format('delta').load(path)
+        if name == 'METADATA_PROCESSING_STATE':
+            return SimpleNamespace(schema=registry[name])
         return spark_session.createDataFrame([], registry[name])
     def write(frame, name, **kwargs):
         assert name == TABLE and kwargs['schema'] == 'custom_engineering'
@@ -64,15 +66,17 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         return {'metadata_level': 'table', 'table_id': 'table', 'workspace_id': 'dev',
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
-    def seed(rows, native=(), extra=True):
+    def seed(rows, native=(), extra=True, retired=False):
         physical = StructType([StructField(f.name, logical_schema[f.name].dataType if f.name in native else f.dataType, True, {'comment': 'original ' + f.name})
             for f in schema.fields] + ([StructField('extension', StringType(), True, {'comment': 'keep'})] if extra else []))
+        if retired:
+            physical.add(StructField('metadata_key', StringType(), True))
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
         return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, workspace_id='dev', verbose=False)
     def upgrade():
-        return setup._upgrade_json_metadata(spark=spark_session, table=read(TABLE, schema='custom_engineering'), table_name=TABLE,
+        return setup._upgrade_metadata_table(spark=spark_session, table=read(TABLE, schema='custom_engineering'), table_name=TABLE,
             expected_schema=schema, metadata_schema='custom_engineering', context={'config': config, 'scope_workspace_id': 'dev'})
     def version():
         from delta.tables import DeltaTable
@@ -209,19 +213,20 @@ def test_native_values_migrate_once_and_json_is_strictly_validated(catalogue_del
     assert TABLE in rt.run()['failed_tables'] and rt.version() == version
 
 
+@pytest.mark.parametrize('retired', [False, True])
 @pytest.mark.parametrize('failure', ['interrupted', 'lost_ack'])
-def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, monkeypatch, failure):
+def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, monkeypatch, failure, retired):
     """Rerunning setup follows physical Delta state and never converts twice."""
     from py4j.java_gateway import JavaMember
     from pyspark.sql.readwriter import DataFrameWriter
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={'key_columns':['id']}, extension='preserved')], native={'load_strategy_parameters_json'})
+    rt.seed([rt.row(load_strategy_parameters_json={'key_columns':['id']}, extension='preserved')], native={'load_strategy_parameters_json'}, retired=retired)
     version = rt.version()
     if failure == 'interrupted':
         original = DataFrameWriter.parquet
         def interrupt(writer, path, *args, **kwargs):
             original(writer, path, *args, **kwargs)
-            if '_json_upgrade_staging/' in path:
+            if '_metadata_upgrade_staging/' in path:
                 raise RuntimeError('interrupted after durable staging')
         monkeypatch.setattr(DataFrameWriter, 'parquet', interrupt)
     else:
@@ -252,18 +257,19 @@ def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, m
     assert rt.version() == expected_version
 
 
+@pytest.mark.parametrize('retired', [False, True])
 @pytest.mark.parametrize('conflict', ['append', 'update', 'setup'])
-def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monkeypatch, conflict):
+def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monkeypatch, conflict, retired):
     """Race after staging, while the pinned whole-table transaction is open."""
     from pyspark.sql.readwriter import DataFrameWriter
     from delta.tables import DeltaTable
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={}, extension='original')], native={'load_strategy_parameters_json'})
+    rt.seed([rt.row(load_strategy_parameters_json={}, extension='original')], native={'load_strategy_parameters_json'}, retired=retired)
     original = DataFrameWriter.parquet
     barrier = Barrier(2)
     def stage(writer, path, *args, **kwargs):
         result = original(writer, path, *args, **kwargs)
-        if '_json_upgrade_staging/' in path:
+        if '_metadata_upgrade_staging/' in path:
             if conflict == 'setup':
                 barrier.wait(timeout=60)
             elif conflict == 'append':
@@ -296,8 +302,9 @@ def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgr
     write = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
     rt = catalogue_delta
     original_row = rt.row(load_strategy_parameters_json='{}', extension='keep')
-    rt.seed([original_row])
+    rt.seed([original_row], retired=True)
     rt.upgrade()
+    assert 'metadata_key' not in rt.read().columns
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering')
     context = {'config': config, 'scope_workspace_id': 'dev'}
     def resolve(*args, **kwargs):
@@ -326,7 +333,7 @@ def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgr
     shared._upsert_catalogue_identities(catalogue_df=frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
     current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
-    assert current['profile_key_candidates_json'] == profile_row['profile_key_candidates_json']
+    assert current['profile_key_candidates_json'] == decode_metadata_row(TABLE, profile_row)['profile_key_candidates_json']
     from types import SimpleNamespace
     monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: current)
     plan = SimpleNamespace(contracts_json='{}', workspace_id='dev')
@@ -464,7 +471,8 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     shared._persist_grain_candidates(identity, [], max_columns=2, config=config, active_workspace_id='dev',
                                      context=context, spark_session=rt.spark)
     assert decode_metadata_row(TABLE, rt.read().where("table_id='table'").first().asDict(recursive=True))['profile_key_candidates_json'] == {
-        'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
+        'status': 'unresolved', 'max_combination_width': 2, 'candidates': [],
+        'profile_scope': None, 'profiling_max_rows': None}
     # Build and insert real profile table/column identities, retaining processing.
     business = rt.spark.createDataFrame([(1, 'a')], ['id', 'name'])
     source = rt.read().where("table_id='inserted'")
@@ -496,7 +504,8 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     draft = contracts.create_contract_draft(table_id='inserted', config=config, active_workspace_id='dev',
         spark_session=rt.spark, context=context, schema='governance')
     payload = json.loads(draft['contract_payload_json'])
-    assert payload['table']['processing'] == {'load_strategy': 'scd1', 'key_columns': ['id']}
+    assert 'processing' not in payload['table']
+    assert shared.catalogue_authored_processing(resolved) == {'load_strategy': 'scd1', 'key_columns': ['id']}
     assert {column['column_name'] for column in payload['table']['columns']} == {'id', 'name'}
     reopened = contracts.create_contract_draft(table_id='inserted', config=config, active_workspace_id='dev',
         spark_session=rt.spark, context=context, schema='governance')

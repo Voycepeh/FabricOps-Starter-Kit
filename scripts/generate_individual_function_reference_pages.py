@@ -4726,6 +4726,7 @@ def generate_metadata_reference_pages() -> None:
     from fabricops_kit.config.metadata_schemas import (
         AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
+        RETIRED_METADATA_COLUMNS,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
@@ -4976,6 +4977,19 @@ def generate_metadata_reference_pages() -> None:
                 f'<td>{_metadata_inline_html(_metadata_field_description(table_name, column))}</td></tr>'
             )
         lines.extend(["</tbody></table>", "</div>"])
+        retirements = RETIRED_METADATA_COLUMNS[table_name]
+        if retirements:
+            lines.extend([
+                "", "## Automatic column cleanup", "",
+                "`setup_metadata_tables()` removes only the explicitly retired columns below. "
+                "It preserves canonical rows, all eight audit columns and other extension columns. "
+                "If a populated value cannot be proved redundant, setup fails for this table with data preserved.",
+                "", "| Retired column | Removal condition |", "| --- | --- |",
+                *(f"| `{name}` | SQL NULL or equal to `{replacement}` |" if replacement else
+                  f"| `{name}` | Every value is SQL NULL |" for name, replacement in retirements.items()),
+                "", "See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) "
+                "for transaction results and the Delta recovery boundary.",
+            ])
         (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )
