@@ -11,6 +11,31 @@ import pytest
 import scripts.release_inventory as ri
 
 
+@pytest.fixture
+def release_render_project(tmp_path, monkeypatch):
+    """Render a synthetic release from current APIs without rewriting published snapshots."""
+    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+
+    version = "9.9.9"
+    manifest = ri.synchronize_manifest(None, ri.discover_inventory(), version)
+    manifest.update(
+        release_status="live", release_date="2026-11-12", source_ref=f"v{version}",
+        release_motivation="Synthetic release renderer test.",
+    )
+    for item in manifest["functions"]:
+        item["status"] = "live" if item["qualified_name"] in SUPPORTED_PUBLIC_API else "preview"
+    for item in manifest["metadata_tables"]:
+        item["status"] = "live"
+    monkeypatch.setattr(ri, "ROOT", tmp_path)
+    monkeypatch.setattr(ri, "read_package_version", lambda: version)
+    monkeypatch.setattr(ri, "extract_changelog_notes", lambda release_version: "Synthetic release notes.")
+    monkeypatch.setattr(ri, "load_release_manifests", lambda: [manifest])
+    path = ri.manifest_path(version)
+    path.parent.mkdir(parents=True)
+    path.write_text(ri.dump_manifest(manifest), encoding="utf-8")
+    return tmp_path
+
+
 def test_release_inventory_reads_version_from_pyproject():
     """Verify release inventory version comes from pyproject.toml."""
     expected = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
@@ -236,7 +261,7 @@ def test_malformed_live_release_dates_fail_clearly():
             ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_release_contract_pages_render_live_manifest_snapshot():
+def test_release_contract_pages_render_live_manifest_snapshot(release_render_project):
     """Verify Live manifests render frozen release evidence."""
     paths = ri.render_release_pages()
     version = ri.read_package_version()
@@ -352,7 +377,7 @@ def test_release_manifest_lifecycle_counts_include_live_orchestrators():
     assert any(item["status"] == "preview" for item in manifest["functions"])
 
 
-def test_release_generates_frozen_detail_pages_for_live_manifest():
+def test_release_generates_frozen_detail_pages_for_live_manifest(release_render_project):
     """Verify Live releases render frozen detail pages."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
@@ -360,7 +385,7 @@ def test_release_generates_frozen_detail_pages_for_live_manifest():
     assert base.exists()
 
 
-def test_release_overview_lists_live_release_with_inventory():
+def test_release_overview_lists_live_release_with_inventory(release_render_project):
     """Verify Live releases are listed with frozen Live inventory links."""
     ri.render_release_pages()
     content = (ri.ROOT / "docs" / "releases" / "index.md").read_text(encoding="utf-8")
@@ -383,7 +408,7 @@ def test_live_release_requires_release_date():
         ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_individual_release_overview_is_rendered_for_live_release():
+def test_individual_release_overview_is_rendered_for_live_release(release_render_project):
     """Verify Live releases render a release overview."""
     ri.render_release_pages()
     version = ri.read_package_version()
@@ -405,12 +430,13 @@ def test_release_inventory_section_omits_empty_manual_asset_groups():
     assert "notebook templates" not in content
 
 
-def test_release_detail_pages_are_rendered_for_live_release():
+def test_release_detail_pages_are_rendered_for_live_release(release_render_project):
     """Verify Live releases render detail page back-link evidence."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
 
-    assert (base / "functions" / "read_lakehouse_excel.md").exists()
+    for name in ("read_lakehouse_excel", "widget_data_steward", "widget_data_agreement"):
+        assert (base / "functions" / f"{name}.md").exists()
     assert (base / "metadata" / "metadata_data_catalogue.md").exists()
 
 
@@ -435,7 +461,7 @@ def test_generated_release_pages_have_required_notice():
             assert content.startswith(prefix)
 
 
-def test_release_generation_is_deterministic_and_second_run_clean():
+def test_release_generation_is_deterministic_and_second_run_clean(release_render_project):
     """Verify rendering twice produces identical page content."""
     ri.render_release_pages()
     first = {p.relative_to(ri.ROOT).as_posix(): p.read_text(encoding="utf-8") for p in (ri.ROOT / "docs" / "releases").glob("**/*.md")}
@@ -452,7 +478,7 @@ def test_mkdocs_navigation_links_release_landing_page():
     assert "releases/0.1.0/functions/index.md" not in content
 
 
-def test_release_renderer_keeps_live_version_directory():
+def test_release_renderer_keeps_live_version_directory(release_render_project):
     """Verify release renderer keeps the version directory for Live releases."""
     ri.render_release_pages()
 
