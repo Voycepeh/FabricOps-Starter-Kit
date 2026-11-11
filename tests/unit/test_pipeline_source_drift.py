@@ -149,11 +149,10 @@ def test_finalization_reports_acceptance_failure_separately_from_committed_run(r
 def test_additions_alone_never_block_publication(runtime, monkeypatch, modified, mode, read_mode):
     session = setup_pipeline(source_drift_enabled=True, source_drift_block=True)
     monkeypatch.setattr(shared, '_record_source_drift_result', Mock())
-    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {
-        'table_id': 'target', 'store': 'Silver', 'schema': 'demo', 'table_name': 'target'})
     orchestrate_read(store='Bronze', schema='demo', table_name='orders', read_mode=read_mode,
         read_parameters={'watermark_column': 'id'} if read_mode == 'incremental' else None,
-        target_table_id='target' if read_mode == 'incremental' else None, verbose=False)
+        verbose=False, **({'target_store': 'Silver', 'target_schema': 'demo', 'target_table_name': 'target'}
+                          if read_mode == 'incremental' else {}))
     session.plan.evidence['source_drift_observations'] = {'orders': result('changes_detected',
         table_id='orders', added_count=100, removed_count=0, modified_count=modified)}
     parameters = {'key_columns': ['id']} if mode in {'scd1', 'scd2'} else None

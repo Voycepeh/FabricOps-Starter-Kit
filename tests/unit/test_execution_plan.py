@@ -37,8 +37,8 @@ def test_canonical_pipeline_json_rejects_unsupported_objects():
         shared.canonical_pipeline_json({"unsupported": object()})
 
 
-def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatch):
-    """Day 2 reuses the registered target row that Day 1 did not have yet."""
+def test_repeated_incremental_plans_use_coordinates_before_and_after_catalogue_registration(monkeypatch):
+    """Both days resolve the same physical target without copying mutable Catalogue metadata."""
     runtime = {
         "config": object(),
         "scope_workspace_id": "workspace",
@@ -46,7 +46,7 @@ def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatc
         "_pipeline_bindings": {},
     }
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda _config, _workspace, **values: {
-        **values, "table_id": "source-id", "store_type": "lakehouse",
+        **values, "table_id": "source-id" if values["store"] == "Bronze" else "target-id", "store_type": "lakehouse",
     })
     monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **_kwargs: {
         table_id: {"workspace_id": "workspace", "item_id": identity["store"], "kind": "lakehouse",
@@ -55,7 +55,8 @@ def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatc
     })
     arguments = {
         "store": "Bronze", "schema": "demo", "table_name": "inventory_movements",
-        "target_table_id": "target-id",
+        "target_store": "Silver", "target_schema": "demo",
+        "target_table_name": "inventory_movements_incremental",
     }
 
     def session(run_id):
@@ -70,7 +71,7 @@ def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatc
 
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", missing_target)
     day_1 = session("day-1").operation_plan("source", arguments)
-    assert set(json.loads(day_1.participants_json)) == {"source-id"}
+    assert set(json.loads(day_1.participants_json)) == {"source-id", "target-id"}
 
     monkeypatch.setattr(shared, "resolve_catalogue_table_identity", lambda *_args, **_kwargs: {
         "table_id": "target-id", "store_type": "lakehouse", "store": "Silver", "layer": "Silver",
@@ -80,8 +81,9 @@ def test_second_incremental_plan_restores_timestamped_target_metadata(monkeypatc
     })
     day_2 = session("day-2").operation_plan("source", arguments)
     restored = json.loads(day_2.participants_json)["target-id"]
-    assert restored["_committed_at"] == "2026-10-29T12:00:00+00:00"
-    assert restored["profiled_on"] == "2026-10-29"
+    assert restored == json.loads(day_1.participants_json)["target-id"]
+    assert restored["roles"] == ["target"]
+    assert "_committed_at" not in restored and "profiled_on" not in restored
 
 
 @pytest.fixture

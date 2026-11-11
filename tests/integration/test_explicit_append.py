@@ -92,7 +92,10 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
         assert (kwargs['store'], kwargs['schema'], kwargs['table_name']) == ('Bronze', 'demo', 'inventory_movements')
         if kwargs['read_mode'] == 'incremental':
             assert kwargs['read_parameters'] == {'watermark_column': 'modified_datetime'}
-            assert kwargs['target_table_id'] == 'canonical-append-all-target'
+            assert kwargs['target_store'] == 'Silver'
+            assert kwargs['target_schema'] == 'demo'
+            assert kwargs['target_table_name'] == 'inventory_movements_append_all'
+            assert 'target_table_id' not in kwargs
             frame = bronze if checkpoint is None else bronze.where(F.col('modified_datetime') > F.lit(checkpoint))
             values = [row.modified_datetime for row in frame.select('modified_datetime').collect()]
             pending_checkpoint = max(values) if values else checkpoint
@@ -137,7 +140,6 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
     namespace = dict(F=F, PIPELINE_MODE='Ungoverned', pipelines={}, pipeline_results={}, sources={}, writes={},
                      read_lakehouse_csv=read_csv, read_lakehouse_table=read_table,
                      write_lakehouse_table=stage, orchestrate_read=read, orchestrate_write=write,
-                     resolve_table_id=lambda **kwargs: 'canonical-append-all-target',
                      setup_pipeline=setup_pipeline, finalize_pipeline=finalize_pipeline,
                      display=lambda frame: None)
     for day, incremental_count, full_count in ((1, 8, 8), (2, 4, 12), (3, 0, 12)):

@@ -1,4 +1,4 @@
-"""Tests for deterministic public table identity resolution."""
+"""Tests for deterministic internal table identity resolution."""
 
 from importlib import import_module
 
@@ -22,4 +22,5 @@ def test_resolve_table_id_uses_physical_identity_without_catalogue(monkeypatch):
     result = module.resolve_table_id(store="Silver", schema="demo", table_name="orders")
 
     assert result == "lakehouse||unified||demo||orders"
-    assert fabricops_kit.resolve_table_id is module.resolve_table_id
+    assert "resolve_table_id" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "resolve_table_id")
