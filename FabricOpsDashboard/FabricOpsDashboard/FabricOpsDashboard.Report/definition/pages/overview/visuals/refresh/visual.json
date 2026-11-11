@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "refresh",
   "position": {
-    "x": 1035,
-    "y": 30,
+    "x": 1000,
+    "y": 25,
     "z": 0,
-    "height": 60,
-    "width": 205,
-    "tabOrder": 1065
+    "height": 55,
+    "width": 215,
+    "tabOrder": 1025
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Dataset refreshed (UTC)\""
+                  "Value": "\"Last refreshed (UTC)\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Dataset refreshed (UTC) visual\""
+                  "Value": "\"Last refreshed (UTC) visual\""
                 }
               }
             }

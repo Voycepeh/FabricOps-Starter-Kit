@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "recent_runs",
   "position": {
-    "x": 635,
-    "y": 485,
+    "x": 25,
+    "y": 570,
     "z": 0,
-    "height": 200,
-    "width": 555,
-    "tabOrder": 1120
+    "height": 130,
+    "width": 1190,
+    "tabOrder": 595
   },
   "visual": {
     "visualType": "tableEx",
@@ -15,20 +15,6 @@
       "queryState": {
         "Values": {
           "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Pipeline Run"
-                    }
-                  },
-                  "Property": "Workspace Name"
-                }
-              },
-              "queryRef": "Pipeline Run.Workspace Name",
-              "nativeQueryRef": "Workspace Name"
-            },
             {
               "field": {
                 "Column": {
@@ -51,11 +37,25 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Execution Identity"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline Run.Execution Identity",
-              "nativeQueryRef": "Execution Identity"
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Pipeline Run.Committed By",
+              "nativeQueryRef": "Committed By"
             },
             {
               "field": {
@@ -79,11 +79,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Status"
+                  "Property": "Execution Outcome"
                 }
               },
-              "queryRef": "Pipeline Run.Status",
-              "nativeQueryRef": "Status"
+              "queryRef": "Pipeline Run.Execution Outcome",
+              "nativeQueryRef": "Execution Outcome"
             },
             {
               "field": {
@@ -107,11 +107,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Completed At"
+                  "Property": "Execution Identity"
                 }
               },
-              "queryRef": "Pipeline Run.Completed At",
-              "nativeQueryRef": "Completed At"
+              "queryRef": "Pipeline Run.Execution Identity",
+              "nativeQueryRef": "Execution Identity"
             },
             {
               "field": {

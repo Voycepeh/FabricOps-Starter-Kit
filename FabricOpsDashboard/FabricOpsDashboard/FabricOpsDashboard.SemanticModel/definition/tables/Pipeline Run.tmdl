@@ -69,6 +69,11 @@ table 'Pipeline Run'
 		lineageTag: 8d3d9ff9-f7fa-5d1f-adbd-7499834cc031
 		sourceColumn: status
 
+	column 'Execution Outcome'
+		dataType: string
+		lineageTag: 30ecc4e3-cc41-5b91-9daf-10393dde82ba
+		sourceColumn: execution_outcome
+
 	column 'Boundary Completed'
 		dataType: boolean
 		lineageTag: 5fa3d060-673d-5ea1-9f76-c4e4931b6b46
@@ -109,7 +114,7 @@ table 'Pipeline Run'
 		source =
 			let
 			    Source = Sql.Database(MetadataServer, MetadataDatabase),
-			    Query = "SELECT r.run_id,CONCAT(r.workspace_id,'|',r.pipeline_id) pipeline_key,r.pipeline_id,r.workspace_id,r._workspace_name workspace_name,r._notebook_name notebook_name,r.execution_identity,r._committed_by committed_by,CONCAT(CONVERT(varchar(19),r.started_at,120),' | ',r.status) run_label,r.started_at,r.completed_at,CAST(r.started_at AS date) run_date,r.status,r.boundary_completed,r.pipeline_version,r.promotion_id,r.execution_mode,(SELECT COUNT(1) FROM OPENJSON(r.failures)) failure_count,CASE WHEN r.governed_notebook_id IS NULL OR r.governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',r.workspace_id,'/notebooks/',r.governed_notebook_id) END fabric_notebook_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
+			    Query = "SELECT r.run_id,CONCAT(r.workspace_id,'|',r.pipeline_id) pipeline_key,r.pipeline_id,r.workspace_id,r._workspace_name workspace_name,r._notebook_name notebook_name,r.execution_identity,r._committed_by committed_by,CONCAT(CONVERT(varchar(19),r.started_at,120),' | ',r.status) run_label,r.started_at,r.completed_at,CAST(r.started_at AS date) run_date,r.status,CASE WHEN r.status='failed' THEN 'Failed' WHEN r.status IN ('succeeded','ungoverned_completed','dry_run_completed') AND r.boundary_completed=1 THEN 'Successful' ELSE 'Incomplete' END execution_outcome,r.boundary_completed,r.pipeline_version,r.promotion_id,r.execution_mode,(SELECT COUNT(1) FROM OPENJSON(r.failures)) failure_count,CASE WHEN r.governed_notebook_id IS NULL OR r.governed_notebook_id='' THEN NULL ELSE CONCAT('https://app.fabric.microsoft.com/groups/',r.workspace_id,'/notebooks/',r.governed_notebook_id) END fabric_notebook_url FROM [" & EngineeringSchemaSql & "].[METADATA_PIPELINE_RUN] r WHERE r.started_at>=DATEADD(day,-" & Number.ToText(HistoryWindowDays) & ",SYSUTCDATETIME()) AND ('" & Text.Replace(WorkspaceFilter, "'", "''") & "'='' OR r.workspace_id='" & Text.Replace(WorkspaceFilter, "'", "''") & "')",
 			    Rows = Value.NativeQuery(Source, Query, null, [EnableFolding=true])
 			in
 			    Rows

@@ -3,11 +3,11 @@
   "name": "trend",
   "position": {
     "x": 25,
-    "y": 245,
+    "y": 175,
     "z": 0,
-    "height": 220,
-    "width": 590,
-    "tabOrder": 270
+    "height": 235,
+    "width": 760,
+    "tabOrder": 200
   },
   "visual": {
     "visualType": "lineChart",
@@ -31,6 +31,24 @@
             }
           ]
         },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Workspace Name"
+                }
+              },
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
+            }
+          ]
+        },
         "Y": {
           "projections": [
             {
@@ -46,34 +64,6 @@
               },
               "queryRef": "Dashboard Metrics.Run Count",
               "nativeQueryRef": "Run Count"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Dashboard Metrics"
-                    }
-                  },
-                  "Property": "Successful Runs"
-                }
-              },
-              "queryRef": "Dashboard Metrics.Successful Runs",
-              "nativeQueryRef": "Successful Runs"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Dashboard Metrics"
-                    }
-                  },
-                  "Property": "Failed Runs"
-                }
-              },
-              "queryRef": "Dashboard Metrics.Failed Runs",
-              "nativeQueryRef": "Failed Runs"
             }
           ]
         }
@@ -93,7 +83,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Execution volume and outcomes\""
+                  "Value": "\"Pipeline executions by workspace\""
                 }
               }
             }
@@ -106,7 +96,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Execution volume and outcomes visual\""
+                  "Value": "\"Pipeline executions by workspace visual\""
                 }
               }
             }

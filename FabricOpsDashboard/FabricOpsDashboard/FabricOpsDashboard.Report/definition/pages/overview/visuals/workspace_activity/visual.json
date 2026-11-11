@@ -2,18 +2,18 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "workspace_activity",
   "position": {
-    "x": 635,
-    "y": 245,
+    "x": 800,
+    "y": 175,
     "z": 0,
-    "height": 220,
-    "width": 555,
-    "tabOrder": 880
+    "height": 235,
+    "width": 415,
+    "tabOrder": 975
   },
   "visual": {
-    "visualType": "clusteredBarChart",
+    "visualType": "pivotTable",
     "query": {
       "queryState": {
-        "Category": {
+        "Rows": {
           "projections": [
             {
               "field": {
@@ -31,7 +31,25 @@
             }
           ]
         },
-        "Y": {
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Run Date"
+                }
+              },
+              "queryRef": "Pipeline Run.Run Date",
+              "nativeQueryRef": "Run Date"
+            }
+          ]
+        },
+        "Values": {
           "projections": [
             {
               "field": {
@@ -65,7 +83,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Executions by workspace\""
+                  "Value": "\"Daily execution activity by workspace\""
                 }
               }
             }
@@ -78,7 +96,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Executions by workspace visual\""
+                  "Value": "\"Daily execution activity by workspace visual\""
                 }
               }
             }

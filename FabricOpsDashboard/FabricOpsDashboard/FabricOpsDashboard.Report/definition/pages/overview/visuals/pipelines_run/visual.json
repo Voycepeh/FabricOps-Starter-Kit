@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "pipelines_run",
   "position": {
-    "x": 25,
-    "y": 115,
+    "x": 985,
+    "y": 95,
     "z": 0,
-    "height": 105,
-    "width": 225,
-    "tabOrder": 140
+    "height": 65,
+    "width": 230,
+    "tabOrder": 1080
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipelines with executions\""
+                  "Value": "\"Distinct notebooks\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipelines with executions visual\""
+                  "Value": "\"Distinct notebooks visual\""
                 }
               }
             }

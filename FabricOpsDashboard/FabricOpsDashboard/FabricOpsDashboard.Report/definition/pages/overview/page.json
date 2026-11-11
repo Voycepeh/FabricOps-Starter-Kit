@@ -8,27 +8,22 @@
   "visualInteractions": [
     {
       "source": "workspace",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "workspace",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "workspace",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "workspace",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -53,6 +48,11 @@
     },
     {
       "source": "workspace",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace",
       "target": "trend",
       "type": "DataFilter"
     },
@@ -72,136 +72,6 @@
       "type": "DataFilter"
     },
     {
-      "source": "mode",
-      "target": "workspace",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "date",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "refresh",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "pipelines_run",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "runs",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "successful",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "failed",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "incomplete",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "trend",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "workspace_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "pipeline_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "mode",
-      "target": "recent_runs",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "workspace",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "date",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "refresh",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "pipelines_run",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "runs",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "successful",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "failed",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "incomplete",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "trend",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "workspace_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "pipeline_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "run_status",
-      "target": "recent_runs",
-      "type": "DataFilter"
-    },
-    {
       "source": "date",
       "target": "workspace",
       "type": "DataFilter"
@@ -213,17 +83,12 @@
     },
     {
       "source": "date",
-      "target": "run_status",
+      "target": "run_outcome",
       "type": "DataFilter"
     },
     {
       "source": "date",
       "target": "refresh",
-      "type": "DataFilter"
-    },
-    {
-      "source": "date",
-      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -248,6 +113,11 @@
     },
     {
       "source": "date",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "date",
       "target": "trend",
       "type": "DataFilter"
     },
@@ -267,18 +137,138 @@
       "type": "DataFilter"
     },
     {
-      "source": "refresh",
+      "source": "mode",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "refresh",
+      "source": "mode",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "refresh",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "workspace_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "pipeline_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "mode",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "workspace",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
       "target": "mode",
       "type": "DataFilter"
     },
     {
+      "source": "run_outcome",
+      "target": "refresh",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "workspace_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "pipeline_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "run_outcome",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
       "source": "refresh",
-      "target": "run_status",
+      "target": "workspace",
       "type": "DataFilter"
     },
     {
@@ -288,7 +278,12 @@
     },
     {
       "source": "refresh",
-      "target": "pipelines_run",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "refresh",
+      "target": "run_outcome",
       "type": "DataFilter"
     },
     {
@@ -313,6 +308,11 @@
     },
     {
       "source": "refresh",
+      "target": "pipelines_run",
+      "type": "DataFilter"
+    },
+    {
+      "source": "refresh",
       "target": "trend",
       "type": "DataFilter"
     },
@@ -332,113 +332,48 @@
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
+      "source": "runs",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
+      "source": "runs",
       "target": "date",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
+      "source": "runs",
+      "target": "mode",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "runs",
       "target": "refresh",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
-      "target": "runs",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
+      "source": "runs",
       "target": "successful",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
+      "source": "runs",
       "target": "failed",
       "type": "DataFilter"
     },
     {
-      "source": "pipelines_run",
+      "source": "runs",
       "target": "incomplete",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
-      "target": "trend",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
-      "target": "workspace_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
-      "target": "pipeline_activity",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipelines_run",
-      "target": "recent_runs",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "workspace",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "date",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "refresh",
       "type": "DataFilter"
     },
     {
       "source": "runs",
       "target": "pipelines_run",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "successful",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "failed",
-      "type": "DataFilter"
-    },
-    {
-      "source": "runs",
-      "target": "incomplete",
       "type": "DataFilter"
     },
     {
@@ -468,27 +403,22 @@
     },
     {
       "source": "successful",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "successful",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "successful",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "successful",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "successful",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -504,6 +434,11 @@
     {
       "source": "successful",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "successful",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -533,27 +468,22 @@
     },
     {
       "source": "failed",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "failed",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "failed",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "failed",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "failed",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -569,6 +499,11 @@
     {
       "source": "failed",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "failed",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -598,27 +533,22 @@
     },
     {
       "source": "incomplete",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "incomplete",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "incomplete",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "incomplete",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "incomplete",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -634,6 +564,11 @@
     {
       "source": "incomplete",
       "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "incomplete",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -657,18 +592,73 @@
       "type": "DataFilter"
     },
     {
-      "source": "trend",
+      "source": "pipelines_run",
       "target": "workspace",
       "type": "DataFilter"
     },
     {
-      "source": "trend",
+      "source": "pipelines_run",
+      "target": "date",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
       "target": "mode",
       "type": "DataFilter"
     },
     {
+      "source": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "refresh",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "runs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "successful",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "failed",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "trend",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "workspace_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "pipeline_activity",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipelines_run",
+      "target": "recent_runs",
+      "type": "DataFilter"
+    },
+    {
       "source": "trend",
-      "target": "run_status",
+      "target": "workspace",
       "type": "DataFilter"
     },
     {
@@ -678,12 +668,17 @@
     },
     {
       "source": "trend",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "trend",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -704,6 +699,11 @@
     {
       "source": "trend",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "trend",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -728,27 +728,22 @@
     },
     {
       "source": "workspace_activity",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "workspace_activity",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "workspace_activity",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "workspace_activity",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "workspace_activity",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_activity",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -769,6 +764,11 @@
     {
       "source": "workspace_activity",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "workspace_activity",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -793,27 +793,22 @@
     },
     {
       "source": "pipeline_activity",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipeline_activity",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "pipeline_activity",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "pipeline_activity",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "pipeline_activity",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_activity",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -834,6 +829,11 @@
     {
       "source": "pipeline_activity",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "pipeline_activity",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {
@@ -858,27 +858,22 @@
     },
     {
       "source": "recent_runs",
-      "target": "mode",
-      "type": "DataFilter"
-    },
-    {
-      "source": "recent_runs",
-      "target": "run_status",
-      "type": "DataFilter"
-    },
-    {
-      "source": "recent_runs",
       "target": "date",
       "type": "DataFilter"
     },
     {
       "source": "recent_runs",
-      "target": "refresh",
+      "target": "mode",
       "type": "DataFilter"
     },
     {
       "source": "recent_runs",
-      "target": "pipelines_run",
+      "target": "run_outcome",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "refresh",
       "type": "DataFilter"
     },
     {
@@ -899,6 +894,11 @@
     {
       "source": "recent_runs",
       "target": "incomplete",
+      "type": "DataFilter"
+    },
+    {
+      "source": "recent_runs",
+      "target": "pipelines_run",
       "type": "DataFilter"
     },
     {

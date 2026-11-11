@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
-  "name": "run_status",
+  "name": "run_outcome",
   "position": {
-    "x": 525,
-    "y": 30,
+    "x": 805,
+    "y": 25,
     "z": 0,
-    "height": 60,
-    "width": 190,
-    "tabOrder": 555
+    "height": 55,
+    "width": 180,
+    "tabOrder": 830
   },
   "visual": {
     "visualType": "slicer",
@@ -23,11 +23,11 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Status"
+                  "Property": "Execution Outcome"
                 }
               },
-              "queryRef": "Pipeline Run.Status",
-              "nativeQueryRef": "Status"
+              "queryRef": "Pipeline Run.Execution Outcome",
+              "nativeQueryRef": "Execution Outcome"
             }
           ]
         }
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run status\""
+                  "Value": "\"Outcome\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Run status visual\""
+                  "Value": "\"Outcome visual\""
                 }
               }
             }

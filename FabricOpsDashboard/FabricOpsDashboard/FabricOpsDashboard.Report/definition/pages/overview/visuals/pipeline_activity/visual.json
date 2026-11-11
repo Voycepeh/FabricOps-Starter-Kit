@@ -3,11 +3,11 @@
   "name": "pipeline_activity",
   "position": {
     "x": 25,
-    "y": 485,
+    "y": 425,
     "z": 0,
-    "height": 200,
-    "width": 590,
-    "tabOrder": 510
+    "height": 130,
+    "width": 1190,
+    "tabOrder": 450
   },
   "visual": {
     "visualType": "tableEx",
@@ -37,11 +37,39 @@
                       "Entity": "Pipeline Run"
                     }
                   },
-                  "Property": "Execution Identity"
+                  "Property": "Workspace Name"
                 }
               },
-              "queryRef": "Pipeline Run.Execution Identity",
-              "nativeQueryRef": "Execution Identity"
+              "queryRef": "Pipeline Run.Workspace Name",
+              "nativeQueryRef": "Workspace Name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Committed By"
+                }
+              },
+              "queryRef": "Pipeline Run.Committed By",
+              "nativeQueryRef": "Committed By"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Pipeline Run"
+                    }
+                  },
+                  "Property": "Execution Outcome"
+                }
+              },
+              "queryRef": "Pipeline Run.Execution Outcome",
+              "nativeQueryRef": "Execution Outcome"
             },
             {
               "field": {
@@ -65,39 +93,11 @@
                       "Entity": "Dashboard Metrics"
                     }
                   },
-                  "Property": "Pipeline Success Rate"
-                }
-              },
-              "queryRef": "Dashboard Metrics.Pipeline Success Rate",
-              "nativeQueryRef": "Pipeline Success Rate"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Dashboard Metrics"
-                    }
-                  },
                   "Property": "Last Recorded Execution"
                 }
               },
               "queryRef": "Dashboard Metrics.Last Recorded Execution",
               "nativeQueryRef": "Last Recorded Execution"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Dashboard Metrics"
-                    }
-                  },
-                  "Property": "Latest Recorded Run Status"
-                }
-              },
-              "queryRef": "Dashboard Metrics.Latest Recorded Run Status",
-              "nativeQueryRef": "Latest Recorded Run Status"
             }
           ]
         }
@@ -117,7 +117,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipeline activity by recorded notebook name\""
+                  "Value": "\"Pipeline activity by notebook\""
                 }
               }
             }
@@ -130,7 +130,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Pipeline activity by recorded notebook name visual\""
+                  "Value": "\"Pipeline activity by notebook visual\""
                 }
               }
             }

@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
   "name": "runs",
   "position": {
-    "x": 260,
-    "y": 115,
+    "x": 25,
+    "y": 95,
     "z": 0,
-    "height": 105,
+    "height": 65,
     "width": 225,
-    "tabOrder": 375
+    "tabOrder": 120
   },
   "visual": {
     "visualType": "cardVisual",
@@ -47,7 +47,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded executions\""
+                  "Value": "\"Total runs\""
                 }
               }
             }
@@ -60,7 +60,7 @@
             "altText": {
               "expr": {
                 "Literal": {
-                  "Value": "\"Recorded executions visual\""
+                  "Value": "\"Total runs visual\""
                 }
               }
             }

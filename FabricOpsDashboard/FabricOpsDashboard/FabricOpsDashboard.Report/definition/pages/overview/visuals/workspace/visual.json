@@ -3,11 +3,11 @@
   "name": "workspace",
   "position": {
     "x": 25,
-    "y": 30,
+    "y": 25,
     "z": 0,
-    "height": 60,
-    "width": 280,
-    "tabOrder": 55
+    "height": 55,
+    "width": 245,
+    "tabOrder": 50
   },
   "visual": {
     "visualType": "slicer",
