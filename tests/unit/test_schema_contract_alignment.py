@@ -155,7 +155,8 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **_k: {"_activity_id": "test-run"})
     writes = []
     monkeypatch.setattr(shared, "write_lakehouse_table", lambda frame, table, **kwargs: writes.append((frame, table, kwargs)))
-    spark = SimpleNamespace(createDataFrame=lambda rows: RecordingFrame(rows))
+    create_frame = MagicMock(side_effect=lambda rows, schema=None: RecordingFrame(rows))
+    spark = SimpleNamespace(createDataFrame=create_frame)
     dataframe = schema_frame({
         "matching": [("id", "bigint")],
         "missing": [],
@@ -169,6 +170,8 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     assert len(writes) == 1
     frame, table, routing = writes[0]
     persisted = frame.rows[0]
+    assert create_frame.call_args.kwargs["schema"] == shared.metadata_table_schema_registry()["METADATA_GUARDRAIL_RESULTS"]
+    assert persisted["source_id"] is None
     assert table == "METADATA_GUARDRAIL_RESULTS"
     assert routing["store"] == "Metadata"
     expected_status = "failed" if blocking else "failed" if difference == "additional" else "passed"
