@@ -31,7 +31,7 @@ def read_lakehouse_query(
     if not isinstance(table_name, str) or not table_name.strip():
         raise ValueError("table_name is required.")
     spark_session = get_spark_session(context=context)
-    resolved_store, resolved_table, resolved_schema, _path = resolve_configured_lakehouse_table(
+    _resolved_store, resolved_table, resolved_schema, _path = resolve_configured_lakehouse_table(
         store, table_name, schema, context=context
     )
     # Reuse the orchestrator's deliberately restricted SQL translation and
