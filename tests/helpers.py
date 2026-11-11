@@ -40,6 +40,7 @@ def framework_config() -> FrameworkConfig:
                         kind="lakehouse",
                         schema_enabled=True,
                         schema="metadata",
+                        name="GovernanceMetadata",
                     ),
                 }
             }
