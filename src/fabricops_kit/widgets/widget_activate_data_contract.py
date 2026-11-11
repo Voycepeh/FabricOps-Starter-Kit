@@ -173,9 +173,11 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
             raise ValueError("Review and explicitly confirm the exact frozen Contract first.")
         terms = reviewed["reference"]
         is_file = reviewed["destination"].get("source_type") == "file"
-        file_store = next((item["store"] for item in files if item["source_id"] == reviewed["source_id"]), None) if is_file else None
+        file_dataset = next((item for item in files if item["source_id"] == reviewed["source_id"]), {}) if is_file else {}
+        file_store = file_dataset.get("store")
         state["result"] = set_table_contract_activation(None if is_file else reviewed["table_id"], *reviewed["contract"],
-            **({"file_source": reviewed["destination"], "file_store": file_store} if is_file else {}),
+            **({"file_source": reviewed["destination"], "file_store": file_store,
+                "file_configuration_workspace_id": file_dataset.get("configuration_workspace_id", reviewed["workspace_id"])} if is_file else {}),
             expected_activation_id=reviewed["expected_activation_id"], activation_id=reviewed["activation_id"], governance_confirmed=True,
             context=routed(), spark_session=spark, expected_destination=reviewed["destination"],
             expected_payload_sha256=reviewed["payload_sha256"], agreement_id=terms[0] if terms else None,

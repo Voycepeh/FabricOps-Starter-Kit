@@ -326,3 +326,22 @@ def test_selected_file_contract_is_enforced_before_associated_table_write(files,
     assert source['source_id'] in write['tested_contracts']
     assert write['source_ids'] == [source['source_id']]
     assert finalize_pipeline(session)['status'] == 'dry_run_completed'
+
+
+def test_persisted_file_guardrail_uses_explicit_nullable_identity_schema(files, spark_session, monkeypatch):
+    from datetime import datetime
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS
+    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    audit = {name: datetime(2026, 1, 1) if kind == 'timestamp' else 'test' for name, kind, _nullable in AUDIT_SCHEMA_FIELDS}
+    monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: audit)
+    written = Mock()
+    monkeypatch.setattr(shared, 'write_lakehouse_table', written)
+    shared.write_guardrail_result_row(spark_session=spark_session, config={}, active_workspace_id='dev', run_id='run',
+        dataset_name='', table_name='demo/orders.csv', store_type='file', layer='Bronze', guardrail_type='schema',
+        rule_type='strict', table_id=source['source_id'], contract_id='file-contract', contract_version=1,
+        result={'guardrail_rule_id': 'schema', 'guardrail_version': 1, 'status': 'passed', 'can_continue': True},
+        context={'config': {}, 'scope_workspace_id': 'dev'})
+    frame = written.call_args.args[0]
+    assert frame.schema['table_id'].nullable and frame.schema['source_id'].nullable
+    row = frame.first()
+    assert row['table_id'] is None and row['source_id'] == source['source_id']

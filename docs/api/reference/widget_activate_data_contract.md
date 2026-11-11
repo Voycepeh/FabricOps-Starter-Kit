@@ -109,7 +109,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_activate_data_contract.py:18`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L18-L218">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_activate_data_contract.py#L18-L220">View on GitHub</a>
 </div>
 
 

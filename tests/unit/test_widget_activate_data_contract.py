@@ -102,7 +102,7 @@ def test_named_file_activation_never_uses_a_table_id(monkeypatch):
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
-    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'store': 'Bronze'}])
+    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
     action = Mock(return_value={'status': 'active', 'source_id': source['source_id'], 'table_id': None})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()
@@ -118,3 +118,4 @@ def test_named_file_activation_never_uses_a_table_id(monkeypatch):
     assert action.call_args.args[0] is None
     assert action.call_args.kwargs['file_source'] == source
     assert action.call_args.kwargs['file_store'] == 'Bronze'
+    assert action.call_args.kwargs['file_configuration_workspace_id'] == 'engineering-route'

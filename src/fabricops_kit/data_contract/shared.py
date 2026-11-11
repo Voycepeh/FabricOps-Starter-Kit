@@ -134,10 +134,11 @@ def contract_file_datasets(rows, *, config, workspace_id):
             for key in paths[route]:
                 store = get_store(config, route, key)
                 if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
-                    stores.append(key)
+                    stores.append((str(route), key))
         if not stores:
             continue
-        datasets[source["source_id"]] = {**source, "store": sorted(stores)[0],
+        route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
+        datasets[source["source_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
             "columns": payload.get("table", {}).get("columns", [])}
     return list(datasets.values())
 

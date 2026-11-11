@@ -40,3 +40,43 @@ def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
     assert contracts.dataset_selector_options([table], [source], workspace_id='other')['tables'] == []
     assert 'Table' in contracts.dataset_display_name(table)
     assert 'demo/orders.csv' in contracts.dataset_display_name(source)
+
+
+def test_governance_file_entry_uses_configured_source_environment(widget_runtime, monkeypatch):  # noqa: F811
+    from tests.unit.test_widget_data_contract import module
+    config = widget_runtime['config']
+    config.path_config.paths['gov'] = {'Metadata': config.path_config.paths['dev']['Metadata']}
+    monkeypatch.setattr(module, 'resolve_fabric_context', lambda **kw: (config, 'gov', {}))
+    source = contracts.file_source_identity(workspace_id='physical-source', item_id='item', relative_path='demo/orders.csv', file_format='csv')
+    resolver = Mock(return_value={**source, 'store': 'Bronze'})
+    reader = Mock(return_value={'dataframe': SimpleNamespace(schema=SimpleNamespace(fields=[
+        SimpleNamespace(name='id', dataType=SimpleNamespace(simpleString=lambda: 'int'))]))})
+    monkeypatch.setattr(pipeline, 'resolve_file_participant', resolver)
+    monkeypatch.setattr(pipeline, 'read_file_participant', reader)
+    state = module.widget_data_contract()
+    controls = state['_controls']
+    assert state['authoring_workspace_id'] == 'gov'
+    assert controls['file_workspace'].value == 'dev'
+    controls['file_path'].value = 'demo/orders.csv'
+    controls['select_file'].click()
+    assert resolver.call_args.kwargs['context']['scope_workspace_id'] == 'dev'
+    assert reader.call_args.kwargs['context']['scope_workspace_id'] == 'dev'
+    assert state['pending_source_id'] == source['source_id']
+    assert state['pending_table_id'] is None
+    assert state['workspace_id'] == 'physical-source'
+
+
+def test_authored_file_keeps_physical_identity_and_separate_configuration_route(monkeypatch):
+    import fabricops_kit.config.shared as config_shared
+    source = contracts.file_source_identity(workspace_id='physical-source', item_id='item', relative_path='demo/orders.csv', file_format='csv')
+    stores = {'gov': {'Metadata': SimpleNamespace(workspace_id='gov', item_id='meta')},
+              'engineering': {'Bronze': SimpleNamespace(workspace_id='physical-source', item_id='item')}}
+    monkeypatch.setattr(config_shared, 'get_store', lambda config, route, key: stores[route][key])
+    rows = [{'source_id': source['source_id'], 'contract_version': 1,
+             'contract_payload_json': json.dumps({'source': source, 'table': {'columns': []}})}]
+    datasets = contracts.contract_file_datasets(rows, config={'path_config': {'paths': stores}}, workspace_id='gov')
+    assert len(datasets) == 1
+    assert datasets[0]['configuration_workspace_id'] == 'engineering'
+    assert datasets[0]['workspace_id'] == 'physical-source'
+    assert datasets[0]['source_id'] == source['source_id']
+    assert 'table_id' not in datasets[0]

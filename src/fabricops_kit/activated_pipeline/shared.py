@@ -411,7 +411,7 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
                                   governance_confirmed, context, spark_session=None,
                                   expected_destination=None, expected_payload_sha256=None,
                                   agreement_id=None, agreement_version=None, expected_agreement_sha256=None,
-                                  file_source=None, file_store=None):
+                                  file_source=None, file_store=None, file_configuration_workspace_id=None):
     """Activate an exact frozen Contract with replay-safe CAS and physical protection."""
     if governance_confirmed is not True:
         raise ValueError("Explicit Governance confirmation is required; actual storage permissions authorize the mutation.")
@@ -430,7 +430,8 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
         from fabricops_kit.io.shared import resolve_configured_file_path
         if table_id is not None or payload.get("source") != file_source or contract.get("source_id") != file_source.get("source_id"):
             raise ValueError("File Activation requires the exact frozen file source identity and reader configuration.")
-        configured, relative_path, _path = resolve_configured_file_path(file_store, file_source["relative_path"], context=context)
+        configured, relative_path, _path = resolve_configured_file_path(file_store, file_source["relative_path"],
+            context={**context, "scope_workspace_id": file_configuration_workspace_id} if file_configuration_workspace_id else context)
         if (configured.workspace_id.lower(), configured.item_id.lower(), relative_path) != (file_source["workspace_id"], file_source["item_id"], file_source["relative_path"]):
             raise ValueError("Configured file source differs from the reviewed physical authorization.")
         destination = dict(file_source)

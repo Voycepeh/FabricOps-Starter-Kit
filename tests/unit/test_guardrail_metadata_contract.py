@@ -40,6 +40,7 @@ _RESULT_COLUMNS = [
     "guardrail_rule_id",
     "guardrail_version",
     "table_id",
+    "source_id",
     "table_name",
     "contract_id",
     "contract_version",

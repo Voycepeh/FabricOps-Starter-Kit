@@ -99,14 +99,21 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
     monkeypatch.setattr(activation, "build_runtime_audit_fields", lambda **kwargs: {"_committed_by": "reviewer"})
     monkeypatch.setattr(activation, "check_contract_agreement", lambda *args, **kwargs: None)
     store = SimpleNamespace(workspace_id="workspace", item_id="item")
-    monkeypatch.setattr(io, "resolve_configured_file_path", lambda *args, **kwargs: (store, "incoming/*.csv", "resolved"))
+    file_scopes = []
+    def resolve_file(*args, **kwargs):
+        file_scopes.append(kwargs["context"]["scope_workspace_id"])
+        return store, "incoming/*.csv", "resolved"
+    monkeypatch.setattr(io, "resolve_configured_file_path", resolve_file)
     def mutate(table, mutation, **kwargs):
         rows, result = mutation([])
         activation.validate_activations(rows)
         return result
     monkeypatch.setattr(activation, "mutate_metadata", mutate)
     result = activation.set_table_contract_activation(None, "files", 1, expected_activation_id=None,
-        activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context)
+        activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context,
+        file_configuration_workspace_id="configuration-route")
+    assert file_scopes == ["configuration-route"]
+    assert result["workspace_id"] == "workspace"
     assert result["table_id"] is None and result["source_id"] == descriptor["source_id"]
     assert json.loads(result["destination_json"]) == descriptor
     store.item_id = "other-item"

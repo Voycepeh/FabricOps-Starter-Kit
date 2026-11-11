@@ -2839,8 +2839,8 @@ def write_guardrail_result_row(
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
-        **({"source_id": table_id, "table_id": None} if str(table_id).startswith("file:") else
-           {"table_id": str(table_id or result.get("table_id") or "").strip()}),
+        "table_id": None if str(table_id).startswith("file:") else str(table_id or result.get("table_id") or "").strip(),
+        "source_id": table_id if str(table_id).startswith("file:") else None,
         "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
@@ -2865,7 +2865,8 @@ def write_guardrail_result_row(
     if not persistence_permitted(context):
         return
     write_lakehouse_table(
-        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
+        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)],
+            schema=metadata_table_schema_registry()[results_table]),
         results_table,
         store="Metadata",
         schema=metadata_table_physical_schema(config, results_table),
@@ -4955,7 +4956,8 @@ def check_dq_runtime(
             "guardrail_result_id": str(uuid4()),
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "guardrail_version": rule["guardrail_version"],
-            **({"source_id": table_id, "table_id": None} if str(table_id).startswith("file:") else {"table_id": table_id}),
+            "table_id": None if str(table_id).startswith("file:") else table_id,
+            "source_id": table_id if str(table_id).startswith("file:") else None,
             "contract_id": str(contract_id or ""),
             "contract_version": int(contract_version or 0),
             "execution_type": execution_mode,
@@ -4985,7 +4987,8 @@ def check_dq_runtime(
             plan.evidence.setdefault("guardrail_history", []).extend(dict(row) for row in summary_rows)
     if persistence_permitted(context):
         write_lakehouse_table(
-            spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
+            spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows],
+                schema=metadata_table_schema_registry()["METADATA_GUARDRAIL_RESULTS"]),
             "METADATA_GUARDRAIL_RESULTS", store="Metadata",
             schema=metadata_table_physical_schema(config, "METADATA_GUARDRAIL_RESULTS"),
             context=context or {"config": config, "scope_workspace_id": active_workspace_id}, mode="append",
