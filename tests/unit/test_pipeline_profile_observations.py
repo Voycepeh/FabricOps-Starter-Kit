@@ -120,7 +120,7 @@ def test_disabled_bounded_profiling_does_not_disable_or_sample_guardrails(runtim
     calculate = Mock(side_effect=AssertionError('profiling disabled'))
     monkeypatch.setattr(shared, 'execute_table_profile', calculate)
     checks = []
-    for name in ('check_schema', 'check_grain', 'check_dq'):
+    for name in ('check_schema', 'check_dq'):
         check = Mock(return_value={'status': 'passed', 'can_continue': True, 'checks': []})
         monkeypatch.setattr(runtime.read, name, check)
         checks.append(check)

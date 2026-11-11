@@ -218,22 +218,22 @@ def test_run_retains_only_enforced_settings_and_exact_contract_references(runtim
     """Unused parameters and raw SQL never become a second configuration store."""
     make, operation, _, _, _ = runtime
     plan = make(mode="dry_run", roles=("source",))
-    operation(plan, 0, read_mode="full", query="SELECT * FROM orders", read_parameters={"password": "hidden-secret"}, dq_diagnostics="full")
+    operation(plan, 0, read_mode="full", query="SELECT * FROM orders", read_parameters={}, dq_diagnostics="full")
     row = shared.persist_pipeline_run(plan)
     item = row["operations"][0]
     assert item["table_id"] == "table0" and item["contract_id"] == "contract-table0" and item["contract_version"] == 1
     assert item["read_mode"] == "full" and item["query_sha256"]
     assert "hidden-secret" not in json.dumps(row, default=str) and "SELECT" not in json.dumps(row, default=str)
-    assert {"configuration", "configuration_json", "configuration_sha256", "read_parameters", "dq_diagnostics"}.isdisjoint(item)
+    assert {"configuration", "configuration_json", "configuration_sha256", "dq_diagnostics"}.isdisjoint(item)
     assert {"candidate_json", "candidate_fingerprint", "definition_id"}.isdisjoint(row)
 
 
-@pytest.mark.parametrize("parameter,value", [("read_mode", "incremental"), ("query", "SELECT id FROM orders"), ("target_table_id", "table0")])
+@pytest.mark.parametrize("parameter,value", [("query", "SELECT id FROM orders"), ("target_table_id", "table0"), ("read_parameters", {"watermark_column": "changed"})])
 def test_live_rejects_changed_material_settings_before_operation(runtime, parameter, value):
     """A changed mode, SQL read or incremental target cannot enter a Live operation."""
     make, operation, _, _, _ = runtime
     plan = make(roles=("source",))
-    with pytest.raises(ValueError, match="activated authority"):
+    with pytest.raises(ValueError, match="activated authority|Full reads"):
         operation(plan, 0, **{parameter: value})
 
 
@@ -591,3 +591,22 @@ def test_governed_run_preserves_governance_decision_and_exact_contracts(runtime)
     assert row["activation_revision"] == "7"
     assert [(op["contract_id"], op["contract_version"]) for op in row["operations"]] == [("contract-table0", 1), ("contract-table1", 1)]
     assert all(len(op["payload_sha256"]) == 64 for op in row["operations"])
+
+
+@pytest.mark.parametrize("parameter,value", [("write_parameters", {"watermark_column": "changed"}), ("repartition_by", 8)])
+def test_approved_processing_changes_reject_before_publication(runtime, parameter, value):
+    """An approved write cannot change processing without a new pipeline approval."""
+    make, operation, saved, writes, _ = runtime
+    plan = make(roles=("target",))
+    with pytest.raises(ValueError, match="activated authority"):
+        operation(plan, 0, **{parameter: value})
+    assert saved[plan.plan_id]["status"] == "failed"
+
+
+def test_invalid_read_parameters_never_enter_run_json(runtime):
+    """Unknown parameters fail before a Run can persist unreviewed arbitrary content."""
+    make, operation, saved, _, _ = runtime
+    plan = make(mode="dry_run", roles=("source",))
+    with pytest.raises(ValueError, match="Invalid read_parameters"):
+        operation(plan, 0, read_parameters={"password": "secret-value"})
+    assert "secret-value" not in json.dumps(shared.pipeline_run_row(plan, status="failed"), default=str)

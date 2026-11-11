@@ -288,7 +288,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append_all", 
         write_module, "catalogue_authored_processing", lambda value: {"load_strategy": value["load_strategy"]}
     )
     monkeypatch.setattr(
-        write_module, "resolve_table_processing_definition", lambda *_a, **_k: {"load_strategy": strategy}
+        write_module, "validated_processing", lambda *_a, **_k: {"load_strategy": strategy}
     )
     monkeypatch.setattr(write_module, "resolve_target_audit_fields", lambda _context: _audit())
     monkeypatch.setattr(write_module, "incremental_publication_scopes", lambda **kwargs: {})
@@ -425,9 +425,9 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
         in output
     )
     assert f"   Identity → {identity['table_id']}" in output
-    assert f"2. Processing → {strategy.upper()} from resolved processing" in output
+    assert f"2. Processing → {strategy.upper()} from Engineering pipeline parameters" in output
     assert "3. Scope → full dataset" in output
-    assert "4. Audit + ownership → runtime audit fields applied; writer ownership validated" in output
+    assert "4. Audit → runtime audit fields applied" in output
     assert f"5. Physical publication → write_{store_type}_table" in output
     assert "6. Catalogue → load strategy and Scheduled Refresh persisted" in output
     assert "7. Success metadata → Lineage and accepted Source Observation state committed" in output
@@ -506,7 +506,7 @@ def test_incremental_merge_bootstrap_uses_idempotent_processing(
     if strategy == "scd2":
         processing["effective_column"] = "effective_at"
     monkeypatch.setattr(
-        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+        write_module, "validated_processing", lambda *_args, **_kwargs: processing
     )
     monkeypatch.setattr(
         write_module,
@@ -542,7 +542,7 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
     identity, _context = _patch_write(monkeypatch, strategy="scd1")
     processing = {"load_strategy": "scd1", "key_columns": ["id"]}
     persisted = []
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
+    monkeypatch.setattr(write_module, "validated_processing", lambda *_a, **_k: processing)
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: None)
     monkeypatch.setattr(shared_module, "execute_lakehouse_processing", lambda *a, **k: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
@@ -694,7 +694,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
 def test_pipeline_write_reports_governed_scd_route(monkeypatch, capsys, store_type, expected_path):
     identity, _ = _patch_write(monkeypatch, store_type=store_type, strategy="scd1")
     processing = {"load_strategy": "scd1", "key_columns": ["id"]}
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
+    monkeypatch.setattr(write_module, "validated_processing", lambda *_a, **_k: processing)
     monkeypatch.setattr(shared_module, "execute_lakehouse_processing", lambda *a, **k: None)
     monkeypatch.setattr(io_shared, "execute_warehouse_processing", lambda *a, **k: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
@@ -702,7 +702,7 @@ def test_pipeline_write_reports_governed_scd_route(monkeypatch, capsys, store_ty
     write_module.pipeline_write(object(), table_id=identity["table_id"], source_table_ids=["source-a"])
 
     output = capsys.readouterr().out
-    assert "2. Processing → SCD1 from resolved processing" in output
+    assert "2. Processing → SCD1 from Engineering pipeline parameters" in output
     assert f"5. Physical publication → {expected_path}" in output
 
 
@@ -734,7 +734,7 @@ def test_pipeline_write_routes_scd_to_governed_processing(monkeypatch, spark_ses
     processing = {"load_strategy": strategy, "key_columns": ["id"]}
     if strategy == "scd2":
         processing["effective_column"] = "effective_at"
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *_a, **_k: processing)
+    monkeypatch.setattr(write_module, "validated_processing", lambda *_a, **_k: processing)
     physical = []
     governed = []
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *a, **k: physical.append(1))
@@ -773,7 +773,7 @@ def test_pipeline_write_retry_uses_exact_batch_proof_and_replays_metadata(
     if strategy == "scd2":
         processing["effective_column"] = "effective_at"
     monkeypatch.setattr(
-        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+        write_module, "validated_processing", lambda *_args, **_kwargs: processing
     )
     marker = {"present": False}
     physical = []
@@ -832,7 +832,7 @@ def test_no_marker_publication_can_be_safely_reevaluated(monkeypatch, spark_sess
     if strategy == "scd2":
         processing["effective_column"] = "effective_at"
     monkeypatch.setattr(
-        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+        write_module, "validated_processing", lambda *_args, **_kwargs: processing
     )
     monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **_kwargs: False))
     physical = []
@@ -985,10 +985,9 @@ def test_scd_reconciles_new_batch_even_when_activity_already_exists(monkeypatch,
     if strategy == "scd2":
         processing["effective_column"] = "effective_at"
     monkeypatch.setattr(
-        write_module, "resolve_table_processing_definition", lambda *_args, **_kwargs: processing
+        write_module, "validated_processing", lambda *_args, **_kwargs: processing
     )
     monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **_kwargs: False))
-    monkeypatch.setattr(write_module, "_physical_processing_definition", lambda value: value)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda _value: None)
     events = []
@@ -1055,8 +1054,7 @@ def test_scd_bootstrap_reports_only_measured_insertions(monkeypatch, spark_sessi
     """New-target physical bootstrap metrics have no updates or expired versions."""
     _patch_write(monkeypatch, strategy=strategy)
     processing = {"load_strategy": strategy, "key_columns": ["id"], "effective_column": "effective_at"}
-    monkeypatch.setattr(write_module, "resolve_table_processing_definition", lambda *args, **kwargs: processing)
-    monkeypatch.setattr(write_module, "_physical_processing_definition", lambda value: value)
+    monkeypatch.setattr(write_module, "validated_processing", lambda *args, **kwargs: processing)
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
 
     def bootstrap(*args, **kwargs):
@@ -1113,7 +1111,7 @@ def test_warehouse_receipt_metrics_only_after_confirmation(monkeypatch, strategy
     """Confirmed append/overwrite counts never become inferred SCD change counts."""
     identity, _ = _patch_write(monkeypatch, store_type="warehouse", strategy=strategy)
     if strategy == "scd1":
-        monkeypatch.setattr(write_module, "resolve_table_processing_definition",
+        monkeypatch.setattr(write_module, "validated_processing",
                             lambda *a, **kw: {"load_strategy": strategy, "key_columns": ["id"]})
     monkeypatch.setattr(BatchDouble, "applied", staticmethod(lambda **kw: already_applied))
     original_enter = BatchDouble.__enter__

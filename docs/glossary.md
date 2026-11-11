@@ -24,8 +24,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="data-contract">
-<summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table.</summary>
-<p>A globally versioned table-centric Data Contract freezes Schema, processing, Enrichment and Guardrails. Draft becomes Frozen and stays immutable and reusable across workspaces. An Activated Pipeline references exact versions and payload hashes. Environment activation can differ while sharing one central contract history; contracts have no individual activation step.</p>
+<summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table or file-backed dataset.</summary>
+<p>A Data Contract freezes Schema, descriptive Enrichment and executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json. Physical tables preserve canonical Table IDs; file-backed datasets use a stable file source identity. Draft becomes Frozen and stays immutable. METADATA_DATA_CONTRACT_ACTIVATION retains exact physical selections. Pipeline Activation separately approves Engineering read/write processing parameters and source authorizations; processing is not authored in a Data Contract.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
@@ -77,7 +77,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="guardrails">
 <summary><strong>Guardrails</strong> — Versioned rules that FabricOps checks during governed pipeline execution.</summary>
-<p>FabricOps Guardrails are executable definitions inside METADATA_DATA_CONTRACT.contract_payload_json for an exact version. Source contracts support Schema, Grain, Freshness and Data Quality; target contracts support Schema, Grain, Data Quality and Sensitive Data treatment. orchestrate_read runs four Contract checks and orchestrate_write runs four Contract checks after the independent pipeline-owned Source Drift decision. Schema blocks missing Required columns and contracted datatype mismatches; additional columns warn and permit continuation. Active Sensitive Data treatment failures block publication. Grain, Freshness and Data Quality can warn or block. Source Drift execution policy belongs to setup_pipeline(), without authority from historical Contract rules.</p>
+<p>Executable definitions in METADATA_DATA_CONTRACT.contract_payload_json enforce Schema, Freshness, Data Quality and Sensitive Data treatment as applicable. Grain enforcement is a managed Data Quality uniqueness rule with non-null keys. Read evaluates Freshness, Schema and DQ; Write evaluates Schema, Sensitive Data and DQ after the independent pipeline Source Drift decision. Schema and Sensitive Data failures block; Grain, Freshness and other DQ rules follow Warn/Block policy. Source Drift policy belongs to setup_pipeline().</p>
 <p><strong>Also known as:</strong> guardrail</p>
 </details>
 
@@ -140,13 +140,13 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="freshness">
 <summary><strong>Freshness</strong> — A Guardrail that checks whether source data is current enough for the governed expectation.</summary>
-<p>FabricOps Freshness evaluates a configured date or datetime column against the expected source refresh timing. It is separate from the notebook's Fabric scheduled refresh.</p>
+<p>Freshness explicitly uses physical update metadata or a configured timestamp column with an age threshold and Warn/Block policy. Metadata describes the full physical dataset; file selectors use the oldest modification time across resolved data files, while supported table metadata uses physical data-update history. Column aggregation may scan data and explicitly targets the full dataset or incremental batch. Empty, inaccessible, unsupported and invalid evidence is reported without switching methods. Historical profiles never authorize freshness. File modification time is not business-event time.</p>
 <p><strong>Also known as:</strong> Freshness Guardrail</p>
 </details>
 
 <details id="grain">
 <summary><strong>Grain</strong> — The column or column combination that uniquely identifies a row at the table's intended level of detail.</summary>
-<p>FabricOps stores the Grain description as Enrichment, selected key columns as a singular table Grain definition, and enforcement as an independent choice. Grain is not enforced until explicitly enabled, defaulting to Block; Warn records violations and allows continuation. Enforced Grain rejects null key components and duplicate key combinations in returned Read rows or prepared Write input. It does not guarantee resulting-table uniqueness for Append or SCD. SCD2 history needs a version-aware physical row key.</p>
+<p>Grain description and row-key selection are authored in the Table tab. Enabling enforcement adds one managed GRAIN — Uniqueness rule to Data Quality, defaulting to Block. The DQ uniqueness engine rejects null key components and duplicate combinations within returned Read rows or prepared Write input. Discovery does not enable enforcement. Grain is evaluated and recorded once through DQ, without a standalone Grain result. Resulting-table uniqueness for Append or SCD is not guaranteed; SCD2 history needs a version-aware row key.</p>
 <p><strong>Also known as:</strong> row grain</p>
 </details>
 

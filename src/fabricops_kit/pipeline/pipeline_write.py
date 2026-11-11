@@ -26,7 +26,7 @@ from fabricops_kit.pipeline.shared import (
     record_pipeline_publication,
     resolve_catalogue_table_identity,
     resolve_physical_table_identity,
-    resolve_table_processing_definition,
+    validated_processing,
     resolve_target_audit_fields,
 )
 
@@ -255,49 +255,6 @@ def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     return source_ids
 
 
-def _validate_target_writer_ownership(*, table_id: str, processing: dict[str, Any], audit: dict[str, Any]) -> None:
-    """Require the current notebook to match the writer frozen in the contract."""
-    if processing.get("source") != "data_contract":
-        return
-    owner_name = str(processing.get("owner_notebook_name") or "").strip()
-    if not owner_name:
-        raise ValueError(
-            f"Data Contract for target table_id {table_id!r} has no owning notebook_name; "
-            "freeze the contract from the target's owning pipeline before writing."
-        )
-    owner_id = str(processing.get("owner_notebook_id") or "").strip()
-    current_name = str(audit.get("_notebook_name") or "").strip()
-    current_id = str(audit.get("_notebook_id") or "").strip()
-    if current_name != owner_name:
-        raise ValueError(
-            f"Target table_id {table_id!r} is owned by notebook {owner_name!r} "
-            f"(contract notebook_id {owner_id!r}); current writer is {current_name or current_id!r} "
-            f"(runtime notebook_id {current_id!r}). "
-            "One governed target table_id must have one owning pipeline/notebook writer."
-        )
-
-
-def _physical_processing_definition(processing: dict[str, Any]) -> dict[str, Any]:
-    """Return executable parameters without the resolver's governance metadata.
-
-    The resolver has already validated the engineering proposal and enforced
-    equality with the selected Data Contract. Physical SCD executors perform
-    their own strict validation, so pass the approved definition rather than
-    the enriched provenance envelope.
-    """
-    from fabricops_kit.pipeline.shared import validated_processing
-
-    if "governed_processing" in processing or "authored_processing" in processing:
-        definition = processing.get("governed_processing") or processing.get("authored_processing")
-        if definition is None:
-            raise ValueError("Resolved processing is missing its validated executable definition.")
-    else:
-        # Preserve the exact object for existing plain-definition callers.
-        validated_processing(dict(processing))
-        return processing
-    return validated_processing(dict(definition))
-
-
 def pipeline_write(
     df,
     *,
@@ -322,8 +279,8 @@ def pipeline_write(
     ``pipeline_write`` is the governed pipeline-orchestration equivalent of
     :func:`write_lakehouse_table` and :func:`write_warehouse_table`. Describe
     the governed target once; FabricOps resolves its canonical identity and
-    configured store, resolves governed processing from the selected or active
-    Data Contract, and selects the appropriate physical publication path. It commits
+    configured store, validates Engineering processing parameters independently
+    of Data Contracts, and selects the physical publication path. It commits
     Lineage and Source Observation metadata only after publication succeeds.
 
     Parameters
@@ -342,10 +299,10 @@ def pipeline_write(
         Canonical registered target identity. This identity form is mutually
         exclusive with ``store``, ``schema``, and ``table_name``.
     load_strategy : {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}, optional
-        Authored processing proposal. The selected frozen payload is authoritative;
-        Live requires the active version and Testing evaluates the selected candidate.
+        Engineering-owned strategy. Pipeline Activation approves the exact mode
+        and parameters before Governed orchestration can invoke publication.
     load_strategy_parameters : dict, optional
-        Authored strategy parameters, subject to the selected frozen contract.
+        Engineering strategy parameters captured by Pipeline Activation.
         SCD1 requires ``key_columns``; SCD2 requires ``key_columns`` and
         ``effective_column`` and may specify ``tracked_columns``.
     source_table_ids : list[str] or tuple[str, ...], optional
@@ -404,8 +361,8 @@ def pipeline_write(
     ------
     ValueError
         If identity inputs conflict or are incomplete, ``source_table_ids`` is
-        missing or invalid, governed processing is invalid, ownership does not
-        match, the target store is unsupported, incremental input is paired
+        missing or invalid, Engineering processing is invalid, the target
+        store is unsupported, incremental input is paired
         with whole-table overwrite, or an incremental append bootstrap finds
         an already-populated target without committed source-to-target state.
 
@@ -426,11 +383,11 @@ def pipeline_write(
 
     1. Resolve the canonical target ``table_id``.
     2. Resolve the configured physical target identity.
-    3. Resolve the selected or active Data Contract.
+    3. Validate the Engineering-owned processing definition.
     4. Resolve the governed load strategy and parameters.
     5. Resolve processing scope.
     6. Apply FabricOps target audit fields.
-    7. Validate target notebook ownership.
+    7. Prepare the input using the validated strategy.
     8. Identify the exact prepared publication batch and its durable receipt.
     9. Perform physical processing unless the exact batch is verified in the target.
     10. Persist the resolved target load strategy and parameters on the
@@ -516,7 +473,7 @@ def pipeline_write(
     >>> result["table_id"]
     'lakehouse:unified:demo:curated_orders'
 
-    Explicit No Contract execution may propose processing:
+    Engineering supplies processing independently of Contract selection:
 
     >>> pipeline_write(
     ...     prepared_df, store="Silver", schema="demo",
@@ -564,9 +521,7 @@ def pipeline_write(
         identity["store_type"] = identity["store_kind"]
         authored = {"load_strategy": load_strategy, **(load_strategy_parameters or {})}
 
-    processing = resolve_table_processing_definition(
-        config, active_workspace_id, str(identity["table_id"]), context=context, authored_processing=authored
-    )
+    processing = validated_processing(authored)
     publication_source_ids = _source_table_ids(source_table_ids)
     audit = resolve_target_audit_fields(context)
     activity_id = str(audit["_activity_id"])
@@ -606,7 +561,6 @@ def pipeline_write(
         for source_table_id, incremental_scope in incremental_scopes.items()
         if incremental_scope.get("first_run")
     ]
-    _validate_target_writer_ownership(table_id=str(identity["table_id"]), processing=processing, audit=audit)
     success_context = {
         "target_table_id": target_table_id,
         "target_store_type": store_kind,
@@ -633,13 +587,13 @@ def pipeline_write(
             )
         from fabricops_kit.io.shared import repartition_dataframe_for_write
         prepared_df = repartition_dataframe_for_write(prepared_df, repartition_by)
-        validate_processing_input(prepared_df, _physical_processing_definition(processing))
+        validate_processing_input(prepared_df, processing)
         write_metrics.update(rows_committed=None, measurement_source="dry_run")
         return {
             "table_id": target_table_id, "strategy": strategy, "published": False,
             "write_metrics": write_metrics, "dataframe": prepared_df,
             "dry_run": {"status": "passed", "fully_evaluated": [
-                "processing definition", "writer ownership", "incremental publication safety",
+                "processing definition", "incremental publication safety",
                 "input column names"] + (["SCD business keys"] if strategy in {"scd1", "scd2"} else []),
                 "simulated": [f"{strategy} publication"],
                 "not_verified": ["destination permissions", "target transaction", "concurrent target writes",
@@ -648,7 +602,7 @@ def pipeline_write(
     if strategy not in {"overwrite", "append_new_only"}:
         validate_target_row_hash(identity, context=context)
     with PublicationBatch(
-        df, identity=identity, processing=_physical_processing_definition(processing),
+        df, identity=identity, processing=processing,
         source_table_ids=publication_source_ids, audit=audit, context=context,
     ) as batch:
         if strategy == "append_new_only":
@@ -732,7 +686,7 @@ def pipeline_write(
             publication_path = "execute_lakehouse_processing" if store_kind == "lakehouse" else "execute_warehouse_processing"
         else:
             publication_path = "write_lakehouse_table" if store_kind == "lakehouse" else "write_warehouse_table"
-        processing_source = str(processing.get("source") or "resolved processing")
+        processing_source = "Engineering pipeline parameters"
         scope_label = "full dataset"
         if scope.get("type") == "partition":
             scope_label = f"partition {scope['column']} ({len(scope['values'])} value(s))"
@@ -743,11 +697,11 @@ def pipeline_write(
             print(f"   Identity → {identity['table_id']}")
             print(f"2. Processing → {strategy.upper()} from {processing_source}")
             print(f"3. Scope → {scope_label}")
-            print("4. Audit + ownership → runtime audit fields applied; writer ownership validated")
+            print("4. Audit → runtime audit fields applied")
             print(f"5. Physical publication → {publication_path}")
 
         physical_processing = (
-            _physical_processing_definition(processing)
+            processing
             if strategy in {"scd1", "scd2"}
             else None
         )

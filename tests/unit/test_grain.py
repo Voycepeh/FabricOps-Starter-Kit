@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 from fabricops_kit.data_contract import shared as contracts
-from fabricops_kit.pipeline.shared import contract_guardrail_rows, grain_check_core
+from fabricops_kit.pipeline.shared import contract_guardrail_rows, _evaluate_dq_rules
 from tests.unit.test_contract_orchestration import runtime as grain_runtime, SOURCE_ID, TARGET_ID, frozen, read, write
 
 
@@ -25,32 +25,25 @@ def _rule(columns=None, action="Block", active=True):
     }
 
 
-@pytest.mark.parametrize("action,status,continuation", [("Warn", "warning", True), ("Block", "failed", False)])
-def test_composite_duplicates_and_nulls(spark_session, action, status, continuation):
-    """Repeated components are valid; repeated combinations and any null fail."""
+@pytest.mark.parametrize("severity,status", [("warning", "warning"), ("error", "failed")])
+def test_composite_duplicates_and_nulls(spark_session, severity, status):
+    """Managed Grain uses DQ uniqueness with a strict non-null composite key."""
     frame = spark_session.createDataFrame([(1, 1), (1, 2), (2, 1), (2, 1), (3, None)], "id long, version long")
-    result = grain_check_core(frame, _rule(action=action), scope="write_prepared_input")
-    assert result["status"] == status
-    assert result["can_continue"] is continuation
-    assert result["actual"] == {"total_count": 5, "duplicate_key": 2, "null_key": 1, "failed_key": 3}
-    assert result["columns"] == ["id", "version"]
-
-
-@pytest.mark.parametrize("columns", [[], ["id", "id"], ["missing"], [""], [" id"], "id"])
-def test_invalid_keys_never_pass_even_empty_warn_input(spark_session, columns):
-    """Missing or malformed configured keys block before empty-table success."""
-    frame = spark_session.createDataFrame([], "id long, version long")
-    result = grain_check_core(frame, _rule(columns, action="Warn"), scope="read_full")
-    assert result["status"] == "failed"
-    assert result["can_continue"] is False
+    result = _evaluate_dq_rules(frame, "history", [{"rule_id": "grain", "rule_type": "uniqueness",
+        "columns": ["id", "version"], "require_non_null": True, "maximum_failure_percent": 0, "severity": severity}])
+    assert len(result["checks"]) == 1
+    assert result["checks"][0]["status"] == status
+    assert result["checks"][0]["failed_count"] == 3
+    assert result["failed_row_count"] == 3
 
 
 def test_empty_input_and_blank_string_values(spark_session):
     """A valid empty input passes; blank strings are ordinary key values."""
-    empty = spark_session.createDataFrame([], "id string, version long")
-    assert grain_check_core(empty, _rule(), scope="read_full")["status"] == "passed"
-    frame = spark_session.createDataFrame([("", 1), ("", 2)], "id string, version long")
-    assert grain_check_core(frame, _rule(), scope="read_full")["status"] == "passed"
+    rule = {"rule_id": "grain", "rule_type": "uniqueness", "columns": ["id", "version"],
+            "require_non_null": True, "maximum_failure_percent": 0, "severity": "error"}
+    for rows in ([], [("", 1), ("", 2)]):
+        frame = spark_session.createDataFrame(rows, "id string, version long")
+        assert _evaluate_dq_rules(frame, "history", [rule])["checks"][0]["status"] == "passed"
 
 
 @pytest.mark.parametrize("active", [True, False])
@@ -66,18 +59,11 @@ def test_assembled_frozen_runtime_round_trip(active):
     assert frozen_payload["guardrails"][0]["rule_parameters"] == {"columns": ["id", "version"]}
     assert frozen_payload["enrichment"]["table"][0]["value"] == "One row per version"
     runtime = contract_guardrail_rows(frozen, workspace_id="dev", table_id="t")
-    runtime = [row for row in runtime if row["guardrail_type"] == "grain"]
+    runtime = [row for row in runtime if row.get("managed_by") == "grain"]
     assert len(runtime) == int(active)
     if active:
-        assert runtime[0]["guardrail_type"] == "grain"
-        assert json.loads(runtime[0]["rule_parameters_json"]) == {"columns": ["id", "version"]}
-
-
-def test_scd2_history_uses_version_aware_grain(spark_session):
-    """History repeats business keys; Grain never rewrites strategy keys or filters history."""
-    history = spark_session.createDataFrame([(1, 1), (1, 2), (2, 1)], ["id", "version"])
-    assert grain_check_core(history, _rule(), scope="read_full")["status"] == "passed"
-    assert grain_check_core(history, _rule(["id"]), scope="read_full")["status"] == "failed"
+        assert runtime[0]["guardrail_type"] == "data_quality"
+        assert json.loads(runtime[0]["rule_parameters_json"]) == {"columns": ["id", "version"], "require_non_null": True, "maximum_failure_percent": 0}
 
 
 def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
@@ -124,15 +110,28 @@ def test_grain_plan_guardrails_and_continuation(contract_runtime, spark_session,
         monkeypatch.setattr(module, "pipeline_write", publish)
         monkeypatch.setattr(module, "schedule_table_profiling", Mock(return_value={"row_count": 2}))
     if mode == "governed" and action == "Block":
-        with pytest.raises(RuntimeError, match="during Grain"):
+        with pytest.raises(RuntimeError, match="during Data Quality"):
             write(plan, source, spark_session, dataframe=frame)
         publish.assert_not_called()
     else:
         result = write(plan, source, spark_session, dataframe=frame)
-        assert result["grain_result"]["validation_scope"] == "write_prepared_input"
-        assert result["grain_result"]["can_continue"] is (action == "Warn")
+        assert result["dq_result"]["can_continue"] is (action == "Warn")
         assert result["published"] is (mode == "governed")
-    assert any(row["guardrail_type"] == "grain" for row in plan.results)
+    results = [row for row in plan.results if row["guardrail_rule_id"] == "grain"]
+    assert len(results) == 1
+    assert results[0]["guardrail_type"] == "data_quality"
     if mode == "dry_run":
         from tests.unit.test_contract_orchestration import assert_testing_mutations_are_diagnostics_only
         assert_testing_mutations_are_diagnostics_only(spies)
+
+
+def test_managed_grain_rejects_duplicate_authored_uniqueness():
+    """The same selected key cannot execute and count as a second DQ rule."""
+    payload = {"table": {"columns": [{"column_name": "id"}]}, "guardrails": [
+        {"guardrail_type": "grain", "rule_type": "uniqueness", "rule_parameters": {"columns": ["id"]}, "action": "Block"},
+        {"guardrail_type": "data_quality", "rule_type": "uniqueness", "rule_parameters": {"columns": ["id"]}, "action": "Warn"},
+    ]}
+    with pytest.raises(ValueError, match="duplicate DQ rule"):
+        contracts.validate_grain_contract(payload)
+    payload["guardrails"][1]["is_active"] = False
+    contracts.validate_grain_contract(payload)

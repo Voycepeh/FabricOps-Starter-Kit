@@ -71,7 +71,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | Yes | `—` | Explicit physical schema; pass None for a schemaless store. |
 | `table_name` | `str` | Yes | `—` | Physical target table name. |
-| `write_mode` | `str` | Yes | `—` | Proposed strategy; must match the selected contract processing definition. |
+| `write_mode` | `str` | Yes | `—` | Engineering write strategy, captured exactly by Pipeline Activation. |
 | `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
 | `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. |
 | `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in persistent workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Dry Run and reused/updated during persistent writes. Failures release the cache. |
@@ -154,9 +154,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:30`
+`fabricops_kit/pipeline/orchestrate_write.py:29`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L284">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L29-L279">View on GitHub</a>
 </div>
 
 
@@ -172,7 +172,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 258 |
+| Live-critical dependencies | 260 |
 
 ### Release history
 
@@ -251,6 +251,11 @@ No related guides documented.
 <li><code>fabricops_kit.data_contract.scheduled_refresh.canonical_scheduled_refresh</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh.discover_scheduled_refresh</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh.normalize_scheduled_refresh</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
+<li><code>fabricops_kit.data_contract.shared.normalize_guardrail_action</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_definitions</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_grain_contract</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_sensitive_data_parameters</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
@@ -279,14 +284,11 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
-<li><code>fabricops_kit.pipeline.check_grain.check_grain</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._physical_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._validate_target_writer_ownership</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
@@ -396,7 +398,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.execution_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
-<li><code>fabricops_kit.pipeline.shared.grain_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
@@ -423,7 +424,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd1_business_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_table_processing_definition</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_table_profiling</code></li>
@@ -436,6 +436,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
@@ -443,6 +444,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validate_processing_input</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_source_drift_configuration</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_target_row_hash</code></li>
+<li><code>fabricops_kit.pipeline.shared.validated_pipeline_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
 </ul>

@@ -589,6 +589,7 @@ def test_incremental_coordinates_register_new_target_and_preserve_routing(coordi
     """Bootstrap needs no Catalogue record and each store owns its physical workspace."""
     session = setup_pipeline(pipeline_mode="Dry Run")
     result = orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental",
+                              read_parameters={"watermark_column": "modified_dt"},
                               target_store=store, target_schema=schema, target_table_name="orders_clean")
     identities = json.loads(session.plan.participants_json)
     source_id = result["table_id"]
@@ -636,6 +637,7 @@ def test_incremental_reads_resolve_distinct_targets_for_same_source(coordinate_r
     for name in ("orders_clean", "orders_archive"):
         session = setup_pipeline(pipeline_mode="Dry Run")
         result = orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental",
+                              read_parameters={"watermark_column": "modified_dt"},
                                   target_store="Silver", target_table_name=name)
         source_ids.append(result["table_id"])
         target_ids.append(coordinate_runtime.reader.call_args.kwargs["target_table_id"])

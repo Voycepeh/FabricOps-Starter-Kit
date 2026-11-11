@@ -14,6 +14,8 @@ from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 import json
+import hashlib
+from pathlib import PurePosixPath
 import math
 from typing import Any
 import uuid
@@ -26,7 +28,7 @@ from fabricops_kit.config.metadata_schemas import (
     metadata_table_physical_schema,
     metadata_table_schema_registry,
 )
-from fabricops_kit.pipeline.shared import validated_processing, validate_grain_parameters
+from fabricops_kit.pipeline.shared import validate_grain_parameters
 
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 GUARDRAIL_TYPES = frozenset({"schema", "grain", "freshness", "data_quality", "sensitive_data"})
@@ -37,6 +39,50 @@ ENRICHMENT_TYPES_BY_LEVEL = {
     "column": frozenset({"Description", "Classification"}),
 }
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
+
+
+def file_source_identity(*, workspace_id, item_id, relative_path, file_format, reader_options=None):
+    """Identify a Lakehouse Files selector without manufacturing a Table ID.
+
+    Identity includes physical workspace/item and a case-sensitive normalized
+    relative selector. Folder/wildcard membership may change without changing
+    the selector identity. Format and reader options are approved separately.
+    """
+    if any(not isinstance(value, str) or not value.strip() for value in (workspace_id, item_id, relative_path)):
+        raise ValueError("File source requires workspace_id, item_id and relative_path.")
+    if relative_path.startswith(("/", "\\")) or ":" in relative_path or "\\" in relative_path or ".." in relative_path.split("/"):
+        raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
+    path = str(PurePosixPath(relative_path))
+    if path in {"", "."}:
+        raise ValueError("Select a file, folder or wildcard beneath Files.")
+    if file_format not in {"csv", "parquet", "json", "excel"}:
+        raise ValueError("Unsupported file source format.")
+    if reader_options is not None and not isinstance(reader_options, dict):
+        raise ValueError("File reader_options must be an object.")
+    physical = {"workspace_id": workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
+    digest = hashlib.sha256(json.dumps(physical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    options = json.loads(json.dumps(reader_options or {}, allow_nan=False, sort_keys=True))
+    return {"source_type": "file", "source_id": "file:" + digest, **physical,
+            "file_format": file_format, "reader_options": options}
+
+
+def validate_contract_source(payload):
+    """Validate physical Table IDs or a distinct stable file selector identity."""
+    source = payload.get("source")
+    if source is None:
+        return  # Physical table contracts retain their canonical Table ID.
+    if not isinstance(source, dict):
+        raise ValueError("Data Contract source must be an object.")
+    if source.get("source_type") == "table":
+        if not source.get("table_id") or source["table_id"] != payload.get("table", {}).get("table_id"):
+            raise ValueError("Table source must preserve the canonical Table ID.")
+    elif source.get("source_type") == "file":
+        expected = file_source_identity(**{key: source.get(key) for key in
+            ("workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
+        if expected != source or payload.get("table", {}).get("table_id"):
+            raise ValueError("File source must use its stable file identity, without a Table ID.")
+    else:
+        raise ValueError("Data Contract source_type must be table or file.")
 
 
 def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any]:
@@ -75,43 +121,60 @@ def contract_lifecycle_id(table_id: str) -> str:
 
 
 def create_contract_draft(
-    *, table_id: str, config: Any, active_workspace_id: str, spark_session: Any,
+    *, table_id: str | None = None, file_source: Mapping[str, Any] | None = None,
+    columns: list[dict[str, Any]] | None = None, config: Any, active_workspace_id: str, spark_session: Any,
     context: Mapping[str, Any] | None = None, store: str = "Metadata",
     schema: str | None = None, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Create or reopen the one mutable draft for a governed table."""
-    lifecycle_id = contract_lifecycle_id(table_id)
+    """Create or reopen one mutable table or file dataset draft without processing.
+
+    File sources require a validated physical selector and an explicitly observed
+    schema; they use source_id with no artificial Table ID.
+    """
+    if file_source is not None:
+        if table_id:
+            raise ValueError("Select a physical table or file source, not both.")
+        validate_contract_source({"source": dict(file_source), "table": {}})
+        lifecycle_id = str(uuid.uuid5(_CONTRACT_NAMESPACE, file_source["source_id"]))
+    else:
+        lifecycle_id = contract_lifecycle_id(table_id)
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     runtime_context = {
         "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
         "_fabricops_suppress_io_log": True,
     }
-    catalogue_rows = row_dicts(read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store=store,
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        context={**(runtime_context or {}), "_spark_session": spark_session},
-    ))
-    active_catalogue = [
-        row for row in current_catalogue_observations(catalogue_rows)
-        if str(row.get("table_id") or "") == str(table_id).strip()
-        and str(row.get("workspace_id") or "") == active_workspace_id
-        and row.get("is_active") is not False
-    ]
-    current = _latest(active_catalogue, ("table_id", "column_id"))
-    table_rows = [
-        row for row in current
-        if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
-    ]
-    if not table_rows:
-        raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
-    table = dict(table_rows[-1])
-    table.update(decode_metadata_row("METADATA_DATA_CATALOGUE", {
-        "load_strategy_parameters_json": table.get("load_strategy_parameters_json"),
-    }))
-    observed_columns = [
-        _fields(row, ("column_id", "column_name", "data_type"))
-        for row in current if row.get("column_id")
-    ]
+    if file_source is not None:
+        table = {"table_name": file_source["relative_path"], "store_type": "file"}
+        observed_columns = [dict(column) for column in columns or []]
+        if not observed_columns or any(not all(column.get(key) for key in ("column_id", "column_name", "data_type")) for column in observed_columns):
+            raise ValueError("File contract requires an explicitly observed schema with stable column identities.")
+    else:
+        catalogue_rows = row_dicts(read_lakehouse_table(
+            "METADATA_DATA_CATALOGUE", store=store,
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+            context={**(runtime_context or {}), "_spark_session": spark_session},
+        ))
+        active_catalogue = [
+            row for row in current_catalogue_observations(catalogue_rows)
+            if str(row.get("table_id") or "") == str(table_id).strip()
+            and str(row.get("workspace_id") or "") == active_workspace_id
+            and row.get("is_active") is not False
+        ]
+        current = _latest(active_catalogue, ("table_id", "column_id"))
+        table_rows = [
+            row for row in current
+            if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
+        ]
+        if not table_rows:
+            raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
+        table = dict(table_rows[-1])
+        table.update(decode_metadata_row("METADATA_DATA_CATALOGUE", {
+            "load_strategy_parameters_json": table.get("load_strategy_parameters_json"),
+        }))
+        observed_columns = [
+            _fields(row, ("column_id", "column_name", "data_type"))
+            for row in current if row.get("column_id")
+        ]
 
     rows = row_dicts(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store=store, schema=schema,
@@ -171,20 +234,6 @@ def create_contract_draft(
                     rule_parameters={"required_columns": [str(column["column_id"]) for column in columns
                                                           if column.get("presence", "required") == "required"]})
 
-    strategy = str(table.get("load_strategy") or "").strip()
-    if strategy:
-        parameters = {name: value for name, value in (table.get("load_strategy_parameters_json") or {}).items()
-                      if value is not None}
-        processing = validated_processing({**parameters, "load_strategy": strategy})
-        processing_source = "catalogue"
-    elif isinstance(previous_payload, dict):
-        previous_processing = previous_payload.get("table", {}).get("processing")
-        processing = validated_processing(previous_processing) if isinstance(previous_processing, dict) else {"load_strategy": "overwrite"}
-        processing_source = "previous_contract"
-    else:
-        processing = {"load_strategy": "overwrite"}
-        processing_source = "default"
-
     payload = {
         **seed,
         "contract": {
@@ -197,8 +246,6 @@ def create_contract_draft(
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
             "evidence_workspace_id": active_workspace_id,
             "columns": columns,
-            "processing": processing,
-            "processing_source": processing_source,
             "writer": {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
@@ -207,9 +254,14 @@ def create_contract_draft(
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
         "guardrails": list(seed.get("guardrails") or []),
     }
+    if file_source is not None:
+        payload["source"] = dict(file_source)
+        payload["table"].pop("table_id", None)
     payload.pop("profiling", None)
     payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
+    payload["table"].pop("processing", None)
+    payload["table"].pop("processing_source", None)
     payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
         item["contract_id"] = lifecycle_id
@@ -225,7 +277,8 @@ def create_contract_draft(
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
-        "table_id": str(table_id).strip(),
+        "table_id": str(table_id).strip() if table_id else None,
+        "source_id": file_source["source_id"] if file_source is not None else None,
         "table_name": payload_table_name,
         "evidence_workspace_id": active_workspace_id,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
@@ -319,29 +372,6 @@ def _latest(rows: Iterable[Mapping[str, Any]], identity: tuple[str, ...]) -> lis
     return [selected[key] for key in sorted(selected)]
 
 
-def contract_processing(record: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the processing definition stored in one Data Contract payload."""
-    payload = _json_value(
-        record.get("contract_payload_json"), field="contract_payload_json", default=None
-    )
-    processing = (
-        payload.get("table", {}).get("processing")
-        if isinstance(payload, dict) and isinstance(payload.get("table"), dict)
-        else None
-    )
-    return validated_processing(processing) if isinstance(processing, dict) and processing else {}
-
-
-def contract_processing_source(record: Mapping[str, Any]) -> str:
-    """Return how the Data Contract draft processing was resolved."""
-    payload = _json_value(
-        record.get("contract_payload_json"), field="contract_payload_json", default=None
-    )
-    if not isinstance(payload, dict) or not isinstance(payload.get("table"), dict):
-        return "default"
-    return str(payload["table"].get("processing_source") or "default").strip() or "default"
-
-
 def validate_contract_definitions(
     payload: Mapping[str, Any], *, allow_unresolved_columns: bool = False
 ) -> None:
@@ -351,6 +381,7 @@ def validate_contract_definitions(
     configuration but are not executed. Grain may keep an empty key selection
     only while disabled.
     """
+    validate_contract_source(payload)
     obsolete = {"coverage_gate", "coverage_policy", "coverage_gate_policy", "guardrail_coverage"}
     definitions = [payload, payload.get("table")]
     if isinstance(payload.get("guardrails"), list):
@@ -417,6 +448,9 @@ def validate_contract_definitions(
             raise ValueError(f"Guardrail {key!r} requires Block action.")
         if rule.get("column_id") and str(rule["column_id"]) not in column_ids and not allow_unresolved_columns:
             raise ValueError(f"Guardrail {key!r} references a column outside the Data Contract.")
+        if kind == "freshness" and rule.get("is_active", True) and rule.get("rule_type") != "skip":
+            from fabricops_kit.pipeline.shared import validate_freshness_parameters
+            validate_freshness_parameters(rule["rule_parameters"])
         if rule.get("guardrail_type") == "sensitive_data":
             if not rule.get("column_id"):
                 raise ValueError("Sensitive Data requires column_id.")
@@ -507,6 +541,8 @@ def save_contract_draft(
         raise ValueError("Only a draft Data Contract version can be saved.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
+    canonical.get("table", {}).pop("processing", None)
+    canonical.get("table", {}).pop("processing_source", None)
     canonical.pop("profiling", None)
     canonical["guardrails"] = [rule for rule in canonical.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
     canonical["contract"] = {
@@ -516,12 +552,10 @@ def save_contract_draft(
     }
     if not isinstance(canonical.get("table"), dict):
         raise ValueError("Data Contract payload must contain one table definition.")
+    if draft.get("source_id") and canonical.get("source", {}).get("source_id") != draft["source_id"]:
+        raise ValueError("Data Contract file source identity must match the draft row.")
     if str(canonical["table"].get("table_id") or "") != str(draft.get("table_id") or ""):
         raise ValueError("Data Contract payload table_id must match the draft row.")
-    canonical["table"]["processing"] = validated_processing(
-        dict(canonical["table"].get("processing") or {})
-    )
-
     validate_contract_definitions(canonical)
     validate_grain_contract(canonical)
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
@@ -1328,6 +1362,12 @@ def validate_grain_contract(payload, *, allow_unresolved_columns=False):
             raise ValueError("Grain references columns outside the Data Contract.")
         rule["rule_parameters"] = parameters
         rule["action"] = normalize_guardrail_action(rule.get("action") or "Block")
+        if rule.get("is_active", True):
+            for other in payload.get("guardrails", []):
+                if (other.get("is_active", True) and other.get("guardrail_type") == "data_quality"
+                        and other.get("rule_type") == "uniqueness"
+                        and set(other.get("rule_parameters", {}).get("columns", [])) == set(parameters["columns"])):
+                    raise ValueError("Grain already manages uniqueness for these columns; remove the duplicate DQ rule.")
 
 
 def freeze_contract_record(
@@ -1343,9 +1383,13 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    payload.get("table", {}).pop("processing", None)
+    payload.get("table", {}).pop("processing_source", None)
     payload.get("table", {}).pop("scheduled_refresh", None)
     payload.pop("profiling", None)
     payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+    if draft.get("source_id") and payload.get("source", {}).get("source_id") != draft["source_id"]:
+        raise ValueError("Frozen file source identity must match the draft row.")
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
     payload["contract"] = {
@@ -1459,14 +1503,6 @@ def assemble_contract_payload(
         item["rule_parameters"] = parameters
         guardrail_docs.append(item)
 
-    try:
-        processing = contract_processing(draft)
-    except ValueError as exc:
-        raise ValueError(
-            f"Data Contract processing for table_id {table_id!r} is incomplete or invalid: {exc}"
-        ) from exc
-    if not processing:
-        raise ValueError("Data Contract draft must define a load strategy before it can be frozen.")
     payload = {
         "contract": {
             "contract_id": contract_id,
@@ -1475,11 +1511,9 @@ def assemble_contract_payload(
         },
         "table": {
             **dict(draft_payload.get("table") or _fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name"))),
-            "table_id": table_id,
+            **({"table_id": table_id} if table_id else {}),
             "evidence_workspace_id": draft.get("evidence_workspace_id") or workspace_id,
             "columns": column_docs,
-            "processing": processing,
-            "processing_source": contract_processing_source(draft),
             "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
                 "notebook_id": str(table.get("_notebook_id") or "").strip(),
                 "notebook_name": str(table.get("_notebook_name") or "").strip(),
@@ -1491,7 +1525,13 @@ def assemble_contract_payload(
         },
         "guardrails": guardrail_docs,
     }
+    payload["table"].pop("processing", None)
+    payload["table"].pop("processing_source", None)
     payload["table"].pop("scheduled_refresh", None)
+    if draft_payload.get("source") is not None:
+        payload["source"] = dict(draft_payload["source"])
+        if payload["source"].get("source_type") == "file":
+            payload["table"].pop("table_id", None)
     if not allow_incomplete_grain:
         validate_grain_contract(payload)
     warnings = []
@@ -1528,7 +1568,6 @@ def freeze_contract(
     table = payload.get("table")
     if not isinstance(table, dict) or str(table.get("table_id") or "") != str(draft.get("table_id") or ""):
         raise ValueError("Saved Data Contract payload does not match the draft table_id.")
-    validated_processing(dict(table.get("processing") or {}))
 
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     runtime_context = {

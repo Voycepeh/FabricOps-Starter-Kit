@@ -40,7 +40,7 @@ def _freshness_rule(column: str) -> dict:
         "is_active": True,
         "rule_type": "max_age",
         "rule_parameters_json": (
-            '{"freshness_column":"' + column + '","maximum_age":1,"maximum_age_unit":"days"}'
+            '{"freshness_column":"' + column + '","evidence_method":"column","evaluation_scope":"full_dataset","maximum_age":1,"maximum_age_unit":"days"}'
         ),
         "action": "Block",
         "guardrail_rule_id": "freshness-rule",
@@ -83,6 +83,7 @@ def _run_freshness(monkeypatch, *, freshness_column: str, drift_column: str | No
         "get_current_freshness_evidence",
         lambda **k: {
             "freshness_column": freshness_column,
+            "evidence_method": "column", "evaluation_scope": "full_dataset", "outcome": "available",
             "latest_value": datetime.now(UTC).isoformat(),
             "_activity_id": "run-1",
         },
@@ -96,7 +97,7 @@ def test_freshness_does_not_require_source_drift(monkeypatch) -> None:
         monkeypatch, freshness_column="arrived_at", drift_column=None
     )
     assert result["status"] == "passed"
-    assert result["freshness_column"] == "arrived_at"
+    assert result["actual"]["freshness_column"] == "arrived_at"
 
 
 def test_freshness_uses_its_own_column_when_source_drift_differs(monkeypatch) -> None:
@@ -104,7 +105,7 @@ def test_freshness_uses_its_own_column_when_source_drift_differs(monkeypatch) ->
         monkeypatch, freshness_column="arrived_at", drift_column="changed_at"
     )
     assert result["status"] == "passed"
-    assert result["freshness_column"] == "arrived_at"
+    assert result["actual"]["freshness_column"] == "arrived_at"
 
 
 def test_freshness_and_source_drift_can_share_a_column(monkeypatch) -> None:
@@ -112,7 +113,7 @@ def test_freshness_and_source_drift_can_share_a_column(monkeypatch) -> None:
         monkeypatch, freshness_column="changed_at", drift_column="changed_at"
     )
     assert result["status"] == "passed"
-    assert result["freshness_column"] == "changed_at"
+    assert result["actual"]["freshness_column"] == "changed_at"
 
 
 class _Store:
@@ -175,11 +176,6 @@ def test_static_source_skips_freshness_evidence_capture(monkeypatch) -> None:
         "guardrail_version": 1,
     }
     _configure_observation_capture(monkeypatch, [rule])
-    monkeypatch.setattr(
-        shared,
-        "resolve_freshness_observation_column",
-        lambda _rule: (_ for _ in ()).throw(AssertionError("Freshness column was resolved")),
-    )
 
     assert shared.capture_source_observation(table_id="source-a", dataframe=[]) is None
     with pytest.raises(ValueError, match="No current freshness evidence"):
@@ -200,4 +196,4 @@ def test_freshness_capture_uses_freshness_rule_column(monkeypatch) -> None:
         workspace_id="dev", activity_id="run-1", table_id="source-a"
     )
     assert evidence["freshness_column"] == "arrived_at"
-    assert evidence["latest_value"] == "2026-09-20"
+    assert evidence["latest_value"] == "2026-09-20T00:00:00+00:00"

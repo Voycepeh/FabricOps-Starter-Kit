@@ -118,15 +118,11 @@
 <path d="M429 78H721Q725 78 725 82V115H425V82Q425 78 429 78Z" fill="#7C3AED"/>
 <text x="575" y="102" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_CONTRACT_ACTIVATION</text>
 <text x="438" y="135" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="476" y="135" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">workspace_id</text>
-<text x="438" y="159" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="476" y="159" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
-<text x="438" y="183" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="476" y="183" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">revision</text>
-<text x="438" y="207" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="476" y="207" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">agreement_id/version</text>
-<text x="438" y="231" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="476" y="231" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id/version</text>
+<text x="476" y="135" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">activation_id</text>
+<text x="438" y="159" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="476" y="159" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">agreement_id/version</text>
+<text x="438" y="183" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="476" y="183" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id/version</text>
 <title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">

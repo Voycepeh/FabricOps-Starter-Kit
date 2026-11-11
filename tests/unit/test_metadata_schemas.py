@@ -50,8 +50,8 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
     assert metadata_table_physical_schema(Config(), "METADATA_PROCESSING_STATE") == "observed"
 
 
-def test_data_contract_uses_versioned_one_table_schema():
-    """Contract rows freeze one table definition under one Agreement version."""
+def test_data_contract_uses_versioned_table_or_file_schema():
+    """Contract rows freeze a table or a file identity without artificial Table IDs."""
     registry = metadata_table_schema_registry()
     audit_names = [name for name, _kind, _nullable in audit_schema_fields()]
     schema = registry["METADATA_DATA_CONTRACT"]
@@ -59,14 +59,14 @@ def test_data_contract_uses_versioned_one_table_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
         "contract_id", "contract_version",
-        "table_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
+        "table_id", "source_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
     ]
     assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
-    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:7]] == [
+    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
-        ("table_id", "StringType", False), ("table_name", "StringType", True),
+        ("table_id", "StringType", True), ("source_id", "StringType", True), ("table_name", "StringType", True),
         ("evidence_workspace_id", "StringType", False),
         ("contract_payload_json", "StringType", True),
         ("status", "StringType", False),

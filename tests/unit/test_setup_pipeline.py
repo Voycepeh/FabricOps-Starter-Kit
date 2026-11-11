@@ -40,14 +40,16 @@ def test_inspector_has_all_columns_rules_parameters_states_and_boundaries():
     row = _row(2)
     review = module._contract_review(row, ["source"])
     assert len(review["columns"]) == 2
-    assert review["counts"]["data_quality"] == 2
-    assert review["categories"]["grain"][0]["parameters"]["columns"] == ["customer_id", "amount"]
+    assert review["counts"]["data_quality"] == 3
+    assert review["categories"]["data_quality"][0]["parameters"]["columns"] == ["customer_id", "amount"]
     rendered = module._inspector(row, ["source"])
     for value in ("decimal(18,4)", "decimal(20,2)", "maximum_failure_percent", "custom_expression", "Inactive",
                   "must remain visible", "future_kind", "preserve_start", "Will not run", "hours", "comparison_scope"):
         assert value in rendered
-    assert "2 checks · 1 inactive" in rendered
+    assert "3 checks · 1 inactive" in rendered
     assert "Raw frozen definition" in rendered
+    assert "Processing and ownership" not in rendered
+    assert "GRAIN — Uniqueness" in rendered
 
 def test_public_imports_do_not_require_optional_notebook_packages():
     """Package imports and headless APIs work without IPython or ipywidgets."""
@@ -82,7 +84,7 @@ def test_inspector_shows_only_exact_contract_results_and_escapes_details():
     rendered = module._inspector(row, ["source"], [result, {**result, "contract_version": 1}])
     assert "Execution results · 1" in rendered and "warning" in rendered and "testing" in rendered
     assert "&lt;script&gt;unsafe&lt;/script&gt;" in rendered and "<script>unsafe" not in rendered
-    assert "2 checks · 1 inactive" in rendered and "decimal(18,4)" in rendered
+    assert "3 checks · 1 inactive" in rendered and "decimal(18,4)" in rendered
     assert "Not executed in this plan" in module._inspector(row, ["target"])
 
 

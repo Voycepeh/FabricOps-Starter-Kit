@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT_ACTIVATION
 
-Selects one exact globally frozen Contract for each physical table workspace/Table ID.
+Selects one exact globally frozen Contract for each physical table or file source.
 
 ## Writer functions
 
@@ -16,9 +16,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `governance`
 
-**Grain:** One retained activation revision per physical workspace_id and table_id; one current active selection.
+**Grain:** One retained activation revision per workspace and Table ID or file source_id; one current active selection.
 
-**Primary key:** `workspace_id` + `table_id` + `revision`
+**Primary key:** `activation_id`
 
 **Relationships:**
 
@@ -28,14 +28,14 @@ via `agreement_id` + `agreement_version`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical binding. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.
+**Implementation details:** Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">21</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">22</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">0</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">13</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">14</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
 
@@ -47,6 +47,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--governance"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--governance"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--governance"><td><code>source_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
 <tr class="metadata-column--governance"><td><code>payload_sha256</code></td><td><code>string</code></td><td>Metadata Data Contract Activation field <code>payload_sha256</code>.</td></tr>

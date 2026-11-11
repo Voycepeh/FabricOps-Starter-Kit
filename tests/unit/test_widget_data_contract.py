@@ -202,7 +202,7 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","expected_refresh_frequency":1,"expected_refresh_unit":"days","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","evidence_method":"column","evaluation_scope":"full_dataset","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "tokenize", "rule_parameters_json": '{"scope":"column","treatment":"tokenize"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
@@ -682,29 +682,14 @@ def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypat
 
 
 @pytest.mark.parametrize('strategy', ['append_all', 'append_new_only'])
-def test_inherited_processing_is_editable_and_persists_on_contract_save(widget_runtime, strategy):
-    """Fallback processing stays editable and is saved inside the exact draft JSON."""
-    payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
-    payload["table"]["processing"] = {"load_strategy": "overwrite"}
-    payload["table"]["processing_source"] = "previous_contract"
-    widget_runtime["contract"]["contract_payload_json"] = json.dumps(payload)
-
+def test_processing_is_not_authored_or_saved_in_contract(widget_runtime, strategy):
+    """Processing controls and payloads belong to Engineering pipelines."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
+    assert {"load_strategy", "key_columns", "watermark_column", "processing_parameters"}.isdisjoint(controls)
+    state["save_data_contract"](return_to_selector_after=False)
+    assert "processing" not in json.loads(widget_runtime["contract"]["contract_payload_json"])["table"]
 
-    assert controls["load_strategy"].disabled is False
-    assert tuple(controls["load_strategy"].options) == ("overwrite", "append_all", "append_new_only", "scd1", "scd2")
-    controls["load_strategy"].value = strategy
-    assert controls["key_columns"].layout.display == "none"
-    controls["top_nav"].value = "Review"
-    controls["save_data_contract"].click()
-
-    saved = widget_runtime["calls"]["draft"][-1]
-    assert saved["table"]["processing"] == {"load_strategy": strategy}
-    assert saved["table"]["processing_source"] == "manual"
-    persisted = json.loads(widget_runtime["contract"]["contract_payload_json"])
-    assert persisted["table"]["processing"] == {"load_strategy": strategy}
-    assert persisted["table"]["processing_source"] == "manual"
 
 
 def test_manifest_view_exposes_exact_canonical_dictionary_and_escapes_html():
@@ -784,8 +769,6 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["required"].value is True
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
     assert "source_drift" not in controls["table_guardrails"]
-    assert controls["load_strategy"].value == "append_all"
-    assert controls["load_strategy"].disabled is True
     assert controls["sensitive_enabled"].value is True
     assert controls["business_saved"].value == "__new_rule__"
     assert controls["row_key_columns"].value == ()
@@ -821,13 +804,13 @@ def test_grain_changes_reuse_one_rule_and_never_enable_implicitly(widget_runtime
     rule_id = grains()[0]["guardrail_rule_id"]
     assert grains()[0]["is_active"] is False
     read_summary = _sidebar_text(controls["sidebar_groups"]["read"])
-    assert "Grain · column_0 · Not enforced" in read_summary
+    assert "GRAIN — Uniqueness · column_0 · Not enforced" in read_summary
     assert "State:</b> Not enforced" in read_summary
     assert "Turn on Enforce Grain" in read_summary
     controls["grain_enabled"].value = True
     assert controls["grain_policy"].value == "Block"
     read_summary = _sidebar_text(controls["sidebar_groups"]["read"])
-    assert "Grain · column_0 · Block" in read_summary
+    assert "GRAIN — Uniqueness · column_0 · Block" in read_summary
     assert "State:</b> Enabled" in read_summary
     assert "Turn on Enforce Grain" not in read_summary
     controls["grain_policy"].value = "Warn"
@@ -879,12 +862,10 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     freshness = controls["table_guardrails"]["freshness"]
     freshness["enabled"].value = True
     freshness["block"].value = False
-    freshness["parameters"][0].value = "recurring"
+    freshness["parameters"][0].value = "column"
     freshness["parameters"][1].value = "column_1"
     freshness["parameters"][2].value = "2"
-    freshness["parameters"][3].value = "days"
-    freshness["parameters"][4].value = "3"
-    freshness["parameters"][5].value = "days"
+    freshness["parameters"][3].value = "hours"
 
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Persisted identifier"
@@ -924,7 +905,7 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     assert reopened_freshness["block"].value is False
     assert reopened_freshness["parameters"][1].value == "column_1"
     assert reopened_freshness["parameters"][2].value == "2.0"
-    assert reopened_freshness["parameters"][4].value == "3.0"
+    assert reopened_freshness["parameters"][4].value == "full_dataset"
 
     assert "source_drift" not in hydrated["table_guardrails"]
 
@@ -987,7 +968,6 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Classification" in table_summary
     assert "Grain" in table_summary
     assert "Row Key" in table_summary
-    assert "Load strategy" in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
     page_style = controls["page"].children[0].value
@@ -995,13 +975,11 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
-    assert table_summary.index("Row Key") < table_summary.index("Load strategy")
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children[1:]
     assert [section.children[0].value for section in table_sections[:4]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
-        "<div class=\"fabricops-section-heading\">Processing</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
     ]
 
@@ -1497,14 +1475,12 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert controls["apply_business_rule"] in controls["business_review_actions"].children[-1].children
 
     for control_name in (
-        "row_key_columns", "key_columns", "tracked_columns",
+        "row_key_columns",
         "column_select", "business_columns", "manual_batch_columns",
         "manual_key_columns",
     ):
         assert "fabricops-contract-list" in controls[control_name]._dom_classes
     assert controls["row_key_columns"].layout.max_height == "252px"
-    assert controls["key_columns"].layout.max_height == "220px"
-    assert controls["tracked_columns"].layout.max_height == "220px"
     assert controls["business_columns"].layout.max_height == "220px"
     assert controls["profile_context"].layout.height == "auto"
     assert controls["profile_context"].layout.overflow == "visible"
@@ -1525,8 +1501,6 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
         label.removesuffix(" *") for label, _value in controls["column_select"].options
     ]
     assert "_row_hash" not in controls["row_key_columns"].options
-    assert "_row_hash" not in controls["key_columns"].options
-    assert "_row_hash" not in controls["tracked_columns"].options
     assert "_row_hash" not in [
         value for _label, value in controls["business_columns"].options
     ]
@@ -1649,44 +1623,19 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert "column_1" in table_summary
 
 
-def test_processing_and_business_rule_changes_refresh_left_table_summary(widget_runtime, monkeypatch):
-    """Hydrate left-side Table values changed from Processing and Data Quality editors."""
-    widget_runtime["guardrails"][:] = [
-        rule for rule in widget_runtime["guardrails"]
-        if str(rule.get("guardrail_type") or "").lower() not in {"data_quality", "dq"}
-    ]
-    state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
+def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runtime):
+    """Table controls own the managed DQ rule's columns and decision."""
+    state = widget_runtime["open"]()
     controls = state["_controls"]
-
-    controls["load_strategy"].value = "scd1"
-    table_summary = controls["left_pane"].children[0].value
-    assert "Load strategy" in table_summary
-    assert "SCD1" in table_summary
-    assert "Data Quality" not in _sidebar_text(controls["guardrail_sidebar"])
-
-    monkeypatch.setattr(
-        module,
-        "suggest_business_rule",
-        lambda *_args, **_kwargs: [{
-            "rule_type": "column_relationship",
-            "columns": ["column_0", "column_1"],
-            "parameters": {
-                "columns": ["column_0", "column_1"],
-                "operator": "=",
-                "business_requirement": "Columns must match.",
-            },
-            "rationale": "Deterministic relationship.",
-        }],
-    )
+    controls["row_key_columns"].value = ("column_0",)
+    controls["grain_enabled"].value = True
     controls["top_nav"].value = "Data Quality"
-    controls["business_requirement"].value = "Columns must match."
-    controls["business_columns"].value = ("column_0", "column_1")
-    controls["resolve_business_rule"].click()
-    controls["apply_business_rule"].click()
+    managed = controls["managed_grain"]
+    assert "GRAIN — Uniqueness" in managed.value
+    assert "column_0" in managed.value and "Block" in managed.value
+    controls["grain_policy"].value = "Warn"
+    assert "Warn" in managed.value
 
-    controls["top_nav"].value = "Table"
-    table_summary = controls["left_pane"].children[0].value
-    assert "Data Quality" in _sidebar_text(controls["guardrail_sidebar"])
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
@@ -2144,83 +2093,13 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
     assert controls["delete_business_rule"].disabled is True
 
 
-def test_freshness_filters_to_temporal_columns_and_explains_live_rule(widget_runtime):
-    """Freshness authoring only offers temporal columns and translates controls into a rule."""
-    state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]
-
-    freshness_grid = freshness["display"][1]
-    assert [row.children[0].value for row in freshness_grid.children] == [
-        "<div style='padding-top:7px;'>Refresh expectation</div>",
-        "<div style='padding-top:7px;'>Timestamp column</div>",
-        "<div style='padding-top:7px;'>Expected refresh</div>",
-        "<div style='padding-top:7px;'>Maximum age</div>",
-    ]
-    options = [
-        item[1] if isinstance(item, tuple) else item
-        for item in freshness["parameters"][1].options
-    ]
-    assert options == ["", "column_1"]
-
-    freshness["enabled"].value = True
-    freshness["parameters"][0].value = "recurring"
-    freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][2].value = "6"
-    freshness["parameters"][3].value = "hours"
-    freshness["parameters"][4].value = "24"
-    freshness["parameters"][5].value = "hours"
-
-    preview = freshness["display"][-1].value
-    assert "Expected source refresh: <b>6 hours</b>." in preview
-    assert "The latest <code>column_1</code> must be within <b>24 hours</b> of the pipeline run." in preview
-    assert "<code>MAX(column_1)</code> must be on or after 1 Jan 2026 23:00." in preview
-
-    freshness_section = state["_controls"]["right_pane"].children[4]
-    assert freshness_section.children[1].children[0] is freshness["enabled"]
-    assert freshness_section.children[1].children[1] is freshness["block"]
-    freshness_primary = freshness_section.children[2]
-    assert "Applies when this table is used as a source in a downstream pipeline." in freshness_primary.children[0].value
-    assert "not when this table itself is written" in freshness_primary.children[0].value
 
 
-def test_static_source_does_not_require_temporal_columns(widget_runtime):
-    """A static source can explicitly declare that no refresh is expected."""
-    widget_runtime["catalogue"][2]["data_type"] = "string"
-
-    state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]
-
-    freshness["enabled"].value = True
-    freshness["parameters"][0].value = "static"
-
-    assert freshness["parameters"][0].disabled is False
-    assert freshness["parameters"][1].disabled is True
-    assert freshness["block"].disabled is True
-    assert "No refresh is expected for this source" in freshness["display"][-1].value
-    assert "Source Drift" not in freshness["display"][-1].value
 
 
-def test_static_freshness_stages_skip_rule(widget_runtime):
-    """Static source expectation persists as an explicit skip Freshness rule."""
-    widget_runtime["guardrails"][:] = [
-        rule for rule in widget_runtime["guardrails"]
-        if rule["guardrail_type"] != "freshness"
-    ]
-    state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]
 
-    freshness["enabled"].value = True
-    freshness["parameters"][0].value = "static"
 
-    staged = next(
-        record for records in state["_pending_guardrails"].values()
-        for record in records.values()
-        if record.get("guardrail_type") == "freshness"
-    )
-    assert staged["rule_type"] == "skip"
-    assert module._parameters(staged) == {"refresh_expectation": "static"}
-    assert "Expected source refresh" in state["_controls"]["left_pane"].children[0].value
-    assert "No refresh expected" in state["_controls"]["left_pane"].children[0].value
+
 
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
@@ -2239,12 +2118,11 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         for message in state["_validation_errors"].values()
     )
 
-    freshness["parameters"][0].value = "recurring"
+    freshness["parameters"][0].value = "column"
     freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][2].value = "1"
-    freshness["parameters"][3].value = "days"
-    freshness["parameters"][4].value = "6"
-    freshness["parameters"][5].value = "hours"
+    freshness["parameters"][0].value = "column"
+    freshness["parameters"][2].value = "6"
+    freshness["parameters"][3].value = "hours"
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -2252,10 +2130,8 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "freshness"
     )
     assert module._parameters(staged) == {
-        "refresh_expectation": "recurring",
+        "evidence_method": "column", "evaluation_scope": "full_dataset",
         "freshness_column": "column_1",
-        "expected_refresh_frequency": 1.0,
-        "expected_refresh_unit": "days",
         "maximum_age": 6.0,
         "maximum_age_unit": "hours",
     }
@@ -3165,20 +3041,9 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
-    freshness_layout = controls["table_guardrails"]["freshness"]["display"][1]
-    assert len(freshness_layout.children) == 4
-    assert [len(row.children) for row in freshness_layout.children] == [2, 2, 3, 3]
-    assert all(
-        str(getattr(child, "value", "") or "").strip()
-        for row in freshness_layout.children
-        for child in row.children[:1]
-    )
-
-    processing_hint = controls["processing_source"]
-    processing_section = controls["right_pane"].children[3]
-    processing_hint_row = processing_section.children[2]
-    assert processing_hint_row.children == (processing_hint,)
-    assert processing_hint_row.layout.align_items == "flex-start"
+    freshness = controls["table_guardrails"]["freshness"]
+    assert len(freshness["parameters"]) == 5
+    assert {"metadata", "column"} <= {value for label, value in freshness["parameters"][0].options}
 
     column_definition = controls["column_definition"].children[1]
     assert column_definition.layout.grid_template_columns == "120px minmax(240px, 1fr)"
@@ -3273,7 +3138,6 @@ def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime
 
     controls = state["_controls"]
     assert "partition_column" not in controls
-    assert controls["watermark_column"].value == ""
 
 
 def test_stale_classification_value_falls_back_to_valid_dropdown_option():
@@ -3404,11 +3268,11 @@ def test_sidebar_paths_show_read_only_shared_rule_details(widget_runtime):
     assert "Source Drift" not in read and "Source Drift" not in write
     assert "Sensitive Data · 1 treatment" not in read and "Sensitive Data · 1 treatment" in write
     for content in (read, write):
-        assert "Grain · column_0 + column_1 · Block" in content
+        assert "GRAIN — Uniqueness · column_0 + column_1 · Block" in content
         assert "Schema · 1 required column" in content
         assert "column_0: long" in content and "column_1: timestamp" in content
         assert "extra columns" in content
-        assert "Data Quality · 3 rules across 2 columns" in content
+        assert "Data Quality · 4 rules across 2 columns" in content
         assert "Accepted failure rate %" in content
         assert "Operator" in content
     assert "treatment must succeed" in write
@@ -3421,7 +3285,7 @@ def test_sidebar_paths_show_read_only_shared_rule_details(widget_runtime):
     assert "State:</b> Enabled" in sidebar and "Profile" not in sidebar
     controls["grain_policy"].value = "Warn"
     for group in controls["sidebar_groups"].values():
-        assert "Grain · column_0 + column_1 · Warn" in _sidebar_text(group)
+        assert "GRAIN — Uniqueness · column_0 + column_1 · Warn" in _sidebar_text(group)
     assert len([r for r in state["current"]["guardrails"] if r.get("guardrail_type") == "grain"]) == 1
     assert "sidebar_rule_buttons" not in controls
     assert "_guardrail_editor_target" not in state
@@ -3457,7 +3321,7 @@ def test_sidebar_unsaved_parameters_types_counts_and_reopen(widget_runtime):
     controls["save_data_contract"].click()
     reopened = widget_runtime["open"]()["_controls"]
     assert "Accepted failure rate %:</b> 17.0" in _sidebar_text(reopened["sidebar_groups"]["write"])
-    assert "Grain · column_0 · Block" in _sidebar_text(reopened["sidebar_groups"]["read"])
+    assert "GRAIN — Uniqueness · column_0 · Block" in _sidebar_text(reopened["sidebar_groups"]["read"])
 
 
 def test_sidebar_shows_incomplete_working_sensitive_data_configuration(widget_runtime):
@@ -3518,12 +3382,12 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
     assert state["table_id"] == "inventory", state["message"]
     assert controls["grain_enabled"].value is False
     assert controls["row_key_columns"].value == ()
-    assert "Grain ·" not in _sidebar_text(controls["guardrail_sidebar"])
+    assert "GRAIN — Uniqueness ·" not in _sidebar_text(controls["guardrail_sidebar"])
     assert "Old grain" not in _sidebar_text(controls["guardrail_sidebar"])
     assert first_sidebar is not controls["guardrail_sidebar"]
     controls["row_key_columns"].value = ("column_1",)
     controls["grain_enabled"].value = True
-    assert "Grain · column_1 · Block" in _sidebar_text(controls["guardrail_sidebar"])
+    assert "GRAIN — Uniqueness · column_1 · Block" in _sidebar_text(controls["guardrail_sidebar"])
     assert "sidebar_rule_buttons" not in controls
     assert len(controls["right_pane"].children) > 1
     assert "inventory" in controls["left_pane"].children[0].value
@@ -3559,15 +3423,7 @@ def test_sidebar_has_no_duplicate_configuration_buttons(widget_runtime):
     assert len(controls["guardrail_sidebar"].children) == 2
 
 
-def test_sidebar_static_freshness_describes_expectation_without_claiming_execution(widget_runtime):
-    """Static Freshness remains configured but does not imply timestamp-age evaluation."""
-    controls = widget_runtime["open"]()["_controls"]
-    controls["table_guardrails"]["freshness"]["parameters"][0].value = "static"
-    read = _sidebar_text(controls["sidebar_groups"]["read"])
-    assert "No refresh expected" in read
-    assert "no age validation" in read
-    assert "latest timestamp relative to run time" not in read
-    assert "Passed" not in read and "Skipped" not in read
+
 
 
 @pytest.mark.parametrize("finish", ["select_key", "disable_grain"])
@@ -4434,7 +4290,7 @@ def test_invalid_unstaged_edits_require_discard_confirmation(widget_runtime, act
     """Invalid text is still unsaved work, even before a valid record can be staged."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][4]
+    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][2]
     maximum_age.value = "invalid age"
     assert not state["dirty"]
     assert "table.freshness" in state["_validation_errors"]
@@ -4451,7 +4307,7 @@ def test_notebook_actions_cannot_bypass_editor_validation(widget_runtime, action
     """Returned notebook actions enforce the same validation as the visible buttons."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    controls["table_guardrails"]["freshness"]["parameters"][4].value = "invalid age"
+    controls["table_guardrails"]["freshness"]["parameters"][2].value = "invalid age"
     with pytest.raises(ValueError, match="Complete the current draft configuration"):
         state[action]()
     assert widget_runtime["calls"]["draft"] == []

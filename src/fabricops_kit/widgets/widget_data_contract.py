@@ -1038,9 +1038,7 @@ def widget_data_contract(
     and governed pipeline execution still require a configured environment mapping.
     Save overwrites the complete canonical JSON for the selected draft version, then reloads
     that exact version. A new draft is seeded from the previous frozen version when one exists.
-    Processing prefers the current Engineering Catalogue scan, otherwise the previous contract,
-    then defaults to overwrite. Catalogue-resolved processing is read-only; inherited, defaulted,
-    or manually saved processing remains editable until the draft is frozen.
+    Engineering processing is reviewed through Pipeline Activation and is not authored in contracts.
     Profile context remains read-only and is never added
     to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
     optional enforcement are independent. Enabling Grain defaults to Block.
@@ -1486,30 +1484,6 @@ def widget_data_contract(
         state["dirty"] = True
         refresh_manifest()
         return records
-
-    def stage_processing(processing: dict[str, Any]) -> dict[str, Any]:
-        """Stage processing inside the mutable draft JSON."""
-        current = state.get("current")
-        if not current or str(current["contract"].get("status") or "").lower() != "draft":
-            raise ValueError("Only a draft Data Contract version can edit processing.")
-        normalized = contracts.validated_processing(dict(processing))
-        payload = json.loads(
-            str(current["contract"].get("contract_payload_json") or "{}")
-        )
-        table_payload = payload.setdefault("table", {})
-        source = str(table_payload.get("processing_source") or "default")
-        if source == "catalogue" and normalized != contracts.contract_processing(current["contract"]):
-            raise ValueError("Catalogue-resolved processing is read-only in this Data Contract.")
-        if normalized != contracts.contract_processing(current["contract"]):
-            source = "manual"
-        table_payload["processing"] = normalized
-        table_payload["processing_source"] = source
-        current["contract"]["contract_payload_json"] = json.dumps(
-            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-        )
-        state["dirty"] = True
-        refresh_manifest()
-        return normalized
 
     @busy_action("Saving Data Contract…")
     def save_data_contract_session(*, return_to_selector_after: bool = True) -> None:
@@ -1968,8 +1942,6 @@ def widget_data_contract(
                 for marker in ("date", "timestamp", "datetime")
             )
         ]
-        field_layout = widgets.Layout(width="100%", max_width="560px", min_width="0")
-        compact_field_layout = widgets.Layout(width="360px", max_width="100%", min_width="0")
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled"))
         top_nav.options = _TABS
@@ -2181,88 +2153,6 @@ def widget_data_contract(
         accept_grain.on_click(accept_grain_ai)
         render_grain_profile_evidence()
 
-        processing = contracts.contract_processing(row)
-        processing_source = contracts.contract_processing_source(row)
-        processing_locked = processing_source == "catalogue"
-        load_strategy_control = widgets.Dropdown(
-            options=("overwrite", "append_all", "append_new_only", "scd1", "scd2"),
-            value=str(processing.get("load_strategy") or "overwrite"),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Load strategy"),
-        )
-        load_strategy_control.layout.close()
-        load_strategy_control.layout = compact_field_layout
-        processing_source_labels = {
-            "catalogue": "Resolved from Engineering Catalogue · read-only",
-            "previous_contract": "Inherited from the previous Data Contract version",
-            "default": "No scan or prior contract value found · defaulted to overwrite",
-            "manual": "Saved on this Data Contract draft",
-        }
-        processing_source_hint = widgets.HTML(
-            "<span style='color:#666;font-size:12px;'>"
-            + html.escape(processing_source_labels.get(processing_source, "Saved on this Data Contract"))
-            + "</span>"
-        )
-        watermark_column_control = widgets.Dropdown(
-            options=["", *column_names],
-            value=_valid_dropdown_value(["", *column_names], processing.get("watermark_column"), fallback=""),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Watermark column"),
-        )
-        key_columns_control = widgets.SelectMultiple(
-            rows=5, options=column_names,
-            value=tuple(value for value in processing.get("key_columns", []) if value in column_names),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Key columns"),
-        )
-        key_columns_control.layout.height = "auto"
-        key_columns_control.layout.max_height = "220px"
-        key_columns_control.add_class("fabricops-contract-list")
-        effective_column_control = widgets.Dropdown(
-            options=["", *column_names],
-            value=_valid_dropdown_value(["", *column_names], processing.get("effective_column"), fallback=""),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Effective column"),
-        )
-        tracked_columns_control = widgets.SelectMultiple(
-            rows=5, options=column_names,
-            value=tuple(value for value in processing.get("tracked_columns", []) if value in column_names),
-            disabled=not editable or processing_locked,
-            **shared.widget_common(widgets, "Tracked columns"),
-        )
-        tracked_columns_control.layout.height = "auto"
-        tracked_columns_control.layout.max_height = "220px"
-        tracked_columns_control.add_class("fabricops-contract-list")
-        processing_parameter_controls = (
-            watermark_column_control, key_columns_control, effective_column_control,
-            tracked_columns_control,
-        )
-
-        def update_processing_controls(_change: dict[str, Any] | None = None) -> None:
-            strategy = str(load_strategy_control.value or "overwrite")
-            watermark_column_control.layout.display = "" if strategy in {"append_all", "append_new_only", "scd1", "scd2"} else "none"
-            key_columns_control.layout.display = "" if strategy in {"scd1", "scd2"} else "none"
-            effective_column_control.layout.display = "" if strategy == "scd2" else "none"
-            tracked_columns_control.layout.display = "" if strategy == "scd2" else "none"
-
-        def build_processing() -> dict[str, Any]:
-            strategy = str(load_strategy_control.value or "").strip()
-            value: dict[str, Any] = {"load_strategy": strategy}
-            if strategy in {"append_all", "append_new_only", "scd1", "scd2"}:
-                watermark = str(watermark_column_control.value or "").strip()
-                if watermark:
-                    value["watermark_column"] = watermark
-            if strategy in {"scd1", "scd2"}:
-                value["key_columns"] = [str(item) for item in key_columns_control.value]
-            if strategy == "scd2":
-                value["effective_column"] = str(effective_column_control.value or "").strip()
-                if tracked_columns_control.value:
-                    value["tracked_columns"] = [str(item) for item in tracked_columns_control.value]
-            return contracts.validated_processing(value)
-
-        load_strategy_control.observe(update_processing_controls, names="value")
-        update_processing_controls()
-
         def render_table_ai() -> None:
             if state["_ai_unavailable"]:
                 table_description_ai.value = f"<p>{state['_ai_unavailable']}</p>"
@@ -2348,254 +2238,47 @@ def widget_data_contract(
         rerun_table_description.on_click(lambda _button: run_table_ai(force=True))
 
         table_rules: dict[str, Any] = {}
-        for kind, title in (("freshness", "Freshness"),):
-            existing = next((r for r in guardrails if str(r.get("guardrail_type") or "").lower() == kind), {})
-            existing_parameters = _parameters(existing)
-            enabled = widgets.Checkbox(value=bool(existing and existing.get("is_active", True)), description="Enabled", disabled=not editable)
-            block = widgets.Checkbox(value=str(existing.get("action") or "Warn") == "Block", description="Block on failure", disabled=not editable)
-            parameter_controls: list[Any] = []
-            display_controls: list[Any] = []
-            if kind == "freshness":
-                refresh_expectation = widgets.Dropdown(
-                    options=[
-                        ("Recurring", "recurring"),
-                        ("No refresh expected", "static"),
-                    ],
-                    value=(
-                        "static"
-                        if str(existing.get("rule_type") or "").lower() == "skip"
-                        or str(existing_parameters.get("refresh_expectation") or "").lower() == "static"
-                        else "recurring"
-                    ),
-                    disabled=not editable,
-                    **shared.widget_common(widgets, "Refresh expectation"),
-                )
-                refresh_expectation.description = ""
-                refresh_expectation.layout.close()
-                refresh_expectation.layout = field_layout
-                configured_freshness_column = str(
-                    existing_parameters.get("freshness_column") or ""
-                )
-                freshness_column_options = [
-                    ("Select timestamp column", ""),
-                    *((name, name) for name in temporal_column_names),
-                ]
-                freshness_column = widgets.Dropdown(
-                    options=freshness_column_options,
-                    disabled=not editable or not temporal_column_names,
-                    **shared.widget_common(widgets, "Timestamp column"),
-                )
-                _set_selection_value(
-                    freshness_column,
-                    (
-                        configured_freshness_column
-                        if configured_freshness_column in temporal_column_names
-                        else ""
-                    ),
-                    control_name="freshness_column",
-                    table_name=str(table.get("table_name") or ""),
-                )
-                freshness_column.description = ""
-                freshness_column.layout.close()
-                freshness_column.layout = field_layout
-                expected_refresh_frequency = widgets.Text(continuous_update=False,
-                    value=str(existing_parameters.get("expected_refresh_frequency") or ""),
-                    disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="100px"),
-                )
-                expected_refresh_unit = widgets.Dropdown(
-                    options=("minutes", "hours", "days"),
-                    value=str(existing_parameters.get("expected_refresh_unit") or "days"),
-                    disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="130px", min_width="110px"),
-                )
-                maximum_age = widgets.Text(continuous_update=False,
-                    value=str(existing_parameters.get("maximum_age") or ""),
-                    disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="150px", min_width="100px"),
-                )
-                maximum_age_unit = widgets.Dropdown(
-                    options=("minutes", "hours", "days"),
-                    value=str(existing_parameters.get("maximum_age_unit") or "days"),
-                    disabled=not editable or not temporal_column_names,
-                    layout=widgets.Layout(width="130px", min_width="110px"),
-                )
-                def freshness_row(label: str, *controls: Any) -> Any:
-                    row = widgets.HBox(
-                        [
-                            widgets.HTML(
-                                f"<div style='padding-top:7px;'>{html.escape(label)}</div>",
-                                layout=widgets.Layout(width="140px", min_width="140px"),
-                            ),
-                            *controls,
-                        ],
-                        layout=widgets.Layout(
-                            width="100%", min_width="0", gap="8px",
-                            align_items="flex-start", overflow="visible",
-                        ),
-                    )
-
-                    row.add_class("fabricops-contract-compound-field")
-                    return row
-
-                freshness_grid = widgets.VBox(
-                    [
-                        freshness_row("Refresh expectation", refresh_expectation),
-                        freshness_row("Timestamp column", freshness_column),
-                        freshness_row(
-                            "Expected refresh",
-                            expected_refresh_frequency,
-                            expected_refresh_unit,
-                        ),
-                        freshness_row("Maximum age", maximum_age, maximum_age_unit),
-                    ],
-                    layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
-                )
-                freshness_rule_preview = widgets.HTML()
-                freshness_unavailable = widgets.HTML()
-
-                def refresh_freshness_rule_preview(
-                    _change: dict[str, Any] | None = None,
-                    *,
-                    enabled_control: Any = enabled,
-                    block_control: Any = block,
-                ) -> None:
-                    static_source = str(refresh_expectation.value or "") == "static"
-                    freshness_column.disabled = not editable or static_source or not temporal_column_names
-                    expected_refresh_frequency.disabled = not editable or static_source or not temporal_column_names
-                    expected_refresh_unit.disabled = not editable or static_source or not temporal_column_names
-                    maximum_age.disabled = not editable or static_source or not temporal_column_names
-                    maximum_age_unit.disabled = not editable or static_source or not temporal_column_names
-                    enabled_control.disabled = not editable
-                    block_control.disabled = not editable or static_source
-                    if static_source:
-                        freshness_unavailable.value = ""
-                        freshness_rule_preview.value = (
-                            "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
-                            "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
-                            "<b>ⓘ Source expectation</b><br>"
-                            "No refresh is expected for this source. Freshness age checks are skipped."
-                            "</div>"
-                        )
-                        return
-                    if not temporal_column_names:
-                        freshness_unavailable.value = (
-                            "<div style='color:#b42318;font-size:12px;font-weight:600;"
-                            "margin:4px 0 8px;'>No date or datetime columns are available. "
-                            "Recurring freshness cannot be configured for this table.</div>"
-                        )
-                        freshness_rule_preview.value = ""
-                        return
-                    freshness_unavailable.value = ""
-                    selected = str(freshness_column.value or "").strip()
-                    raw_expected = str(expected_refresh_frequency.value or "").strip()
-                    expected_unit = str(expected_refresh_unit.value or "days")
-                    raw_age = str(maximum_age.value or "").strip()
-                    unit = str(maximum_age_unit.value or "days")
-                    if not enabled.value or not selected or not raw_expected or not raw_age:
-                        freshness_rule_preview.value = ""
-                        return
-                    try:
-                        expected = float(raw_expected)
-                        age = float(raw_age)
-                    except ValueError:
-                        freshness_rule_preview.value = ""
-                        return
-                    if expected <= 0 or age <= 0:
-                        freshness_rule_preview.value = ""
-                        return
-                    shown_age = str(int(age)) if age.is_integer() else str(age)
-                    sample_run = datetime(2026, 1, 2, 23, 0)
-                    if unit == "minutes":
-                        cutoff = sample_run - timedelta(minutes=age)
-                    elif unit == "hours":
-                        cutoff = sample_run - timedelta(hours=age)
-                    else:
-                        cutoff = sample_run - timedelta(days=age)
-                    freshness_rule_preview.value = (
-                        "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
-                        "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
-                        "<b>ⓘ Rule</b><br>"
-                        f"Expected source refresh: <b>{html.escape(str(int(expected)) if expected.is_integer() else str(expected))} "
-                        f"{html.escape(expected_unit)}</b>.<br>"
-                        f"The latest <code>{html.escape(selected)}</code> must be within "
-                        f"<b>{html.escape(shown_age)} {html.escape(unit)}</b> of the pipeline run."
-                        "<br><span style='color:#667085;'>Example: if the pipeline runs at "
-                        "2 Jan 2026 23:00, "
-                        f"<code>MAX({html.escape(selected)})</code> must be on or after "
-                        f"{cutoff.day} {cutoff.strftime('%b %Y %H:%M')}.</span></div>"
-                    )
-
-                for freshness_control in (
-                    enabled, refresh_expectation, freshness_column,
-                    expected_refresh_frequency, expected_refresh_unit,
-                    maximum_age, maximum_age_unit
-                ):
-                    freshness_control.observe(refresh_freshness_rule_preview, names="value")
-                refresh_freshness_rule_preview()
-                parameter_controls = [
-                    refresh_expectation,
-                    freshness_column,
-                    expected_refresh_frequency,
-                    expected_refresh_unit,
-                    maximum_age,
-                    maximum_age_unit,
-                ]
-                display_controls = [
-                    freshness_unavailable,
-                    freshness_grid,
-                    freshness_rule_preview,
-                ]
-            def build_table_rule_record(
-                *, rule_kind: str = kind,
-                enabled_control: Any = enabled, block_control: Any = block,
-                controls: list[Any] = parameter_controls, rule_title: str = title,
-            ) -> dict[str, Any] | None:
-                old = next((
-                    rule for rule in session_guardrails()
-                    if str(rule.get("guardrail_type") or "").lower() == rule_kind
-                    and not str(rule.get("column_id") or "")
-                ), {})
-                if not enabled_control.value and not old:
-                    return None
-                if not enabled_control.value:
-                    parameters = _parameters(old)
-                else:
-                    expectation = str(controls[0].value or "recurring")
-                    if expectation == "static":
-                        parameters = {"refresh_expectation": "static"}
-                    else:
-                        if not temporal_column_names:
-                            raise ValueError(
-                                "Recurring Freshness requires at least one date or datetime column."
-                            )
-                        raw_expected = str(controls[2].value or "").strip()
-                        raw_age = str(controls[4].value or "").strip()
-                        parameters = {
-                            "refresh_expectation": "recurring",
-                            "freshness_column": str(controls[1].value or "").strip(),
-                            "expected_refresh_frequency": float(raw_expected),
-                            "expected_refresh_unit": str(controls[3].value or "days"),
-                            "maximum_age": float(raw_age),
-                            "maximum_age_unit": str(controls[5].value or "days"),
-                        }
-                if enabled_control.value and any(value in {"", None} for value in parameters.values()):
-                    raise ValueError(f"{rule_title} requires all governed configuration fields.")
-                return guardrail_record(
-                    rule_kind,
-                    "skip" if rule_kind == "freshness" and parameters.get("refresh_expectation") == "static"
-                    else rule_kind,
-                    parameters,
-                    existing=old,
-                    action="Block" if block_control.value else "Warn",
-                    active=enabled_control.value,
-                )
-
-            table_rules[kind] = {
-                "enabled": enabled, "parameters": parameter_controls,
-                "display": display_controls,
-                "block": block, "build_record": build_table_rule_record,
-            }
+        existing_freshness = next((r for r in guardrails if r.get("guardrail_type") == "freshness"), {})
+        freshness_parameters = _parameters(existing_freshness)
+        freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
+        freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
+        freshness_method = widgets.Dropdown(options=[("Select evidence method", ""), ("Metadata-based", "metadata"), ("Column-based", "column")], value=freshness_parameters.get("evidence_method", ""), disabled=not editable, **shared.widget_common(widgets, "Evidence method"))
+        freshness_column = widgets.Dropdown(options=[("Select timestamp column", ""), *[(name, name) for name in temporal_column_names]], value=freshness_parameters.get("freshness_column", "") if freshness_parameters.get("freshness_column", "") in temporal_column_names else "", disabled=not editable, **shared.widget_common(widgets, "Timestamp column"))
+        freshness_age = widgets.Text(value=str(freshness_parameters.get("maximum_age", "")), continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Maximum age"))
+        freshness_unit = widgets.Dropdown(options=["minutes", "hours", "days"], value=freshness_parameters.get("maximum_age_unit", "days"), disabled=not editable, **shared.widget_common(widgets, "Age unit"))
+        freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value=freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable, **shared.widget_common(widgets, "Evaluation scope"))
+        freshness_hint = widgets.HTML()
+        def refresh_freshness_controls(_change=None):
+            metadata = freshness_method.value == "metadata"
+            freshness_column.layout.display = "none" if metadata else ""
+            freshness_column.disabled = not editable or metadata
+            if metadata:
+                freshness_scope.value = "full_dataset"
+            freshness_scope.disabled = not editable or metadata
+            freshness_hint.value = (
+                "Physical update metadata only. Unsupported or inaccessible metadata is reported as unavailable. File modification time is not business-event time."
+                if metadata else "Evaluate the latest configured timestamp in the selected scope. Column aggregation may scan data. Empty or invalid evidence is reported explicitly."
+            )
+        freshness_method.observe(refresh_freshness_controls, names="value")
+        refresh_freshness_controls()
+        def build_freshness_record():
+            old = next((r for r in session_guardrails() if r.get("guardrail_type") == "freshness"), {})
+            if not freshness_enabled.value and not old:
+                return None
+            parameters = _parameters(old)
+            if freshness_enabled.value:
+                parameters = {"evidence_method": freshness_method.value, "evaluation_scope": freshness_scope.value,
+                    "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
+                if freshness_method.value == "column":
+                    parameters["freshness_column"] = freshness_column.value
+                from fabricops_kit.pipeline.shared import validate_freshness_parameters
+                validate_freshness_parameters(parameters)
+            return guardrail_record("freshness", "freshness", parameters, existing=old,
+                action="Block" if freshness_block.value else "Warn", active=freshness_enabled.value)
+        table_rules["freshness"] = {"enabled": freshness_enabled, "block": freshness_block,
+            "parameters": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope],
+            "display": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope, freshness_hint],
+            "build_record": build_freshness_record}
         def derive_table_classification() -> str:
             """Return the highest ranked classification among columns retained by the write."""
             rank = {value: index for index, value in enumerate(classification_levels)}
@@ -2698,15 +2381,6 @@ def widget_data_contract(
                 set_validation_error("table.row_key", exc)
                 render_table_summary()
 
-        def sync_table_processing(_change: dict[str, Any] | None = None) -> None:
-            if not editable:
-                return
-            try:
-                stage_processing(build_processing())
-                set_validation_error("table.processing")
-            except (TypeError, ValueError, RuntimeError) as exc:
-                set_validation_error("table.processing", exc)
-
         def sync_table_rule(
             rule_kind: str, _change: dict[str, Any] | None = None,
         ) -> None:
@@ -2736,8 +2410,6 @@ def widget_data_contract(
                 grain_policy.value = "Block"
             sync_row_key()
         grain_enabled.observe(grain_enforcement_changed, names="value")
-        for control in (load_strategy_control, *processing_parameter_controls):
-            control.observe(sync_table_processing, names="value")
         for rule_kind, rule_controls in table_rules.items():
             rule_controls["enabled"].observe(
                 lambda change, kind=rule_kind: sync_table_rule(kind, change), names="value"
@@ -3045,6 +2717,9 @@ def widget_data_contract(
                         for name in row_key_columns.value
                     ]
                     detail = [
+                        ("Managed rule", "GRAIN — Uniqueness · " + " + ".join(affected_names) + " · " + (policy if enabled else "Not enforced")),
+                        ("Policy", policy),
+                        ("Edit", "Table tab · Grain & Row Key"),
                         ("State", "Enabled" if enabled else "Not enforced"),
                         ("Key", affected_names or "Not selected"),
                         (
@@ -3102,7 +2777,7 @@ def widget_data_contract(
             def group(role, title, subtitle, kinds):
                 sections = []
                 for kind in kinds:
-                    rules = [r for r in active if r.get("guardrail_type") == kind]
+                    rules = [r for r in active if r.get("guardrail_type") == kind or kind == "data_quality" and r.get("guardrail_type") == "grain"]
                     if not rules:
                         continue
                     if kind == "schema":
@@ -3122,13 +2797,13 @@ def widget_data_contract(
                         summary = f"{len(rules)} treatment{'s' if len(rules) != 1 else ''}"
                     else:
                         params = _parameters(rules[0])
-                        expectation = "No refresh expected" if rules[0].get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else f"{params.get('freshness_column', 'Timestamp')} · ≤ {params.get('maximum_age', '?')} {params.get('maximum_age_unit', '')}"
+                        expectation = "No refresh expected" if rules[0].get("rule_type") == "skip" or params.get("refresh_expectation") == "static" else f"{params.get('evidence_method', 'Method required')} · {params.get('evaluation_scope', 'Scope required')} · {params.get('freshness_column', 'Physical update')} · ≤ {params.get('maximum_age', '?')} {params.get('maximum_age_unit', '')}"
                         summary = expectation + " · " + str(rules[0].get("action") or "Warn")
                     key = (role, kind)
                     content = widgets.VBox(
                         [
                             rule_content(
-                                kind, rule, role=role, show_summary=len(rules) > 1,
+                                "grain" if rule.get("guardrail_type") == "grain" else kind, rule, role=role, show_summary=len(rules) > 1,
                             )
                             for rule in rules
                         ],
@@ -3142,8 +2817,8 @@ def widget_data_contract(
                 return box
 
             guardrail_sidebar.children = (
-                group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "grain", "data_quality")),
-                group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "grain", "data_quality")),
+                group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "data_quality")),
+                group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "data_quality")),
             )
             sidebar_snapshot["signature"] = signature
             close_sidebar_widgets(previous)
@@ -3155,26 +2830,9 @@ def widget_data_contract(
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
-            source_refresh_expectation = "Not defined"
+            source_refresh_expectation = "Not configured"
             if freshness_controls["enabled"].value:
-                freshness_parameters = freshness_controls["parameters"]
-                expectation_mode = str(freshness_parameters[0].value or "recurring")
-                if expectation_mode == "static":
-                    source_refresh_expectation = "No refresh expected"
-                else:
-                    frequency = str(freshness_parameters[2].value or "").strip()
-                    unit = str(freshness_parameters[3].value or "").strip()
-                    if frequency and unit:
-                        try:
-                            numeric_frequency = float(frequency)
-                            shown_frequency = (
-                                str(int(numeric_frequency))
-                                if numeric_frequency.is_integer()
-                                else str(numeric_frequency)
-                            )
-                        except ValueError:
-                            shown_frequency = frequency
-                        source_refresh_expectation = f"{shown_frequency} {unit}"
+                source_refresh_expectation = f"{freshness_method.value} · {freshness_scope.value} · {freshness_age.value} {freshness_unit.value}"
 
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
@@ -3200,9 +2858,6 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:11px;'>Row Key</div>"
                 f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
                 "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Load strategy</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(load_strategy_control.value or 'Not configured').upper())}</div></div>"
-                "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
                 f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
                 "</details>"
@@ -3218,7 +2873,6 @@ def widget_data_contract(
         table_grain.observe(render_table_summary, names="value")
         row_key_columns.observe(render_table_summary, names="value")
         table_classification.observe(render_table_summary, names="value")
-        load_strategy_control.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
         for freshness_control in table_rules["freshness"]["parameters"]:
@@ -3263,10 +2917,6 @@ def widget_data_contract(
                 set_status(_format_widget_exception(exc, phase="table context"), error=True)
 
         load_table_context_button.on_click(load_table_context_clicked)
-        processing_hint_row = widgets.VBox(
-            [processing_source_hint],
-            layout=widgets.Layout(width="100%", min_width="0", align_items="flex-start"),
-        )
         def definition_section(
             title: str,
             classification: Any,
@@ -3489,15 +3139,6 @@ def widget_data_contract(
         table_right = (
             grain_definition,
             table_definition,
-            shared.form_section(
-                widgets,
-                title="Processing",
-                children=[
-                    load_strategy_control,
-                    processing_hint_row,
-                    *processing_parameter_controls,
-                ],
-            ),
             guardrail_section(
                 "Freshness",
                 banner_title="Applies when this table is used as a source in a downstream pipeline.",
@@ -3507,8 +3148,7 @@ def widget_data_contract(
                 ),
                 description=(
                     "Check whether the source has received sufficiently recent data. "
-                    "Freshness uses the latest value in the selected timestamp column "
-                    "relative to the pipeline run time."
+                    "Choose physical update metadata or a timestamp column and the scope to evaluate."
                 ),
                 header_controls=[
                     table_rules["freshness"]["enabled"],
@@ -6863,13 +6503,6 @@ def widget_data_contract(
                     "row to create a new rule. "
                     "AI drafts remain proposals until you review and add them.</div>"
                 ),
-                widgets.HTML(
-                    "<div style='display:grid;grid-template-columns:100px 1fr 130px;"
-                    "gap:10px;padding:6px 10px;background:#f1edf8;color:#526477;"
-                    "font-size:11px;font-weight:700;border:1px solid #d8cfea;"
-                    "border-radius:6px 6px 0 0;'>"
-                    "<span>Status</span><span>Rule and columns</span><span>Action</span></div>"
-                ),
                 business_saved,
             ],
         )
@@ -6937,7 +6570,19 @@ def widget_data_contract(
         elif business_saved.value:
             set_rule_workspace("review")
 
-        business_left = (current_rules_section,)
+        managed_grain = widgets.HTML()
+        def render_managed_grain(_change=None):
+            keys = " + ".join(str(key) for key in row_key_columns.value) or "Key required"
+            status = "Enabled" if grain_enabled.value else "Not enforced"
+            managed_grain.value = (
+                "<b>GRAIN — Uniqueness</b><br>"
+                + html.escape(keys) + " · " + html.escape(str(grain_policy.value)) + " · " + status
+                + "<br>Edit the row key and enforcement in the Table tab. Non-null keys are required."
+            ) if grain_enabled.value else ""
+        for control in (row_key_columns, grain_enabled, grain_policy):
+            control.observe(render_managed_grain, names="value")
+        render_managed_grain()
+        business_left = (managed_grain, current_rules_section,)
         business_right = (rule_workspace_section,)
         view_content["Data Quality"] = (business_left, business_right)
 
@@ -6950,15 +6595,6 @@ def widget_data_contract(
             changes: list[str] = []
             old_table = dict(saved_payload.get("table") or {})
             new_table = dict(payload.get("table") or {})
-            old_processing = old_table.get("processing") or {}
-            new_processing = new_table.get("processing") or {}
-            if old_processing != new_processing:
-                changes.append(
-                    "<li><b>Processing</b> changed from "
-                    f"<code>{html.escape(json.dumps(old_processing, sort_keys=True))}</code> to "
-                    f"<code>{html.escape(json.dumps(new_processing, sort_keys=True))}</code></li>"
-                )
-
             def enrichment_map(doc: dict[str, Any]) -> dict[tuple[str, str], str]:
                 result: dict[tuple[str, str], str] = {}
                 enrichment = doc.get("enrichment") or {}
@@ -7236,6 +6872,7 @@ def widget_data_contract(
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
+            "managed_grain": managed_grain,
             "table_grain": table_grain, "row_key_columns": row_key_columns,
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
@@ -7243,13 +6880,6 @@ def widget_data_contract(
             "load_table_context": load_table_context_button,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
-            "load_strategy": load_strategy_control,
-            "processing_source": processing_source_hint,
-            "processing_parameters": processing_parameter_controls,
-            "watermark_column": watermark_column_control,
-            "key_columns": key_columns_control,
-            "effective_column": effective_column_control,
-            "tracked_columns": tracked_columns_control,
             "table_description_ai": table_description_ai,
             "accept_table_description": accept_table_description,
             "rerun_table_description": rerun_table_description,

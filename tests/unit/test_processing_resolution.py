@@ -1,132 +1,29 @@
-"""Tests for workspace_id-aware processing definition resolution."""
-# ruff: noqa: D101, D102, D103, D107
-
-from __future__ import annotations
-
-from types import SimpleNamespace
-
+"""Engineering-owned processing validation has no Data Contract dependency."""
 import pytest
-
-from fabricops_kit.pipeline import shared
-
-pytestmark = pytest.mark.unit
+from fabricops_kit.pipeline.shared import validated_processing, validated_pipeline_processing
 
 
-class Frame:
-    def __init__(self, rows):
-        self.rows = rows
-
-    def collect(self):
-        return [SimpleNamespace(**row) for row in self.rows]
-
-
-def contract(strategy="scd1", *, version=3):
-    processing = {"load_strategy": strategy}
-    if strategy == "scd1":
-        processing["key_columns"] = ["student_id"]
-    return {
-        "contract_id": "contract",
-        "contract_version": version,
-        "table_id": "students",
-        "contract_payload": {"table": {
-            "table_id": "students",
-            "processing": processing,
-            "writer": {"notebook_id": "notebook-1", "notebook_name": "02_pipeline"},
-        }},
-    }
-
-
-def catalogue(strategy="overwrite"):
-    return Frame([{
-        "metadata_level": "table", "table_id": "students", "workspace_id": "dev",
-        "is_active": True, "load_strategy": strategy,
-        "load_strategy_parameters_json": {},
-    }])
-
-
-def test_development_uses_current_notebook_authoring_without_catalogue(monkeypatch):
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    resolved = shared.resolve_table_processing_definition(
-        object(), "dev", "students", context={"_pipeline_contracts": {"students": None}}, authored_processing={"load_strategy": "overwrite"}
-    )
-    assert resolved == {
-        "load_strategy": "overwrite",
-        "source": "current_authoring",
-        "processing_mode": "uncontracted",
-        "authored_processing": {"load_strategy": "overwrite"},
-        "governed_processing": None,
-    }
-
-
-def test_development_override_uses_frozen_contract(monkeypatch):
-    monkeypatch.setattr(shared, "resolve_data_contract_version", lambda *args, **kwargs: contract())
-    resolved = shared.resolve_table_processing_definition(
-        object(), "dev", "students",
-        context={"_pipeline_contracts": {"students": contract()}},
-        authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
-    )
-    assert resolved["load_strategy"] == "scd1"
-    assert resolved["source"] == "data_contract"
-    assert resolved["contract_version"] == 3
-    assert resolved["processing_mode"] == "contract_governed"
-    assert resolved["authored_processing"] == resolved["governed_processing"]
-
-
-@pytest.mark.parametrize(
-    "authored",
-    [
-        {"load_strategy": "overwrite"},
-        {"load_strategy": "scd1", "key_columns": ["other_id"]},
-    ],
-)
-def test_development_override_rejects_engineering_processing_drift(monkeypatch, authored):
-    monkeypatch.setattr(shared, "resolve_data_contract_version", lambda *args, **kwargs: contract())
-    with pytest.raises(ValueError, match="Processing mismatch detected.*Engineering proposes"):
-        shared.resolve_table_processing_definition(
-            object(), "dev", "students",
-            context={"_pipeline_contracts": {"students": contract()}},
-            authored_processing=authored,
-        )
-
-
-def test_development_current_authoring_requires_notebook_definition():
-    with pytest.raises(ValueError, match="authored processing"):
-        shared.resolve_table_processing_definition(object(), "dev", "students", context={"_pipeline_contracts": {"students": None}})
-
-
-def test_production_uses_active_contract_and_never_reads_catalogue(monkeypatch):
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: pytest.fail("Catalogue read"))
-    resolved = shared.resolve_table_processing_definition(
-        object(), "prod", "students", context={"_pipeline_contracts": {"students": contract()}},
-        authored_processing={"load_strategy": "scd1", "key_columns": ["student_id"]},
-    )
-    assert resolved["load_strategy"] == "scd1"
-    assert resolved["owner_notebook_id"] == "notebook-1"
-    assert resolved["processing_mode"] == "contract_governed"
-
-
-def test_production_missing_active_contract_fails(monkeypatch):
-    def fail(*args, **kwargs):
-        raise ValueError("No active Data Contract")
-    with pytest.raises(ValueError, match="explicit execution plan"):
-        shared.resolve_table_processing_definition(
-            object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}
-        )
+@pytest.mark.parametrize("mode,parameters", [("overwrite", {}), ("append_all", {}), ("append_new_only", {}),
+    ("scd1", {"key_columns": ["id"]}), ("scd2", {"key_columns": ["id"], "effective_column": "modified_dt"})])
+def test_pipeline_owns_every_supported_write_strategy(mode, parameters):
+    """Each supported strategy is valid without contract Processing configuration."""
+    exact = validated_pipeline_processing(role="target", read_mode=None, read_parameters=None,
+        write_mode=mode, write_parameters=parameters, repartition_by=None)
+    assert exact["write_parameters"] == parameters
+    assert validated_processing({"load_strategy": mode, **parameters})["load_strategy"] == mode
 
 
 @pytest.mark.parametrize("processing", [None, {}, {"load_strategy": "merge"}, {"load_strategy": "scd2", "key_columns": ["id"]}])
-def test_production_rejects_missing_or_malformed_frozen_processing(monkeypatch, processing):
-    frozen = contract()
-    frozen["contract_payload"]["table"]["processing"] = processing
+def test_invalid_engineering_processing_rejects(processing):
+    """Moving processing ownership does not weaken strategy validation."""
     with pytest.raises(ValueError):
-        shared.resolve_table_processing_definition(
-            object(), "prod", "students", authored_processing={"load_strategy": "overwrite"}
-        )
+        validated_processing(processing)
 
 
-def test_scd2_default_tracking_retains_existing_ingestion_and_audit_exclusions():
-    tracked = shared.resolve_scd2_tracked_columns(
-        ["student_id", "name", "status", "effective_at", "ingested_at_utc", "_fabricops_created_at", "loaded_at"],
-        {"key_columns": ["student_id"], "effective_column": "effective_at"},
-    )
-    assert tracked == ["name", "status"]
+def test_approval_parameters_are_snapshotted():
+    """Later caller mutations cannot edit captured processing configuration."""
+    proposed = {"key_columns": ["id"], "effective_column": "modified_dt"}
+    approved = validated_pipeline_processing(role="target", read_mode=None, read_parameters=None,
+        write_mode="scd2", write_parameters=proposed, repartition_by=2)
+    proposed["key_columns"].append("other")
+    assert approved["write_parameters"]["key_columns"] == ["id"]

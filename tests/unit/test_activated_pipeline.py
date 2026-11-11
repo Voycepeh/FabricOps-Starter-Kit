@@ -19,7 +19,8 @@ def operation(role="target", table="orders", mode="overwrite", workspace="DEV"):
     return dict(operation_key=role + ":Silver/" + table, table_id=table, pipeline_role=role,
         destination=dict(workspace_id=workspace, item_id="item", kind="lakehouse", schema="demo", table_name=table),
         read_mode="full" if role == "source" else None, write_mode=mode if role == "target" else None,
-        query_sha256=None, incremental_target_table_id=None, source_table_ids=[], requested_schema="demo")
+        query_sha256=None, incremental_target_table_id=None, source_table_ids=[], requested_schema="demo",
+        read_parameters={} if role == "source" else None, write_parameters={} if role == "target" else None, repartition_by=None)
 
 
 def contract_candidate(workspace="DEV"):

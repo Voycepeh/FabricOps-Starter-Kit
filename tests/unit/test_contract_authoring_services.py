@@ -54,13 +54,13 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     assert first["contract_id"] == service.contract_lifecycle_id("orders")
     assert first["status"] == "draft"
     assert payload["contract"]["status"] == "draft"
-    assert payload["table"]["processing"] == {"load_strategy": "overwrite"}
-    assert payload["table"]["processing_source"] == "default"
+    assert "processing" not in payload["table"]
+    assert "processing_source" not in payload["table"]
     assert len(writes) == 1
 
 
-def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
-    """New drafts prefer a current scan and otherwise inherit the frozen JSON."""
+def test_new_version_excludes_processing_from_scan_and_previous_contract(monkeypatch):
+    """New drafts exclude processing while retaining immutable historical JSON."""
     lifecycle_id = service.contract_lifecycle_id("orders")
     previous_payload = {
         "contract": {"contract_id": lifecycle_id, "contract_version": 1, "status": "frozen"},
@@ -105,10 +105,8 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
     assert "profiling" not in inherited_payload
     assert json.loads(frozen["contract_payload_json"]) == previous_payload
     assert inherited["contract_version"] == 2
-    assert inherited_payload["table"]["processing"] == {
-        "load_strategy": "scd1", "key_columns": ["id"]
-    }
-    assert inherited_payload["table"]["processing_source"] == "previous_contract"
+    assert "processing" not in inherited_payload["table"]
+    assert "processing_source" not in inherited_payload["table"]
 
     rows[:] = [frozen]
     catalogue[0]["load_strategy"] = "append_all"
@@ -116,8 +114,8 @@ def test_new_version_uses_scan_then_previous_contract_processing(monkeypatch):
         table_id="orders", config=object(), active_workspace_id="dev", spark_session=spark,
     )
     scanned_payload = json.loads(scanned["contract_payload_json"])
-    assert scanned_payload["table"]["processing"] == {"load_strategy": "append_all"}
-    assert scanned_payload["table"]["processing_source"] == "catalogue"
+    assert "processing" not in scanned_payload["table"]
+    assert "processing_source" not in scanned_payload["table"]
 
 
 @pytest.mark.parametrize("contract_id,version", [("", 1), ("c", 0), ("c", "bad")])
@@ -219,7 +217,7 @@ def test_freeze_record_locks_saved_payload_without_version_churn():
     """Freezing changes lifecycle state on the already-saved draft JSON."""
     draft_payload = {
         "contract": {"contract_id": "c", "contract_version": 1, "status": "draft"},
-        "table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}},
+        "table": {"table_id": "orders"},
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
     }
@@ -236,7 +234,7 @@ def test_freeze_record_locks_saved_payload_without_version_churn():
     assert payload["contract"] == {
         "contract_id": "c", "contract_version": 1, "status": "frozen"
     }
-    assert payload["table"]["processing"] == {"load_strategy": "overwrite"}
+    assert "processing" not in payload["table"]
 
 
 def test_enrichment_model_is_descriptive_and_level_specific(monkeypatch):
@@ -407,7 +405,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
         draft=draft, catalogue_rows=tables["METADATA_DATA_CATALOGUE"], enrichment_rows=tables["enrichment"], guardrail_rows=tables["guardrails"], workspace_id="dev",
     )
 
-    assert payload["table"]["processing"]["load_strategy"] == "append_all"
+    assert "processing" not in payload["table"]
     assert "scheduled_refresh" not in payload["table"]
     frozen = service.freeze_contract_record(draft=draft, audit={})
     assert "scheduled_refresh" not in json.loads(frozen["contract_payload_json"])["table"]

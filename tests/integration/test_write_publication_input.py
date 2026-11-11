@@ -53,7 +53,7 @@ def publication_input_runtime(monkeypatch, spark_session):
             metrics.update(rows_committed=state.native, measurement_source="delta_commit")
     monkeypatch.setattr(writer, "resolve_physical_table_identity", identity)
     monkeypatch.setattr(writer, "resolve_target_audit_fields", lambda c: audit)
-    monkeypatch.setattr(writer, "resolve_table_processing_definition", processing)
+    monkeypatch.setattr(writer, "validated_processing", processing)
     monkeypatch.setattr(writer, "_persist_target_processing", lambda **kw: None)
     monkeypatch.setattr(writer, "_writer_scheduled_refresh", lambda **kw: {})
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: [])
