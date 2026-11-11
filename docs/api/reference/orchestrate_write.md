@@ -251,12 +251,12 @@ No related guides documented.
 <li><code>fabricops_kit.data_contract.scheduled_refresh.canonical_scheduled_refresh</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh.discover_scheduled_refresh</code></li>
 <li><code>fabricops_kit.data_contract.scheduled_refresh.normalize_scheduled_refresh</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
 <li><code>fabricops_kit.data_contract.shared.normalize_guardrail_action</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_contract_definitions</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_grain_contract</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_sensitive_data_parameters</code></li>
-<li><code>fabricops_kit.data_contract.source_identity.file_source_identity</code></li>
-<li><code>fabricops_kit.data_contract.source_identity.validate_contract_source</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._drop_warehouse_stage_best_effort</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
@@ -286,7 +286,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
-<li><code>fabricops_kit.pipeline.freshness.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
@@ -437,6 +436,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.stage_pipeline_write_observations</code></li>
 <li><code>fabricops_kit.pipeline.shared.tested_contract_identities</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>

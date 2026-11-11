@@ -644,7 +644,11 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
             if field.name in METADATA_JSON_COLUMNS.get(table_name, ()):
-                coerced[field.name] = decode_metadata_row(table_name, {field.name: coerced[field.name]})[field.name]
+                # Runtime coercion requires native logical values; only the
+                # physical row decoder accepts JSON text.
+                coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
+                if table_name == "METADATA_PIPELINE_RUN" and field.name == "operations":
+                    coerced[field.name] = decode_metadata_row(table_name, {field.name: row[field.name]})[field.name]
             elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:

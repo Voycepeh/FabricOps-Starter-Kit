@@ -74,7 +74,7 @@ def validate_agreement(row):
 def normalized_destination(destination):
     """Compare physical aliases independently of logical Table ID and case."""
     if isinstance(destination, dict) and destination.get("source_type") == "file":
-        from fabricops_kit.data_contract.source_identity import validate_contract_source
+        from fabricops_kit.data_contract.shared import validate_contract_source
         validate_contract_source({"source": destination, "table": {}})
         return ("file", destination["workspace_id"], destination["item_id"], destination["relative_path"],
                 destination["file_format"], canonical_pipeline_json(destination["reader_options"]))

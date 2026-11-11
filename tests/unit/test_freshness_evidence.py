@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.pipeline.freshness import (
+from fabricops_kit.pipeline.shared import (
     collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters,
 )
 
@@ -154,3 +154,30 @@ def test_file_metadata_does_not_ignore_reader_selection_options():
     evidence = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": "folder",
         "reader_options": {"pathGlobFilter": "*.csv"}}, spark_session=object())
     assert evidence["outcome"] == "unavailable" and "reader-resolved" in evidence["reason"]
+
+
+def test_evidence_for_another_timestamp_column_cannot_pass():
+    """A fresh value from a different column is not evidence for the frozen rule."""
+    params = parameters()
+    evidence = collect_freshness_evidence(params, dataframe=[{"modified_dt": "2026-11-11T10:00:00Z"}])
+    changed = {**params, "freshness_column": "snapshot_dt"}
+    result = evaluate_freshness_evidence(evidence, changed, action="Block", reference_time="2026-11-11T11:00:00Z")
+    assert result["evidence_outcome"] == "invalid" and result["can_continue"] is False
+
+
+def test_fresh_oldest_member_cannot_hide_a_future_file_timestamp():
+    """Collection age uses the oldest member but every member must be valid."""
+    params = parameters("metadata")
+    future = datetime(2026, 11, 11, 12, tzinfo=UTC).timestamp() * 1000
+    evidence = {"evidence_method": "metadata", "evaluation_scope": "full_dataset", "outcome": "available",
+        "latest_value": "2026-11-11T10:00:00Z", "aggregation": "oldest_member_modification",
+        "members": [("old.csv", future-7200000), ("future.csv", future)]}
+    result = evaluate_freshness_evidence(evidence, params, action="Block", reference_time="2026-11-11T11:00:00Z")
+    assert result["evidence_outcome"] == "invalid" and result["can_continue"] is False
+
+
+@pytest.mark.parametrize("column", [1, True, [], {}, None, ""])
+def test_freshness_requires_a_real_timestamp_column_name(column):
+    """Malformed column configuration is rejected before saving or physical access."""
+    with pytest.raises(ValueError, match="timestamp column"):
+        validate_freshness_parameters({**parameters(), "freshness_column": column})

@@ -104,7 +104,7 @@ def check_freshness(
             print("  No refresh is expected for this source; freshness age evaluation skipped.")
         return result
     import json
-    from fabricops_kit.pipeline.freshness import collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters
+    from fabricops_kit.pipeline.shared import collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters
     parameters = validate_freshness_parameters(json.loads(freshness_rule["rule_parameters_json"]))
     if parameters["evaluation_scope"] == "incremental_batch":
         evidence = collect_freshness_evidence(parameters,

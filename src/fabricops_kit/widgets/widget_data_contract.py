@@ -2271,7 +2271,7 @@ def widget_data_contract(
                     "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
                 if freshness_method.value == "column":
                     parameters["freshness_column"] = freshness_column.value
-                from fabricops_kit.pipeline.freshness import validate_freshness_parameters
+                from fabricops_kit.pipeline.shared import validate_freshness_parameters
                 validate_freshness_parameters(parameters)
             return guardrail_record("freshness", "freshness", parameters, existing=old,
                 action="Block" if freshness_block.value else "Warn", active=freshness_enabled.value)

@@ -5,7 +5,7 @@ from copy import deepcopy
 import pytest
 
 from fabricops_kit.data_contract import shared as contracts
-from fabricops_kit.data_contract.source_identity import file_source_identity, validate_contract_source
+from fabricops_kit.data_contract.shared import file_source_identity, validate_contract_source
 
 
 def source(path="incoming/*.csv", **changes):

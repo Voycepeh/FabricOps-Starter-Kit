@@ -221,12 +221,12 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
 <li><code>fabricops_kit.data_contract.shared.normalize_guardrail_action</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_contract_definitions</code></li>
+<li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_grain_contract</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_sensitive_data_parameters</code></li>
-<li><code>fabricops_kit.data_contract.source_identity.file_source_identity</code></li>
-<li><code>fabricops_kit.data_contract.source_identity.validate_contract_source</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
@@ -237,7 +237,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
-<li><code>fabricops_kit.pipeline.freshness.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
@@ -249,6 +248,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
 <li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_profiling</code></li>
