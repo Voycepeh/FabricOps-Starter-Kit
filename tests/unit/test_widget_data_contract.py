@@ -849,6 +849,7 @@ def test_general_table_uniqueness_is_not_reinterpreted_as_grain(widget_runtime):
 
 def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     """Saved governance choices hydrate without relying on the old widget instance."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     _use_text_identifier(widget_runtime)
     state = widget_runtime["open"]()
     controls = state["_controls"]
@@ -2127,6 +2128,7 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
     """A new Freshness rule stages live and blocks final save while incomplete."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     widget_runtime["guardrails"][:] = [
         rule for rule in widget_runtime["guardrails"]
         if rule["guardrail_type"] != "freshness"
@@ -3061,6 +3063,7 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
 
 def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     """Keep form rows explicit, aligned, and free of empty placeholder widgets."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -3238,7 +3241,8 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
 
 
 def test_table_freshness_automatically_uses_column_and_keeps_same_controls(widget_runtime):
-    """Tables always use a timestamp-column freshness check."""
+    """Warehouse tables use a timestamp-column freshness check."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
     assert freshness["parameters"][0].value == "column"
@@ -3250,6 +3254,7 @@ def test_table_freshness_automatically_uses_column_and_keeps_same_controls(widge
 
 def test_table_freshness_rejects_missing_temporal_columns(widget_runtime):
     """A table without date/time evidence must not offer arbitrary columns."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     for column in widget_runtime["catalogue"][1:]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
@@ -3264,6 +3269,7 @@ def test_table_freshness_rejects_missing_temporal_columns(widget_runtime):
 
 def test_table_freshness_excludes_non_temporal_types(widget_runtime):
     """Only date/time types are selectable, including timestamp-with-precision."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     widget_runtime["catalogue"][1]["data_type"] = "update"
     widget_runtime["catalogue"][2]["data_type"] = "timestamp(6)"
     _capture_fixture_columns(widget_runtime)
@@ -3275,6 +3281,7 @@ def test_table_freshness_excludes_non_temporal_types(widget_runtime):
 
 def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
     """Timestamp dropdown options stay valid when temporal columns are present."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     widget_runtime["catalogue"].append({
         "table_id": widget_runtime["catalogue"][0]["table_id"],
         "workspace_id": widget_runtime["catalogue"][0]["workspace_id"],
@@ -4628,3 +4635,26 @@ def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widg
     assert 'bounded selection' in controls['grain_profile_evidence'].value
     assert 'full-table uniqueness is unverified' in controls['grain_profile_evidence'].value
     assert tuple(controls['row_key_columns'].value) == ()
+
+
+def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
+    """Lakehouse tables use existing Delta history without requiring temporal columns."""
+    for column in widget_runtime["catalogue"][1:]:
+        column["data_type"] = "string"
+    _capture_fixture_columns(widget_runtime)
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert freshness["parameters"][1].layout.display == "none"
+    assert freshness["parameters"][4].value == "full_dataset"
+    assert freshness["parameters"][4].layout.display == "none"
+    assert "Delta transaction" in freshness["display"][-1].value
+    freshness["parameters"][2].value = "2"
+    freshness["enabled"].value = True
+    saved = next(
+        item for records in state["_pending_guardrails"].values()
+        for item in records.values() if item["guardrail_type"] == "freshness"
+    )
+    assert module._parameters(saved)["evidence_method"] == "metadata"
+    assert "freshness_column" not in module._parameters(saved)
