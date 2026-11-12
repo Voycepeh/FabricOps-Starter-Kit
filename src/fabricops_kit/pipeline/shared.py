@@ -415,20 +415,18 @@ def validate_freshness_parameters(parameters):
     if not isinstance(parameters, dict):
         raise ValueError("Freshness parameters must be an object.")
     method = parameters.get("evidence_method")
-    if method not in {"metadata", "column"}:
-        raise ValueError("Freshness requires evidence_method metadata or column; no fallback is permitted.")
+    if method != "metadata":
+        raise ValueError("Freshness requires metadata-only evidence; use Data Quality for timestamp-column checks.")
     age = parameters.get("maximum_age")
     if type(age) not in {int, float} or not math.isfinite(age) or age <= 0:
         raise ValueError("Freshness maximum_age must be finite and positive.")
     if parameters.get("maximum_age_unit") not in {"minutes", "hours", "days"}:
         raise ValueError("Freshness maximum_age_unit must be minutes, hours, or days.")
     scope = parameters.get("evaluation_scope")
-    if scope not in {"full_dataset", "incremental_batch"}:
-        raise ValueError("Freshness requires an explicit evaluation_scope.")
-    if method == "metadata" and scope != "full_dataset":
+    if scope != "full_dataset":
         raise ValueError("Metadata Freshness describes the full physical source.")
-    if method == "column" and (not isinstance(parameters.get("freshness_column"), str) or not parameters["freshness_column"].strip()):
-        raise ValueError("Column Freshness requires a timestamp column.")
+    if "freshness_column" in parameters:
+        raise ValueError("Freshness cannot use a timestamp column; author a Data Quality rule instead.")
     return dict(parameters)
 
 
@@ -447,8 +445,8 @@ def _freshness_timestamp(value):
 def collect_freshness_evidence(parameters, *, dataframe=None, source=None, spark_session=None):
     """Observe only the selected current source and explicit scope.
 
-    Column aggregation scans data. Delta history supplies supported physical-table
-    modification metadata. Files use every resolved member's modification time;
+    Delta history supplies physical-table modification metadata. Files use every
+    resolved member's modification time;
     directories are recursively expanded, wildcards resolve before evaluation,
     and hidden Spark control files are excluded. The oldest member governs the
     collection so one recent file cannot hide stale members. No business-event
@@ -460,34 +458,7 @@ def collect_freshness_evidence(parameters, *, dataframe=None, source=None, spark
                 "observed_at": datetime.now(UTC).isoformat(), "source": source,
                 "outcome": "unavailable", "latest_value": None}
     try:
-        if params["evidence_method"] == "column":
-            if dataframe is None:
-                return {**evidence, "reason": "The configured dataset scope is unavailable."}
-            column = params["freshness_column"]
-            if hasattr(dataframe, "columns"):
-                from pyspark.sql import functions as F
-                if column not in dataframe.columns:
-                    return {**evidence, "outcome": "invalid", "reason": "Configured timestamp column is missing."}
-                value = F.col("`" + column.replace("`", "``") + "`")
-                # Reject invalid non-null values as well as obtaining MAX. This is
-                # deliberately a data action, never advertised as metadata-only.
-                stamp = F.expr("try_cast(`" + column.replace("`", "``") + "` AS TIMESTAMP)")
-                row = dataframe.agg(F.count(F.lit(1)).alias("rows"),
-                    F.sum(F.when(value.isNotNull() & stamp.isNull(), 1).otherwise(0)).alias("invalid"),
-                    F.max(stamp).alias("latest")).first()
-                evidence.update(row_count=int(row["rows"]), invalid_count=int(row["invalid"] or 0), scan_required=True)
-                if row["invalid"]:
-                    return {**evidence, "outcome": "invalid", "reason": "Timestamp column contains invalid values."}
-                latest = row["latest"]
-            else:
-                rows = list(dataframe)
-                values = [row.get(column) for row in rows if row.get(column) is not None]
-                evidence.update(row_count=len(rows), scan_required=True)
-                latest = max((_freshness_timestamp(value) for value in values), default=None)
-            if latest is None:
-                return {**evidence, "reason": "Empty dataset or no non-null timestamp values."}
-            evidence["freshness_column"] = column
-        elif source.get("source_type") == "file":
+        if source.get("source_type") == "file":
             selection_options = {"pathGlobFilter", "modifiedBefore", "modifiedAfter", "recursiveFileLookup", "ignoreMissingFiles", "ignoreCorruptFiles"}
             if selection_options.intersection(source.get("reader_options") or {}):
                 return {**evidence, "reason": "Reader selection options require reader-resolved file membership; metadata evidence is unavailable."}
@@ -550,8 +521,6 @@ def evaluate_freshness_evidence(evidence, parameters, *, action, reference_time=
     reason = evidence.get("reason", "")
     if any(evidence.get(key) != params[key] for key in ("evidence_method", "evaluation_scope")):
         outcome, reason = "invalid", "Evidence method or scope differs from the frozen rule."
-    if outcome == "available" and params["evidence_method"] == "column" and evidence.get("freshness_column") != params["freshness_column"]:
-        outcome, reason = "invalid", "Evidence timestamp column differs from the frozen rule."
     if outcome == "available" and evidence.get("aggregation") == "oldest_member_modification":
         try:
             members = evidence.get("members")
@@ -5789,13 +5758,7 @@ def capture_source_observation(
         parameters = validate_freshness_parameters(_parse_rule_parameters(freshness_rule))
         # Batch scope is evaluated after the incremental filter by check_freshness.
         if parameters["evaluation_scope"] == "full_dataset":
-            freshness_frame = dataframe
-            if parameters["evidence_method"] == "column" and freshness_frame is None:
-                freshness_frame = (read_lakehouse_table(table_value, store=store_key, schema=schema_value,
-                    context={**(context or {}), "_spark_session": spark}) if source_type == "lakehouse"
-                    else read_warehouse_table(schema_value, table_value, store=store_key,
-                    context={**(context or {}), "_spark_session": spark}))
-            evidence = collect_freshness_evidence(parameters, dataframe=freshness_frame,
+            evidence = collect_freshness_evidence(parameters,
                 source={"source_type": "table", "table_id": governed_table_id, "store_type": source_type,
                         "resolved_path": _path if source_type == "lakehouse" else warehouse_history_path}, spark_session=spark)
             _CURRENT_FRESHNESS_EVIDENCE[
