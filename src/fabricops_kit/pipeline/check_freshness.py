@@ -115,10 +115,6 @@ def check_freshness(
             if parameters["evaluation_scope"] == "full_dataset" else
             {"evidence_method": parameters["evidence_method"], "evaluation_scope": parameters["evaluation_scope"],
              "outcome": "unavailable", "reason": "Incremental batch scope is unavailable for full file Reads."})
-    elif parameters["evaluation_scope"] == "incremental_batch":
-        evidence = collect_freshness_evidence(parameters,
-            dataframe=dataframe if read_mode == "incremental" else None,
-            source={"source_type": "table", "table_id": table_id}, spark_session=spark_session)
     else:
         try:
             evidence = get_current_freshness_evidence(workspace_id=active_workspace_id,
