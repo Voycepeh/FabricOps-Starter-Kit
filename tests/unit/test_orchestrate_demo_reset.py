@@ -232,6 +232,32 @@ def test_gold_preflight_failure_preserves_metadata(monkeypatch):
     assert not env.removed
 
 
+def test_gold_verify_rejects_retained_rows(monkeypatch):
+    state = SimpleNamespace(_demo_gold_empty_output=None)
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    monkeypatch.setattr(API, "read_warehouse_query",
+                        lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 4}))
+    with pytest.raises(RuntimeError, match="still has rows"):
+        API._demo_verify_outputs(state)
+
+
+def test_gold_verify_accepts_empty_table_and_checks_schema(monkeypatch):
+    state = SimpleNamespace(_demo_gold_empty_output=SimpleNamespace(schema="original"))
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    monkeypatch.setattr(API, "read_warehouse_query",
+                        lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 0}))
+    monkeypatch.setattr(API, "read_warehouse_table",
+                        lambda **kw: SimpleNamespace(schema="original"))
+    import sys
+    monkeypatch.setitem(sys.modules, "notebookutils",
+                        SimpleNamespace(fs=SimpleNamespace(exists=lambda path: False)))
+    monkeypatch.setattr(API, "resolve_configured_lakehouse_table",
+                        lambda store, table, schema: (store, table, schema, "some-path"))
+    state._demo_bronze_catalog = state._demo_silver_catalog = "demo_catalog"
+    state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda name: False))
+    API._demo_verify_outputs(state)
+
+
 @pytest.mark.parametrize('initially_present', [False, True])
 def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     import sys
@@ -256,7 +282,8 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     state._demo_silver_catalog = 'catalog'
     state._demo_bronze_catalog = 'catalog'
     state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda qualified: qualified in catalog), sql=spark_sql)
-    state._demo_gold_empty_output = object()
+    state._demo_gold_empty_output = None
+    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: False)
     monkeypatch.setattr(API, '_demo_clear_gold_output', lambda state: warehouse.append(state))
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table', lambda store, table, schema: (store, table, schema, f'/configured/{store}/demo/{table}'))
     monkeypatch.setattr(API, 'read_warehouse_query', lambda *a, **kw: SimpleNamespace(first=lambda: {'n': 0}))
