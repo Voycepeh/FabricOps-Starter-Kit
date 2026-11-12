@@ -233,8 +233,13 @@ def test_gold_preflight_failure_preserves_metadata(monkeypatch):
 
 def test_gold_verify_rejects_retained_rows(monkeypatch):
     import sys
-    monkeypatch.setitem(sys.modules, "notebookutils", SimpleNamespace())
-    state = SimpleNamespace(_demo_gold_empty_output=None)
+    monkeypatch.setitem(sys.modules, "notebookutils",
+                        SimpleNamespace(fs=SimpleNamespace(exists=lambda path: False)))
+    monkeypatch.setattr(API, "resolve_configured_lakehouse_table",
+                        lambda store, table, schema: (store, table, schema, "some-path"))
+    state = SimpleNamespace(_demo_gold_empty_output=None,
+                            _demo_bronze_catalog="demo_catalog", _demo_silver_catalog="demo_catalog",
+                            spark=SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda name: False)))
     monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
     monkeypatch.setattr(API, "read_warehouse_query",
                         lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 4}))
