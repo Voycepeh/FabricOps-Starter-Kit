@@ -1117,6 +1117,34 @@ def widget_data_contract(
 
     """
     startup = shared.WidgetStartup("Data Contract")
+    timing_log: list[dict[str, Any]] = []
+    timing_panel = None
+
+    def record_timing(operation: str, seconds: float, status: str = "ok") -> None:
+        entry = {"operation": operation, "seconds": round(seconds, 3), "status": status}
+        timing_log.append(entry)
+        if len(timing_log) > 100:
+            del timing_log[:-100]
+        if timing_panel is not None:
+            refresh_timing_panel()
+
+    def refresh_timing_panel() -> None:
+        if timing_panel is None:
+            return
+        rows = "".join(
+            "<tr><td style='padding:3px 12px 3px 0'>" + html.escape(item["operation"])
+            + "</td><td style='text-align:right;padding-right:12px'>" + f'{item["seconds"]:.3f}'
+            + "</td><td>" + html.escape(item["status"]) + "</td></tr>"
+            for item in timing_log
+        )
+        timing_panel.value = (
+            "<details style='font-size:12px;margin:8px 0'><summary style='cursor:pointer'>"
+            "Performance timings (kernel elapsed seconds)</summary>"
+            "<table><thead><tr><th align='left'>Operation</th><th>Seconds</th><th>Status</th></tr></thead>"
+            + "<tbody>" + rows + "</tbody></table>"
+            "<div style='color:#667085'>Includes Spark execution and Python work; "
+            "browser paint and notebook cold start are not measured.</div></details>"
+        )
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, active_workspace_id, resolved = resolve_fabric_context(context=context)
         authoring_workspace_id = active_workspace_id
@@ -1164,6 +1192,7 @@ def widget_data_contract(
         catalogue = contracts.list_contract_governance_state(
             config=config, active_workspace_id=active_workspace_id,
             spark_session=spark, metadata_workspace_id=routing_workspace_id,
+            timing_callback=record_timing,
         )
         table_rows = catalogue["tables"]
         file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
@@ -1182,6 +1211,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_diagnostics": {},
+        "_timing_log": timing_log,
         "ai_settings": {key: ai_enrichment[key] for key in ("model_deployment_name", "reasoning_effort", "verbosity")},
         "ai_usage": [],
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
@@ -1193,6 +1223,8 @@ def widget_data_contract(
     status = shared.status_message(widgets)
     operation_progress = widgets.HTML(layout=widgets.Layout(width="100%"))
     operation_progress.add_class("fabricops-operation-progress")
+    timing_panel = widgets.HTML(layout=widgets.Layout(width="100%"))
+    refresh_timing_panel()
     state["_operation_timings"] = []
     state["_busy_depth"] = 0
 
@@ -1232,10 +1264,15 @@ def widget_data_contract(
                 state["_busy_depth"] += 1
                 began = perf_counter()
                 operation_progress.value = loading_html(label)
+                status_value = "ok"
                 try:
                     return callback(*args, **kwargs)
+                except Exception:
+                    status_value = "failed"
+                    raise
                 finally:
                     elapsed = perf_counter() - began
+                    record_timing(label, elapsed, status_value)
                     state["_operation_timings"].append({"operation": label, "seconds": elapsed})
                     del state["_operation_timings"][:-100]
                     state["_busy_depth"] -= 1
@@ -7270,12 +7307,24 @@ def widget_data_contract(
                 if not state.get("workspace_id"):
                     raise ValueError("Select a workspace observation before creating a draft.")
                 state["dataset_id"] = selected_table
-                new_draft()
+                began = perf_counter()
+                try:
+                    new_draft()
+                finally:
+                    record_timing("Open: create draft / metadata", perf_counter() - began)
             else:
-                select(selected_table, int(selected_contract))
+                began = perf_counter()
+                try:
+                    select(selected_table, int(selected_contract))
+                finally:
+                    record_timing("Open: select contract / metadata", perf_counter() - began)
             set_open_progress("Loading editor…")
-            top_nav.value = "Table"
-            render()
+            began = perf_counter()
+            try:
+                top_nav.value = "Table"
+                render()
+            finally:
+                record_timing("Open: editor construction", perf_counter() - began)
             set_open_progress("Building editor…")
             selector_panel.children = tuple(child for child in selector_panel.children if child is not status)
             selector_panel.layout.display = "none"
@@ -7333,7 +7382,7 @@ def widget_data_contract(
     page = shared.form_page(
         widgets, title="Data Contract", tone="governance",
         description="Select, author, review, and freeze one governed dataset contract.",
-        children=[selector_panel, editor_shell],
+        children=[selector_panel, editor_shell, timing_panel],
     )
     page.layout.height = "auto"
     page.layout.overflow = "visible"
@@ -7356,4 +7405,8 @@ def widget_data_contract(
         "cancel_exit": cancel_exit,
     })
     startup.display(page)
+    for phase in ("initialization", "spark_loading", "metadata_loading", "widget_construction"):
+        if phase in startup.timings:
+            record_timing("Startup: " + phase, startup.timings[phase])
+    state["_startup_timings"] = startup.timings
     return state
