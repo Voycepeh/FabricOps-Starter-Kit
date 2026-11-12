@@ -42,7 +42,6 @@ def _environment(monkeypatch):
 
 def _ready(monkeypatch):
     env = _environment(monkeypatch)
-    monkeypatch.setattr(API, '_demo_check_jobs', lambda self: None)
     monkeypatch.setattr(API, '_demo_metadata_files', lambda self, **kw: {'submissions': 0, 'dry_runs': 0, 'pipeline_snapshots': 0})
     monkeypatch.setattr(API, '_demo_remove_outputs', lambda self, **kw: None)
     monkeypatch.setattr(API, '_demo_verify_outputs', lambda self: None)
@@ -171,16 +170,25 @@ def test_schema_migration_must_precede_reset(monkeypatch, table, field, wrong_ty
         API._demo_metadata_counts(env.state)
 
 
-@pytest.mark.parametrize('status', ['NotStarted', 'InProgress', 'Unknown'])
-def test_active_demo_job_blocks_reset(monkeypatch, status):
-    state = _environment(monkeypatch).state
-    def request(method, path):
-        if path.endswith('/notebooks'):
-            return {'value': [{'id': 'notebook', 'displayName': '02A_full_refresh_demo'}]}
-        return {'value': [{'status': status}]}
-    state._demo_client = SimpleNamespace(request=request)
-    with pytest.raises(RuntimeError, match='job is active'):
-        API._demo_check_jobs(state)
+# Historical notebook IDs must never prevent a data-and-metadata-only reset.
+def test_reset_does_not_inspect_notebook_jobs(monkeypatch, capsys):
+    _ready(monkeypatch)
+    original_client = API.FabricNotebookClient
+
+    def client():
+        instance = original_client()
+        original_request = instance.request
+
+        def request(method, path):
+            assert '/notebooks' not in path
+            assert '/jobs/instances' not in path
+            return original_request(method, path)
+
+        return SimpleNamespace(request=request)
+
+    monkeypatch.setattr(API, 'FabricNotebookClient', client)
+    API.orchestrate_demo_reset(reset=True)
+    assert 'RESET COMPLETE' in capsys.readouterr().out
 
 
 @pytest.mark.parametrize('initially_present', [False, True])

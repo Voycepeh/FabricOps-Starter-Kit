@@ -3,7 +3,6 @@
 from __future__ import annotations
 import json
 from types import SimpleNamespace
-from urllib.error import HTTPError
 from fabricops_kit.activated_pipeline.shared import FabricNotebookClient, snapshot_file
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -39,7 +38,6 @@ _DEMO_OUTPUTS = (
     ("Silver", "product_master_scd2"),
 )
 _DEMO_REMOVALS = (*_DEMO_OUTPUTS, ("Bronze", "orders"))
-_DEMO_NAMES = {"02A_full_refresh_demo", "02B_incremental_append_demo", "02C_scd_demo"}
 
 
 def _demo_metadata_counts(_state):
@@ -70,62 +68,6 @@ def _demo_assert_source(_state, actual, expected):
     actual = actual.select(*[F.col(field.name).cast(field.dataType).alias(field.name) for field in expected.schema])
     if actual.exceptAll(expected).limit(1).count() or expected.exceptAll(actual).limit(1).count():
         raise RuntimeError("Day 1 source verification failed: persisted content differs from the fixture. Rerun 00C.")
-
-
-def _demo_check_jobs(_state):
-    """Check current and retained promoted demo notebooks before resetting."""
-    jobs = set()
-    page = f"/workspaces/{_state.context.workspace_id}/notebooks"
-    while page:
-        payload = _state._demo_client.request("GET", page)
-        jobs.update(
-            (
-                (_state.context.workspace_id, item["id"])
-                for item in payload["value"]
-                if item["displayName"] in _DEMO_NAMES
-            )
-        )
-        page = payload.get("continuationUri")
-    for row in read_lakehouse_table(
-        "METADATA_PIPELINE_REGISTRY",
-        store="Metadata",
-        schema=metadata_table_physical_schema(_state._demo_config, "METADATA_PIPELINE_REGISTRY"),
-    ).collect():
-        jobs.add((row["source_workspace_id"], row["source_notebook_id"]))
-        jobs.add((row["execution_workspace_id"], row["governed_notebook_id"]))
-    for row in (
-        read_lakehouse_table(
-            "METADATA_PIPELINE_RUN",
-            store="Metadata",
-            schema=metadata_table_physical_schema(_state._demo_config, "METADATA_PIPELINE_RUN"),
-        )
-        .select("_workspace_id", "_notebook_id")
-        .distinct()
-        .collect()
-    ):
-        jobs.add((row["_workspace_id"], row["_notebook_id"]))
-    jobs.discard((_state.context.workspace_id, _state._demo_runtime.get("notebook_id")))
-    for workspace, notebook in jobs:
-        path = f"/workspaces/{workspace}/items/{notebook}/jobs/instances"
-        while path:
-            try:
-                payload = _state._demo_client.request("GET", path)
-            except HTTPError as exc:
-                if exc.code != 404:
-                    raise
-                try:
-                    _state._demo_client.request("GET", f"/workspaces/{workspace}/items/{notebook}")
-                except HTTPError as missing:
-                    error = json.loads(missing.read()) if missing.code == 404 else {}
-                    if missing.code == 404 and error.get("errorCode") == "ItemNotFound":
-                        break
-                    raise
-                raise RuntimeError(
-                    "Cannot check demo notebook jobs. Stop executions and check Fabric permissions."
-                ) from exc
-            if any((job["status"] not in {"Completed", "Failed", "Cancelled", "Deduped"} for job in payload["value"])):
-                raise RuntimeError("A demo notebook job is active. Stop demo executions before reset=True.")
-            path = payload.get("continuationUri")
 
 
 def _demo_check_metadata_scope(_state, value):
@@ -294,7 +236,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         If reset is not a boolean.
     RuntimeError
         If notebook setup is not ready, required stores or metadata schemas
-        are invalid, non-demo references or active jobs are found, fixtures
+        are invalid, non-demo references are found, fixtures
         are unavailable, or reset verification fails. Fabric/Spark permission,
         transport and storage failures propagate; correct the cause and rerun.
 
@@ -310,7 +252,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     and six outputs plus the obsolete Bronze Orders table are removed in the reserved
     ``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
     tables and source files are preserved. Exact demo table/workspace references,
-    relevant jobs, artifact contents, fixture counts and catalog locations are
+    artifact contents, fixture counts and catalog locations are
     checked before deletion. A dedicated name alone cannot prove ownership;
     never share this Metadata item or these eleven tables with other projects.
 
@@ -364,7 +306,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         "GET", f"/workspaces/{_demo._metadata.workspace_id}/items/{_demo._metadata.item_id}"
     )
     # The configured item ID is authoritative; a display name is not proof of
-    # demo ownership. Retain the independent scope, job and store-isolation checks.
+    # demo ownership. Retain the independent scope and store-isolation checks.
     if _item.get("id") and _item["id"] != _demo._metadata.item_id:
         raise RuntimeError("Configured Metadata item ID does not match the Fabric item returned by the API.")
     if _item.get("type") and _item["type"] != "Lakehouse":
@@ -420,7 +362,6 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo_file_counts = _demo_metadata_files(_demo)
     for _folder, _count in _demo_file_counts.items():
         print(f"Metadata Files/{_folder}: {_count} artifacts")
-    _demo_check_jobs(_demo)
     _silver = _demo.context.paths["Silver"]
     _workspace_name = _demo._demo_client.request("GET", f"/workspaces/{_silver.workspace_id}")["displayName"]
     _item_name = _demo._demo_client.request("GET", f"/workspaces/{_silver.workspace_id}/items/{_silver.item_id}")[

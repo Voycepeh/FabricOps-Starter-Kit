@@ -84,7 +84,7 @@ ValueError
     If reset is not a boolean.
 RuntimeError
     If notebook setup is not ready, required stores or metadata schemas
-    are invalid, non-demo references or active jobs are found, fixtures
+    are invalid, non-demo references are found, fixtures
     are unavailable, or reset verification fails. Fabric/Spark permission,
     transport and storage failures propagate; correct the cause and rerun.
 
@@ -102,7 +102,7 @@ Four Day 1 tables are overwritten, Orders CSV is validated and retained,
 and six outputs plus the obsolete Bronze Orders table are removed in the reserved
 ``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
 tables and source files are preserved. Exact demo table/workspace references,
-relevant jobs, artifact contents, fixture counts and catalog locations are
+artifact contents, fixture counts and catalog locations are
 checked before deletion. A dedicated name alone cannot prove ownership;
 never share this Metadata item or these eleven tables with other projects.
 
@@ -131,9 +131,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:269`
+`fabricops_kit/config/orchestrate_demo_reset.py:211`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L269-L470">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L211-L411">View on GitHub</a>
 </div>
 
 
