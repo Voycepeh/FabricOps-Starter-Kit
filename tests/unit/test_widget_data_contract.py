@@ -3248,6 +3248,31 @@ def test_table_freshness_automatically_uses_column_and_keeps_same_controls(widge
     assert freshness["parameters"][1].value == "column_1"
 
 
+def test_table_freshness_rejects_missing_temporal_columns(widget_runtime):
+    """A table without date/time evidence must not offer arbitrary columns."""
+    for column in widget_runtime["catalogue"][1:]:
+        column["data_type"] = "string"
+    _capture_fixture_columns(widget_runtime)
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    selector = freshness["parameters"][1]
+    assert selector.options == [("No date or timestamp columns available", "")]
+    assert selector.disabled is True
+    assert "No date or timestamp columns available" in freshness["display"][-1].value
+    assert "table.freshness" in state["_validation_errors"]
+
+
+def test_table_freshness_excludes_non_temporal_types(widget_runtime):
+    """Only date/time types are selectable, including timestamp-with-precision."""
+    widget_runtime["catalogue"][1]["data_type"] = "update"
+    widget_runtime["catalogue"][2]["data_type"] = "timestamp(6)"
+    _capture_fixture_columns(widget_runtime)
+    state = widget_runtime["open"]()
+    options = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1].options
+    assert ("column_0", "column_0") not in options
+    assert ("column_1", "column_1") in options
+
+
 def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
     """Timestamp dropdown options stay valid when temporal columns are present."""
     widget_runtime["catalogue"].append({
