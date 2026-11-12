@@ -4960,6 +4960,7 @@ def widget_data_contract(
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
         new_rule_option = "__new_rule__"
+        managed_grain_option = "__managed_grain__"
         business_saved = widgets.Select(
             rows=7,
             **shared.widget_common(widgets, "Rules")
@@ -5669,6 +5670,12 @@ def widget_data_contract(
                 "Select a rule to edit, or click here to create a new rule",
                 new_rule_option,
             )]
+            if grain_enabled.value:
+                keys = " + ".join(str(key) for key in row_key_columns.value) or "Key required"
+                options.append((
+                    f"Locked  |  GRAIN — Uniqueness · {keys}  |  {grain_policy.value}",
+                    managed_grain_option,
+                ))
             for rule in session_guardrails():
                 if str(rule.get("guardrail_type") or "").lower() not in {
                     "data_quality", "dq"
@@ -5872,6 +5879,12 @@ def widget_data_contract(
             if business_hydrating["active"]:
                 return
             key = str(business_saved.value or "")
+            if key == managed_grain_option:
+                hide_business_delete_confirmation()
+                business_active_saved["rule_id"] = ""
+                delete_business_rule.disabled = True
+                delete_business_rule.layout.display = "none"
+                return
             if key.startswith("__ai_draft__:"):
                 try:
                     index = int(key.rsplit(":", 1)[1])
@@ -6565,7 +6578,7 @@ def widget_data_contract(
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                     "Select a current rule or AI draft to edit it, or select the first "
-                    "row to create a new rule. "
+                    "row to create a new rule. The locked GRAIN rule is managed in the Table tab. "
                     "AI drafts remain proposals until you review and add them.</div>"
                 ),
                 business_saved,
@@ -6609,6 +6622,7 @@ def widget_data_contract(
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="16px"),
         )
+        managed_grain_review = widgets.HTML()
         rule_workspace_body = widgets.VBox(
             [new_rule_editor],
             layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
@@ -6618,13 +6632,17 @@ def widget_data_contract(
         )
 
         def set_rule_workspace(mode: str) -> None:
-            if mode == "review":
+            if mode == "managed_grain":
+                rule_workspace_body.children = (managed_grain_review,)
+            elif mode == "review":
                 rule_workspace_body.children = (rule_reviewer,)
             else:
                 rule_workspace_body.children = (new_rule_editor,)
 
         def open_selected_rule(change: dict[str, Any]) -> None:
-            if str(change.get("new") or "") == new_rule_option:
+            if str(change.get("new") or "") == managed_grain_option:
+                set_rule_workspace("managed_grain")
+            elif str(change.get("new") or "") == new_rule_option:
                 set_rule_workspace("create")
             elif str(change.get("new") or ""):
                 set_rule_workspace("review")
@@ -6632,6 +6650,8 @@ def widget_data_contract(
         business_saved.observe(open_selected_rule, names="value")
         if str(business_saved.value or "") == new_rule_option:
             set_rule_workspace("create")
+        elif business_saved.value == managed_grain_option:
+            set_rule_workspace("managed_grain")
         elif business_saved.value:
             set_rule_workspace("review")
 
@@ -6644,10 +6664,18 @@ def widget_data_contract(
                 + html.escape(keys) + " · " + html.escape(str(grain_policy.value)) + " · " + status
                 + "<br>Edit the row key and enforcement in the Table tab. Non-null keys are required."
             ) if grain_enabled.value else ""
+            managed_grain_review.value = (
+                "<div style='padding:12px;border:1px solid #dce4ed;border-radius:8px'>"
+                "<b>Locked managed rule — GRAIN · Uniqueness</b><br>"
+                + html.escape(keys) + " · " + html.escape(str(grain_policy.value))
+                + "<p>Grain uniqueness is configured in the Table tab. "
+                "It cannot be edited or deleted from Data Quality Rules.</p></div>"
+            )
+            refresh_business_saved_options()
         for control in (row_key_columns, grain_enabled, grain_policy):
             control.observe(render_managed_grain, names="value")
         render_managed_grain()
-        business_left = (managed_grain, current_rules_section,)
+        business_left = (current_rules_section,)
         business_right = (rule_workspace_section,)
         view_content["Data Quality"] = (business_left, business_right)
 
