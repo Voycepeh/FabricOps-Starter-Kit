@@ -2503,7 +2503,15 @@ def widget_data_contract(
         def runtime_context_html() -> str:
             profile = runtime_context.get("latest_profile")
             if profile:
-                workspace_id = str(profile.get("workspace_id") or "Unknown workspace_id")
+                workspace_id = str(profile.get("workspace_id") or "")
+                workspace_name = str(profile.get("workspace_name") or "").strip()
+                if not workspace_name:
+                    workspace_name = next((
+                        str(observation.get("_workspace_name") or "").strip()
+                        for observation in table_rows
+                        if str(observation.get("workspace_id") or "") == workspace_id
+                        and observation.get("_workspace_name")
+                    ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 committed_by = str(profile.get("committed_by") or "Unknown")
                 rank, instant = metadata_timestamp_sort_key(profile.get("committed_at"))
@@ -2515,7 +2523,7 @@ def widget_data_contract(
                 profile_html = (
                     "<div style='margin-top:14px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
-                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_id)} · "
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)} · "
                     f"{html.escape(pipeline_name)}</div>"
                     f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
                     f"{html.escape(context_timestamp(profile.get('committed_at')))}</div>"
@@ -2536,7 +2544,15 @@ def widget_data_contract(
             if lineage_rows:
                 lineage_cells = []
                 for item in lineage_rows:
-                    workspace_value = str(item.get("workspace_id") or "")
+                    workspace_id = str(item.get("workspace_id") or "")
+                    workspace_value = str(item.get("workspace_name") or "").strip()
+                    if not workspace_value:
+                        workspace_value = next((
+                            str(observation.get("_workspace_name") or "").strip()
+                            for observation in table_rows
+                            if str(observation.get("workspace_id") or "") == workspace_id
+                            and observation.get("_workspace_name")
+                        ), "") or "Unknown workspace"
                     pipeline_value = str(item.get("pipeline_name") or "")
                     relationship = str(item.get("relationship") or "")
                     relationship_key = relationship.lower()
@@ -2564,7 +2580,7 @@ def widget_data_contract(
                     "<table class='fabricops-lineage-table'>"
                     "<colgroup><col style='width:31%'><col style='width:25%'>"
                     "<col style='width:12%'><col style='width:32%'></colgroup>"
-                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Env</th>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Workspace</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Role</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
@@ -2585,9 +2601,7 @@ def widget_data_contract(
         def table_identity_html() -> str:
             workspace_name = str(
                 table.get("_workspace_name")
-                or table.get("workspace_id")
-                or state.get("workspace_id")
-                or "Unknown"
+                or "Unknown workspace"
             )
             item_name = configured_item_name(table) or "Unknown"
             full_table_name = qualified_table_name(table) or "Unknown"
@@ -2909,7 +2923,7 @@ def widget_data_contract(
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
-                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or table.get('workspace_id') or '') or str(state.get('workspace_id') or 'Unknown'))}</div>"
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or 'Unknown workspace'))}</div>"
             )
             table_context_content.value = (
                 table_identity_html()
@@ -6974,6 +6988,8 @@ def widget_data_contract(
 
         state["_refresh_guardrail_sidebar"] = render_table_summary
         render_table_summary()
+        # Show Table context immediately and load recorded metadata once.
+        table_context_accordion.selected_index = 0
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
