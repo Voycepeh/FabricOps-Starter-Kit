@@ -133,7 +133,8 @@ def test_no_resolved_files_is_unavailable():
     assert evidence["outcome"] == "unavailable" and "no data files" in evidence["reason"]
 
 
-def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch):
+@pytest.mark.parametrize("store_type", ["lakehouse", "warehouse"])
+def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch, store_type):
     """Metadata Freshness uses a physical data update, never OPTIMIZE time."""
     import sys
     from types import ModuleType
@@ -143,7 +144,7 @@ def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch)
     tables = ModuleType("delta.tables")
     tables.DeltaTable = SimpleNamespace(forPath=lambda spark, path: SimpleNamespace(history=lambda: history))
     monkeypatch.setitem(sys.modules, "delta.tables", tables)
-    evidence = collect_freshness_evidence(parameters("metadata"), source={"store_type": "lakehouse", "resolved_path": "physical-table"}, spark_session=spark_session)
+    evidence = collect_freshness_evidence(parameters("metadata"), source={"store_type": store_type, "resolved_path": "physical-table"}, spark_session=spark_session)
     assert evidence["outcome"] == "available" and evidence["table_version"] == 1
     result = evaluate_freshness_evidence(evidence, parameters("metadata"), action="Block", reference_time="2026-11-11T11:00:00Z")
     assert result["status"] == "failed"
