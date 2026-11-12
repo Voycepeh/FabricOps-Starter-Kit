@@ -43,7 +43,7 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
 1. Run with `False` to inspect metadata counts. No data is changed.
 2. Stop all demo schedules and executions, including earlier promoted copies. Set `True` and run the cell to reset.
-3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate reads of the restored data.
+3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate all ten foundational I/O functions: four file readers, Lakehouse and Warehouse writers, table readers, and SQL query readers. The guarded write examples repeat the same Products and Order History Day 1 fixture writes, then check persisted row counts and display five-row SQL samples. Run them immediately after reset, before starting the scenario days; `RESET_DEMO = False` skips the table writes and reads.
 
 !!! warning "Dedicated demo environment only"
 
