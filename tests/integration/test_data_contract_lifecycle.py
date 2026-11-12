@@ -211,7 +211,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
              ("grain", "uniqueness", "", {"columns": ["id"]}),
              ("data_quality", "completeness", f"{table_id}/id", {"columns": ["id"], "maximum_missing_percent": 0, "treat_blank_as_missing": False})]
     if source:
-        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "evidence_method": "column", "evaluation_scope": "full_dataset", "maximum_age": 2, "maximum_age_unit": "days"})]
+        specs += [("freshness", "freshness", "", {"evidence_method": "metadata", "evaluation_scope": "full_dataset", "maximum_age": 2, "maximum_age_unit": "days"})]
     else:
         specs += [("sensitive_data", "mask", f"{table_id}/email", {"scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*"})]
     if schema_only:
