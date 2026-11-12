@@ -545,6 +545,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
+        "activity_id": "prod-profile", "notebook_id": "", "workspace_name": "",
     }
     assert context["column_profiles"] == {
         "amount": {
