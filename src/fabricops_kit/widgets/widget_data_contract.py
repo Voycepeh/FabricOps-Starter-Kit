@@ -1998,14 +1998,6 @@ def widget_data_contract(
             [str(name) for name in profile_key_candidates[0].get("columns", [])]
             if profile_key_candidates and discovery.get("profile_scope") != "bounded_selection" else []
         )
-        temporal_column_names = [
-            str(column.get("column_name") or "")
-            for column in authoring_columns
-            if str(column.get("data_type") or "").strip().lower().split("(")[0] in {
-                "date", "datetime", "datetime2", "timestamp", "timestamp_ntz",
-                "timestamp_ltz", "timestamp_tz", "timestamptz",
-            }
-        ]
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled"))
         top_nav.options = _TABS
@@ -2307,7 +2299,6 @@ def widget_data_contract(
         existing_freshness = next((r for r in guardrails if r.get("guardrail_type") == "freshness"), {})
         freshness_parameters = _parameters(existing_freshness)
         is_file_source = current.get("payload", {}).get("source", {}).get("source_type") == "file"
-        is_lakehouse_table = not is_file_source and str(table.get("store_type") or "").lower() == "lakehouse"
         freshness_evidence_method = "metadata"
         freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
         freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
