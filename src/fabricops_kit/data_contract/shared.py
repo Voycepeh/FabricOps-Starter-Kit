@@ -145,6 +145,70 @@ def contract_file_datasets(rows, *, config, workspace_id):
     return list(datasets.values())
 
 
+def pipeline_file_datasets(rows, *, config, workspace_id):
+    """Discover successfully observed file sources from Engineering run evidence.
+
+    Only recorded configurations with an observed schema can create new drafts;
+    previously authored Contracts are handled independently.
+    """
+    from fabricops_kit.config.shared import get_store
+    from uuid import uuid5, NAMESPACE_URL
+    paths = config.get("path_config", {}) if isinstance(config, Mapping) else config.path_config
+    paths = paths.get("paths", paths) if isinstance(paths, Mapping) else paths.paths
+    candidates = {}
+    for run in rows:
+        operations = _json_value(run.get("operations"), field="operations", default=[])
+        if not isinstance(operations, list):
+            continue
+        for operation in operations:
+            if not isinstance(operation, Mapping) or operation.get("pipeline_role") != "source":
+                continue
+            if operation.get("source_type") != "file" or operation.get("status") != "succeeded":
+                continue
+            binding = operation.get("destination") or {}
+            if not isinstance(binding, Mapping):
+                continue
+            schema_json = operation.get("observed_columns_json")
+            if not schema_json:
+                continue  # Historic runs without schema evidence cannot author new contracts.
+            columns_raw = _json_value(schema_json, field="observed_columns_json", default=[])
+            if not isinstance(columns_raw, list) or not columns_raw:
+                continue
+            try:
+                options = _json_value(binding.get("reader_options_json"), field="reader_options_json", default={})
+                source = file_source_identity(
+                    workspace_id=binding["workspace_id"], item_id=binding["item_id"],
+                    relative_path=binding["relative_path"], file_format=binding["file_format"],
+                    reader_options=options,
+                )
+                if source["source_id"] != operation.get("source_id"):
+                    continue
+                columns = [{"column_id": str(uuid5(NAMESPACE_URL, source["source_id"] + ":" + col["column_name"])),
+                            "column_name": col["column_name"], "data_type": col["data_type"]}
+                           for col in columns_raw if isinstance(col, Mapping)
+                           and isinstance(col.get("column_name"), str) and isinstance(col.get("data_type"), str)]
+                if len(columns) != len(columns_raw):
+                    continue
+            except (KeyError, TypeError, ValueError):
+                continue
+            stores = []
+            for route, targets in paths.items():
+                for key in targets:
+                    store = get_store(config, route, key)
+                    if (str(store.workspace_id).lower(), str(store.item_id).lower()) == (source["workspace_id"], source["item_id"]):
+                        stores.append((str(route), str(key)))
+            if not stores:
+                continue
+            route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
+            timestamp = str(operation.get("completed_at") or run.get("completed_at") or "")
+            candidate = {**source, "store": store_key, "configuration_workspace_id": route,
+                         "columns": columns}
+            current = candidates.get(source["source_id"])
+            if current is None or timestamp > current[0]:
+                candidates[source["source_id"]] = (timestamp, candidate)
+    return [record for _, record in sorted(candidates.values(), key=lambda entry: entry[1]["relative_path"])]
+
+
 def dataset_selector_options(tables, files, *, table_id=None, workspace_id=None):
     """Combine typed dataset choices while preserving the table observation selector."""
     options = observation_selector_options(tables, table_id=table_id, workspace_id=workspace_id)
@@ -965,7 +1029,9 @@ def list_contract_governance_state(
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
     contracts = row_dicts(read_lakehouse_table(DATA_CONTRACT_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE), context=context))
-    return {"observations": observations,
+    runs = row_dicts(read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context))
+    return {"observations": observations, "pipeline_runs": runs,
             "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
             "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
 

@@ -6182,7 +6182,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
-                    "started_at", "completed_at", "rows_read", "rows_written")},
+                    "started_at", "completed_at", "rows_read", "rows_written", "observed_columns_json")},
                 "metrics": dict(actual.get("metrics") or {}),
                 "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})

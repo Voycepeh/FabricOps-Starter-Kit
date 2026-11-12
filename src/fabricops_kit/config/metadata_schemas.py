@@ -477,6 +477,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                      [("source_type", "string"), ("source_id", "string"), ("relative_path", "string"),
                       ("file_format", "string"), ("reader_options_json", "string")]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
+                 ("observed_columns_json", "string"),
                  ("read_parameters", {"struct": [("watermark_column", "string")]}),
                  ("write_parameters", {"struct": [(key, kind) for key, kind in CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"].items()]}),
                  ("repartition_by", "integer"),

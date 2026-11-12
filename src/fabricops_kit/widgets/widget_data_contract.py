@@ -1167,6 +1167,11 @@ def widget_data_contract(
         )
         table_rows = catalogue["tables"]
         file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
+        observed_files = contracts.pipeline_file_datasets(catalogue.get("pipeline_runs", []), config=config, workspace_id=active_workspace_id)
+        existing_files = {row["source_id"]: row for row in file_rows}
+        for row in observed_files:
+            existing_files.setdefault(row["source_id"], row)
+        file_rows = list(existing_files.values())
         if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
             raise ValueError("table_id has no active table-level Catalogue row in central governance metadata.")
     state: dict[str, Any] = {
@@ -7193,57 +7198,6 @@ def widget_data_contract(
                                            state.get("workspace_id") or "")
         finally:
             state["_selector_refreshing"] = False
-
-    file_routes = sorted(str(route) for route, stores in paths.items() if any(
-        key != "Metadata" and str(store.get("kind", "") if isinstance(store, Mapping) else getattr(store, "kind", "")).lower() == "lakehouse"
-        for key, store in stores.items()))
-    route_names = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in table_rows}
-    file_workspace = widgets.Dropdown(options=[(route_names.get(route, route), route) for route in file_routes]
-        or [("No configured Lakehouse file source", None)],
-        value=authoring_workspace_id if authoring_workspace_id in file_routes else file_routes[0] if file_routes else None,
-        layout=widgets.Layout(width="100%"))
-    file_store = widgets.Text(description="", value="Bronze", layout=widgets.Layout(width="100%"))
-    file_path = widgets.Text(description="", placeholder="demo/orders.csv", layout=widgets.Layout(width="100%"))
-    file_format = widgets.Dropdown(description="", options=["csv", "json", "parquet", "excel"], layout=widgets.Layout(width="100%"))
-    file_options = widgets.Textarea(description="", value='{"header": true, "inferSchema": true}', layout=widgets.Layout(width="100%"))
-    file_add = widgets.Button(description="Select file source", button_style="primary", disabled=not bool(file_routes))
-
-    @busy_action("Observing file schema…")
-    def select_file_source(_button=None):
-        nonlocal active_workspace_id
-        from fabricops_kit.pipeline.shared import resolve_file_participant, file_participant_source, read_file_participant
-        from uuid import uuid5, NAMESPACE_URL
-        if file_workspace.value is None:
-            raise ValueError("Configure a Lakehouse source environment in 00_env_config before selecting a file.")
-        file_context = {**resolved, "config": config, "scope_workspace_id": file_workspace.value}
-        identity = resolve_file_participant(store=file_store.value.strip(), relative_path=file_path.value.strip(),
-            file_format=file_format.value, read_options=json.loads(file_options.value),
-            context=file_context)
-        source = file_participant_source(identity)
-        frame = read_file_participant(identity, context=file_context, spark_session=spark)["dataframe"]
-        columns = [{"column_id": str(uuid5(NAMESPACE_URL, source["source_id"] + ":" + field.name)),
-                    "column_name": field.name, "data_type": field.dataType.simpleString()} for field in frame.schema.fields]
-        file_rows[:] = [row for row in file_rows if row["source_id"] != source["source_id"]]
-        file_rows.append({**source, "store": identity["store"], "configuration_workspace_id": file_workspace.value, "columns": columns})
-        state["workspace_id"] = source["workspace_id"]
-        active_workspace_id = source["workspace_id"]
-        state["pending_dataset_id"] = source["source_id"]
-        refresh_table_options()
-        table_changed({"new": source["source_id"]})
-
-    def file_clicked(button):
-        try:
-            select_file_source(button)
-        except Exception as exc:
-            set_status(str(exc), error=True)
-    file_add.on_click(file_clicked)
-    file_authoring = widgets.Accordion(children=[widgets.VBox([selector_field("Source environment", file_workspace), selector_field("Configured store", file_store), selector_field("Relative Files path", file_path),
-        selector_field("File format", file_format), selector_field("Reader options (JSON)", file_options), file_add], layout=widgets.Layout(width="100%"))])
-    file_authoring.set_title(0, "Select a Lakehouse file, folder or wildcard")
-    file_authoring.selected_index = None
-    selector_panel.children = (*selector_panel.children, file_authoring)
-    state["_controls"].update(file_workspace=file_workspace, file_store=file_store, file_path=file_path, file_format=file_format,
-                              file_options=file_options, select_file=file_add, file_source_panel=file_authoring)
 
     def table_changed(change: dict[str, Any]) -> None:
         if state["_selector_refreshing"]:

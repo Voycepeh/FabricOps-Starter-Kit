@@ -9,26 +9,28 @@ from fabricops_kit.pipeline import shared as pipeline
 from tests.unit.test_widget_data_contract import widget_runtime  # noqa: F401
 
 
-def test_unobserved_file_selection_observes_schema_and_offers_existing_editor(widget_runtime, monkeypatch):  # noqa: F811
-    source = contracts.file_source_identity(workspace_id='dev', item_id='item', relative_path='demo/orders.csv',
-                                            file_format='csv', reader_options={'header': True, 'inferSchema': True})
-    monkeypatch.setattr(pipeline, 'resolve_file_participant', lambda **kw: {**source, 'store': 'Bronze'})
-    field = SimpleNamespace(name='id', dataType=SimpleNamespace(simpleString=lambda: 'int'))
-    reader = Mock(return_value={'dataframe': SimpleNamespace(schema=SimpleNamespace(fields=[field]))})
-    monkeypatch.setattr(pipeline, 'read_file_participant', reader)
-    state = widget_runtime['start']()
-    controls = state['_controls']
-    controls['file_path'].value = 'demo/orders.csv'
-    controls['select_file'].click()
-    assert state['pending_source_id'] == source['source_id']
-    assert state['pending_table_id'] is None
-    assert state['workspace_id'] == 'dev'
-    labels = dict((value, label) for label, value in controls['table'].options)
-    assert 'demo/orders.csv' in labels[source['source_id']] and 'File' in labels[source['source_id']]
-    assert source['source_id'] not in labels[source['source_id']]
-    assert controls['contract'].value == 'new'
-    assert all(row.get('table_id') != source['source_id'] for row in state['tables'])
-    reader.assert_called_once()
+def test_unobserved_file_discovered_from_successful_pipeline_without_reading(widget_runtime, monkeypatch):  # noqa: F811
+    source = contracts.file_source_identity(workspace_id="dev", item_id="item",
+        relative_path="demo/orders.csv", file_format="csv",
+        reader_options={"header": True, "inferSchema": True})
+    run = {"completed_at": "2026-11-12T10:00:00Z", "operations": json.dumps([{
+        "pipeline_role": "source", "source_type": "file", "source_id": source["source_id"],
+        "status": "succeeded", "destination": {
+            **{key: source[key] for key in ("workspace_id", "item_id", "relative_path", "file_format")},
+            "reader_options_json": json.dumps(source["reader_options"])},
+        "observed_columns_json": json.dumps([{"column_name": "id", "data_type": "int"}])
+    }])}
+    from tests.unit.test_widget_data_contract import module
+    import fabricops_kit.config.shared as config_shared
+    monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state",
+        lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run]})
+    state = module.widget_data_contract()
+    labels = {value: label for label, value in state["_controls"]["table"].options}
+    assert source["source_id"] in labels
+    assert "demo/orders.csv" in labels[source["source_id"]]
+    assert "select_file" not in state["_controls"]
+    assert "file_path" not in state["_controls"]
 
 
 def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
@@ -40,30 +42,6 @@ def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
     assert contracts.dataset_selector_options([table], [source], workspace_id='other')['tables'] == []
     assert 'Table' in contracts.dataset_display_name(table)
     assert 'demo/orders.csv' in contracts.dataset_display_name(source)
-
-
-def test_governance_file_entry_uses_configured_source_environment(widget_runtime, monkeypatch):  # noqa: F811
-    from tests.unit.test_widget_data_contract import module
-    config = widget_runtime['config']
-    config.path_config.paths['gov'] = {'Metadata': config.path_config.paths['dev']['Metadata']}
-    monkeypatch.setattr(module, 'resolve_fabric_context', lambda **kw: (config, 'gov', {}))
-    source = contracts.file_source_identity(workspace_id='physical-source', item_id='item', relative_path='demo/orders.csv', file_format='csv')
-    resolver = Mock(return_value={**source, 'store': 'Bronze'})
-    reader = Mock(return_value={'dataframe': SimpleNamespace(schema=SimpleNamespace(fields=[
-        SimpleNamespace(name='id', dataType=SimpleNamespace(simpleString=lambda: 'int'))]))})
-    monkeypatch.setattr(pipeline, 'resolve_file_participant', resolver)
-    monkeypatch.setattr(pipeline, 'read_file_participant', reader)
-    state = module.widget_data_contract()
-    controls = state['_controls']
-    assert state['authoring_workspace_id'] == 'gov'
-    assert controls['file_workspace'].value == 'dev'
-    controls['file_path'].value = 'demo/orders.csv'
-    controls['select_file'].click()
-    assert resolver.call_args.kwargs['context']['scope_workspace_id'] == 'dev'
-    assert reader.call_args.kwargs['context']['scope_workspace_id'] == 'dev'
-    assert state['pending_source_id'] == source['source_id']
-    assert state['pending_table_id'] is None
-    assert state['workspace_id'] == 'physical-source'
 
 
 def test_authored_file_keeps_physical_identity_and_separate_configuration_route(monkeypatch):
