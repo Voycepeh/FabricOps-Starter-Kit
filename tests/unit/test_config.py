@@ -779,7 +779,7 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
     result = call_with_spark(object(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
     assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
     assert (
-        "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
+        "row_count: expected long, found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
     )
 
 
@@ -825,7 +825,7 @@ def test_profiled_frequency_validation_checks_required_columns_and_types():
             for field in schema.fields
         ]
     )
-    with pytest.raises(ValueError, match="frequency_count type expected long but found string"):
+    with pytest.raises(ValueError, match="frequency_count: expected long, found string"):
         _validate_existing_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", wrong_type, schema)
 
 

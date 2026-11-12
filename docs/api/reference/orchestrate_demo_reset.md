@@ -133,7 +133,7 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 
 `fabricops_kit/config/orchestrate_demo_reset.py:269`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L269-L468">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L269-L470">View on GitHub</a>
 </div>
 
 

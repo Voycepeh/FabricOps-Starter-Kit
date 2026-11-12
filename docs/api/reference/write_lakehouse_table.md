@@ -10,6 +10,7 @@
 Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
 <span class="reference-chip">02B_incremental_append_demo</span>
 <span class="reference-chip">02C_scd_demo</span>
 </p>
