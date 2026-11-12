@@ -1649,7 +1649,9 @@ def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runti
     assert "column_1" in dict(controls["business_saved"].options)[grain_label.replace("column_0", "column_1")]
     assert controls["business_saved"].value == "__managed_grain__"
     controls["grain_enabled"].value = False
-    assert "__managed_grain__" not in [value for _label, value in controls["business_saved"].options]
+    grain_labels = dict(controls["business_saved"].options)
+    assert any("GRAIN — Uniqueness" in label and "Not enforced" in label for label in grain_labels)
+    assert controls["business_saved"].value == "__managed_grain__"
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
