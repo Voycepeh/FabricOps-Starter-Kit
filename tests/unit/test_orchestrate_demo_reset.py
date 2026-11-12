@@ -170,6 +170,7 @@ def test_schema_migration_must_precede_reset(monkeypatch, table, field, wrong_ty
         API._demo_metadata_counts(env.state)
 
 
+# Historical notebook IDs must never prevent a data-and-metadata-only reset.
 def test_reset_does_not_inspect_notebook_jobs(monkeypatch, capsys):
     _ready(monkeypatch)
     original_client = API.FabricNotebookClient
