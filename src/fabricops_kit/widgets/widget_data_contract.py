@@ -5670,12 +5670,12 @@ def widget_data_contract(
                 "Select a rule to edit, or click here to create a new rule",
                 new_rule_option,
             )]
-            if grain_enabled.value:
-                keys = " + ".join(str(key) for key in row_key_columns.value) or "Key required"
-                options.append((
-                    f"Locked  |  GRAIN — Uniqueness · {keys}  |  {grain_policy.value}",
-                    managed_grain_option,
-                ))
+            keys = " + ".join(str(key) for key in row_key_columns.value) or "Key required"
+            grain_status = str(grain_policy.value) if grain_enabled.value else "Not enforced"
+            options.append((
+                f"Locked  |  GRAIN — Uniqueness · {keys}  |  {grain_status}",
+                managed_grain_option,
+            ))
             for rule in session_guardrails():
                 if str(rule.get("guardrail_type") or "").lower() not in {
                     "data_quality", "dq"
