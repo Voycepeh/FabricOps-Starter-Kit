@@ -44,6 +44,7 @@ def _ready(monkeypatch):
     env = _environment(monkeypatch)
     monkeypatch.setattr(API, '_demo_metadata_files', lambda self, **kw: {'submissions': 0, 'dry_runs': 0, 'pipeline_snapshots': 0})
     monkeypatch.setattr(API, '_demo_remove_outputs', lambda self, **kw: None)
+    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: False)
     monkeypatch.setattr(API, '_demo_verify_outputs', lambda self: None)
     monkeypatch.setattr(API, '_demo_assert_source', lambda *a: None)
     monkeypatch.setattr(API, 'read_lakehouse_csv', lambda file, **kw: SimpleNamespace(cache=lambda: SimpleNamespace(
@@ -191,6 +192,35 @@ def test_reset_does_not_inspect_notebook_jobs(monkeypatch, capsys):
     assert 'RESET COMPLETE' in capsys.readouterr().out
 
 
+
+def test_gold_drop_uses_native_cursor_and_exact_sql():
+    statements = []
+    class Cursor:
+        def execute(self, statement):
+            statements.append(statement)
+        def close(self):
+            statements.append("cursor closed")
+    connection = SimpleNamespace(cursor=lambda: Cursor(), commit=lambda: statements.append("commit"))
+    API._demo_drop_gold_output(SimpleNamespace(), connection)
+    assert statements == [
+        "DROP TABLE IF EXISTS [demo].[customer_summary];",
+        "commit",
+        "cursor closed",
+    ]
+
+
+def test_missing_native_gold_ddl_support_blocks_before_metadata_delete(monkeypatch):
+    import sys
+    env = _ready(monkeypatch)
+    env.rows['METADATA_DATA_CATALOGUE'] = [{'table_id': 'orders'}]
+    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: True)
+    monkeypatch.setitem(sys.modules, 'notebookutils', SimpleNamespace())
+    with pytest.raises(RuntimeError, match='native T-SQL command connection'):
+        API.orchestrate_demo_reset(reset=True)
+    assert env.rows['METADATA_DATA_CATALOGUE']
+    assert not env.removed
+
+
 @pytest.mark.parametrize('initially_present', [False, True])
 def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     import sys
@@ -215,8 +245,9 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     state._demo_silver_catalog = 'catalog'
     state._demo_bronze_catalog = 'catalog'
     state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda qualified: qualified in catalog), sql=spark_sql)
-    monkeypatch.setattr(API, 'resolve_warehouse_name', lambda *_: 'physical-gold')
-    monkeypatch.setattr(API, 'execute_warehouse_sql', lambda *a, **kw: warehouse.append((a, kw)))
+    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: True)
+    monkeypatch.setattr(API, '_demo_drop_gold_output', lambda state, conn: warehouse.append((state, conn)))
+    state._demo_gold_connection = object()
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table', lambda store, table, schema: (store, table, schema, f'/configured/{store}/demo/{table}'))
     monkeypatch.setattr(API, 'read_warehouse_query', lambda *a, **kw: SimpleNamespace(first=lambda: {'n': 0}))
     before = existing.copy()
@@ -225,8 +256,7 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     API._demo_remove_outputs(state); API._demo_remove_outputs(state); API._demo_verify_outputs(state)
     assert existing == {'/configured/Silver/demo/unrelated'}
     assert not catalog and len(warehouse) == 2
-    assert all('DROP TABLE [demo].[customer_summary]' in call[0][2] for call in warehouse)
-    assert all(call[1]['database_name'] == 'physical-gold' for call in warehouse)
+    assert all(call[1] is state._demo_gold_connection for call in warehouse)
     assert sum(q.startswith('DROP TABLE') for q in sql) == (6 if initially_present else 0)
 
 

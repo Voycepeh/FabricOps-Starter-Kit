@@ -15,10 +15,8 @@ from fabricops_kit.io import (
     write_warehouse_table,
 )
 from fabricops_kit.io.shared import (
-    execute_warehouse_sql,
     get_spark_session,
     resolve_configured_lakehouse_table,
-    resolve_warehouse_name,
 )
 from fabricops_kit.pipeline.shared import resolve_physical_table_identity
 
@@ -137,6 +135,48 @@ def _demo_metadata_files(_state, *, delete=False):
     return counts
 
 
+def _demo_gold_output_exists() -> bool:
+    """Check only the configured demo Warehouse output using read-only SQL."""
+    return bool(read_warehouse_query(
+        "SELECT COUNT(*) AS n FROM sys.tables t JOIN sys.schemas s ON t.schema_id=s.schema_id "
+        "WHERE s.name='demo' AND t.name='customer_summary'",
+        store="Gold",
+    ).first()["n"])
+
+
+def _demo_gold_ddl_connection(_state):
+    """Get a native Warehouse command connection; never send DDL to Spark's reader."""
+    import notebookutils
+
+    data = getattr(notebookutils, "data", None)
+    connect = getattr(data, "connect_to_artifact", None)
+    if not callable(connect):
+        raise RuntimeError(
+            "Demo Gold Warehouse cleanup needs a native T-SQL command connection. "
+            "This notebook runtime does not provide notebookutils.data.connect_to_artifact "
+            "(currently documented for Fabric Python notebooks). "
+            "Drop [demo].[customer_summary] using the Gold Warehouse SQL editor, "
+            "then rerun 00C after stopping demo writers. No reset data has been deleted."
+        )
+    gold = _state.context.paths["Gold"]
+    connection = connect(gold.item_id, gold.workspace_id, "Warehouse")
+    if not callable(getattr(connection, "cursor", None)):
+        raise RuntimeError("Warehouse connection does not expose a SQL command cursor.")
+    return connection
+
+
+def _demo_drop_gold_output(_state, connection):
+    """Execute the one approved demo DDL command without a Spark query wrapper."""
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DROP TABLE IF EXISTS [demo].[customer_summary];")
+        connection.commit()
+    finally:
+        close = getattr(cursor, "close", None)
+        if callable(close):
+            close()
+
+
 def _demo_remove_outputs(_state, *, preview=False):
     """Remove exact configured output objects and their physical publication markers."""
     import notebookutils
@@ -145,13 +185,9 @@ def _demo_remove_outputs(_state, *, preview=False):
         if store == "Gold":
             if preview:
                 continue
-            gold = _state.context.paths[store]
-            execute_warehouse_sql(
-                _state.spark,
-                gold,
-                "IF OBJECT_ID(N'demo.customer_summary', N'U') IS NOT NULL DROP TABLE [demo].[customer_summary]; SELECT 1 AS demo_reset_dropped;",
-                database_name=resolve_warehouse_name(gold, store),
-            )
+            if _demo_gold_output_exists():
+                connection = _state._demo_gold_connection
+                _demo_drop_gold_output(_state, connection)
         else:
             _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
             catalog = _state._demo_bronze_catalog if store == "Bronze" else _state._demo_silver_catalog
@@ -381,31 +417,41 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
             raise RuntimeError(f"{_file} must contain {_count} rows. Restore the fixture before resetting.")
         _demo_day1[_store, _table] = _frame
     _demo_remove_outputs(_demo, preview=True)
-    _demo_clear_metadata(_demo, _demo_counts, _demo_order)
-    if any(_demo_metadata_counts(_demo).values()):
-        raise RuntimeError(
-            "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    _demo_removed_files = _demo_metadata_files(_demo, delete=True)
-    for _folder, _count in _demo_removed_files.items():
-        print(f"Metadata Files/{_folder}: removed {_count}")
-    _demo_remove_outputs(_demo)
-    for (_store, _table), _expected in _demo_day1.items():
-        if (_store, _table) == ("Bronze", "orders"):
-            continue  # Validated CSV is the source; never recreate its redundant table.
-        _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
-        _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
-        _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
-        _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
-    _demo_verify_outputs(_demo)
-    if any(_demo_metadata_counts(_demo).values()):
-        raise RuntimeError(
-            "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    if any(_demo_metadata_files(_demo).values()):
-        raise RuntimeError(
-            "Lifecycle artifacts remain. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    for _frame in _demo_day1.values():
-        _frame.unpersist()
+    # Verify the native command route before deleting any metadata.
+    # Do not require it when the Gold demo output is already absent.
+    _demo._demo_gold_connection = _demo_gold_ddl_connection(_demo) if _demo_gold_output_exists() else None
+    try:
+        _demo_clear_metadata(_demo, _demo_counts, _demo_order)
+        if any(_demo_metadata_counts(_demo).values()):
+            raise RuntimeError(
+                "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
+            )
+        _demo_removed_files = _demo_metadata_files(_demo, delete=True)
+        for _folder, _count in _demo_removed_files.items():
+            print(f"Metadata Files/{_folder}: removed {_count}")
+        _demo_remove_outputs(_demo)
+        for (_store, _table), _expected in _demo_day1.items():
+            if (_store, _table) == ("Bronze", "orders"):
+                continue  # Validated CSV is the source; never recreate its redundant table.
+            _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
+            _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
+            _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
+            _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
+        _demo_verify_outputs(_demo)
+        if any(_demo_metadata_counts(_demo).values()):
+            raise RuntimeError(
+                "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
+            )
+        if any(_demo_metadata_files(_demo).values()):
+            raise RuntimeError(
+                "Lifecycle artifacts remain. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
+            )
+        for _frame in _demo_day1.values():
+            _frame.unpersist()
+    finally:
+        connection = _demo._demo_gold_connection
+        if connection is not None:
+            close = getattr(connection, "close", None)
+            if callable(close):
+                close()
     print("RESET COMPLETE")
