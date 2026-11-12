@@ -2306,26 +2306,32 @@ def widget_data_contract(
         table_rules: dict[str, Any] = {}
         existing_freshness = next((r for r in guardrails if r.get("guardrail_type") == "freshness"), {})
         freshness_parameters = _parameters(existing_freshness)
+        is_file_source = current.get("payload", {}).get("source", {}).get("source_type") == "file"
+        freshness_evidence_method = "metadata" if is_file_source else "column"
         freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
         freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
-        freshness_method = widgets.Dropdown(options=[("Select evidence method", ""), ("Metadata-based", "metadata"), ("Column-based", "column")], value=freshness_parameters.get("evidence_method", ""), disabled=not editable, **shared.widget_common(widgets, "Evidence method"))
-        freshness_column = widgets.Dropdown(options=[("Select timestamp column", ""), *[(name, name) for name in temporal_column_names]], value=freshness_parameters.get("freshness_column", "") if freshness_parameters.get("freshness_column", "") in temporal_column_names else "", disabled=not editable, **shared.widget_common(widgets, "Timestamp column"))
+        freshness_method = widgets.Dropdown(
+            options=[("File modification metadata" if is_file_source else "Timestamp column", freshness_evidence_method)],
+            value=freshness_evidence_method, disabled=True,
+            **shared.widget_common(widgets, "Evidence source (automatic)"),
+        )
+        saved_freshness_column = freshness_parameters.get("freshness_column", "")
+        default_freshness_column = (
+            saved_freshness_column if saved_freshness_column in temporal_column_names
+            else temporal_column_names[0] if len(temporal_column_names) == 1 else ""
+        )
+        freshness_column = widgets.Dropdown(options=[("Select timestamp column", ""), *[(name, name) for name in temporal_column_names]], value=default_freshness_column, disabled=not editable or is_file_source, **shared.widget_common(widgets, "Timestamp column"))
         freshness_age = widgets.Text(value=str(freshness_parameters.get("maximum_age", "")), continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Maximum age"))
         freshness_unit = widgets.Dropdown(options=["minutes", "hours", "days"], value=freshness_parameters.get("maximum_age_unit", "days"), disabled=not editable, **shared.widget_common(widgets, "Age unit"))
-        freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value=freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable, **shared.widget_common(widgets, "Evaluation scope"))
+        freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value="full_dataset" if is_file_source else freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable or is_file_source, **shared.widget_common(widgets, "Evaluation scope"))
         freshness_hint = widgets.HTML()
         def refresh_freshness_controls(_change=None):
-            metadata = freshness_method.value == "metadata"
-            freshness_column.layout.display = "none" if metadata else ""
-            freshness_column.disabled = not editable or metadata
-            if metadata:
-                freshness_scope.value = "full_dataset"
-            freshness_scope.disabled = not editable or metadata
+            freshness_column.layout.display = "none" if is_file_source else ""
+            freshness_scope.layout.display = "none" if is_file_source else ""
             freshness_hint.value = (
-                "Physical update metadata only. Unsupported or inaccessible metadata is reported as unavailable. File modification time is not business-event time."
-                if metadata else "Evaluate the latest configured timestamp in the selected scope. Column aggregation may scan data. Empty or invalid evidence is reported explicitly."
+                "Automatically uses the oldest selected file's modification time. This is physical file freshness, not business-event time. Missing file metadata is reported as unavailable."
+                if is_file_source else "Automatically checks the latest value in the selected timestamp column. Choose a timestamp and scope; this check may scan the source data."
             )
-        freshness_method.observe(refresh_freshness_controls, names="value")
         refresh_freshness_controls()
         def build_freshness_record():
             old = next((r for r in session_guardrails() if r.get("guardrail_type") == "freshness"), {})
@@ -2333,9 +2339,9 @@ def widget_data_contract(
                 return None
             parameters = _parameters(old)
             if freshness_enabled.value:
-                parameters = {"evidence_method": freshness_method.value, "evaluation_scope": freshness_scope.value,
+                parameters = {"evidence_method": freshness_evidence_method, "evaluation_scope": "full_dataset" if is_file_source else freshness_scope.value,
                     "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
-                if freshness_method.value == "column":
+                if not is_file_source:
                     parameters["freshness_column"] = freshness_column.value
                 from fabricops_kit.pipeline.shared import validate_freshness_parameters
                 validate_freshness_parameters(parameters)
@@ -3223,14 +3229,14 @@ def widget_data_contract(
             table_definition,
             guardrail_section(
                 "Freshness",
-                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_title="Applies when this dataset is read by a downstream pipeline.",
                 banner_detail=(
-                    "This rule is checked when the table is consumed as an input, "
-                    "not when this table itself is written."
+                    "This rule is checked when the dataset is consumed as an input, "
+                    "not when that dataset is written."
                 ),
                 description=(
-                    "Check whether the source has received sufficiently recent data. "
-                    "Choose physical update metadata or a timestamp column and the scope to evaluate."
+                    "Check whether this source is recent enough. Evidence is selected automatically "
+                    "by source type: file modification metadata for files, timestamp column for tables."
                 ),
                 header_controls=[
                     table_rules["freshness"]["enabled"],
