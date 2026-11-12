@@ -25,7 +25,7 @@ def test_unobserved_file_discovered_from_successful_pipeline_without_reading(wid
     monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
         lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run]})
-    state = widget_runtime["start"]()
+    state = module.widget_data_contract()
     labels = {value: label for label, value in state["_controls"]["table"].options}
     assert source["source_id"] in labels
     assert "demo/orders.csv" in labels[source["source_id"]]
