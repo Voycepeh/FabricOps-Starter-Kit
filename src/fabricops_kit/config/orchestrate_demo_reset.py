@@ -441,10 +441,4 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         )
     for _frame in _demo_day1.values():
         _frame.unpersist()
-finally:
-    connection = _demo._demo_gold_connection
-    if connection is not None:
-        close = getattr(connection, "close", None)
-        if callable(close):
-            close()
     print("RESET COMPLETE")
