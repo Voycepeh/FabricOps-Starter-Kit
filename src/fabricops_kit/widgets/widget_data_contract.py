@@ -6951,6 +6951,10 @@ def widget_data_contract(
                 layout=widgets.Layout(width="100%", gap="8px"),
             ),
             shared.form_section(
+                widgets, title="Read / Write Guardrails",
+                children=[guardrail_disclosure],
+            ),
+            shared.form_section(
                 widgets,
                 title="Exact JSON",
                 children=[exact_json],
@@ -6964,7 +6968,7 @@ def widget_data_contract(
         nonlocal sidebar_content
         sidebar_content = (
             table_summary, table_context_accordion, sidebar_actions, table_exit_row,
-            table_exit_confirm, operation_progress, status, guardrail_disclosure,
+            table_exit_confirm, operation_progress, status,
         )
         apply_view()
 
@@ -7099,7 +7103,7 @@ def widget_data_contract(
 
         state["_refresh_ai_controls"] = refresh_ai_controls
         editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
-        editor_roots.extend([table_summary, table_context_accordion, guardrail_disclosure, *sidebar_actions.children])
+        editor_roots.extend([table_summary, table_context_accordion, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
             sensitive_ai_panel, business_advanced, business_rule_controls,
