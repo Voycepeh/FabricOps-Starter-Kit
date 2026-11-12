@@ -47,7 +47,7 @@ jobs:
           python -c 'from scripts.validate_generated_artifact_ownership import restore_generated_metadata_and_page_timestamps;restore_generated_metadata_and_page_timestamps(update_reference_pages=True)'
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/public-api-compatibility.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+          git add -A docs/api/reference docs/reference
           if ! git diff --cached --quiet; then
             git commit -m "Regenerate profile API reference artifacts for PR 1834"
             git push origin HEAD:fix/native-profile-display-status
