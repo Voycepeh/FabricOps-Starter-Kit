@@ -79,13 +79,70 @@ For registered table pipelines, the same [`orchestrate_read()`](api/reference/or
 
 The pipeline example above uses `SELECT * FROM demo.orders` to demonstrate the optional Full Read SQL argument without filtering the source. Set `query=None` to use a plain table read. For a narrowed Lakehouse read, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
 
-Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
+For direct, lower-level file access outside a pipeline, the format-specific foundational functions remain available: [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) and [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). For pipeline reads of files, prefer `orchestrate_read()` so the file participates in the usual read stages and operational evidence.
 
 ??? info "Under the Hood — store and file routing"
 
     `00_env_config` maps logical aliases to workspace IDs, item IDs, physical names and store types. Internal [`resolve_fabric_context()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L108), [`get_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L823) and [`resolve_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L155) select the location. Table callers do not choose a Lakehouse versus Warehouse reader.
 
     File helpers resolve the same logical Lakehouse store but operate under its `Files` area. [`orchestrate_read()`](api/reference/orchestrate_read.md) selects [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md) or [`read_warehouse_query()`](api/reference/read_warehouse_query.md). Table publication ultimately uses [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md); there is no generic governed file writer in the current pipeline orchestrator.
+
+## How does metadata-driven Freshness detect changes?
+
+**Freshness asks when the physical source was last updated, without inspecting business timestamp columns.** A frozen Data Contract supplies a positive maximum age (minutes, hours or days), an Enabled/Disabled decision and Warn/Block enforcement. The evidence method is always `metadata`, and the evaluation scope is the **complete physical source**, not a filtered SQL result or incremental batch. An event-date or record-age requirement belongs in a separately authored Data Quality rule.
+
+| Source | Physical evidence | How the age is determined |
+| --- | --- | --- |
+| Lakehouse Delta table | Delta transaction history at the resolved OneLake table path | Take the timestamp of the most recent qualifying data-changing commit by version. |
+| Warehouse table | Delta transaction history at the configured Warehouse table's resolved physical path | Use the same data-changing transaction-history check; this is **not** a query against a user-defined timestamp column or a claim that a generic SQL `last_modified` field exists. |
+| Lakehouse file, folder or wildcard | Filesystem modification metadata for the resolved data-file members | Recursively expand matching files, exclude hidden/control files and evaluate the **oldest** member's modification time. A newly arrived file cannot disguise an older member in the selected set. |
+
+The table check reads Delta history fields `operation`, `version` and `timestamp`, selecting the highest version among `WRITE`, `MERGE`, `UPDATE`, `DELETE`, `STREAMING UPDATE`, `CREATE TABLE AS SELECT`, `CREATE OR REPLACE TABLE AS SELECT` and `RESTORE`. Merely reading or inspecting a table does not reset Freshness. For files, the implementation records file membership and modification evidence; it does not infer the business event time inside the files.
+
+??? info "Under the Hood — Freshness evidence and enforcement"
+
+    The source is resolved via `00_env_config` and its physical identity. Internal [`collect_freshness_evidence()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py) obtains the metadata. Table Reads reuse the **current run's Source Observation** evidence; file Reads evaluate the resolved file membership. [`check_freshness()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py) compares that evidence with the frozen Contract rule and records the guardrail outcome in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) when persistence is permitted.
+
+    The observed timestamp is compared with execution time minus the configured maximum age, in UTC. Missing paths, inaccessible or insufficient history, no matching data files, invalid/future timestamps and unsupported file-selection options produce unavailable/invalid evidence, **not** a silently invented refresh time. The configured Warn or Block policy then determines continuation. No fallback reads a timestamp column or scans business rows to guess Freshness. In particular, Warehouse metadata access must actually resolve and be readable in the Fabric runtime; the Warehouse label alone does not guarantee evidence is available.
+
+    File selection options that can change which members the reader consumes (such as `pathGlobFilter`, `modifiedBefore`, `modifiedAfter`, `recursiveFileLookup`, `ignoreMissingFiles` or `ignoreCorruptFiles`) make reliable membership-based Freshness unavailable rather than risking a mismatch. File content may change without a meaningful business-data update, and a table's write time is not the same as a record's event time.
+
+## How does SQL query pushdown reduce data transferred to Spark?
+
+For a **Full Read**, pass `query` to [`orchestrate_read()`](api/reference/orchestrate_read.md). FabricOps preserves the configured physical source identity for governance while executing the returned SQL result. The engine differs by source:
+
+- **Warehouse:** validate one read-only T-SQL SELECT/CTE and send it through the Fabric Warehouse Spark connector to the Warehouse SQL engine. The Warehouse performs the query's filtering, projections, aggregations and joins **before** Spark receives the result; `query=None` retains the full-table reader.
+- **Lakehouse:** parse read-only Spark SQL, verify that physical table references stay within the declared source, bind them to its configured OneLake Delta DataFrame using a private temporary view, and let Spark plan the query. This is **Spark SQL execution over the configured Lakehouse**, not a push to a Warehouse SQL endpoint.
+- **Incremental:** caller-supplied `query` is rejected; FabricOps owns the accepted-watermark predicate. Incremental Warehouse reads push the bounded predicate to the Warehouse connector, while incremental Lakehouse reads apply a Delta DataFrame filter.
+
+```python
+# Warehouse: only the filtered and projected result reaches Spark.
+warehouse_orders = orchestrate_read(
+    store="Gold", schema="demo", table_name="order_history",
+    read_mode="full",
+    query="""
+        SELECT customer_id, COUNT(*) AS order_count
+        FROM demo.order_history
+        WHERE customer_id IS NOT NULL
+        GROUP BY customer_id
+    """,
+)
+
+# Lakehouse: Spark SQL runs against the configured Delta source.
+lakehouse_orders = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders",
+    read_mode="full",
+    query="SELECT order_id, customer_id FROM demo.orders WHERE is_active = true",
+)
+```
+
+??? info "Under the Hood — SQL validation, execution and boundaries"
+
+    [`pipeline_read()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py) selects the reader after resolving the configured store. [`read_warehouse_query()`](api/reference/read_warehouse_query.md) passes validated T-SQL and the configured Warehouse artifact to the Fabric connector. A query narrows the returned rows and columns; it does **not** discover extra governed source participants or change the physical source's Freshness evaluation scope.
+
+    For Lakehouse SQL, aliases, CTEs and self-joins against the declared source are supported. A limited simple T-SQL `TOP (n)` pattern can be converted to Spark `LIMIT`; `TOP PERCENT`, `WITH TIES`, unsupported T-SQL features, additional physical tables and table-valued sources are rejected rather than silently reinterpreted. Use native Spark SQL for more complex Lakehouse expressions.
+
+    Pushdown can reduce Spark-side data transfer and downstream processing, but does not promise a particular speedup: SQL execution cost, Warehouse connector behavior, result size and Spark workload still matter. Filtering a result also does not prove that fewer underlying storage bytes were scanned by the query engine.
 
 ## How do Full, Incremental, Append and SCD processing work?
 
