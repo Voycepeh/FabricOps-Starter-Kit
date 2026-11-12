@@ -863,10 +863,8 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     freshness = controls["table_guardrails"]["freshness"]
     freshness["enabled"].value = True
     freshness["block"].value = False
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][2].value = "2"
-    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][1].value = "2"
+    freshness["parameters"][2].value = "hours"
 
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Persisted identifier"
@@ -904,9 +902,8 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     reopened_freshness = hydrated["table_guardrails"]["freshness"]
     assert reopened_freshness["enabled"].value is True
     assert reopened_freshness["block"].value is False
-    assert reopened_freshness["parameters"][1].value == "column_1"
-    assert reopened_freshness["parameters"][2].value == "2.0"
-    assert reopened_freshness["parameters"][4].value == "full_dataset"
+    assert reopened_freshness["parameters"][0].value == "metadata"
+    assert reopened_freshness["parameters"][1].value == "2.0"
 
     assert "source_drift" not in hydrated["table_guardrails"]
 
@@ -2143,11 +2140,8 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         for message in state["_validation_errors"].values()
     )
 
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][2].value = "6"
-    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][1].value = "6"
+    freshness["parameters"][2].value = "hours"
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -2155,8 +2149,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "freshness"
     )
     assert module._parameters(staged) == {
-        "evidence_method": "column", "evaluation_scope": "full_dataset",
-        "freshness_column": "column_1",
+        "evidence_method": "metadata", "evaluation_scope": "full_dataset",
         "maximum_age": 6.0,
         "maximum_age_unit": "hours",
     }
@@ -3068,10 +3061,9 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     controls = state["_controls"]
 
     freshness = controls["table_guardrails"]["freshness"]
-    assert len(freshness["parameters"]) == 5
-    assert freshness["parameters"][0].value == "column"
+    assert len(freshness["parameters"]) == 3
+    assert freshness["parameters"][0].value == "metadata"
     assert freshness["parameters"][0].disabled is True
-    assert freshness["parameters"][1].layout.display != "none"
 
     column_definition = controls["column_definition"].children[1]
     assert column_definition.layout.grid_template_columns == "120px minmax(240px, 1fr)"
@@ -3223,13 +3215,11 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
     freshness = controls["table_guardrails"]["freshness"]
     assert freshness["parameters"][0].value == "metadata"
     assert freshness["parameters"][0].disabled is True
-    assert freshness["parameters"][1].layout.display == "none"
-    assert freshness["parameters"][4].layout.display == "none"
-    assert freshness["parameters"][4].value == "full_dataset"
+    assert len(freshness["parameters"]) == 3
     assert "file" in freshness["display"][-1].value.lower()
     freshness["enabled"].value = True
-    freshness["parameters"][2].value = "2"
-    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][1].value = "2"
+    freshness["parameters"][2].value = "hours"
     saved = next(
         rule for records in state["_pending_guardrails"].values()
         for rule in records.values() if rule["guardrail_type"] == "freshness"
@@ -3240,68 +3230,20 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
     }
 
 
-def test_table_freshness_automatically_uses_column_and_keeps_same_controls(widget_runtime):
-    """Warehouse tables use a timestamp-column freshness check."""
-    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
-    state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]
-    assert freshness["parameters"][0].value == "column"
-    assert freshness["parameters"][0].disabled is True
-    assert freshness["parameters"][1].layout.display != "none"
-    assert freshness["parameters"][4].layout.display != "none"
-    assert freshness["parameters"][1].value == "column_1"
-
-
-def test_table_freshness_rejects_missing_temporal_columns(widget_runtime):
-    """A table without date/time evidence must not offer arbitrary columns."""
+def test_warehouse_freshness_is_metadata_only_without_temporal_columns(widget_runtime):
+    """Warehouse authoring never offers column-based freshness or requires a date field."""
     widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     for column in widget_runtime["catalogue"][1:]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
     freshness = state["_controls"]["table_guardrails"]["freshness"]
-    selector = freshness["parameters"][1]
-    assert selector.options == [("No date or timestamp columns available", "")]
-    assert selector.disabled is True
-    assert "No date or timestamp columns available" in freshness["display"][-1].value
-    assert "table.freshness" in state["_validation_errors"]
-
-
-def test_table_freshness_excludes_non_temporal_types(widget_runtime):
-    """Only date/time types are selectable, including timestamp-with-precision."""
-    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
-    widget_runtime["catalogue"][1]["data_type"] = "update"
-    widget_runtime["catalogue"][2]["data_type"] = "timestamp(6)"
-    _capture_fixture_columns(widget_runtime)
-    state = widget_runtime["open"]()
-    options = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1].options
-    assert ("column_0", "column_0") not in options
-    assert ("column_1", "column_1") in options
-
-
-def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
-    """Timestamp dropdown options stay valid when temporal columns are present."""
-    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
-    widget_runtime["catalogue"].append({
-        "table_id": widget_runtime["catalogue"][0]["table_id"],
-        "workspace_id": widget_runtime["catalogue"][0]["workspace_id"],
-        "metadata_level": "column",
-        "column_id": "col-date",
-        "column_name": "snapshot_date",
-        "data_type": "date",
-        "is_active": True,
-    })
-    _capture_fixture_columns(widget_runtime)
-    state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1]
-
-    assert ("Select timestamp column", "") in freshness.options
-    assert ("snapshot_date", "snapshot_date") in freshness.options
-    option_values = [
-        option[1] if isinstance(option, tuple) else option
-        for option in freshness.options
-    ]
-    assert freshness.value in option_values
+    assert len(freshness["parameters"]) == 3
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert "Delta transaction" in freshness["display"][-1].value
+    freshness["parameters"][1].value = "3"
+    assert "table.freshness" not in state["_validation_errors"]
 
 
 def test_selection_diagnostic_names_control_table_column_and_valid_options():
@@ -4646,11 +4588,9 @@ def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     freshness = state["_controls"]["table_guardrails"]["freshness"]
     assert freshness["parameters"][0].value == "metadata"
     assert freshness["parameters"][0].disabled is True
-    assert freshness["parameters"][1].layout.display == "none"
-    assert freshness["parameters"][4].value == "full_dataset"
-    assert freshness["parameters"][4].layout.display == "none"
+    assert len(freshness["parameters"]) == 3
     assert "Delta transaction" in freshness["display"][-1].value
-    freshness["parameters"][2].value = "2"
+    freshness["parameters"][1].value = "2"
     freshness["enabled"].value = True
     saved = next(
         item for records in state["_pending_guardrails"].values()
