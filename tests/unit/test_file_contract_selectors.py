@@ -21,6 +21,8 @@ def test_unobserved_file_discovered_from_successful_pipeline_without_reading(wid
         "observed_columns_json": json.dumps([{"column_name": "id", "data_type": "int"}])
     }]}
     from tests.unit.test_widget_data_contract import module
+    import fabricops_kit.config.shared as config_shared
+    monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
         lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run]})
     state = widget_runtime["start"]()
