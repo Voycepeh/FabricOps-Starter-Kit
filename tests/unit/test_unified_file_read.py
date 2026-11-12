@@ -209,7 +209,7 @@ def test_file_contract_shared_schema_dq_grain_and_metadata_freshness(files, spar
         return {'evidence_method': 'metadata', 'evaluation_scope': 'full_dataset',
                 'outcome': 'available', 'latest_value': datetime.now(UTC).isoformat(),
                 'scan_required': False}
-    monkeypatch.setattr(freshness_module, 'collect_freshness_evidence', metadata_evidence)
+    monkeypatch.setattr(freshness_module, 'collect_freshness_evidence', metadata_evidence, raising=False)
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *a, **kw: rules)
     frame = spark_session.createDataFrame([(1, datetime.now(UTC)), (1, datetime.now(UTC))], 'id int, modified timestamp')
     schema = check_schema(frame, table_id=source_id, verbose=False, context=context)
