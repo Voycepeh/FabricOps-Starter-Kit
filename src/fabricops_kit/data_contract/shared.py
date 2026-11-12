@@ -1186,6 +1186,8 @@ def get_table_runtime_context(
             ),
             "committed_by": str(latest_profile_row.get("_committed_by") or ""),
             "committed_at": latest_profile_row.get("_committed_at"),
+            "activity_id": str(latest_profile_row.get("_activity_id") or ""),
+            "notebook_id": str(latest_profile_row.get("_notebook_id") or ""),
         }
         snapshot_id = str(latest_profile_row.get("profile_snapshot_id") or "")
         if snapshot_id:
