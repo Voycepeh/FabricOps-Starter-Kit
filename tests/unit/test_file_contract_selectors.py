@@ -13,13 +13,13 @@ def test_unobserved_file_discovered_from_successful_pipeline_without_reading(wid
     source = contracts.file_source_identity(workspace_id="dev", item_id="item",
         relative_path="demo/orders.csv", file_format="csv",
         reader_options={"header": True, "inferSchema": True})
-    run = {"completed_at": "2026-11-12T10:00:00Z", "operations": [{
+    run = {"completed_at": "2026-11-12T10:00:00Z", "operations": json.dumps([{
         "pipeline_role": "source", "source_type": "file", "source_id": source["source_id"],
         "status": "succeeded", "destination": {
             **{key: source[key] for key in ("workspace_id", "item_id", "relative_path", "file_format")},
             "reader_options_json": json.dumps(source["reader_options"])},
         "observed_columns_json": json.dumps([{"column_name": "id", "data_type": "int"}])
-    }]}
+    }])}
     from tests.unit.test_widget_data_contract import module
     import fabricops_kit.config.shared as config_shared
     monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
