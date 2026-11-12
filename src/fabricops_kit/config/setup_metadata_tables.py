@@ -98,37 +98,47 @@ def _validate_existing_metadata_schema(
     expected = _schema_fields_by_name(expected_schema)
     if not existing:
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
+    missing = sorted(set(expected) - set(existing))
+    unexpected = sorted(set(existing) - set(expected))
+    mismatches: list[str] = []
+    for name in sorted(set(existing) & set(expected)):
+        existing_field = existing[name]
+        if existing_field is None:
+            continue
+        expected_type = metadata_schema_type_name(expected[name].dataType)
+        existing_type = metadata_schema_type_name(existing_field.dataType)
+        if existing_type != expected_type:
+            mismatches.append(f"{name}: expected {expected_type}, found {existing_type}")
+
+    differences = []
+    if missing:
+        differences.append("Missing columns: " + ", ".join(missing))
+    if unexpected:
+        differences.append("Unexpected columns: " + ", ".join(unexpected))
+    if mismatches:
+        differences.append("Type mismatches: " + "; ".join(mismatches))
+    detail = ". ".join(differences)
+
     provenance = {"pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version"}
     supported_run_addition = (table_name == "METADATA_PIPELINE_RUN" and allow_missing
-        and not (set(existing) - set(expected)) and set(expected) - set(existing) <= provenance)
-    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} and set(expected) != set(existing) and not supported_run_addition:
+        and not unexpected and set(missing) <= provenance)
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} and (missing or unexpected) and not supported_run_addition:
         raise ValueError(
-            f"Incompatible {table_name} physical schema. Required identity and execution fields must match the canonical schema. "
-            "Existing data has been preserved; automatic schema evolution is unsafe for this layout."
+            f"Incompatible {table_name} physical schema. {detail}. "
+            "Existing data has been preserved; automatic schema evolution is unsafe for this layout. "
+            "Inspect the differences and plan an explicit migration or reset."
         )
     if table_name == "METADATA_PROCESSING_STATE" and (
-        "observation_status" in existing or "publication_payload_json" in existing
-        or set(expected) - set(existing)
+        "observation_status" in existing or "publication_payload_json" in existing or missing
     ):
         raise ValueError(
             "Incompatible METADATA_PROCESSING_STATE schema. Existing checkpoints and publication receipts have been preserved. "
-            "Required processing identity and progress fields cannot be inferred safely."
+            f"Required processing identity and progress fields cannot be inferred safely. {detail}. "
+            "Inspect the differences and plan an explicit migration or reset."
         )
-    missing = [name for name in expected if name not in existing]
-    mismatches: list[str] = []
-    for name, expected_field in expected.items():
-        existing_field = existing.get(name)
-        if existing_field is None:
-            continue
-        expected_type = metadata_schema_type_name(expected_field.dataType)
-        existing_type = metadata_schema_type_name(existing_field.dataType)
-        if existing_type != expected_type:
-            mismatches.append(f"{name} type expected {expected_type} but found {existing_type}")
     if mismatches:
         raise ValueError(
-            f"{table_name} physical schema does not match the canonical FabricOps metadata schema: "
-            + "; ".join(mismatches)
-            + "."
+            f"{table_name} physical schema does not match the canonical FabricOps metadata schema: {detail}."
         )
     if missing and not allow_missing:
         raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
