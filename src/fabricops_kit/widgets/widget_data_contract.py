@@ -2308,64 +2308,39 @@ def widget_data_contract(
         freshness_parameters = _parameters(existing_freshness)
         is_file_source = current.get("payload", {}).get("source", {}).get("source_type") == "file"
         is_lakehouse_table = not is_file_source and str(table.get("store_type") or "").lower() == "lakehouse"
-        use_metadata_freshness = is_file_source or is_lakehouse_table
-        freshness_evidence_method = "metadata" if use_metadata_freshness else "column"
+        freshness_evidence_method = "metadata"
         freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
         freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
         freshness_method = widgets.Dropdown(
-            options=[("File modification metadata" if is_file_source else "Delta transaction history" if is_lakehouse_table else "Timestamp column", freshness_evidence_method)],
+            options=[("File modification metadata" if is_file_source else "Delta transaction history", freshness_evidence_method)],
             value=freshness_evidence_method, disabled=True,
             **shared.widget_common(widgets, "Evidence source (automatic)"),
         )
-        saved_freshness_column = freshness_parameters.get("freshness_column", "")
-        default_freshness_column = (
-            saved_freshness_column if saved_freshness_column in temporal_column_names
-            else temporal_column_names[0] if len(temporal_column_names) == 1 else ""
-        )
-        freshness_column = widgets.Dropdown(
-            options=[("Select date or timestamp column", "") if temporal_column_names else ("No date or timestamp columns available", ""),
-                     *[(name, name) for name in temporal_column_names]],
-            value=default_freshness_column,
-            disabled=not editable or use_metadata_freshness or not temporal_column_names,
-            **shared.widget_common(widgets, "Date / timestamp column"),
-        )
         freshness_age = widgets.Text(value=str(freshness_parameters.get("maximum_age", "")), continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Maximum age"))
         freshness_unit = widgets.Dropdown(options=["minutes", "hours", "days"], value=freshness_parameters.get("maximum_age_unit", "days"), disabled=not editable, **shared.widget_common(widgets, "Age unit"))
-        freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value="full_dataset" if use_metadata_freshness else freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable or use_metadata_freshness, **shared.widget_common(widgets, "Evaluation scope"))
         freshness_hint = widgets.HTML()
-        def refresh_freshness_controls(_change=None):
-            freshness_column.layout.display = "none" if use_metadata_freshness else ""
-            freshness_scope.layout.display = "none" if use_metadata_freshness else ""
-            freshness_hint.value = (
-                "Automatically uses the oldest selected file's modification time. This is physical file freshness, not business-event time. Missing file metadata is reported as unavailable."
-                if is_file_source else
-                "Automatically checks the latest data-changing Delta transaction. Maintenance-only operations are excluded; if transaction history is unavailable, evidence is unavailable."
-                if is_lakehouse_table else (
-                    "No date or timestamp columns available. Warehouse Freshness requires a suitable date/time column."
-                    if not temporal_column_names else
-                    "Automatically checks the latest value in the selected date or timestamp column. Choose the column and scope; this check may scan the source data."
-                )
-            )
-        refresh_freshness_controls()
+        freshness_hint.value = (
+            "Uses file modification metadata; the oldest selected file determines freshness. "
+            "This does not measure business-event time."
+            if is_file_source else
+            "Uses the latest data-changing Delta transaction. Warehouse history can lag SQL commits; "
+            "unavailable metadata is reported explicitly, never replaced with a column scan."
+        )
         def build_freshness_record():
             old = next((r for r in session_guardrails() if r.get("guardrail_type") == "freshness"), {})
             if not freshness_enabled.value and not old:
                 return None
             parameters = _parameters(old)
             if freshness_enabled.value:
-                parameters = {"evidence_method": freshness_evidence_method, "evaluation_scope": "full_dataset" if use_metadata_freshness else freshness_scope.value,
+                parameters = {"evidence_method": "metadata", "evaluation_scope": "full_dataset",
                     "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
-                if not use_metadata_freshness:
-                    if not temporal_column_names:
-                        raise ValueError("No date or timestamp columns available for table Freshness.")
-                    parameters["freshness_column"] = freshness_column.value
                 from fabricops_kit.pipeline.shared import validate_freshness_parameters
                 validate_freshness_parameters(parameters)
             return guardrail_record("freshness", "freshness", parameters, existing=old,
                 action="Block" if freshness_block.value else "Warn", active=freshness_enabled.value)
         table_rules["freshness"] = {"enabled": freshness_enabled, "block": freshness_block,
-            "parameters": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope],
-            "display": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope, freshness_hint],
+            "parameters": [freshness_method, freshness_age, freshness_unit],
+            "display": [freshness_method, freshness_age, freshness_unit, freshness_hint],
             "build_record": build_freshness_record}
         def derive_table_classification() -> str:
             """Return the highest ranked classification among columns retained by the write."""
@@ -2937,7 +2912,7 @@ def widget_data_contract(
             freshness_controls = table_rules["freshness"]
             source_refresh_expectation = "Not configured"
             if freshness_controls["enabled"].value:
-                source_refresh_expectation = f"{freshness_method.value} · {freshness_scope.value} · {freshness_age.value} {freshness_unit.value}"
+                source_refresh_expectation = f"metadata · full_dataset · {freshness_age.value} {freshness_unit.value}"
 
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
