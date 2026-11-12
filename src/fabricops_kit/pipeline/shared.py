@@ -5746,12 +5746,19 @@ def capture_source_observation(
     if source_type not in {"lakehouse", "warehouse"}:
         raise ValueError(f"Store {store_key!r} must resolve to a Lakehouse or Warehouse.")
     configured_store = get_store(config, active_workspace_id, store_key)
+    warehouse_history_path = None
     if source_type == "warehouse":
         configured_schema = schema_value if schema_value is not None else getattr(configured_store, "schema", None)
         if configured_schema is None or not str(configured_schema).strip():
             raise ValueError("schema is required for Warehouse observation; pass it or configure a default schema.")
         schema_value, table_value, _object_name = resolve_warehouse_table_location(
             configured_store, configured_schema, table_value, warehouse_name=configured_store.key
+        )
+        # Fabric Warehouse publishes read-only Delta logs for tables in OneLake.
+        # Metadata may lag the SQL commit; failed access stays unavailable.
+        warehouse_history_path = (
+            f"abfss://{configured_store.workspace_id}@onelake.dfs.fabric.microsoft.com/"
+            f"{configured_store.item_id}/Tables/{schema_value}/{table_value}"
         )
     else:
         table_value, schema_value, _path = resolve_lakehouse_table_location(configured_store, table_value, schema_value)
@@ -5790,7 +5797,7 @@ def capture_source_observation(
                     context={**(context or {}), "_spark_session": spark}))
             evidence = collect_freshness_evidence(parameters, dataframe=freshness_frame,
                 source={"source_type": "table", "table_id": governed_table_id, "store_type": source_type,
-                        "resolved_path": _path if source_type == "lakehouse" else None}, spark_session=spark)
+                        "resolved_path": _path if source_type == "lakehouse" else warehouse_history_path}, spark_session=spark)
             _CURRENT_FRESHNESS_EVIDENCE[
                 (active_workspace_id, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
             ] = {**evidence, "_activity_id": str(audit["_activity_id"])}
