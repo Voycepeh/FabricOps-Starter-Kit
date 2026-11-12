@@ -666,3 +666,47 @@ def test_historical_source_drift_is_retained_but_not_inherited_or_authorable(mon
     with pytest.raises(ValueError, match='guardrail_type must be'):
         service.canonical_guardrail_rule_record({'contract_id': 'c', 'contract_version': 2,
             'guardrail_type': 'source_drift'}, config={}, active_workspace_id='dev')
+
+
+def test_save_confirmation_ignores_timestamp_representation(monkeypatch):
+    """A Spark timezone round-trip is not a different contract revision."""
+    from datetime import datetime, timezone
+
+    expected = {
+        "contract_id": "contract-orders", "contract_version": 1,
+        "status": "draft", "contract_payload_json": '{"table":{}}',
+        "_activity_id": "activity-123",
+        "_committed_at": datetime(2026, 11, 12, 15, 0, tzinfo=timezone.utc),
+    }
+    persisted = {
+        **expected,
+        "_committed_at": datetime(2026, 11, 12, 15, 0),
+    }
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_a, **_k: [persisted])
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_a: "governance")
+    confirmed = service._confirm_contract_mutation(
+        expected, config={}, active_workspace_id="dev",
+        spark_session=None, context={}, store="Metadata", schema=None,
+    )
+    assert confirmed == persisted
+
+
+@pytest.mark.parametrize("changed", [
+    {"contract_payload_json": '{"table":{"changed":true}}'},
+    {"_activity_id": "other-author"},
+    {"status": "frozen"},
+])
+def test_save_confirmation_rejects_real_concurrent_changes(monkeypatch, changed):
+    """Payload, activity and lifecycle changes remain protected."""
+    expected = {
+        "contract_id": "contract-orders", "contract_version": 1,
+        "status": "draft", "contract_payload_json": '{"table":{}}',
+        "_activity_id": "activity-123",
+    }
+    monkeypatch.setattr(service, "read_lakehouse_table", lambda *_a, **_k: [{**expected, **changed}])
+    monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_a: "governance")
+    with pytest.raises(RuntimeError, match="changed in another session"):
+        service._confirm_contract_mutation(
+            expected, config={}, active_workspace_id="dev",
+            spark_session=None, context={}, store="Metadata", schema=None,
+        )
