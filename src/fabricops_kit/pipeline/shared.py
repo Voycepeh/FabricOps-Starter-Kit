@@ -493,6 +493,9 @@ def collect_freshness_evidence(parameters, *, dataframe=None, source=None, spark
                 return {**evidence, "reason": "Physical table path is unavailable."}
             from pyspark.sql import functions as F
             history = DeltaTable.forPath(spark_session, path).history()
+            required_history_fields = {"operation", "version", "timestamp"}
+            if not required_history_fields.issubset(set(history.columns)):
+                return {**evidence, "reason": "Delta transaction history lacks required operation, version, or timestamp metadata."}
             updates = history.filter(F.col("operation").isin("WRITE", "MERGE", "UPDATE", "DELETE", "STREAMING UPDATE", "CREATE TABLE AS SELECT", "CREATE OR REPLACE TABLE AS SELECT", "RESTORE"))
             row = updates.orderBy(F.col("version").desc()).first()
             if row is None:
