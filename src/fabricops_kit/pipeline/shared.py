@@ -515,7 +515,7 @@ def collect_freshness_evidence(parameters, *, dataframe=None, source=None, spark
             evidence.update(file_count=len(members), members=records,
                 members_sha256=hashlib.sha256(json.dumps(records, separators=(",", ":")).encode()).hexdigest(),
                 aggregation="oldest_member_modification", scan_required=False)
-        elif source.get("store_type") == "lakehouse":
+        elif source.get("store_type") in {"lakehouse", "warehouse"}:
             from delta.tables import DeltaTable
             path = source.get("resolved_path")
             if not path:
