@@ -99,8 +99,9 @@ snapshots in its three native lifecycle folders are removed too. Table
 definitions remain; no metadata migration is performed.
 
 Four Day 1 tables are overwritten, Orders CSV is validated and retained,
-and six outputs plus the obsolete Bronze Orders table are removed in the reserved
-``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
+and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
+``demo`` schemas of the configured Bronze/Silver stores. The Gold customer_summary
+table is retained with zero rows when present. Other business
 tables and source files are preserved. Exact demo table/workspace references,
 artifact contents, fixture counts and catalog locations are
 checked before deletion. A dedicated name alone cannot prove ownership;
@@ -131,9 +132,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:247`
+`fabricops_kit/config/orchestrate_demo_reset.py:240`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L247-L457">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L240-L444">View on GitHub</a>
 </div>
 
 
