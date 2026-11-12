@@ -1348,7 +1348,7 @@ def widget_data_contract(
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = sidebar_content
         section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_view)}</h3>"
-        right.children = (section_heading, *left_children, *right_children)
+        right.children = (contract_nav_row, section_heading, *left_children, *right_children)
         if selected_view == "Data Quality":
             refresh_dq_rules = state.get("_refresh_dq_rules")
             if callable(refresh_dq_rules):
@@ -7243,15 +7243,12 @@ def widget_data_contract(
     contract_nav_row = widgets.HBox(
         [top_nav],
         layout=widgets.Layout(
-            width="100%", justify_content="flex-start", margin="4px 0 6px 0",
+            width="100%", justify_content="flex-start", margin="0 0 8px 0",
         ),
     )
     contract_nav_row.add_class("fabricops-contract-nav-row")
     editor_shell = widgets.VBox(
-        [
-            contract_nav_row,
-            workspace,
-        ],
+        [workspace],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
     )
 
