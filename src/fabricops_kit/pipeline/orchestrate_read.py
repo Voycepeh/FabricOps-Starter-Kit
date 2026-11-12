@@ -1,6 +1,7 @@
 """Public owner for the standard governed source lifecycle."""
 from __future__ import annotations
 from typing import Any
+import json
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
