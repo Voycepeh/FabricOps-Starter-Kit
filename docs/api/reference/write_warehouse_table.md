@@ -9,6 +9,9 @@
 
 Write a DataFrame to a configured Fabric warehouse target.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
 
 ## Usage notes
 

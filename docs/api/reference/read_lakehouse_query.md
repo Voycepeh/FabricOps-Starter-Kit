@@ -8,6 +8,9 @@
 
 Run read-only Spark SQL against one configured Lakehouse table.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
 
 ## Usage notes
 

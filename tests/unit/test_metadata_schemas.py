@@ -315,6 +315,7 @@ def test_incompatible_processing_state_is_rejected_without_changing_progress():
 
 
 def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
+    """Report missing and unexpected fields while preserving incompatible metadata."""
     from importlib import import_module
     from pyspark.sql.types import StructField, StructType, StringType
     import pytest
@@ -336,6 +337,7 @@ def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
 
 
 def test_incompatible_metadata_schema_reports_wrong_column_types():
+    """Identify canonical type mismatches in incompatible metadata schemas."""
     from importlib import import_module
     from pyspark.sql.types import StructField, StructType, StringType, IntegerType
     import pytest
