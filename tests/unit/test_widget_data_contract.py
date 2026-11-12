@@ -941,8 +941,10 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
 
     controls["top_nav"].value = "Table"
     table_context = controls["left_pane"].children[0]
-    table_summary = table_context.value
-    assert "v1 · DRAFT" in table_summary
+    assert "v1 · DRAFT" in table_context.value
+    assert controls["table_context"].selected_index is None
+    controls["table_context"].selected_index = 0
+    table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
     assert "Workspace" in table_summary
     assert "Development" in table_summary
@@ -1608,7 +1610,7 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["left_pane"].children[0].value
+    table_summary = controls["table_context"].children[0].value
     assert "Row Key" in table_summary
     assert "column_1" in table_summary
 
@@ -1618,7 +1620,7 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["left_pane"].children[0].value
+    table_summary = controls["table_context"].children[0].value
     assert "One row represents a single order line." in table_summary
     assert "column_1" in table_summary
 
@@ -3054,7 +3056,7 @@ def test_table_classification_updates_left_summary_immediately(widget_runtime):
     """Table classification feedback follows the staged editor value without a save."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["left_pane"].children[0]
+    summary = controls["table_context"].children[0]
 
     assert "Confidential" in summary.value
     controls["table_classification"].value = "Restricted"
@@ -4022,8 +4024,8 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
         "lineage": [{"last_seen": value}],
     })
     controls = widget_runtime["open"]()["_controls"]
-    controls["load_table_context"].click()
-    summary = controls["left_pane"].children[0].value
+    controls["table_context"].selected_index = 0
+    summary = controls["table_context"].children[0].value
     assert f" · {expected}</div>" in summary
     assert f"title='{expected}'>{expected}</td>" in summary
 
@@ -4040,12 +4042,15 @@ def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
     assert reads == []
-    assert "have not been loaded" in controls["left_pane"].children[0].value
+    assert controls["table_context"].selected_index is None
+    assert "Expand to read saved profile" in controls["table_context"].children[0].value
 
-    controls["load_table_context"].click()
+    controls["table_context"].selected_index = 0
     assert len(reads) == 1
-    assert controls["load_table_context"].layout.display == "none"
-    assert "Pipeline usage" in controls["left_pane"].children[0].value
+    assert "Pipeline usage" in controls["table_context"].children[0].value
+    controls["table_context"].selected_index = None
+    controls["table_context"].selected_index = 0
+    assert len(reads) == 1
 
 
 def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, monkeypatch):
