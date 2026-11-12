@@ -2601,6 +2601,9 @@ def widget_data_contract(
             )
 
         table_summary = widgets.HTML()
+        table_context_content = widgets.HTML()
+        table_context_accordion = widgets.Accordion([table_context_content], selected_index=None)
+        table_context_accordion.set_title(0, "Table context")
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
         guardrail_disclosure = widgets.Accordion([guardrail_sidebar], selected_index=None)
@@ -2886,7 +2889,7 @@ def widget_data_contract(
 
         runtime_summary_html = (
             "<div style='color:#667085;font-size:12px;margin-top:14px;'>"
-            "Profile and pipeline usage have not been loaded.</div>"
+            "Expand to read saved profile, lineage and pipeline usage metadata.</div>"
         )
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
@@ -2905,11 +2908,12 @@ def widget_data_contract(
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
                 + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or table.get('workspace_id') or '') or str(state.get('workspace_id') or 'Unknown'))}</div>"
-                + "<details style='margin-top:10px;'><summary style='cursor:pointer;'>Table context</summary>"
-                + table_identity_html()
+            )
+            table_context_content.value = (
+                table_identity_html()
                 + runtime_summary_html
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                "<div style='margin-top:12px;'>"
+                + "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Grain</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
                 "<div style='margin-top:12px;'>"
@@ -2921,7 +2925,6 @@ def widget_data_contract(
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
                 f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
-                "</details>"
             )
             if state.get("workspace_id"):
                 difference = state.get("observation_difference", {})
@@ -2939,12 +2942,7 @@ def widget_data_contract(
         for freshness_control in table_rules["freshness"]["parameters"]:
             freshness_control.observe(render_table_summary, names="value")
 
-        load_table_context_button = widgets.Button(
-            description="Load profile and pipeline usage",
-            layout=widgets.Layout(width="100%"),
-        )
-
-        @busy_action("Loading profile and pipeline usage…")
+        @busy_action("Reading profile, lineage and pipeline usage metadata…")
         def ensure_runtime_context() -> None:
             nonlocal runtime_context, runtime_summary_html
             if runtime_context:
@@ -2952,7 +2950,6 @@ def widget_data_contract(
             if current.get("payload", {}).get("source", {}).get("source_type") == "file":
                 runtime_context = {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "pipeline_usage": []}
                 runtime_summary_html = runtime_context_html()
-                load_table_context_button.layout.display = "none"
                 return
             loaded = contracts.get_table_runtime_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
@@ -2972,17 +2969,17 @@ def widget_data_contract(
                         )}
                     )
             runtime_summary_html = runtime_context_html()
-            load_table_context_button.layout.display = "none"
             render_table_summary()
 
-        def load_table_context_clicked(_button: Any) -> None:
+        def table_context_expanded(change: dict[str, Any]) -> None:
+            if change.get("new") != 0 or runtime_context:
+                return
             try:
                 ensure_runtime_context()
-                set_status("Profile and pipeline usage loaded. Open Table context to view.")
             except Exception as exc:
-                set_status(_format_widget_exception(exc, phase="table context"), error=True)
+                set_status(_format_widget_exception(exc, phase="table context metadata read"), error=True)
 
-        load_table_context_button.on_click(load_table_context_clicked)
+        table_context_accordion.observe(table_context_expanded, names="selected_index")
         def definition_section(
             title: str,
             classification: Any,
@@ -6768,12 +6765,13 @@ def widget_data_contract(
         cancel_discard_contract = None
         if editable:
             save_contract_button = widgets.Button(
-                description="Save draft",
-                button_style="primary",
+                description="Save draft", button_style="primary",
+                layout=widgets.Layout(width="auto", min_width="125px"),
             )
             discard_contract_button = widgets.Button(
-                description="Discard changes",
-                button_style="danger",
+                description="Discard",
+                layout=widgets.Layout(width="auto", min_width="110px"),
+                tooltip="Discard unsaved edits and return to the saved draft",
             )
             confirm_discard_contract = widgets.Button(
                 description="Discard unsaved changes",
@@ -6807,8 +6805,9 @@ def widget_data_contract(
             )
             freeze_button = widgets.Button(
                 description=f"Freeze v{row['contract_version']}…",
-                button_style="info",
                 disabled=pending_engineering_review,
+                layout=widgets.Layout(width="auto", min_width="130px"),
+                tooltip="Validate and make this version immutable; confirmation required",
             )
             freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
             freeze_cancel = widgets.Button(description="Cancel")
@@ -6901,7 +6900,13 @@ def widget_data_contract(
             freeze_cancel.on_click(freeze_cancel_clicked)
             freeze_confirm_button.on_click(freeze_confirm_clicked)
             sidebar_actions.children = (
-                save_contract_button, discard_contract_button, freeze_button,
+                widgets.HTML("<b style='font-size:12px'>Contract actions</b>"),
+                widgets.HBox([save_contract_button, discard_contract_button],
+                    layout=widgets.Layout(width="100%", gap="8px", flex_flow="row wrap")),
+                widgets.HTML("<div style='border-top:1px solid #e6eaef;margin:5px 0'></div>"),
+                widgets.HBox([widgets.HTML("<span style='font-size:12px'><b>Finalize version</b><br>"
+                    "<span style='color:#667085'>Validate and lock this version.</span></span>"), freeze_button],
+                    layout=widgets.Layout(width="100%", gap="8px", align_items="center", justify_content="space-between")),
                 discard_contract_confirm, freeze_confirm,
             )
             sidebar_actions.layout.display = ""
@@ -6928,7 +6933,7 @@ def widget_data_contract(
         )
         nonlocal sidebar_content
         sidebar_content = (
-            table_summary, load_table_context_button, sidebar_actions, table_exit_row,
+            table_summary, table_context_accordion, sidebar_actions, table_exit_row,
             table_exit_confirm, operation_progress, status, guardrail_disclosure,
         )
         apply_view()
@@ -6943,7 +6948,7 @@ def widget_data_contract(
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "guardrail_sidebar": guardrail_sidebar, "guardrail_disclosure": guardrail_disclosure, "sidebar_groups": sidebar_groups,
-            "load_table_context": load_table_context_button,
+            "table_context": table_context_accordion,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "table_description_ai": table_description_ai,
@@ -7064,7 +7069,7 @@ def widget_data_contract(
 
         state["_refresh_ai_controls"] = refresh_ai_controls
         editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
-        editor_roots.extend([table_summary, load_table_context_button, guardrail_disclosure, *sidebar_actions.children])
+        editor_roots.extend([table_summary, table_context_accordion, guardrail_disclosure, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
             sensitive_ai_panel, business_advanced, business_rule_controls,
@@ -7167,7 +7172,7 @@ def widget_data_contract(
     )
     table_exit_row = widgets.HBox(
         [change_table_button],
-        layout=widgets.Layout(width="100%", justify_content="center"),
+        layout=widgets.Layout(width="100%", justify_content="flex-end"),
     )
     selector_actions = widgets.VBox(
         [
@@ -7301,7 +7306,7 @@ def widget_data_contract(
             set_status("Select a dataset and contract before opening.", error=True)
             return
         open_button.disabled = True
-        set_open_progress("Opening contract…")
+        set_open_progress("Selecting Data Contract version from governance metadata…")
         try:
             if selected_contract == "new":
                 if not state.get("workspace_id"):
@@ -7318,14 +7323,14 @@ def widget_data_contract(
                     select(selected_table, int(selected_contract))
                 finally:
                     record_timing("Open: select contract / metadata", perf_counter() - began)
-            set_open_progress("Loading editor…")
+            set_open_progress("Constructing Table, Columns, Data Quality and Review widget controls…")
             began = perf_counter()
             try:
                 top_nav.value = "Table"
                 render()
             finally:
-                record_timing("Open: editor construction", perf_counter() - began)
-            set_open_progress("Building editor…")
+                record_timing("Open: constructing editor controls", perf_counter() - began)
+            set_open_progress("Mounting contract editor controls in notebook output…")
             selector_panel.children = tuple(child for child in selector_panel.children if child is not status)
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
