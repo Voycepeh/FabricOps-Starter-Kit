@@ -31,7 +31,7 @@ Saving keeps a draft editable. **Freezing creates an immutable version.** Engine
 
     [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, dataset identity, authoring provenance and exact JSON payload. Table contracts use `table_id`; file contracts use a stable physical file-selector `source_id` rather than manufacturing a Catalogue Table ID. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
-## Is it one contract per workspace, pipeline or table?
+## Is it one contract per workspace, pipeline or dataset?
 
 **The version history belongs to the physical dataset identity, not to a workspace or notebook.**
 
