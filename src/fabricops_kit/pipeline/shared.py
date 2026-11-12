@@ -7114,8 +7114,13 @@ def display_profile_presentations(presentations):
                 pass
 
             if native_display is not None:
-                native_display(preview)
-                continue
+                try:
+                    native_display(preview)
+                    continue
+                except Exception:
+                    # The Fabric renderer may exist but be unavailable at runtime.
+                    # Fall through to a bounded, notebook-readable HTML table.
+                    pass
 
             # Portable notebook fallback: scrollable HTML, never wrapped ASCII.
             from html import escape
@@ -7143,7 +7148,10 @@ def display_profile_presentations(presentations):
             ))
         except Exception as exc:
             # Rendering must not invalidate a successful Read or Write.
-            print(f"Statistical profile display unavailable: {type(exc).__name__}: {exc}")
+            try:
+                print(f"Statistical profile display unavailable: {type(exc).__name__}: {exc}")
+            except Exception:
+                pass
 
 
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False, presentations=None):
