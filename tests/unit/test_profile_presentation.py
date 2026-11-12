@@ -202,3 +202,25 @@ def test_generic_ipython_display_uses_text_fallback(compact_profile, monkeypatch
     output = capsys.readouterr().out
     assert 'amount' in output and '1,234' in output
     assert 'DataFrame[' not in output
+
+
+def test_fabric_display_wrapped_in_ipython_module_is_used(compact_profile, monkeypatch, capsys):
+    display = Mock()
+    display.__module__ = "IPython.fabric_renderer"
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: SimpleNamespace(user_ns={'display': display}))
+    preview = presentation.capture_profile_presentation(compact_profile, scope={'profile_scope': 'full_table'})
+    presentation.display_profile_presentations([preview])
+    display.assert_called_once()
+    assert display.call_args.args[0].first()['Rows'] == '1,234'
+    assert 'amount' not in capsys.readouterr().out
+
+
+def test_native_display_from_builtins_without_notebook_kernel(compact_profile, monkeypatch, capsys):
+    import builtins
+    display = Mock()
+    monkeypatch.setattr(builtins, 'display', display, raising=False)
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: None)
+    preview = presentation.capture_profile_presentation(compact_profile, scope={'profile_scope': 'full_table'})
+    presentation.display_profile_presentations([preview])
+    display.assert_called_once()
+    assert 'amount' not in capsys.readouterr().out
