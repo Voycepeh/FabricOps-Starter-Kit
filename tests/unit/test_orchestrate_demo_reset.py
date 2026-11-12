@@ -245,7 +245,6 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     state._demo_silver_catalog = 'catalog'
     state._demo_bronze_catalog = 'catalog'
     state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda qualified: qualified in catalog), sql=spark_sql)
-    monkeypatch.setattr(API, 'resolve_warehouse_name', lambda *_: 'physical-gold')
     monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: True)
     monkeypatch.setattr(API, '_demo_drop_gold_output', lambda state, conn: warehouse.append((state, conn)))
     state._demo_gold_connection = object()
