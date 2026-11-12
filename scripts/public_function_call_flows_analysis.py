@@ -47,6 +47,7 @@ FOUNDATIONAL_IO_FUNCTION_NAMES = frozenset({
     "read_lakehouse_excel",
     "read_lakehouse_json",
     "read_lakehouse_parquet",
+    "read_lakehouse_query",
     "read_lakehouse_table",
     "read_warehouse_query",
     "read_warehouse_table",

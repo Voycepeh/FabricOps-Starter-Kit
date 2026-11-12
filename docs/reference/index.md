@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">27</strong>
+    <strong class="reference-kpi-value">28</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 27 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 28 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 27 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 28 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,8 +34,8 @@ Use the finder below to search 27 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 51
-    - Total callables: 822
+    - Source Python files count: 52
+    - Total callables: 823
     - Supporting functions: 444
     - Private helpers to review: 344
 
@@ -189,7 +189,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 </details>
 
 <details class="reference-function-group" data-callable-group="preview" data-default-open="false">
-<summary><span class="reference-function-group-title">Preview / In Development</span><span class="reference-function-group-meta">5 functions · Access and consumption capabilities</span></summary>
+<summary><span class="reference-function-group-title">Preview / In Development</span><span class="reference-function-group-meta">6 functions · Access and consumption capabilities</span></summary>
 <p class="reference-function-group-description">Evaluate effective access scanners and the governed Production table to Data Agent handoff.</p>
 <div class="reference-catalogue-list">
 <article id="access_scanner.scan_effective_access-scan_effective_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_effective_access" data-callable-module="access_scanner.scan_effective_access" data-function-type="public-starter-kit" data-callable-purpose="Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.">
@@ -215,6 +215,11 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 <article id="data_agent.create_data_agent-create_data_agent" class="reference-catalogue-item" data-callable-row="true" data-callable-name="create_data_agent" data-callable-module="consumption.create_data_agent" data-function-type="public-starter-kit" data-callable-purpose="Complete the governed single-table Step 7 handoff without manually composing context or instructions.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/create_data_agent/"><code>create_data_agent</code></a></h3>
   <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+</article>
+<article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
 </div>

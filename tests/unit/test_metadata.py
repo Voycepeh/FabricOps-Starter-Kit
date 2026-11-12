@@ -259,6 +259,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'orchestrate_demo_reset',
         'create_data_agent',
         'read_lakehouse_table',
+        'read_lakehouse_query',
         'write_lakehouse_table',
         'read_lakehouse_csv',
         'read_lakehouse_json',

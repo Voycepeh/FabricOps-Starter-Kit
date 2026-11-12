@@ -8,6 +8,7 @@ from fabricops_kit.io.read_lakehouse_query import read_lakehouse_query
 
 
 def test_query_reuses_configured_source_and_existing_translator(monkeypatch):
+    """Route the declared source through the existing restricted SQL reader."""
     from fabricops_kit.io import read_lakehouse_query as public_reader
     import importlib
 
@@ -39,5 +40,6 @@ def test_query_reuses_configured_source_and_existing_translator(monkeypatch):
 
 
 def test_query_requires_table_name():
+    """Reject a missing source before resolving Spark or Lakehouse routing."""
     with pytest.raises(ValueError, match="table_name is required"):
         read_lakehouse_query("SELECT 1", table_name="")

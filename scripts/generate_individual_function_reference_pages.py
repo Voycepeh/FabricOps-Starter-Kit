@@ -5792,7 +5792,7 @@ def main() -> None:
             "description": "Evaluate effective access scanners and the governed Production table to Data Agent handoff.",
             "functions": (
                 "scan_effective_access", "scan_workspace_access", "scan_sql_access",
-                "scan_onelake_access", "create_data_agent",
+                "scan_onelake_access", "create_data_agent", "read_lakehouse_query",
             ),
             "open": False,
         },

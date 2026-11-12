@@ -24,7 +24,7 @@ EXPECTED_GROUPS = [
     ("demo", "Demo Only", ["orchestrate_demo_reset"]),
     ("preview", "Preview / In Development", [
         "scan_effective_access", "scan_workspace_access", "scan_sql_access",
-        "scan_onelake_access", "create_data_agent",
+        "scan_onelake_access", "create_data_agent", "read_lakehouse_query",
     ]),
 ]
 

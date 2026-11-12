@@ -27,6 +27,44 @@ def read_lakehouse_query(
     No pipeline setup, metadata mutation, or contract enforcement is performed.
 
     Returns a Spark DataFrame. No Spark session is created.
+
+    Parameters
+    ----------
+    query : str
+        One read-only Spark SQL SELECT or CTE referencing the declared source.
+        Simple integer T-SQL TOP projections are also supported.
+    table_name : str
+        Required Lakehouse table name referenced by the query. Supply its schema
+        separately with ``schema``.
+    store : str, default "Bronze"
+        Logical Lakehouse store key configured in ``00_env_config``.
+    schema : str | None, optional
+        Schema for the declared source in a schema-enabled Lakehouse.
+    context : dict[str, Any] | None, optional
+        Active Fabric context override containing an existing Spark session
+        and configured Lakehouse routing.
+
+    Returns
+    -------
+    pyspark.sql.DataFrame
+        Lazy query result bound to the configured physical source. A downstream
+        Spark action evaluates the data.
+
+    Raises
+    ------
+    ValueError
+        If the declared source is invalid, SQL is not read-only, another source
+        is referenced, or unsupported T-SQL cannot be converted safely.
+    RuntimeError
+        If no active Spark session or configured Lakehouse target is available.
+
+    Examples
+    --------
+    >>> orders_df = read_lakehouse_query(
+    ...     "SELECT TOP (5) order_id FROM demo.orders",
+    ...     table_name="orders", schema="demo", store="Bronze",
+    ... )
+
     """
     if not isinstance(table_name, str) or not table_name.strip():
         raise ValueError("table_name is required.")
