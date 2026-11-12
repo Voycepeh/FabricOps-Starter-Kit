@@ -192,7 +192,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         columns = getattr(source["dataframe"], "columns", None)
         metrics.setdefault("columns", len(columns) if columns is not None else None)
         operation.capture_metrics(metrics)
-        if is_file:
+        if is_file and getattr(getattr(source["dataframe"], "schema", None), "fields", None) is not None:
             # Persist schema only, not rows or sensitive values, for Governance authoring.
             # This is the schema returned by the successful Engineering reader.
             operation.record["observed_columns_json"] = json.dumps([
