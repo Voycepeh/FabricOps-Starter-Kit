@@ -1637,7 +1637,19 @@ def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runti
     assert "column_0" in managed.value and "Block" in managed.value
     controls["grain_policy"].value = "Warn"
     assert "Warn" in managed.value
-
+    grain_options = dict(controls["business_saved"].options)
+    grain_label = next(label for label in grain_options if "GRAIN — Uniqueness" in label)
+    assert "Locked" in grain_label and "column_0" in grain_label and "Warn" in grain_label
+    controls["business_saved"].value = "__managed_grain__"
+    assert controls["delete_business_rule"].disabled is True
+    assert controls["delete_business_rule"].layout.display == "none"
+    assert "cannot be edited or deleted" in controls["rule_workspace_body"].children[0].value
+    assert controls["apply_business_rule"] not in controls["rule_workspace_body"].children
+    controls["row_key_columns"].value = ("column_1",)
+    assert "column_1" in dict(controls["business_saved"].options)[grain_label.replace("column_0", "column_1")]
+    assert controls["business_saved"].value == "__managed_grain__"
+    controls["grain_enabled"].value = False
+    assert "__managed_grain__" not in [value for _label, value in controls["business_saved"].options]
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
