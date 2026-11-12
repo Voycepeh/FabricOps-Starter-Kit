@@ -631,7 +631,10 @@ def _confirm_contract_mutation(
         contract_id=expected["contract_id"], contract_version=expected["contract_version"],
         workspace_id=active_workspace_id,
     )
-    fields = ("status", "contract_payload_json", "_activity_id", "_committed_at")
+    # Spark can normalize timestamp timezone information across write and read.
+    # The canonical payload and activity ID identify the committed revision;
+    # comparing raw _committed_at objects creates false concurrency conflicts.
+    fields = ("status", "contract_payload_json", "_activity_id")
     if len(matches) != 1 or any(matches[0].get(name) != expected.get(name) for name in fields):
         raise RuntimeError(
             "Data Contract changed in another session or the draft no longer exists. "
@@ -686,6 +689,13 @@ def save_contract_draft(
         config=config, active_workspace_id=routing_workspace_id,
         runtime_context=runtime_context,
     )
+    # Read the current revision before updating. A stale widget must never
+    # silently replace edits made by another author.
+    _confirm_contract_mutation(
+        draft, config=config, active_workspace_id=active_workspace_id,
+        spark_session=spark_session, context=runtime_context,
+        store=store, schema=schema,
+    )
     updated = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         **dict(draft),
         "contract_payload_json": json.dumps(
@@ -709,6 +719,14 @@ def save_contract_draft(
         if store == "Metadata" else schema or configured_lakehouse_schema(config, active_workspace_id, store),
         context=runtime_context,
     )
+    # Keep the revision check in the MERGE itself so concurrent writers
+    # cannot win a race between preflight and publication.
+    prior_payload_digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
+    prior_activity = draft.get("_activity_id")
+    activity_condition = (
+        "target._activity_id IS NULL" if prior_activity is None
+        else f"target._activity_id = {_sql_literal(str(prior_activity))}"
+    )
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
@@ -717,7 +735,11 @@ def save_contract_draft(
             "target.contract_id = source.contract_id "
             "AND target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition="target.status = 'draft'")
+        .whenMatchedUpdateAll(condition=(
+            "target.status = 'draft' AND "
+            + activity_condition
+            + f" AND sha2(target.contract_payload_json, 256) = '{prior_payload_digest}'"
+        ))
         .execute())
     )
     return _confirm_contract_mutation(
@@ -1156,6 +1178,7 @@ def get_table_runtime_context(
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
             "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
+            "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")
@@ -1299,6 +1322,7 @@ def get_table_runtime_context(
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
                 "workspace_id": workspace_id,
+                "workspace_name": str(row.get("_workspace_name") or ""),
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
                 "last_seen": row.get("_committed_at"),
