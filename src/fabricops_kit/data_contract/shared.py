@@ -1029,7 +1029,9 @@ def list_contract_governance_state(
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
     contracts = row_dicts(read_lakehouse_table(DATA_CONTRACT_TABLE, store="Metadata",
         schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE), context=context))
-    return {"observations": observations,
+    runs = row_dicts(read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context))
+    return {"observations": observations, "pipeline_runs": runs,
             "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
             "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
 
