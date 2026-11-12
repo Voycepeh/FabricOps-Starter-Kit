@@ -103,10 +103,31 @@ def test_requires_all_business_store_mappings(monkeypatch):
         API.orchestrate_demo_reset(reset=True)
 
 
-def test_true_requires_actual_dedicated_item_name_before_deleting(monkeypatch):
+def test_reset_accepts_configured_metadata_with_arbitrary_display_name(monkeypatch, capsys):
+    env = _ready(monkeypatch)
+    env.setup.paths['Metadata'].name = 'project_metadata'
+    original_client = API.FabricNotebookClient
+    def client():
+        instance = original_client()
+        original_request = instance.request
+        def request(method, path):
+            if path.endswith('/items/metadata-id'):
+                return {'id': 'metadata-id', 'type': 'Lakehouse', 'displayName': 'project_metadata'}
+            return original_request(method, path)
+        return SimpleNamespace(request=request)
+    monkeypatch.setattr(API, 'FabricNotebookClient', client)
+    API.orchestrate_demo_reset(reset=True)
+    assert 'RESET COMPLETE' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('item', [
+    {'id': 'different-id', 'type': 'Lakehouse', 'displayName': 'project_metadata'},
+    {'id': 'metadata-id', 'type': 'Warehouse', 'displayName': 'project_metadata'},
+])
+def test_reset_rejects_mismatched_metadata_item_before_deleting(monkeypatch, item):
     env = _environment(monkeypatch)
-    monkeypatch.setattr(API, 'FabricNotebookClient', lambda: SimpleNamespace(request=lambda *a: {'displayName': 'production_metadata'}))
-    with pytest.raises(RuntimeError, match='dedicated demo_metadata'):
+    monkeypatch.setattr(API, 'FabricNotebookClient', lambda: SimpleNamespace(request=lambda *a: item))
+    with pytest.raises(RuntimeError, match='Metadata item'):
         API.orchestrate_demo_reset(reset=True)
     assert not any(env.rows.values())
 
