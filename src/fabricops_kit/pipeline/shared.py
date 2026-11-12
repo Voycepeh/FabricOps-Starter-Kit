@@ -252,7 +252,7 @@ from fabricops_kit.config.shared import (
     normalize_audit_datetime,
     resolve_fabric_context,
 )
-from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_warehouse_table, write_lakehouse_table
+from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
     resolve_configured_lakehouse_table,
