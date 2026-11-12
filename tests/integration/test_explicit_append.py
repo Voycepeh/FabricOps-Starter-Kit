@@ -130,7 +130,12 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
         return {'dataframe': frame, 'published': has_rows}
 
     def setup_pipeline(**kwargs):
-        assert kwargs == {'pipeline_mode': 'Ungoverned', 'source_drift_enabled': False, 'source_drift_interval_days': 1, 'source_drift_block': True}
+        assert kwargs == {
+            'pipeline_mode': 'Ungoverned',
+            'profiling_enabled': True, 'profiling_interval_days': 1, 'profiling_max_rows': None,
+            'grain_discovery_enabled': False, 'frequency_enabled': False,
+            'source_drift_enabled': False, 'source_drift_interval_days': 1, 'source_drift_block': True,
+        }
         return object()
 
     def finalize_pipeline(pipeline):
