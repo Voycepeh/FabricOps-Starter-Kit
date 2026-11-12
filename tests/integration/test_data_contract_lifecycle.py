@@ -42,6 +42,11 @@ class _DeltaTransport:
 
     def history(self):
         """Expose transaction receipts retained by the local Delta transport."""
+        if self.name in self.boundary.business:
+            return self.boundary.spark.createDataFrame(
+                [("WRITE", 1, datetime.now())],
+                "operation string, version long, timestamp timestamp",
+            )
         return self.boundary.spark.createDataFrame(self.boundary.commits.get(self.name, []), "userMetadata string")
 
     def alias(self, name):
