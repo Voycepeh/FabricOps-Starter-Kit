@@ -2001,10 +2001,10 @@ def widget_data_contract(
         temporal_column_names = [
             str(column.get("column_name") or "")
             for column in authoring_columns
-            if any(
-                marker in str(column.get("data_type") or "").lower()
-                for marker in ("date", "timestamp", "datetime")
-            )
+            if str(column.get("data_type") or "").strip().lower().split("(")[0] in {
+                "date", "datetime", "datetime2", "timestamp", "timestamp_ntz",
+                "timestamp_ltz", "timestamp_tz", "timestamptz",
+            }
         ]
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled"))
@@ -2320,7 +2320,13 @@ def widget_data_contract(
             saved_freshness_column if saved_freshness_column in temporal_column_names
             else temporal_column_names[0] if len(temporal_column_names) == 1 else ""
         )
-        freshness_column = widgets.Dropdown(options=[("Select timestamp column", ""), *[(name, name) for name in temporal_column_names]], value=default_freshness_column, disabled=not editable or is_file_source, **shared.widget_common(widgets, "Timestamp column"))
+        freshness_column = widgets.Dropdown(
+            options=[("Select date or timestamp column", "") if temporal_column_names else ("No date or timestamp columns available", ""),
+                     *[(name, name) for name in temporal_column_names]],
+            value=default_freshness_column,
+            disabled=not editable or is_file_source or not temporal_column_names,
+            **shared.widget_common(widgets, "Date / timestamp column"),
+        )
         freshness_age = widgets.Text(value=str(freshness_parameters.get("maximum_age", "")), continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Maximum age"))
         freshness_unit = widgets.Dropdown(options=["minutes", "hours", "days"], value=freshness_parameters.get("maximum_age_unit", "days"), disabled=not editable, **shared.widget_common(widgets, "Age unit"))
         freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value="full_dataset" if is_file_source else freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable or is_file_source, **shared.widget_common(widgets, "Evaluation scope"))
@@ -2330,7 +2336,11 @@ def widget_data_contract(
             freshness_scope.layout.display = "none" if is_file_source else ""
             freshness_hint.value = (
                 "Automatically uses the oldest selected file's modification time. This is physical file freshness, not business-event time. Missing file metadata is reported as unavailable."
-                if is_file_source else "Automatically checks the latest value in the selected timestamp column. Choose a timestamp and scope; this check may scan the source data."
+                if is_file_source else (
+                    "No date or timestamp columns available. Freshness cannot be enabled until a suitable date/time column is recorded in the dataset schema."
+                    if not temporal_column_names else
+                    "Automatically checks the latest value in the selected date or timestamp column. Choose the column and scope; this check may scan the source data."
+                )
             )
         refresh_freshness_controls()
         def build_freshness_record():
@@ -2342,6 +2352,8 @@ def widget_data_contract(
                 parameters = {"evidence_method": freshness_evidence_method, "evaluation_scope": "full_dataset" if is_file_source else freshness_scope.value,
                     "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
                 if not is_file_source:
+                    if not temporal_column_names:
+                        raise ValueError("No date or timestamp columns available for table Freshness.")
                     parameters["freshness_column"] = freshness_column.value
                 from fabricops_kit.pipeline.shared import validate_freshness_parameters
                 validate_freshness_parameters(parameters)
