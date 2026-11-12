@@ -301,7 +301,13 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         inputs = reads(plan)
         tested = run_pipeline_operation(orchestrate_write, inputs[0]["dataframe"], plan=plan, sources=inputs,
             **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
-    assert tested["validation_passed"] and not tested["published"]
+    assert tested["validation_passed"] and not tested["published"], {
+        "source_freshness": [source.get("freshness_result") for source in inputs],
+        "source_schema": [source.get("schema_result") for source in inputs],
+        "source_dq": [source.get("dq_result") for source in inputs],
+        "write_dq": tested.get("dq_result"),
+        "results": plan.results,
+    }
     assert tested["validation_passed"]
     assert tested["dataframe"].first().email == "****************"
     assert_ordinary_metadata_unchanged(state.metadata, snapshot)
