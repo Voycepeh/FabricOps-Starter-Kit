@@ -972,6 +972,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Row Key" in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
+    assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
     assert ".fabricops-lineage-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
@@ -1015,6 +1016,9 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Data Quality" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Review"
     assert controls["left_pane"].children[0] is table_context
+    review_sections = controls["right_pane"].children
+    assert any(controls["guardrail_disclosure"] in section.children for section in review_sections)
+    assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     assert "Column definitions" in controls["manifest_preview"].value
     assert "Guardrails" in controls["manifest_preview"].value
     assert "<b>Table</b>" in controls["manifest_preview"].value
