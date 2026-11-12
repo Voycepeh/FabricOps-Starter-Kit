@@ -22,13 +22,18 @@ def compact_profile(spark_session):
 
 
 def test_fallback_formats_canonical_metrics_without_changing_values(compact_profile, monkeypatch, capsys):
+    import IPython.display
+    html_display = Mock()
+    monkeypatch.setattr(IPython.display, 'display', html_display)
     monkeypatch.setattr(IPython, 'get_ipython', lambda: None)
     preview = presentation.capture_profile_presentation(compact_profile, scope={'profile_scope': 'full_table'})
     presentation.display_profile_presentations([preview])
-    output = capsys.readouterr().out
-    assert 'Complete table' in output and 'amount' in output
-    assert '1,234' in output and '2.75%' in output and '12.35' in output
-    assert 'Distinct % (all rows)' in output
+    html_display.assert_called_once()
+    html = html_display.call_args.args[0].data
+    assert 'Complete table' in capsys.readouterr().out
+    assert 'amount' in html and '1,234' in html and '2.75%' in html and '12.35' in html
+    assert 'Distinct % (all rows)' in html
+    assert 'overflow-x:auto' in html
     assert compact_profile.first().MEAN == 12.3456
 
 
@@ -43,7 +48,8 @@ def test_native_display_uses_detached_rows_and_falls_back(compact_profile, monke
     assert rendered is not compact_profile
     assert rendered.first()['Rows'] == '1,234'
     output = capsys.readouterr().out
-    assert ('amount' in output) is fails
+    assert 'Statistical profile' in output
+    assert 'Statistical profile display unavailable' not in output
 
 
 def test_preview_has_row_and_cell_bounds(compact_profile):
@@ -194,14 +200,18 @@ def test_display_failure_preserves_committed_write_and_profiling_failures(runtim
     assert 'Statistical profile' not in capsys.readouterr().out
 
 
-def test_generic_ipython_display_uses_text_fallback(compact_profile, monkeypatch, capsys):
-    from IPython.display import display
-    monkeypatch.setattr(IPython, 'get_ipython', lambda: SimpleNamespace(kernel=object(), user_ns={'display': display}))
+def test_generic_ipython_display_uses_html_fallback(compact_profile, monkeypatch, capsys):
+    import IPython.display
+    generic_display = Mock()
+    monkeypatch.setattr(IPython.display, 'display', generic_display)
+    monkeypatch.setattr(IPython, 'get_ipython', lambda: SimpleNamespace(kernel=object(), user_ns={'display': generic_display}))
     preview = presentation.capture_profile_presentation(compact_profile, scope={'profile_scope': 'full_table'})
     presentation.display_profile_presentations([preview])
-    output = capsys.readouterr().out
-    assert 'amount' in output and '1,234' in output
-    assert 'DataFrame[' not in output
+    generic_display.assert_called_once()
+    html = generic_display.call_args.args[0].data
+    assert 'amount' in html and '1,234' in html
+    assert 'DataFrame[' not in html
+    assert 'overflow-x:auto' in html
 
 
 def test_fabric_display_wrapped_in_ipython_module_is_used(compact_profile, monkeypatch, capsys):
