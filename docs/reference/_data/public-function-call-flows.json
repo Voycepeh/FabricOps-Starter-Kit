@@ -6514,6 +6514,8 @@
       "function_name": "read_warehouse_table",
       "function_type": "public_function",
       "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_prepare_gold_empty_output",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.pipeline_read.pipeline_read",
         "fabricops_kit.pipeline.shared.capture_source_observation",
@@ -7981,6 +7983,7 @@
       "function_name": "write_warehouse_table",
       "function_type": "public_function",
       "inbound_source_references": [
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_gold_output",
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.pipeline_write.pipeline_write"
       ],
@@ -18943,10 +18946,6 @@
       "caller_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._expand_principal"
     },
     {
-      "callee_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._text",
-      "caller_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant_id"
-    },
-    {
       "callee_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant_id",
       "caller_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant"
     },
@@ -18961,6 +18960,10 @@
     {
       "callee_qualified_name": "fabricops_kit.access_scanner.shared.normalise_principal_type",
       "caller_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._text",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant_id"
     },
     {
       "callee_qualified_name": "fabricops_kit.access_scanner.scan_effective_access._grant",
@@ -21397,22 +21400,6 @@
       "caller_qualified_name": "fabricops_kit.data_contract.shared.dataset_selector_options"
     },
     {
-      "callee_qualified_name": "fabricops_kit.data_contract.shared._json_value",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_contract_definitions",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_contract_identity",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_grain_contract",
-      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
-    },
-    {
       "callee_qualified_name": "fabricops_kit.config.audit.build_runtime_audit_fields",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract"
     },
@@ -21451,6 +21438,22 @@
     {
       "callee_qualified_name": "fabricops_kit.io.shared.retry_delta_metadata",
       "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.data_contract.shared._json_value",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_contract_definitions",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_contract_identity",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.data_contract.shared.validate_grain_contract",
+      "caller_qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record"
     },
     {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
@@ -24689,6 +24692,18 @@
       "caller_qualified_name": "fabricops_kit.pipeline.shared.record_profiling_outcome"
     },
     {
+      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.pipeline.shared._row_to_dict",
+      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
+    },
+    {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.decode_metadata_row",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
     },
@@ -24709,18 +24724,6 @@
     {
       "callee_qualified_name": "fabricops_kit.pipeline.shared._row_to_dict",
       "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_identity"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
-      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
-      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.pipeline.shared._row_to_dict",
-      "caller_qualified_name": "fabricops_kit.pipeline.shared.resolve_catalogue_table_id"
     },
     {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
