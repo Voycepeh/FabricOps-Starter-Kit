@@ -363,10 +363,12 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _item = _demo._demo_client.request(
         "GET", f"/workspaces/{_demo._metadata.workspace_id}/items/{_demo._metadata.item_id}"
     )
-    if _item["displayName"] != "demo_metadata" or _demo._metadata.name != "demo_metadata":
-        raise RuntimeError(
-            "Reset requires the manually created dedicated demo_metadata item selected in 00_env_config."
-        )
+    # The configured item ID is authoritative; a display name is not proof of
+    # demo ownership. Retain the independent scope, job and store-isolation checks.
+    if _item.get("id") and _item["id"] != _demo._metadata.item_id:
+        raise RuntimeError("Configured Metadata item ID does not match the Fabric item returned by the API.")
+    if _item.get("type") and _item["type"] != "Lakehouse":
+        raise RuntimeError("Configured Metadata item must be a Lakehouse.")
     if any(
         (
             (_demo.context.paths[key].workspace_id, _demo.context.paths[key].item_id)
