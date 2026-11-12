@@ -21,38 +21,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  regenerate-profile-pr:
-    if: github.event_name == 'pull_request' && github.head_ref == 'fix/native-profile-display-status'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: fix/native-profile-display-status
-          fetch-depth: 0
-      - uses: astral-sh/setup-uv@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: .python-version
-      - run: uv sync --frozen --extra docs --extra dev
-      - name: Generate required artifacts
-        run: |
-          source .venv/bin/activate
-          export PYTHONPATH=src
-          export FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1
-          python scripts/generate_public_function_call_flows_json.py
-          python scripts/generate_individual_function_reference_pages.py
-          python scripts/generate_public_api_compatibility.py --main-ref "$(python -c 'import json;print(next(x["revision"] for x in json.load(open("docs/reference/_data/public-api-compatibility.json"))["snapshots"] if x["version"]=="main"))')"
-          python -c 'from scripts.validate_generated_artifact_ownership import restore_generated_metadata_and_page_timestamps;restore_generated_metadata_and_page_timestamps(update_reference_pages=True)'
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A docs/api/reference docs/reference
-          if ! git diff --cached --quiet; then
-            git commit -m "Regenerate profile API reference artifacts for PR 1834"
-            git push origin HEAD:fix/native-profile-display-status
-          fi
-
   tests:
     name: tests (${{ matrix.suite }}, ${{ matrix.shard }})
     runs-on: ubuntu-latest
