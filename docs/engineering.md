@@ -226,6 +226,14 @@ Across all 31 possible waits, the scheduled waiting budget is **3.1–212.6 seco
 
     Local Delta workloads passed at 5, 10 and 20 simultaneous synthetic workspace/user identities; the earlier 12-attempt budget was insufficient at width 20. These results do not establish a supported maximum concurrency or signed-in Fabric acceptance. See [Shared Metadata Lakehouse concurrency](maintainer/concurrent-metadata-reliability-plan.md) for writer coverage, retained record checks and the outstanding Fabric acceptance procedure.
 
+## How is profiling scheduled without a Data Contract?
+
+[`setup_pipeline()`](api/reference/setup_pipeline.md) owns Standard profiling, Grain discovery and Frequency for the whole execution, independently of mandatory Guardrails. Standard profiling is enabled by default (`profiling_enabled=True`, `profiling_interval_days=1`); `profiling_max_rows=None` profiles the full available physical scope. A positive row cap produces **bounded, selection-only statistics**, not authoritative full-table totals or uniqueness. Grain discovery and Frequency both default to `False` and can be enabled separately.
+
+??? info "Under the Hood — shared profiling eligibility"
+
+    A due Standard profile follows the configured interval and prior confirmed physical-table completion history; opt-in Grain discovery and Frequency each run once per physical table when sufficient scope is available. A bounded completion cannot suppress a later full-table request. Profiling schedules do not change mandatory Grain uniqueness, Freshness, Schema or Data Quality checks, and they do not bound complete-source Source Drift evidence. See [`setup_pipeline()`](api/reference/setup_pipeline.md) for exact controls.
+
 ## How does FabricOps detect Source Drift?
 
 Engineering opts in through `setup_pipeline(source_drift_enabled=True, source_drift_interval_days=1, source_drift_block=True)`. Source Drift is independent of Standard profiling, Grain discovery, Frequency and the profiling row limit. An enabled due Read observes its **complete physical source**, including rows outside a SQL query or incremental watermark scope.
@@ -234,7 +242,7 @@ Read all sources before any Write. The first Write consolidates every source obs
 
 The first successful exact snapshot establishes history; changes before it are unknown. Distributed SHA256 identity/content hashes preserve row multiplicities without storing historical business values. Validated authored unique keys support exact modified-row counts. Without trustworthy keys, added/missing content is measurable but modifications remain unknown; unrelated rows are never paired. Diagnostics retain at most ten hash-only examples per category.
 
-`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, DQ, Freshness, Sensitive Data and Processing requirements, without Source Drift execution policy.
+`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, Data Quality, Freshness and Sensitive Data requirements; **Processing mode, profiling and Source Drift execution policy are Engineering-owned**, outside the frozen Data Contract.
 
 ??? info "Scope, cost and recovery"
 
@@ -245,18 +253,18 @@ The first successful exact snapshot establishes history; changes before it are u
 
 ## How does a Governance Data Contract affect my ETL?
 
-Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract affects both the allowed operation and the checks around it:
+Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract supplies dataset-level expectations and Guardrails; Engineering separately owns Read/Write processing choices, profiling schedules and Source Drift policy:
 
 ![Contract checks at pipeline boundaries and execution-mode distinctions.](assets/engineering/data-contract-boundaries.svg){ .fabricops-section-evidence }
 
 | Pipeline boundary | Contract effect |
 | --- | --- |
-| Setup | Selects the exact contract version and approved Processing definition. |
+| Setup | Selects the exact frozen Contract version for relevant sources and targets; configures processing and profiling independently in Engineering. |
 | Read | Applies Freshness, Schema, Grain and Data Quality where configured. |
 | Transform | Leaves project PySpark visible and project-owned. |
 | Write preparation | Consolidates pipeline Source Drift, then applies target Schema, Sensitive Data treatment, Grain and Data Quality. |
-| Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
-| Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
+| Publication | Uses the explicitly configured Engineering Write strategy and parameters; any applicable activated Contract Guardrails still govern the prepared data. |
+| Profiling | Follows `setup_pipeline()` settings, not a frozen Data Contract schedule: Standard is enabled by default; Grain discovery and Frequency are opt-in. |
 
 Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) progress.
 
@@ -267,17 +275,15 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Location | Required Engineering configuration |
 | --- | --- |
 | `00_env_config` | Workspace IDs, logical store aliases, item IDs/names, store types and the shared Metadata target |
-| Pipeline setup | `pipeline_mode` and optional full Source Observation policy; the Fabric Notebook ID establishes the stable Pipeline ID |
-| Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
+| Pipeline setup | `pipeline_mode`, Standard profiling enablement/interval/row cap, optional Grain discovery and Frequency, and optional Source Drift policy; the Fabric Notebook ID establishes the stable Pipeline ID |
+| Each Read | Logical `store` and table coordinates (or a Lakehouse file selector), Full/Incremental mode, optional Full Read SQL query, and watermark parameters when incremental; files support Full Read only |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
-| Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
+| Each Write | Logical destination, independently selected `write_mode`, SCD keys/effective column where required, and optional Spark repartitioning |
 | Finalization | [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md) after all Reads, transformations and Writes, or `failed=True` after a caught project failure |
 
 Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeline()`](api/reference/setup_pipeline.md). A successful Write does not prove that the rest of the notebook completed; finalization records the whole execution outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md). A killed notebook can remain incomplete and require reviewed operator reconciliation.
 
 ## How do I move the same pipeline between Development and Production?
-
-
 
 Keep the same notebook flow and stable Pipeline ID, but give each workspace its own `00_env_config` mapping. The logical names—such as Bronze, Silver and Gold—stay in the notebook while each workspace resolves its own Fabric items.
 
@@ -305,7 +311,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 ![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
 
-- technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
+- technical table and column identity plus observed processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
