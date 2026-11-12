@@ -178,7 +178,7 @@ def test_file_profile_respects_explicit_bound_and_stays_in_memory(files, spark_s
     files.runtime.writes.assert_not_called()
 
 
-def test_file_contract_shared_schema_dq_grain_and_column_freshness(files, spark_session, monkeypatch):
+def test_file_contract_shared_schema_dq_grain_and_metadata_freshness(files, spark_session, monkeypatch):
     from datetime import datetime, UTC
     from fabricops_kit.pipeline.check_schema import check_schema
     from fabricops_kit.pipeline.check_dq import check_dq
@@ -192,7 +192,7 @@ def test_file_contract_shared_schema_dq_grain_and_column_freshness(files, spark_
             {'guardrail_rule_id': 'grain', 'guardrail_type': 'grain', 'rule_type': 'uniqueness', 'action': 'Block',
              'rule_parameters': {'columns': ['id']}, 'is_active': True},
             {'guardrail_rule_id': 'fresh', 'guardrail_type': 'freshness', 'rule_type': 'freshness', 'action': 'Warn',
-             'rule_parameters': {'evidence_method': 'column', 'evaluation_scope': 'full_dataset', 'freshness_column': 'modified',
+             'rule_parameters': {'evidence_method': 'metadata', 'evaluation_scope': 'full_dataset',
                                  'maximum_age': 2, 'maximum_age_unit': 'hours'}, 'is_active': True}]}
     contract = {'source_id': source_id, 'table_id': None, 'contract_id': 'c', 'contract_version': 1,
                 'contract_payload_json': json.dumps(payload), 'contract_payload': payload}
@@ -203,7 +203,13 @@ def test_file_contract_shared_schema_dq_grain_and_column_freshness(files, spark_
     monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: {'_activity_id': 'test'})
     monkeypatch.setattr(shared, 'get_current_audit_timestamp', lambda **kw: datetime.now(UTC))
     monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.check_schema'), 'get_store', lambda *a: files.configured)
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.pipeline.check_freshness'), 'build_runtime_audit_fields', lambda **kw: {'_activity_id': 'test'})
+    freshness_module = importlib.import_module('fabricops_kit.pipeline.check_freshness')
+    monkeypatch.setattr(freshness_module, 'build_runtime_audit_fields', lambda **kw: {'_activity_id': 'test'})
+    def metadata_evidence(params, **kwargs):
+        return {'evidence_method': 'metadata', 'evaluation_scope': 'full_dataset',
+                'outcome': 'available', 'latest_value': datetime.now(UTC).isoformat(),
+                'scan_required': False}
+    monkeypatch.setattr(freshness_module, 'collect_freshness_evidence', metadata_evidence)
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *a, **kw: rules)
     frame = spark_session.createDataFrame([(1, datetime.now(UTC)), (1, datetime.now(UTC))], 'id int, modified timestamp')
     schema = check_schema(frame, table_id=source_id, verbose=False, context=context)
