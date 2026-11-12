@@ -2124,6 +2124,7 @@ def widget_data_contract(
             grain_ai.value = (
                 "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
                 "padding:9px 11px;font-size:12px;line-height:1.5;'>"
+                "<div style='font-size:11px;color:#667085;margin-bottom:5px'>Previously generated AI suggestion</div>"
                 f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
                 f"<b>Profiled row key:</b> {html.escape(key_text)}"
                 "<details style='margin-top:5px;color:#667085;'>"
@@ -2132,6 +2133,7 @@ def widget_data_contract(
                 "</details></div>"
             )
             accept_grain.disabled = not (editable and ai_available())
+            suggest_grain.description = "Regenerate grain"
 
         render_grain_ai()
 
@@ -7306,7 +7308,10 @@ def widget_data_contract(
             set_status("Select a dataset and contract before opening.", error=True)
             return
         open_button.disabled = True
-        set_open_progress("Selecting Data Contract version from governance metadata…")
+        set_open_progress(
+            "Preparing a new Data Contract draft…" if selected_contract == "new"
+            else "Selecting saved Data Contract version from governance metadata…"
+        )
         try:
             if selected_contract == "new":
                 if not state.get("workspace_id"):
