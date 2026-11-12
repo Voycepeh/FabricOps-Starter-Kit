@@ -3066,7 +3066,9 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
 
     freshness = controls["table_guardrails"]["freshness"]
     assert len(freshness["parameters"]) == 5
-    assert {"metadata", "column"} <= {value for label, value in freshness["parameters"][0].options}
+    assert freshness["parameters"][0].value == "column"
+    assert freshness["parameters"][0].disabled is True
+    assert freshness["parameters"][1].layout.display != "none"
 
     column_definition = controls["column_definition"].children[1]
     assert column_definition.layout.grid_template_columns == "120px minmax(240px, 1fr)"
@@ -3198,6 +3200,52 @@ def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtim
     assert controls["column_classification"].value == ""
     assert controls["pii_type"].value == "none"
     assert controls["sensitive_treatment"].value == "tokenize"
+
+
+def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_runtime, monkeypatch):
+    """File sources share the Freshness section but do not require a timestamp column."""
+    original_review = module.contracts.get_contract_review_state
+
+    def file_review(**kwargs):
+        loaded = original_review(**kwargs)
+        loaded["payload"] = {
+            "source": {"source_type": "file"},
+            "table": {"table_id": "orders"},
+        }
+        return loaded
+
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    freshness = controls["table_guardrails"]["freshness"]
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert freshness["parameters"][1].layout.display == "none"
+    assert freshness["parameters"][4].layout.display == "none"
+    assert freshness["parameters"][4].value == "full_dataset"
+    assert "file" in freshness["display"][-1].value.lower()
+    freshness["enabled"].value = True
+    freshness["parameters"][2].value = "2"
+    freshness["parameters"][3].value = "hours"
+    saved = next(
+        rule for records in state["_pending_guardrails"].values()
+        for rule in records.values() if rule["guardrail_type"] == "freshness"
+    )
+    assert module._parameters(saved) == {
+        "evidence_method": "metadata", "evaluation_scope": "full_dataset",
+        "maximum_age": 2.0, "maximum_age_unit": "hours",
+    }
+
+
+def test_table_freshness_automatically_uses_column_and_keeps_same_controls(widget_runtime):
+    """Tables always use a timestamp-column freshness check."""
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    assert freshness["parameters"][0].value == "column"
+    assert freshness["parameters"][0].disabled is True
+    assert freshness["parameters"][1].layout.display != "none"
+    assert freshness["parameters"][4].layout.display != "none"
+    assert freshness["parameters"][1].value == "column_1"
 
 
 def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
