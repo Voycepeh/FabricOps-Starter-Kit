@@ -144,37 +144,24 @@ def _demo_gold_output_exists() -> bool:
     ).first()["n"])
 
 
-def _demo_gold_ddl_connection(_state):
-    """Get a native Warehouse command connection; never send DDL to Spark's reader."""
-    import notebookutils
-
-    data = getattr(notebookutils, "data", None)
-    connect = getattr(data, "connect_to_artifact", None)
-    if not callable(connect):
-        raise RuntimeError(
-            "Demo Gold Warehouse cleanup needs a native T-SQL command connection. "
-            "This notebook runtime does not provide notebookutils.data.connect_to_artifact "
-            "(currently documented for Fabric Python notebooks). "
-            "Drop [demo].[customer_summary] using the Gold Warehouse SQL editor, "
-            "then rerun 00C after stopping demo writers. No reset data has been deleted."
-        )
-    gold = _state.context.paths["Gold"]
-    connection = connect(gold.item_id, gold.workspace_id, "Warehouse")
-    if not callable(getattr(connection, "cursor", None)):
-        raise RuntimeError("Warehouse connection does not expose a SQL command cursor.")
-    return connection
+def _demo_prepare_gold_empty_output():
+    """Preflight the exact demo Warehouse target without reading its rows."""
+    if not _demo_gold_output_exists():
+        return None
+    existing = read_warehouse_table(store="Gold", schema="demo", table_name="customer_summary")
+    if not getattr(existing, "columns", None):
+        raise RuntimeError("Gold.demo.customer_summary has no readable columns; reset blocked.")
+    return existing.limit(0)
 
 
-def _demo_drop_gold_output(_state, connection):
-    """Execute the one approved demo DDL command without a Spark query wrapper."""
-    cursor = connection.cursor()
-    try:
-        cursor.execute("DROP TABLE IF EXISTS [demo].[customer_summary];")
-        connection.commit()
-    finally:
-        close = getattr(cursor, "close", None)
-        if callable(close):
-            close()
+def _demo_clear_gold_output(_state):
+    """Clear rows through the configured Spark Warehouse writer, retaining an output table."""
+    empty = _state._demo_gold_empty_output
+    if empty is None:
+        return  # Missing on repeat reset: no DDL, no table creation.
+    write_warehouse_table(
+        empty, store="Gold", schema="demo", table_name="customer_summary", mode="overwrite"
+    )
 
 
 def _demo_remove_outputs(_state, *, preview=False):
@@ -185,9 +172,7 @@ def _demo_remove_outputs(_state, *, preview=False):
         if store == "Gold":
             if preview:
                 continue
-            if _demo_gold_output_exists():
-                connection = _state._demo_gold_connection
-                _demo_drop_gold_output(_state, connection)
+            _demo_clear_gold_output(_state)
         else:
             _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
             catalog = _state._demo_bronze_catalog if store == "Bronze" else _state._demo_silver_catalog
@@ -203,27 +188,35 @@ def _demo_remove_outputs(_state, *, preview=False):
             if not preview and notebookutils.fs.exists(path) and (not notebookutils.fs.rm(path, True)):
                 raise RuntimeError(f"Could not remove {store}.demo.{table}; check permissions and retry 00C.")
         if not preview:
-            print(f"Removed output (missing is OK): {store}.demo.{table}")
+            action = "Cleared rows (missing is OK)" if store == "Gold" else "Removed output (missing is OK)"
+            print(f"{action}: {store}.demo.{table}")
 
 
 def _demo_verify_outputs(_state):
-    """Fail if any output or the obsolete Bronze Orders table still exists."""
+    """Verify that the Gold output is empty and the Lakehouse outputs are absent."""
     import notebookutils
 
     for store, table in _DEMO_REMOVALS:
         if store == "Gold":
-            exists = (
-                read_warehouse_query(
-                    "SELECT COUNT(*) AS n FROM sys.tables t JOIN sys.schemas s ON t.schema_id=s.schema_id WHERE s.name='demo' AND t.name='customer_summary'",
+            if _demo_gold_output_exists():
+                rows = read_warehouse_query(
+                    "SELECT COUNT_BIG(*) AS n FROM [demo].[customer_summary]",
                     store="Gold",
                 ).first()["n"]
-                != 0
-            )
-        else:
-            _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
-            exists = notebookutils.fs.exists(path) or _state.spark.catalog.tableExists(
-                f"{_state._demo_bronze_catalog if store == 'Bronze' else _state._demo_silver_catalog}.`{table}`"
-            )
+                if rows:
+                    raise RuntimeError(
+                        "Reset incomplete: Gold.demo.customer_summary still has rows. "
+                        "Check Warehouse overwrite support and rerun 00C."
+                    )
+                if _state._demo_gold_empty_output is not None:
+                    restored = read_warehouse_table(store="Gold", schema="demo", table_name="customer_summary")
+                    if restored.schema != _state._demo_gold_empty_output.schema:
+                        raise RuntimeError("Gold.demo.customer_summary schema changed during reset.")
+            continue
+        _, _, _, path = resolve_configured_lakehouse_table(store, table, "demo")
+        exists = notebookutils.fs.exists(path) or _state.spark.catalog.tableExists(
+            f"{_state._demo_bronze_catalog if store == 'Bronze' else _state._demo_silver_catalog}.`{table}`"
+        )
         if exists:
             raise RuntimeError(f"Reset incomplete: {store}.demo.{table} remains. Check permissions and rerun 00C.")
 
@@ -285,8 +278,9 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     definitions remain; no metadata migration is performed.
 
     Four Day 1 tables are overwritten, Orders CSV is validated and retained,
-    and six outputs plus the obsolete Bronze Orders table are removed in the reserved
-    ``demo`` schemas of the configured Bronze/Silver/Gold stores. Other business
+    and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
+    ``demo`` schemas of the configured Bronze/Silver stores. The Gold customer_summary
+    table is retained with zero rows when present. Other business
     tables and source files are preserved. Exact demo table/workspace references,
     artifact contents, fixture counts and catalog locations are
     checked before deletion. A dedicated name alone cannot prove ownership;
@@ -417,41 +411,34 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
             raise RuntimeError(f"{_file} must contain {_count} rows. Restore the fixture before resetting.")
         _demo_day1[_store, _table] = _frame
     _demo_remove_outputs(_demo, preview=True)
-    # Verify the native command route before deleting any metadata.
-    # Do not require it when the Gold demo output is already absent.
-    _demo._demo_gold_connection = _demo_gold_ddl_connection(_demo) if _demo_gold_output_exists() else None
-    try:
-        _demo_clear_metadata(_demo, _demo_counts, _demo_order)
-        if any(_demo_metadata_counts(_demo).values()):
-            raise RuntimeError(
-                "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
-            )
-        _demo_removed_files = _demo_metadata_files(_demo, delete=True)
-        for _folder, _count in _demo_removed_files.items():
-            print(f"Metadata Files/{_folder}: removed {_count}")
-        _demo_remove_outputs(_demo)
-        for (_store, _table), _expected in _demo_day1.items():
-            if (_store, _table) == ("Bronze", "orders"):
-                continue  # Validated CSV is the source; never recreate its redundant table.
-            _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
-            _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
-            _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
-            _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
-        _demo_verify_outputs(_demo)
-        if any(_demo_metadata_counts(_demo).values()):
-            raise RuntimeError(
-                "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-            )
-        if any(_demo_metadata_files(_demo).values()):
-            raise RuntimeError(
-                "Lifecycle artifacts remain. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-            )
-        for _frame in _demo_day1.values():
-            _frame.unpersist()
-    finally:
-        connection = _demo._demo_gold_connection
-        if connection is not None:
-            close = getattr(connection, "close", None)
-            if callable(close):
-                close()
+    # Resolve the existing Gold schema before changing metadata or business data.
+    # A missing demo output needs no write and must stay missing on repeat reset.
+    _demo._demo_gold_empty_output = _demo_prepare_gold_empty_output()
+    _demo_clear_metadata(_demo, _demo_counts, _demo_order)
+    if any(_demo_metadata_counts(_demo).values()):
+        raise RuntimeError(
+            "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
+        )
+    _demo_removed_files = _demo_metadata_files(_demo, delete=True)
+    for _folder, _count in _demo_removed_files.items():
+        print(f"Metadata Files/{_folder}: removed {_count}")
+    _demo_remove_outputs(_demo)
+    for (_store, _table), _expected in _demo_day1.items():
+        if (_store, _table) == ("Bronze", "orders"):
+            continue  # Validated CSV is the source; never recreate its redundant table.
+        _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
+        _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
+        _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
+        _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
+    _demo_verify_outputs(_demo)
+    if any(_demo_metadata_counts(_demo).values()):
+        raise RuntimeError(
+            "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
+        )
+    if any(_demo_metadata_files(_demo).values()):
+        raise RuntimeError(
+            "Lifecycle artifacts remain. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
+        )
+    for _frame in _demo_day1.values():
+        _frame.unpersist()
     print("RESET COMPLETE")
