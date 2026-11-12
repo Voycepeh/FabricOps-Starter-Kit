@@ -942,8 +942,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     controls["top_nav"].value = "Table"
     table_context = controls["left_pane"].children[0]
     assert "v1 · DRAFT" in table_context.value
-    assert controls["table_context"].selected_index is None
-    controls["table_context"].selected_index = 0
+    assert controls["table_context"].selected_index == 0
     table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
     assert "Workspace" in table_summary
@@ -961,7 +960,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "<colgroup><col style='width:31%'><col style='width:25%'>" in table_summary
     assert "<col style='width:12%'><col style='width:32%'></colgroup>" in table_summary
     assert "title='04_reporting'" in table_summary
-    assert ">Env</th>" in table_summary
+    assert ">Workspace</th>" in table_summary
     assert ">Pipeline</th>" in table_summary
     assert ">Role</th>" in table_summary
     assert ">Write</td>" in table_summary
@@ -4048,8 +4047,8 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
     assert f"title='{expected}'>{expected}</td>" in summary
 
 
-def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
-    """Opening the editor leaves collapsed runtime context unread until requested."""
+def test_open_loads_profile_and_lineage_once_for_expanded_context(widget_runtime, monkeypatch):
+    """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
     original = module.contracts.get_table_runtime_context
 
@@ -4059,12 +4058,8 @@ def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
 
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
-    assert reads == []
-    assert controls["table_context"].selected_index is None
-    assert "Expand to read saved profile" in controls["table_context"].children[0].value
-
-    controls["table_context"].selected_index = 0
     assert len(reads) == 1
+    assert controls["table_context"].selected_index == 0
     assert "Pipeline usage" in controls["table_context"].children[0].value
     controls["table_context"].selected_index = None
     controls["table_context"].selected_index = 0
