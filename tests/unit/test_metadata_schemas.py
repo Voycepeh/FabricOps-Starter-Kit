@@ -314,6 +314,42 @@ def test_incompatible_processing_state_is_rejected_without_changing_progress():
     assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
 
 
+def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
+    from importlib import import_module
+    from pyspark.sql.types import StructField, StructType, StringType
+    import pytest
+
+    setup = import_module("fabricops_kit.config.setup_metadata_tables")
+    registry = metadata_table_schema_registry()
+    for table in ("METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PROCESSING_STATE"):
+        expected = registry[table]
+        existing = StructType([
+            *expected.fields[1:],
+            StructField("outdated_column", StringType()),
+        ])
+        with pytest.raises(ValueError) as error:
+            setup._validate_existing_metadata_schema(table, existing, expected)
+        message = str(error.value)
+        assert f"Missing columns: {expected.fields[0].name}" in message
+        assert "Unexpected columns: outdated_column" in message
+        assert "preserved" in message
+
+
+def test_incompatible_metadata_schema_reports_wrong_column_types():
+    from importlib import import_module
+    from pyspark.sql.types import StructField, StructType, StringType, IntegerType
+    import pytest
+
+    setup = import_module("fabricops_kit.config.setup_metadata_tables")
+    expected = metadata_table_schema_registry()["METADATA_DATA_CONTRACT_ACTIVATION"]
+    existing = StructType([
+        StructField(field.name, IntegerType() if field.name == "workspace_id" else field.dataType)
+        for field in expected.fields
+    ])
+    with pytest.raises(ValueError, match="workspace_id: expected string, found integer"):
+        setup._validate_existing_metadata_schema("METADATA_DATA_CONTRACT_ACTIVATION", existing, expected)
+
+
 def test_processing_state_table_has_no_legacy_alias():
     """Only the renamed table is canonical; release history does not grant an alias."""
     registry = metadata_table_schema_registry()
