@@ -7078,13 +7078,18 @@ def display_profile_presentations(presentations):
                 import builtins
 
                 from IPython import get_ipython
+                from IPython.display import display as generic_display
 
                 shell = get_ipython()
-                native_display = None
-                if shell is not None and getattr(shell, "kernel", None) is not None:
-                    native_display = shell.user_ns.get("display") or getattr(builtins, "display", None)
-                # Generic IPython display only prints a Spark DataFrame repr.
-                if callable(native_display) and not getattr(native_display, "__module__", "").startswith("IPython."):
+                # Fabric injects a native display callable into the notebook
+                # namespace (or builtins). Its implementation may itself live
+                # under IPython.*, so do not reject it by module name.
+                native_display = (
+                    (getattr(shell, "user_ns", {}) or {}).get("display")
+                    if shell is not None else None
+                ) or getattr(builtins, "display", None)
+                # The ordinary IPython renderer only prints Spark's repr.
+                if callable(native_display) and native_display is not generic_display:
                     from pyspark.sql.types import StringType, StructField, StructType
 
                     schema = StructType([StructField(name, StringType(), False) for name in presentation["headers"]])
