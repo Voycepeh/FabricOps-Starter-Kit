@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from time import perf_counter
+
 from fabricops_kit.io.shared import retry_delta_metadata
 
 
@@ -629,7 +631,10 @@ def _confirm_contract_mutation(
         contract_id=expected["contract_id"], contract_version=expected["contract_version"],
         workspace_id=active_workspace_id,
     )
-    fields = ("status", "contract_payload_json", "_activity_id", "_committed_at")
+    # Spark can normalize timestamp timezone information across write and read.
+    # The canonical payload and activity ID identify the committed revision;
+    # comparing raw _committed_at objects creates false concurrency conflicts.
+    fields = ("status", "contract_payload_json", "_activity_id")
     if len(matches) != 1 or any(matches[0].get(name) != expected.get(name) for name in fields):
         raise RuntimeError(
             "Data Contract changed in another session or the draft no longer exists. "
@@ -684,6 +689,13 @@ def save_contract_draft(
         config=config, active_workspace_id=routing_workspace_id,
         runtime_context=runtime_context,
     )
+    # Read the current revision before updating. A stale widget must never
+    # silently replace edits made by another author.
+    _confirm_contract_mutation(
+        draft, config=config, active_workspace_id=active_workspace_id,
+        spark_session=spark_session, context=runtime_context,
+        store=store, schema=schema,
+    )
     updated = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         **dict(draft),
         "contract_payload_json": json.dumps(
@@ -707,6 +719,14 @@ def save_contract_draft(
         if store == "Metadata" else schema or configured_lakehouse_schema(config, active_workspace_id, store),
         context=runtime_context,
     )
+    # Keep the revision check in the MERGE itself so concurrent writers
+    # cannot win a race between preflight and publication.
+    prior_payload_digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
+    prior_activity = draft.get("_activity_id")
+    activity_condition = (
+        "target._activity_id IS NULL" if prior_activity is None
+        else f"target._activity_id = {_sql_literal(str(prior_activity))}"
+    )
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
@@ -715,7 +735,11 @@ def save_contract_draft(
             "target.contract_id = source.contract_id "
             "AND target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition="target.status = 'draft'")
+        .whenMatchedUpdateAll(condition=(
+            "target.status = 'draft' AND "
+            + activity_condition
+            + f" AND sha2(target.contract_payload_json, 256) = '{prior_payload_digest}'"
+        ))
         .execute())
     )
     return _confirm_contract_mutation(
@@ -1020,17 +1044,30 @@ def get_contract_authoring_state(
 def list_contract_governance_state(
     *, config: Any, active_workspace_id: str, spark_session: Any,
     metadata_workspace_id: str | None = None,
+    timing_callback: Any = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Return all current workspace observations and global Contract histories."""
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     context = {**_metadata_io_context(config, routing_workspace_id), "_spark_session": spark_session}
-    observations = current_catalogue_observations(read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
-    contracts = row_dicts(read_lakehouse_table(DATA_CONTRACT_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE), context=context))
-    runs = row_dicts(read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context))
+
+    def read_metadata(name: str, transform: Any) -> Any:
+        began = perf_counter()
+        try:
+            result = transform(read_lakehouse_table(
+                name, store="Metadata",
+                schema=metadata_table_physical_schema(config, name), context=context,
+            ))
+        except Exception:
+            if timing_callback is not None:
+                timing_callback(f"Metadata read: {name}", perf_counter() - began, "failed")
+            raise
+        if timing_callback is not None:
+            timing_callback(f"Metadata read: {name}", perf_counter() - began, "ok")
+        return result
+
+    observations = read_metadata("METADATA_DATA_CATALOGUE", current_catalogue_observations)
+    contracts = read_metadata(DATA_CONTRACT_TABLE, row_dicts)
+    runs = read_metadata("METADATA_PIPELINE_RUN", row_dicts)
     return {"observations": observations, "pipeline_runs": runs,
             "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
             "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
@@ -1141,6 +1178,7 @@ def get_table_runtime_context(
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
             "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
+            "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")
@@ -1148,6 +1186,8 @@ def get_table_runtime_context(
             ),
             "committed_by": str(latest_profile_row.get("_committed_by") or ""),
             "committed_at": latest_profile_row.get("_committed_at"),
+            "activity_id": str(latest_profile_row.get("_activity_id") or ""),
+            "notebook_id": str(latest_profile_row.get("_notebook_id") or ""),
         }
         snapshot_id = str(latest_profile_row.get("profile_snapshot_id") or "")
         if snapshot_id:
@@ -1284,6 +1324,7 @@ def get_table_runtime_context(
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
                 "workspace_id": workspace_id,
+                "workspace_name": str(row.get("_workspace_name") or ""),
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
                 "last_seen": row.get("_committed_at"),

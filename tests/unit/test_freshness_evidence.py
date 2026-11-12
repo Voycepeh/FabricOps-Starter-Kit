@@ -9,57 +9,47 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def parameters(method="column", scope="full_dataset"):
-    """Return one explicit frozen rule definition."""
-    return {"evidence_method": method, "evaluation_scope": scope, "freshness_column": "modified_dt",
+def parameters(method="metadata", scope="full_dataset"):
+    """Return one metadata-only Freshness configuration."""
+    return {"evidence_method": method, "evaluation_scope": scope,
             "maximum_age": 2, "maximum_age_unit": "hours"}
 
 
-@pytest.mark.parametrize("rows,outcome", [([], "unavailable"), ([{"modified_dt": None}], "unavailable"),
-    ([{"modified_dt": "bad"}], "invalid"), ([{"modified_dt": "2026-11-11T10:00:00Z"}], "available")])
-@pytest.mark.parametrize("action", ["Warn", "Block"])
-def test_column_evidence_and_continuation(rows, outcome, action):
-    """Empty/null/invalid observations are explicit and obey the authored policy."""
-    params = parameters()
-    evidence = collect_freshness_evidence(params, dataframe=rows)
-    assert evidence["outcome"] == outcome
-    result = evaluate_freshness_evidence(evidence, params, action=action, reference_time="2026-11-11T11:00:00Z")
-    assert result["evidence_outcome"] == outcome
-    assert result["can_continue"] is (outcome == "available" or action == "Warn")
-    assert result["actual"] == evidence
-
-
-def test_latest_timestamp_uses_instants_and_checks_every_nonnull_value():
-    """Offsets are compared as instants and invalid rows cannot hide behind MAX."""
-    params = parameters()
-    evidence = collect_freshness_evidence(params, dataframe=[
-        {"modified_dt": "2026-11-11T12:00:00+02:00"}, {"modified_dt": "2026-11-11T10:30:00Z"}])
-    assert evidence["latest_value"] == "2026-11-11T10:30:00+00:00"
-    invalid = collect_freshness_evidence(params, dataframe=[{"modified_dt": "bad"}, {"modified_dt": "2026-11-11"}])
-    assert invalid["outcome"] == "invalid"
-
-
-def test_methods_and_scopes_never_fall_back():
-    """Unsupported metadata and mismatched batch evidence cannot authorize execution."""
-    params = parameters("metadata")
-    evidence = collect_freshness_evidence(params, source={"store_type": "warehouse"}, dataframe=[{"modified_dt": "2026-11-11"}])
-    assert evidence["outcome"] == "unavailable"
-    assert evaluate_freshness_evidence(evidence, parameters(), action="Block")["evidence_outcome"] == "invalid"
-    batch = collect_freshness_evidence(parameters(scope="incremental_batch"), dataframe=[])
-    assert batch["evaluation_scope"] == "incremental_batch" and batch["outcome"] == "unavailable"
+def test_freshness_rejects_column_evidence_without_fallback():
+    """Timestamp/business-event checks belong to Data Quality, never Freshness."""
+    with pytest.raises(ValueError, match="metadata-only"):
+        validate_freshness_parameters(parameters("column"))
+    with pytest.raises(ValueError, match="Data Quality"):
+        validate_freshness_parameters({**parameters(), "freshness_column": "modified_dt"})
     with pytest.raises(ValueError, match="full physical"):
-        validate_freshness_parameters(parameters("metadata", "incremental_batch"))
-    with pytest.raises(ValueError, match="evidence_method"):
+        validate_freshness_parameters(parameters(scope="incremental_batch"))
+    with pytest.raises(ValueError, match="metadata-only"):
         validate_freshness_parameters({"maximum_age": 1})
 
 
-@pytest.mark.parametrize("stamp,outcome,status", [("2026-11-11T12:00:00Z", "invalid", "failed"),
-    ("2026-11-10T10:00:00Z", "available", "failed"), ("2026-11-11T09:00:00Z", "available", "passed")])
-def test_future_stale_and_exact_boundary(stamp, outcome, status):
-    """Future values are invalid; the exact configured cutoff is inclusive."""
+def test_missing_warehouse_metadata_is_unavailable_and_respects_policy():
+    """Metadata access failure never silently scans a Warehouse table."""
     params = parameters()
-    evidence = collect_freshness_evidence(params, dataframe=[{"modified_dt": stamp}])
-    result = evaluate_freshness_evidence(evidence, params, action="Block", reference_time="2026-11-11T11:00:00Z")
+    evidence = collect_freshness_evidence(
+        params, source={"store_type": "warehouse"},
+        dataframe=[{"modified_dt": "2026-11-11"}],
+    )
+    assert evidence["outcome"] == "unavailable"
+    assert evaluate_freshness_evidence(evidence, params, action="Block")["can_continue"] is False
+    assert evaluate_freshness_evidence(evidence, params, action="Warn")["can_continue"] is True
+
+
+@pytest.mark.parametrize("stamp,outcome,status", [("2026-11-11T12:00:00Z", "invalid", "failed"),
+    ("2026-11-10T10:00:00Z", "available", "failed"),
+    ("2026-11-11T09:00:00Z", "available", "passed")])
+def test_metadata_future_stale_and_exact_boundary(stamp, outcome, status):
+    """Future values are invalid; the metadata freshness cutoff is inclusive."""
+    params = parameters()
+    evidence = {"evidence_method": "metadata", "evaluation_scope": "full_dataset",
+                "outcome": "available", "latest_value": stamp}
+    result = evaluate_freshness_evidence(
+        evidence, params, action="Block", reference_time="2026-11-11T11:00:00Z",
+    )
     assert (result["evidence_outcome"], result["status"]) == (outcome, status)
 
 
@@ -115,14 +105,6 @@ def test_failed_file_access_remains_unavailable():
     assert evaluate_freshness_evidence(result, parameters("metadata"), action="Block")["can_continue"] is False
 
 
-def test_spark_column_aggregation_reports_invalid_and_empty(spark_session):
-    """Real Spark timestamp conversion rejects bad input and reports empty scope."""
-    params = parameters()
-    for rows, expected in [([], "unavailable"), ([("bad",), ("2026-11-11T10:00:00Z",)], "invalid"), ([("2026-11-11T10:00:00Z",)], "available")]:
-        frame = spark_session.createDataFrame(rows, "modified_dt string")
-        assert collect_freshness_evidence(params, dataframe=frame)["outcome"] == expected
-
-
 def test_no_resolved_files_is_unavailable():
     """A wildcard matching no files cannot pass Freshness."""
     fs = SimpleNamespace(globStatus=lambda path: [])
@@ -133,7 +115,8 @@ def test_no_resolved_files_is_unavailable():
     assert evidence["outcome"] == "unavailable" and "no data files" in evidence["reason"]
 
 
-def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch):
+@pytest.mark.parametrize("store_type", ["lakehouse", "warehouse"])
+def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch, store_type):
     """Metadata Freshness uses a physical data update, never OPTIMIZE time."""
     import sys
     from types import ModuleType
@@ -143,7 +126,7 @@ def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch)
     tables = ModuleType("delta.tables")
     tables.DeltaTable = SimpleNamespace(forPath=lambda spark, path: SimpleNamespace(history=lambda: history))
     monkeypatch.setitem(sys.modules, "delta.tables", tables)
-    evidence = collect_freshness_evidence(parameters("metadata"), source={"store_type": "lakehouse", "resolved_path": "physical-table"}, spark_session=spark_session)
+    evidence = collect_freshness_evidence(parameters("metadata"), source={"store_type": store_type, "resolved_path": "physical-table"}, spark_session=spark_session)
     assert evidence["outcome"] == "available" and evidence["table_version"] == 1
     result = evaluate_freshness_evidence(evidence, parameters("metadata"), action="Block", reference_time="2026-11-11T11:00:00Z")
     assert result["status"] == "failed"
@@ -154,15 +137,6 @@ def test_file_metadata_does_not_ignore_reader_selection_options():
     evidence = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": "folder",
         "reader_options": {"pathGlobFilter": "*.csv"}}, spark_session=object())
     assert evidence["outcome"] == "unavailable" and "reader-resolved" in evidence["reason"]
-
-
-def test_evidence_for_another_timestamp_column_cannot_pass():
-    """A fresh value from a different column is not evidence for the frozen rule."""
-    params = parameters()
-    evidence = collect_freshness_evidence(params, dataframe=[{"modified_dt": "2026-11-11T10:00:00Z"}])
-    changed = {**params, "freshness_column": "snapshot_dt"}
-    result = evaluate_freshness_evidence(evidence, changed, action="Block", reference_time="2026-11-11T11:00:00Z")
-    assert result["evidence_outcome"] == "invalid" and result["can_continue"] is False
 
 
 def test_fresh_oldest_member_cannot_hide_a_future_file_timestamp():
@@ -176,8 +150,3 @@ def test_fresh_oldest_member_cannot_hide_a_future_file_timestamp():
     assert result["evidence_outcome"] == "invalid" and result["can_continue"] is False
 
 
-@pytest.mark.parametrize("column", [1, True, [], {}, None, ""])
-def test_freshness_requires_a_real_timestamp_column_name(column):
-    """Malformed column configuration is rejected before saving or physical access."""
-    with pytest.raises(ValueError, match="timestamp column"):
-        validate_freshness_parameters({**parameters(), "freshness_column": column})

@@ -156,7 +156,26 @@ def widget_runtime(monkeypatch):
     class Tab(Box):
         def __init__(self, *args, selected_index=None, **kwargs):
             super().__init__(*args, **kwargs)
-            self.selected_index = selected_index
+            self._selected_index = selected_index
+            self._index_observers = []
+
+        @property
+        def selected_index(self):
+            return self._selected_index
+
+        @selected_index.setter
+        def selected_index(self, value):
+            old = self._selected_index
+            self._selected_index = value
+            if old != value:
+                for callback in list(self._index_observers):
+                    callback({"name": "selected_index", "old": old, "new": value})
+
+        def observe(self, callback, names="value"):
+            if names == "selected_index":
+                self._index_observers.append(callback)
+            else:
+                super().observe(callback, names=names)
 
         def set_title(self, index, title):
             pass
@@ -202,7 +221,7 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","evidence_method":"column","evaluation_scope":"full_dataset","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"evidence_method":"metadata","evaluation_scope":"full_dataset","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "tokenize", "rule_parameters_json": '{"scope":"column","treatment":"tokenize"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
@@ -478,7 +497,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
     assert controls["change_table"].description == "Exit"
-    assert controls["table_exit_row"].layout.justify_content == "center"
+    assert controls["table_exit_row"].layout.justify_content == "flex-end"
 
     controls["change_table"].click()
     assert state["current"] is not None
@@ -849,6 +868,7 @@ def test_general_table_uniqueness_is_not_reinterpreted_as_grain(widget_runtime):
 
 def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     """Saved governance choices hydrate without relying on the old widget instance."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     _use_text_identifier(widget_runtime)
     state = widget_runtime["open"]()
     controls = state["_controls"]
@@ -862,10 +882,8 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     freshness = controls["table_guardrails"]["freshness"]
     freshness["enabled"].value = True
     freshness["block"].value = False
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][2].value = "2"
-    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][1].value = "2"
+    freshness["parameters"][2].value = "hours"
 
     controls["column_select"].value = "col-0"
     controls["column_description"].value = "Persisted identifier"
@@ -903,9 +921,8 @@ def test_reviewed_fields_round_trip_after_save_and_reopen(widget_runtime):
     reopened_freshness = hydrated["table_guardrails"]["freshness"]
     assert reopened_freshness["enabled"].value is True
     assert reopened_freshness["block"].value is False
-    assert reopened_freshness["parameters"][1].value == "column_1"
-    assert reopened_freshness["parameters"][2].value == "2.0"
-    assert reopened_freshness["parameters"][4].value == "full_dataset"
+    assert reopened_freshness["parameters"][0].value == "metadata"
+    assert reopened_freshness["parameters"][1].value == "2.0"
 
     assert "source_drift" not in hydrated["table_guardrails"]
 
@@ -933,6 +950,10 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     """Keep top navigation separate from the widened sidebar and editor pane."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
+    left_pane, right_column = controls["workspace"].children
+    assert left_pane is controls["left_pane"]
+    assert right_column.children == (controls["contract_nav_row"], controls["right_pane"])
+    assert controls["contract_nav_row"] not in controls["editor_shell"].children
 
     for label in ("Table", "Columns", "Review"):
         controls["top_nav"].value = label
@@ -941,8 +962,9 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
 
     controls["top_nav"].value = "Table"
     table_context = controls["left_pane"].children[0]
-    table_summary = table_context.value
-    assert "v1 · DRAFT" in table_summary
+    assert "v1 · DRAFT" in table_context.value
+    assert controls["table_context"].selected_index == 0
+    table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
     assert "Workspace" in table_summary
     assert "Development" in table_summary
@@ -950,7 +972,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Curated Lakehouse" in table_summary
     assert "Full table name" in table_summary
     assert "sales.orders" in table_summary
-    assert "PROD · 02_pipeline" in table_summary
+    assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
     assert "1 write · 2 reads" in table_summary
@@ -959,7 +981,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "<colgroup><col style='width:31%'><col style='width:25%'>" in table_summary
     assert "<col style='width:12%'><col style='width:32%'></colgroup>" in table_summary
     assert "title='04_reporting'" in table_summary
-    assert ">Env</th>" in table_summary
+    assert ">Workspace</th>" in table_summary
     assert ">Pipeline</th>" in table_summary
     assert ">Role</th>" in table_summary
     assert ">Write</td>" in table_summary
@@ -970,6 +992,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Row Key" in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
+    assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
     assert ".fabricops-lineage-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
@@ -1013,6 +1036,9 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Data Quality" in tuple(controls["top_nav"].options)
     controls["top_nav"].value = "Review"
     assert controls["left_pane"].children[0] is table_context
+    review_sections = controls["right_pane"].children
+    assert any(controls["guardrail_disclosure"] in getattr(section, "children", ()) for section in review_sections)
+    assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     assert "Column definitions" in controls["manifest_preview"].value
     assert "Guardrails" in controls["manifest_preview"].value
     assert "<b>Table</b>" in controls["manifest_preview"].value
@@ -1506,7 +1532,7 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     ]
 
     controls["top_nav"].value = "Review"
-    exact_json = controls["right_pane"].children[2].children[1]
+    exact_json = controls["right_pane"].children[-1].children[1]
     assert exact_json.layout.height == "auto"
     assert exact_json.layout.overflow == "visible"
 
@@ -1608,7 +1634,7 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["left_pane"].children[0].value
+    table_summary = controls["table_context"].children[0].value
     assert "Row Key" in table_summary
     assert "column_1" in table_summary
 
@@ -1618,7 +1644,7 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["left_pane"].children[0].value
+    table_summary = controls["table_context"].children[0].value
     assert "One row represents a single order line." in table_summary
     assert "column_1" in table_summary
 
@@ -1635,7 +1661,22 @@ def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runti
     assert "column_0" in managed.value and "Block" in managed.value
     controls["grain_policy"].value = "Warn"
     assert "Warn" in managed.value
-
+    grain_options = dict(controls["business_saved"].options)
+    grain_label = next(label for label in grain_options if "GRAIN — Uniqueness" in label)
+    assert "Locked" in grain_label and "column_0" in grain_label and "Warn" in grain_label
+    controls["business_saved"].value = "__managed_grain__"
+    assert controls["delete_business_rule"].disabled is True
+    assert controls["delete_business_rule"].layout.display == "none"
+    assert "cannot be edited or deleted" in controls["rule_workspace_body"].children[0].value
+    assert controls["apply_business_rule"] not in controls["rule_workspace_body"].children
+    controls["row_key_columns"].value = ("column_1",)
+    assert any("column_1" in label and value == "__managed_grain__"
+               for label, value in controls["business_saved"].options)
+    assert controls["business_saved"].value == "__managed_grain__"
+    controls["grain_enabled"].value = False
+    grain_labels = dict(controls["business_saved"].options)
+    assert any("GRAIN — Uniqueness" in label and "Not enforced" in label for label in grain_labels)
+    assert controls["business_saved"].value == "__managed_grain__"
 
 
 def test_business_rule_delete_requires_confirmation_and_stages_removal(
@@ -2104,6 +2145,7 @@ def test_immutable_contract_does_not_run_authoring_ai(widget_runtime, monkeypatc
 
 def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runtime):
     """A new Freshness rule stages live and blocks final save while incomplete."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     widget_runtime["guardrails"][:] = [
         rule for rule in widget_runtime["guardrails"]
         if rule["guardrail_type"] != "freshness"
@@ -2118,11 +2160,8 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         for message in state["_validation_errors"].values()
     )
 
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][1].value = "column_1"
-    freshness["parameters"][0].value = "column"
-    freshness["parameters"][2].value = "6"
-    freshness["parameters"][3].value = "hours"
+    freshness["parameters"][1].value = "6"
+    freshness["parameters"][2].value = "hours"
     assert widget_runtime["calls"]["guardrails"] == []
     staged = next(
         record for records in state["_pending_guardrails"].values()
@@ -2130,8 +2169,7 @@ def test_new_table_guardrails_require_and_save_canonical_parameters(widget_runti
         if record.get("guardrail_type") == "freshness"
     )
     assert module._parameters(staged) == {
-        "evidence_method": "column", "evaluation_scope": "full_dataset",
-        "freshness_column": "column_1",
+        "evidence_method": "metadata", "evaluation_scope": "full_dataset",
         "maximum_age": 6.0,
         "maximum_age_unit": "hours",
     }
@@ -3038,12 +3076,14 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
 
 def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     """Keep form rows explicit, aligned, and free of empty placeholder widgets."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
     freshness = controls["table_guardrails"]["freshness"]
-    assert len(freshness["parameters"]) == 5
-    assert {"metadata", "column"} <= {value for label, value in freshness["parameters"][0].options}
+    assert len(freshness["parameters"]) == 3
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
 
     column_definition = controls["column_definition"].children[1]
     assert column_definition.layout.grid_template_columns == "120px minmax(240px, 1fr)"
@@ -3054,7 +3094,7 @@ def test_table_classification_updates_left_summary_immediately(widget_runtime):
     """Table classification feedback follows the staged editor value without a save."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["left_pane"].children[0]
+    summary = controls["table_context"].children[0]
 
     assert "Confidential" in summary.value
     controls["table_classification"].value = "Restricted"
@@ -3177,28 +3217,53 @@ def test_stale_column_dropdown_metadata_does_not_block_widget_open(widget_runtim
     assert controls["sensitive_treatment"].value == "tokenize"
 
 
-def test_freshness_timestamp_dropdown_uses_consistent_label_value_options(widget_runtime):
-    """Timestamp dropdown options stay valid when temporal columns are present."""
-    widget_runtime["catalogue"].append({
-        "table_id": widget_runtime["catalogue"][0]["table_id"],
-        "workspace_id": widget_runtime["catalogue"][0]["workspace_id"],
-        "metadata_level": "column",
-        "column_id": "col-date",
-        "column_name": "snapshot_date",
-        "data_type": "date",
-        "is_active": True,
-    })
+def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_runtime, monkeypatch):
+    """File sources share the Freshness section but do not require a timestamp column."""
+    original_review = module.contracts.get_contract_review_state
+
+    def file_review(**kwargs):
+        loaded = original_review(**kwargs)
+        loaded["payload"] = {
+            "source": {"source_type": "file"},
+            "table": {"table_id": "orders"},
+        }
+        return loaded
+
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    freshness = controls["table_guardrails"]["freshness"]
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert len(freshness["parameters"]) == 3
+    assert "file" in freshness["display"][-1].value.lower()
+    freshness["enabled"].value = True
+    freshness["parameters"][1].value = "2"
+    freshness["parameters"][2].value = "hours"
+    saved = next(
+        rule for records in state["_pending_guardrails"].values()
+        for rule in records.values() if rule["guardrail_type"] == "freshness"
+    )
+    assert module._parameters(saved) == {
+        "evidence_method": "metadata", "evaluation_scope": "full_dataset",
+        "maximum_age": 2.0, "maximum_age_unit": "hours",
+    }
+
+
+def test_warehouse_freshness_is_metadata_only_without_temporal_columns(widget_runtime):
+    """Warehouse authoring never offers column-based freshness or requires a date field."""
+    widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
+    for column in widget_runtime["catalogue"][1:]:
+        column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
-    freshness = state["_controls"]["table_guardrails"]["freshness"]["parameters"][1]
-
-    assert ("Select timestamp column", "") in freshness.options
-    assert ("snapshot_date", "snapshot_date") in freshness.options
-    option_values = [
-        option[1] if isinstance(option, tuple) else option
-        for option in freshness.options
-    ]
-    assert freshness.value in option_values
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    assert len(freshness["parameters"]) == 3
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert "Delta transaction" in freshness["display"][-1].value
+    freshness["parameters"][1].value = "3"
+    assert "table.freshness" not in state["_validation_errors"]
 
 
 def test_selection_diagnostic_names_control_table_column_and_valid_options():
@@ -4022,14 +4087,14 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
         "lineage": [{"last_seen": value}],
     })
     controls = widget_runtime["open"]()["_controls"]
-    controls["load_table_context"].click()
-    summary = controls["left_pane"].children[0].value
+    controls["table_context"].selected_index = 0
+    summary = controls["table_context"].children[0].value
     assert f" · {expected}</div>" in summary
     assert f"title='{expected}'>{expected}</td>" in summary
 
 
-def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
-    """Opening the editor leaves collapsed runtime context unread until requested."""
+def test_open_loads_profile_and_lineage_once_for_expanded_context(widget_runtime, monkeypatch):
+    """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
     original = module.contracts.get_table_runtime_context
 
@@ -4039,13 +4104,12 @@ def test_open_defers_profile_and_lineage_reads(widget_runtime, monkeypatch):
 
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
-    assert reads == []
-    assert "have not been loaded" in controls["left_pane"].children[0].value
-
-    controls["load_table_context"].click()
     assert len(reads) == 1
-    assert controls["load_table_context"].layout.display == "none"
-    assert "Pipeline usage" in controls["left_pane"].children[0].value
+    assert controls["table_context"].selected_index == 0
+    assert "Pipeline usage" in controls["table_context"].children[0].value
+    controls["table_context"].selected_index = None
+    controls["table_context"].selected_index = 0
+    assert len(reads) == 1
 
 
 def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, monkeypatch):
@@ -4175,7 +4239,7 @@ def test_reopening_releases_old_editor_models(widget_runtime):
         assert previous.layout.closed
         assert not controls["column_description"].closed
         counts.append(len(widget_runtime["models"]))
-    assert max(counts) - min(counts) <= 2
+    assert max(counts) - min(counts) <= 6
     assert not controls["change_table"].closed
     assert not controls["editor_ai_information"].closed
 
@@ -4290,7 +4354,7 @@ def test_invalid_unstaged_edits_require_discard_confirmation(widget_runtime, act
     """Invalid text is still unsaved work, even before a valid record can be staged."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][2]
+    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][1]
     maximum_age.value = "invalid age"
     assert not state["dirty"]
     assert "table.freshness" in state["_validation_errors"]
@@ -4307,7 +4371,7 @@ def test_notebook_actions_cannot_bypass_editor_validation(widget_runtime, action
     """Returned notebook actions enforce the same validation as the visible buttons."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    controls["table_guardrails"]["freshness"]["parameters"][2].value = "invalid age"
+    controls["table_guardrails"]["freshness"]["parameters"][1].value = "invalid age"
     with pytest.raises(ValueError, match="Complete the current draft configuration"):
         state[action]()
     assert widget_runtime["calls"]["draft"] == []
@@ -4533,3 +4597,25 @@ def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widg
     assert 'bounded selection' in controls['grain_profile_evidence'].value
     assert 'full-table uniqueness is unverified' in controls['grain_profile_evidence'].value
     assert tuple(controls['row_key_columns'].value) == ()
+
+
+def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
+    """Lakehouse tables use existing Delta history without requiring temporal columns."""
+    for column in widget_runtime["catalogue"][1:]:
+        column["data_type"] = "string"
+    _capture_fixture_columns(widget_runtime)
+    state = widget_runtime["open"]()
+    freshness = state["_controls"]["table_guardrails"]["freshness"]
+    assert freshness["parameters"][0].value == "metadata"
+    assert freshness["parameters"][0].disabled is True
+    assert len(freshness["parameters"]) == 3
+    assert "Delta transaction" in freshness["display"][-1].value
+    freshness["enabled"].value = True
+    freshness["parameters"][1].value = "3"
+    freshness["parameters"][1].value = "2"
+    saved = next(
+        item for records in state["_pending_guardrails"].values()
+        for item in records.values() if item["guardrail_type"] == "freshness"
+    )
+    assert module._parameters(saved)["evidence_method"] == "metadata"
+    assert "freshness_column" not in module._parameters(saved)

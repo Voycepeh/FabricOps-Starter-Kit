@@ -1117,6 +1117,34 @@ def widget_data_contract(
 
     """
     startup = shared.WidgetStartup("Data Contract")
+    timing_log: list[dict[str, Any]] = []
+    timing_panel = None
+
+    def record_timing(operation: str, seconds: float, status: str = "ok") -> None:
+        entry = {"operation": operation, "seconds": round(seconds, 3), "status": status}
+        timing_log.append(entry)
+        if len(timing_log) > 100:
+            del timing_log[:-100]
+        if timing_panel is not None:
+            refresh_timing_panel()
+
+    def refresh_timing_panel() -> None:
+        if timing_panel is None:
+            return
+        rows = "".join(
+            "<tr><td style='padding:3px 12px 3px 0'>" + html.escape(item["operation"])
+            + "</td><td style='text-align:right;padding-right:12px'>" + f'{item["seconds"]:.3f}'
+            + "</td><td>" + html.escape(item["status"]) + "</td></tr>"
+            for item in timing_log
+        )
+        timing_panel.value = (
+            "<details style='font-size:12px;margin:8px 0'><summary style='cursor:pointer'>"
+            "Performance timings (kernel elapsed seconds)</summary>"
+            "<table><thead><tr><th align='left'>Operation</th><th>Seconds</th><th>Status</th></tr></thead>"
+            + "<tbody>" + rows + "</tbody></table>"
+            "<div style='color:#667085'>Includes Spark execution and Python work; "
+            "browser paint and notebook cold start are not measured.</div></details>"
+        )
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, active_workspace_id, resolved = resolve_fabric_context(context=context)
         authoring_workspace_id = active_workspace_id
@@ -1164,6 +1192,7 @@ def widget_data_contract(
         catalogue = contracts.list_contract_governance_state(
             config=config, active_workspace_id=active_workspace_id,
             spark_session=spark, metadata_workspace_id=routing_workspace_id,
+            timing_callback=record_timing,
         )
         table_rows = catalogue["tables"]
         file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
@@ -1182,6 +1211,7 @@ def widget_data_contract(
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
         "_ai_suggestions": {}, "_ai_errors": {}, "_ai_diagnostics": {},
+        "_timing_log": timing_log,
         "ai_settings": {key: ai_enrichment[key] for key in ("model_deployment_name", "reasoning_effort", "verbosity")},
         "ai_usage": [],
         "_pending_enrichment": {}, "_pending_guardrails": {}, "_validation_errors": {},
@@ -1193,6 +1223,8 @@ def widget_data_contract(
     status = shared.status_message(widgets)
     operation_progress = widgets.HTML(layout=widgets.Layout(width="100%"))
     operation_progress.add_class("fabricops-operation-progress")
+    timing_panel = widgets.HTML(layout=widgets.Layout(width="100%"))
+    refresh_timing_panel()
     state["_operation_timings"] = []
     state["_busy_depth"] = 0
 
@@ -1232,10 +1264,15 @@ def widget_data_contract(
                 state["_busy_depth"] += 1
                 began = perf_counter()
                 operation_progress.value = loading_html(label)
+                status_value = "ok"
                 try:
                     return callback(*args, **kwargs)
+                except Exception:
+                    status_value = "failed"
+                    raise
                 finally:
                     elapsed = perf_counter() - began
+                    record_timing(label, elapsed, status_value)
                     state["_operation_timings"].append({"operation": label, "seconds": elapsed})
                     del state["_operation_timings"][:-100]
                     state["_busy_depth"] -= 1
@@ -1277,8 +1314,11 @@ def widget_data_contract(
     )
     left.add_class("fabricops-contract-sidebar")
     right.add_class("fabricops-contract-detail")
+    right_column = widgets.VBox(
+        [right], layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+    )
     workspace = widgets.GridBox(
-        [left, right],
+        [left, right_column],
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
             grid_template_columns="480px minmax(0, 1fr)",
@@ -1958,14 +1998,6 @@ def widget_data_contract(
             [str(name) for name in profile_key_candidates[0].get("columns", [])]
             if profile_key_candidates and discovery.get("profile_scope") != "bounded_selection" else []
         )
-        temporal_column_names = [
-            str(column.get("column_name") or "")
-            for column in authoring_columns
-            if any(
-                marker in str(column.get("data_type") or "").lower()
-                for marker in ("date", "timestamp", "datetime")
-            )
-        ]
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled"))
         top_nav.options = _TABS
@@ -2087,6 +2119,7 @@ def widget_data_contract(
             grain_ai.value = (
                 "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
                 "padding:9px 11px;font-size:12px;line-height:1.5;'>"
+                "<div style='font-size:11px;color:#667085;margin-bottom:5px'>Previously generated AI suggestion</div>"
                 f"<b>Suggested grain:</b> {html.escape(suggestion['grain'] or 'Not inferred')}<br>"
                 f"<b>Profiled row key:</b> {html.escape(key_text)}"
                 "<details style='margin-top:5px;color:#667085;'>"
@@ -2095,6 +2128,7 @@ def widget_data_contract(
                 "</details></div>"
             )
             accept_grain.disabled = not (editable and ai_available())
+            suggest_grain.description = "Regenerate grain"
 
         render_grain_ai()
 
@@ -2264,44 +2298,40 @@ def widget_data_contract(
         table_rules: dict[str, Any] = {}
         existing_freshness = next((r for r in guardrails if r.get("guardrail_type") == "freshness"), {})
         freshness_parameters = _parameters(existing_freshness)
+        is_file_source = current.get("payload", {}).get("source", {}).get("source_type") == "file"
+        freshness_evidence_method = "metadata"
         freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
         freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
-        freshness_method = widgets.Dropdown(options=[("Select evidence method", ""), ("Metadata-based", "metadata"), ("Column-based", "column")], value=freshness_parameters.get("evidence_method", ""), disabled=not editable, **shared.widget_common(widgets, "Evidence method"))
-        freshness_column = widgets.Dropdown(options=[("Select timestamp column", ""), *[(name, name) for name in temporal_column_names]], value=freshness_parameters.get("freshness_column", "") if freshness_parameters.get("freshness_column", "") in temporal_column_names else "", disabled=not editable, **shared.widget_common(widgets, "Timestamp column"))
+        freshness_method = widgets.Dropdown(
+            options=[("File modification metadata" if is_file_source else "Delta transaction history", freshness_evidence_method)],
+            value=freshness_evidence_method, disabled=True,
+            **shared.widget_common(widgets, "Evidence source (automatic)"),
+        )
         freshness_age = widgets.Text(value=str(freshness_parameters.get("maximum_age", "")), continuous_update=False, disabled=not editable, **shared.widget_common(widgets, "Maximum age"))
         freshness_unit = widgets.Dropdown(options=["minutes", "hours", "days"], value=freshness_parameters.get("maximum_age_unit", "days"), disabled=not editable, **shared.widget_common(widgets, "Age unit"))
-        freshness_scope = widgets.Dropdown(options=[("Full dataset", "full_dataset"), ("Incremental batch", "incremental_batch")], value=freshness_parameters.get("evaluation_scope", "full_dataset"), disabled=not editable, **shared.widget_common(widgets, "Evaluation scope"))
         freshness_hint = widgets.HTML()
-        def refresh_freshness_controls(_change=None):
-            metadata = freshness_method.value == "metadata"
-            freshness_column.layout.display = "none" if metadata else ""
-            freshness_column.disabled = not editable or metadata
-            if metadata:
-                freshness_scope.value = "full_dataset"
-            freshness_scope.disabled = not editable or metadata
-            freshness_hint.value = (
-                "Physical update metadata only. Unsupported or inaccessible metadata is reported as unavailable. File modification time is not business-event time."
-                if metadata else "Evaluate the latest configured timestamp in the selected scope. Column aggregation may scan data. Empty or invalid evidence is reported explicitly."
-            )
-        freshness_method.observe(refresh_freshness_controls, names="value")
-        refresh_freshness_controls()
+        freshness_hint.value = (
+            "Uses file modification metadata; the oldest selected file determines freshness. "
+            "This does not measure business-event time."
+            if is_file_source else
+            "Uses the latest data-changing Delta transaction. Warehouse history can lag SQL commits; "
+            "unavailable metadata is reported explicitly, never replaced with a column scan."
+        )
         def build_freshness_record():
             old = next((r for r in session_guardrails() if r.get("guardrail_type") == "freshness"), {})
             if not freshness_enabled.value and not old:
                 return None
             parameters = _parameters(old)
             if freshness_enabled.value:
-                parameters = {"evidence_method": freshness_method.value, "evaluation_scope": freshness_scope.value,
+                parameters = {"evidence_method": "metadata", "evaluation_scope": "full_dataset",
                     "maximum_age": float(freshness_age.value), "maximum_age_unit": freshness_unit.value}
-                if freshness_method.value == "column":
-                    parameters["freshness_column"] = freshness_column.value
                 from fabricops_kit.pipeline.shared import validate_freshness_parameters
                 validate_freshness_parameters(parameters)
             return guardrail_record("freshness", "freshness", parameters, existing=old,
                 action="Block" if freshness_block.value else "Warn", active=freshness_enabled.value)
         table_rules["freshness"] = {"enabled": freshness_enabled, "block": freshness_block,
-            "parameters": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope],
-            "display": [freshness_method, freshness_column, freshness_age, freshness_unit, freshness_scope, freshness_hint],
+            "parameters": [freshness_method, freshness_age, freshness_unit],
+            "display": [freshness_method, freshness_age, freshness_unit, freshness_hint],
             "build_record": build_freshness_record}
         def derive_table_classification() -> str:
             """Return the highest ranked classification among columns retained by the write."""
@@ -2464,7 +2494,15 @@ def widget_data_contract(
         def runtime_context_html() -> str:
             profile = runtime_context.get("latest_profile")
             if profile:
-                workspace_id = str(profile.get("workspace_id") or "Unknown workspace_id")
+                workspace_id = str(profile.get("workspace_id") or "")
+                workspace_name = str(profile.get("workspace_name") or "").strip()
+                if not workspace_name:
+                    workspace_name = next((
+                        str(observation.get("_workspace_name") or "").strip()
+                        for observation in table_rows
+                        if str(observation.get("workspace_id") or "") == workspace_id
+                        and observation.get("_workspace_name")
+                    ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 committed_by = str(profile.get("committed_by") or "Unknown")
                 rank, instant = metadata_timestamp_sort_key(profile.get("committed_at"))
@@ -2476,7 +2514,7 @@ def widget_data_contract(
                 profile_html = (
                     "<div style='margin-top:14px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
-                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_id)} · "
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)} · "
                     f"{html.escape(pipeline_name)}</div>"
                     f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
                     f"{html.escape(context_timestamp(profile.get('committed_at')))}</div>"
@@ -2497,7 +2535,15 @@ def widget_data_contract(
             if lineage_rows:
                 lineage_cells = []
                 for item in lineage_rows:
-                    workspace_value = str(item.get("workspace_id") or "")
+                    workspace_id = str(item.get("workspace_id") or "")
+                    workspace_value = str(item.get("workspace_name") or "").strip()
+                    if not workspace_value:
+                        workspace_value = next((
+                            str(observation.get("_workspace_name") or "").strip()
+                            for observation in table_rows
+                            if str(observation.get("workspace_id") or "") == workspace_id
+                            and observation.get("_workspace_name")
+                        ), "") or "Unknown workspace"
                     pipeline_value = str(item.get("pipeline_name") or "")
                     relationship = str(item.get("relationship") or "")
                     relationship_key = relationship.lower()
@@ -2525,7 +2571,7 @@ def widget_data_contract(
                     "<table class='fabricops-lineage-table'>"
                     "<colgroup><col style='width:31%'><col style='width:25%'>"
                     "<col style='width:12%'><col style='width:32%'></colgroup>"
-                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Env</th>"
+                    "<thead><tr><th style='text-align:left;padding:5px 8px;'>Workspace</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Role</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
@@ -2546,9 +2592,7 @@ def widget_data_contract(
         def table_identity_html() -> str:
             workspace_name = str(
                 table.get("_workspace_name")
-                or table.get("workspace_id")
-                or state.get("workspace_id")
-                or "Unknown"
+                or "Unknown workspace"
             )
             item_name = configured_item_name(table) or "Unknown"
             full_table_name = qualified_table_name(table) or "Unknown"
@@ -2564,6 +2608,9 @@ def widget_data_contract(
             )
 
         table_summary = widgets.HTML()
+        table_context_content = widgets.HTML()
+        table_context_accordion = widgets.Accordion([table_context_content], selected_index=None)
+        table_context_accordion.set_title(0, "Table context")
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
         guardrail_disclosure = widgets.Accordion([guardrail_sidebar], selected_index=None)
@@ -2849,14 +2896,14 @@ def widget_data_contract(
 
         runtime_summary_html = (
             "<div style='color:#667085;font-size:12px;margin-top:14px;'>"
-            "Profile and pipeline usage have not been loaded.</div>"
+            "Expand to read saved profile, lineage and pipeline usage metadata.</div>"
         )
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
             freshness_controls = table_rules["freshness"]
             source_refresh_expectation = "Not configured"
             if freshness_controls["enabled"].value:
-                source_refresh_expectation = f"{freshness_method.value} · {freshness_scope.value} · {freshness_age.value} {freshness_unit.value}"
+                source_refresh_expectation = f"metadata · full_dataset · {freshness_age.value} {freshness_unit.value}"
 
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
@@ -2867,12 +2914,13 @@ def widget_data_contract(
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
-                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or table.get('workspace_id') or '') or str(state.get('workspace_id') or 'Unknown'))}</div>"
-                + "<details style='margin-top:10px;'><summary style='cursor:pointer;'>Table context</summary>"
-                + table_identity_html()
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or 'Unknown workspace'))}</div>"
+            )
+            table_context_content.value = (
+                table_identity_html()
                 + runtime_summary_html
                 + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                "<div style='margin-top:12px;'>"
+                + "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Grain</div>"
                 f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
                 "<div style='margin-top:12px;'>"
@@ -2884,7 +2932,6 @@ def widget_data_contract(
                 "<div style='margin-top:12px;'>"
                 "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
                 f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
-                "</details>"
             )
             if state.get("workspace_id"):
                 difference = state.get("observation_difference", {})
@@ -2902,12 +2949,7 @@ def widget_data_contract(
         for freshness_control in table_rules["freshness"]["parameters"]:
             freshness_control.observe(render_table_summary, names="value")
 
-        load_table_context_button = widgets.Button(
-            description="Load profile and pipeline usage",
-            layout=widgets.Layout(width="100%"),
-        )
-
-        @busy_action("Loading profile and pipeline usage…")
+        @busy_action("Reading profile, lineage and pipeline usage metadata…")
         def ensure_runtime_context() -> None:
             nonlocal runtime_context, runtime_summary_html
             if runtime_context:
@@ -2915,7 +2957,6 @@ def widget_data_contract(
             if current.get("payload", {}).get("source", {}).get("source_type") == "file":
                 runtime_context = {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "pipeline_usage": []}
                 runtime_summary_html = runtime_context_html()
-                load_table_context_button.layout.display = "none"
                 return
             loaded = contracts.get_table_runtime_context(
                 config=config, active_workspace_id=active_workspace_id, spark_session=spark,
@@ -2935,17 +2976,17 @@ def widget_data_contract(
                         )}
                     )
             runtime_summary_html = runtime_context_html()
-            load_table_context_button.layout.display = "none"
             render_table_summary()
 
-        def load_table_context_clicked(_button: Any) -> None:
+        def table_context_expanded(change: dict[str, Any]) -> None:
+            if change.get("new") != 0 or runtime_context:
+                return
             try:
                 ensure_runtime_context()
-                set_status("Profile and pipeline usage loaded. Open Table context to view.")
             except Exception as exc:
-                set_status(_format_widget_exception(exc, phase="table context"), error=True)
+                set_status(_format_widget_exception(exc, phase="table context metadata read"), error=True)
 
-        load_table_context_button.on_click(load_table_context_clicked)
+        table_context_accordion.observe(table_context_expanded, names="selected_index")
         def definition_section(
             title: str,
             classification: Any,
@@ -3170,14 +3211,14 @@ def widget_data_contract(
             table_definition,
             guardrail_section(
                 "Freshness",
-                banner_title="Applies when this table is used as a source in a downstream pipeline.",
+                banner_title="Applies when this dataset is read by a downstream pipeline.",
                 banner_detail=(
-                    "This rule is checked when the table is consumed as an input, "
-                    "not when this table itself is written."
+                    "This rule is checked when the dataset is consumed as an input, "
+                    "not when that dataset is written."
                 ),
                 description=(
-                    "Check whether the source has received sufficiently recent data. "
-                    "Choose physical update metadata or a timestamp column and the scope to evaluate."
+                    "Check whether this source is recent enough. Evidence is selected automatically "
+                    "by source type: file modification metadata for files, timestamp column for tables."
                 ),
                 header_controls=[
                     table_rules["freshness"]["enabled"],
@@ -4924,6 +4965,7 @@ def widget_data_contract(
 
         # Data Quality: manage the shared rule set manually or with optional AI assistance.
         new_rule_option = "__new_rule__"
+        managed_grain_option = "__managed_grain__"
         business_saved = widgets.Select(
             rows=7,
             **shared.widget_common(widgets, "Rules")
@@ -5633,6 +5675,12 @@ def widget_data_contract(
                 "Select a rule to edit, or click here to create a new rule",
                 new_rule_option,
             )]
+            keys = " + ".join(str(key) for key in row_key_columns.value) or "Key required"
+            grain_status = str(grain_policy.value) if grain_enabled.value else "Not enforced"
+            options.append((
+                f"Locked  |  GRAIN — Uniqueness · {keys}  |  {grain_status}",
+                managed_grain_option,
+            ))
             for rule in session_guardrails():
                 if str(rule.get("guardrail_type") or "").lower() not in {
                     "data_quality", "dq"
@@ -5836,6 +5884,12 @@ def widget_data_contract(
             if business_hydrating["active"]:
                 return
             key = str(business_saved.value or "")
+            if key == managed_grain_option:
+                hide_business_delete_confirmation()
+                business_active_saved["rule_id"] = ""
+                delete_business_rule.disabled = True
+                delete_business_rule.layout.display = "none"
+                return
             if key.startswith("__ai_draft__:"):
                 try:
                     index = int(key.rsplit(":", 1)[1])
@@ -6529,7 +6583,7 @@ def widget_data_contract(
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                     "Select a current rule or AI draft to edit it, or select the first "
-                    "row to create a new rule. "
+                    "row to create a new rule. The locked GRAIN rule is managed in the Table tab. "
                     "AI drafts remain proposals until you review and add them.</div>"
                 ),
                 business_saved,
@@ -6573,6 +6627,7 @@ def widget_data_contract(
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="16px"),
         )
+        managed_grain_review = widgets.HTML()
         rule_workspace_body = widgets.VBox(
             [new_rule_editor],
             layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
@@ -6582,13 +6637,17 @@ def widget_data_contract(
         )
 
         def set_rule_workspace(mode: str) -> None:
-            if mode == "review":
+            if mode == "managed_grain":
+                rule_workspace_body.children = (managed_grain_review,)
+            elif mode == "review":
                 rule_workspace_body.children = (rule_reviewer,)
             else:
                 rule_workspace_body.children = (new_rule_editor,)
 
         def open_selected_rule(change: dict[str, Any]) -> None:
-            if str(change.get("new") or "") == new_rule_option:
+            if str(change.get("new") or "") == managed_grain_option:
+                set_rule_workspace("managed_grain")
+            elif str(change.get("new") or "") == new_rule_option:
                 set_rule_workspace("create")
             elif str(change.get("new") or ""):
                 set_rule_workspace("review")
@@ -6596,6 +6655,8 @@ def widget_data_contract(
         business_saved.observe(open_selected_rule, names="value")
         if str(business_saved.value or "") == new_rule_option:
             set_rule_workspace("create")
+        elif business_saved.value == managed_grain_option:
+            set_rule_workspace("managed_grain")
         elif business_saved.value:
             set_rule_workspace("review")
 
@@ -6608,10 +6669,18 @@ def widget_data_contract(
                 + html.escape(keys) + " · " + html.escape(str(grain_policy.value)) + " · " + status
                 + "<br>Edit the row key and enforcement in the Table tab. Non-null keys are required."
             ) if grain_enabled.value else ""
+            managed_grain_review.value = (
+                "<div style='padding:12px;border:1px solid #dce4ed;border-radius:8px'>"
+                "<b>Locked managed rule — GRAIN · Uniqueness</b><br>"
+                + html.escape(keys) + " · " + html.escape(str(grain_policy.value))
+                + "<p>Grain uniqueness is configured in the Table tab. "
+                "It cannot be edited or deleted from Data Quality Rules.</p></div>"
+            )
+            refresh_business_saved_options()
         for control in (row_key_columns, grain_enabled, grain_policy):
             control.observe(render_managed_grain, names="value")
         render_managed_grain()
-        business_left = (managed_grain, current_rules_section,)
+        business_left = (current_rules_section,)
         business_right = (rule_workspace_section,)
         view_content["Data Quality"] = (business_left, business_right)
 
@@ -6731,12 +6800,13 @@ def widget_data_contract(
         cancel_discard_contract = None
         if editable:
             save_contract_button = widgets.Button(
-                description="Save draft",
-                button_style="primary",
+                description="Save draft", button_style="primary",
+                layout=widgets.Layout(width="auto", min_width="125px"),
             )
             discard_contract_button = widgets.Button(
-                description="Discard changes",
-                button_style="danger",
+                description="Discard",
+                layout=widgets.Layout(width="auto", min_width="110px"),
+                tooltip="Discard unsaved edits and return to the saved draft",
             )
             confirm_discard_contract = widgets.Button(
                 description="Discard unsaved changes",
@@ -6770,8 +6840,9 @@ def widget_data_contract(
             )
             freeze_button = widgets.Button(
                 description=f"Freeze v{row['contract_version']}…",
-                button_style="info",
                 disabled=pending_engineering_review,
+                layout=widgets.Layout(width="auto", min_width="130px"),
+                tooltip="Validate and make this version immutable; confirmation required",
             )
             freeze_confirm = widgets.VBox(layout=widgets.Layout(display="none"))
             freeze_cancel = widgets.Button(description="Cancel")
@@ -6864,7 +6935,13 @@ def widget_data_contract(
             freeze_cancel.on_click(freeze_cancel_clicked)
             freeze_confirm_button.on_click(freeze_confirm_clicked)
             sidebar_actions.children = (
-                save_contract_button, discard_contract_button, freeze_button,
+                widgets.HTML("<b style='font-size:12px'>Contract actions</b>"),
+                widgets.HBox([save_contract_button, discard_contract_button],
+                    layout=widgets.Layout(width="100%", gap="8px", flex_flow="row wrap")),
+                widgets.HTML("<div style='border-top:1px solid #e6eaef;margin:5px 0'></div>"),
+                widgets.HBox([widgets.HTML("<span style='font-size:12px'><b>Finalize version</b><br>"
+                    "<span style='color:#667085'>Validate and lock this version.</span></span>"), freeze_button],
+                    layout=widgets.Layout(width="100%", gap="8px", align_items="center", justify_content="space-between")),
                 discard_contract_confirm, freeze_confirm,
             )
             sidebar_actions.layout.display = ""
@@ -6879,6 +6956,10 @@ def widget_data_contract(
                 layout=widgets.Layout(width="100%", gap="8px"),
             ),
             shared.form_section(
+                widgets, title="Read / Write Guardrails",
+                children=[guardrail_disclosure],
+            ),
+            shared.form_section(
                 widgets,
                 title="Exact JSON",
                 children=[exact_json],
@@ -6891,13 +6972,15 @@ def widget_data_contract(
         )
         nonlocal sidebar_content
         sidebar_content = (
-            table_summary, load_table_context_button, sidebar_actions, table_exit_row,
-            table_exit_confirm, operation_progress, status, guardrail_disclosure,
+            table_summary, table_context_accordion, sidebar_actions, table_exit_row,
+            table_exit_confirm, operation_progress, status,
         )
         apply_view()
 
         state["_refresh_guardrail_sidebar"] = render_table_summary
         render_table_summary()
+        # Show Table context immediately and load recorded metadata once.
+        table_context_accordion.selected_index = 0
 
         state["_controls"].update({
             "table_description": table_description, "table_classification": table_classification,
@@ -6906,7 +6989,7 @@ def widget_data_contract(
             "grain_enabled": grain_enabled, "grain_policy": grain_policy, "grain_profile_evidence": grain_profile_evidence,
             "grain_ai": grain_ai, "suggest_grain": suggest_grain, "accept_grain": accept_grain,
             "guardrail_sidebar": guardrail_sidebar, "guardrail_disclosure": guardrail_disclosure, "sidebar_groups": sidebar_groups,
-            "load_table_context": load_table_context_button,
+            "table_context": table_context_accordion,
             "table_definition": table_definition,
             "table_guardrails": table_rules,
             "table_description_ai": table_description_ai,
@@ -7027,7 +7110,7 @@ def widget_data_contract(
 
         state["_refresh_ai_controls"] = refresh_ai_controls
         editor_roots = [node for panes in view_content.values() for pane in panes for node in pane]
-        editor_roots.extend([table_summary, load_table_context_button, guardrail_disclosure, *sidebar_actions.children])
+        editor_roots.extend([table_summary, table_context_accordion, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
             sensitive_ai_panel, business_advanced, business_rule_controls,
@@ -7130,7 +7213,7 @@ def widget_data_contract(
     )
     table_exit_row = widgets.HBox(
         [change_table_button],
-        layout=widgets.Layout(width="100%", justify_content="center"),
+        layout=widgets.Layout(width="100%", justify_content="flex-end"),
     )
     selector_actions = widgets.VBox(
         [
@@ -7151,15 +7234,13 @@ def widget_data_contract(
     contract_nav_row = widgets.HBox(
         [top_nav],
         layout=widgets.Layout(
-            width="100%", justify_content="flex-start", margin="4px 0 6px 0",
+            width="100%", justify_content="flex-start", margin="0 0 8px 0",
         ),
     )
     contract_nav_row.add_class("fabricops-contract-nav-row")
+    right_column.children = (contract_nav_row, right)
     editor_shell = widgets.VBox(
-        [
-            contract_nav_row,
-            workspace,
-        ],
+        [workspace],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
     )
 
@@ -7264,19 +7345,34 @@ def widget_data_contract(
             set_status("Select a dataset and contract before opening.", error=True)
             return
         open_button.disabled = True
-        set_open_progress("Opening contract…")
+        set_open_progress(
+            "Preparing a new Data Contract draft…" if selected_contract == "new"
+            else "Selecting saved Data Contract version from governance metadata…"
+        )
         try:
             if selected_contract == "new":
                 if not state.get("workspace_id"):
                     raise ValueError("Select a workspace observation before creating a draft.")
                 state["dataset_id"] = selected_table
-                new_draft()
+                began = perf_counter()
+                try:
+                    new_draft()
+                finally:
+                    record_timing("Open: create draft / metadata", perf_counter() - began)
             else:
-                select(selected_table, int(selected_contract))
-            set_open_progress("Loading editor…")
-            top_nav.value = "Table"
-            render()
-            set_open_progress("Building editor…")
+                began = perf_counter()
+                try:
+                    select(selected_table, int(selected_contract))
+                finally:
+                    record_timing("Open: select contract / metadata", perf_counter() - began)
+            set_open_progress("Constructing Table, Columns, Data Quality and Review widget controls…")
+            began = perf_counter()
+            try:
+                top_nav.value = "Table"
+                render()
+            finally:
+                record_timing("Open: constructing editor controls", perf_counter() - began)
+            set_open_progress("Mounting contract editor controls in notebook output…")
             selector_panel.children = tuple(child for child in selector_panel.children if child is not status)
             selector_panel.layout.display = "none"
             editor_shell.layout.display = ""
@@ -7333,7 +7429,7 @@ def widget_data_contract(
     page = shared.form_page(
         widgets, title="Data Contract", tone="governance",
         description="Select, author, review, and freeze one governed dataset contract.",
-        children=[selector_panel, editor_shell],
+        children=[selector_panel, editor_shell, timing_panel],
     )
     page.layout.height = "auto"
     page.layout.overflow = "visible"
@@ -7356,4 +7452,8 @@ def widget_data_contract(
         "cancel_exit": cancel_exit,
     })
     startup.display(page)
+    for phase in ("initialization", "spark_loading", "metadata_loading", "widget_construction"):
+        if phase in startup.timings:
+            record_timing("Startup: " + phase, startup.timings[phase])
+    state["_startup_timings"] = startup.timings
     return state

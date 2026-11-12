@@ -42,6 +42,11 @@ class _DeltaTransport:
 
     def history(self):
         """Expose transaction receipts retained by the local Delta transport."""
+        if str(self.name).rsplit("/", 1)[-1] in self.boundary.business:
+            return self.boundary.spark.createDataFrame(
+                [("WRITE", 1, datetime.now())],
+                "operation string, version long, timestamp timestamp",
+            )
         return self.boundary.spark.createDataFrame(self.boundary.commits.get(self.name, []), "userMetadata string")
 
     def alias(self, name):
@@ -211,7 +216,7 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
              ("grain", "uniqueness", "", {"columns": ["id"]}),
              ("data_quality", "completeness", f"{table_id}/id", {"columns": ["id"], "maximum_missing_percent": 0, "treat_blank_as_missing": False})]
     if source:
-        specs += [("freshness", "freshness", "", {"freshness_column": "modified_at", "evidence_method": "column", "evaluation_scope": "full_dataset", "maximum_age": 2, "maximum_age_unit": "days"})]
+        specs += [("freshness", "freshness", "", {"evidence_method": "metadata", "evaluation_scope": "full_dataset", "maximum_age": 2, "maximum_age_unit": "days"})]
     else:
         specs += [("sensitive_data", "mask", f"{table_id}/email", {"scope": "column", "treatment": "mask", "preserve_start": 0, "preserve_end": 0, "mask_character": "*"})]
     if schema_only:
@@ -296,7 +301,13 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
         inputs = reads(plan)
         tested = run_pipeline_operation(orchestrate_write, inputs[0]["dataframe"], plan=plan, sources=inputs,
             **coordinates["targets"][0], write_mode="overwrite", spark_session=state.spark, verbose=False)
-    assert tested["validation_passed"] and not tested["published"]
+    assert tested["validation_passed"] and not tested["published"], {
+        "source_freshness": [source.get("freshness_result") for source in inputs],
+        "source_schema": [source.get("schema_result") for source in inputs],
+        "source_dq": [source.get("dq_result") for source in inputs],
+        "write_dq": tested.get("dq_result"),
+        "results": plan.results,
+    }
     assert tested["validation_passed"]
     assert tested["dataframe"].first().email == "****************"
     assert_ordinary_metadata_unchanged(state.metadata, snapshot)
