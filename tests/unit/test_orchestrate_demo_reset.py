@@ -45,7 +45,6 @@ def _ready(monkeypatch):
     monkeypatch.setattr(API, '_demo_metadata_files', lambda self, **kw: {'submissions': 0, 'dry_runs': 0, 'pipeline_snapshots': 0})
     monkeypatch.setattr(API, '_demo_remove_outputs', lambda self, **kw: None)
     monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: False)
-    monkeypatch.setattr(API, '_demo_prepare_gold_empty_output', lambda: None)
     monkeypatch.setattr(API, '_demo_verify_outputs', lambda self: None)
     monkeypatch.setattr(API, '_demo_assert_source', lambda *a: None)
     monkeypatch.setattr(API, 'read_lakehouse_csv', lambda file, **kw: SimpleNamespace(cache=lambda: SimpleNamespace(
@@ -233,6 +232,8 @@ def test_gold_preflight_failure_preserves_metadata(monkeypatch):
 
 
 def test_gold_verify_rejects_retained_rows(monkeypatch):
+    import sys
+    monkeypatch.setitem(sys.modules, "notebookutils", SimpleNamespace())
     state = SimpleNamespace(_demo_gold_empty_output=None)
     monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
     monkeypatch.setattr(API, "read_warehouse_query",
