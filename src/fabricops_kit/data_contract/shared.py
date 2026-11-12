@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from time import perf_counter
+
 from fabricops_kit.io.shared import retry_delta_metadata
 
 
@@ -1020,17 +1022,30 @@ def get_contract_authoring_state(
 def list_contract_governance_state(
     *, config: Any, active_workspace_id: str, spark_session: Any,
     metadata_workspace_id: str | None = None,
+    timing_callback: Any = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Return all current workspace observations and global Contract histories."""
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     context = {**_metadata_io_context(config, routing_workspace_id), "_spark_session": spark_session}
-    observations = current_catalogue_observations(read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"), context=context))
-    contracts = row_dicts(read_lakehouse_table(DATA_CONTRACT_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(config, DATA_CONTRACT_TABLE), context=context))
-    runs = row_dicts(read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
-        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context))
+
+    def read_metadata(name: str, transform: Any) -> Any:
+        began = perf_counter()
+        try:
+            result = transform(read_lakehouse_table(
+                name, store="Metadata",
+                schema=metadata_table_physical_schema(config, name), context=context,
+            ))
+        except Exception:
+            if timing_callback is not None:
+                timing_callback(f"Metadata read: {name}", perf_counter() - began, "failed")
+            raise
+        if timing_callback is not None:
+            timing_callback(f"Metadata read: {name}", perf_counter() - began, "ok")
+        return result
+
+    observations = read_metadata("METADATA_DATA_CATALOGUE", current_catalogue_observations)
+    contracts = read_metadata(DATA_CONTRACT_TABLE, row_dicts)
+    runs = read_metadata("METADATA_PIPELINE_RUN", row_dicts)
     return {"observations": observations, "pipeline_runs": runs,
             "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
             "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
