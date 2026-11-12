@@ -221,7 +221,7 @@ def widget_runtime(monkeypatch):
     ]
     guardrails = [
         {"guardrail_rule_id": "schema", "guardrail_version": 1, "guardrail_type": "schema", "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["col-0"]}', "action": "Block", "is_active": True},
-        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"freshness_column":"column_1","evidence_method":"column","evaluation_scope":"full_dataset","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
+        {"guardrail_rule_id": "fresh", "guardrail_version": 1, "guardrail_type": "freshness", "rule_type": "freshness", "rule_parameters_json": '{"evidence_method":"metadata","evaluation_scope":"full_dataset","maximum_age":2,"maximum_age_unit":"days"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "drift", "guardrail_version": 1, "guardrail_type": "source_drift", "rule_type": "source_drift", "rule_parameters_json": '{"partition_column":"column_0","change_column":"column_1"}', "action": "Warn", "is_active": True},
         {"guardrail_rule_id": "sensitive", "guardrail_version": 1, "guardrail_type": "sensitive_data", "column_id": "col-0", "rule_type": "tokenize", "rule_parameters_json": '{"scope":"column","treatment":"tokenize"}', "action": "Block", "is_active": True},
         {"guardrail_rule_id": "dq", "guardrail_version": 1, "guardrail_type": "data_quality", "column_id": "col-0", "rule_type": "completeness", "rule_parameters_json": '{"columns":["column_0"],"maximum_missing_percent":0,"treat_blank_as_missing":false}', "action": "Block", "is_active": True},
@@ -972,7 +972,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "Curated Lakehouse" in table_summary
     assert "Full table name" in table_summary
     assert "sales.orders" in table_summary
-    assert "PROD · 02_pipeline" in table_summary
+    assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
     assert "1 write · 2 reads" in table_summary
@@ -1532,7 +1532,7 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     ]
 
     controls["top_nav"].value = "Review"
-    exact_json = controls["exact_json"]
+    exact_json = controls["right_pane"].children[-1].children[1]
     assert exact_json.layout.height == "auto"
     assert exact_json.layout.overflow == "visible"
 
