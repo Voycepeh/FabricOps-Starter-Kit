@@ -933,6 +933,10 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     """Keep top navigation separate from the widened sidebar and editor pane."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
+    left_pane, right_column = controls["workspace"].children
+    assert left_pane is controls["left_pane"]
+    assert right_column.children == (controls["contract_nav_row"], controls["right_pane"])
+    assert controls["contract_nav_row"] not in controls["editor_shell"].children
 
     for label in ("Table", "Columns", "Review"):
         controls["top_nav"].value = label
