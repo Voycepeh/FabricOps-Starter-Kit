@@ -193,32 +193,75 @@ def test_reset_does_not_inspect_notebook_jobs(monkeypatch, capsys):
 
 
 
-def test_gold_drop_uses_native_cursor_and_exact_sql():
-    statements = []
-    class Cursor:
-        def execute(self, statement):
-            statements.append(statement)
-        def close(self):
-            statements.append("cursor closed")
-    connection = SimpleNamespace(cursor=lambda: Cursor(), commit=lambda: statements.append("commit"))
-    API._demo_drop_gold_output(SimpleNamespace(), connection)
-    assert statements == [
-        "DROP TABLE IF EXISTS [demo].[customer_summary];",
-        "commit",
-        "cursor closed",
-    ]
+def test_gold_clear_uses_empty_overwrite_without_ddl(monkeypatch):
+    state = SimpleNamespace(_demo_gold_empty_output=object())
+    calls = []
+    monkeypatch.setattr(API, "write_warehouse_table", lambda frame, **kw: calls.append((frame, kw)))
+    API._demo_clear_gold_output(state)
+    assert calls == [(state._demo_gold_empty_output, {
+        "store": "Gold", "schema": "demo", "table_name": "customer_summary", "mode": "overwrite",
+    })]
 
 
-def test_missing_native_gold_ddl_support_blocks_before_metadata_delete(monkeypatch):
-    import sys
+def test_missing_gold_output_skips_write(monkeypatch):
+    state = SimpleNamespace(_demo_gold_empty_output=None)
+    monkeypatch.setattr(API, "write_warehouse_table", lambda *a, **kw: pytest.fail("must not write"))
+    API._demo_clear_gold_output(state)
+
+
+def test_gold_preflight_reads_only_schema_and_limits_zero_rows(monkeypatch):
+    observed = []
+    frame = SimpleNamespace(columns=["customer_id"], limit=lambda size: observed.append(size) or "empty")
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    monkeypatch.setattr(API, "read_warehouse_table", lambda **kw: frame)
+    assert API._demo_prepare_gold_empty_output() == "empty"
+    assert observed == [0]
+
+
+def test_gold_preflight_failure_preserves_metadata(monkeypatch):
     env = _ready(monkeypatch)
-    env.rows['METADATA_DATA_CATALOGUE'] = [{'table_id': 'orders'}]
-    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: True)
-    monkeypatch.setitem(sys.modules, 'notebookutils', SimpleNamespace())
-    with pytest.raises(RuntimeError, match='native T-SQL command connection'):
+    env.rows["METADATA_DATA_CATALOGUE"] = [{"table_id": "orders"}]
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    def fail(**kwargs):
+        raise RuntimeError("read failed")
+    monkeypatch.setattr(API, "read_warehouse_table", fail)
+    with pytest.raises(RuntimeError, match="read failed"):
         API.orchestrate_demo_reset(reset=True)
-    assert env.rows['METADATA_DATA_CATALOGUE']
+    assert env.rows["METADATA_DATA_CATALOGUE"]
     assert not env.removed
+
+
+def test_gold_verify_rejects_retained_rows(monkeypatch):
+    import sys
+    monkeypatch.setitem(sys.modules, "notebookutils",
+                        SimpleNamespace(fs=SimpleNamespace(exists=lambda path: False)))
+    monkeypatch.setattr(API, "resolve_configured_lakehouse_table",
+                        lambda store, table, schema: (store, table, schema, "some-path"))
+    state = SimpleNamespace(_demo_gold_empty_output=None,
+                            _demo_bronze_catalog="demo_catalog", _demo_silver_catalog="demo_catalog",
+                            spark=SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda name: False)))
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    monkeypatch.setattr(API, "read_warehouse_query",
+                        lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 4}))
+    with pytest.raises(RuntimeError, match="still has rows"):
+        API._demo_verify_outputs(state)
+
+
+def test_gold_verify_accepts_empty_table_and_checks_schema(monkeypatch):
+    state = SimpleNamespace(_demo_gold_empty_output=SimpleNamespace(schema="original"))
+    monkeypatch.setattr(API, "_demo_gold_output_exists", lambda: True)
+    monkeypatch.setattr(API, "read_warehouse_query",
+                        lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 0}))
+    monkeypatch.setattr(API, "read_warehouse_table",
+                        lambda **kw: SimpleNamespace(schema="original"))
+    import sys
+    monkeypatch.setitem(sys.modules, "notebookutils",
+                        SimpleNamespace(fs=SimpleNamespace(exists=lambda path: False)))
+    monkeypatch.setattr(API, "resolve_configured_lakehouse_table",
+                        lambda store, table, schema: (store, table, schema, "some-path"))
+    state._demo_bronze_catalog = state._demo_silver_catalog = "demo_catalog"
+    state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda name: False))
+    API._demo_verify_outputs(state)
 
 
 @pytest.mark.parametrize('initially_present', [False, True])
@@ -245,9 +288,9 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     state._demo_silver_catalog = 'catalog'
     state._demo_bronze_catalog = 'catalog'
     state.spark = SimpleNamespace(catalog=SimpleNamespace(tableExists=lambda qualified: qualified in catalog), sql=spark_sql)
-    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: True)
-    monkeypatch.setattr(API, '_demo_drop_gold_output', lambda state, conn: warehouse.append((state, conn)))
-    state._demo_gold_connection = object()
+    state._demo_gold_empty_output = None
+    monkeypatch.setattr(API, '_demo_gold_output_exists', lambda: False)
+    monkeypatch.setattr(API, '_demo_clear_gold_output', lambda state: warehouse.append(state))
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table', lambda store, table, schema: (store, table, schema, f'/configured/{store}/demo/{table}'))
     monkeypatch.setattr(API, 'read_warehouse_query', lambda *a, **kw: SimpleNamespace(first=lambda: {'n': 0}))
     before = existing.copy()
@@ -256,7 +299,7 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
     API._demo_remove_outputs(state); API._demo_remove_outputs(state); API._demo_verify_outputs(state)
     assert existing == {'/configured/Silver/demo/unrelated'}
     assert not catalog and len(warehouse) == 2
-    assert all(call[1] is state._demo_gold_connection for call in warehouse)
+    assert warehouse == [state, state]
     assert sum(q.startswith('DROP TABLE') for q in sql) == (6 if initially_present else 0)
 
 
