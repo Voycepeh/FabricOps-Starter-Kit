@@ -4334,7 +4334,7 @@ def test_invalid_unstaged_edits_require_discard_confirmation(widget_runtime, act
     """Invalid text is still unsaved work, even before a valid record can be staged."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][2]
+    maximum_age = controls["table_guardrails"]["freshness"]["parameters"][1]
     maximum_age.value = "invalid age"
     assert not state["dirty"]
     assert "table.freshness" in state["_validation_errors"]
@@ -4351,7 +4351,7 @@ def test_notebook_actions_cannot_bypass_editor_validation(widget_runtime, action
     """Returned notebook actions enforce the same validation as the visible buttons."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    controls["table_guardrails"]["freshness"]["parameters"][2].value = "invalid age"
+    controls["table_guardrails"]["freshness"]["parameters"][1].value = "invalid age"
     with pytest.raises(ValueError, match="Complete the current draft configuration"):
         state[action]()
     assert widget_runtime["calls"]["draft"] == []
