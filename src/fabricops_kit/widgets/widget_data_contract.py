@@ -1314,8 +1314,11 @@ def widget_data_contract(
     )
     left.add_class("fabricops-contract-sidebar")
     right.add_class("fabricops-contract-detail")
+    right_column = widgets.VBox(
+        [right], layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
+    )
     workspace = widgets.GridBox(
-        [left, right],
+        [left, right_column],
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
             grid_template_columns="480px minmax(0, 1fr)",
@@ -1348,7 +1351,7 @@ def widget_data_contract(
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = sidebar_content
         section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_view)}</h3>"
-        right.children = (contract_nav_row, section_heading, *left_children, *right_children)
+        right.children = (section_heading, *left_children, *right_children)
         if selected_view == "Data Quality":
             refresh_dq_rules = state.get("_refresh_dq_rules")
             if callable(refresh_dq_rules):
@@ -7247,6 +7250,7 @@ def widget_data_contract(
         ),
     )
     contract_nav_row.add_class("fabricops-contract-nav-row")
+    right_column.children = (contract_nav_row, right)
     editor_shell = widgets.VBox(
         [workspace],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", display="none", gap="7px"),
