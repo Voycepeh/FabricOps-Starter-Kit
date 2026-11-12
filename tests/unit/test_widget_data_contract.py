@@ -1037,7 +1037,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     controls["top_nav"].value = "Review"
     assert controls["left_pane"].children[0] is table_context
     review_sections = controls["right_pane"].children
-    assert any(controls["guardrail_disclosure"] in section.children for section in review_sections)
+    assert any(controls["guardrail_disclosure"] in getattr(section, "children", ()) for section in review_sections)
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     assert "Column definitions" in controls["manifest_preview"].value
     assert "Guardrails" in controls["manifest_preview"].value
