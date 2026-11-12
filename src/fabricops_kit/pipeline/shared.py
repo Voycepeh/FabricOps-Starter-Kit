@@ -139,13 +139,13 @@ def _orchestration_status(result: Any) -> str:
         status = str(result.get("status", "")).strip().lower().replace("-", "_").replace(" ", "_")
         if result.get("can_continue") is False:
             return "blocked"
-        if status in {"skip", "skipped", "not_applicable"}:
+        if status in {"skip", "skipped", "not_applicable", "not_due", "disabled"}:
             return "skipped"
         if status in {"warn", "warning"}:
             return "warning"
         if status in {"block", "blocked", "fail", "failed", "failure", "error"}:
             return "blocked"
-        if status in {"pass", "passed", "success", "succeeded"}:
+        if status in {"pass", "passed", "success", "succeeded", "completed"}:
             return "passed"
         if status:
             return "warning"
@@ -7065,7 +7065,10 @@ def capture_profile_presentation(profile, *, scope, dry_run=False, table=None):
 
 
 def display_profile_presentations(presentations):
-    """Prefer Fabric's native display, with a bounded text fallback."""
+    """Display profile previews as Fabric-native Spark tables, not ASCII tables."""
+    import builtins
+    import inspect
+
     for presentation in presentations:
         if presentation is None:
             continue
@@ -7074,38 +7077,81 @@ def display_profile_presentations(presentations):
             if not presentation["rows"]:
                 print("No statistical profile rows.")
                 continue
-            try:
-                import builtins
 
+            from pyspark.sql.types import StringType, StructField, StructType
+
+            schema = StructType([
+                StructField(name, StringType(), False)
+                for name in presentation["headers"]
+            ])
+            preview = presentation["spark_session"].createDataFrame(
+                presentation["rows"], schema
+            )
+            native_display = None
+            try:
                 from IPython import get_ipython
                 from IPython.display import display as generic_display
 
                 shell = get_ipython()
-                # Fabric injects a native display callable into the notebook
-                # namespace (or builtins). Its implementation may itself live
-                # under IPython.*, so do not reject it by module name.
-                native_display = (
-                    (getattr(shell, "user_ns", {}) or {}).get("display")
-                    if shell is not None else None
-                ) or getattr(builtins, "display", None)
-                # The ordinary IPython renderer only prints Spark's repr.
-                if callable(native_display) and native_display is not generic_display:
-                    from pyspark.sql.types import StringType, StructField, StructType
+                candidates = []
+                if shell is not None:
+                    candidates.append((getattr(shell, "user_ns", None) or {}).get("display"))
+                    candidates.append((getattr(shell, "user_global_ns", None) or {}).get("display"))
+                candidates.append(getattr(builtins, "display", None))
+                # The notebook may inject display only into its calling frame.
+                frame = inspect.currentframe()
+                try:
+                    while frame is not None:
+                        candidates.append(frame.f_globals.get("display"))
+                        frame = frame.f_back
+                finally:
+                    del frame
+                native_display = next(
+                    (fn for fn in candidates if callable(fn) and fn is not generic_display),
+                    None,
+                )
+            except ImportError:
+                pass
 
-                    schema = StructType([StructField(name, StringType(), False) for name in presentation["headers"]])
-                    native_display(presentation["spark_session"].createDataFrame(presentation["rows"], schema))
+            if native_display is not None:
+                try:
+                    native_display(preview)
                     continue
+                except Exception:
+                    # The Fabric renderer may exist but be unavailable at runtime.
+                    # Fall through to a bounded, notebook-readable HTML table.
+                    pass
+
+            # Portable notebook fallback: scrollable HTML, never wrapped ASCII.
+            from html import escape
+            from IPython.display import HTML, display as ipython_display
+
+            headers = "".join(
+                "<th style='text-align:left;padding:6px 10px;"
+                "border-bottom:1px solid #bbb;white-space:nowrap'>"
+                + escape(str(value)) + "</th>"
+                for value in presentation["headers"]
+            )
+            rows = "".join(
+                "<tr>" + "".join(
+                    "<td style='padding:6px 10px;border-bottom:1px solid #eee;"
+                    "white-space:nowrap'>" + escape(str(value)) + "</td>"
+                    for value in row
+                ) + "</tr>"
+                for row in presentation["rows"]
+            )
+            ipython_display(HTML(
+                "<div style='max-width:100%;overflow-x:auto'>"
+                "<table style='border-collapse:collapse;font-size:13px'>"
+                f"<thead><tr>{headers}</tr></thead><tbody>{rows}</tbody>"
+                "</table></div>"
+            ))
+        except Exception as exc:
+            # Rendering must not invalidate a successful Read or Write.
+            try:
+                print(f"Statistical profile display unavailable: {type(exc).__name__}: {exc}")
             except Exception:
                 pass
-            rows = [presentation["headers"], *presentation["rows"]]
-            widths = [max(len(row[index]) for row in rows) for index in range(len(rows[0]))]
-            for index, row in enumerate(rows):
-                print(" | ".join(value.ljust(width) for value, width in zip(row, widths)))
-                if index == 0:
-                    print("-+-".join("-" * width for width in widths))
-        except Exception:
-            # A notebook renderer or output stream must not invalidate a write.
-            pass
 
 
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False, presentations=None):
