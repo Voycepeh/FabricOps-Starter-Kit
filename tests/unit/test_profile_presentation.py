@@ -238,10 +238,6 @@ def test_native_display_from_builtins_without_notebook_kernel(compact_profile, m
 
 def test_skipped_profile_shows_confirmed_snapshot_in_audit_timezone(spark_session, monkeypatch, capsys):
     from fabricops_kit.pipeline import shared
-    from types import SimpleNamespace
-    from unittest.mock import Mock
-    from pyspark.sql import functions as F
-
     persisted = spark_session.createDataFrame(
         [("workspace-1", "orders", "snapshot-1", "amount", "double", 2, 2, 0,
           0.0, 2, 100.0, 1.5, 0.5, "1", 1.25, 1.5, 1.75, "2")],
