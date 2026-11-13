@@ -6921,19 +6921,21 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     if activity is not None:
         events = events.filter(F.col("activity") == activity)
     markers = events.filter((F.col("activity") == "grain") |
-        ((F.col("activity") == "frequency") & F.col("empty_result"))).select("activity", "completed_at")
+        ((F.col("activity") == "frequency") & F.col("empty_result"))).select("activity", "completed_at", "profile_scope", "profiling_max_rows")
     completed = markers.withColumn("profile_snapshot_id", F.lit(None).cast("string"))
     for kind, table in (("standard", "METADATA_DATA_PROFILED"), ("frequency", "METADATA_DATA_PROFILED_FREQUENCY")):
         if activity is not None and activity != kind:
             continue
         snapshots = frame(table).filter(F.col("table_id") == table_id).select("profile_snapshot_id").dropDuplicates()
         matched = events.filter(F.col("activity") == kind).join(snapshots, "profile_snapshot_id", "left_semi")
-        completed = completed.unionByName(matched.select("activity", "completed_at", "profile_snapshot_id"))
+        completed = completed.unionByName(matched.select("activity", "completed_at", "profile_scope", "profiling_max_rows", "profile_snapshot_id"))
     latest = completed.groupBy("activity").agg(
-        F.max(F.struct("completed_at", "profile_snapshot_id")).alias("latest")
+        F.max(F.struct("completed_at", "profile_snapshot_id", "profile_scope", "profiling_max_rows")).alias("latest")
     )
     return {row["activity"]: {"last_success": row["latest"]["completed_at"],
-                              "profile_snapshot_id": row["latest"]["profile_snapshot_id"]}
+                              "profile_snapshot_id": row["latest"]["profile_snapshot_id"],
+                              "profile_scope": row["latest"]["profile_scope"],
+                              "profiling_max_rows": row["latest"]["profiling_max_rows"]}
             for row in latest.collect()}
 
 
@@ -7160,7 +7162,8 @@ def _show_previous_table_profile(table_id, previous, *, context, spark_session, 
             & (F.col("table_id") == table_id)
             & (F.col("profile_snapshot_id") == snapshot_id)
         )
-        scope = {"profile_scope": "full_table", "profiling_max_rows": None}
+        scope = {"profile_scope": previous.get("profile_scope") or "full_table",
+                 "profiling_max_rows": previous.get("profiling_max_rows")}
         preview = capture_profile_presentation(profile, scope=scope)
         if preview and preview["rows"]:
             preview["title"] = (
