@@ -7213,6 +7213,11 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
             else:
                 outcomes[activity] = {"status": "skipped", "reason": "Not due for this operation"}
                 diagnostic = outcomes[activity]
+                if activity == "standard" and policy[activity].get("enabled", True) and policy[activity]["trigger"] in {operation, "read_or_write"}:
+                    _show_previous_table_profile(
+                        table_id, history.get(activity, {}), context=context,
+                        spark_session=spark_session, presentations=presentations,
+                    )
             record_profiling_outcome({**descriptor, **diagnostic, "context_key": key, "activity": activity,
                 "trigger": operation, "pipeline_run_id": context["execution_plan"].plan_id,
                 "executed_at": datetime.now(UTC).isoformat()}, context=context, spark_session=spark_session)
