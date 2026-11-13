@@ -726,8 +726,8 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
 
     Native logical values are accepted for application calls, not as a physical
     schema fallback. Missing nullable struct members retain their explicit nulls.
-    Additive profiling scope members stay absent in retained Run JSON so historical
-    approved content hashes remain stable.
+    Additive profiling scope and file-write members stay absent in retained Run
+    JSON so historical approved content hashes remain stable.
     """
     result = dict(row)
     required = table_name == "METADATA_PIPELINE_RUN"
@@ -742,11 +742,16 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         result[name] = validate_metadata_value(value, kind, field=name)
         if required and name == "operations":
             for original, decoded in zip(value, result[name]):
-                for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids"):
+                for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids",
+                              "file_write_parameters_json", "output_path", "publication_status"):
                     if field not in original:
                         decoded.pop(field, None)
                     elif isinstance(original[field], dict):
                         decoded[field] = {key: decoded[field][key] for key in original[field]}
+                if isinstance(original.get("metrics"), dict):
+                    for field in ("file_count", "output_bytes"):
+                        if field not in original["metrics"]:
+                            decoded["metrics"].pop(field, None)
                 decoded["destination"] = {key: decoded["destination"][key] for key in original["destination"]}
         if required and name == "profiling":
             # Scope fields are additive JSON members. Do not inject them into

@@ -112,8 +112,19 @@ row and encoded-byte safeguards do not bound executor working memory. The
 byte check occurs after staging, before publication. Single CSV/JSON uses uncompressed
 output; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing
 artifact only after staging succeeds; rename/replace is not transactional.
-Writers to the same path must be externally serialized. Temporary output is
-removed on success and failure. Empty frames use Spark's native empty output.
+Dataset overwrite also stages all rows before replacing the target, so lazy
+reads of that target finish before it is moved. Existing output is renamed to
+a unique backup and restored when publication fails and the target is absent.
+Failed/ambiguous publication retains staging and backup recovery paths on the
+raised exception; never delete these until the output has been inspected.
+Concurrent writers to the same physical path or overlapping folders are
+unsupported, including aliases through different stores. There is no distributed
+lock. Serialize writers externally and coordinate readers: replacement can
+expose a temporary gap between renames. Resolve ambiguous failures before
+retrying. Production use requires signed-in Fabric validation of permissions,
+shortcut support, rename outcomes, rollback and recovery.
+Temporary output is
+removed after successful publication or failures before publication begins. Empty frames use Spark's native empty output.
 Permission and read-only/unsupported shortcut failures propagate with a clear
 destination error. SharePoint shortcuts are not assumed writable; no fallback
 destination is used. Fabric Hadoop rename semantics require live validation.
@@ -129,7 +140,7 @@ No related guides documented.
 
 `fabricops_kit/io/write_lakehouse_file.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_file.py#L16-L149">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_file.py#L16-L174">View on GitHub</a>
 </div>
 
 

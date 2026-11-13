@@ -147,7 +147,9 @@ folders remain blocked in Ungoverned mode. Incremental checkpoint publication
 is table-only; file writes require Full Read sources.
 
 File profiling uses the supplied DataFrame and setup_pipeline settings, remains
-session-local, and persists no table profile snapshots. A bounded profile cannot
+session-local, and persists no table profile snapshots. File overwrite profiles
+its supplied input before publication so lazy reads of the target remain valid.
+A bounded profile cannot
 establish complete row counts. Ignored output is never reported as published.
 File options, physical location, publication status and available filesystem
 metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
@@ -190,7 +192,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:30`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L344">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L346">View on GitHub</a>
 </div>
 
 
@@ -206,7 +208,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 278 |
+| Live-critical dependencies | 279 |
 
 ### Release history
 
@@ -326,6 +328,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
 <li><code>fabricops_kit.io.shared.validate_file_write</code></li>
 <li><code>fabricops_kit.io.shared.write_warehouse_synapsesql</code></li>
+<li><code>fabricops_kit.io.write_lakehouse_file._publish_staged</code></li>
 <li><code>fabricops_kit.io.write_lakehouse_file._result</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>

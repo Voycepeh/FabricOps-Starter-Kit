@@ -140,3 +140,30 @@ def test_retained_profile_events_do_not_acquire_scope_fields_or_change_hashes():
     scoped = {**retained, 'profiling': [{**retained['profiling'][0],
         'profile_scope': 'bounded_selection', 'profiling_max_rows': 100}]}
     assert decode_metadata_row(RUN, encode_metadata_row(RUN, scoped)) == scoped
+
+
+def test_pre_file_write_run_retains_released_content_hash():
+    """Decode a fixture exported on main before the file-write schema additions."""
+    from pathlib import Path
+    fixture = json.loads((Path(__file__).parents[1] / 'fixtures' / 'retained_run_before_file_writes.json').read_text())
+    physical = fixture['physical_run']
+    decoded = decode_metadata_row(RUN, physical)
+    assert manifest_digest(decoded) == fixture['logical_sha256']
+    operation = decoded['operations'][0]
+    assert all(key not in operation for key in ('file_write_parameters_json', 'output_path', 'publication_status'))
+    assert all(key not in operation['metrics'] for key in ('file_count', 'output_bytes'))
+    assert encode_metadata_row(RUN, decoded) == physical
+    assert encode_metadata_row(RUN, physical) == physical
+
+
+def test_explicit_file_write_fields_survive_run_roundtrip():
+    """Preserve both absent historical fields and explicitly present file facts."""
+    row = logical_run()
+    operation = row['operations'][0]
+    operation.update(file_write_parameters_json='{"single_file":true}', output_path='configured/Files/orders.csv',
+                     publication_status='published', metrics={'file_count': 1, 'output_bytes': 12})
+    decoded = decode_metadata_row(RUN, encode_metadata_row(RUN, row))
+    actual = decoded['operations'][0]
+    for field in ('file_write_parameters_json', 'output_path', 'publication_status'):
+        assert actual[field] == operation[field]
+    assert actual['metrics']['file_count'] == 1 and actual['metrics']['output_bytes'] == 12

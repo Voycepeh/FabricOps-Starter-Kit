@@ -222,7 +222,8 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
-        for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+        for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
+                           "recovery_paths", "resolved_path", "publication_status"):
             if hasattr(exc, field_name):
                 setattr(failure, field_name, getattr(exc, field_name))
         raise failure from exc
@@ -6428,11 +6429,15 @@ class PipelineOperation:
                 if self.role == "target" and getattr(exc, "published", False):
                     write_metrics = getattr(exc, "write_metrics", {}) or {}
                     self.capture_metrics(write_metrics)
+                    if self.arguments.get("relative_path") is not None:
+                        self.record["output_path"] = getattr(exc, "resolved_path", None) or self.record.get("output_path")
+                        self.record["publication_status"] = "published"
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
-                for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+                for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
+                           "recovery_paths", "resolved_path", "publication_status"):
                     if exc is not None and hasattr(exc, name):
                         setattr(persistence_error, name, getattr(exc, name))
                 if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"

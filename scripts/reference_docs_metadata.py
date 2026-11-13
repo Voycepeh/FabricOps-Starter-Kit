@@ -2181,7 +2181,7 @@ PUBLIC_SYMBOL_DOCS.append({
     "do_not_use_when": "Use orchestrate_write when a file must participate in an active pipeline.",
     "returns": "Dictionary with actual output path, publication status and available filesystem metrics.",
     "raises": "ValueError for invalid arguments, FileExistsError for collisions, RuntimeError for destination failures.",
-    "side_effects": "Writes Spark data; single-file output stages and renames one part and removes temporary output.",
+    "side_effects": "Writes Spark data; single-file output and dataset overwrite stage output before publication. Overwrite preserves a backup; failed publication retains recovery paths for inspection.",
     "fabric_context": "Uses configured Lakehouse routing and the DataFrame-owned Spark Hadoop filesystem.",
     "preferred_example": 'write_lakehouse_file(dataframe=final_df, relative_path="Exports/orders.csv", store="Silver", file_format="csv", write_options={"header": True})',
     "related_functions": ["orchestrate_write", "write_lakehouse_table", "read_lakehouse_csv"],

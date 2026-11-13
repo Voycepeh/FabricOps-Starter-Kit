@@ -41,7 +41,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     is table-only; file writes require Full Read sources.
 
     File profiling uses the supplied DataFrame and setup_pipeline settings, remains
-    session-local, and persists no table profile snapshots. A bounded profile cannot
+    session-local, and persists no table profile snapshots. File overwrite profiles
+    its supplied input before publication so lazy reads of the target remain valid.
+    A bounded profile cannot
     establish complete row counts. Ignored output is never reported as published.
     File options, physical location, publication status and available filesystem
     metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
@@ -377,6 +379,16 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
         stages.append(record)
         return result
     _, _, path = resolve_configured_file_path(store, relative_path, context=context)
+    profile = None
+    if execution_plan.permits_persistence and write_mode == "overwrite":
+        # The supplied input may lazily read files that publication replaces.
+        try:
+            profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
+                presentations=presentations, operation="write"))
+        except RuntimeError as exc:
+            exc.published = False
+            exc.failed_stage = "Profile"
+            raise
     if execution_plan.permits_persistence:
         result = run("Write", lambda: write_lakehouse_file(dataframe, relative_path, store=store,
             file_format=file_format, mode=write_mode, write_options=write_options,
@@ -391,14 +403,15 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     operation.record.update(output_path=result["resolved_path"], publication_status=result["publication_status"])
     metrics = {**result["write_metrics"], "input_columns": len(dataframe.columns)}
     operation.capture_metrics(metrics)
-    try:
-        profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
-            presentations=presentations, operation="write"))
-    except RuntimeError as exc:
-        exc.published = result["published"]
-        exc.write_metrics = dict(metrics)
-        exc.failed_stage = "Profile"
-        raise
+    if profile is None:
+        try:
+            profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
+                presentations=presentations, operation="write"))
+        except RuntimeError as exc:
+            exc.published = result["published"]
+            exc.write_metrics = dict(metrics)
+            exc.failed_stage = "Profile"
+            raise
     if profile.get("profiling_max_rows") is None:
         metrics["input_rows"] = profile.get("row_count")
     operation.complete(stages, metrics=metrics)

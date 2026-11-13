@@ -65,8 +65,19 @@ def write_lakehouse_file(
     byte check occurs after staging, before publication. Single CSV/JSON uses uncompressed
     output; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing
     artifact only after staging succeeds; rename/replace is not transactional.
-    Writers to the same path must be externally serialized. Temporary output is
-    removed on success and failure. Empty frames use Spark's native empty output.
+    Dataset overwrite also stages all rows before replacing the target, so lazy
+    reads of that target finish before it is moved. Existing output is renamed to
+    a unique backup and restored when publication fails and the target is absent.
+    Failed/ambiguous publication retains staging and backup recovery paths on the
+    raised exception; never delete these until the output has been inspected.
+    Concurrent writers to the same physical path or overlapping folders are
+    unsupported, including aliases through different stores. There is no distributed
+    lock. Serialize writers externally and coordinate readers: replacement can
+    expose a temporary gap between renames. Resolve ambiguous failures before
+    retrying. Production use requires signed-in Fabric validation of permissions,
+    shortcut support, rename outcomes, rollback and recovery.
+    Temporary output is
+    removed after successful publication or failures before publication begins. Empty frames use Spark's native empty output.
     Permission and read-only/unsupported shortcut failures propagate with a clear
     destination error. SharePoint shortcuts are not assumed writable; no fallback
     destination is used. Fabric Hadoop rename semantics require live validation.
@@ -91,6 +102,7 @@ def write_lakehouse_file(
     _, relative_path, path = resolve_configured_file_path(store, relative_path, context=context)
     fs, target, path_type = lakehouse_file_filesystem(dataframe, path, context=context)
     staging = None
+    retain_staging = False
     try:
         exists = fs.exists(target)
         if exists and fs.isFile(target) != single_file:
@@ -109,28 +121,39 @@ def write_lakehouse_file(
                 raise RuntimeError("Single-file staging did not produce exactly one data part.")
             if parts[0].getLen() > max_single_file_bytes:
                 raise ValueError("Single-file byte limit exceeded; use dataset-folder output.")
-            if fs.exists(target):
-                if mode == "ignore":
-                    result = _result(fs, target, path, relative_path, file_format, True, mode, False)
-                    return result
-                if mode != "overwrite":
-                    raise FileExistsError("Lakehouse Files destination already exists.")
-                if not fs.isFile(target):
-                    raise ValueError("Single-file output cannot replace a directory.")
-                if not fs.delete(target, False):
-                    raise RuntimeError("Cannot replace existing file.")
-            fs.mkdirs(target.getParent())
-            if not fs.rename(parts[0].getPath(), target):
-                raise RuntimeError("Filesystem refused single-file publication rename.")
+            retain_staging = True
+            published = _publish_staged(fs, parts[0].getPath(), target, mode=mode, path_type=path_type, single_file=True)
+            retain_staging = False
+        elif mode == "overwrite":
+            # Evaluate every lazy input before moving or replacing the destination.
+            staging = path_type(path + ".fabricops-" + uuid4().hex)
+            frame.write.format(file_format).mode("errorifexists").options(**options).save(str(staging))
+            retain_staging = True
+            _publish_staged(fs, staging, target, mode=mode, path_type=path_type, single_file=False)
+            retain_staging = False
         else:
             frame.write.format(file_format).mode(mode).options(**options).save(path)
-        result = _result(fs, target, path, relative_path, file_format, single_file, mode, True)
-    except (ValueError, FileExistsError):
+        result = _result(fs, target, path, relative_path, file_format, single_file, mode, published if single_file else True)
+    except (ValueError, FileExistsError) as exc:
+        if retain_staging and getattr(exc, "recovery_paths", None):
+            exc.recovery_paths = [str(staging), *exc.recovery_paths]
+        else:
+            retain_staging = False  # Pre-publication validation/collision rejection.
         raise
     except Exception as exc:
-        raise RuntimeError("Lakehouse Files write failed; check destination permissions and shortcut write/rename support.") from exc
+        failure = RuntimeError("Lakehouse Files write failed; check destination permissions and shortcut write/rename support.")
+        if retain_staging:
+            recovery = [str(staging), *getattr(exc, "recovery_paths", ())]
+            failure.recovery_paths = list(dict.fromkeys(recovery))
+            failure.args = (str(failure) + " Recovery paths retained for inspection: " + ", ".join(failure.recovery_paths),)
+        if getattr(exc, "published", False):
+            failure.published = True
+            failure.resolved_path = path
+            failure.publication_status = "published"
+            failure.write_metrics = _result(fs, target, path, relative_path, file_format, single_file, mode, True)["write_metrics"]
+        raise failure from exc
     finally:
-        if staging is not None:
+        if staging is not None and not retain_staging:
             pending = sys.exception()
             try:
                 removed = fs.delete(staging, True)
@@ -142,6 +165,8 @@ def write_lakehouse_file(
                 else:
                     failure = RuntimeError("File publication completed but temporary output cleanup failed.")
                     failure.published = result["published"]
+                    failure.resolved_path = path
+                    failure.publication_status = result["publication_status"]
                     failure.write_metrics = result["write_metrics"]
                     raise failure from cleanup
     if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
@@ -168,3 +193,42 @@ def _result(fs, target, path, relative_path, file_format, single_file, mode, pub
             "output_layout": "single_file" if single_file else "dataset_folder", "mode": mode,
             "published": published, "publication_status": "published" if published else "ignored",
             "write_metrics": metrics}
+
+
+def _publish_staged(fs, source, target, *, mode, path_type, single_file):
+    """Replace a completed artifact with rollback and retained recovery copies."""
+    backup = None
+    try:
+        if fs.exists(target):
+            if fs.isFile(target) != single_file:
+                raise ValueError("Destination layout differs from requested output.")
+            if mode == "ignore":
+                return False
+            if mode != "overwrite":
+                raise FileExistsError("Lakehouse Files destination already exists.")
+            backup = path_type(str(target) + ".fabricops-backup-" + uuid4().hex)
+            if not fs.rename(target, backup):
+                raise RuntimeError("Filesystem refused to preserve existing output before publication.")
+        fs.mkdirs(target.getParent())
+        if not fs.rename(source, target):
+            raise RuntimeError("Filesystem refused staged output publication rename.")
+    except Exception as exc:
+        if backup is not None:
+            try:
+                if fs.exists(backup) and not fs.exists(target):
+                    if not fs.rename(backup, target):
+                        exc.add_note("Backup restoration failed; recovery copies were retained.")
+            except Exception:
+                exc.add_note("Backup restoration could not be confirmed; recovery copies were retained.")
+            exc.recovery_paths = [str(backup)]
+        raise
+    if backup is not None:
+        try:
+            if not fs.delete(backup, not single_file) and fs.exists(backup):
+                raise RuntimeError("Filesystem refused backup cleanup.")
+        except Exception as exc:
+            failure = RuntimeError("Output published but previous-output backup cleanup failed.")
+            failure.published = True
+            failure.recovery_paths = [str(backup)]
+            raise failure from exc
+    return True

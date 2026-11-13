@@ -131,8 +131,14 @@ do not bound executor working memory, especially for wide rows. No business rows
 are collected on the driver. Use a stable input during the count and write actions.
 Single CSV/JSON artifacts are uncompressed; dataset folders support compression
 options, and single Parquet supports internal compression. Temporary paths are
-removed after staging. Overwrite and rename are not transactional; serialize writers
-to each destination and validate recovery behavior in Fabric.
+removed after successful publication or failures before publication begins. Dataset
+overwrite also stages the complete output before moving the original destination,
+so lazy reads from the same destination finish safely. Overwrites first rename the
+old output to a unique backup and attempt restoration if publication fails while
+the target is absent. Publication failures retain recovery copies and expose their
+locations through the exception's `recovery_paths`; inspect these before deleting
+anything. Overwrite and rename remain nontransactional: serialize writers to each
+destination and validate recovery behavior in Fabric.
 
 The result includes the actual `resolved_path`, publication status and available
 filesystem metrics. `file_count` and `output_bytes` describe the resulting target,
@@ -152,6 +158,8 @@ participate; incremental checkpoint publication remains table-only.
 
 Pipeline profiling honors `setup_pipeline()` settings and profiles the supplied
 DataFrame, with session-local file history and no persisted table profile snapshots.
+File overwrite profiles its input before publication so a lazy read of the destination
+is evaluated while the original source files still exist.
 It does not reread the published destination. `METADATA_PIPELINE_RUN` operations retain
 source participation, destination, options/layout limits, mode, output path,
 publication status and available metrics. Call `finalize_pipeline()` at the normal
@@ -162,3 +170,19 @@ delete and rename operations; read-only or unsupported shortcuts raise an error.
 SharePoint shortcuts are not assumed writable. There is no Graph upload or redirected
 publication. Test permissions, rename behavior and cleanup against the real Fabric
 Lakehouse before relying on single-file publication.
+
+
+Concurrent writers to the same physical path or overlapping folders are unsupported,
+including aliases through different configured stores. There is no distributed
+lock, lease or atomic compare-and-swap for Files. Serialize these writes externally.
+Readers may observe a temporary gap between replacement renames; coordinate consumers
+or start them after successful publication. An uncertain rename outcome requires
+inspection of the target and reported recovery paths before retrying.
+
+**File output remains Preview and is not production-ready until signed-in Fabric
+validation is complete.** Local Spark tests do not establish OneLake behavior.
+Validate all supported formats and layouts against real configured Lakehouses,
+including cross-workspace permissions, writable and read-only shortcuts, staging and
+backup rename failures, lost acknowledgements, rollback, cleanup, recovery and
+serialized writer/reader coordination. No further metadata tables or columns are
+needed for this validation.

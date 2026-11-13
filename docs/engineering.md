@@ -211,11 +211,25 @@ remains table-only; use Full Read sources for file targets.
     Single-file output counts a bounded input, uses one executor, checks staged
     output bytes and renames a temporary Spark part. Its row/byte caps do not bound
     executor working memory. Single CSV/JSON is uncompressed; dataset compression
-    and single Parquet internal compression remain available. Overwrite/rename is
-    not transactional and concurrent writers must be serialized. Shortcuts must
+    and single Parquet internal compression remain available. Dataset overwrite
+    also stages all rows before replacing its destination. Overwrites preserve the
+    old output in a backup and attempt restoration on failure; failed or ambiguous
+    publication retains recovery paths on the raised exception for inspection.
+    Overwrite/rename remains nontransactional. Concurrent writes to the same
+    physical path or overlapping folders are unsupported, including store aliases;
+    there is no distributed lock. Serialize writers externally and coordinate
+    readers, which may observe a temporary gap between renames. Inspect uncertain
+    outcomes and recovery paths before retrying. Shortcuts must
     support writes, deletes and renames; SharePoint shortcuts are not presumed
     writable. Fabric failures never redirect output to another destination.
 
+
+**File output remains Preview until signed-in Fabric validation is complete.**
+Local Spark coverage does not prove OneLake permissions, cross-workspace routing,
+shortcut write/rename support, rollback, recovery after lost acknowledgements or
+reader coordination. These checks are required before production use. File overwrite
+profiles the supplied input before publication so lazy reads of the destination
+remain valid.
 
 ## How does FabricOps stop me loading the same data twice?
 

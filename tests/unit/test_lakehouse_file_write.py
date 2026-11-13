@@ -56,7 +56,10 @@ class Filesystem:
 
     def rename(self, source, target):
         self.renames.append((str(source), str(target)))
-        self.entries[str(target)] = self.entries.pop(str(source))
+        source, target = str(source), str(target)
+        for key in list(self.entries):
+            if key == source or key.startswith(source + '/'):
+                self.entries[target + key[len(source):]] = self.entries.pop(key)
         return True
 
     def listStatus(self, path):  # noqa: N802
@@ -125,7 +128,7 @@ def test_dataset_collisions(output, mode):
         result = write_lakehouse_file(output.frame, 'orders', mode=mode)
         assert result['published'] == (mode != 'ignore')
         if mode != 'ignore':
-            output.writer.mode.assert_called_once_with(mode)
+            output.writer.mode.assert_called_once_with("errorifexists" if mode == "overwrite" else mode)
     if mode in {'ignore', 'errorifexists'}:
         output.writer.save.assert_not_called()
 
@@ -287,7 +290,7 @@ def test_profiling_failure_retains_published_file_status(files, monkeypatch):
     monkeypatch.setattr(shared, 'schedule_file_profiling', Mock(side_effect=RuntimeError('profile failed')))
     session = setup_pipeline(pipeline_mode='Ungoverned')
     with pytest.raises(RuntimeError) as caught:
-        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='overwrite')
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='append')
     assert caught.value.published is True
     record = next(iter(session.plan.evidence['operations'].values()))
     assert record['publication_status'] == 'published' and record['status'] == 'failed'
@@ -322,3 +325,78 @@ def test_orchestrated_single_artifact_uses_real_foundation(files, output, monkey
     target = next(iter(session.plan.evidence['operations'].values()))
     assert target['publication_status'] == 'published'
     assert target['output_path'] == result['resolved_path']
+
+
+@pytest.mark.parametrize('single', [False, True])
+@pytest.mark.parametrize('failure', ['backup', 'publication', 'rollback', 'after_publication'])
+def test_overwrite_failures_preserve_recoverable_output(output, single, failure):
+    target = '/configured/Files/orders.csv'
+    output.fs.entries[target] = 8 if single else None
+    old_part = target if single else target + '/part-old.csv'
+    output.fs.entries[old_part] = 8
+    rename = output.fs.rename
+    calls = 0
+    def faulty_rename(source, destination):
+        nonlocal calls
+        calls += 1
+        if failure == 'backup' and calls == 1:
+            return False
+        if failure in {'publication', 'rollback'} and calls == 2:
+            return False
+        if failure == 'rollback' and calls == 3:
+            return False
+        result = rename(source, destination)
+        if failure == 'after_publication' and calls == 2:
+            raise OSError('publication acknowledgement lost')
+        return result
+    output.fs.rename = faulty_rename
+    with pytest.raises(RuntimeError) as caught:
+        write_lakehouse_file(output.frame, 'orders.csv', file_format='csv', single_file=single, mode='overwrite')
+    assert caught.value.recovery_paths
+    if failure in {'backup', 'publication'}:
+        assert output.fs.entries[old_part] == 8
+    else:
+        assert any('.fabricops-backup-' in key and value == 8 for key, value in output.fs.entries.items())
+    assert 12 in output.fs.entries.values()  # Replacement survives in staging or at the target.
+    assert not output.fs.deleted
+
+
+@pytest.mark.parametrize('single', [False, True])
+def test_overwrite_staging_failure_leaves_original_untouched(output, single):
+    target = '/configured/Files/orders.csv'
+    output.fs.entries[target] = 8 if single else None
+    output.writer.save.side_effect = OSError('staging failed')
+    with pytest.raises(RuntimeError):
+        write_lakehouse_file(output.frame, 'orders.csv', file_format='csv', single_file=single, mode='overwrite')
+    assert output.fs.entries[target] == (8 if single else None)
+    assert not output.fs.renames
+
+
+def test_backup_cleanup_failure_retains_publication_and_recovery_in_run(files, output, monkeypatch):
+    output.fs.entries['/configured/Files/orders.csv'] = 8
+    delete = output.fs.delete
+    output.fs.delete = lambda path, recursive: False if '.fabricops-backup-' in str(path) else delete(path, recursive)
+    monkeypatch.setattr(shared, 'schedule_file_profiling', lambda *a, **kw: {'status': 'disabled'})
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    with pytest.raises(RuntimeError) as caught:
+        orchestrate_write(output.frame, store='Silver', relative_path='orders.csv', file_format='csv',
+            single_file=True, write_mode='overwrite')
+    assert caught.value.published is True and caught.value.recovery_paths
+    assert output.fs.entries['/configured/Files/orders.csv'] == 12
+    assert any('.fabricops-backup-' in key and value == 8 for key, value in output.fs.entries.items())
+    operation = next(iter(session.plan.evidence['operations'].values()))
+    assert operation['status'] == 'failed' and operation['publication_status'] == 'published'
+    assert operation['output_path'] == '/configured/Files/orders.csv'
+
+
+
+def test_overwrite_profile_failure_does_not_publish(files, monkeypatch):
+    io = importlib.import_module('fabricops_kit.io')
+    writer = Mock()
+    monkeypatch.setattr(io, 'write_lakehouse_file', writer)
+    monkeypatch.setattr(shared, 'schedule_file_profiling', Mock(side_effect=RuntimeError('profile failed')))
+    setup_pipeline(pipeline_mode='Ungoverned')
+    with pytest.raises(RuntimeError) as caught:
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='overwrite')
+    assert caught.value.published is False
+    writer.assert_not_called()
