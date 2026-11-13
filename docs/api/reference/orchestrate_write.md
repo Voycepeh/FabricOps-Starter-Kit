@@ -174,7 +174,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 269 |
+| Live-critical dependencies | 270 |
 
 ### Release history
 
@@ -365,6 +365,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._show_previous_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared._spark_profile_key_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._spark_sql_helpers</code></li>
 <li><code>fabricops_kit.pipeline.shared._sql_identifier</code></li>
