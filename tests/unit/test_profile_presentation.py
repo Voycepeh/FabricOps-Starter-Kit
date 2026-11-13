@@ -234,3 +234,45 @@ def test_native_display_from_builtins_without_notebook_kernel(compact_profile, m
     presentation.display_profile_presentations([preview])
     display.assert_called_once()
     assert 'amount' not in capsys.readouterr().out
+
+
+def test_skipped_profile_shows_confirmed_snapshot_in_audit_timezone(spark_session, monkeypatch, capsys):
+    from fabricops_kit.pipeline import shared
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    from pyspark.sql import functions as F
+
+    persisted = spark_session.createDataFrame(
+        [("workspace-1", "orders", "snapshot-1", "amount", "double", 2, 2, 0,
+          0.0, 2, 100.0, 1.5, 0.5, "1", 1.25, 1.5, 1.75, "2")],
+        ["workspace_id", "table_id", "profile_snapshot_id", "column_name", "data_type",
+         "row_count", "non_null_count", "null_count", "null_percent", "distinct_count",
+         "distinct_percent", "mean_value", "stddev_value", "min_value",
+         "percentile_25_value", "median_value", "percentile_75_value", "max_value"],
+    )
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: persisted)
+    output = []
+    shared._show_previous_table_profile(
+        "orders",
+        {"last_success": "2026-11-13T01:30:00+00:00", "profile_snapshot_id": "snapshot-1"},
+        context={"config": {"audit_timezone": "Asia/Singapore"}, "scope_workspace_id": "workspace-1"},
+        spark_session=spark_session, presentations=output,
+    )
+    assert len(output) == 1
+    assert "Profiling skipped; showing previous state as of 2026-11-13 09:30:00" in output[0]["title"]
+    assert "[Asia/Singapore]" in output[0]["title"]
+    assert output[0]["rows"][0][0] == "amount"
+
+
+def test_no_previous_snapshot_means_no_reused_profile(spark_session, monkeypatch):
+    from fabricops_kit.pipeline import shared
+    read = Mock(side_effect=AssertionError("no metadata read expected"))
+    monkeypatch.setattr(shared, 'read_lakehouse_table', read)
+    output = []
+    shared._show_previous_table_profile(
+        "orders", {"last_success": "2026-11-13T01:30:00+00:00"},
+        context={"config": {"audit_timezone": "Asia/Singapore"}, "scope_workspace_id": "workspace-1"},
+        spark_session=spark_session, presentations=output,
+    )
+    assert output == []
+    read.assert_not_called()
