@@ -124,13 +124,18 @@ def test_public_orchestration_summary_precedes_current_profile(runtime, compact_
 
 @pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned'])
 @pytest.mark.parametrize('disabled', [False, True])
-def test_skipped_profiles_have_no_calculation_or_presentation(runtime, monkeypatch, capsys, mode, disabled):
+@pytest.mark.parametrize('operation', ['read', 'write'])
+def test_skipped_profiles_have_no_calculation_or_presentation(runtime, monkeypatch, capsys, mode, disabled, operation):
     session = setup_pipeline(pipeline_mode=mode, profiling_enabled=not disabled)
     monkeypatch.setattr(runtime.read, 'schedule_table_profiling', shared.schedule_table_profiling)
     monkeypatch.setattr(shared, 'profiling_completion_history', lambda *a, **kw: {'standard': {'last_success': datetime.now(UTC).isoformat()}})
     calculate = Mock(side_effect=AssertionError('no physical calculation permitted'))
     monkeypatch.setattr(shared, 'execute_table_profile', calculate)
-    result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    if operation == 'read':
+        result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    else:
+        runtime.publication.return_value = {'published': True, 'table_id': 'orders', 'status': 'passed'}
+        result = orchestrate_write(runtime.frame, store='Bronze', schema='demo', table_name='orders', write_mode='overwrite')
     assert result['profile_result']['activities']['standard']['status'] == 'skipped'
     assert session.plan.evidence['profiling']
     calculate.assert_not_called()
@@ -272,3 +277,27 @@ def test_no_previous_snapshot_means_no_reused_profile(spark_session, monkeypatch
     )
     assert output == []
     read.assert_not_called()
+
+
+@pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned'])
+@pytest.mark.parametrize('operation', ['read', 'write'])
+def test_skipped_table_profile_reuses_snapshot_in_all_execution_modes(runtime, monkeypatch, mode, operation):
+    setup_pipeline(pipeline_mode=mode)
+    for owner in (runtime.read, runtime.write):
+        monkeypatch.setattr(owner, 'schedule_table_profiling', shared.schedule_table_profiling)
+    previous = {'standard': {'last_success': datetime.now(UTC).isoformat(),
+                             'profile_snapshot_id': 'previous-snapshot', 'profile_scope': 'full_table'}}
+    monkeypatch.setattr(shared, 'profiling_completion_history', lambda *a, **kw: previous)
+    show_previous = Mock()
+    monkeypatch.setattr(shared, '_show_previous_table_profile', show_previous)
+    calculate = Mock(side_effect=AssertionError('no profile calculation expected'))
+    monkeypatch.setattr(shared, 'execute_table_profile', calculate)
+    if operation == 'read':
+        result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    else:
+        runtime.publication.return_value = {'published': True, 'table_id': 'orders', 'status': 'passed'}
+        result = orchestrate_write(runtime.frame, store='Bronze', schema='demo', table_name='orders', write_mode='overwrite')
+    assert result['profile_result']['activities']['standard']['status'] == 'skipped'
+    show_previous.assert_called_once()
+    assert show_previous.call_args.args[1]['profile_snapshot_id'] == 'previous-snapshot'
+    calculate.assert_not_called()
