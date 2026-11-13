@@ -18,13 +18,13 @@ EXPECTED_GROUPS = [
     ]),
     ("foundational-io", "Foundational I/O", [
         "read_lakehouse_csv", "read_lakehouse_excel", "read_lakehouse_json",
-        "read_lakehouse_parquet", "read_lakehouse_table", "read_warehouse_query",
+        "read_lakehouse_parquet", "read_lakehouse_table", "read_lakehouse_query", "read_warehouse_query",
         "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table",
     ]),
     ("demo", "Demo Only", ["orchestrate_demo_reset"]),
     ("preview", "Preview / In Development", [
         "scan_effective_access", "scan_workspace_access", "scan_sql_access",
-        "scan_onelake_access", "create_data_agent", "read_lakehouse_query",
+        "scan_onelake_access", "create_data_agent",
     ]),
 ]
 
