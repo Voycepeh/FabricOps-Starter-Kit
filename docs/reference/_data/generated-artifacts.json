@@ -8,8 +8,8 @@
       "output_path": "docs/api/reference"
     },
     "public_api_compatibility_json": {
-      "generated_at_sgt": "14 Nov 2026, 12:18 AM SGT",
-      "generated_at_utc": "2026-11-13T16:18:06Z",
+      "generated_at_sgt": "14 Nov 2026, 3:37 AM SGT",
+      "generated_at_utc": "2026-11-13T19:37:18.023187Z",
       "generator": "scripts/generate_public_api_compatibility.py",
       "label": "Public API compatibility snapshots",
       "output_path": "docs/reference/_data/public-api-compatibility.json"
@@ -29,7 +29,7 @@
       "output_path": "docs/reference/_data/public-function-call-flows.json"
     }
   },
-  "last_generated_at_sgt": "14 Nov 2026, 3:12 AM SGT",
-  "last_generated_at_utc": "2026-11-13T19:12:02.430828Z",
+  "last_generated_at_sgt": "14 Nov 2026, 3:37 AM SGT",
+  "last_generated_at_utc": "2026-11-13T19:37:18.023187Z",
   "schema": "fabricops_generated_artifact_timestamps_v1"
 }

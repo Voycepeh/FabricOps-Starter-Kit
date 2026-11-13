@@ -43,8 +43,9 @@ def test_reset_is_one_code_cell_and_false_cannot_write_later_cells():
             assert 'write_lakehouse_table(' not in cell.source and 'write_warehouse_table(' not in cell.source
 
 
-def test_demo_calls_every_foundational_io_function():
+def test_demo_calls_every_live_foundational_io_function():
     from fabricops_kit import IO_EXPORTS
+    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
 
     calls = {
         node.func.id
@@ -53,7 +54,10 @@ def test_demo_calls_every_foundational_io_function():
         for node in ast.walk(ast.parse(cell.source))
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
     }
-    assert set(IO_EXPORTS) <= calls
+    # Preview I/O is covered by dedicated tests before Fabric validation and
+    # promotion to Live; the released demo must cover every Live I/O callable.
+    live = {name.rsplit('.', 1)[-1] for name in SUPPORTED_PUBLIC_API}
+    assert set(IO_EXPORTS) & live <= calls
 
 
 @pytest.mark.parametrize('cell_id,kind,store,table,rows', [
