@@ -53,6 +53,7 @@ EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
     "setup_metadata_tables",
     "profile_table",
     "read_lakehouse_json",
+    "read_lakehouse_query",
     "setup_pipeline",
     "widget_data_agreement",
     "widget_data_steward",
@@ -149,8 +150,8 @@ def test_supported_public_api_contract_uses_orchestrated_reads():
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 18, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 18
+    assert len(SUPPORTED_PUBLIC_API) == 19, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 19
     assert APPROVED_V1_CALLABLES == EXPECTED_CURRENT_LIVE_CALLABLES
 
 
