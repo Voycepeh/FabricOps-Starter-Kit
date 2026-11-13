@@ -9,6 +9,7 @@ from typing import NotRequired, TypedDict
 # manifests keep the released names; these entries do not claim releases of the
 # new spelling and do not provide import or callable compatibility.
 CURRENT_PUBLIC_LIVE_SINCE = {
+    "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query": "0.4.2",
     "fabricops_kit.widgets.widget_data_steward.widget_data_steward": "0.2.0",
     "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement": "0.2.0",
 }
