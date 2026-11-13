@@ -246,12 +246,12 @@ jobs:
             python scripts/generate_public_api_compatibility.py --main-ref "$main_revision"
           }
           generate
-          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/reference/_data/public-api-compatibility.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata docs/index.md
+          git add -A -- docs/api/reference docs/reference docs/index.md
           git diff --cached --stat
+          first_tree="$(git write-tree)"
           generate
-          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/reference/_data/public-api-compatibility.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata docs/index.md
-          git diff --exit-code --cached >/dev/null || true
-          if ! git diff --quiet; then
+          git add -A -- docs/api/reference docs/reference docs/index.md
+          if [ "$(git write-tree)" != "$first_tree" ] || ! git diff --quiet; then
             echo "Second generation modified files; refusing commit"
             git diff --stat
             exit 1
