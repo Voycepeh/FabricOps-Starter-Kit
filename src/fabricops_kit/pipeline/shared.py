@@ -6922,15 +6922,19 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
         events = events.filter(F.col("activity") == activity)
     markers = events.filter((F.col("activity") == "grain") |
         ((F.col("activity") == "frequency") & F.col("empty_result"))).select("activity", "completed_at")
-    completed = markers
+    completed = markers.withColumn("profile_snapshot_id", F.lit(None).cast("string"))
     for kind, table in (("standard", "METADATA_DATA_PROFILED"), ("frequency", "METADATA_DATA_PROFILED_FREQUENCY")):
         if activity is not None and activity != kind:
             continue
         snapshots = frame(table).filter(F.col("table_id") == table_id).select("profile_snapshot_id").dropDuplicates()
         matched = events.filter(F.col("activity") == kind).join(snapshots, "profile_snapshot_id", "left_semi")
-        completed = completed.unionByName(matched.select("activity", "completed_at"))
-    return {row["activity"]: {"last_success": row["last_success"]}
-            for row in completed.groupBy("activity").agg(F.max("completed_at").alias("last_success")).collect()}
+        completed = completed.unionByName(matched.select("activity", "completed_at", "profile_snapshot_id"))
+    latest = completed.groupBy("activity").agg(
+        F.max(F.struct("completed_at", "profile_snapshot_id")).alias("latest")
+    )
+    return {row["activity"]: {"last_success": row["latest"]["completed_at"],
+                              "profile_snapshot_id": row["latest"]["profile_snapshot_id"]}
+            for row in latest.collect()}
 
 
 def record_profiling_outcome(outcome, *, context, spark_session=None):
@@ -7127,6 +7131,48 @@ def display_profile_presentations(presentations):
                 pass
 
 
+def _show_previous_table_profile(table_id, previous, *, context, spark_session, presentations):
+    """Present the confirmed previous snapshot without scanning the physical source."""
+    snapshot_id = previous.get("profile_snapshot_id")
+    completed_at = previous.get("last_success")
+    if not snapshot_id or not completed_at or presentations is None:
+        return
+    try:
+        from zoneinfo import ZoneInfo
+        from fabricops_kit.config.shared import get_audit_timezone
+        from pyspark.sql import functions as F
+
+        config = context["config"]
+        zone_name = get_audit_timezone(config)
+        instant = datetime.fromisoformat(str(completed_at).replace("Z", "+00:00"))
+        # Scheduler records are emitted as UTC ISO timestamps.
+        if instant.tzinfo is None:
+            instant = instant.replace(tzinfo=UTC)
+        local_time = instant.astimezone(ZoneInfo(zone_name))
+        timestamp = local_time.strftime("%Y-%m-%d %H:%M:%S %Z (%z)")
+        profile = read_lakehouse_table(
+            "METADATA_DATA_PROFILED",
+            store="Metadata",
+            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
+            context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True},
+        ).filter(
+            (F.col("workspace_id") == context["scope_workspace_id"])
+            & (F.col("table_id") == table_id)
+            & (F.col("profile_snapshot_id") == snapshot_id)
+        )
+        scope = {"profile_scope": "full_table", "profiling_max_rows": None}
+        preview = capture_profile_presentation(profile, scope=scope)
+        if preview and preview["rows"]:
+            preview["title"] = (
+                f"Profiling skipped; showing previous state as of {timestamp} "
+                f"[{zone_name}] · " + preview["title"]
+            )
+            presentations.append(preview)
+    except Exception:
+        # A missing/unavailable historical preview must not invalidate a successful operation.
+        pass
+
+
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False, presentations=None):
     """Profile due work using successful completion history as the schedule."""
     if operation not in {"read", "write"}:
@@ -7188,6 +7234,11 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 "already_completed" if settings["frequency"] == "first" else "interval_not_elapsed")}
             outcomes[activity] = skipped
             record_profiling_outcome({**base, **skipped}, context=context, spark_session=spark_session)
+            if activity == "standard":
+                _show_previous_table_profile(
+                    table_id, history.get(activity, {}), context=context,
+                    spark_session=spark_session, presentations=presentations,
+                )
             continue
         if verbose and not scope_reported:
             print("Profiling scope → " + scope_message)
