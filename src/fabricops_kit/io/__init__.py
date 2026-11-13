@@ -8,6 +8,7 @@ from .read_lakehouse_table import read_lakehouse_table
 from .read_lakehouse_query import read_lakehouse_query
 from .read_warehouse_query import read_warehouse_query
 from .read_warehouse_table import read_warehouse_table
+from .write_lakehouse_file import write_lakehouse_file
 from .write_lakehouse_table import write_lakehouse_table
 from .write_warehouse_table import write_warehouse_table
 
@@ -20,6 +21,7 @@ __all__ = [
     "read_lakehouse_query",
     "read_warehouse_query",
     "read_warehouse_table",
+    "write_lakehouse_file",
     "write_lakehouse_table",
     "write_warehouse_table",
 ]

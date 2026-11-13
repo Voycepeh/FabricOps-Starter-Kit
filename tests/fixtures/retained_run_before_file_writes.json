@@ -1,0 +1,11 @@
+{
+  "source_commit": "13a908f2923c9f28e9c3ec9ef41f2f4dfe1280be",
+  "logical_sha256": "752873603e97c2b57efb5d4e967abaff060f72360b292379fa459fd1fb0c91c7",
+  "physical_run": {
+    "run_id": "retained-run",
+    "status": "incomplete",
+    "operations": "[{\"completed_at\":\"2020-01-02T03:05:05.123456\",\"contract_id\":\"contract\",\"contract_version\":7,\"destination\":{\"item_id\":\"lakehouse\",\"kind\":\"lakehouse\",\"schema\":null,\"table_name\":\"订单\",\"workspace_id\":\"environment\"},\"incremental_target_table_id\":null,\"metrics\":{\"columns\":null,\"input_columns\":null,\"input_rows\":null,\"measurement_source\":\"count\",\"rows_committed\":null,\"rows_inserted\":null,\"rows_read\":42,\"rows_unchanged\":null,\"rows_updated\":null,\"total_target_rows\":null,\"versions_expired\":null,\"versions_inserted\":null},\"observed_columns_json\":null,\"operation_key\":\"source:orders\",\"payload_sha256\":\"unchanged\",\"pipeline_role\":\"source\",\"query_sha256\":null,\"read_mode\":\"full\",\"rows_read\":null,\"rows_written\":null,\"source_table_ids\":[],\"stages\":[{\"evaluation_status\":null,\"stage\":\"Read\",\"status\":\"passed\"}],\"started_at\":\"2020-01-02T03:04:05.123456\",\"status\":\"succeeded\",\"table_id\":\"orders\",\"write_mode\":null}]",
+    "profiling": "[{\"activity\":\"frequency\",\"completed_at\":\"2020-01-02T03:05:05+00:00\",\"context_key\":\"physical\",\"empty_result\":true,\"executed_at\":null,\"physical\":null,\"pipeline_run_id\":null,\"profile_snapshot_id\":null,\"reason\":null,\"results_persisted\":true,\"row_count\":1152921504606846976,\"status\":\"passed\",\"table_id\":null,\"trigger\":null,\"workspace_id\":null}]",
+    "failures": "[{\"code\":\"safe_failure\",\"exception_type\":null},{\"code\":\"safe_failure\",\"exception_type\":null}]"
+  }
+}

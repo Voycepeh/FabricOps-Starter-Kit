@@ -160,7 +160,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 98 |
+| Live-critical dependencies | 101 |
 
 ### Release history
 
@@ -239,6 +239,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
@@ -246,6 +247,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.validate_file_write</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
@@ -258,6 +260,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_file_write_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_pipeline_participants</code></li>
 <li><code>fabricops_kit.pipeline.shared.start_pipeline_session</code></li>

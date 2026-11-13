@@ -222,7 +222,8 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             print(f"  Root cause → {reason}{location}")
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
-        for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+        for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
+                           "recovery_paths", "resolved_path", "publication_status"):
             if hasattr(exc, field_name):
                 setattr(failure, field_name, getattr(exc, field_name))
         raise failure from exc
@@ -5891,6 +5892,13 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
     return {**source, "store": store, "logical_id": f"{store}/Files/{source['relative_path']}"}
 
 
+def resolve_file_write_participant(*, store, relative_path, file_format, context):
+    """Resolve exact file target identity independently of writer options."""
+    from fabricops_kit.io.shared import validate_file_write
+    validate_file_write(relative_path, file_format, "errorifexists")
+    return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
+
+
 def read_file_participant(identity, *, context, spark_session):
     """Read a planned file using foundational I/O and the execution-owned Spark session."""
     from fabricops_kit.io import read_lakehouse_csv, read_lakehouse_json, read_lakehouse_parquet, read_lakehouse_excel
@@ -5908,7 +5916,7 @@ def read_file_participant(identity, *, context, spark_session):
             "read_metrics": {"rows_read": None, "columns": len(frame.columns), "measurement_source": None}}
 
 
-def schedule_file_profiling(dataframe, *, source_id, context, presentations):
+def schedule_file_profiling(dataframe, *, source_id, context, presentations, operation="read"):
     """Run pipeline-owned profiling activities without creating table snapshots.
 
     File completion history is session-local. No durable interval is consumed;
@@ -5916,10 +5924,10 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations):
     """
     plan = context["execution_plan"]
     settings = validate_pipeline_profiling(plan.evidence.get("profiling_configuration"))
-    history = plan.evidence.setdefault("file_profiles", {}).setdefault(source_id, {})
+    history = plan.evidence.setdefault("file_profiles", {}).setdefault(source_id, {}).setdefault(operation, {})
     policy = pipeline_profiling_policy(context=context)
     due = {activity for activity in PROFILING_ACTIVITIES
-           if profiling_due(policy[activity], history.get(activity, {}), "read", datetime.now(UTC))}
+           if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
     if not due:
         return {"status": "not_due" if any(policy[name]["enabled"] for name in policy) else "disabled",
                 "source_id": source_id, "results_persisted": False}
@@ -6035,9 +6043,11 @@ def resolve_pipeline_participants(config, active_workspace_id, *, sources, targe
     for role, participants in (("source", sources), ("target", targets)):
         for participant in participants:
             if participant.get("relative_path") is not None:
-                if role != "source":
-                    raise ValueError("Files participate only as Read sources.")
-                identity = resolve_file_participant(**{key: participant.get(key) for key in
+                if role == "target":
+                    identity = resolve_file_write_participant(**{key: participant.get(key) for key in
+                        ("store", "relative_path", "file_format")}, context={**(context or {}), "config": config, "scope_workspace_id": active_workspace_id})
+                else:
+                    identity = resolve_file_participant(**{key: participant.get(key) for key in
                     ("store", "relative_path", "file_format", "read_options")}, context={**(context or {}), "config": config, "scope_workspace_id": active_workspace_id})
             elif "store" in participant:
                 identity = resolve_physical_table_identity(config, active_workspace_id, **{
@@ -6113,8 +6123,17 @@ def validate_pipeline_run(row):
             from fabricops_kit.data_contract.shared import validate_contract_source
             source = file_binding_source(item["destination"])
             validate_contract_source({"source": source, "table": {}})
-            if item.get("table_id") or item["source_id"] != source["source_id"] or item["pipeline_role"] != "source" or (item["read_mode"] != "full" and item["status"] != "not_started"):
-                raise ValueError("File operations require a full source Read without a Table ID.")
+            if item.get("table_id") or item["source_id"] != source["source_id"]:
+                raise ValueError("File operations require a distinct file Source ID without a Table ID.")
+            if item["pipeline_role"] == "source" and item["read_mode"] != "full" and item["status"] != "not_started":
+                raise ValueError("File source operations require a full Read.")
+            if item["pipeline_role"] == "target":
+                if row.get("execution_mode") == "governed":
+                    raise ValueError("Governed file target authorization is unsupported.")
+                if item.get("contract_id") is not None:
+                    raise ValueError("File targets cannot use table contracts.")
+                if item["status"] == "succeeded" and item["write_mode"] not in {"overwrite", "append", "errorifexists", "ignore"}:
+                    raise ValueError("Unsupported file write mode.")
         elif item.get("source_id") is not None or str(item["table_id"]).startswith("file:"):
             raise ValueError("Table operations cannot use a file Source ID as a Table ID.")
         refs = [item.get(key) for key in ("contract_id", "contract_version", "payload_sha256")]
@@ -6126,6 +6145,8 @@ def validate_pipeline_run(row):
             mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
             # Run records retain historical strategy facts; execution validates the five current choices.
             allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "append_all", "append_new_only", "scd1", "scd2"}
+            if item.get("source_type") == "file" and item["pipeline_role"] == "target":
+                allowed = {"overwrite", "append", "errorifexists", "ignore"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
@@ -6153,6 +6174,8 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "contract_id": contract["contract_id"] if contract else None,
                 "contract_version": contract["contract_version"] if contract else None,
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
+                **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path", "publication_status")}
+                   if role == "target" and identity.get("source_type") == "file" else {}),
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
                     "started_at", "completed_at", "rows_read", "rows_written", "observed_columns_json")},
@@ -6283,6 +6306,8 @@ class PipelineOperation:
             physical_identity = (resolve_file_participant(**{key: args.get(key) for key in
                 ("store", "relative_path", "file_format", "read_options")}, context=plan.runtime_context)
                 if self.role == "source" and args.get("relative_path") is not None else
+                resolve_file_write_participant(**{key: args.get(key) for key in ("store", "relative_path", "file_format")}, context=plan.runtime_context)
+                if self.role == "target" and args.get("relative_path") is not None else
                 resolve_physical_table_identity(plan.runtime_context["config"], plan.workspace_id,
                     **{key: args[key] for key in ("store", "schema", "table_name")}))
             table_id = participant_id(physical_identity)
@@ -6305,12 +6330,19 @@ class PipelineOperation:
             plan.evidence["operations"][key] = self.record
             # These are the notebook settings retained and compared in Governed mode.
             # Exact processing parameters are retained in the approved Pipeline Activation.
-            processing_parameters = validated_pipeline_processing(role=self.role,
+            is_file_target = self.role == "target" and identity.get("source_type") == "file"
+            processing_parameters = ({"read_parameters": None, "write_parameters": None,
+                "repartition_by": args.get("repartition_by")} if is_file_target else validated_pipeline_processing(role=self.role,
                 read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
                 write_mode=str(args.get("write_mode", "overwrite") or "").strip().lower() if self.role == "target" else None,
                 read_parameters=args.get("read_parameters") if self.role == "source" else None,
                 write_parameters=args.get("write_parameters") if self.role == "target" else None,
-                repartition_by=args.get("repartition_by") if self.role == "target" else None)
+                repartition_by=args.get("repartition_by") if self.role == "target" else None))
+            if is_file_target:
+                if plan.execution_mode == "governed":
+                    raise ValueError("Governed file targets require explicit destination authorization; file-target Pipeline Promotion is not supported.")
+                self.record["file_write_parameters_json"] = canonical_pipeline_json({key: args.get(key) for key in
+                    ("write_options", "single_file", "max_single_file_rows", "max_single_file_bytes")})
             self.record.update(
                 store=str(identity["store"]),
                 requested_schema=args.get("schema"),
@@ -6397,11 +6429,15 @@ class PipelineOperation:
                 if self.role == "target" and getattr(exc, "published", False):
                     write_metrics = getattr(exc, "write_metrics", {}) or {}
                     self.capture_metrics(write_metrics)
+                    if self.arguments.get("relative_path") is not None:
+                        self.record["output_path"] = getattr(exc, "resolved_path", None) or self.record.get("output_path")
+                        self.record["publication_status"] = "published"
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
-                for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status"):
+                for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
+                           "recovery_paths", "resolved_path", "publication_status"):
                     if exc is not None and hasattr(exc, name):
                         setattr(persistence_error, name, getattr(exc, name))
                 if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"
@@ -6573,6 +6609,8 @@ class PipelineSession:
                 identity = (resolve_file_participant(**{key: arguments.get(key) for key in
                     ("store", "relative_path", "file_format", "read_options")}, context=self.plan.runtime_context)
                     if role == "source" and arguments.get("relative_path") is not None else
+                    resolve_file_write_participant(**{key: arguments.get(key) for key in ("store", "relative_path", "file_format")}, context=self.plan.runtime_context)
+                    if role == "target" and arguments.get("relative_path") is not None else
                     resolve_physical_table_identity(self.plan.runtime_context["config"], self.plan.workspace_id,
                         **{key: arguments[key] for key in ("store", "schema", "table_name")}))
                 requested = [(role, identity)]
@@ -6594,6 +6632,8 @@ class PipelineSession:
                         identities[table_id] = {**identity, "logical_id": logical, "roles": [*roles, participant_role]}
                         choice = (self.choices.get(table_id, {"no_contract": True})
                                   if self.plan.execution_mode == "dry_run" else {"no_contract": True})
+                        if participant_role == "target" and identity.get("source_type") == "file" and choice != {"no_contract": True}:
+                            raise ValueError("File targets do not support Data Contracts; select No Contract.")
                         selections[table_id] = choice
                         if choice == {"no_contract": True}:
                             contracts[table_id] = None

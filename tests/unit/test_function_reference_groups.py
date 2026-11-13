@@ -19,7 +19,7 @@ EXPECTED_GROUPS = [
     ("foundational-io", "Foundational I/O", [
         "read_lakehouse_csv", "read_lakehouse_excel", "read_lakehouse_json",
         "read_lakehouse_parquet", "read_lakehouse_table", "read_lakehouse_query", "read_warehouse_query",
-        "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table",
+        "read_warehouse_table", "write_lakehouse_file", "write_lakehouse_table", "write_warehouse_table",
     ]),
     ("demo", "Demo Only", ["orchestrate_demo_reset"]),
     ("preview", "Preview / In Development", [

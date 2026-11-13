@@ -4069,6 +4069,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -4139,7 +4151,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4408,13 +4420,13 @@
         }
       ],
       "summary": {
-        "added": 18,
+        "added": 19,
         "modified": 10,
-        "nonbreaking": 18,
+        "nonbreaking": 19,
         "potentially_breaking": 10,
         "removed": 16,
         "review_required": 16,
-        "total": 44
+        "total": 45
       },
       "target": "working-tree"
     },
@@ -7754,6 +7766,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -7858,7 +7882,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -8060,13 +8084,13 @@
         }
       ],
       "summary": {
-        "added": 15,
+        "added": 16,
         "modified": 11,
-        "nonbreaking": 15,
+        "nonbreaking": 16,
         "potentially_breaking": 16,
         "removed": 15,
         "review_required": 10,
-        "total": 41
+        "total": 42
       },
       "target": "working-tree"
     },
@@ -11354,6 +11378,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -11479,9 +11515,18 @@
             "Parameter removed: spark_session.",
             "Optional parameter added: dq_diagnostics.",
             "Optional parameter added: existing_mapping.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -11670,13 +11715,13 @@
         }
       ],
       "summary": {
-        "added": 7,
+        "added": 8,
         "modified": 18,
-        "nonbreaking": 7,
+        "nonbreaking": 8,
         "potentially_breaking": 23,
         "removed": 13,
         "review_required": 8,
-        "total": 38
+        "total": 39
       },
       "target": "working-tree"
     },
@@ -13465,6 +13510,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -13484,6 +13541,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -13633,13 +13710,13 @@
         }
       ],
       "summary": {
-        "added": 5,
-        "modified": 5,
-        "nonbreaking": 6,
+        "added": 6,
+        "modified": 6,
+        "nonbreaking": 7,
         "potentially_breaking": 6,
         "removed": 4,
-        "review_required": 2,
-        "total": 14
+        "review_required": 3,
+        "total": 16
       },
       "target": "working-tree"
     },
@@ -15428,6 +15505,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -15447,6 +15536,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -15596,13 +15705,13 @@
         }
       ],
       "summary": {
-        "added": 5,
-        "modified": 5,
-        "nonbreaking": 6,
+        "added": 6,
+        "modified": 6,
+        "nonbreaking": 7,
         "potentially_breaking": 6,
         "removed": 4,
-        "review_required": 2,
-        "total": 14
+        "review_required": 3,
+        "total": 16
       },
       "target": "working-tree"
     },
@@ -17383,6 +17492,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -17402,6 +17523,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -17511,13 +17652,13 @@
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 3,
-        "nonbreaking": 4,
+        "added": 5,
+        "modified": 4,
+        "nonbreaking": 5,
         "potentially_breaking": 6,
         "removed": 4,
-        "review_required": 1,
-        "total": 11
+        "review_required": 2,
+        "total": 13
       },
       "target": "working-tree"
     },
@@ -19298,6 +19439,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -19317,6 +19470,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -19426,13 +19599,13 @@
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 3,
-        "nonbreaking": 4,
+        "added": 5,
+        "modified": 4,
+        "nonbreaking": 5,
         "potentially_breaking": 6,
         "removed": 4,
-        "review_required": 1,
-        "total": 11
+        "review_required": 2,
+        "total": 13
       },
       "target": "working-tree"
     },
@@ -21441,6 +21614,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "review_required",
           "lifecycle_after": "Live",
@@ -21456,6 +21641,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: max_single_file_bytes.",
+            "Optional parameter added: max_single_file_rows.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: single_file.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -21507,13 +21712,13 @@
         }
       ],
       "summary": {
-        "added": 3,
-        "modified": 1,
-        "nonbreaking": 3,
+        "added": 4,
+        "modified": 2,
+        "nonbreaking": 4,
         "potentially_breaking": 2,
         "removed": 2,
-        "review_required": 1,
-        "total": 6
+        "review_required": 2,
+        "total": 8
       },
       "target": "working-tree"
     },
@@ -21739,6 +21944,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -21810,7 +22027,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22082,9 +22299,9 @@
         "modified": 10,
         "nonbreaking": 16,
         "potentially_breaking": 19,
-        "removed": 18,
-        "review_required": 9,
-        "total": 44
+        "removed": 19,
+        "review_required": 10,
+        "total": 45
       },
       "target": "v0.1.0"
     },
@@ -22302,6 +22519,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "added",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -22407,7 +22636,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22612,9 +22841,9 @@
         "modified": 11,
         "nonbreaking": 15,
         "potentially_breaking": 18,
-        "removed": 15,
-        "review_required": 8,
-        "total": 41
+        "removed": 16,
+        "review_required": 9,
+        "total": 42
       },
       "target": "v0.2.0"
     },
@@ -22812,6 +23041,18 @@
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "added",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -22932,15 +23173,24 @@
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
             "Parameter removed: existing_mapping.",
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
             "Optional parameter added: contracts.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: frequency_top_n.",
             "Required parameter added: sources.",
             "Optional parameter added: spark_session.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str.",
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23132,9 +23382,9 @@
         "modified": 18,
         "nonbreaking": 14,
         "potentially_breaking": 22,
-        "removed": 7,
-        "review_required": 2,
-        "total": 38
+        "removed": 8,
+        "review_required": 3,
+        "total": 39
       },
       "target": "v0.2.5"
     },
@@ -23166,6 +23416,18 @@
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -23185,6 +23447,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23335,12 +23617,12 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 5,
+        "modified": 6,
         "nonbreaking": 4,
-        "potentially_breaking": 6,
-        "removed": 5,
-        "review_required": 4,
-        "total": 14
+        "potentially_breaking": 7,
+        "removed": 6,
+        "review_required": 5,
+        "total": 16
       },
       "target": "v0.3.0"
     },
@@ -23372,6 +23654,18 @@
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -23391,6 +23685,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23541,12 +23855,12 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 5,
+        "modified": 6,
         "nonbreaking": 4,
-        "potentially_breaking": 6,
-        "removed": 5,
-        "review_required": 4,
-        "total": 14
+        "potentially_breaking": 7,
+        "removed": 6,
+        "review_required": 5,
+        "total": 16
       },
       "target": "v0.3.1"
     },
@@ -23578,6 +23892,18 @@
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -23597,6 +23923,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23707,12 +24053,12 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 4,
-        "potentially_breaking": 5,
-        "removed": 4,
-        "review_required": 2,
-        "total": 11
+        "potentially_breaking": 6,
+        "removed": 5,
+        "review_required": 3,
+        "total": 13
       },
       "target": "v0.4.0"
     },
@@ -23744,6 +24090,18 @@
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -23763,6 +24121,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23873,12 +24251,12 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 3,
+        "modified": 4,
         "nonbreaking": 4,
-        "potentially_breaking": 5,
-        "removed": 4,
-        "review_required": 2,
-        "total": 11
+        "potentially_breaking": 6,
+        "removed": 5,
+        "review_required": 3,
+        "total": 13
       },
       "target": "v0.4.1"
     },
@@ -23898,6 +24276,18 @@
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
         },
         {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -23913,6 +24303,26 @@
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: max_single_file_bytes.",
+            "Parameter removed: max_single_file_rows.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: single_file.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -23965,12 +24375,12 @@
       ],
       "summary": {
         "added": 2,
-        "modified": 1,
+        "modified": 2,
         "nonbreaking": 2,
-        "potentially_breaking": 4,
-        "removed": 3,
-        "review_required": 0,
-        "total": 6
+        "potentially_breaking": 5,
+        "removed": 4,
+        "review_required": 1,
+        "total": 8
       },
       "target": "main"
     }
@@ -38490,6 +38900,114 @@
         {
           "certainty": "certain",
           "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "'Silver'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "'parquet'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "'errorifexists'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "mode",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "write_options",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "single_file",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "1000000",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "max_single_file_rows",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "134217728",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "max_single_file_bytes",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "return_annotation": null,
+          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
+          "source_qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
           "lifecycle": "Live",
           "parameters": [
             {
@@ -38830,19 +39348,19 @@
             },
             {
               "annotation": "str | None",
-              "default": null,
-              "has_default": false,
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "schema",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "table_name",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
@@ -38891,11 +39409,59 @@
               "kind": "keyword_only",
               "name": "dq_diagnostics",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "relative_path",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "write_options",
+              "required": false
+            },
+            {
+              "annotation": "bool",
+              "default": "False",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "single_file",
+              "required": false
+            },
+            {
+              "annotation": "int",
+              "default": "1000000",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "max_single_file_rows",
+              "required": false
+            },
+            {
+              "annotation": "int",
+              "default": "134217728",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "max_single_file_bytes",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
         },
@@ -39294,7 +39860,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:6a46e3f933085e77454521d1175962831286b17285875a05c740805a58783a40",
+      "source_digest": "sha256:b572595c9f0401f47b22778bcce22b74d5876e2d6a35f2c70ca31f892a326f6f",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
