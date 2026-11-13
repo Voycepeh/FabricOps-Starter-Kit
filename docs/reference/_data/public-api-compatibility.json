@@ -4014,7 +4014,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -7708,7 +7708,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -11308,7 +11308,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -13455,7 +13455,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -15418,7 +15418,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -17373,7 +17373,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -19288,7 +19288,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -21431,7 +21431,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
@@ -21683,12 +21683,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -22081,9 +22081,9 @@
         "added": 16,
         "modified": 10,
         "nonbreaking": 16,
-        "potentially_breaking": 18,
+        "potentially_breaking": 19,
         "removed": 18,
-        "review_required": 10,
+        "review_required": 9,
         "total": 44
       },
       "target": "v0.1.0"
@@ -22255,12 +22255,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -22611,9 +22611,9 @@
         "added": 15,
         "modified": 11,
         "nonbreaking": 15,
-        "potentially_breaking": 17,
+        "potentially_breaking": 18,
         "removed": 15,
-        "review_required": 9,
+        "review_required": 8,
         "total": 41
       },
       "target": "v0.2.0"
@@ -22765,12 +22765,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23131,9 +23131,9 @@
         "added": 13,
         "modified": 18,
         "nonbreaking": 14,
-        "potentially_breaking": 21,
+        "potentially_breaking": 22,
         "removed": 7,
-        "review_required": 3,
+        "review_required": 2,
         "total": 38
       },
       "target": "v0.2.5"
@@ -23155,12 +23155,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23337,9 +23337,9 @@
         "added": 4,
         "modified": 5,
         "nonbreaking": 4,
-        "potentially_breaking": 5,
+        "potentially_breaking": 6,
         "removed": 5,
-        "review_required": 5,
+        "review_required": 4,
         "total": 14
       },
       "target": "v0.3.0"
@@ -23361,12 +23361,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23543,9 +23543,9 @@
         "added": 4,
         "modified": 5,
         "nonbreaking": 4,
-        "potentially_breaking": 5,
+        "potentially_breaking": 6,
         "removed": 5,
-        "review_required": 5,
+        "review_required": 4,
         "total": 14
       },
       "target": "v0.3.1"
@@ -23567,12 +23567,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23709,9 +23709,9 @@
         "added": 4,
         "modified": 3,
         "nonbreaking": 4,
-        "potentially_breaking": 4,
+        "potentially_breaking": 5,
         "removed": 4,
-        "review_required": 3,
+        "review_required": 2,
         "total": 11
       },
       "target": "v0.4.0"
@@ -23733,12 +23733,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23875,9 +23875,9 @@
         "added": 4,
         "modified": 3,
         "nonbreaking": 4,
-        "potentially_breaking": 4,
+        "potentially_breaking": 5,
         "removed": 4,
-        "review_required": 3,
+        "review_required": 2,
         "total": 11
       },
       "target": "v0.4.1"
@@ -23887,12 +23887,12 @@
       "changes": [
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
@@ -23967,9 +23967,9 @@
         "added": 2,
         "modified": 1,
         "nonbreaking": 2,
-        "potentially_breaking": 3,
+        "potentially_breaking": 4,
         "removed": 3,
-        "review_required": 1,
+        "review_required": 0,
         "total": 6
       },
       "target": "main"
@@ -38282,7 +38282,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "str",
@@ -39294,7 +39294,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:d9aed94b092d46561a2aead0136be832bafa143a6aa611a736598da62bd7b0a1",
+      "source_digest": "sha256:6a46e3f933085e77454521d1175962831286b17285875a05c740805a58783a40",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

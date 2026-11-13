@@ -3196,6 +3196,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -3280,6 +3281,7 @@
       "source_start_line": 120,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4070,6 +4072,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -4108,6 +4111,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -4145,6 +4149,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -4365,6 +4370,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -4429,6 +4435,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -4669,6 +4676,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
@@ -6247,13 +6255,14 @@
     },
     {
       "architecture_classification": "foundational_io",
-      "contract_classification": "preview_public_function",
-      "contract_risk": "preview",
+      "contract_classification": "live_public_function",
+      "contract_risk": "live",
       "examples": ">>> orders_df = read_lakehouse_query(\n...     \"SELECT TOP (5) order_id FROM demo.orders\",\n...     table_name=\"orders\", schema=\"demo\", store=\"Bronze\",\n... )",
       "function_name": "read_lakehouse_query",
       "function_type": "public_function",
-      "lifecycle_status": "preview",
-      "live_impact_level": "preview_only",
+      "lifecycle_status": "live",
+      "live_impact_level": "direct_public_contract",
+      "live_since": "0.4.2",
       "parameters": [
         {
           "description": "One read-only Spark SQL SELECT or CTE referencing the declared source. Simple integer T-SQL TOP projections are also supported.",
@@ -6295,6 +6304,7 @@
       "source_path": "src/fabricops_kit/io/read_lakehouse_query.py",
       "source_start_line": 10,
       "summary": "Run read-only Spark SQL against a configured Lakehouse source.",
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
@@ -6666,6 +6676,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -6715,6 +6726,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
@@ -6747,6 +6759,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
@@ -6823,6 +6836,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -6850,6 +6864,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -6881,6 +6896,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -6944,6 +6960,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -7086,6 +7103,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -7400,6 +7418,7 @@
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table"
       ],
@@ -7588,6 +7607,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -7622,6 +7642,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
@@ -8579,6 +8600,9 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query"
+      ],
       "function_name": "_lakehouse_query",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -8586,7 +8610,7 @@
         "fabricops_kit.pipeline.pipeline_read.pipeline_read"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.pipeline_read._lakehouse_query",
       "source_end_line": 221,
       "source_path": "src/fabricops_kit/pipeline/pipeline_read.py",
@@ -17965,6 +17989,28 @@
         "src/fabricops_kit/io/read_lakehouse_table.py",
         "src/fabricops_kit/io/shared.py",
         "src/fabricops_kit/pipeline/pipeline_read.py"
+      ],
+      "live_critical_dependencies": [
+        "fabricops_kit.config.metadata_schemas.metadata_table_owner",
+        "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
+        "fabricops_kit.config.shared._get_fabric_runtime_metadata",
+        "fabricops_kit.config.shared._normalize_path_config",
+        "fabricops_kit.config.shared.get_default_fabric_context",
+        "fabricops_kit.config.shared.get_store",
+        "fabricops_kit.config.shared.resolve_fabric_context",
+        "fabricops_kit.io.shared._join_lakehouse_area_path",
+        "fabricops_kit.io.shared._normalize_schema_name",
+        "fabricops_kit.io.shared._normalize_table_name",
+        "fabricops_kit.io.shared._resolve_lakehouse_schema",
+        "fabricops_kit.io.shared._resolve_lakehouse_table_path",
+        "fabricops_kit.io.shared._validate_lakehouse_store",
+        "fabricops_kit.io.shared._validate_warehouse_store",
+        "fabricops_kit.io.shared.get_spark_session",
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.pipeline.pipeline_read._lakehouse_query"
       ],
       "metrics": {
         "depth": 6,

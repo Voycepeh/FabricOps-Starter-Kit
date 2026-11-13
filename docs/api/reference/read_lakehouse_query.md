@@ -2,9 +2,10 @@
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.4.2</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Run read-only Spark SQL against one configured Lakehouse table.
 
@@ -142,11 +143,36 @@ No related guides documented.
 | Property | Value |
 | --- | --- |
 | Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | — |
+| Live since | 0.4.2 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 20 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_read._lakehouse_query</code></li>
+</ul>
 
 
 </details>

@@ -153,6 +153,11 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <p class="reference-catalogue-item-purpose">Read a Delta table from a configured Fabric lakehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup, 02B_incremental_append_demo</span></p>
 </article>
+<article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.4.2</span><span class="reference-chip">00C_demo_setup</span></p>
+</article>
 <article id="io.read_warehouse_query-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</p>
@@ -172,11 +177,6 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
-</article>
-<article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
 </div>
 </details>
@@ -222,7 +222,6 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
-
 </div>
 </details>
 
