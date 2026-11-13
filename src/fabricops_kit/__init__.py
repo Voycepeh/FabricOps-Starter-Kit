@@ -29,6 +29,7 @@ from .io import (
     read_lakehouse_query,
     read_warehouse_query,
     read_warehouse_table,
+    write_lakehouse_file,
     write_lakehouse_table,
     write_warehouse_table,
 )
@@ -69,6 +70,7 @@ DATA_AGENT_EXPORTS = (
 IO_EXPORTS = (
     "read_lakehouse_table",
     "read_lakehouse_query",
+    "write_lakehouse_file",
     "write_lakehouse_table",
     "read_lakehouse_csv",
     "read_lakehouse_json",

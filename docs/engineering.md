@@ -170,6 +170,53 @@ Use the [Read & Write Modes reference](reference/read-and-load-strategies.md) fo
 
     SCD2 maintains `_effective_from`, `_effective_to` and `_is_current`. FabricOps also recalculates `_row_hash` from final incoming business values after transformation and Sensitive Data treatment. Incorrect business keys still produce incorrect SCD semantics; the framework cannot infer business identity for you.
 
+## How do I write Lakehouse files?
+
+**Use file coordinates instead of table coordinates.** Both foundational
+[`write_lakehouse_file()`](api/reference/write_lakehouse_file.md) (Preview) and
+[`orchestrate_write()`](api/reference/orchestrate_write.md) support CSV, Parquet and
+newline-delimited JSON under the Lakehouse `Files/` root configured by `00_env_config`.
+
+```python
+result = orchestrate_write(
+    dataframe=final_df, store="Silver",
+    relative_path="Exports/orders.parquet", file_format="parquet",
+    write_mode="overwrite",
+)
+```
+
+The default output is a distributed dataset folder, including when the path ends
+with `.parquet` or `.csv`. Set `single_file=True` explicitly for one named artifact.
+File modes are `errorifexists`, `overwrite`, `append` and `ignore`; append adds dataset
+parts and is rejected for one physical file. Table-only SCD and Append New Only
+strategies are rejected. Use foundational I/O when pipeline participation and
+profiling are unnecessary; see the [source package guide](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/README.md#lakehouse-files-output)
+for both APIs and output safeguards.
+
+Dry Run never stages or publishes files. Ungoverned checks protection of physical
+file destinations and overlapping folders. Governed file targets remain blocked
+because current Pipeline Promotion authorizes file Reads only. File targets carry
+file `source_id` values separately from table identities. Existing
+[`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) operations
+capture source participation, physical output, writer settings, status and available
+filesystem metrics; no additional metadata table is introduced.
+
+File profiling honors pipeline settings, evaluates the supplied DataFrame and
+remains session-local without table profile snapshots. Successful publication leaves
+the execution open for `finalize_pipeline()`. Incremental checkpoint publication
+remains table-only; use Full Read sources for file targets.
+
+!!! warning "Single artifacts and shortcuts"
+
+    Single-file output counts a bounded input, uses one executor, checks staged
+    output bytes and renames a temporary Spark part. Its row/byte caps do not bound
+    executor working memory. Single CSV/JSON is uncompressed; dataset compression
+    and single Parquet internal compression remain available. Overwrite/rename is
+    not transactional and concurrent writers must be serialized. Shortcuts must
+    support writes, deletes and renames; SharePoint shortcuts are not presumed
+    writable. Fabric failures never redirect output to another destination.
+
+
 ## How does FabricOps stop me loading the same data twice?
 
 There are two protections for different failure modes:

@@ -87,3 +87,78 @@ Expand the Data Contract selector's sections to inspect columns/types, Grain key
 `setup_pipeline(source_drift_enabled=False, source_drift_interval_days=1, source_drift_block=True)` controls automatic complete-source observation, independently of every profiling setting. Read all sources before any Write; the first Write closes the Read set and consolidates source decisions. Source hashes and duplicate multiplicities remain distributed. Validated authored keys permit exact modified-row counts; unkeyed comparisons report content additions/removals with modifications unknown. Additions alone never block normal incremental ETL; configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. The first successful observation establishes history without invented prior changes.
 
 Confirmed acceptance history is shared by execution workspace and exact physical workspace/item/table. Successful finalization and all required verified publications precede an atomic conditional head update; failed, blocked, incomplete or nonpublishing work cannot advance it. Nonblocking mode retains warnings and the same acceptance boundary. Dry Run persists neither baselines nor publication state. `finalize_pipeline()` adds a `source_drift` diagnostic summary when enabled, separately from immutable Run content. Acceptance failures require investigation/new execution. If acknowledgement and read-back both fail, `acceptance_unknown` requires inspecting immutable acceptance history before retrying; do not assume rollback. Engineering settings are retained in saved approval/promotion identity; new Contracts omit Source Drift rules while historical frozen records remain unchanged. The former `observe_source` and `source_observation_days` parameters have no aliases.
+
+## Lakehouse Files output
+
+Use `write_lakehouse_file()` (Preview) for standalone CSV, Parquet or newline-delimited
+JSON output without profiling or metadata persistence:
+
+```python
+write_lakehouse_file(
+    dataframe=final_df,
+    relative_path="Exports/orders.csv",
+    store="Silver",
+    file_format="csv",
+    write_options={"header": True},
+)
+```
+
+For pipeline participation, use `orchestrate_write()` after `setup_pipeline()`:
+
+```python
+result = orchestrate_write(
+    dataframe=final_df,
+    store="Silver",
+    relative_path="Exports/orders.parquet",
+    file_format="parquet",
+    write_mode="overwrite",
+)
+```
+
+Supply either table coordinates (`store`, `schema`, `table_name`) or file coordinates
+(`store`, `relative_path`, `file_format`). File modes are `errorifexists`, `overwrite`,
+`append` and `ignore`; the foundational default is `errorifexists`. Orchestration
+requires an explicit `write_mode`. Files do not support `append_all`, Append New Only,
+SCD1 or SCD2. A suffix does not select output layout: `orders.csv` is a **dataset
+folder** by default. Set `single_file=True` for one artifact with a matching extension;
+append is then rejected. Dataset output preserves distributed Spark parallelism and
+supports the same `repartition_by` conventions as foundational table writing.
+
+Single-file output uses one executor, stages one part and renames it into place. It
+checks up to `max_single_file_rows + 1` rows before staging (default limit 1,000,000)
+and checks encoded output size before publication (default 128 MiB). These limits
+do not bound executor working memory, especially for wide rows. No business rows
+are collected on the driver. Use a stable input during the count and write actions.
+Single CSV/JSON artifacts are uncompressed; dataset folders support compression
+options, and single Parquet supports internal compression. Temporary paths are
+removed after staging. Overwrite and rename are not transactional; serialize writers
+to each destination and validate recovery behavior in Fabric.
+
+The result includes the actual `resolved_path`, publication status and available
+filesystem metrics. `file_count` and `output_bytes` describe the resulting target,
+including prior dataset parts after append. `rows_committed` remains unknown.
+`ignore` returns `published=False` when a destination exists. Paths must be exact,
+nested paths beneath the configured `Files/` root; absolute paths, traversal, reader
+wildcards and destination/layout overrides in `write_options` are rejected.
+
+File writes support Dry Run and Ungoverned. Dry Run validates arguments and profiles
+the supplied DataFrame when due, but never stages or publishes files and cannot verify
+permissions, collisions or output-size limits. Governed file targets fail closed:
+the current Pipeline Promotion authorization supports file Reads only. Ungoverned
+still rejects protected file destinations and overlapping folders. File targets use
+the existing physical file `source_id`, never a `table_id`, and do not use table
+contracts, table audit columns, row hashes or table lineage. Full Read sources can
+participate; incremental checkpoint publication remains table-only.
+
+Pipeline profiling honors `setup_pipeline()` settings and profiles the supplied
+DataFrame, with session-local file history and no persisted table profile snapshots.
+It does not reread the published destination. `METADATA_PIPELINE_RUN` operations retain
+source participation, destination, options/layout limits, mode, output path,
+publication status and available metrics. Call `finalize_pipeline()` at the normal
+notebook boundary; successful publication does not finalize the pipeline.
+
+Configured paths may traverse shortcuts. Fabric must support the underlying write,
+delete and rename operations; read-only or unsupported shortcuts raise an error.
+SharePoint shortcuts are not assumed writable. There is no Graph upload or redirected
+publication. Test permissions, rename behavior and cleanup against the real Fabric
+Lakehouse before relying on single-file publication.

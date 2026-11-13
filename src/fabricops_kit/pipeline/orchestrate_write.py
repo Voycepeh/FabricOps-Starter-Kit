@@ -27,10 +27,26 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample") -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample", relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]:
     """Evaluate or publish a target using the active pipeline's runtime.
 
     Define the dataframe, destination, write_mode and processing parameters.
+    Select either store/schema/table_name for tables or store/relative_path/file_format
+    for Lakehouse Files. File modes are errorifexists, overwrite, append and ignore;
+    table-only append_all, Append New Only and SCD strategies are rejected for files.
+    Files support Dry Run and Ungoverned; Governed file targets fail closed because
+    current Pipeline Promotion authorizes only file Reads. No file Table ID or
+    table Data Contract is manufactured. Protected file destinations and overlapping
+    folders remain blocked in Ungoverned mode. Incremental checkpoint publication
+    is table-only; file writes require Full Read sources.
+
+    File profiling uses the supplied DataFrame and setup_pipeline settings, remains
+    session-local, and persists no table profile snapshots. A bounded profile cannot
+    establish complete row counts. Ignored output is never reported as published.
+    File options, physical location, publication status and available filesystem
+    metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
+    receive table audit columns, row hashes, SCD processing or table lineage.
+    A successful file Write leaves the pipeline open for finalize_pipeline().
     All reads registered in this execution are associated with this target as
     pipeline participants, not proven transformation dependencies. File participation
     is returned under source_ids and retained separately from source_table_ids in
@@ -43,7 +59,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     A successful Write does not imply successful completion of the notebook.
 
     Dry Run profiles the prepared DataFrame in memory without publishing the target.
-    Persistent modes profile the physical target after successful publication,
+    Persistent table writes profile the physical target after successful publication,
     bounded only by setup_pipeline(profiling_max_rows=...).
     Pipeline-owned settings apply independently of selected Contracts; Dry Run observations
     do not consume persisted schedules. Guardrail checks run regardless
@@ -64,11 +80,27 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     store : str
         Configured target store key.
     schema : str or None
-        Explicit physical schema; pass None for a schemaless store.
+        Explicit physical table schema; pass None for a schemaless store or omit for files.
     table_name : str
-        Physical target table name.
-    write_mode : {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
-        Engineering write strategy, captured exactly by Pipeline Activation.
+        Physical target table name; omit for file destinations.
+    write_mode : str
+        Table strategies: overwrite, append_all, append_new_only, scd1, scd2,
+        captured exactly by Pipeline Activation. File modes: errorifexists,
+        overwrite, append, ignore.
+    relative_path : str, optional
+        Exact destination beneath the configured Lakehouse Files area.
+    file_format : {"csv", "parquet", "json"}, optional
+        Required with relative_path. JSON is newline-delimited.
+    write_options : dict, optional
+        Spark file writer options. Cannot override destination, mode or layout.
+    single_file : bool, default=False
+        Opt into one named artifact; default output is a Spark dataset folder.
+    max_single_file_rows : int, default=1000000
+        Bounded count safeguard before single-file staging.
+    max_single_file_bytes : int, default=134217728
+        Encoded-byte safeguard before single-file publication. Coalescing uses
+        one executor; these caps do not bound its working memory. Single CSV/JSON
+        is uncompressed. See write_lakehouse_file for filesystem limitations.
     write_parameters : dict, optional
         Strategy parameters including SCD key_columns and SCD2 effective_column.
     existing_mapping : object, optional
@@ -99,6 +131,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         Persistent modes return an eagerly materialized, caller-owned snapshot of
         the exact physical writer input. It remains inspectable after publication;
         call ``result["dataframe"].unpersist()`` when inspection is complete.
+        File results instead return the supplied DataFrame without caching or
+        table preparation, a source_id, resolved_path and filesystem write_metrics.
         ``rows_committed`` measures this attempt; ``total_target_rows`` is the
         destination total where profiling provides it.
 
@@ -107,6 +141,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
 
     Examples
     --------
+    >>> result = orchestrate_write(dataframe=final_df, store="Silver",
+    ...     relative_path="Exports/orders.parquet", file_format="parquet", write_mode="overwrite")
     >>> result = orchestrate_write(summary_df, store="Gold", schema="demo",
     ...     table_name="customer_summary", write_mode="overwrite")
 
@@ -114,6 +150,23 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
     session = current_pipeline_session()
     spark_session = session.spark
     try:
+        is_file = relative_path is not None or file_format is not None or write_options is not None or single_file
+        if is_file:
+            from fabricops_kit.io.shared import validate_file_write, repartition_dataframe_for_write
+            if table_name is not None or schema is not None or write_parameters is not None or existing_mapping is not None:
+                raise ValueError("Select table destination/processing arguments or file arguments, not both.")
+            if relative_path is None or file_format is None:
+                raise ValueError("File writes require relative_path and file_format.")
+            if session.plan.execution_mode == "governed":
+                raise ValueError("Governed file targets require explicit destination authorization; file-target Pipeline Promotion is not supported.")
+            write_mode, write_options = validate_file_write(relative_path, file_format, write_mode, write_options,
+                single_file=single_file, repartition_by=repartition_by,
+                max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes)
+            if repartition_by is not None and (type(repartition_by) is not int or repartition_by < 1):
+                raise ValueError("Orchestrated repartition_by must be a positive integer.")
+            repartition_dataframe_for_write(dataframe, repartition_by)
+        elif not table_name:
+            raise ValueError("table_name or a complete file destination is required.")
         execution_plan = session.operation_plan("target", locals())
     except BaseException:
         session.close(failed=True)
@@ -124,6 +177,12 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
         sources = operation.arguments["sources"]
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
+        if is_file:
+            return _write_file(dataframe, operation=operation, execution_plan=execution_plan, sources=sources,
+                store=store, relative_path=relative_path, file_format=file_format, write_mode=write_mode,
+                write_options=write_options, repartition_by=repartition_by, single_file=single_file,
+                max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes,
+                verbose=verbose, spark_session=spark_session)
         summary = ExecutionSummary("WRITE", verbose=verbose)
         presentations = []
         target = ".".join(str(part) for part in (store, schema, table_name) if part)
@@ -283,3 +342,80 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_n
             if mapping is not None:
                 mapping.unpersist()
             raise
+
+
+def _write_file(dataframe, *, operation, execution_plan, sources, store, relative_path, file_format,
+                write_mode, write_options, repartition_by, single_file, max_single_file_rows,
+                max_single_file_bytes, verbose, spark_session):
+    """Publish an admitted exact file destination under the existing run boundary."""
+    from fabricops_kit.io import write_lakehouse_file
+    from fabricops_kit.io.shared import resolve_configured_file_path
+    from fabricops_kit.pipeline.shared import resolve_file_write_participant, schedule_file_profiling
+    identity = resolve_file_write_participant(store=store, relative_path=relative_path,
+        file_format=file_format, context=execution_plan.runtime_context)
+    target_id = identity["source_id"]
+    if any(source.get("execution_plan_id") != execution_plan.plan_id for source in sources):
+        raise ValueError("Every source must be a Read result from the same execution plan.")
+    context = prepare_pipeline_execution([target_id, *[participant_id(source) for source in sources]],
+        execution_plan=execution_plan, spark_session=spark_session)
+    context = {**context, "_fabricops_suppress_io_log": True}
+    if context["_pipeline_contracts"].get(target_id) is not None:
+        raise ValueError("File targets cannot use table or read-source contracts.")
+    checks = source_guardrail_results(context, sources)
+    drift = evaluate_pipeline_source_drift(execution_plan, verbose=verbose, spark_session=spark_session)
+    if execution_plan.permits_persistence and (any(not row["can_continue"] for row in checks)
+                                               or drift.get("can_continue") is False):
+        raise ValueError("Source Guardrails block file publication.")
+    if any(source.get("read_mode") == "incremental" for source in sources):
+        raise ValueError("File targets do not support incremental checkpoint publication; use Full Read sources.")
+    summary = ExecutionSummary("WRITE", verbose=verbose)
+    presentations, stages = [], []
+    def run(name, function):
+        result, record = _run_orchestration_stage(operation="WRITE", name=relative_path,
+            index=len(stages)+1, total=2, stage=name, function=function, verbose=verbose,
+            allow_blocked=not execution_plan.permits_persistence)
+        stages.append(record)
+        return result
+    _, _, path = resolve_configured_file_path(store, relative_path, context=context)
+    if execution_plan.permits_persistence:
+        result = run("Write", lambda: write_lakehouse_file(dataframe, relative_path, store=store,
+            file_format=file_format, mode=write_mode, write_options=write_options,
+            repartition_by=repartition_by, single_file=single_file,
+            max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes,
+            verbose=False, context=context))
+    else:
+        result = run("Processing", lambda: {"published": False, "publication_status": "not_published",
+            "resolved_path": path, "relative_path": relative_path, "write_metrics": {"rows_committed": None,
+            "measurement_source": "dry_run"}, "dry_run": {"status": "passed",
+            "not_verified": ["destination permissions, collisions, size limits and publication"]}})
+    operation.record.update(output_path=result["resolved_path"], publication_status=result["publication_status"])
+    metrics = {**result["write_metrics"], "input_columns": len(dataframe.columns)}
+    operation.capture_metrics(metrics)
+    try:
+        profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
+            presentations=presentations, operation="write"))
+    except RuntimeError as exc:
+        exc.published = result["published"]
+        exc.write_metrics = dict(metrics)
+        exc.failed_stage = "Profile"
+        raise
+    if profile.get("profiling_max_rows") is None:
+        metrics["input_rows"] = profile.get("row_count")
+    operation.complete(stages, metrics=metrics)
+    duration = summary.finish([("Target", f"{store}/Files/{relative_path}"),
+        ("Mode", PIPELINE_MODE_NAMES[execution_plan.execution_mode]), ("Published", result["published"])])
+    display_profile_presentations(presentations)
+    return {**execution_result(context, target_id, stages=stages), **result, "source_type": "file",
+        "source_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
+        "file_format": file_format, "output_layout": "single_file" if single_file else "dataset_folder",
+        "validation_passed": all(row["can_continue"] for row in checks) and drift.get("can_continue", True)
+            and all(stage.get("status") != "blocked" for source in sources for stage in source.get("orchestration_stages", [])),
+        "tested_contracts": tested_contract_identities(context, [participant_id(source) for source in sources]),
+        **({"testing_completed_at": datetime.now(UTC).isoformat()} if not execution_plan.permits_persistence else {}),
+        "source_drift_results": [row for row in drift.get("sources", []) if row.get("table_id") in
+            {source.get("table_id") for source in sources if source.get("table_id")}],
+        "source_table_ids": [source["table_id"] for source in sources if source.get("table_id")],
+        "source_ids": [source["source_id"] for source in sources if source.get("source_type") == "file"],
+        "source_association": "pipeline_participation", "source_guardrail_results": checks,
+        "source_drift_decision": drift, "profile_result": profile, "write_metrics": metrics,
+        "orchestration_stages": stages, "total_duration_seconds": duration}

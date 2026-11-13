@@ -401,10 +401,26 @@ def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
     Contract Activation must be performed while that target's pipeline is stopped.
     """
     rows = read_activations(context=plan.runtime_context, spark_session=spark_session)
-    if any((row["workspace_id"].casefold() == destination["workspace_id"].casefold() and row["table_id"] == table_id)
-            or normalized_destination(parse_metadata_json(row["destination_json"], field="destination_json")) == normalized_destination(destination)
-            for row in rows):
-        raise ValueError("Ungoverned cannot write a protected Table ID or physical destination alias.")
+    for row in rows:
+        protected = parse_metadata_json(row["destination_json"], field="destination_json")
+        if destination.get("source_type") == "file" and protected.get("source_type") == "file":
+            # Protection follows physical path membership, independent of format/options.
+            # Wildcard selectors conservatively protect their containing folder.
+            def prefix(path):
+                parts = path.split("/")
+                for index, part in enumerate(parts):
+                    if any(character in part for character in "*?["):
+                        return "/".join(parts[:index])
+                return path.rstrip("/")
+            left, right = prefix(destination["relative_path"]), prefix(protected["relative_path"])
+            same_item = all(destination[key].casefold() == protected[key].casefold() for key in ("workspace_id", "item_id"))
+            overlap = not left or not right or left == right or left.startswith(right + "/") or right.startswith(left + "/")
+            if same_item and overlap:
+                raise ValueError("Ungoverned cannot write a protected file destination or overlapping folder.")
+        if ((row["workspace_id"].casefold() == destination["workspace_id"].casefold() and row.get("table_id") == table_id)
+                or normalized_destination(protected) == normalized_destination(destination)):
+            raise ValueError("Ungoverned cannot write a protected Table ID or physical destination alias.")
+
 
 
 def set_table_contract_activation(table_id, contract_id, contract_version, *, expected_activation_id, activation_id,

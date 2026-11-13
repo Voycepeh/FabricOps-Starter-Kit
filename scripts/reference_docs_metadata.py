@@ -2171,3 +2171,18 @@ METADATA_COLUMN_OWNERS["METADATA_PIPELINE_ACTIVATION"] = {
     "__default__": ["fabricops_kit.activated_pipeline.shared.import_pipeline_submission", "fabricops_kit.activated_pipeline.shared.decide_pipeline_submission"],
     "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
 }
+
+
+PUBLIC_SYMBOL_DOCS.append({
+    "kind": "function", "module": "io", "function_type": "callable",
+    "symbol_name": "write_lakehouse_file", "template_segment": "Fabric IO",
+    "summary_override": "Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.",
+    "use_when": "Use for standalone physical output without pipeline profiling or metadata persistence.",
+    "do_not_use_when": "Use orchestrate_write when a file must participate in an active pipeline.",
+    "returns": "Dictionary with actual output path, publication status and available filesystem metrics.",
+    "raises": "ValueError for invalid arguments, FileExistsError for collisions, RuntimeError for destination failures.",
+    "side_effects": "Writes Spark data; single-file output stages and renames one part and removes temporary output.",
+    "fabric_context": "Uses configured Lakehouse routing and the DataFrame-owned Spark Hadoop filesystem.",
+    "preferred_example": 'write_lakehouse_file(dataframe=final_df, relative_path="Exports/orders.csv", store="Silver", file_format="csv", write_options={"header": True})',
+    "related_functions": ["orchestrate_write", "write_lakehouse_table", "read_lakehouse_csv"],
+})
