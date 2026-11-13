@@ -125,7 +125,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 </details>
 
 <details class="reference-function-group" data-callable-group="foundational-io" data-default-open="false">
-<summary><span class="reference-function-group-title">Foundational I/O</span><span class="reference-function-group-meta">9 functions · Direct physical reads and writes</span></summary>
+<summary><span class="reference-function-group-title">Foundational I/O</span><span class="reference-function-group-meta">10 functions · Direct physical reads and writes</span></summary>
 <p class="reference-function-group-description">Low-level Lakehouse and Warehouse reads and writes when direct physical I/O is required.</p>
 <div class="reference-catalogue-list">
 <article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="io" data-callable-starter-path="00C_demo_setup, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="00C_demo_setup, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric-resolved path through Spark CSV.">
@@ -173,6 +173,11 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
+<article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip">00C_demo_setup</span></p>
+</article>
 </div>
 </details>
 
@@ -189,7 +194,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 </details>
 
 <details class="reference-function-group" data-callable-group="preview" data-default-open="false">
-<summary><span class="reference-function-group-title">Preview / In Development</span><span class="reference-function-group-meta">6 functions · Access and consumption capabilities</span></summary>
+<summary><span class="reference-function-group-title">Preview / In Development</span><span class="reference-function-group-meta">5 functions · Access and consumption capabilities</span></summary>
 <p class="reference-function-group-description">Evaluate effective access scanners and the governed Production table to Data Agent handoff.</p>
 <div class="reference-catalogue-list">
 <article id="access_scanner.scan_effective_access-scan_effective_access" class="reference-catalogue-item" data-callable-row="true" data-callable-name="scan_effective_access" data-callable-module="access_scanner.scan_effective_access" data-function-type="public-starter-kit" data-callable-purpose="Answer which actual person can access which discovered Fabric table, through which supported permission surface, and why.">
@@ -217,11 +222,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <p class="reference-catalogue-item-purpose">Complete the governed single-table Step 7 handoff without manually composing context or instructions.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
 </article>
-<article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">00C_demo_setup</span></p>
-</article>
+
 </div>
 </details>
 
