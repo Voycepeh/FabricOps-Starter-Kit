@@ -203,68 +203,6 @@ jobs:
         with:
           path: site
 
-  # Temporary PR #1838 regeneration runner. Removed after committing its generated diff.
-  regenerate-pr-1838:
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 1838
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Check out PR head
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          persist-credentials: true
-
-      - uses: astral-sh/setup-uv@v6
-      - uses: actions/setup-python@v5
-        with:
-          python-version-file: .python-version
-      - name: Install dependencies
-        run: uv sync --frozen --extra docs --extra dev
-
-      - name: Generate twice, check stable diff, commit outputs
-        shell: bash
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          set -euo pipefail
-          export PYTHONPATH=src
-          export FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS=1
-          source .venv/bin/activate
-          main_revision="$(python - <<'PY'
-          import json
-          with open('docs/reference/_data/public-api-compatibility.json', encoding='utf-8') as stream:
-              snapshots = json.load(stream)['snapshots']
-          print(next(item['revision'] for item in snapshots if item['version'] == 'main'))
-          PY
-          )"
-          generate() {
-            python scripts/generate_public_function_call_flows_json.py
-            python scripts/generate_individual_function_reference_pages.py
-            python scripts/generate_public_api_compatibility.py --main-ref "$main_revision"
-          }
-          generate
-          git add -A -- docs/api/reference docs/reference docs/index.md
-          git diff --cached --stat
-          first_tree="$(git write-tree)"
-          generate
-          git add -A -- docs/api/reference docs/reference docs/index.md
-          if [ "$(git write-tree)" != "$first_tree" ] || ! git diff --quiet; then
-            echo "Second generation modified files; refusing commit"
-            git diff --stat
-            exit 1
-          fi
-          if git diff --cached --quiet; then
-            echo "No generated content changed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "docs: regenerate directly affected reference contracts for lakehouse query"
-          git push origin "HEAD:refs/heads/$BRANCH_NAME"
-
   # Keep the existing required check name and fail it if any parallel job fails.
   validate:
     if: always()
