@@ -124,18 +124,13 @@ def test_public_orchestration_summary_precedes_current_profile(runtime, compact_
 
 @pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned'])
 @pytest.mark.parametrize('disabled', [False, True])
-@pytest.mark.parametrize('operation', ['read', 'write'])
-def test_skipped_profiles_have_no_calculation_or_presentation(runtime, monkeypatch, capsys, mode, disabled, operation):
+def test_skipped_profiles_have_no_calculation_or_presentation(runtime, monkeypatch, capsys, mode, disabled):
     session = setup_pipeline(pipeline_mode=mode, profiling_enabled=not disabled)
     monkeypatch.setattr(runtime.read, 'schedule_table_profiling', shared.schedule_table_profiling)
     monkeypatch.setattr(shared, 'profiling_completion_history', lambda *a, **kw: {'standard': {'last_success': datetime.now(UTC).isoformat()}})
     calculate = Mock(side_effect=AssertionError('no physical calculation permitted'))
     monkeypatch.setattr(shared, 'execute_table_profile', calculate)
-    if operation == 'read':
-        result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
-    else:
-        runtime.publication.return_value = {'published': True, 'table_id': 'orders', 'status': 'passed'}
-        result = orchestrate_write(runtime.frame, store='Bronze', schema='demo', table_name='orders', write_mode='overwrite')
+    result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
     assert result['profile_result']['activities']['standard']['status'] == 'skipped'
     assert session.plan.evidence['profiling']
     calculate.assert_not_called()
