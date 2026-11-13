@@ -5772,7 +5772,7 @@ def main() -> None:
             "description": "Low-level Lakehouse and Warehouse reads and writes when direct physical I/O is required.",
             "functions": (
                 "read_lakehouse_csv", "read_lakehouse_excel", "read_lakehouse_json",
-                "read_lakehouse_parquet", "read_lakehouse_table", "read_warehouse_query",
+                "read_lakehouse_parquet", "read_lakehouse_table", "read_lakehouse_query", "read_warehouse_query",
                 "read_warehouse_table", "write_lakehouse_table", "write_warehouse_table",
             ),
             "open": False,
@@ -5792,7 +5792,7 @@ def main() -> None:
             "description": "Evaluate effective access scanners and the governed Production table to Data Agent handoff.",
             "functions": (
                 "scan_effective_access", "scan_workspace_access", "scan_sql_access",
-                "scan_onelake_access", "create_data_agent", "read_lakehouse_query",
+                "scan_onelake_access", "create_data_agent",
             ),
             "open": False,
         },
