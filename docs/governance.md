@@ -16,49 +16,49 @@
 
 ![Anatomy of a frozen Data Contract](assets/data-contract-anatomy.svg){ .fabricops-section-evidence }
 
-A FabricOps Data Contract is the versioned definition for one governed `table_id`. It combines the observed table and column structure with the decisions Governance owns:
+A FabricOps Data Contract is a versioned definition for one governed dataset: a physical table identified by `table_id`, or a Lakehouse Files source identified by `source_id`. It combines observed schema evidence with the decisions Governance owns:
 
 - business descriptions and information classification;
 - the expected schema and required columns;
-- the approved processing strategy;
+- managed Grain uniqueness and the expected structure of the dataset;
 - Grain, Freshness, Data Quality and Sensitive Data Guardrails.
 
 Saving keeps a draft editable. **Freezing creates an immutable version.** Engineering can select that exact frozen payload in Dry Run and validate it against real reads, transformations and prepared writes. Later profile observations never silently rewrite the frozen contract.
 
 ??? info "Under the Hood — contract identity and immutable payload"
 
-    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected table observation, authored Enrichment, Processing and Guardrails. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
+    [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected physical table or file observation, authored Enrichment and Guardrails. Processing and profiling settings remain outside new frozen Contract payloads. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
 
-    [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, globally stable `table_id`, authoring provenance and exact JSON payload. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
+    [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, dataset identity, authoring provenance and exact JSON payload. Table contracts use `table_id`; file contracts use a stable physical file-selector `source_id` rather than manufacturing a Catalogue Table ID. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
-## Is it one contract per workspace, pipeline or table?
+## Is it one contract per workspace, pipeline or dataset?
 
-**The version history belongs to the table, not to a workspace or notebook.**
+**The version history belongs to the physical dataset identity, not to a workspace or notebook.**
 
 | Scope | What FabricOps does |
 | --- | --- |
-| Table | One global contract history belongs to one stable `table_id`. |
-| Workspace | Each workspace can independently select or activate an exact frozen version for that table. Development and Production can therefore reference different versions during a controlled change. |
+| Table or file source | One contract history belongs to the stable table `table_id` or file selector `source_id`. |
+| Workspace | Each physical workspace can independently activate an exact frozen version for a dataset. Development and Production can therefore reference different versions during a controlled change. |
 | Pipeline | A pipeline uses the exact contracts for every participating source and target. A contract is not copied into the pipeline. |
-| Authoring evidence | The selected workspace supplies the observed schema, profile and processing evidence used to create the draft. It does not own the global version history. |
+| Authoring evidence | The selected physical workspace supplies observed schema and available profiling evidence for authoring; Processing remains Engineering-owned. It does not own global contract version history. |
 
-An independently activated table contract protects that Table ID and physical destination from Ungoverned publication in the selected workspace. Pipeline approval is a separate decision because it also covers participating tables, readers and writers, destinations, Processing and an effective Data Agreement.
+An independently activated table contract protects the relevant physical Table ID or destination from Ungoverned publication in the selected workspace. File-source activation governs its physical file selector and approved Read configuration. Pipeline approval is a separate decision because it also covers participating sources, readers and writers, destinations, Engineering-owned Processing and an effective Data Agreement.
 
 ??? info "Under the Hood — workspace activation"
 
-    [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) reviews and activates one exact frozen `contract_id` and `contract_version` for a `table_id` in its physical `workspace_id`. The reviewer also selects the applicable exact Data Agreement. The append-only decision is stored in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), separately from the global contract definition.
+    [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) reviews and activates one exact frozen `contract_id` and `contract_version` for the selected physical table or file source in its `workspace_id`. The reviewer also selects the applicable exact Data Agreement. The append-only decision is stored in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), separately from the global contract definition.
 
     This action does not activate a pipeline or enable Governed execution. It creates an immutable activation record, prevents casual Ungoverned writes to that protected identity, and leaves historical Pipeline Runs unchanged.
 
 ## How do I author, freeze and activate one? { #data-contract-lifecycle }
 
 1. **Record accountability.** Use [`widget_data_steward()`](api/reference/widget_data_steward.md), then create the versioned Data Agreement with [`widget_data_agreement()`](api/reference/widget_data_agreement.md) to explain ownership, purpose and approved use.
-2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue, profiles, processing definition and pipeline participation describe the real table.
-3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), deliberately select the table and the workspace whose evidence you want to review. Configure descriptions, Processing and Guardrails.
+2. **Collect real Engineering evidence.** Run the pipeline in Ungoverned mode so the Catalogue (for tables), available profiles and pipeline participation describe the physical source or target. Engineering owns the processing definition.
+3. **Author the draft.** In [`widget_data_contract()`](api/reference/widget_data_contract.md), select the physical table or Lakehouse file selector and its workspace. Configure descriptions, Grain and the applicable Guardrails; do not configure pipeline Processing or profiling here.
 4. **Save and freeze.** Save until the definition is ready, then freeze the exact immutable candidate.
 5. **Validate with Engineering.** Engineering selects the frozen version in Dry Run. FabricOps exercises the real Read → Transform → Write preparation without publishing target rows or committing operational state.
 6. **Review the evidence.** Confirm that every participating table used the intended version and that Schema, Grain, Freshness, Data Quality and Sensitive Data outcomes allow continuation.
-7. **Activate the physical table contracts.** Use [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) for every source and target in its physical workspace, selecting the applicable Agreement each time.
+7. **Activate the physical dataset contracts.** Use [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) for each relevant physical table or file source in its workspace, selecting the applicable Agreement.
 8. **Approve the saved pipeline submission.** Engineering finalizes a saved Dry Run submission. Governance uses [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) to inspect that exact notebook, its recorded checks and resolved bindings, then approve, reject or revoke it. The decision is stored in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md).
 9. **Let Engineering deploy the approval.** Engineering uses the controls beneath [`finalize_pipeline()`](api/reference/finalize_pipeline.md) to deploy the exact approved snapshot as a separate Governed notebook, then explicitly rebinds the Fabric schedule. Governance approval alone never creates or deploys a notebook.
 
@@ -69,16 +69,16 @@ An independently activated table contract protects that Table ID and physical de
 
 | Contract area | Governance decision | Runtime effect |
 | --- | --- | --- |
-| Table and columns | Stable table identity, observed columns, data types and required/optional presence | Schema checks compare the real DataFrame with the frozen definition. |
+| Dataset and columns | Stable table or file-source identity, observed columns, data types and required/optional presence | Schema checks compare the real DataFrame with the frozen definition. |
 | Enrichment | Table and column descriptions plus governed classification | Supplies business context to reviewers and downstream consumers. |
-| Processing | Overwrite, Append All, Append New Only, SCD1 or SCD2, including required watermark and key parameters | The proposed Engineering operation must agree with the selected contract. |
+| Grain | Author the physical row key and opt into managed uniqueness enforcement | The managed Grain rule is evaluated with Data Quality; profile-based Grain discovery is a separate optional Engineering activity. |
 | Guardrails | Schema, Grain, Freshness, Data Quality and Sensitive Data | Evaluates the real Read or prepared Write and returns a continuation decision. |
 
-Engineering owns Standard, Grain discovery and Frequency execution through `setup_pipeline()`. See [Shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for defaults and scope. Data Contracts can be authored, frozen and activated without saved profiles; missing measurements display **Not yet profiled**. Profiling controls never enable, disable or weaken Guardrails.
+Engineering owns Full/Incremental Read behavior, Write strategies (Overwrite, Append All, Append New Only, SCD1 and SCD2), and Standard, Grain discovery and Frequency execution through `setup_pipeline()` and per-operation parameters. See [Shared table profiling](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#shared-table-profiling) for defaults and scope. Data Contracts can be authored, frozen and activated without saved profiles; missing measurements display **Not yet profiled**. Profiling controls never enable, disable or weaken Guardrails.
 
 ??? info "Under the Hood — payload structure and profiling state"
 
-    New frozen payloads contain `table`, `enrichment` and `guardrails`. Source Drift enablement, interval and blocking are Engineering notebook settings reviewed with Pipeline Activation/Promotion; historical Source Drift Contract rules have no execution authority and new versions omit them. Processing lives under `table.processing`. Historical frozen records retain their original bytes; any historical `profiling` object has no execution authority. Pipeline profiling settings are reviewed and retained in the approved notebook package. Bounded measurements are labelled as sampled and do not establish full-table uniqueness or counts.
+    New frozen payloads contain dataset information (`table`, and `source` for file-backed contracts), `enrichment` and `guardrails`. Source Drift enablement, interval and blocking are Engineering notebook settings reviewed with Pipeline Activation/Promotion; historical Source Drift Contract rules have no execution authority and new versions omit them. **New contracts remove `table.processing` and profiling settings.** Historical frozen records retain their original bytes; legacy Processing/profiling fields have no authority over current Engineering settings. Pipeline profiling settings are reviewed and retained in the approved notebook package. Bounded measurements are labelled as sampled and do not establish full-table uniqueness or counts.
 
     [`orchestrate_read()`](api/reference/orchestrate_read.md) and [`orchestrate_write()`](api/reference/orchestrate_write.md) call the profiling scheduler. Standard results are stored in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), and independent activity events in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) record when each table, workspace, physical destination, activity and trigger completed. Concurrent runs can both find profiling due, so duplicate snapshots are possible; only a successfully journaled completion advances the schedule.
 
@@ -188,7 +188,7 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | --- | --- | --- |
 | [`widget_data_steward()`](api/reference/widget_data_steward.md) | Accountable people and steward responsibilities | Versioned [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md) records |
 | [`widget_data_agreement()`](api/reference/widget_data_agreement.md) | Provider/recipient purpose, approved use and Agreement version | Versioned [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md) records |
-| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Table meaning, Processing and Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
+| [`widget_data_contract()`](api/reference/widget_data_contract.md) | Dataset meaning, Grain, Freshness, Data Quality and Sensitive Data Guardrails | Editable drafts and immutable frozen [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) versions |
 | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | Select one frozen Contract and applicable Agreement for one physical workspace/table | Reviewed activation history in [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
 | [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | Review an exact saved Engineering submission and approve, reject or revoke it independently | Protected decision history and accepted package in [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md); approval does not deploy |
 
@@ -200,7 +200,7 @@ Governance can author supported Data Quality rules directly or ask AI to transla
 | Ungoverned | The pipeline can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. |
 | Governed | Resolves activated Contracts, an approved submission and the deployed notebook identity. It currently fails closed pending signed-in Fabric acceptance. |
 
-Governance therefore controls the definitions, protected physical destinations and independent approval without pretending that approval deploys code. Processing changes, contract mappings, table roles, destinations, source relationships and transformation settings require fresh validation and approval. Engineering separately deploys the exact accepted snapshot and owns schedule rebinding.
+Governance therefore controls dataset definitions, protected physical destinations and independent approval without pretending that approval deploys code. Engineering Processing changes, contract mappings, source selectors, table roles, destinations, source relationships and transformation settings require fresh validation and approval. Engineering separately deploys the exact accepted snapshot and owns schedule rebinding.
 
 ## What can I monitor in Power BI?
 
@@ -226,7 +226,7 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
     | Active Contract and Agreement selections | [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
     | Pipeline decisions and accepted submissions | [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
     | Deployed pipeline versions and notebook identity | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
-    | Table identity and processing | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
+    | Table identity and observed processing context (table sources) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
     | Profiling trends | [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
     | Pipeline participation and outcomes | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
     | Guardrail status and continuation | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
@@ -236,10 +236,22 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
 
     The [Metadata Tables reference](reference/metadata.md) exists for the report developer who needs exact fields. Governance users do not need to understand the physical table architecture to author or approve a Data Contract.
 
-</div>
-
-### File-backed Data Contracts
+## How do file-backed Data Contracts work?
 
 The existing Data Contract editor selects human-readable table and file datasets. Files not yet authored can be selected by configured store and validated relative Files path, with explicit format and reader options. Schema is observed through the foundational reader; no synthetic Catalogue table or Table ID is created. Frozen file contracts and Contract Activation use the existing Source ID model, preserving the same Schema, Data Quality, managed Grain uniqueness, Freshness and descriptive Enrichment semantics. Sensitive Data treatment stays at the target Write boundary.
 
-Governed file Reads require the exact approved pipeline operation, physical selector, format, reader settings and frozen Contract. Changing any approved configuration requires review. Metadata-only Freshness covers every selected file using the oldest modification time and both Lakehouse and Warehouse tables using published Delta transaction history. If that evidence is unavailable, it does not scan table rows; business-date checks belong in Data Quality. Missing or invalid evidence yields the existing explicit Warn/Block outcome. File operation support does not open the separate signed-in Fabric Governed-release gate.
+Governed file Reads require the exact approved pipeline operation, physical selector, format, reader settings and frozen Contract. Changing any approved configuration requires review. File operation support does not open the separate signed-in Fabric Governed-release gate.
+
+### How does metadata-only Freshness work?
+
+Freshness compares the age of **physical update evidence** with the frozen maximum age (minutes, hours or days), over the **full physical dataset**. It does not inspect date/timestamp columns or infer business-event timeliness:
+
+| Source | Evidence used |
+| --- | --- |
+| Lakehouse Delta table | Latest qualifying data-changing commit in Delta transaction history at the configured physical table path. |
+| Warehouse table | The same Delta transaction-history check at the resolved Warehouse table path; metadata must actually be readable. |
+| Lakehouse file selector | Modification timestamps of all resolved data-file members; the **oldest** member governs the selected collection. |
+
+The implementation filters table commits to data-changing operations rather than treating any metadata inspection as a refresh. For file folders and wildcards, it resolves the selected members and excludes hidden/control files. Missing or invalid metadata is **unavailable/invalid evidence**, not proof of freshness; configured **Warn** or **Block** determines continuation. No row scan or timestamp-column fallback is performed. Governance authors a separate Data Quality rule when the requirement concerns dates *inside* the data. See [Engineering's Under the Hood explanation](engineering.md#how-does-metadata-driven-freshness-detect-changes) for exact operations and evidence limitations.
+
+</div>

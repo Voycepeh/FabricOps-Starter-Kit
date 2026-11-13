@@ -79,13 +79,70 @@ For registered table pipelines, the same [`orchestrate_read()`](api/reference/or
 
 The pipeline example above uses `SELECT * FROM demo.orders` to demonstrate the optional Full Read SQL argument without filtering the source. Set `query=None` to use a plain table read. For a narrowed Lakehouse read, `orchestrate_read(store="Bronze", schema="demo", table_name="orders", query="SELECT id FROM demo.orders WHERE is_active = true LIMIT 100")` executes Spark SQL on the configured Lakehouse. Warehouse queries keep their supplied T-SQL and connector routing. The declared source remains the governed participant; query text does not discover or enroll additional sources.
 
-Lakehouse files are a separate foundational I/O surface because they need a relative file path and format-specific options. Use [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) or [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). FabricOps does **not** currently expose one orchestrated file/table function for every format.
+For direct, lower-level file access outside a pipeline, the format-specific foundational functions remain available: [`read_lakehouse_csv()`](api/reference/read_lakehouse_csv.md), [`read_lakehouse_excel()`](api/reference/read_lakehouse_excel.md), [`read_lakehouse_json()`](api/reference/read_lakehouse_json.md) and [`read_lakehouse_parquet()`](api/reference/read_lakehouse_parquet.md). For pipeline reads of files, prefer `orchestrate_read()` so the file participates in the usual read stages and operational evidence.
 
 ??? info "Under the Hood — store and file routing"
 
     `00_env_config` maps logical aliases to workspace IDs, item IDs, physical names and store types. Internal [`resolve_fabric_context()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L108), [`get_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L823) and [`resolve_store()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L155) select the location. Table callers do not choose a Lakehouse versus Warehouse reader.
 
     File helpers resolve the same logical Lakehouse store but operate under its `Files` area. [`orchestrate_read()`](api/reference/orchestrate_read.md) selects [`read_lakehouse_table()`](api/reference/read_lakehouse_table.md), [`read_warehouse_table()`](api/reference/read_warehouse_table.md) or [`read_warehouse_query()`](api/reference/read_warehouse_query.md). Table publication ultimately uses [`write_lakehouse_table()`](api/reference/write_lakehouse_table.md) or [`write_warehouse_table()`](api/reference/write_warehouse_table.md); there is no generic governed file writer in the current pipeline orchestrator.
+
+## How does metadata-driven Freshness detect changes?
+
+**Freshness asks when the physical source was last updated, without inspecting business timestamp columns.** A frozen Data Contract supplies a positive maximum age (minutes, hours or days), an Enabled/Disabled decision and Warn/Block enforcement. The evidence method is always `metadata`, and the evaluation scope is the **complete physical source**, not a filtered SQL result or incremental batch. An event-date or record-age requirement belongs in a separately authored Data Quality rule.
+
+| Source | Physical evidence | How the age is determined |
+| --- | --- | --- |
+| Lakehouse Delta table | Delta transaction history at the resolved OneLake table path | Take the timestamp of the most recent qualifying data-changing commit by version. |
+| Warehouse table | Delta transaction history at the configured Warehouse table's resolved physical path | Use the same data-changing transaction-history check; this is **not** a query against a user-defined timestamp column or a claim that a generic SQL `last_modified` field exists. |
+| Lakehouse file, folder or wildcard | Filesystem modification metadata for the resolved data-file members | Recursively expand matching files, exclude hidden/control files and evaluate the **oldest** member's modification time. A newly arrived file cannot disguise an older member in the selected set. |
+
+The table check reads Delta history fields `operation`, `version` and `timestamp`, selecting the highest version among `WRITE`, `MERGE`, `UPDATE`, `DELETE`, `STREAMING UPDATE`, `CREATE TABLE AS SELECT`, `CREATE OR REPLACE TABLE AS SELECT` and `RESTORE`. Merely reading or inspecting a table does not reset Freshness. For files, the implementation records file membership and modification evidence; it does not infer the business event time inside the files.
+
+??? info "Under the Hood — Freshness evidence and enforcement"
+
+    The source is resolved via `00_env_config` and its physical identity. Internal [`collect_freshness_evidence()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py) obtains the metadata. Table Reads reuse the **current run's Source Observation** evidence; file Reads evaluate the resolved file membership. [`check_freshness()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py) compares that evidence with the frozen Contract rule and records the guardrail outcome in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) when persistence is permitted.
+
+    The observed timestamp is compared with execution time minus the configured maximum age, in UTC. Missing paths, inaccessible or insufficient history, no matching data files, invalid/future timestamps and unsupported file-selection options produce unavailable/invalid evidence, **not** a silently invented refresh time. The configured Warn or Block policy then determines continuation. No fallback reads a timestamp column or scans business rows to guess Freshness. In particular, Warehouse metadata access must actually resolve and be readable in the Fabric runtime; the Warehouse label alone does not guarantee evidence is available.
+
+    File selection options that can change which members the reader consumes (such as `pathGlobFilter`, `modifiedBefore`, `modifiedAfter`, `recursiveFileLookup`, `ignoreMissingFiles` or `ignoreCorruptFiles`) make reliable membership-based Freshness unavailable rather than risking a mismatch. File content may change without a meaningful business-data update, and a table's write time is not the same as a record's event time.
+
+## How does SQL query pushdown reduce data transferred to Spark?
+
+For a **Full Read**, pass `query` to [`orchestrate_read()`](api/reference/orchestrate_read.md). FabricOps preserves the configured physical source identity for governance while executing the returned SQL result. The engine differs by source:
+
+- **Warehouse:** validate one read-only T-SQL SELECT/CTE and send it through the Fabric Warehouse Spark connector to the Warehouse SQL engine. The Warehouse performs the query's filtering, projections, aggregations and joins **before** Spark receives the result; `query=None` retains the full-table reader.
+- **Lakehouse:** parse read-only Spark SQL, verify that physical table references stay within the declared source, bind them to its configured OneLake Delta DataFrame using a private temporary view, and let Spark plan the query. This is **Spark SQL execution over the configured Lakehouse**, not a push to a Warehouse SQL endpoint.
+- **Incremental:** caller-supplied `query` is rejected; FabricOps owns the accepted-watermark predicate. Incremental Warehouse reads push the bounded predicate to the Warehouse connector, while incremental Lakehouse reads apply a Delta DataFrame filter.
+
+```python
+# Warehouse: only the filtered and projected result reaches Spark.
+warehouse_orders = orchestrate_read(
+    store="Gold", schema="demo", table_name="order_history",
+    read_mode="full",
+    query="""
+        SELECT customer_id, COUNT(*) AS order_count
+        FROM demo.order_history
+        WHERE customer_id IS NOT NULL
+        GROUP BY customer_id
+    """,
+)
+
+# Lakehouse: Spark SQL runs against the configured Delta source.
+lakehouse_orders = orchestrate_read(
+    store="Bronze", schema="demo", table_name="orders",
+    read_mode="full",
+    query="SELECT order_id, customer_id FROM demo.orders WHERE is_active = true",
+)
+```
+
+??? info "Under the Hood — SQL validation, execution and boundaries"
+
+    [`pipeline_read()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_read.py) selects the reader after resolving the configured store. [`read_warehouse_query()`](api/reference/read_warehouse_query.md) passes validated T-SQL and the configured Warehouse artifact to the Fabric connector. A query narrows the returned rows and columns; it does **not** discover extra governed source participants or change the physical source's Freshness evaluation scope.
+
+    For Lakehouse SQL, aliases, CTEs and self-joins against the declared source are supported. A limited simple T-SQL `TOP (n)` pattern can be converted to Spark `LIMIT`; `TOP PERCENT`, `WITH TIES`, unsupported T-SQL features, additional physical tables and table-valued sources are rejected rather than silently reinterpreted. Use native Spark SQL for more complex Lakehouse expressions.
+
+    Pushdown can reduce Spark-side data transfer and downstream processing, but does not promise a particular speedup: SQL execution cost, Warehouse connector behavior, result size and Spark workload still matter. Filtering a result also does not prove that fewer underlying storage bytes were scanned by the query engine.
 
 ## How do Full, Incremental, Append and SCD processing work?
 
@@ -169,6 +226,14 @@ Across all 31 possible waits, the scheduled waiting budget is **3.1–212.6 seco
 
     Local Delta workloads passed at 5, 10 and 20 simultaneous synthetic workspace/user identities; the earlier 12-attempt budget was insufficient at width 20. These results do not establish a supported maximum concurrency or signed-in Fabric acceptance. See [Shared Metadata Lakehouse concurrency](maintainer/concurrent-metadata-reliability-plan.md) for writer coverage, retained record checks and the outstanding Fabric acceptance procedure.
 
+## How is profiling scheduled without a Data Contract?
+
+[`setup_pipeline()`](api/reference/setup_pipeline.md) owns Standard profiling, Grain discovery and Frequency for the whole execution, independently of mandatory Guardrails. Standard profiling is enabled by default (`profiling_enabled=True`, `profiling_interval_days=1`); `profiling_max_rows=None` profiles the full available physical scope. A positive row cap produces **bounded, selection-only statistics**, not authoritative full-table totals or uniqueness. Grain discovery and Frequency both default to `False` and can be enabled separately.
+
+??? info "Under the Hood — shared profiling eligibility"
+
+    A due Standard profile follows the configured interval and prior confirmed physical-table completion history; opt-in Grain discovery and Frequency each run once per physical table when sufficient scope is available. A bounded completion cannot suppress a later full-table request. Profiling schedules do not change mandatory Grain uniqueness, Freshness, Schema or Data Quality checks, and they do not bound complete-source Source Drift evidence. See [`setup_pipeline()`](api/reference/setup_pipeline.md) for exact controls.
+
 ## How does FabricOps detect Source Drift?
 
 Engineering opts in through `setup_pipeline(source_drift_enabled=True, source_drift_interval_days=1, source_drift_block=True)`. Source Drift is independent of Standard profiling, Grain discovery, Frequency and the profiling row limit. An enabled due Read observes its **complete physical source**, including rows outside a SQL query or incremental watermark scope.
@@ -177,7 +242,7 @@ Read all sources before any Write. The first Write consolidates every source obs
 
 The first successful exact snapshot establishes history; changes before it are unknown. Distributed SHA256 identity/content hashes preserve row multiplicities without storing historical business values. Validated authored unique keys support exact modified-row counts. Without trustworthy keys, added/missing content is measurable but modifications remain unknown; unrelated rows are never paired. Diagnostics retain at most ten hash-only examples per category.
 
-`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, DQ, Freshness, Sensitive Data and Processing requirements, without Source Drift execution policy.
+`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, Data Quality, Freshness and Sensitive Data requirements; **Processing mode, profiling and Source Drift execution policy are Engineering-owned**, outside the frozen Data Contract.
 
 ??? info "Scope, cost and recovery"
 
@@ -188,18 +253,18 @@ The first successful exact snapshot establishes history; changes before it are u
 
 ## How does a Governance Data Contract affect my ETL?
 
-Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract affects both the allowed operation and the checks around it:
+Engineering can select an exact frozen contract in Dry Run and exercise the real pipeline without publication. The contract supplies dataset-level expectations and Guardrails; Engineering separately owns Read/Write processing choices, profiling schedules and Source Drift policy:
 
 ![Contract checks at pipeline boundaries and execution-mode distinctions.](assets/engineering/data-contract-boundaries.svg){ .fabricops-section-evidence }
 
 | Pipeline boundary | Contract effect |
 | --- | --- |
-| Setup | Selects the exact contract version and approved Processing definition. |
+| Setup | Selects the exact frozen Contract version for relevant sources and targets; configures processing and profiling independently in Engineering. |
 | Read | Applies Freshness, Schema, Grain and Data Quality where configured. |
 | Transform | Leaves project PySpark visible and project-owned. |
 | Write preparation | Consolidates pipeline Source Drift, then applies target Schema, Sensitive Data treatment, Grain and Data Quality. |
-| Publication | Requires the proposed Write strategy and parameters to match the selected authority. |
-| Profiling | Uses the frozen Standard, Grain and Frequency schedule. |
+| Publication | Uses the explicitly configured Engineering Write strategy and parameters; any applicable activated Contract Guardrails still govern the prepared data. |
+| Profiling | Follows `setup_pipeline()` settings, not a frozen Data Contract schedule: Standard is enabled by default; Grain discovery and Frequency are opt-in. |
 
 Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) progress.
 
@@ -210,17 +275,15 @@ Ungoverned can publish without contract-dependent checks, but it cannot write a 
 | Location | Required Engineering configuration |
 | --- | --- |
 | `00_env_config` | Workspace IDs, logical store aliases, item IDs/names, store types and the shared Metadata target |
-| Pipeline setup | `pipeline_mode` and optional full Source Observation policy; the Fabric Notebook ID establishes the stable Pipeline ID |
-| Each Read | Logical `store`, optional `schema`, `table_name`, Full/Incremental mode, and watermark parameters when incremental |
+| Pipeline setup | `pipeline_mode`, Standard profiling enablement/interval/row cap, optional Grain discovery and Frequency, and optional Source Drift policy; the Fabric Notebook ID establishes the stable Pipeline ID |
+| Each Read | Logical `store` and table coordinates (or a Lakehouse file selector), Full/Incremental mode, optional Full Read SQL query, and watermark parameters when incremental; files support Full Read only |
 | Project code | Ordinary PySpark joins, filters, calculations and aggregations |
-| Each Write | Logical destination, `write_mode`, SCD/watermark parameters where required, and optional Spark repartitioning |
+| Each Write | Logical destination, independently selected `write_mode`, SCD keys/effective column where required, and optional Spark repartitioning |
 | Finalization | [`finalize_pipeline(pipeline)`](api/reference/finalize_pipeline.md) after all Reads, transformations and Writes, or `failed=True` after a caught project failure |
 
 Call [`setup_notebook()`](api/reference/setup_notebook.md) before [`setup_pipeline()`](api/reference/setup_pipeline.md). A successful Write does not prove that the rest of the notebook completed; finalization records the whole execution outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md). A killed notebook can remain incomplete and require reviewed operator reconciliation.
 
 ## How do I move the same pipeline between Development and Production?
-
-
 
 Keep the same notebook flow and stable Pipeline ID, but give each workspace its own `00_env_config` mapping. The logical names—such as Bronze, Silver and Gold—stay in the notebook while each workspace resolves its own Fabric items.
 
@@ -248,7 +311,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 ![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
 
-- technical table and column identity plus resolved Processing in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
+- technical table and column identity plus observed processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
