@@ -392,7 +392,15 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
     monkeypatch.setattr(shared, 'read_lakehouse_table', reader)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *args: 'engineering')
     actual = REAL_HISTORY('orders', context=metadata.context, spark_session=spark_session, activity=activity)
-    assert actual == ({activity: completed[activity]} if activity is not None else completed)
+    expected = ({activity: completed[activity]} if activity is not None else completed)
+    assert {kind: {"last_success": row["last_success"]} for kind, row in actual.items()} == expected
+    for kind, row in actual.items():
+        assert row["profile_scope"] == "full_table"
+        assert row["profiling_max_rows"] is None
+        if kind == "grain":
+            assert row["profile_snapshot_id"] is None
+        else:
+            assert row["profile_snapshot_id"]
     assert len(reads) == (3 if activity is None else 1 if activity == 'grain' else 2)
 
 

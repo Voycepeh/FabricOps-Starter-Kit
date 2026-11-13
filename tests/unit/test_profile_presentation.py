@@ -234,3 +234,65 @@ def test_native_display_from_builtins_without_notebook_kernel(compact_profile, m
     presentation.display_profile_presentations([preview])
     display.assert_called_once()
     assert 'amount' not in capsys.readouterr().out
+
+
+def test_skipped_profile_shows_confirmed_snapshot_in_audit_timezone(spark_session, monkeypatch, capsys):
+    from fabricops_kit.pipeline import shared
+    persisted = spark_session.createDataFrame(
+        [("workspace-1", "orders", "snapshot-1", "amount", "double", 2, 2, 0,
+          0.0, 2, 100.0, 1.5, 0.5, "1", 1.25, 1.5, 1.75, "2")],
+        ["workspace_id", "table_id", "profile_snapshot_id", "column_name", "data_type",
+         "row_count", "non_null_count", "null_count", "null_percent", "distinct_count",
+         "distinct_percent", "mean_value", "stddev_value", "min_value",
+         "percentile_25_value", "median_value", "percentile_75_value", "max_value"],
+    )
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: persisted)
+    output = []
+    shared._show_previous_table_profile(
+        "orders",
+        {"last_success": "2026-11-13T01:30:00+00:00", "profile_snapshot_id": "snapshot-1"},
+        context={"config": {"audit_timezone": "Asia/Singapore"}, "scope_workspace_id": "workspace-1"},
+        spark_session=spark_session, presentations=output,
+    )
+    assert len(output) == 1
+    assert "Profiling skipped; showing previous state as of 2026-11-13 09:30:00" in output[0]["title"]
+    assert "[Asia/Singapore]" in output[0]["title"]
+    assert output[0]["rows"][0][0] == "amount"
+
+
+def test_no_previous_snapshot_means_no_reused_profile(spark_session, monkeypatch):
+    from fabricops_kit.pipeline import shared
+    read = Mock(side_effect=AssertionError("no metadata read expected"))
+    monkeypatch.setattr(shared, 'read_lakehouse_table', read)
+    output = []
+    shared._show_previous_table_profile(
+        "orders", {"last_success": "2026-11-13T01:30:00+00:00"},
+        context={"config": {"audit_timezone": "Asia/Singapore"}, "scope_workspace_id": "workspace-1"},
+        spark_session=spark_session, presentations=output,
+    )
+    assert output == []
+    read.assert_not_called()
+
+
+@pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned'])
+@pytest.mark.parametrize('operation', ['read', 'write'])
+def test_skipped_table_profile_reuses_snapshot_in_all_execution_modes(runtime, monkeypatch, mode, operation):
+    setup_pipeline(pipeline_mode=mode)
+    for owner in (runtime.read, runtime.write):
+        monkeypatch.setattr(owner, 'schedule_table_profiling', shared.schedule_table_profiling)
+    previous = {'standard': {'last_success': datetime.now(UTC).isoformat(),
+                             'profile_snapshot_id': 'previous-snapshot', 'profile_scope': 'full_table'}}
+    monkeypatch.setattr(shared, 'profiling_completion_history', lambda *a, **kw: previous)
+    show_previous = Mock()
+    monkeypatch.setattr(shared, '_show_previous_table_profile', show_previous)
+    calculate = Mock(side_effect=AssertionError('no profile calculation expected'))
+    monkeypatch.setattr(shared, 'execute_table_profile', calculate)
+    if operation == 'read':
+        result = orchestrate_read(store='Bronze', schema='demo', table_name='orders')
+    else:
+        runtime.publication.return_value = {'published': True, 'table_id': 'orders', 'status': 'passed'}
+        result = orchestrate_write(runtime.frame, store='Bronze', schema='demo', table_name='orders', write_mode='overwrite')
+    assert result['profile_result']['activities']['standard']['status'] == 'skipped'
+    show_previous.assert_called_once()
+    assert show_previous.call_args.args[1]['profile_snapshot_id'] == 'previous-snapshot'
+    calculate.assert_not_called()

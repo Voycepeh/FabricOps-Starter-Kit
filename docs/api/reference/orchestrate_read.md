@@ -182,7 +182,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 263 |
+| Live-critical dependencies | 264 |
 
 ### Release history
 
@@ -369,6 +369,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared._show_previous_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared._source_evidence_totals</code></li>
 <li><code>fabricops_kit.pipeline.shared._source_observation_signature</code></li>
 <li><code>fabricops_kit.pipeline.shared._source_snapshot_keys</code></li>
