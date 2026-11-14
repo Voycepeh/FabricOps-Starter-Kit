@@ -48,7 +48,7 @@ Follow <strong>Steps 1–7</strong> from Governance through Engineering, validat
 </div>
 </div>
 
-![Seven-step FabricOps lifecycle from Governance context to governed consumption](assets/fabricops-role-workflow.png){ .fabricops-section-evidence }
+![Seven-step FabricOps lifecycle from Governance context to governed consumption](assets/fabricops-seven-step-lifecycle.png){ .fabricops-section-evidence }
 
 The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until the immutable Contract candidate and the real pipeline agree. If you clone `02_pipeline` into another Engineering workspace, configure that workspace's `00_env_config`, repeat Step 4 there, repeat the workspace-scoped Contract activations and pipeline submission approval in Step 5, then run the approved clone in Step 6.
 
@@ -80,9 +80,9 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 | [2C. Run the SCD1 and SCD2 Demo](guided-demo/02C-build-and-run-scd-etl.md) | `02C_scd_demo` | Run three complete Product Master snapshots and compare current state with retained history. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Preview and enforce the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02A_full_refresh_demo` | Preview the exact frozen candidate in Dry Run, or enforce an activated version in Governed mode. |
-| [5. Activate Data Contracts and deploy](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Engineering notebook | Activate exact Contract versions for physical tables, approve the exact pipeline submission, then deploy the reviewed notebook. |
-| [6. Run the governed pipeline and grant access](guided-demo/06-run-production.md) | Governed pipeline + native Fabric access | Run the approved workflow in its configured Engineering workspace, publish governed outputs, then grant consumer access through native Fabric permissions. |
-| [7. Consume and productize governed data](guided-demo/07-consume-production-data.md) | Native Fabric interfaces or a project-specific notebook | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |
+| [5. Activate Data Contracts and deploy](guided-demo/05-activate-contracts-and-deploy.md) | `01_governance` + Engineering notebook | Activate exact Contract versions for physical tables, approve the exact pipeline submission, then deploy the reviewed notebook. |
+| [6. Run the governed pipeline and grant access](guided-demo/06-run-governed-pipeline.md) | Governed pipeline + native Fabric access | Run the approved workflow in its configured Engineering workspace, publish governed outputs, then grant consumer access through native Fabric permissions. |
+| [7. Consume and productize governed data](guided-demo/07-consume-governed-data.md) | Native Fabric interfaces or a project-specific notebook | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |
 
 ### Choose Read Mode and Write Mode
 

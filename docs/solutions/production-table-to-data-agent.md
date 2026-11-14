@@ -85,6 +85,6 @@ Fabric permissions remain authoritative for access to the Production data and fo
 
 ## Go deeper
 
-Use [Step 7: Governed Consumption](../guided-demo/07-consume-production-data.md) to see where the Data Agent handoff fits in the governed consumer lifecycle.
+Use [Step 7: Governed Consumption](../guided-demo/07-consume-governed-data.md) to see where the Data Agent handoff fits in the governed consumer lifecycle.
 
 Use the generated [`create_data_agent()` reference](../api/reference/create_data_agent.md) for the exact Preview API contract, prerequisites, parameters, errors, and implementation details.

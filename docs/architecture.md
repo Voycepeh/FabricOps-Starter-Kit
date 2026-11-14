@@ -4,7 +4,7 @@
 
 **Governance defines expectations, Engineering produces and validates data, and shared metadata connects both without hiding project-owned transformations.**
 
-![FabricOps operating model showing Governance, Engineering and Consumption workspaces, their Lakehouses and shared Metadata Lakehouse](assets/fabricops-operating-model-overview.png){ .fabricops-section-evidence }
+![FabricOps operating model showing Governance, Engineering and Consumption workspaces, their Lakehouses and shared Metadata Lakehouse](assets/fabricops-workspace-operating-model.png){ .fabricops-section-evidence }
 
 ## Workspace operating model
 
@@ -103,7 +103,7 @@ The configured Metadata Lakehouse holds five Governance-owned tables and nine En
     <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true">
-    <img src="../assets/fabricops-role-workflow.png" alt="" loading="lazy" decoding="async">
+    <img src="../assets/fabricops-seven-step-lifecycle.png" alt="" loading="lazy" decoding="async">
   </span>
 </a>
 

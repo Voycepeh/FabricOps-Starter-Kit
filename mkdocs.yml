@@ -36,9 +36,9 @@ nav:
       - "Step 2C - SCD1 and SCD2 Demo": guided-demo/02C-build-and-run-scd-etl.md
       - "Step 3 - Author and Freeze Data Contract": guided-demo/03-author-and-freeze-data-contract.md
       - "Step 4 - Select and Validate Data Contract": guided-demo/04-validate-frozen-data-contract.md
-      - "Step 5 - Activate Data Contract and Promote": guided-demo/05-activate-data-contract-and-promote.md
-      - "Step 6 - Run Production and Grant Access": guided-demo/06-run-production.md
-      - "Step 7 - Governed Consumption": guided-demo/07-consume-production-data.md
+      - "Step 5 - Activate Contracts and Deploy": guided-demo/05-activate-contracts-and-deploy.md
+      - "Step 6 - Run Governed Pipeline and Grant Access": guided-demo/06-run-governed-pipeline.md
+      - "Step 7 - Governed Consumption": guided-demo/07-consume-governed-data.md
   - Download FabricOps:
       - Releases (Python package): releases/index.md
       - Notebook Templates: https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks

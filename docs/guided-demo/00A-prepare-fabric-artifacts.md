@@ -65,7 +65,7 @@ Open the **Engineering** workspace and create the source, operations, analytics 
 
 
 
-![Engineering Fabric items](../assets/00A/Objects.png)
+![Engineering Fabric items](../assets/00A/engineering-workspace-items.png)
 
 ??? info "Optional: use another Engineering or Consumption workspace"
 

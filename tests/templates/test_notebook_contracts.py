@@ -203,8 +203,8 @@ def test_guided_demo_uses_the_frozen_contract_first_lifecycle():
     """Guided Demo Steps 3–6 preserve lifecycle order and responsibility boundaries."""
     step_3 = (ROOT / "docs/guided-demo/03-author-and-freeze-data-contract.md").read_text(encoding="utf-8")
     step_4 = (ROOT / "docs/guided-demo/04-validate-frozen-data-contract.md").read_text(encoding="utf-8")
-    step_5 = (ROOT / "docs/guided-demo/05-activate-data-contract-and-promote.md").read_text(encoding="utf-8")
-    step_6 = (ROOT / "docs/guided-demo/06-run-production.md").read_text(encoding="utf-8")
+    step_5 = (ROOT / "docs/guided-demo/05-activate-contracts-and-deploy.md").read_text(encoding="utf-8")
+    step_6 = (ROOT / "docs/guided-demo/06-run-governed-pipeline.md").read_text(encoding="utf-8")
     overview = (ROOT / "docs/guided-demo.md").read_text(encoding="utf-8")
 
     normalized = {

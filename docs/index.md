@@ -32,7 +32,7 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
     <span class="fabricops-metadata-preview__action">Explore Architecture <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true">
-    <img src="assets/fabricops-operating-model-overview.png" alt="" loading="eager" decoding="async">
+    <img src="assets/fabricops-workspace-operating-model.png" alt="" loading="eager" decoding="async">
   </span>
 </a>
 
@@ -56,7 +56,7 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
     <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true">
-    <img src="assets/fabricops-role-workflow.png" alt="" loading="eager" decoding="async">
+    <img src="assets/fabricops-seven-step-lifecycle.png" alt="" loading="eager" decoding="async">
   </span>
 </a>
 

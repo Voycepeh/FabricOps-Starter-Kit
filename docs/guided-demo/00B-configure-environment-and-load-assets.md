@@ -33,7 +33,7 @@ After importing the notebooks, the two required workspaces should now look like 
 
 The Governance workspace contains the dedicated `demo_metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
 
-![Engineering workspace assets](../assets/00B/Engineering_Assets.png)
+![Engineering workspace assets](../assets/00B/engineering-workspace-assets.png)
 
 The Engineering workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the demo notebooks. If you clone `02_pipeline` into another workspace, configure `00_env_config` there with that workspace's stores and repeat Step 4 validation and Step 5 activation and pipeline approval. Advanced deployments may load a shared config notebook from Central Engineering.
 

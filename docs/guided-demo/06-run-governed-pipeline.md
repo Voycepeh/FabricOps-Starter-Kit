@@ -5,7 +5,7 @@
 
 ### Before you begin
 
-Complete [Step 5](05-activate-data-contract-and-promote.md) and use the separately deployed Governed notebook in the approved Engineering workspace.
+Complete [Step 5](05-activate-contracts-and-deploy.md) and use the separately deployed Governed notebook in the approved Engineering workspace.
 
 ### Load the Engineering workspace configuration
 
@@ -72,4 +72,4 @@ FabricOps remains relevant to the access boundary through its effective-access s
 
 The approved Engineering workspace completes the validated pipeline workflow, publishes governed outputs using the reviewed Pipeline Promotion, and approved consumers can reach those outputs through native Fabric access controls and interfaces.
 
-**Next:** [Step 7. Publish governed data to a Fabric Data Agent](07-consume-production-data.md)
+**Next:** [Step 7. Publish governed data to a Fabric Data Agent](07-consume-governed-data.md)
