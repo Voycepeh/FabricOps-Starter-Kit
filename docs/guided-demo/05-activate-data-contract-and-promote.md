@@ -42,7 +42,7 @@ Review saved submissions directly from the Metadata Lakehouse.
 3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
 4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
 
-The standard walkthrough can use one Engineering workspace for both Dry Run and governed execution. If you clone `02_pipeline` into another workspace, configure that workspace's `00_env_config`, repeat Step 4 validation there, repeat the applicable physical Contract activations above, and submit the clone as a new pipeline package for Governance approval. Pipeline approval is tied to the exact submission and execution workspace; it does not transfer with the clone.
+The standard walkthrough can use one Engineering workspace for both Dry Run and governed execution. If you clone `02_pipeline` into another workspace, configure that workspace's `00_env_config`, repeat Step 4 validation there, repeat the applicable physical Contract activations above, and submit the clone as a new pipeline package for Governance approval. Pipeline approval is tied to the exact submission and Engineering workspace; it does not transfer with the clone.
 
 There is no package download, upload or JSON paste. Governance reads the saved submission directly.
 

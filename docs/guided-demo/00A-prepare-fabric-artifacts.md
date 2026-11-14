@@ -70,10 +70,10 @@ Open the **Engineering** workspace and create the source, operations, analytics 
 ??? info "Optional: use another Engineering or Consumption workspace"
 
 
-The Engineering workspace is sufficient for the full walkthrough. A separate governed execution workspace is optional.
+The Engineering workspace is sufficient for the full walkthrough. A separate Engineering workspace is optional.
 
 
-    If you want a separate governed execution workspace, create its Fabric items and Environment when you clone `02_pipeline` there. Configure its own `00_env_config`; repeat Step 4 validation and Step 5 Contract activation and pipeline approval for that workspace before running Step 6. A Consumption workspace is optional and can host consumer notebooks or analysis.
+    If you want a separate Engineering workspace, create its Fabric items and Environment when you clone `02_pipeline` there. Configure its own `00_env_config`; repeat Step 4 validation and Step 5 Contract activation and pipeline approval for that workspace before running Step 6. A Consumption workspace is optional and can host consumer notebooks or analysis.
 
     A separate **Consumption** workspace does not need its own Fabric store for this Guided Demo.
 

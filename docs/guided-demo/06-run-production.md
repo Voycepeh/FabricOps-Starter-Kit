@@ -5,13 +5,13 @@
 
 ### Before you begin
 
-Complete [Step 5](05-activate-data-contract-and-promote.md) and use the separately deployed Governed notebook in the approved execution workspace.
+Complete [Step 5](05-activate-data-contract-and-promote.md) and use the separately deployed Governed notebook in the approved Engineering workspace.
 
-### Load the execution workspace configuration
+### Load the Engineering workspace configuration
 
-The Governed notebook calls `setup_notebook()`, which loads the current execution workspace's `00_env_config` automatically. To use a shared deployment, pass its workspace ID as `config_workspace_id` in the Setup Notebook block. The following `setup_pipeline(pipeline_mode="Governed")` reuses this configuration and resolves the approved pipeline. One Engineering workspace can host both the Dry Run and separately deployed Governed notebooks. A cloned pipeline in another workspace requires its own configuration, Step 4 validation, workspace-scoped Contract activations and Step 5 pipeline approval.
+The Governed notebook calls `setup_notebook()`, which loads the current Engineering workspace's `00_env_config` automatically. To use a shared deployment, pass its workspace ID as `config_workspace_id` in the Setup Notebook block. The following `setup_pipeline(pipeline_mode="Governed")` reuses this configuration and resolves the approved pipeline. One Engineering workspace can host both the Dry Run and separately deployed Governed notebooks. A cloned pipeline in another workspace requires its own configuration, Step 4 validation, workspace-scoped Contract activations and Step 5 pipeline approval.
 
-Logical store names resolve to the Lakehouses, Warehouses, schemas, paths, and SQL endpoints configured for that execution workspace.
+Logical store names resolve to the Lakehouses, Warehouses, schemas, paths, and SQL endpoints configured for that Engineering workspace.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-prod.png" alt="" loading="lazy">
@@ -37,7 +37,7 @@ Read → Transform → Write
 
 Source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Processing State](../reference/metadata/metadata_processing_state.md) run against the configured resources.
 
-Governed uses the **same pipeline workflow in its approved execution workspace**, with Contracts resolved exclusively from activated workspace authority. It verifies the exact effective Agreement, Data Contract versions, active approval and configured physical bindings before execution. Read and Write behavior must match the activated operation configuration.
+Governed uses the **same pipeline workflow in its approved Engineering workspace**, with Contracts resolved exclusively from activated workspace authority. It verifies the exact effective Agreement, Data Contract versions, active approval and configured physical bindings before execution. Read and Write behavior must match the activated operation configuration.
 
 Run the **separate deployed Governed notebook** returned by Step 5, after tenant validation is complete. Do not switch the Dry Run notebook to Governed manually. Its frozen setup mode and exact behavior parameters are verified; ordinary parameter overrides cannot change approved behavior.
 

@@ -52,7 +52,7 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |
 | 4 | Engineering — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the complete successful Testing candidate, link the exact Data Agreement version, and activate the whole pipeline for Live. |
-| 6 | Engineering — Run and hand off access | Run the separately deployed Governed notebook in its approved execution workspace. It resolves workspace-scoped Contract activations and pipeline approval, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
+| 6 | Engineering — Run and hand off access | Run the separately deployed Governed notebook in its approved Engineering workspace. It resolves workspace-scoped Contract activations and pipeline approval, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
 | 7 | Consumption — Consume and productize governed data | Use native Fabric interfaces or project-specific notebooks to review governed context, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
 ## Canonical operating decisions
