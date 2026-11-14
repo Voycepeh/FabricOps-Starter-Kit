@@ -1,5 +1,6 @@
 """Public completion boundary for a pipeline execution."""
 
+import json
 from datetime import datetime, timezone
 
 from fabricops_kit.pipeline.shared import (
@@ -47,15 +48,15 @@ def _operation_summary_rows(result, *, pipeline=None):
     identities = {}
     runtime_operations = {}
     if pipeline is not None:
-        import json
-
         identities = json.loads(pipeline.plan.participants_json)
         runtime_operations = pipeline.plan.evidence.get("operations", {})
 
     for operation in result.get("operations") or []:
-        identity = identities.get(operation.get("table_id"), {})
+        identity = identities.get(operation.get("source_id") or operation.get("table_id"), {})
         runtime = runtime_operations.get(operation.get("operation_key"), {})
         destination = operation.get("destination") or {}
+        is_file = (operation.get("source_type") or identity.get("source_type")
+                   or destination.get("source_type")) == "file"
         role = str(operation.get("pipeline_role") or "").lower()
         is_read = role == "source"
         is_write = role == "target"
@@ -76,6 +77,21 @@ def _operation_summary_rows(result, *, pipeline=None):
             or operation.get("table_id")
             or "Unknown"
         )
+        file_format = layout = publication = "—"
+        if is_file:
+            relative_path = destination.get("relative_path") or identity.get("relative_path")
+            table_name = f"Files/{relative_path}" if relative_path else "Not captured"
+            file_format = str(destination.get("file_format") or identity.get("file_format") or "Not captured")
+            if is_write:
+                parameters_json = operation.get("file_write_parameters_json") or runtime.get("file_write_parameters_json")
+                try:
+                    parameters = json.loads(parameters_json) if parameters_json else {}
+                except (TypeError, ValueError):
+                    parameters = {}
+                single_file = parameters.get("single_file") if isinstance(parameters, dict) else None
+                layout = "Single file" if single_file is True else "Dataset folder" if single_file is False else "Not captured"
+                publication = str(operation.get("publication_status") or runtime.get("publication_status")
+                                  or "Not captured").replace("_", " ").title()
         rows_read_display = (
             f"{rows_read:,}" if rows_read is not None else "Not captured" if is_read else "—"
         )
@@ -109,11 +125,15 @@ def _operation_summary_rows(result, *, pipeline=None):
             metric_parts = [value for value in (
                 measured("processed", "input_rows"), measured("inserted", "rows_inserted"),
             ) if value]
+        if is_file and is_write:
+            metric_parts.extend(value for value in (
+                measured("files in output", "file_count"), measured("bytes in output", "output_bytes"),
+            ) if value)
         metrics_display = ", ".join(metric_parts) or ("Not captured" if is_read or is_write else "—")
         rows.append((
             "Read" if is_read else "Write" if is_write else role.title() or "Operation",
-            str(identity.get("store") or "Not captured"),
-            str(identity.get("schema") or destination.get("schema") or "Not captured"),
+            str(identity.get("store") or runtime.get("store") or "Not captured"),
+            "—" if is_file else str(identity.get("schema") or destination.get("schema") or "Not captured"),
             str(table_name),
             str(
                 operation.get("read_mode")
@@ -131,6 +151,9 @@ def _operation_summary_rows(result, *, pipeline=None):
                 f"{stage.get('stage', 'Stage')}: {stage.get('status', 'Not captured')}"
                 for stage in operation.get("stages") or []
             ) or "Not captured",
+            file_format,
+            layout,
+            publication,
         ))
     return rows
 
@@ -165,8 +188,9 @@ def _print_pipeline_summary(pipeline, result):
         return
 
     columns = [
-        "Operation", "Store", "Schema", "Table", "Mode",
+        "Operation", "Store", "Schema", "Table / File", "Mode",
         "Rows read", "Rows written", "Metrics", "Status", "Duration", "Stages",
+        "Format", "Layout", "Publication",
     ]
     try:
         operations_frame = pipeline.spark.createDataFrame(rows, schema=columns)
@@ -203,6 +227,13 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     Open sessions require the current initialized notebook configuration and
     runtime identity, whether passed explicitly or selected implicitly. Already
     closed sessions retain their recorded outcome for repeat finalization.
+
+    The notebook summary identifies table and file operations. Files show their
+    configured Store, path beneath Files, format and, for Writes, output layout,
+    publication status and available output file/byte counts. Filesystem counts
+    describe the output, not rows committed by this attempt. Missing historical
+    details remain not captured. Rendering uses retained operation records and
+    session metadata without reading source or target data again.
 
     Dry Run returns a session-only summary and persists no target, watermark,
     processing state, profile observation or run metadata. A completed captured

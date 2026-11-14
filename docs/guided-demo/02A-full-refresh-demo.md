@@ -23,13 +23,13 @@
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-This pipeline combines **CSV file, Lakehouse table and Warehouse table** Reads before its existing retail transformations and two table Writes. READ 1 calls `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"})`. The timestamp format preserves the fixture timestamp columns. Products and Order History keep their existing table reads, joins, aggregations and destinations.
+This pipeline combines **CSV file, Lakehouse table and Warehouse table** Reads before its existing retail transformations, two table Writes, and a Silver Lakehouse CSV Write. READ 1 calls `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"})`. The timestamp format preserves the fixture timestamp columns. Products and Order History keep their existing table reads, joins, aggregations and destinations.
 
 File Reads use execution planning, applicable Data Contract checks and Read-stage reporting. They return `dataframe` with a stable `source_id`, without a fabricated `table_id`. Full Read is the only supported file mode; file checkpoints, change detection, deduplication and exactly-once guarantees are outside this workflow.
 
 ## The big picture
 
-Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite targets.
+Apply the Step 2 scaffold to three Full Reads, one transform, and three Overwrite targets.
 
 </div>
 </div>
@@ -43,7 +43,7 @@ Apply the Step 2 scaffold to three Full Reads, one transform, and two Overwrite 
 | Data Contract Configuration | Optional in Dry Run, omitted in Ungoverned, and resolved from activation in Governed. |
 | Governed Read | Reads Orders, Products, and Order History in full. |
 | PySpark Transform | Produces detailed orders and a customer summary. |
-| Governed Write | Overwrites a Silver Lakehouse target and a Gold Warehouse target. |
+| Write | Overwrites a Silver Lakehouse table, a Gold Warehouse table, and a CSV in Silver Lakehouse Files. |
 | Execution report | Updates automatically with operation and Guardrail outcomes. |
 
 Bounded DataFrame previews also remain directly below each Read and Write call.
@@ -129,29 +129,47 @@ The optional displays show:
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Configure the Governed Writes
+## Configure the Writes
 
-Overwrite the curated Lakehouse table and Warehouse customer summary.
+Overwrite the curated Lakehouse table, Warehouse customer summary, and Silver CSV export.
 
 </div>
 </div>
 
-Initialize `writes = {}`, then run both Write blocks. This demo publishes two independent Overwrite targets from the same transform:
+Initialize `writes = {}`, then run all three Write blocks. This demo publishes three independent Overwrite targets from the same transform:
 
 | Block | DataFrame | Target | Saved result |
 | --- | --- | --- | --- |
 | WRITE 1 — Lakehouse Curated Orders | `transformed_df` | Silver Lakehouse · `demo.curated_orders` | `writes["curated_orders_lakehouse"]` |
 | WRITE 2 — Warehouse Customer Summary | `customer_summary_df` | Gold Warehouse · `demo.customer_summary` | `writes["customer_summary_warehouse"]` |
+| WRITE 3 — Silver Lakehouse Files CSV | `transformed_df` | Silver Lakehouse Files · `demo/curated_orders.csv` | `writes["curated_orders_csv"]` |
 
-A **Governed** run publishes each target with contract enforcement. **Dry Run** returns `published=False`; inspect `validation_passed` and finalize to receive a session-only summary. **Ungoverned** publishes without contracts and records the initial Governance observations automatically.
+Use **Ungoverned** to publish all three targets or **Dry Run** to preview. **Governed file Writes are not currently supported**. Dry Run returns `published=False`; inspect `validation_passed` and finalize to receive a session-only summary. Ungoverned publishes without contracts and records table observations automatically.
+
+WRITE 3 uses the same public orchestrator:
+
+```python
+writes["curated_orders_csv"] = orchestrate_write(
+    transformed_df,
+    store="Silver",
+    relative_path="demo/curated_orders.csv",
+    file_format="csv",
+    write_mode="overwrite",
+    write_options={"header": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"},
+    single_file=True,
+    verbose=True,
+)
+```
+
+`single_file=True` creates one named CSV; the default creates a Spark dataset folder. File outputs retain the supplied business columns without table audit columns or row hashes. File profiling stays in memory. Finalize shows the configured Store, `Files/demo/curated_orders.csv`, format, layout, publication status, and available output file/byte counts. These filesystem counts describe the output; they do not establish rows committed by this attempt.
 
 ![Curated Orders Write output](../assets/2a/Write_Block_Output.png)
 
 ![Customer Summary Write output](../assets/2a/Write_Block_Output_2.png)
 
-!!! note "The two Writes publish independently"
+!!! note "The three Writes publish independently"
 
-    WRITE 1 and WRITE 2 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; both targets use Overwrite, so a successful rerun replaces their contents.
+    WRITE 1, WRITE 2 and WRITE 3 are not one atomic transaction. If WRITE 1 succeeds and WRITE 2 fails, `demo.curated_orders` remains published. Fix the error and rerun the notebook; all three targets use Overwrite, so a successful rerun replaces their contents.
 
 ![Pipeline finalized output](../assets/2a/Finalize.png)
 
@@ -159,10 +177,10 @@ A **Governed** run publishes each target with contract enforcement. **Dry Run** 
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-validate.png" alt="" loading="lazy">
 <div class="fabricops-section-content" markdown="1">
 
-## Verify the published tables
+## Verify the published tables and CSV
 
 Verify the target tables and the recorded governance metadata.
-The notebook now displays each Read and Write DataFrame in the same code cell as its orchestrator call. To verify what was committed, open the target tables in Fabric Stores. 
+The notebook now displays each Read and Write DataFrame in the same code cell as its orchestrator call. To verify what was committed, open the target tables in Fabric Stores and the CSV beneath the Silver Lakehouse Files area.
 
 </div>
 </div>
@@ -182,7 +200,7 @@ The notebook now displays each Read and Write DataFrame in the same code cell as
 
 ### Expected result
 
-Dry Run completes all three Reads and both prepared Writes without publication. After a run with persistent publication, both Overwrite targets publish and the saved tables and metadata reflect that run.
+Dry Run completes all three Reads and all three prepared Writes without publication. After a successful Ungoverned run, all three Overwrite targets publish. Finalize reports three Reads and three Writes, with file paths and CSV publication details.
 
 ### Data saved by the demo
 
@@ -193,13 +211,15 @@ Dry Run completes all three Reads and both prepared Writes without publication. 
 | Gold Warehouse | `demo.order_history` | Existing source prepared in Step 00C; unchanged by this notebook. |
 | Silver Lakehouse | `demo.curated_orders` | Detailed order-level result, fully replaced by WRITE 1. |
 | Gold Warehouse | `demo.customer_summary` | Customer-level result, fully replaced by WRITE 2. |
+| Silver Lakehouse Files | `demo/curated_orders.csv` | Detailed order-level CSV with a header, fully replaced by WRITE 3. |
 
 ### Acceptance checklist
 
 - [ ] Read the persisted Silver `demo.curated_orders` and Gold `demo.customer_summary`, using the optional public read cells. Expect 120 unique orders and 30 unique customers.
 - [ ] Verify each `order_net_amount = round(quantity * unit_price * (1 - discount), 2)`, the product lookup, and the six historical orders per fixture customer. The total order net amount is **28,539.15**; customer `order_count` sums to 120 and customer totals sum to the same amount.
-- [ ] Repeat 02A before advancing days. Both complete targets must be overwritten without duplicate business keys, with valid `_row_hash` and audit fields where the target writer adds them. Bronze Orders/Products and Gold Order History must retain their source content.
-- [ ] Finalize the execution and inspect all three source and both target operations, Catalogue/profiles, publication receipts and Lineage using the [00C metadata checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata). A successful cell alone is insufficient.
+- [ ] Read `demo/curated_orders.csv` from Silver Files using `read_lakehouse_csv(..., store="Silver", inferSchema=True)`. Expect the same 120 business rows as the detailed transform and one named CSV with a header.
+- [ ] Repeat 02A before advancing days. All three complete targets must be overwritten without duplicate business keys, with valid `_row_hash` and audit fields where the target writer adds them. Bronze Orders/Products and Gold Order History must retain their source content.
+- [ ] Finalize the execution and inspect all three source and all three target operations, applicable table Catalogue/profiles, publication receipts and Lineage using the [00C metadata checklist](00C-prepare-demo-data-with-fabricops-io.md#validate-outputs-and-metadata). A successful cell alone is insufficient.
 
 For a package regression, follow the [complete Day 1–3 sequence](00C-prepare-demo-data-with-fabricops-io.md#execute-the-engineering-regression): reset with 00C, then run 02A, 02B and 02C on Day 1, followed by 02B/02C on Days 2 and 3. To restart the full lifecycle, stop demo jobs and run the single 00C reset cell with `RESET_DEMO = True`. This clears the dedicated demo metadata; wait for `RESET COMPLETE` before Step 1.
 
@@ -212,11 +232,11 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | Metadata table | What this run records |
 | --- | --- |
 | `METADATA_PIPELINE_REGISTRY` | No rows from this Ungoverned demo. The separate promotion workflow retains immutable per-workspace versions and Governed notebook snapshots; neither Ungoverned nor Dry Run automatically registers a Pipeline. |
-| `METADATA_PIPELINE_RUN` | The finalized execution outcome, including status and the run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
+| `METADATA_PIPELINE_RUN` | All six operations, including file locations, file Write options, publication status and available filesystem metrics, plus the finalized execution outcome and run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets, plus applicable target processing and profile metadata. |
-| `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets when profiling completes. |
+| `METADATA_DATA_PROFILED` | Profile snapshots for the two table sources and two table targets when profiling completes; file profiles remain session-only. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Source and target participation recorded for this notebook pipeline. |
+| `METADATA_DATA_LINEAGE` | Table source and target participation recorded for this notebook pipeline; file participation is retained in Run operations. |
 | `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
