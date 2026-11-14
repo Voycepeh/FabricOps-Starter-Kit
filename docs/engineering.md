@@ -16,8 +16,8 @@ A FabricOps pipeline is the standard notebook flow **Setup → Read → Transfor
 [Watch the Plug-and-Play 02 pipeline walkthrough in Microsoft Fabric](guided-demo/02-build-and-run-etl.md) to see the template and a real execution.
 
 <video class="fabricops-page-video" controls preload="metadata" aria-label="Plug-and-Play 02 Pipeline Template walkthrough">
-  <source src="assets/Plug%20%26%20Play%20Pipeline.mp4" type="video/mp4">
-  Your browser does not support embedded video. <a href="assets/Plug%20%26%20Play%20Pipeline.mp4">Open the Pipeline Template walkthrough</a>.
+  <source src="/FabricOps-Starter-Kit/assets/Plug%20%26%20Play%20Pipeline.mp4" type="video/mp4">
+  Your browser does not support embedded video. <a href="/FabricOps-Starter-Kit/assets/Plug%20%26%20Play%20Pipeline.mp4">Open the Pipeline Template walkthrough</a>.
 </video>
 
 ![Setup, Read, Transform, Write, and Finalize with project-owned PySpark.](assets/engineering/pipeline-lifecycle.svg){ .fabricops-section-evidence }
