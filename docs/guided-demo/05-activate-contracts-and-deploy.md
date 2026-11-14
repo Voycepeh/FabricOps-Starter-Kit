@@ -1,4 +1,4 @@
-# Step 5. Activate Contracts and promote the notebook
+# Step 5. Activate Contracts and deploy the notebook
 
 Governance independently approves a portable notebook candidate; Engineering separately deploys the exact approved snapshot.
 
