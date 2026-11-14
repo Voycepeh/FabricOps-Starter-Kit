@@ -412,6 +412,8 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
         "table_classification": str(state.get("table_classification") or ""),
         "contract_id": str(state.get("contract_id") or ""),
         "contract_version": int(state.get("contract_version") or 0),
+        "classification_levels": dict(state.get("classification_levels") or {}),
+        "classification_order": list(state.get("classification_levels") or {}),
         "columns": columns,
     }
 
@@ -470,6 +472,12 @@ def suggest_sensitive_data(
     """Return validated transient Sensitive Data rule suggestions."""
     if not str(prompt).strip():
         raise AIConfigurationError("An AI Sensitive Data prompt is required.")
+    classifications = context.get("classification_levels")
+    if not isinstance(classifications, dict) or not classifications or any(
+        not isinstance(label, str) or not label.strip() or not isinstance(explanation, str) or not explanation.strip()
+        for label, explanation in classifications.items()
+    ):
+        raise AIConfigurationError("Configured classification_levels labels and explanations are required.")
     allowed_columns = {
         str(row.get("column_name") or ""): str(row.get("column_id") or "")
         for row in context.get("columns", [])
@@ -479,7 +487,13 @@ def suggest_sensitive_data(
     instruction = (
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
         "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
-        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, and parameters. "
+        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, parameters, "
+        "output_classification, and classification_reason. "
+        "Choose output_classification from the supplied classification_levels keys using their definitions "
+        "and residual sensitivity after treatment. Explain it in classification_reason. Classification levels "
+        "are ranked from lowest to highest in classification_order. Never assume treatment automatically "
+        "makes data less sensitive. Not PII can still be business-sensitive and requires a classification. "
+        "For remove, output_classification must be null because the column is excluded from output. "
         "The column field must be the supplied column_name string, not a column object. "
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
@@ -514,6 +528,19 @@ def suggest_sensitive_data(
         reason = str(candidate.get("reason") or "").strip()
         if not reason:
             raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires a reason.")
+        if "output_classification" not in candidate:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires output_classification.")
+        output_classification = candidate["output_classification"]
+        classification_reason = candidate.get("classification_reason")
+        if not isinstance(classification_reason, str) or not classification_reason.strip():
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires classification_reason.")
+        classification_reason = classification_reason.strip()
+        if candidate.get("treatment") == "remove":
+            if output_classification is not None:
+                raise ValueError("Removed columns must have null output_classification.")
+        elif not isinstance(output_classification, str) or output_classification not in classifications:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} has an unconfigured output_classification.")
+        classification = {"output_classification": output_classification, "classification_reason": classification_reason}
         if pii_type == "none":
             if candidate.get("treatment") not in (None, "") or candidate.get("action") not in (None, ""):
                 raise ValueError("Not PII suggestions cannot include a treatment or action.")
@@ -529,6 +556,7 @@ def suggest_sensitive_data(
                 "action": None,
                 "parameters": {},
                 "is_active": False,
+                **classification,
             })
             seen.add(column_name)
             continue
@@ -557,6 +585,7 @@ def suggest_sensitive_data(
             "action": action,
             "parameters": {key: value for key, value in parameters.items() if key != "scope"},
             "is_active": True,
+            **classification,
         })
         seen.add(column_name)
     return suggestions

@@ -14,6 +14,7 @@ def _context() -> dict:
     return {
         "table_id": "customers",
         "table_name": "customers",
+        "classification_levels": {"Public": "Approved for external sharing", "Restricted": "Internal use", "Confidential": "Sensitive business or personal data"},
         "columns": [
             {"column_id": "email-id", "column_name": "EMAIL", "data_type": "string"},
             {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "long"},
@@ -23,7 +24,63 @@ def _context() -> dict:
 
 
 def _invoke(payload):
+    if isinstance(payload, list):
+        payload = [{"output_classification": None if item.get("treatment") == "remove" else "Restricted",
+                    "classification_reason": "The output meets the internal-use policy.", **item}
+                   if isinstance(item, dict) else item for item in payload]
     return lambda _prompt: json.dumps(payload)
+
+
+def test_custom_classification_definitions_and_rank_reach_ai_unchanged():
+    """Custom policy meanings and the explicit rank survive JSON serialization."""
+    context = _context()
+    context["classification_levels"] = {"Open": "External sharing", "Team": "Approved internal users", "Secret": "Strictly limited"}
+    prompts = []
+    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
+                 "treatment": "tokenize", "action": "Block", "parameters": {},
+                 "output_classification": "Team", "classification_reason": "Tokenized output still has internal business sensitivity."}
+    result = module.suggest_sensitive_data(context, prompt="Our policy", invoke=lambda prompt: prompts.append(prompt) or json.dumps([candidate]))
+    supplied = json.loads(prompts[0].split("Context:\n", 1)[1])
+    assert supplied["classification_levels"] == context["classification_levels"]
+    assert supplied["classification_order"] == ["Open", "Team", "Secret"]
+    assert result[0]["output_classification"] == "Team"
+    assert result[0]["classification_reason"] == candidate["classification_reason"]
+
+
+@pytest.mark.parametrize("label", [None, "", "Unconfigured", {"label": "Restricted"}])
+def test_ai_cannot_introduce_unconfigured_output_classifications(label):
+    """A usable treatment does not make an invented classification acceptable."""
+    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
+                 "treatment": "tokenize", "action": "Block", "parameters": {},
+                 "output_classification": label, "classification_reason": "Internal business data."}
+    with pytest.raises(ValueError, match="output_classification"):
+        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
+
+
+def test_ai_requires_a_classification_rationale_and_handles_business_sensitivity():
+    """Not PII still needs a governed output label and an explanation."""
+    candidate = {"column": "ORDER_TOTAL", "pii_type": "none", "reason": "No identifying information.",
+                 "treatment": None, "action": None, "parameters": {}, "output_classification": "Confidential"}
+    with pytest.raises(ValueError, match="classification_reason"):
+        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
+    candidate["classification_reason"] = "Commercially sensitive sales figures."
+    result = module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
+    assert result[0]["output_classification"] == "Confidential"
+    assert result[0]["is_active"] is False
+
+
+def test_removal_has_no_output_classification_and_definitions_are_required_before_invocation():
+    """Removed values are not reclassified; unconfigured classification requests never invoke AI."""
+    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
+                 "treatment": "remove", "action": "Block", "parameters": {},
+                 "output_classification": None, "classification_reason": "No column is written."}
+    result = module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
+    assert result[0]["output_classification"] is None
+    candidate["output_classification"] = "Public"
+    with pytest.raises(ValueError, match="null output_classification"):
+        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
+    with pytest.raises(module.AIConfigurationError, match="classification_levels"):
+        module.suggest_sensitive_data({**_context(), "classification_levels": {}}, prompt="Policy", invoke=lambda _: pytest.fail("Must not invoke AI"))
 
 
 def test_direct_indirect_and_not_pii_suggestions_are_reviewable():
@@ -367,7 +424,7 @@ def test_sensitive_context_and_prompt_include_approved_profile_samples():
                     {'value': 'third', 'count': 10},
                 ],
                 'profile_evidence': {'row_count': 100, 'null_count': 2}}
-    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [evidence]})
+    built = module.build_ai_sensitive_data_context({**_context(), 'catalogue_profile_rows': [evidence]})
     column = built['columns'][0]
     assert column['profile_evidence'] == {'row_count': 100, 'null_count': 2,
                                         'min_value': 'min@example.test', 'max_value': 'max@example.test'}

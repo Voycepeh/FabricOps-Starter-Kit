@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import hashlib
 import json
 
@@ -393,6 +395,14 @@ class PathConfig:
             raise ValueError("paths must be a non-empty mapping of workspaces to targets.")
 
 
+DEFAULT_CLASSIFICATION_LEVELS = {
+    "Public": "Approved for unrestricted external sharing.",
+    "Restricted": "For internal use; share only with authorized organizational users.",
+    "Confidential": "Sensitive personal or business information; restrict access to an approved business need.",
+    "Highly Sensitive": "Information requiring the strictest access controls because disclosure could cause severe harm.",
+}
+
+
 DEFAULT_AI_ENRICHMENT = {
     "enabled": False,
     "model_deployment_name": "gpt-5-mini",
@@ -418,7 +428,11 @@ DEFAULT_AI_ENRICHMENT = {
         "explicit parameters, and a Block action. Use Mask for text or categorical columns and Bucket for "
         "numeric values using approved fixed boundaries. Tokenize can protect numeric or categorical "
         "identifiers; Remove supports either. Prefer full masking when Mask applies. The manually selected information "
-        "classification is context only, not a PII decision. Profile summaries, min/max, and the top three "
+        "classification is context only, not a PII decision. Suggest the final output_classification and "
+        "classification_reason using the configured classification_levels definitions and the residual risk "
+        "after the proposed treatment. Do not automatically lower classification because a treatment is enabled. "
+        "For Remove, output_classification is null because the column has no written output. "
+        "For Not PII, still classify business sensitivity using the configured definitions. Profile summaries, min/max, and the top three "
         "frequent values are approved input evidence. Never request full source rows or return raw values. Return "
         "structured JSON only; final review belongs to Governance."
     ),
@@ -489,9 +503,10 @@ class GovernanceConfig:
     sensitivity_rules : dict[str, str]
         Mapping of rule keys to expected sensitivity labels used by governance
         notebook checks and reporting summaries.
-    classification_levels : list[str]
-        Controlled information-classification labels rendered by table and
-        column metadata enrichment widgets.
+    classification_levels : dict[str, str]
+        Ordered mapping of information-classification labels to their policy
+        explanations, ranked from lowest to highest. Labels are stored as
+        Enrichment; explanations guide authors and AI output suggestions.
     ai_enrichment : dict[str, Any]
         Optional AI Enrichment authoring settings. ``enabled`` controls the
         assistant and the prompt fields provide project instructions. Built-in models
@@ -511,7 +526,7 @@ class GovernanceConfig:
 
     required_classification: bool = True
     sensitivity_rules: dict[str, str] = field(default_factory=dict)
-    classification_levels: list[str] = field(default_factory=lambda: ["Public", "Restricted", "Confidential", "Highly Sensitive"])
+    classification_levels: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_CLASSIFICATION_LEVELS))
     ai_enrichment: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_AI_ENRICHMENT))
     enrichment_context_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
@@ -534,11 +549,16 @@ class GovernanceConfig:
         object.__setattr__(self, "sensitive_data_token_mapping", target)
         object.__setattr__(self, "required_classification", bool(self.required_classification))
         object.__setattr__(self, "sensitivity_rules", dict(self.sensitivity_rules or {}))
-        labels = [str(option).strip() for option in (self.classification_levels or []) if str(option).strip()]
-        labels = labels or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
-        if len(labels) != len(set(labels)):
-            raise ValueError("classification_levels must contain unique ranked values.")
-        object.__setattr__(self, "classification_levels", labels)
+        if not isinstance(self.classification_levels, Mapping) or not self.classification_levels:
+            raise ValueError("classification_levels must be a non-empty ordered mapping of labels to explanations.")
+        levels = {}
+        for label, explanation in self.classification_levels.items():
+            if not isinstance(label, str) or not label.strip() or not isinstance(explanation, str) or not explanation.strip():
+                raise ValueError("classification_levels requires non-empty string labels and explanations.")
+            if label.strip() in levels:
+                raise ValueError("classification_levels must contain unique ranked values.")
+            levels[label.strip()] = explanation.strip()
+        object.__setattr__(self, "classification_levels", levels)
         object.__setattr__(self, "ai_enrichment", validate_ai_enrichment(self.ai_enrichment))
         object.__setattr__(
             self,
