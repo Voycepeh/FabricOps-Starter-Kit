@@ -4,20 +4,19 @@
 
 **Governance defines expectations, Engineering produces and validates data, and shared metadata connects both without hiding project-owned transformations.**
 
-![FabricOps operating model showing Governance, Engineering Development, Engineering Production, shared metadata and consumers](assets/fabricops-operating-model-overview.png){ .fabricops-section-evidence }
+![FabricOps operating model showing Governance, Engineering and Consumption workspaces, their Lakehouses and shared Metadata Lakehouse](assets/fabricops-workspace-operating-model.png){ .fabricops-section-evidence }
 
 ## Workspace operating model
 
-FabricOps uses Microsoft Fabric workspaces to separate responsibilities and execution scope while keeping the logical Bronze, Silver and Gold roles aligned.
+FabricOps separates Governance, Engineering and Consumption responsibilities. A single Engineering workspace is enough to build, validate and run a governed pipeline. A separate Engineering workspace is optional when teams want workspace isolation or deployment separation.
 
 | Area | Responsibility | FabricOps assets |
 | --- | --- | --- |
 | **Governance Workspace** | Owns stewards, agreements and governed table definitions. | `00_env_config`, `01_governance`, shared Metadata Lakehouse |
-| **Engineering Development** | Builds the notebook pipeline, observes real tables, profiles data and tests changes. | `00_env_config`, `02_pipeline`, Development Lakehouses/Warehouses |
-| **Engineering Production** | Runs the promoted pipeline against Production stores. | The same logical notebook flow with Production configuration |
-| **Project-Specific Consumer** | Uses approved Production data through native Fabric interfaces. | SQL, Spark, notebooks, reports or AI workloads |
+| **Engineering Workspace** | Builds and runs pipelines, observes physical tables, profiles data, validates Contracts and executes approved pipelines. | `00_env_config`, `02_pipeline`, source, operations, analytics and release stores |
+| **Consumption Workspace** | Provides a separate place for analysis or consumer workloads when useful; consumption can also happen through permitted Fabric interfaces. | Notebooks, Lakehouses/Warehouses, reports or AI workloads |
 
-`00_env_config` maps logical store names to environment-specific Fabric workspaces and items. The pipeline therefore addresses a configured logical store instead of assuming the notebook's default Lakehouse. Promotion moves the reviewed notebook; it does not make metadata rows or Fabric permissions appear automatically.
+`00_env_config` maps logical store names to configured workspaces and items. The pipeline addresses configured stores instead of assuming the notebook's default Lakehouse. Teams may keep the pipeline in one Engineering workspace or clone `02_pipeline` into another workspace with its own `00_env_config`. A clone must be validated there, have Contracts activated for its physical tables, and receive a separate Governance approval for its exact submission before governed execution. Promotion and cloning do not transfer metadata authority or Fabric permissions.
 
 ??? info "Under the Hood — workspace and store resolution"
 
@@ -31,7 +30,7 @@ FabricOps uses Microsoft Fabric workspaces to separate responsibilities and exec
 
 ![FabricOps Governance and Engineering cycle around shared metadata](assets/fabricops-roles.png){ .fabricops-section-evidence }
 
-**The cycle is joined by the stable `table_id`, not by a workspace name.** A table has one global Data Contract version history; workspace observations, profiles and activation choices remain workspace-specific.
+**Frozen Data Contract definitions are global; their activations and pipeline approvals are scoped.** The stable `table_id` joins a physical table to its global Contract version history, while physical table activation and pipeline approval are workspace-specific.
 
 1. Engineering registers physical table identity and records observations, profiles and lineage.
 2. Governance uses that evidence to author Enrichment and Guardrails in a versioned Data Contract.
@@ -104,7 +103,7 @@ The configured Metadata Lakehouse holds five Governance-owned tables and nine En
     <span class="fabricops-metadata-preview__action">Start Guided Demo <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true">
-    <img src="../assets/fabricops-role-workflow.png" alt="" loading="lazy" decoding="async">
+    <img src="../assets/fabricops-seven-step-lifecycle.png" alt="" loading="lazy" decoding="async">
   </span>
 </a>
 

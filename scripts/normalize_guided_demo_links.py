@@ -10,9 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS_DIR = ROOT / "docs"
 
 LINK_REPLACEMENTS = {
-    "guided-demo/99-explore-via-notebooks.md": "guided-demo/07-consume-production-data.md",
-    "guided-demo/99-explore-via-notebook.md": "guided-demo/07-consume-production-data.md",
-    "99-explore-via-notebook.md": "07-consume-production-data.md",
+    "guided-demo/99-explore-via-notebooks.md": "guided-demo/07-consume-governed-data.md",
+    "guided-demo/99-explore-via-notebook.md": "guided-demo/07-consume-governed-data.md",
+    "99-explore-via-notebook.md": "07-consume-governed-data.md",
     "../../guided-demo/run-pipeline.md": "../../guided-demo/02-build-and-run-etl.md",
     "../../guided-demo/02-run-pipeline.md": "../../guided-demo/02-build-and-run-etl.md",
     "../../guided-demo/review-guardrails.md": "../../guided-demo/03-author-and-freeze-data-contract.md",
@@ -20,9 +20,9 @@ LINK_REPLACEMENTS = {
     "run-pipeline-with-guardrails.md": "04-validate-frozen-data-contract.md",
     "run-pipeline.md": "02-build-and-run-etl.md",
     "review-guardrails.md": "03-author-and-freeze-data-contract.md",
-    "create-data-contract.md": "05-activate-data-contract-and-promote.md",
-    "promote-to-production.md": "06-run-production.md",
-    "explore-metadata-outputs.md": "07-consume-production-data.md",
+    "create-data-contract.md": "05-activate-contracts-and-deploy.md",
+    "promote-to-production.md": "06-run-governed-pipeline.md",
+    "explore-metadata-outputs.md": "07-consume-governed-data.md",
 }
 
 SOURCE_REPLACEMENTS = {

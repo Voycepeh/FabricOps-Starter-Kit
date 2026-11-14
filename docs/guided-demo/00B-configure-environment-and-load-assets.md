@@ -22,8 +22,8 @@ Import the three reusable notebook templates:
 | --- | --- |
 | `00_env_config.ipynb` | Import into each workspace that runs FabricOps notebooks |
 | `01_governance.ipynb` | Governance workspace |
-| `02_pipeline.ipynb` | Engineering Development workspace |
-| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering Development workspace; keep the original demo notebook names for 00C live-job checks |
+| `02_pipeline.ipynb` | Engineering workspace |
+| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering workspace; keep the original demo notebook names for 00C live-job checks |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -33,9 +33,9 @@ After importing the notebooks, the two required workspaces should now look like 
 
 The Governance workspace contains the dedicated `demo_metadata` Lakehouse, its Fabric Environment, `00_env_config`, and `01_governance`.
 
-![Engineering Development workspace assets](../assets/00B/Engineering_Assets.png)
+![Engineering workspace assets](../assets/00B/engineering-workspace-assets.png)
 
-The Engineering Development workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the demo notebooks. Production uses the same config template with its own registered workspace ID. Advanced deployments may instead load a shared config notebook from Central Engineering.
+The Engineering workspace contains `bronze`, `silver`, `gold`, its Fabric Environment, `00_env_config`, the reusable `02_pipeline`, and the demo notebooks. If you clone `02_pipeline` into another workspace, configure `00_env_config` there with that workspace's stores and repeat Step 4 validation and Step 5 activation and pipeline approval. Advanced deployments may load a shared config notebook from Central Engineering.
 
 Consumers can use SQL or other native Fabric interfaces directly. For a project-specific consumer notebook using FabricOps, import the config template locally or explicitly select a shared config workspace, register its workspace, and grant access to the existing stores. Each registered workspace uses its workspace ID as the configuration key.
 
@@ -56,7 +56,7 @@ Open each imported notebook and make sure it uses the Fabric Environment created
 2. In the notebook toolbar, make sure the runtime is set to **PySpark (Python)**.
 3. Beside it, open the **Environment** dropdown and choose **Change environment**.
 4. Select the Environment created for that workspace in 0A, where the FabricOps `.whl` was uploaded as a custom library.
-5. Repeat this for every imported notebook in Governance, Engineering Development, and Consumer.
+5. Repeat this for every imported notebook in Governance and Engineering, and in any optional Consumer workspace where you run notebooks.
 
 ![Set the notebook Environment](../assets/00B/fabric-example-set-notebook-environment.png)
 
@@ -74,7 +74,7 @@ For regression validation after a package change, replace the custom library wit
 
 ## Configure `00_env_config`
 
-In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Configure `ENGINEERING_WORKSPACES` using stable workspace IDs as keys and each workspace’s business stores as values. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` with Metadata only. Development and Production are example workspace roles; they do not control FabricOps identity or activation order. Keep all demo Metadata stores pointed at the same dedicated `demo_metadata` Lakehouse. Set `GOVERNANCE_METADATA_LAKEHOUSE_ID` and `GOVERNANCE_METADATA_LAKEHOUSE_NAME` to that item. Never change unrelated production/project configuration for this walkthrough.
+In each deployment of `00_env_config`, replace the Fabric ID placeholders with the IDs for the items created in 0A. Configure `ENGINEERING_WORKSPACES` using stable workspace IDs as keys and each workspace’s business stores as values. The central Governance workspace uses `GOVERNANCE_WORKSPACE_ID` with Metadata only. Keep all demo Metadata stores pointed at the same dedicated `demo_metadata` Lakehouse. Set `GOVERNANCE_METADATA_LAKEHOUSE_ID` and `GOVERNANCE_METADATA_LAKEHOUSE_NAME` to that item. Never change unrelated project configuration for this walkthrough.
 
 For this walkthrough, **create the schema-enabled Lakehouse named `demo_metadata` yourself in Fabric**, then set these values in the demo `00_env_config`:
 
@@ -118,9 +118,9 @@ Use the current walkthrough store keys exactly as they appear in `00_env_config`
 | `FabricStore` key | Open this Fabric item | `kind` |
 | --- | --- | --- |
 | `Metadata` | demo Governance → `demo_metadata` (dedicated item) | `lakehouse` |
-| `Bronze` | Engineering Development → `Bronze` | `lakehouse` |
-| `Silver` | Engineering Development → `Silver` | `lakehouse` |
-| `Gold` | Engineering Development → `Gold` | `warehouse` |
+| `Bronze` | Engineering → `Bronze` | `lakehouse` |
+| `Silver` | Engineering → `Silver` | `lakehouse` |
+| `Gold` | Engineering → `Gold` | `warehouse` |
 
 
 <div class="fabricops-section-banner" markdown="1">
@@ -170,10 +170,10 @@ Also download the ready-to-run pipeline demos from [FabricOps DemoData](https://
 
 | Demo notebook | Where it goes now |
 | --- | --- |
-| `02A_full_refresh_demo.ipynb` | Engineering Development workspace |
-| `02B_incremental_append_demo.ipynb` | Engineering Development workspace |
-| `02C_scd_demo.ipynb` | Engineering Development workspace |
-| `00C_demo_setup.ipynb` | Engineering Development workspace |
+| `02A_full_refresh_demo.ipynb` | Engineering workspace |
+| `02B_incremental_append_demo.ipynb` | Engineering workspace |
+| `02C_scd_demo.ipynb` | Engineering workspace |
+| `00C_demo_setup.ipynb` | Engineering workspace |
 
 
 <div class="fabricops-section-banner" markdown="1">
@@ -187,7 +187,7 @@ Upload the downloaded demo files to the Bronze Lakehouse and the demo notebooks 
 </div>
 </div>
 
-1. Open the **Engineering Development** workspace.
+1. Open the **Engineering** workspace.
 2. Open the `bronze` Lakehouse created in 0A.
 3. Under **Files**, create a subfolder named `demo` (**lowercase; paths are case-sensitive**).
 4. Upload the **entire downloaded DemoData folder contents** into that folder.
