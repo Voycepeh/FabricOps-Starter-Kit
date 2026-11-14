@@ -16,7 +16,7 @@ If your organisation does not provide Fabric capacity, you can use a Fabric tria
 
 ## Create the workspaces
 
-Only **Governance** and **Engineering Development** are needed initially. You can add the Production and Consumer workspaces when you reach Steps 6 and 7.
+Only **Governance** and **Engineering** workspaces are needed for the standard walkthrough. A second Engineering workspace or a Consumption workspace is optional.
 
 </div>
 </div>
@@ -55,7 +55,7 @@ The business stores may already exist: reuse only the eleven tables reserved by 
 
 ## Create the Engineering stores
 
-Open **Engineering Development** and create three distinct stores: **bronze**, **silver** lakehouse and **gold** warehouse.
+Open the **Engineering** workspace and create the source, operations, analytics and release stores described below.
 
 </div>
 </div>
@@ -65,17 +65,17 @@ Open **Engineering Development** and create three distinct stores: **bronze**, *
 
 
 
-![Engineering Development Fabric items](../assets/00A/Objects.png)
+![Engineering Fabric items](../assets/00A/Objects.png)
 
-??? info "Optional: prepare Engineering Production and Consumer"
-
-
-Production should be a **1:1 structural mirror** of Development so the validated pipeline can use the same logical stores after promotion.
+??? info "Optional: use another Engineering or Consumption workspace"
 
 
-    If you created **Engineering Production**, repeat the same setup there with `bronze`, `silver`, and `gold` using the same item types and names.
+The Engineering workspace is sufficient for the full walkthrough. A separate governed execution workspace is optional.
 
-    The **Consumer** workspace does not need its own Fabric store for this Guided Demo.
+
+    If you want a separate governed execution workspace, create its Fabric items and Environment when you clone `02_pipeline` there. Configure its own `00_env_config`; repeat Step 4 validation and Step 5 Contract activation and pipeline approval for that workspace before running Step 6. A Consumption workspace is optional and can host consumer notebooks or analysis.
+
+    A separate **Consumption** workspace does not need its own Fabric store for this Guided Demo.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -115,7 +115,7 @@ Fabric Environments can be created in one workspace and shared across all worksp
 </div>
 
 
-A Fabric Environment belongs to a workspace but it can be shared to different users acrosss the organization . An Environment created in Governance is not automatically available in Engineering Development, Engineering Production, or Consumer unless explicity shared with the user.
+A Fabric Environment belongs to a workspace but it can be shared to different users across the organization. An Environment created in Governance is not automatically available in Engineering or another workspace unless explicitly shared with the user.
 
 Start in the **Governance** workspace and create a Fabric **Environment**. Then:
 
@@ -153,8 +153,8 @@ After you are done publishing you can share this environment with anyone in your
 You now have:
 
 - a Governance workspace with the dedicated `demo_metadata` Lakehouse and a published Fabric Environment containing FabricOps;
-- an Engineering Development workspace with `bronze`, `silver`, and `gold`, plus its own published Fabric Environment containing the same FabricOps wheel;
-- optionally, a matching Engineering Production workspace for Step 6, with its own Environment when you are ready to use it; and
+- an Engineering workspace with its source, operations, analytics and release stores, plus a published Fabric Environment containing FabricOps;
+- optionally, a second Engineering workspace with its own configured stores and Environment for a cloned governed pipeline; and
 - optionally, a Consumer workspace for Step 7, with its own Environment when you are ready to run project-specific consumer notebooks.
 
 The physical Fabric foundation is ready. The next step imports the FabricOps notebook templates and demo data.

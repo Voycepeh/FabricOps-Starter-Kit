@@ -32,7 +32,7 @@ The [FabricOps Glossary](../glossary.md) carries the detailed FabricOps, Governa
 - a Python package containing helper and orchestrator functions
 - standardized Python notebook templates that weave those functions into reusable workflows
 - a shared metadata model connecting Governance intent with recorded profiles, lineage, source observations, resolved read strategies, governed load strategies and parameters, and Guardrail Results
-- an operating model for Engineering Development, Engineering Production, Governance, and Project-Specific Consumer workspaces
+- an operating model for Governance, Engineering, and optional Consumption workspaces
 - a Guided Demo for learning and adopting the workflow
 - technical documentation for notebook templates, metadata tables, data-quality rules, and individual functions
 
@@ -48,21 +48,20 @@ This gives AI and BI consumers a stable, governed, and reusable Production data 
 | --- | --- | --- |
 | 0 | Set up the operating environment | Create the Fabric workspaces and required stores, configure `00_env_config`, and create the metadata tables in Governance. |
 | 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between accountable stewards. |
-| 2 | Engineering Development — ETL, profile, and catalogue | Build and run `02_pipeline`, profile and catalogue governed tables, and capture Data Lineage and technical observations. |
+| 2 | Engineering — ETL, profile, and catalogue | Build and run `02_pipeline`, profile and catalogue governed tables, and capture Data Lineage and technical observations. |
 | 3 | Governance — Author and freeze the Data Contract | Select the governed `table_id`, author descriptive Enrichment and enforced Guardrails, review the schema and processing definition, and freeze an immutable table-centric version. Do not link a Data Agreement at authoring time. |
-| 4 | Engineering Development — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
+| 4 | Engineering — Select and validate | Use the current notebook's `METADATA_DATA_LINEAGE` to discover linked `table_id` values, select one frozen version independently per table, and validate the ETL. Failed validation returns to Step 3 for a new frozen version. |
 | 5 | Governance — Link the Data Agreement and activate | Select the complete successful Testing candidate, link the exact Data Agreement version, and activate the whole pipeline for Live. |
-| 6 | Engineering Production — Promote, run, and hand off access | Promote and run the validated `02_pipeline`. Production automatically resolves the active Data Contract, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
+| 6 | Engineering — Run and hand off access | Run the separately deployed Governed notebook in its approved execution workspace. It resolves workspace-scoped Contract activations and pipeline approval, publishes governed outputs, and approved consumers receive access through native Fabric controls. |
 | 7 | Consumption — Consume and productize governed data | Use native Fabric interfaces or project-specific notebooks to review governed context, consume data directly, or publish to a target such as a Fabric Data Agent. |
 
 ## Canonical operating decisions
 
 | Area | Canonical decision |
 | --- | --- |
-| Workspaces | FabricOps uses Governance, Engineering Development, Engineering Production, and Project-Specific Consumer workspaces where needed. |
+| Workspaces | Governance and Engineering workspaces provide the core operating model. A separate Engineering workspace or Consumption workspace is optional. |
 | Governance | Governance defines ownership, Data Agreements, Enrichment, Guardrails, Data Contracts, and promotion approval. |
-| Development | Engineering Development supports exploration, pipeline development, profiling, testing, and review. |
-| Production | Engineering Production contains approved recurring pipelines and durable Production outputs. |
+| Engineering | One Engineering workspace can support pipeline development, profiling, testing, Governance review and governed execution. Teams can clone `02_pipeline` to another workspace when separate execution or production isolation is useful. |
 | Standard pipeline approach | PySpark is the standard for repeatable `02_pipeline` workflows. |
 | Consumption | Approved consumers can use native Fabric permissions and interfaces directly. Centralized metadata provides reusable context for analytics and AI consumers through direct PySpark or SQL reads. |
 | Consumption products | FabricOps should surface existing products that use the same or overlapping governed tables before creating another. Data Agent publishing is the first automated target; Power BI and other consumers remain parallel paths. |

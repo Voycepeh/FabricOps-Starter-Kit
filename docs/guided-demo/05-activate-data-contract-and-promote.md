@@ -21,6 +21,8 @@ Choose an exact frozen definition for every approved source and target.
 3. Open `widget_activate_data_contract(TABLE_ID, CONTRACT_ID, VERSION, workspace_id=PHYSICAL_WORKSPACE_ID)`, select the applicable exact effective Agreement, review the frozen payload and physical workspace, then explicitly confirm activation.
 4. Repeat for every source and target. `METADATA_DATA_CONTRACT_ACTIVATION` stores these independent selections. The global frozen definition remains unchanged; authoring evidence workspace does not select activation scope.
 
+Contract definitions and versions are global, but activation is scoped to each physical workspace/table (or file source). If `02_pipeline` is cloned to another Engineering workspace, activate the exact required Contract versions for that workspace's physical sources and targets as well.
+
 ??? info "Protection and independent versions"
     Active Contracts protect physical targets from Ungoverned writes, including logical aliases. Two physical workspaces can activate different versions of the same Table ID. Newly admitted runs adopt the current active Contract; existing admitted runs retain their exact captured versions.
 
@@ -40,6 +42,8 @@ Review saved submissions directly from the Metadata Lakehouse.
 3. **Engineering:** beneath Finalize, click **Refresh approvals**, select that approval, and click **Review approved deployment**. Tick the deployment confirmation and click **Deploy approved notebook**. FabricOps creates the separate Governed notebook, archives its snapshot and records it in Registry.
 4. **Engineering:** open the new notebook in the Engineering workspace's **Governed** folder and update your Fabric schedule or notebook activity to target it. Keep the development notebook in Dry Run mode.
 
+The standard walkthrough can use one Engineering workspace for both Dry Run and governed execution. If you clone `02_pipeline` into another workspace, configure that workspace's `00_env_config`, repeat Step 4 validation there, repeat the applicable physical Contract activations above, and submit the clone as a new pipeline package for Governance approval. Pipeline approval is tied to the exact submission and execution workspace; it does not transfer with the clone.
+
 There is no package download, upload or JSON paste. Governance reads the saved submission directly.
 
 To reopen Engineering controls in the same kernel, rerun only `finalize_pipeline(pipeline)`. After a restart, rerun the Environment cell and call `finalize_pipeline()`; another Dry Run is not required just to deploy an existing approval.
@@ -58,6 +62,6 @@ For recovery, select a **Retained implementation**, choose **Restore the active 
 
 `METADATA_PIPELINE_REGISTRY` retains an immutable per-workspace Pipeline version with a separate Governed notebook ID, snapshot pointers/hashes, exact Governance approval/submission references and reviewed bindings. **Governed admission remains blocked pending the [signed-in Fabric checklist](../maintainer/governed-pipeline-fabric-acceptance.md).** Do not treat green local tests as secured Fabric execution.
 
-**Next:** [Step 6. Run Production](06-run-production.md)
+**Next:** [Step 6. Run the governed pipeline](06-run-production.md)
 
 Processing is Engineering-owned. Review the exact read/write modes, read/write parameters, repartitioning and source-to-target associations in the submitted package. Any change requires a new Pipeline Activation approval. File source authorizations retain exact selectors, reader options and frozen Contract hashes; deployment remains blocked until a file orchestration boundary can enforce their Guardrails.

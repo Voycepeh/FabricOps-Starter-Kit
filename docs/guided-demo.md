@@ -1,6 +1,6 @@
 # FabricOps Guided Demo
 
-**Run the FabricOps operating model yourself in Microsoft Fabric, from initial setup through governed Production consumption.**
+**Run the FabricOps operating model in Microsoft Fabric, from initial setup through governed execution and consumption.**
 
 `00A`, `00B`, and `00C` prepare the Fabric environment, configure the notebooks, exercise the FabricOps I/O helpers, and seed the managed demo tables. Use a dedicated, initially empty Metadata Lakehouse shared only by these demo workspaces. The seven numbered steps then walk you through the implementation. For a complete restart, stop demo jobs and run the single reset cell in 00C with `RESET_DEMO = True`; this clears the dedicated demo metadata and restores Day 1.
 
@@ -33,9 +33,9 @@ Start with <strong>0A–0C</strong> to prepare your Fabric environment, configur
 
 | Setup | What you do | Why it matters |
 | --- | --- | --- |
-| [0A. Prepare Fabric artifacts](guided-demo/00A-prepare-fabric-artifacts.md) | Create the workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
+| [0A. Prepare Fabric artifacts](guided-demo/00A-prepare-fabric-artifacts.md) | Create Governance and Engineering workspaces, stores, and Fabric Environments, then install the FabricOps wheel. | The physical Fabric foundation exists. |
 | [0B. Load and configure the Guided Demo assets](guided-demo/00B-configure-environment-and-load-assets.md) | Import the core notebooks, attach their Fabric Environments, configure `00_env_config`, create empty tables in the dedicated demo Metadata Lakehouse, and upload the packaged demo files to Bronze `Files/demo`. | Every notebook can resolve the configured Fabric stores and the raw demo assets are in place. |
-| [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering Development to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
+| [0C. Prepare the demo data with FabricOps I/O](guided-demo/00C-prepare-demo-data-with-fabricops-io.md) | Run `00C_demo_setup` in Engineering to demonstrate file, Lakehouse, and Warehouse I/O and seed the original managed source tables. | The Full Refresh demo starts from real managed tables prepared through the public FabricOps I/O helpers. |
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">
@@ -43,14 +43,14 @@ Start with <strong>0A–0C</strong> to prepare your Fabric environment, configur
 
 ## The seven-step FabricOps workflow
 
-Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, Production, and consumption. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.
+Follow <strong>Steps 1–7</strong> from Governance through Engineering, validation, governed execution, and consumption. One Engineering workspace is the default; a second workspace is optional. Steps <strong>2A–2C</strong> are hands-on pipeline examples within Step 2.
 
 </div>
 </div>
 
 ![Seven-step FabricOps lifecycle from Governance context to governed consumption](assets/fabricops-role-workflow.png){ .fabricops-section-evidence }
 
-The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until the immutable contract candidate and the real pipeline agree.
+The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until the immutable Contract candidate and the real pipeline agree. If you clone `02_pipeline` into another Engineering workspace, configure that workspace's `00_env_config`, repeat Step 4 there, repeat the workspace-scoped Contract activations and pipeline submission approval in Step 5, then run the approved clone in Step 6.
 
 1. **Establish Governance context.** Record accountable Data Stewards and the versioned Data Agreement that explains why the data is shared.
 2. **Build and observe the pipeline.** Engineering runs real sources and targets in Development, creating Catalogue, profiling, lineage and processing observations.
@@ -80,8 +80,8 @@ The lifecycle is a hand-off, not a one-way checklist. Steps 3 and 4 repeat until
 | [2C. Run the SCD1 and SCD2 Demo](guided-demo/02C-build-and-run-scd-etl.md) | `02C_scd_demo` | Run three complete Product Master snapshots and compare current state with retained history. |
 | [3. Author and freeze the Data Contract](guided-demo/03-author-and-freeze-data-contract.md) | `01_governance` | Select the real `table_id`, author Enrichment, Guardrails, and Processing, then freeze the contract version. |
 | [4. Preview and enforce the frozen Data Contract](guided-demo/04-validate-frozen-data-contract.md) | `02A_full_refresh_demo` | Preview the exact frozen candidate in Dry Run, or enforce an activated version in Governed mode. |
-| [5. Activate Data Contracts and deploy](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Fabric Deployment Pipeline | Link exact contract versions to the Data Agreement, activate them for Production, then deploy the reviewed engineering artifact. |
-| [6. Run the pipeline in Production and grant access](guided-demo/06-run-production.md) | Governed 02A pipeline + native Fabric access | Run the activated Production workflow, publish governed outputs, then grant approved consumers direct access through native Fabric permissions. |
+| [5. Activate Data Contracts and deploy](guided-demo/05-activate-data-contract-and-promote.md) | `01_governance` + Engineering notebook | Activate exact Contract versions for physical tables, approve the exact pipeline submission, then deploy the reviewed notebook. |
+| [6. Run the governed pipeline and grant access](guided-demo/06-run-production.md) | Governed pipeline + native Fabric access | Run the approved workflow in its configured Engineering workspace, publish governed outputs, then grant consumer access through native Fabric permissions. |
 | [7. Consume and productize governed data](guided-demo/07-consume-production-data.md) | Native Fabric interfaces or a project-specific notebook | Review the governed consumer context, discover reusable consumption products, and use a consumption accelerator such as one-shot Data Agent publishing. |
 
 ### Choose Read Mode and Write Mode

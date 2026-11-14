@@ -28,7 +28,7 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Architecture</span>
     <strong class="fabricops-metadata-preview__title">See how FabricOps fits together</strong>
-    <span class="fabricops-metadata-preview__description">Understand the Governance, Engineering Development, Engineering Production, shared metadata, Data Contract, and consumer relationships.</span>
+    <span class="fabricops-metadata-preview__description">Understand Governance, Engineering, optional Consumption workspaces, shared metadata, Data Contracts, and workspace-scoped approvals.</span>
     <span class="fabricops-metadata-preview__action">Explore Architecture <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true">
