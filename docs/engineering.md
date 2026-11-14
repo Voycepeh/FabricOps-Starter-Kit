@@ -13,6 +13,13 @@
 
 A FabricOps pipeline is the standard notebook flow **Setup → Read → Transform → Write → Finalize**. FabricOps owns the repeatable boundaries; the PySpark transformation remains project code.
 
+[Watch the Plug-and-Play 02 pipeline walkthrough in Microsoft Fabric](guided-demo/02-build-and-run-etl.md) to see the template and a real execution.
+
+<video class="fabricops-page-video" controls preload="metadata" aria-label="Plug-and-Play 02 Pipeline Template walkthrough">
+  <source src="assets/Plug%20%26%20Play%20Pipeline.mp4" type="video/mp4">
+  Your browser does not support embedded video. <a href="assets/Plug%20%26%20Play%20Pipeline.mp4">Open the Pipeline Template walkthrough</a>.
+</video>
+
 ![Setup, Read, Transform, Write, and Finalize with project-owned PySpark.](assets/engineering/pipeline-lifecycle.svg){ .fabricops-section-evidence }
 
 ```python
