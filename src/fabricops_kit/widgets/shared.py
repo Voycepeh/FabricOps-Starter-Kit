@@ -94,6 +94,35 @@ _FORM_STYLE = """<style>
 .fabricops-form .fabricops-searchable-selector .widget-combobox-container input {
     width:100% !important; min-width:0 !important; max-width:100% !important;
 }
+.fabricops-form .fabricops-searchable-selector { position:relative; }
+.fabricops-form .fabricops-searchable-selector::after {
+    content:"▾"; position:absolute; right:12px; bottom:9px; pointer-events:none; color:#526477;
+}
+.fabricops-form .fabricops-searchable-selector input { padding-right:30px; }
+.fabricops-form .fabricops-searchable-selector input::-webkit-calendar-picker-indicator { display:none !important; }
+.fabricops-form .fabricops-searchable-selector.fabricops-selector-wrapped input {
+    grid-area:2 / 1; height:100%;
+}
+.fabricops-form .fabricops-selector-value {
+    grid-area:2 / 1; align-self:center; z-index:1; min-width:0;
+    padding:8px 30px 8px 11px; pointer-events:none; white-space:normal; overflow-wrap:anywhere;
+}
+.fabricops-form .fabricops-selector-value[data-empty=true] { color:#657587; }
+.fabricops-form .fabricops-selector-wrapped:focus-within .fabricops-selector-value { visibility:hidden; }
+.fabricops-form .fabricops-selector-wrapped:not(:focus-within) input,
+.fabricops-form .fabricops-selector-wrapped:not(:focus-within) input::placeholder { color:transparent; }
+/* Portalled to body so notebook panes cannot clip the open menu. */
+.fabricops-selector-popup {
+    position:fixed; z-index:10000; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;
+    background:#fff; color:#243449; border:1px solid #b8c5d3; border-radius:5px;
+    padding:4px; font:13px/1.5 'Segoe UI',Arial,sans-serif;
+    box-shadow:0 4px 12px #19243a1a; overscroll-behavior:contain;
+}
+.fabricops-selector-popup [role=option] {
+    padding:8px 10px; cursor:pointer; white-space:normal; overflow-wrap:anywhere;
+}
+.fabricops-selector-popup [role=option]:hover,
+.fabricops-selector-popup [aria-selected=true] { background:#eaf3fb; outline:1px solid #0f6cbd; outline-offset:-1px; }
 .fabricops-form .widget-textarea textarea { height:110px; min-height:96px; resize:vertical; }
 .fabricops-form .widget-select select { height:130px; padding:5px; }
 .fabricops-form .widget-select-multiple select { height:96px; }

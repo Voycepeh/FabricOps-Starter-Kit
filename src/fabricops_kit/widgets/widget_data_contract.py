@@ -735,8 +735,9 @@ def _manifest_sections(
         for row in columns
     )
     guardrail_count = len(table_guardrails) + len(column_guardrails) + len(business_rules)
+    dataset_label = "File" if payload.get("source", {}).get("source_type") == "file" else "Table"
     guardrail_sections = (
-        "<div style='margin-top:8px;'><b>Table</b>"
+        f"<div style='margin-top:8px;'><b>{dataset_label}</b>"
         + rule_list(table_guardrails)
         + "</div>"
         "<div style='margin-top:8px;'><b>Columns</b>"
@@ -857,7 +858,7 @@ def _profile_html(context: dict[str, Any]) -> str:
         return "<p>A profile record exists, but no metrics were recorded for this column.</p>"
     return "<p style='margin:0;line-height:1.65;'>" + "<br>".join(lines) + "</p>"
 
-def _ai_usage_html(records: list[dict[str, Any]]) -> str:
+def _ai_usage_html(records: list[dict[str, Any]], *, dataset_label: str = "Table") -> str:
     """Render measured tokens and an explicitly estimated Fabric AI capacity equivalent."""
     # Microsoft AI Functions billing rates, checked 7 November 2026, per 1,000 tokens.
     rates = {"gpt-5-mini": (Decimal("8.40"), Decimal("0.84"), Decimal("67.23")),
@@ -873,7 +874,7 @@ def _ai_usage_html(records: list[dict[str, Any]]) -> str:
     estimate_partial = False
     cache_assumed = False
     rows = []
-    labels = {"table_enrichment": "Table description", "column_enrichment": "Column description",
+    labels = {"table_enrichment": f"{dataset_label} description", "column_enrichment": "Column description",
               "grain_key": "Grain and row key", "sensitive_data": "Sensitive Data",
               "business_rule_ai": "Data Quality suggestions"}
 
@@ -1055,7 +1056,7 @@ def widget_data_contract(
     and addition. Both paths create the same editable Guardrail records; the
     Columns section contains column metadata and non-DQ settings only.
     Open Data Contract loads a manual-first editor without AI inference or AI-only
-    profile reads. Top navigation keeps Table, Columns, Data Quality, Review,
+    profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
     and AI Usage above the editor; lifecycle actions remain in the sidebar.
     Every AI request requires an explicit Generate, Suggest or Re-run action.
     Suggestions persist during navigation and require explicit acceptance.
@@ -1348,9 +1349,10 @@ def widget_data_contract(
 
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)
+        selected_label = next((option[0] for option in top_nav.options if isinstance(option, tuple) and option[1] == selected_view), selected_view)
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = sidebar_content
-        section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_view)}</h3>"
+        section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_label)}</h3>"
         right.children = (section_heading, *left_children, *right_children)
         if selected_view == "Data Quality":
             refresh_dq_rules = state.get("_refresh_dq_rules")
@@ -1768,17 +1770,24 @@ def widget_data_contract(
     )
 
     def configured_item_name(row: Mapping[str, Any]) -> str:
-        workspace_id = str(row.get("workspace_id") or "")
-        store_key = str(row.get("layer") or "")
-        paths = getattr(getattr(config, "path_config", None), "paths", {}) or {}
+        workspace_id = str(row.get("configuration_workspace_id") or row.get("workspace_id") or "")
+        store_key = str(row.get("store") or row.get("layer") or "")
         configured = paths.get(workspace_id, {}).get(store_key)
         if isinstance(configured, Mapping):
-            return str(configured.get("name") or configured.get("item_id") or store_key)
+            return str(configured.get("name") or store_key)
         return str(
             getattr(configured, "name", None)
-            or getattr(configured, "item_id", "")
             or store_key
         )
+
+    workspace_names = {
+        str(row["workspace_id"]): str(row["_workspace_name"])
+        for row in [*table_rows, *file_rows]
+        if row.get("workspace_id") and row.get("_workspace_name")
+    }
+    runtime_metadata = resolved.get("runtime_metadata") or resolved
+    if runtime_metadata.get("workspace_id") and runtime_metadata.get("workspace_name"):
+        workspace_names.setdefault(str(runtime_metadata["workspace_id"]), str(runtime_metadata["workspace_name"]))
 
     def qualified_table_name(row: Mapping[str, Any]) -> str:
         schema_name = str(row.get("schema_name") or "").strip()
@@ -1786,12 +1795,15 @@ def widget_data_contract(
         return f"{schema_name}.{table_name}" if schema_name else table_name
 
     def table_selector_label(row: Mapping[str, Any]) -> str:
-        if row.get("source_type") == "file":
-            return contracts.dataset_display_name(row)
+        kind = "Table"
         name = qualified_table_name(row)
+        if row.get("source_type") == "file":
+            name = str(row["relative_path"])
+            kind = "Folder" if name.endswith("/") else "File selector" if any(char in name for char in "*?[") else "File"
         item = configured_item_name(row)
-        workspace = row.get("_workspace_name") or row.get("workspace_id") or ""
-        return f"{item} · {name} — Table · {workspace}"
+        workspace_id = str(row.get("workspace_id") or "")
+        workspace = workspace_names.get(workspace_id) or workspace_id
+        return f"{item} · {name} — {kind} · {workspace}"
 
     rows_cache: dict[str, Any] = {}
 
@@ -1890,6 +1902,7 @@ def widget_data_contract(
             return
         row = current["contract"]
         editable = str(row.get("status") or "").lower() == "draft"
+        table_exit_row.layout.display = "none" if editable else ""
         enrichments, guardrails = current_rows()
 
         def session_guardrails() -> list[dict[str, Any]]:
@@ -1961,6 +1974,12 @@ def widget_data_contract(
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
+        source = current.get("payload", {}).get("source", {})
+        dataset_label = "File" if source.get("source_type") == "file" else "Table"
+        if source.get("source_type") == "file":
+            # Display physical file context without changing the authored payload.
+            dataset = next((item for item in file_rows if item["source_id"] == source["source_id"]), source)
+            table = {**table, **dataset, "table_name": source["relative_path"]}
         observed_names = {str(item.get("column_name")) for item in current.get("catalogue_rows", [])
                           if item.get("column_id") and item.get("is_active") is not False}
         if current.get("payload", {}).get("source", {}).get("source_type") == "file":
@@ -2000,7 +2019,7 @@ def widget_data_contract(
         )
         checkbox_row_layout = widgets.Layout(gap="20px", align_items="center", flex_flow="row wrap")
         ai_visible = bool(ai_enrichment.get("enabled"))
-        top_nav.options = _TABS
+        top_nav.options = tuple(("File" if tab == "Table" else tab, tab) for tab in _TABS) if dataset_label == "File" else _TABS
         if str(top_nav.value) not in _TABS:
             top_nav.value = "Table"
 
@@ -2105,7 +2124,7 @@ def widget_data_contract(
                 "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                 "<b>Profile evidence</b><br>"
                 + ("Sampled Grain discovery used a bounded selection; full-table uniqueness is unverified. " if discovery.get("profile_scope") == "bounded_selection" else "No row key suggestion available from the latest profile. ")
-                + "Select a row key manually if this table has one.</div>"
+                + f"Select a row key manually if this {dataset_label.lower()} has one.</div>"
             )
 
         def render_grain_ai() -> None:
@@ -2234,7 +2253,7 @@ def widget_data_contract(
             rerun_table_description.disabled = not available
             rerun_table_description.description = "Re-run" if ai_state["table"].get("description") else "Generate"
 
-        @busy_action("Generating table description…", ai_request=True)
+        @busy_action(f"Generating {dataset_label.lower()} description…", ai_request=True)
         def run_table_ai(*, force: bool = False) -> None:
             if (
                 not editable
@@ -2273,7 +2292,7 @@ def widget_data_contract(
                 ai_errors.pop("table_enrichment", None)
                 if retrying:
                     ai_recovered(
-                        "Table AI suggestion generated after retry.",
+                        f"{dataset_label} AI suggestion generated after retry.",
                         operation="table_enrichment",
                         remaining_errors=bool(
                             ai_errors or state["_validation_errors"].get("business_rule_ai")
@@ -2284,7 +2303,7 @@ def widget_data_contract(
                 message = ai_failure_message(exc, "table_enrichment")
                 ai_state["table"]["description"] = {"error": message, "stale": False}
                 ai_errors["table_enrichment"] = message
-                set_status(f"Table AI suggestions unavailable: {message}", warning=True)
+                set_status(f"{dataset_label} AI suggestions unavailable: {message}", warning=True)
             render_table_ai()
 
         accept_table_description.on_click(
@@ -2591,18 +2610,19 @@ def widget_data_contract(
 
         def table_identity_html() -> str:
             workspace_name = str(
-                table.get("_workspace_name")
-                or "Unknown workspace"
+                workspace_names.get(str(table.get("workspace_id") or ""))
+                or table.get("workspace_id") or "Workspace unavailable"
             )
-            item_name = configured_item_name(table) or "Unknown"
-            full_table_name = qualified_table_name(table) or "Unknown"
+            item_name = configured_item_name(table) or "Fabric object unavailable"
+            full_table_name = str(source["relative_path"]) if is_file_source else qualified_table_name(table)
+            name_label = "File path" if is_file_source else "Full table name"
             return (
                 "<div style='margin-top:14px;'>"
                 "<div style='color:#667085;font-size:11px;'>Workspace</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)}</div>"
                 "<div style='color:#667085;font-size:11px;margin-top:10px;'>Fabric object</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{html.escape(item_name)}</div>"
-                "<div style='color:#667085;font-size:11px;margin-top:10px;'>Full table name</div>"
+                f"<div style='color:#667085;font-size:11px;margin-top:10px;'>{name_label}</div>"
                 f"<div style='font-weight:600;margin-top:3px;overflow-wrap:anywhere;'>"
                 f"{html.escape(full_table_name)}</div></div>"
             )
@@ -2610,7 +2630,7 @@ def widget_data_contract(
         table_summary = widgets.HTML()
         table_context_content = widgets.HTML()
         table_context_accordion = widgets.Accordion([table_context_content], selected_index=None)
-        table_context_accordion.set_title(0, "Table context")
+        table_context_accordion.set_title(0, "File context" if is_file_source else "Table context")
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
         guardrail_disclosure = widgets.Accordion([guardrail_sidebar], selected_index=None)
@@ -2790,7 +2810,7 @@ def widget_data_contract(
                     detail = [
                         ("Managed rule", "GRAIN — Uniqueness · " + " + ".join(affected_names) + " · " + (policy if enabled else "Not enforced")),
                         ("Policy", policy),
-                        ("Edit", "Table tab · Grain & Row Key"),
+                        ("Edit", f"{dataset_label} tab · Grain & Row Key"),
                         ("State", "Enabled" if enabled else "Not enforced"),
                         ("Key", affected_names or "Not selected"),
                         (
@@ -2803,10 +2823,10 @@ def widget_data_contract(
                     if not enabled:
                         detail.append((
                             "Next step",
-                            "Turn on Enforce Grain in the Table tab to activate this check.",
+                            f"Turn on Enforce Grain in the {dataset_label} tab to activate this check.",
                         ))
                 else:
-                    detail = [("Scope", "Column" if rule.get("column_id") else "Table-level"), ("Columns", affected_names or "Table-level"), ("Rule", str(rule.get("rule_type") or "").replace("_", " ")), ("Policy", "Block · treatment must succeed" if kind == "sensitive_data" else policy)]
+                    detail = [("Scope", "Column" if rule.get("column_id") else f"{dataset_label}-level"), ("Columns", affected_names or f"{dataset_label}-level"), ("Rule", str(rule.get("rule_type") or "").replace("_", " ")), ("Policy", "Block · treatment must succeed" if kind == "sensitive_data" else policy)]
                     if kind == "sensitive_data":
                         pii_label = {
                             "direct": "Direct PII", "indirect": "Indirect PII",
@@ -2835,7 +2855,7 @@ def widget_data_contract(
                     detail.insert(0, ("State", "Enabled" if enabled else "Disabled · intentionally not executed"))
                 text = "".join(f"<div><b>{escaped(key)}:</b> {escaped(value)}</div>" for key, value in detail)
                 state_label = policy if enabled else "Not enforced"
-                description = (", ".join(affected_names) + " · " if affected_names else "Table · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + state_label
+                description = (", ".join(affected_names) + " · " if affected_names else f"{dataset_label} · ") + str(rule.get("rule_type") or labels[kind]).replace("_", " ") + " · " + state_label
                 children = [widgets.HTML("<div class='fabricops-guardrail-detail'>" + text + "</div>")]
                 if show_summary:
                     children.insert(0, widgets.HTML(
@@ -2888,8 +2908,8 @@ def widget_data_contract(
                 return box
 
             guardrail_sidebar.children = (
-                group("read", "When this table is read", "orchestrate_read()", ("freshness", "schema", "data_quality")),
-                group("write", "Before this table is written", "orchestrate_write()", ("schema", "sensitive_data", "data_quality")),
+                group("read", f"When this {dataset_label.lower()} is read", "orchestrate_read()", ("freshness", "schema", "data_quality")),
+                group("write", f"Before this {dataset_label.lower()} is written", "orchestrate_write()", ("schema", "sensitive_data", "data_quality")),
             )
             sidebar_snapshot["signature"] = signature
             close_sidebar_widgets(previous)
@@ -2907,14 +2927,14 @@ def widget_data_contract(
 
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
-                "'>Table</div>"
+                f"'>{'File' if is_file_source else 'Table'}</div>"
                 f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
                 f"{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
-                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or 'Unknown workspace'))}</div>"
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(workspace_names.get(str(table.get('workspace_id') or '')) or table.get('workspace_id') or 'Workspace unavailable'))}</div>"
             )
             table_context_content.value = (
                 table_identity_html()
@@ -3138,7 +3158,7 @@ def widget_data_contract(
         if ai_visible:
             table_definition_content.add_class("fabricops-contract-assistant-grid")
         table_definition = shared.form_section(
-            widgets, title="Table definition", children=[table_definition_content]
+            widgets, title=f"{dataset_label} definition", children=[table_definition_content]
         )
         grain_definition = shared.form_section(
             widgets,
@@ -4677,12 +4697,6 @@ def widget_data_contract(
         refresh_column_options()
 
         column_left = (
-            widgets.HTML(
-                "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
-                "'>Columns</div>"
-                "<div style='color:#667085;font-size:12px;line-height:1.45;margin-top:4px;'>"
-                "Select a column to review its details and rules.</div>"
-            ),
             column_search,
             column_option_style,
             column_select,
@@ -6583,7 +6597,7 @@ def widget_data_contract(
                 widgets.HTML(
                     "<div style='color:#667085;font-size:12px;line-height:1.5;'>"
                     "Select a current rule or AI draft to edit it, or select the first "
-                    "row to create a new rule. The locked GRAIN rule is managed in the Table tab. "
+                    f"row to create a new rule. The locked GRAIN rule is managed in the {dataset_label} tab. "
                     "AI drafts remain proposals until you review and add them.</div>"
                 ),
                 business_saved,
@@ -6667,13 +6681,13 @@ def widget_data_contract(
             managed_grain.value = (
                 "<b>GRAIN — Uniqueness</b><br>"
                 + html.escape(keys) + " · " + html.escape(str(grain_policy.value)) + " · " + status
-                + "<br>Edit the row key and enforcement in the Table tab. Non-null keys are required."
+                + f"<br>Edit the row key and enforcement in the {dataset_label} tab. Non-null keys are required."
             ) if grain_enabled.value else ""
             managed_grain_review.value = (
                 "<div style='padding:12px;border:1px solid #dce4ed;border-radius:8px'>"
                 "<b>Locked managed rule — GRAIN · Uniqueness</b><br>"
                 + html.escape(keys) + " · " + html.escape(str(grain_policy.value))
-                + "<p>Grain uniqueness is configured in the Table tab. "
+                + f"<p>Grain uniqueness is configured in the {dataset_label} tab. "
                 "It cannot be edited or deleted from Data Quality Rules.</p></div>"
             )
             refresh_business_saved_options()
@@ -6709,7 +6723,7 @@ def widget_data_contract(
             for key in sorted(set(old_enrichment) | set(new_enrichment)):
                 before, after = old_enrichment.get(key, ""), new_enrichment.get(key, "")
                 if before != after:
-                    target = column_names.get(key[0], "Column") if key[0] else "Table"
+                    target = column_names.get(key[0], "Column") if key[0] else dataset_label
                     changes.append(
                         f"<li><b>{html.escape(target)} · {html.escape(key[1])}</b>: "
                         f"{html.escape(before or 'Not set')} → {html.escape(after or 'Not set')}</li>"
@@ -6972,8 +6986,8 @@ def widget_data_contract(
         )
         nonlocal sidebar_content
         sidebar_content = (
-            table_summary, table_context_accordion, sidebar_actions, table_exit_row,
-            table_exit_confirm, operation_progress, status,
+            table_summary, operation_progress, status, table_context_accordion,
+            sidebar_actions, table_exit_row, table_exit_confirm,
         )
         apply_view()
 
@@ -7162,7 +7176,8 @@ def widget_data_contract(
 
     def refresh_ai_usage() -> None:
         """Display measured input/output totals separately from estimated AI capacity."""
-        ai_usage_view.value = _ai_usage_html(state["ai_usage"])
+        source = (state.get("current") or {}).get("payload", {}).get("source", {})
+        ai_usage_view.value = _ai_usage_html(state["ai_usage"], dataset_label="File" if source.get("source_type") == "file" else "Table")
 
     refresh_ai_usage()
     selector_ai_information = ai_information()
@@ -7185,8 +7200,8 @@ def widget_data_contract(
         "<span style='color:#666;font-size:12px;'>AI suggestions unavailable: disabled in 00_env_config.</span>"
     )
     change_table_button = widgets.Button(
-        description="Exit",
-        layout=widgets.Layout(width="120px"),
+        description="Back to datasets",
+        layout=widgets.Layout(width="auto", min_width="140px"),
     )
     confirm_exit_discard = widgets.Button(
         description="Discard & exit",
@@ -7274,8 +7289,7 @@ def widget_data_contract(
                 selected if selected in options["tables"] else "",
             )
             workspaces = contracts.dataset_selector_options(table_rows, file_rows, table_id=selected)["workspaces"]
-            labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in [*table_rows, *file_rows]}
-            workspace_control.refresh_rows([{"label": f"{labels[value]} ({value})", "value": value} for value in workspaces],
+            workspace_control.refresh_rows([{"label": workspace_names.get(value) or value, "value": value} for value in workspaces],
                                            state.get("workspace_id") or "")
         finally:
             state["_selector_refreshing"] = False
@@ -7365,7 +7379,7 @@ def widget_data_contract(
                     select(selected_table, int(selected_contract))
                 finally:
                     record_timing("Open: select contract / metadata", perf_counter() - began)
-            set_open_progress("Constructing Table, Columns, Data Quality and Review widget controls…")
+            set_open_progress(f"Constructing {'File' if str(selected_table).startswith('file:') else 'Table'}, Columns, Data Quality and Review widget controls…")
             began = perf_counter()
             try:
                 top_nav.value = "Table"

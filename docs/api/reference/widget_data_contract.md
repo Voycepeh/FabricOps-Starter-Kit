@@ -121,7 +121,7 @@ from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
 Columns section contains column metadata and non-DQ settings only.
 Open Data Contract loads a manual-first editor without AI inference or AI-only
-profile reads. Top navigation keeps Table, Columns, Data Quality, Review,
+profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
 and AI Usage above the editor; lifecycle actions remain in the sidebar.
 Every AI request requires an explicit Generate, Suggest or Re-run action.
 Suggestions persist during navigation and require explicit acceptance.
@@ -191,9 +191,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:989`
+`fabricops_kit/widgets/widget_data_contract.py:990`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L990-L7473">View on GitHub</a>
 </div>
 
 
