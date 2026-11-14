@@ -1768,17 +1768,24 @@ def widget_data_contract(
     )
 
     def configured_item_name(row: Mapping[str, Any]) -> str:
-        workspace_id = str(row.get("workspace_id") or "")
-        store_key = str(row.get("layer") or "")
-        paths = getattr(getattr(config, "path_config", None), "paths", {}) or {}
+        workspace_id = str(row.get("configuration_workspace_id") or row.get("workspace_id") or "")
+        store_key = str(row.get("store") or row.get("layer") or "")
         configured = paths.get(workspace_id, {}).get(store_key)
         if isinstance(configured, Mapping):
-            return str(configured.get("name") or configured.get("item_id") or store_key)
+            return str(configured.get("name") or store_key)
         return str(
             getattr(configured, "name", None)
-            or getattr(configured, "item_id", "")
             or store_key
         )
+
+    workspace_names = {
+        str(row["workspace_id"]): str(row["_workspace_name"])
+        for row in [*table_rows, *file_rows]
+        if row.get("workspace_id") and row.get("_workspace_name")
+    }
+    runtime_metadata = resolved.get("runtime_metadata") or resolved
+    if runtime_metadata.get("workspace_id") and runtime_metadata.get("workspace_name"):
+        workspace_names.setdefault(str(runtime_metadata["workspace_id"]), str(runtime_metadata["workspace_name"]))
 
     def qualified_table_name(row: Mapping[str, Any]) -> str:
         schema_name = str(row.get("schema_name") or "").strip()
@@ -1786,12 +1793,15 @@ def widget_data_contract(
         return f"{schema_name}.{table_name}" if schema_name else table_name
 
     def table_selector_label(row: Mapping[str, Any]) -> str:
-        if row.get("source_type") == "file":
-            return contracts.dataset_display_name(row)
+        kind = "Table"
         name = qualified_table_name(row)
+        if row.get("source_type") == "file":
+            name = str(row["relative_path"])
+            kind = "Folder" if name.endswith("/") else "File selector" if any(char in name for char in "*?[") else "File"
         item = configured_item_name(row)
-        workspace = row.get("_workspace_name") or row.get("workspace_id") or ""
-        return f"{item} · {name} — Table · {workspace}"
+        workspace_id = str(row.get("workspace_id") or "")
+        workspace = workspace_names.get(workspace_id) or workspace_id
+        return f"{item} · {name} — {kind} · {workspace}"
 
     rows_cache: dict[str, Any] = {}
 
@@ -1961,6 +1971,11 @@ def widget_data_contract(
         table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
+        source = current.get("payload", {}).get("source", {})
+        if source.get("source_type") == "file":
+            # Display physical file context without changing the authored payload.
+            dataset = next((item for item in file_rows if item["source_id"] == source["source_id"]), source)
+            table = {**table, **dataset, "table_name": source["relative_path"]}
         observed_names = {str(item.get("column_name")) for item in current.get("catalogue_rows", [])
                           if item.get("column_id") and item.get("is_active") is not False}
         if current.get("payload", {}).get("source", {}).get("source_type") == "file":
@@ -2591,18 +2606,19 @@ def widget_data_contract(
 
         def table_identity_html() -> str:
             workspace_name = str(
-                table.get("_workspace_name")
-                or "Unknown workspace"
+                workspace_names.get(str(table.get("workspace_id") or ""))
+                or table.get("workspace_id") or "Workspace unavailable"
             )
-            item_name = configured_item_name(table) or "Unknown"
-            full_table_name = qualified_table_name(table) or "Unknown"
+            item_name = configured_item_name(table) or "Fabric object unavailable"
+            full_table_name = str(source["relative_path"]) if is_file_source else qualified_table_name(table)
+            name_label = "File path" if is_file_source else "Full table name"
             return (
                 "<div style='margin-top:14px;'>"
                 "<div style='color:#667085;font-size:11px;'>Workspace</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)}</div>"
                 "<div style='color:#667085;font-size:11px;margin-top:10px;'>Fabric object</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{html.escape(item_name)}</div>"
-                "<div style='color:#667085;font-size:11px;margin-top:10px;'>Full table name</div>"
+                f"<div style='color:#667085;font-size:11px;margin-top:10px;'>{name_label}</div>"
                 f"<div style='font-weight:600;margin-top:3px;overflow-wrap:anywhere;'>"
                 f"{html.escape(full_table_name)}</div></div>"
             )
@@ -2610,7 +2626,7 @@ def widget_data_contract(
         table_summary = widgets.HTML()
         table_context_content = widgets.HTML()
         table_context_accordion = widgets.Accordion([table_context_content], selected_index=None)
-        table_context_accordion.set_title(0, "Table context")
+        table_context_accordion.set_title(0, "File context" if is_file_source else "Table context")
         guardrail_sidebar = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0", gap="8px"))
         guardrail_sidebar.add_class("fabricops-guardrail-sidebar")
         guardrail_disclosure = widgets.Accordion([guardrail_sidebar], selected_index=None)
@@ -2907,14 +2923,14 @@ def widget_data_contract(
 
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
-                "'>Table</div>"
+                f"'>{'File' if is_file_source else 'Table'}</div>"
                 f"<div style='color:#172b4d;font-size:18px;font-weight:700;margin-top:6px;'>"
                 f"{html.escape(str(table.get('table_name') or state.get('table_id') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:2px;'>"
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
-                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(table.get('_workspace_name') or 'Unknown workspace'))}</div>"
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(workspace_names.get(str(table.get('workspace_id') or '')) or table.get('workspace_id') or 'Workspace unavailable'))}</div>"
             )
             table_context_content.value = (
                 table_identity_html()
@@ -7274,8 +7290,7 @@ def widget_data_contract(
                 selected if selected in options["tables"] else "",
             )
             workspaces = contracts.dataset_selector_options(table_rows, file_rows, table_id=selected)["workspaces"]
-            labels = {str(row["workspace_id"]): str(row.get("_workspace_name") or row["workspace_id"]) for row in [*table_rows, *file_rows]}
-            workspace_control.refresh_rows([{"label": f"{labels[value]} ({value})", "value": value} for value in workspaces],
+            workspace_control.refresh_rows([{"label": workspace_names.get(value) or value, "value": value} for value in workspaces],
                                            state.get("workspace_id") or "")
         finally:
             state["_selector_refreshing"] = False

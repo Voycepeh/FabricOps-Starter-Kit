@@ -643,6 +643,45 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
     assert "grid-template-columns:minmax(0,1fr)" in style
 
 
+@pytest.mark.parametrize("path,kind", [("demo/orders.csv", "File"), ("demo/*.csv", "File selector")])
+def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, monkeypatch, path, kind):
+    """Files use configured item names and known workspace names without changing their identity."""
+    source = module.contracts.file_source_identity(
+        workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
+    )
+    dataset = {**source, "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
+    original_review = module.contracts.get_contract_review_state
+
+    def file_review(**kwargs):
+        loaded = original_review(**kwargs)
+        loaded["catalogue_rows"] = []
+        loaded["payload"] = {**json.loads(loaded["contract"]["contract_payload_json"]), "source": dict(source)}
+        return loaded
+
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    labels = {value: label for label, value in controls["table"].options}
+    assert labels[source["source_id"]] == f"Raw Lakehouse · {path} — {kind} · Development"
+    assert labels["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
+    assert ("Development", "dev") in controls["workspace_select"].options
+    context = controls["table_context"].children[0].value
+    assert "Development" in context and "Raw Lakehouse" in context and path in context
+    assert "File path" in context and "Full table name" not in context
+    assert "Unknown workspace" not in context and ">Unknown<" not in context
+    assert state["current"]["payload"]["source"] == source
+    assert state["dirty"] is False
+
+
+def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_runtime):
+    """An unnamed workspace has one useful fallback instead of ID (ID)."""
+    for row in widget_runtime["catalogue"]:
+        row.pop("_workspace_name", None)
+    state = widget_runtime["start"]()
+    assert ("dev", "dev") in state["_controls"]["workspace_select"].options
+
+
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):
     """Table and Workspace filtering clears stale selections in either direction."""
     rows = [dict(widget_runtime["catalogue"][0]),
@@ -3224,7 +3263,9 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
     def file_review(**kwargs):
         loaded = original_review(**kwargs)
         loaded["payload"] = {
-            "source": {"source_type": "file"},
+            "source": module.contracts.file_source_identity(
+                workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
+            ),
             "table": {"table_id": "orders"},
         }
         return loaded

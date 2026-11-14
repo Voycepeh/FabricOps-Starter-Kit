@@ -27,11 +27,150 @@ def __getattr__(name: str):
 # Form styling belongs to shared.form_page, not a second injected stylesheet.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
-  if (window.__fabricopsNotebookUXVersion === 2) {
+  if (window.__fabricopsNotebookUXVersion === 3) {
     return;
   }
   window.__fabricopsFocusReleaseInstalled = true;
-  window.__fabricopsNotebookUXVersion = 2;
+  window.__fabricopsNotebookUXVersion = 3;
+
+  // Native datalist popups truncate long dataset labels independently of the
+  // input width. Keep the widget's datalist/model, but own its visible popup.
+  const selectors = new WeakMap();
+  let activeSelector = null;
+  let popupSequence = 0;
+  const closeSelector = () => {
+    if (!activeSelector) return;
+    const {input, popup, observer} = activeSelector;
+    observer.disconnect();
+    popup.remove();
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+    input.removeAttribute("aria-controls");
+    activeSelector = null;
+  };
+  const positionSelector = () => {
+    if (!activeSelector) return;
+    const {input, popup} = activeSelector;
+    if (!input.isConnected || input.disabled) { closeSelector(); return; }
+    const rect = input.getBoundingClientRect();
+    const below = innerHeight - rect.bottom - 8;
+    const above = rect.top - 8;
+    const upwards = below < 200 && above > below;
+    popup.style.left = `${Math.max(4, Math.min(rect.left, innerWidth - rect.width - 4))}px`;
+    popup.style.width = `${Math.min(rect.width, innerWidth - 8)}px`;
+    popup.style.maxHeight = `${Math.max(0, Math.min(320, upwards ? above : below))}px`;
+    popup.style.top = upwards ? "auto" : `${rect.bottom + 2}px`;
+    popup.style.bottom = upwards ? `${innerHeight - rect.top + 2}px` : "auto";
+  };
+  const highlightSelector = (index) => {
+    const state = activeSelector;
+    if (!state || !state.popup.children.length) return;
+    state.index = Math.max(0, Math.min(index, state.popup.children.length - 1));
+    [...state.popup.children].forEach((option, i) => option.setAttribute("aria-selected", String(i === state.index)));
+    const option = state.popup.children[state.index];
+    state.input.setAttribute("aria-activedescendant", option.id);
+    option.scrollIntoView({block:"nearest"});
+  };
+  const chooseSelector = (option) => {
+    if (!activeSelector) return;
+    const input = activeSelector.input;
+    input.value = option.textContent;
+    closeSelector();
+    // Use the real ComboboxView handlers so ensure_option and stable values
+    // continue to be synchronized by ipywidgets.
+    input.dispatchEvent(new Event("change", {bubbles:true}));
+  };
+  const renderSelector = (filter) => {
+    if (!activeSelector) return;
+    const {input, popup, datalist} = activeSelector;
+    activeSelector.index = -1;
+    input.removeAttribute("aria-activedescendant");
+    const query = filter ? input.value.toLocaleLowerCase() : "";
+    popup.replaceChildren();
+    for (const entry of datalist.options) {
+      if (!entry.value.toLocaleLowerCase().includes(query)) continue;
+      const option = document.createElement("div");
+      option.id = `${popup.id}-${popup.children.length}`;
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", "false");
+      option.textContent = entry.value;
+      popup.append(option);
+    }
+    popup.hidden = !popup.children.length;
+    input.setAttribute("aria-expanded", String(!popup.hidden));
+    positionSelector();
+  };
+  const openSelector = (input, filter = false) => {
+    if (input.disabled || input.readOnly) return;
+    let datalist = selectors.get(input);
+    if (!datalist) {
+      datalist = document.getElementById(input.getAttribute("list"));
+      if (!(datalist instanceof HTMLDataListElement)) return;
+      selectors.set(input, datalist);
+      input.removeAttribute("list");
+      input.setAttribute("role", "combobox");
+      input.setAttribute("aria-autocomplete", "list");
+      input.setAttribute("aria-haspopup", "listbox");
+    }
+    if (activeSelector?.input !== input) {
+      closeSelector();
+      const popup = document.createElement("div");
+      popup.className = "fabricops-selector-popup";
+      popup.id = `fabricops-selector-popup-${++popupSequence}`;
+      popup.setAttribute("role", "listbox");
+      popup.setAttribute("aria-label", input.getAttribute("aria-label") || input.placeholder || "Options");
+      document.body.append(popup);
+      input.setAttribute("aria-controls", popup.id);
+      const observer = new MutationObserver(() => renderSelector(false));
+      observer.observe(datalist, {childList:true, subtree:true, attributes:true});
+      activeSelector = {input, popup, datalist, observer, index:-1};
+      popup.addEventListener("pointerdown", event => event.preventDefault());
+      popup.addEventListener("click", event => {
+        const option = event.target.closest('[role="option"]');
+        if (option) chooseSelector(option);
+      });
+    }
+    renderSelector(filter);
+  };
+  const selectorInput = target => target instanceof HTMLInputElement &&
+    target.closest(".fabricops-form .fabricops-searchable-selector") ? target : null;
+  document.addEventListener("pointerdown", event => {
+    const input = selectorInput(event.target);
+    if (input) openSelector(input);
+    else if (activeSelector && !activeSelector.popup.contains(event.target)) closeSelector();
+  }, true);
+  document.addEventListener("focusin", event => {
+    const input = selectorInput(event.target);
+    if (input) openSelector(input);
+  });
+  document.addEventListener("focusout", event => {
+    if (activeSelector?.input === event.target) closeSelector();
+  });
+  document.addEventListener("input", event => {
+    const input = selectorInput(event.target);
+    if (input && document.activeElement === input) openSelector(input, true);
+  });
+  document.addEventListener("keydown", event => {
+    const input = selectorInput(event.target);
+    if (!input || event.isComposing) return;
+    if (event.key === "Escape" || event.key === "Tab") {
+      closeSelector();
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); }
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!activeSelector) openSelector(input);
+      highlightSelector((activeSelector?.index ?? -1) + (event.key === "ArrowDown" ? 1 : -1));
+    } else if (event.key === "Enter" && activeSelector?.index >= 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      chooseSelector(activeSelector.popup.children[activeSelector.index]);
+    }
+  }, true);
+  window.addEventListener("resize", positionSelector);
+  document.addEventListener("scroll", event => {
+    if (activeSelector && !activeSelector.popup.contains(event.target)) positionSelector();
+  }, true);
 
   let pointerAction = false;
   let scrollSnapshot = null;
@@ -114,7 +253,7 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     window.setTimeout(() => {
       if (!pointerAction) return;
       const active = document.activeElement;
-      if (active && form.contains(active) && typeof active.blur === "function") {
+      if (active && activeSelector?.input !== active && form.contains(active) && typeof active.blur === "function") {
         active.blur();
       }
     }, delay);
