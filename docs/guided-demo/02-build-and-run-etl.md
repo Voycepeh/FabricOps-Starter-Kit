@@ -14,8 +14,8 @@ See how the Plug-and-Play 02 template is structured and how its governed pipelin
 </div>
 
 <video class="fabricops-page-video" controls preload="metadata" aria-label="Plug-and-Play 02 Pipeline Template walkthrough">
-  <source src="../assets/plug-and-play-pipeline-template.mp4" type="video/mp4">
-  Your browser does not support embedded video. <a href="../assets/plug-and-play-pipeline-template.mp4">Open the Pipeline Template walkthrough</a>.
+  <source src="/FabricOps-Starter-Kit/assets/plug-and-play-pipeline-template.mp4" type="video/mp4">
+  Your browser does not support embedded video. <a href="/FabricOps-Starter-Kit/assets/plug-and-play-pipeline-template.mp4">Open the Pipeline Template walkthrough</a>.
 </video>
 
 The walkthrough is the primary guided introduction. This page remains a standalone reference for the template's concepts, examples, strategy choices, and execution output.
