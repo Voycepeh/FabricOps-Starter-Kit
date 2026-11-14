@@ -29,7 +29,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         return {'dataframe': frame, **({'source_id': 'file:orders', 'source_type': 'file'} if kwargs.get('relative_path') else {'table_name': kwargs['table_name']})}
     def write(dataframe, **kwargs):
         assert not {'execution_plan', 'sources', 'spark_session'}.intersection(kwargs)
-        writes.append((kwargs['table_name'], kwargs['write_mode']))
+        writes.append((kwargs.get('relative_path') or kwargs['table_name'], kwargs['write_mode']))
         return {'dataframe': dataframe, 'published': False}
     namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
@@ -52,7 +52,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     assert all(call.kwargs == {'pipeline_mode': 'Ungoverned', **observation} for call in setup.call_args_list)
     expected = {
         '02_pipeline': (1, ['overwrite']),
-        '02A_full_refresh_demo': (3, ['overwrite','overwrite']),
+        '02A_full_refresh_demo': (3, ['overwrite','overwrite','overwrite']),
         '02B_incremental_append_demo': (2, ['append_all','append_new_only']),
         '02C_scd_demo': (1, ['scd1','scd2']),
     }
@@ -60,6 +60,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     assert len(reads) == count and [mode for name, mode in writes] == modes
     if path.stem == '02A_full_refresh_demo':
         assert reads == ['demo/orders.csv', 'products', 'order_history']
+        assert writes[-1] == ('demo/curated_orders.csv', 'overwrite')
 
 
 

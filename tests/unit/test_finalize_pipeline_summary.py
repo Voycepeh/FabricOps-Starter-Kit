@@ -1,6 +1,9 @@
 """Readable final pipeline summaries assembled from the finalized run snapshot."""
 
 import json
+from copy import deepcopy
+
+import pytest
 from datetime import UTC, datetime, timedelta
 from importlib import import_module
 from types import SimpleNamespace
@@ -89,10 +92,10 @@ def test_operation_summary_rows_use_native_operation_metadata():
 
     assert rows == [
         ("Read", "wh_Bronze", "dbo", "orders", "full", "125", "—",
-         "Batch returned", "Succeeded", "00:00:12", "Read: passed"),
+         "Batch returned", "Succeeded", "00:00:12", "Read: passed", "—", "—", "—"),
         ("Write", "Lakehouse_Silver", "dbo", "orders", "scd2", "—", "170",
          "100 processed, 100 versions inserted, 70 versions expired, 0 unchanged",
-         "Succeeded", "00:00:45", "Write: passed; Profile: passed"),
+         "Succeeded", "00:00:45", "Write: passed; Profile: passed", "—", "—", "—"),
     ]
 
 
@@ -141,8 +144,9 @@ def test_pipeline_summary_displays_dataframe_and_run_totals(monkeypatch, capsys)
     assert "Pipeline ID: pipeline-456" in output
     assert captured["displayed"] is frame
     assert captured["schema"] == [
-        "Operation", "Store", "Schema", "Table", "Mode",
+        "Operation", "Store", "Schema", "Table / File", "Mode",
         "Rows read", "Rows written", "Metrics", "Status", "Duration", "Stages",
+        "Format", "Layout", "Publication",
     ]
     assert len(captured["rows"]) == 2
 
@@ -174,3 +178,72 @@ def test_pipeline_summary_shows_failure_codes_and_missing_duration(capsys):
     assert "Duration: Not captured" in output
     assert "project_execution_failed (ValueError)" in output
     assert "password" not in output
+
+
+@pytest.mark.parametrize("single_file,expected_layout", [(True, "Single file"), (False, "Dataset folder")])
+@pytest.mark.parametrize("publication", ["published", "ignored", "not_published"])
+def test_file_summary_uses_source_identity_and_retained_output_metrics(single_file, expected_layout, publication):
+    """File destinations and output counts are visible without fabricating committed rows."""
+    result = _result()
+    source, target = result["operations"]
+    for operation in (source, target):
+        operation.update(source_type="file", source_id="file:" + operation["table_id"], table_id=None,
+                         destination={"source_type": "file", "relative_path": "demo/orders.csv", "file_format": "csv"})
+    target.update(file_write_parameters_json=json.dumps({"single_file": single_file}),
+                  publication_status=publication, rows_written=None,
+                  metrics={"input_rows": 120, "file_count": 1, "output_bytes": 8192, "rows_committed": None})
+    pipeline = _pipeline(None)
+    pipeline.plan.participants_json = json.dumps({
+        source["source_id"]: {"store": "Bronze", "source_type": "file"},
+        target["source_id"]: {"store": "Silver", "source_type": "file"},
+    })
+    pipeline.plan.evidence = {"operations": {}}
+    before = deepcopy(result)
+
+    rows = finalize_module._operation_summary_rows(result, pipeline=pipeline)
+
+    assert rows[0][1:4] == ("Bronze", "—", "Files/demo/orders.csv")
+    assert rows[0][-3:] == ("csv", "—", "—")
+    assert rows[1][1:4] == ("Silver", "—", "Files/demo/orders.csv")
+    assert rows[1][6] == "Not captured"
+    assert rows[1][7] == "120 processed, 1 files in output, 8,192 bytes in output"
+    assert rows[1][-3:] == ("csv", expected_layout, publication.replace("_", " ").title())
+    assert result == before
+
+
+@pytest.mark.parametrize("parameters", [None, "invalid JSON", "null"])
+def test_file_summary_missing_history_stays_not_captured(parameters):
+    """Historical files retain their destination without invented publication details."""
+    result = _result()
+    target = result["operations"][1]
+    target.update(source_type="file", source_id="file:target", table_id=None,
+                  destination={"source_type": "file", "relative_path": "exports/orders", "file_format": "parquet"},
+                  file_write_parameters_json=parameters, rows_written=None, metrics={})
+
+    row = finalize_module._operation_summary_rows(result)[1]
+
+    assert row[2:4] == ("—", "Files/exports/orders")
+    assert row[6:8] == ("Not captured", "Not captured")
+    assert row[-3:] == ("parquet", "Not captured", "Not Captured")
+
+
+def test_file_dry_run_summary_uses_runtime_fallback_without_publication_counts():
+    """A prepared file Write shows its layout and honest Dry Run publication state."""
+    result = _result()
+    result["execution_mode"] = "dry_run"
+    target = result["operations"][1]
+    target.update(source_type="file", source_id="file:target", table_id=None,
+                  destination={"source_type": "file", "relative_path": "exports/orders.csv", "file_format": "csv"},
+                  rows_written=None, metrics={})
+    pipeline = _pipeline(None)
+    pipeline.plan.evidence["operations"][target["operation_key"]] = {
+        "store": "Silver", "publication_status": "not_published",
+        "file_write_parameters_json": json.dumps({"single_file": True}),
+        "metrics": {"input_rows": 0},
+    }
+
+    row = finalize_module._operation_summary_rows(result, pipeline=pipeline)[1]
+
+    assert row[1] == "Silver"
+    assert row[6:8] == ("Not published", "0 processed")
+    assert row[-3:] == ("csv", "Single file", "Not Published")

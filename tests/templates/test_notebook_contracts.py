@@ -394,7 +394,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                 assert "read_lakehouse_table" not in calls
                 assert "read_warehouse_query" not in calls
                 assert cell.source.index(f"{orchestrator}(") < cell.source.index("display(")
-                if orchestrator == "orchestrate_write":
+                if orchestrator == "orchestrate_write" and "relative_path=" not in cell.source:
                     assert all(key in cell.source for key in ("dq_result", "sensitive_result", "support_mapping"))
                     if path.name != "02C_scd_demo.ipynb":
                         assert "# from fabricops_kit import read_" in cell.source
@@ -450,6 +450,13 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
                        if cell.cell_type == "code" and "orchestrate_write(" in cell.source]
         for cell in write_cells:
             assert cell.source.lstrip().startswith('writes["')
+            if 'relative_path=' in cell.source:
+                assert 'single_file=True' in cell.source
+                assert 'file_format="csv"' in cell.source
+                assert 'store="Silver"' in cell.source
+                assert 'relative_path="demo/curated_orders.csv"' in cell.source
+                assert '# from fabricops_kit import read_lakehouse_csv' in cell.source
+                continue
             assert "# Optional: inspect Data Quality diagnostics and caller-managed token mapping." in cell.source
             assert '.get("dq_result")' in cell.source
             assert '.get("sensitive_result")' in cell.source
@@ -469,8 +476,8 @@ def test_02a_preserves_the_full_refresh_pipeline():
     )
     assert code_source.count("orchestrate_read(") == 3
     assert code_source.count('read_mode="full"') == 3
-    assert code_source.count("= orchestrate_write(") == 2
-    assert code_source.count('write_mode="overwrite"') == 2
+    assert code_source.count("= orchestrate_write(") == 3
+    assert code_source.count('write_mode="overwrite"') == 3
     assert 'sources=' not in code_source
     assert "FROM demo.order_history" in source
     assert "customer_summary_df" in source

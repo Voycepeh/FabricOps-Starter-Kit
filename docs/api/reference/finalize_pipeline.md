@@ -103,6 +103,13 @@ Open sessions require the current initialized notebook configuration and
 runtime identity, whether passed explicitly or selected implicitly. Already
 closed sessions retain their recorded outcome for repeat finalization.
 
+The notebook summary identifies table and file operations. Files show their
+configured Store, path beneath Files, format and, for Writes, output layout,
+publication status and available output file/byte counts. Filesystem counts
+describe the output, not rows committed by this attempt. Missing historical
+details remain not captured. Rendering uses retained operation records and
+session metadata without reading source or target data again.
+
 Dry Run returns a session-only summary and persists no target, watermark,
 processing state, profile observation or run metadata. A completed captured
 Dry Run retains complete saved-definition and test claims in Engineering
@@ -128,9 +135,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:192`
+`fabricops_kit/pipeline/finalize_pipeline.py:216`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L304">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L216-L335">View on GitHub</a>
 </div>
 
 
