@@ -1721,10 +1721,17 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
     assert result["data_agreement"]["active_steward_count"] == 0
 
 
+@pytest.mark.parametrize("levels", [[], ["Public"], {}, {"": "Meaning"}, {"Public": ""}, {"Public": None}, {1: "Meaning"}])
+def test_classification_definitions_require_labels_and_policy_explanations(levels):
+    """Reject the old list format and incomplete definitions before the widget opens."""
+    with pytest.raises(ValueError, match="classification_levels"):
+        GovernanceConfig(classification_levels=levels)
+
+
 def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     """Keep prompts configurable and AI optional alongside Classification labels."""
     config = GovernanceConfig(
-        classification_levels=[" Public ", "Restricted"],
+        classification_levels={" Public ": " External sharing ", "Restricted": "Internal use"},
         ai_enrichment={
             "enabled": True,
             "table_description_prompt": " describe table ",
@@ -1732,9 +1739,9 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "sensitive_data_prompt": " sensitive rules ",
         },
     )
-    assert config.classification_levels == ["Public", "Restricted"]
+    assert config.classification_levels == {"Public": "External sharing", "Restricted": "Internal use"}
     with pytest.raises(ValueError, match="unique ranked values"):
-        GovernanceConfig(classification_levels=["Public", "Restricted", "Restricted"])
+        GovernanceConfig(classification_levels={"Public": "External", " Public ": "Duplicate"})
     assert config.ai_enrichment == {
         "enabled": True,
         "model_deployment_name": "gpt-5-mini", "reasoning_effort": "low", "verbosity": None,

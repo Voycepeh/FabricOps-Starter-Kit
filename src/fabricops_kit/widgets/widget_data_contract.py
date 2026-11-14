@@ -12,7 +12,7 @@ from time import perf_counter
 from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
-from fabricops_kit.config.shared import metadata_timestamp_sort_key, normalize_audit_datetime, resolve_fabric_context, validate_ai_enrichment
+from fabricops_kit.config.shared import DEFAULT_CLASSIFICATION_LEVELS, metadata_timestamp_sort_key, normalize_audit_datetime, resolve_fabric_context, validate_ai_enrichment
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
@@ -1180,11 +1180,8 @@ def widget_data_contract(
     except (TypeError, ValueError) as exc:
         ai_configuration_error = str(exc)
         ai_enrichment = validate_ai_enrichment({"enabled": False})
-    classification_levels = [
-        str(value).strip()
-        for value in (getattr(governance_config, "classification_levels", []) or [])
-        if str(value).strip()
-    ] or ["Public", "Restricted", "Confidential", "Highly Sensitive"]
+    classification_definitions = dict(getattr(governance_config, "classification_levels", None) or DEFAULT_CLASSIFICATION_LEVELS)
+    classification_levels = list(classification_definitions)
     classification_options = ("", *classification_levels)
     with startup.phase("spark_loading", "Resolving the Spark session…"):
         spark = get_spark_session(context=context)
@@ -3279,6 +3276,14 @@ def widget_data_contract(
         column_description.layout.close()
         column_description.layout = widgets.Layout(width="100%", min_width="0", height="110px")
         column_classification.description = "Output classification"
+        classification_context = widgets.HTML(layout=widgets.Layout(width="100%", min_width="0"))
+
+        def refresh_classification_context(_change: Any = None) -> None:
+            explanation = classification_definitions.get(str(column_classification.value or ""), "")
+            classification_context.value = f"<div style='color:#526477;font-size:12px;'>{html.escape(explanation)}</div>" if explanation else ""
+
+        column_classification.observe(refresh_classification_context, names="value")
+        refresh_classification_context()
         column_classification.layout.close()
         column_classification.layout = widgets.Layout(
             width="100%", min_width="0", max_width="560px"
@@ -3814,6 +3819,8 @@ def widget_data_contract(
                 if enabled else ""
             )
             removing = bool(sensitive_enabled.value) and treatment == "remove"
+            column_classification.layout.display = "none" if removing else ""
+            classification_context.layout.display = "none" if removing else ""
             if removing and required.value and editable and not hydrating["active"] and not removal_state["pending"]:
                 removal_state["pending"] = True
                 if change and change.get("owner") is sensitive_treatment:
@@ -3947,12 +3954,6 @@ def widget_data_contract(
             if hydrating["active"]:
                 return
             enabled_now = bool(sensitive_enabled.value)
-            if enabled_now and not bool(change.get("old")) and str(sensitive_treatment.value or "") != "remove":
-                current = str(column_classification.value or "")
-                if current in classification_levels:
-                    index = classification_levels.index(current)
-                    if index > 0:
-                        column_classification.value = classification_levels[index - 1]
             state["_working_sensitive_enabled"] = enabled_now
             render_table_summary()
 
@@ -4027,6 +4028,9 @@ def widget_data_contract(
                     "<div style='color:#475467;'>"
                     f"Treatment: {html.escape(str(suggestion.get('treatment') or 'None'))} · "
                     f"Action: {html.escape(str(suggestion.get('action') or 'None'))}</div>"
+                    "<div style='margin-top:8px;'><b>Suggested output classification:</b> "
+                    f"{html.escape(str(suggestion.get('output_classification') or 'Not applicable — column removed'))}<br>"
+                    f"{html.escape(str(suggestion.get('classification_reason') or ''))}</div>"
                 )
             else:
                 value = html.escape(str(value or ""))
@@ -4193,6 +4197,7 @@ def widget_data_contract(
                     "contract_version": current.get("contract_version"),
                     "table_description": str(table_description.value or ""),
                     "table_classification": table_classification.value,
+                    "classification_levels": classification_definitions,
                     "catalogue_profile_rows": [{
                         **dict(selected), "description": description,
                         "classification": classification,
@@ -4252,8 +4257,11 @@ def widget_data_contract(
                 return
             allowed = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or ""))
             treatment = str(suggestion.get("treatment") or sensitive_treatment.value or allowed[0])
+            removing_output = suggestion["pii_type"] != "none" and treatment == "remove"
             parameters = suggestion.get("parameters", {})
             try:
+                if not removing_output and suggestion.get("output_classification") not in classification_definitions:
+                    raise ValueError("The AI output classification must match a configured classification label.")
                 if suggestion["pii_type"] != "none":
                     if treatment not in allowed:
                         raise ValueError("This treatment does not apply to the column datatype. Use Bucket for numeric values, Mask for text/categories, or Tokenize/Remove for supported scalar values.")
@@ -4268,6 +4276,8 @@ def widget_data_contract(
                 pii_reason.value = str(suggestion["reason"])
                 sensitive_enabled.value = suggestion["pii_type"] != "none"
                 sensitive_treatment.value = treatment
+                if not removing_output:
+                    column_classification.value = str(suggestion["output_classification"])
                 mask_start.value = str(parameters.get("preserve_start", 0))
                 mask_end.value = str(parameters.get("preserve_end", 0))
                 mask_character.value = str(parameters.get("mask_character", "*"))
@@ -4281,6 +4291,10 @@ def widget_data_contract(
                 hydrating["active"] = False
             update_sensitive_fields({"owner": sensitive_treatment, "old": previous_treatment})
             sync_sensitive()
+            if not removing_output:
+                sync_column_enrichment()
+            suggestion["stale"] = False
+            render_column_ai(str(column_select.value or ""))
             refresh_sensitive_rule_preview()
 
         accept_column_description.on_click(accept_description_clicked)
@@ -4897,6 +4911,7 @@ def widget_data_contract(
                 treatment_help,
                 removal_confirmation_box,
                 column_classification,
+                classification_context,
                 mask_mode,
                 mask_start,
                 mask_end,
@@ -7002,6 +7017,7 @@ def widget_data_contract(
             "column_definition": column_definition,
             "profile_context": profile_context, "column_description": column_description,
             "column_classification": column_classification, "required": required,
+            "classification_context": classification_context,
             "datatype_choice": datatype_choice, "column_option_style": column_option_style,
             "dq_panel": dq_panel, "dq_primary": dq_primary,
             "sensitive_enabled": sensitive_enabled, "sensitive_treatment": sensitive_treatment,

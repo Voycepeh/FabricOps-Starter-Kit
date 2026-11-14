@@ -335,7 +335,7 @@ def widget_runtime(monkeypatch):
         }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
-            classification_levels=["Public", "Restricted", "Confidential", "Highly Sensitive"],
+            classification_levels=dict(module.DEFAULT_CLASSIFICATION_LEVELS),
         ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
@@ -1418,6 +1418,7 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
             "action": "Block",
             "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"} if column["data_type"] == "string" else {},
             "is_active": True,
+            "output_classification": "Restricted", "classification_reason": "Residual sensitivity requires internal access.",
         }]
 
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
@@ -1756,8 +1757,59 @@ def test_ai_requests_report_progress_only_after_explicit_click(widget_runtime, m
     assert any(t["operation"] == "Opening Data Contract…" for t in state["_operation_timings"])
 
 
+@pytest.mark.parametrize("assessment", ["direct", "none"])
+@pytest.mark.parametrize("use_real_widgets", [False, True])
+def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_runtime, monkeypatch, assessment, use_real_widgets):
+    """AI uses policy definitions; classification stays advisory until Apply and saves as Enrichment."""
+    real_suggest = module.suggest_sensitive_data
+    _enable_ai(widget_runtime, monkeypatch)
+    if use_real_widgets:
+        widgets = pytest.importorskip("ipywidgets")
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
+    levels = {"Open": "External sharing", "Team": "Only <approved> internal users", "Secret": "Severely restricted"}
+    widget_runtime["config"].governance_config.classification_levels = levels
+    contexts = []
+
+    def suggest(context, **kwargs):
+        contexts.append(context)
+        return real_suggest(context, prompt=kwargs["prompt"], invoke=lambda _: json.dumps([{
+            "column": "column_0", "pii_type": assessment, "reason": "Reviewed identifying potential.",
+            "treatment": "tokenize" if assessment == "direct" else None, "action": "Block" if assessment == "direct" else None, "parameters": {},
+            "output_classification": "Team", "classification_reason": "Tokenized identifiers remain internal business data.",
+        }]))
+
+    monkeypatch.setattr(module, "suggest_sensitive_data", suggest)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_classification"].value = "Secret"
+    controls["rerun_sensitive"].click()
+    assert contexts[-1]["classification_levels"] == levels
+    assert controls["column_classification"].value == "Secret"
+    assert "Tokenized identifiers remain internal business data." in controls["sensitive_ai"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["accept_sensitive"].click()
+    assert controls["column_classification"].value == "Team"
+    assert controls["table_classification"].value == "Team"
+    assert "Only &lt;approved&gt; internal users" in controls["classification_context"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["save_data_contract"].click()
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert any(row["column_id"] == "col-0" and row["enrichment_type"] == "Classification" and row["value"] == "Team"
+               for row in saved["enrichment"]["columns"])
+
+
+def test_enabling_sensitive_treatment_does_not_automatically_lower_classification(widget_runtime):
+    """Classification requires a reviewed policy decision instead of a one-rank downgrade."""
+    controls = widget_runtime["open"]()["_controls"]
+    controls["sensitive_enabled"].value = False
+    controls["column_classification"].value = "Highly Sensitive"
+    controls["pii_type"].value = "direct"
+    controls["sensitive_enabled"].value = True
+    assert controls["column_classification"].value == "Highly Sensitive"
+
+
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
-    """Description and Sensitive Data acceptance stay isolated from manual Classification."""
+    """Sensitive Data acceptance applies its proposed classification and preserves unrelated fields."""
     state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
@@ -1776,7 +1828,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["sensitive_treatment"].value == "tokenize"
     assert "sensitive_block" not in controls
     assert controls["column_description"].value == description
-    assert controls["column_classification"].value == "Confidential"
+    assert controls["column_classification"].value == "Restricted"
     assert controls["required"].value is False
     assert controls["dq_whitelist_values"].value == "keep-me"
     assert widget_runtime["calls"]["guardrails"] == []
@@ -3810,6 +3862,7 @@ def test_invalid_ai_acceptance_leaves_all_authored_fields_unchanged(widget_runti
         column = context['columns'][0]
         return [{'column_name': column['column_name'], 'column_id': column['column_id'],
             'pii_type': 'indirect', 'pii_label': 'Indirect PII', 'reason': 'Coarse detail',
+            'output_classification': 'Restricted', 'classification_reason': 'Internal output.',
             'treatment': 'bucket', 'action': 'Block', 'parameters': {'bins': [0, 10], 'labels': ['low', 'high']}, 'is_active': True}]
     monkeypatch.setattr(module, 'suggest_sensitive_data', bucket)
     controls['rerun_sensitive'].click()
@@ -3989,7 +4042,7 @@ def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(
         if operation == "grain_key":
             return '```json\n{"grain":"One order", "rationale":"Governed context"}\n```'
         if operation == "sensitive_data":
-            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}}]'
+            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}, "output_classification":"Restricted", "classification_reason":"Internal business data"}]'
         if operation == "business_rule_ai":
             return '[{"requirement":"Positive values", "rule_type":"range", "columns":["column_0"], "parameters":{"minimum":0,"minimum_inclusive":true,"maximum_inclusive":true}, "rationale":"Requested minimum"}]'
         return "Suggested description"

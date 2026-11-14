@@ -751,7 +751,7 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-CLASSIFICATION_LEVELS = ["Public", "Restricted", "Confidential", "Highly Sensitive"]
+CLASSIFICATION_LEVELS = list(config_shared.DEFAULT_CLASSIFICATION_LEVELS)
 
 
 @dataclass
