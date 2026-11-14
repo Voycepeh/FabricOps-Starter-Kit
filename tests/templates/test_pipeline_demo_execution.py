@@ -31,7 +31,7 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
         assert not {'execution_plan', 'sources', 'spark_session'}.intersection(kwargs)
         writes.append((kwargs.get('relative_path') or kwargs['table_name'], kwargs['write_mode']))
         return {'dataframe': dataframe, 'published': False}
-    namespace = {'F': MagicMock(), 'spark': object(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
+    namespace = {'F': MagicMock(), 'spark': MagicMock(), 'setup_pipeline': setup, 'setup_notebook': notebook_setup,
                  'orchestrate_read': read, 'orchestrate_write': write, 'finalize_pipeline': Mock(return_value={'execution_mode': 'ungoverned', 'status': 'ungoverned_completed'}),
                  'read_lakehouse_table': Mock(return_value=MagicMock()),
                  'display': Mock()}
