@@ -1758,10 +1758,14 @@ def test_ai_requests_report_progress_only_after_explicit_click(widget_runtime, m
 
 
 @pytest.mark.parametrize("assessment", ["direct", "none"])
-def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_runtime, monkeypatch, assessment):
+@pytest.mark.parametrize("use_real_widgets", [False, True])
+def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_runtime, monkeypatch, assessment, use_real_widgets):
     """AI uses policy definitions; classification stays advisory until Apply and saves as Enrichment."""
     real_suggest = module.suggest_sensitive_data
     _enable_ai(widget_runtime, monkeypatch)
+    if use_real_widgets:
+        widgets = pytest.importorskip("ipywidgets")
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
     levels = {"Open": "External sharing", "Team": "Only <approved> internal users", "Secret": "Severely restricted"}
     widget_runtime["config"].governance_config.classification_levels = levels
     contexts = []
@@ -1788,7 +1792,7 @@ def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_ru
     assert controls["table_classification"].value == "Team"
     assert "Only &lt;approved&gt; internal users" in controls["classification_context"].value
     assert widget_runtime["calls"]["draft"] == []
-    state["save_data_contract"]()
+    controls["save_data_contract"].click()
     saved = widget_runtime["calls"]["draft"][-1]
     assert any(row["column_id"] == "col-0" and row["enrichment_type"] == "Classification" and row["value"] == "Team"
                for row in saved["enrichment"]["columns"])
