@@ -496,7 +496,8 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
-    assert controls["change_table"].description == "Exit"
+    assert controls["change_table"].description == "Back to datasets"
+    assert controls["table_exit_row"].layout.display == "none"
     assert controls["table_exit_row"].layout.justify_content == "flex-end"
 
     controls["change_table"].click()
@@ -670,6 +671,16 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     assert "Development" in context and "Raw Lakehouse" in context and path in context
     assert "File path" in context and "Full table name" not in context
     assert "Unknown workspace" not in context and ">Unknown<" not in context
+    assert controls["top_nav"].options[0] == ("File", "Table")
+    assert ">File</h3>" in controls["right_pane"].children[0].value
+    assert "File definition" in _sidebar_text(controls["table_definition"])
+    assert "<b>File</b>" in module._manifest_html(state["current"]["payload"])
+    controls["top_nav"].value = "Data Quality"
+    assert "File tab" in _sidebar_text(controls["right_pane"])
+    controls["top_nav"].value = "Table"
+    sidebar = controls["left_pane"].children
+    assert ">File</div>" in sidebar[0].value
+    assert sidebar[1:4] == (controls["operation_progress"], controls["status"], controls["table_context"])
     assert state["current"]["payload"]["source"] == source
     assert state["dirty"] is False
 
@@ -680,6 +691,23 @@ def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_ru
         row.pop("_workspace_name", None)
     state = widget_runtime["start"]()
     assert ("dev", "dev") in state["_controls"]["workspace_select"].options
+
+
+@pytest.mark.parametrize("status", ["draft", "frozen"])
+def test_editor_keeps_one_columns_heading_and_navigation_for_frozen_contracts(widget_runtime, status):
+    """Draft actions already navigate; frozen reviews retain a way back to datasets."""
+    widget_runtime["contract"]["status"] = status
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["table_exit_row"].layout.display == ("none" if status == "draft" else "")
+    controls["top_nav"].value = "Columns"
+    assert controls["right_pane"].children[1] is controls["column_search"]
+    assert "Select a column to review its details and rules." not in _sidebar_text(controls["right_pane"])
+    if status == "frozen":
+        controls["change_table"].click()
+        assert state["current"] is None
+        assert controls["selector_panel"].layout.display == ""
+        assert widget_runtime["calls"]["draft"] == []
 
 
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):

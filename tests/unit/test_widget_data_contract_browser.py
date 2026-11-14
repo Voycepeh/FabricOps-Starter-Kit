@@ -109,6 +109,20 @@ def test_dataset_popup_follows_input_width_and_supports_search_and_keyboard(monk
                 assert popup.count() <= 1  # next searchable field may open its own menu
                 page.locator("body").click(position={"x": 2, "y": 2})
                 assert popup.count() == 0
+                resting_label = page.locator(".fabricops-selector-value").first
+                assert resting_label.inner_text() == label
+                wrapping = resting_label.evaluate("""e => {
+                    const input = e.parentElement.querySelector('input');
+                    return {height:e.getBoundingClientRect().height, fieldHeight:input.getBoundingClientRect().height,
+                            clipped:e.scrollHeight > e.clientHeight || e.scrollWidth > e.clientWidth,
+                            whiteSpace:getComputedStyle(e).whiteSpace};
+                }""")
+                assert wrapping["whiteSpace"] == "normal" and not wrapping["clipped"], wrapping
+                assert wrapping["fieldHeight"] >= wrapping["height"], wrapping
+                if width == 700:
+                    assert wrapping["height"] > 40, wrapping
+                if os.environ.get("FABRICOPS_WIDGET_SCREENSHOT_DIR"):
+                    page.screenshot(path=str(Path(os.environ["FABRICOPS_WIDGET_SCREENSHOT_DIR"]) / f"dataset-selected-{width}.png"))
             assert not errors
             instance.close()
     finally:

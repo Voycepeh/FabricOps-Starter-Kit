@@ -27,11 +27,46 @@ def __getattr__(name: str):
 # Form styling belongs to shared.form_page, not a second injected stylesheet.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
-  if (window.__fabricopsNotebookUXVersion === 3) {
+  if (window.__fabricopsNotebookUXVersion === 4) {
     return;
   }
   window.__fabricopsFocusReleaseInstalled = true;
-  window.__fabricopsNotebookUXVersion = 3;
+  window.__fabricopsNotebookUXVersion = 4;
+
+  // A single-line input cannot wrap its selected value. A grid overlay supplies
+  // the readable resting label and sizes the field; focus reveals native search.
+  const wrapSelector = (input) => {
+    const owner = input.closest(".fabricops-searchable-selector");
+    if (!owner || owner.classList.contains("fabricops-selector-wrapped")) return;
+    const label = document.createElement("div");
+    label.className = "fabricops-selector-value";
+    label.setAttribute("aria-hidden", "true");
+    const sync = () => {
+      label.textContent = input.value || input.placeholder;
+      label.dataset.empty = String(!input.value);
+    };
+    // ComboboxView assigns .value directly when Python changes the selection.
+    const valueProperty = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+    Object.defineProperty(input, "value", {
+      configurable:true,
+      get() { return valueProperty.get.call(this); },
+      set(value) { valueProperty.set.call(this, value); sync(); }
+    });
+    input.addEventListener("input", sync);
+    input.addEventListener("change", sync);
+    input.parentElement.append(label);
+    owner.classList.add("fabricops-selector-wrapped");
+    sync();
+  };
+  const wrapSelectors = (root) => {
+    if (!(root instanceof Element || root instanceof Document)) return;
+    if (root.matches?.(".fabricops-form .fabricops-searchable-selector input")) wrapSelector(root);
+    root.querySelectorAll(".fabricops-form .fabricops-searchable-selector input").forEach(wrapSelector);
+  };
+  wrapSelectors(document);
+  new MutationObserver(records => {
+    for (const record of records) for (const node of record.addedNodes) wrapSelectors(node);
+  }).observe(document.documentElement, {childList:true, subtree:true});
 
   // Native datalist popups truncate long dataset labels independently of the
   // input width. Keep the widget's datalist/model, but own its visible popup.
