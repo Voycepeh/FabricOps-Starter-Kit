@@ -125,15 +125,6 @@ export const NARRATION_CUE_SHEET = {
     {phrase: 'Business and governance requirements become executable rules.', atSeconds: 389.34},
     {phrase: 'Consistently enforced through the same ETL process.', atSeconds: 395.34},
   ]),
-  promotion: sceneCue('Promotion', 402.25, 426.34, 426.34, [
-    {phrase: 'Clone and promote the pipelines.', atSeconds: 405.64},
-    {phrase: 'Through the deployment pipeline.', atSeconds: 415.31},
-    {phrase: 'Environment configuration.', atSeconds: 416.71},
-    {phrase: 'The pipeline itself.', atSeconds: 419.34},
-    {phrase: 'The Data Contracts.', atSeconds: 421.58},
-    {phrase: 'From Development.', atSeconds: 422.64},
-    {phrase: 'To Production.', atSeconds: 424.4},
-  ]),
   closing: sceneCue('Closing', 426.34, NARRATION_DURATION_SECONDS, FINAL_FADE_END_SECONDS, [
     {phrase: 'From Development to Production.', atSeconds: 426.34},
     {phrase: 'Plug-and-play data pipelines.', atSeconds: 436.77},
