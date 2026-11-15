@@ -3,6 +3,8 @@ import {FINAL_VIDEO_FRAME, NARRATION_CUE_SHEET, VIDEO_FPS, narrationFrame} from 
 export {VIDEO_FPS};
 export const seconds = narrationFrame;
 export const NARRATION_START_FRAME = seconds(0);
+export const WORKSPACE_ARCHITECTURE_DURATION_SECONDS = 96;
+export const WORKSPACE_ARCHITECTURE_DURATION = seconds(WORKSPACE_ARCHITECTURE_DURATION_SECONDS);
 
 export const VIDEO_CONFIG = {
   sizes: {
@@ -52,23 +54,53 @@ export const GUIDED_SCENE_DURATIONS = {
   sensitiveData: NARRATION_CUE_SHEET.sensitiveData.transitionFrame - NARRATION_CUE_SHEET.sensitiveData.startFrame,
   businessRules: NARRATION_CUE_SHEET.businessRules.transitionFrame - NARRATION_CUE_SHEET.businessRules.startFrame,
   bigPicture: NARRATION_CUE_SHEET.bigPicture.transitionFrame - NARRATION_CUE_SHEET.bigPicture.startFrame,
-  promotion: NARRATION_CUE_SHEET.promotion.transitionFrame - NARRATION_CUE_SHEET.promotion.startFrame,
   closing: NARRATION_CUE_SHEET.closing.transitionFrame - NARRATION_CUE_SHEET.closing.startFrame,
 } as const;
+
+export const REMOVED_PROMOTION_DURATION = NARRATION_CUE_SHEET.closing.startFrame - NARRATION_CUE_SHEET.bigPicture.transitionFrame;
+export const CTA_TRIM_START_FRAMES = 75;
 
 export const FULL_VIDEO_TIMELINE = {
   opening: {start: SCENE_STARTS.opening, duration: scenes.opening},
   fabricOps: {start: SCENE_STARTS.fabricOps, duration: scenes.fabricOps},
   notebooks: {start: SCENE_STARTS.notebooks, duration: scenes.notebooks},
-  lifecycle: {start: SCENE_STARTS.workflow, duration: LIFECYCLE_HANDOFF_LOCAL_FRAME},
-  consumption: {start: NARRATION_CUE_SHEET.consumption.startFrame, duration: GUIDED_SCENE_DURATIONS.consumption},
-  dataEngineers: {start: NARRATION_CUE_SHEET.dataEngineers.startFrame, duration: GUIDED_SCENE_DURATIONS.dataEngineers},
-  repeatablePipeline: {start: NARRATION_CUE_SHEET.repeatablePipeline.startFrame, duration: GUIDED_SCENE_DURATIONS.repeatablePipeline},
-  sensitiveData: {start: NARRATION_CUE_SHEET.sensitiveData.startFrame, duration: GUIDED_SCENE_DURATIONS.sensitiveData},
-  businessRules: {start: NARRATION_CUE_SHEET.businessRules.startFrame, duration: GUIDED_SCENE_DURATIONS.businessRules},
-  bigPicture: {start: NARRATION_CUE_SHEET.bigPicture.startFrame, duration: GUIDED_SCENE_DURATIONS.bigPicture},
-  promotion: {start: NARRATION_CUE_SHEET.promotion.startFrame, duration: GUIDED_SCENE_DURATIONS.promotion},
-  closing: {start: NARRATION_CUE_SHEET.closing.startFrame, duration: GUIDED_SCENE_DURATIONS.closing},
+  workspaceArchitecture: {
+    start: NARRATION_CUE_SHEET.notebooks.transitionFrame,
+    duration: WORKSPACE_ARCHITECTURE_DURATION,
+  },
+  lifecycle: {
+    start: SCENE_STARTS.workflow + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: LIFECYCLE_HANDOFF_LOCAL_FRAME,
+  },
+  consumption: {
+    start: NARRATION_CUE_SHEET.consumption.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.consumption,
+  },
+  dataEngineers: {
+    start: NARRATION_CUE_SHEET.dataEngineers.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.dataEngineers,
+  },
+  repeatablePipeline: {
+    start: NARRATION_CUE_SHEET.repeatablePipeline.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.repeatablePipeline,
+  },
+  sensitiveData: {
+    start: NARRATION_CUE_SHEET.sensitiveData.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.sensitiveData,
+  },
+  businessRules: {
+    start: NARRATION_CUE_SHEET.businessRules.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.businessRules,
+  },
+  bigPicture: {
+    start: NARRATION_CUE_SHEET.bigPicture.startFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    duration: GUIDED_SCENE_DURATIONS.bigPicture,
+  },
+  closing: {
+    start: NARRATION_CUE_SHEET.bigPicture.transitionFrame + WORKSPACE_ARCHITECTURE_DURATION,
+    sourceStart: NARRATION_CUE_SHEET.closing.startFrame + CTA_TRIM_START_FRAMES,
+    duration: GUIDED_SCENE_DURATIONS.closing - CTA_TRIM_START_FRAMES,
+  },
 } as const;
 
-export const FULL_VIDEO_DURATION = FINAL_VIDEO_FRAME;
+export const FULL_VIDEO_DURATION = FINAL_VIDEO_FRAME + WORKSPACE_ARCHITECTURE_DURATION - REMOVED_PROMOTION_DURATION - CTA_TRIM_START_FRAMES;

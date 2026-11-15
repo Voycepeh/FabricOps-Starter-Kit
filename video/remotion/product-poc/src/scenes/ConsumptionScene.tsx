@@ -118,7 +118,7 @@ export const ConsumptionScene = () => {
         <LifecycleScene hideStep7 />
       </Freeze>
       {frame >= STEP_7_ARROW_START ? <AnimatedDataFlow>
-        <AnimatedFlowPath id="consumption-step-7-handoff" d="M1330 840 H1445" progress={step7Arrow} color={theme.consumer} baseColor="#405571" strokeWidth={6} opacity={step7Arrow} />
+        <AnimatedFlowPath id="consumption-step-7-handoff" d="M1192 855 C1285 855 1350 840 1445 840" progress={step7Arrow} color={theme.consumer} baseColor="#405571" strokeWidth={6} opacity={step7Arrow} />
       </AnimatedDataFlow> : null}
     </AbsoluteFill> : null}
 
