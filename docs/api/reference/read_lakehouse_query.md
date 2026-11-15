@@ -1,11 +1,10 @@
 # `read_lakehouse_query`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Live</span>
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 </p>
 
-> This function is part of the Preview public function; not included in a published release yet.
+> This is a Preview public function and has not shipped in a published release.
 
 Run read-only Spark SQL against one configured Lakehouse table.
 
