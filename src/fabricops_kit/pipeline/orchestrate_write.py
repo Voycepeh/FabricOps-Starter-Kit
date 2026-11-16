@@ -32,7 +32,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
 
     Define the dataframe, destination, write_mode and processing parameters.
     Select either store/schema/table_name for tables or store/relative_path/file_format
-    for Lakehouse Files. File modes are errorifexists, overwrite, append and ignore;
+    for Lakehouse Files. File modes are overwrite and append;
     table-only append_all, Append New Only and SCD strategies are rejected for files.
     Files support Dry Run and Ungoverned; Governed file targets fail closed because
     current Pipeline Promotion authorizes only file Reads. No file Table ID or
@@ -44,7 +44,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     session-local, and persists no table profile snapshots. File overwrite profiles
     its supplied input before publication so lazy reads of the target remain valid.
     A bounded profile cannot
-    establish complete row counts. Ignored output is never reported as published.
+    establish complete row counts. 
     File options, physical location, publication status and available filesystem
     metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
     receive table audit columns, row hashes, SCD processing or table lineage.
@@ -87,8 +87,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         Physical target table name; omit for file destinations.
     write_mode : str
         Table strategies: overwrite, append_all, append_new_only, scd1, scd2,
-        captured exactly by Pipeline Activation. File modes: errorifexists,
-        overwrite, append, ignore.
+        captured exactly by Pipeline Activation. File modes: overwrite, append.
     relative_path : str, optional
         Exact destination beneath the configured Lakehouse Files area.
     file_format : {"csv", "parquet", "json"}, optional
