@@ -39,6 +39,7 @@ def write_lakehouse_file(
         Same Spark repartitioning conventions as write_lakehouse_table.
     single_file : bool, default=False
         Explicitly produce one named artifact with a matching format extension.
+        Incompatible with append_all; use a dataset folder for append batches.
         Otherwise the path is a dataset directory, even if it has an extension.
     max_single_file_rows : int, default=1000000
         Single-file input row limit, checked with a bounded Spark count.
