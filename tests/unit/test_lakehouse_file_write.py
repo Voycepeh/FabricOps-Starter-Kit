@@ -267,8 +267,6 @@ def test_foundation_resolves_configured_store(output, monkeypatch):
         write_lakehouse_file(output.frame, 'orders.csv', store='Gold', context=context)
 
 
-@pytest.mark.parametrize('protected_path', ['nested/orders.csv', 'nested', 'nested/*.csv', '*'])
-
 @pytest.mark.parametrize('mode', ['errorifexists', 'ignore', 'append'])
 def test_orchestrator_rejects_removed_file_modes_before_publication(files, mode):
     with pytest.raises(ValueError, match='overwrite or append_all'):
@@ -276,6 +274,7 @@ def test_orchestrator_rejects_removed_file_modes_before_publication(files, mode)
                           file_format='csv', write_mode=mode)
 
 
+@pytest.mark.parametrize('protected_path', ['nested/orders.csv', 'nested', 'nested/*.csv', '*'])
 def test_ungoverned_file_protection_ignores_format_and_options(monkeypatch, protected_path):
     import json
     from fabricops_kit.data_contract.shared import file_source_identity
