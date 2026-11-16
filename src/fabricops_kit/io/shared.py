@@ -950,7 +950,7 @@ def validate_file_write(relative_path, file_format, mode, write_options=None, *,
     if normalized not in {"overwrite", "append_all"}:
         raise ValueError("File write mode must be overwrite or append_all.")
     if single_file and normalized == "append_all":
-        raise ValueError("Single-file output does not support append_all; use a dataset folder.")
+        raise ValueError("Cannot use write_mode=\"append_all\" with single_file=True: append_all adds new part files to a dataset folder. Set single_file=False to append batches, or use write_mode=\"overwrite\" for one file. No data was written.")
     if single_file and repartition_by is not None:
         raise ValueError("single_file cannot be combined with repartition_by.")
     if any(type(value) is not int or value <= 0 for value in (max_single_file_rows, max_single_file_bytes)):
