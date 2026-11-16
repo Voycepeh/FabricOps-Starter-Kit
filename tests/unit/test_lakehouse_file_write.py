@@ -150,6 +150,27 @@ def test_invalid_foundation_requests(output, changes):
     output.writer.save.assert_not_called()
 
 
+
+def test_append_all_single_file_rejected_before_filesystem_mutation(output):
+    target = '/configured/Files/orders.csv'
+    output.fs.entries[target] = 8
+    with pytest.raises(ValueError, match='single_file=True.*single_file=False.*overwrite.*No data was written'):
+        write_lakehouse_file(output.frame, 'orders.csv', file_format='csv',
+                             mode='append_all', single_file=True)
+    assert output.fs.entries[target] == 8
+    assert output.fs.renames == []
+    assert output.fs.deleted == []
+    output.writer.save.assert_not_called()
+
+
+def test_orchestrated_append_all_single_file_rejected_before_publication(files):
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    with pytest.raises(ValueError, match='single_file=True.*single_file=False.*overwrite.*No data was written'):
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
+                          file_format='csv', write_mode='append_all', single_file=True)
+    assert not session.plan.evidence['operations']
+
+
 def test_existing_physical_file_cannot_be_appended_as_dataset(output):
     output.fs.entries['/configured/Files/orders'] = 12
     with pytest.raises(ValueError, match='layout'):
