@@ -32,8 +32,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
 
     Define the dataframe, destination, write_mode and processing parameters.
     Select either store/schema/table_name for tables or store/relative_path/file_format
-    for Lakehouse Files. File modes are overwrite and append;
-    table-only append_all, Append New Only and SCD strategies are rejected for files.
+    for Lakehouse Files. File modes are overwrite and append_all;
+    Append New Only and SCD strategies are table-only.
     Files support Dry Run and Ungoverned; Governed file targets fail closed because
     current Pipeline Promotion authorizes only file Reads. No file Table ID or
     table Data Contract is manufactured. Protected file destinations and overlapping
@@ -87,7 +87,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         Physical target table name; omit for file destinations.
     write_mode : str
         Table strategies: overwrite, append_all, append_new_only, scd1, scd2,
-        captured exactly by Pipeline Activation. File modes: overwrite, append.
+        captured exactly by Pipeline Activation. File modes: overwrite, append_all.
     relative_path : str, optional
         Exact destination beneath the configured Lakehouse Files area.
     file_format : {"csv", "parquet", "json"}, optional
