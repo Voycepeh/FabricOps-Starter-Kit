@@ -30,8 +30,8 @@ def write_lakehouse_file(
         Lakehouse key from 00_env_config.
     file_format : {"csv", "parquet", "json"}
         Spark output format.
-    mode : {"overwrite", "append"}
-        Overwrite replaces the destination; append adds data to a dataset folder only.
+    mode : {"overwrite", "append_all"}
+        Overwrite replaces the destination; append_all adds data to a dataset folder only.
     write_options : dict, optional
         Spark writer options, such as header, sep or compression. Destination,
         mode and output layout overrides are rejected.
@@ -128,7 +128,7 @@ def write_lakehouse_file(
             _publish_staged(fs, staging, target, mode=mode, path_type=path_type, single_file=False)
             retain_staging = False
         else:
-            frame.write.format(file_format).mode(mode).options(**options).save(path)
+            frame.write.format(file_format).mode("append").options(**options).save(path)
         result = _result(fs, target, path, relative_path, file_format, single_file, mode, published if single_file else True)
     except (ValueError, FileExistsError) as exc:
         if retain_staging and getattr(exc, "recovery_paths", None):
