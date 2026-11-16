@@ -947,6 +947,8 @@ def validate_file_write(relative_path, file_format, mode, write_options=None, *,
     if single_file and not relative_path.endswith("." + file_format):
         raise ValueError("Single-file name must end with the selected format extension.")
     normalized = normalize_write_mode(mode)
+    if normalized not in {"overwrite", "append"}:
+        raise ValueError("File write mode must be overwrite or append.")
     if single_file and normalized == "append":
         raise ValueError("Single-file output does not support append; use a dataset folder.")
     if single_file and repartition_by is not None:
