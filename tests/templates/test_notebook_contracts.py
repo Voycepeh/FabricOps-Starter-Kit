@@ -289,58 +289,80 @@ def test_demo_notebooks_are_valid_and_use_public_fabricops_apis(notebook_path: P
 
 
 def test_02_pipeline_is_a_small_reusable_scaffold():
-    """The living template keeps one clear Workspace -> Contract -> Read -> Transform -> Write path."""
-    source = _notebook_source("02_pipeline.ipynb")
-    headings = (
-        "# 0. Workspace",
-        "# 1. Setup Pipeline",
-        "# 2. Read",
-        "# 3. Transform",
-        "# 4. Write",
-    )
-    assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
-    assert code_source.count("setup_pipeline(") == 1
-    assert code_source.count("orchestrate_read(") == 1
-    assert code_source.count("orchestrate_write(") == 1
-    assert all(name not in source for name in ("orders", "products", "order_history", "customer_summary"))
-
-
-def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
-    """The standard template keeps stable cells and passes the Read result into the Write."""
+    """The reusable template has one active setup, read, write and finalization."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
-    cell_ids = [cell.get("id") for cell in notebook.cells]
-    required_order = [
-        "contracts",
-        "read-setup",
-        "read-1",
-        "transform",
-        "write-setup",
-        "write-1",
+    trees = [
+        (cell, ast.parse(cell.source))
+        for cell in notebook.cells
+        if cell.cell_type == "code"
     ]
-    positions = [cell_ids.index(cell_id) for cell_id in required_order]
-    assert positions == sorted(positions)
 
-    read = _cell_by_id("02_pipeline.ipynb", "read-1").source
-    transform = _cell_by_id("02_pipeline.ipynb", "transform").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    assert 'sources["source"] = source' in read
-    assert 'sources["source"]["dataframe"]' in transform
-    assert 'sources=' not in write
-    assert "orchestrate_read(" not in transform
-    assert "orchestrate_write(" not in transform
-    assert "READ_STORE =" not in read
-    assert "WRITE_STORE =" not in write
+    def calls_for(name):
+        return [
+            (cell, node)
+            for cell, tree in trees
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == name
+        ]
 
+    for name in ("setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"):
+        assert len(calls_for(name)) == 1, name
 
-def test_02_pipeline_optional_inspection_stays_outside_orchestration():
-    """Bounded previews follow orchestration calls in the same cloneable cells."""
-    read = _cell_by_id("02_pipeline.ipynb", "read-1").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    assert read.index("orchestrate_read(") < read.index('display(sources["source"]["dataframe"].limit(10))')
-    assert write.index("orchestrate_write(") < write.index('display(writes["target"]["dataframe"].limit(10))')
-    assert '# display(writes["target"].get("dq_result"))' in write
+    # Initialization is independent of the example, so users may duplicate read/write cells.
+    for variable, call in (("sources", "orchestrate_read"), ("writes", "orchestrate_write")):
+        initializer = [
+            index for index, (cell, tree) in enumerate(trees)
+            if len(tree.body) == 1
+            and isinstance(tree.body[0], ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == variable for target in tree.body[0].targets)
+            and isinstance(tree.body[0].value, ast.Dict)
+            and not tree.body[0].value.keys
+        ]
+        assert len(initializer) == 1, variable
+        call_cell = calls_for(call)[0][0]
+        call_index = next(index for index, (cell, _) in enumerate(trees) if cell is call_cell)
+        assert initializer[0] < call_index
 
+    # Read -> transformed DataFrame -> Write must remain intact without enforcing names.
+    read_call = calls_for("orchestrate_read")[0][1]
+    write_call = calls_for("orchestrate_write")[0][1]
+    assert isinstance(write_call.args[0], ast.Name)
+    transformed_name = write_call.args[0].id
+    assignments = [
+        (cell, node) for cell, tree in trees for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+    ]
+    read_results = [
+        node.targets[0] for _, node in assignments
+        if isinstance(node.value, ast.Call) and node.value is read_call and len(node.targets) == 1
+    ]
+    assert len(read_results) == 1 and isinstance(read_results[0], ast.Subscript)
+    read_key = ast.unparse(read_results[0])
+    transforms = [
+        node for _, node in assignments
+        if any(isinstance(target, ast.Name) and target.id == transformed_name for target in node.targets)
+    ]
+    assert len(transforms) == 1
+    assert read_key in ast.unparse(transforms[0].value)
+
+    # The user-facing examples must stay bounded when previewing results.
+    for call_name in ("orchestrate_read", "orchestrate_write"):
+        cell = calls_for(call_name)[0][0]
+        tree = ast.parse(cell.source)
+        previews = [
+            node for node in tree.body
+            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name) and node.value.func.id == "display"
+        ]
+        assert len(previews) == 1
+        assert any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "limit" and len(node.args) == 1
+            and isinstance(node.args[0], ast.Constant) and node.args[0].value == 10
+            for node in ast.walk(previews[0])
+        )
 
 def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
     """The standard scaffold does not depend on private FabricOps modules."""
@@ -358,7 +380,6 @@ def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
 def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
     """Each pipeline notebook defaults to bounded top-level Read and Write previews."""
     paths = [
-        NOTEBOOK_DIR / "02_pipeline.ipynb",
         DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb",
         DEMO_NOTEBOOK_DIR / "02B_incremental_append_demo.ipynb",
         DEMO_NOTEBOOK_DIR / "02C_scd_demo.ipynb",
@@ -403,7 +424,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
 
 def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_inspection():
     """Demo variants retain the standard scaffold and its inspection choices."""
-    paths = [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS]
+    paths = DEMO_NOTEBOOKS
     required_order = [
         "environment-heading",
         "imports",
