@@ -117,7 +117,7 @@ def test_foundation_layout_formats_and_metrics(output, fmt, single):
         output.frame.coalesce.assert_not_called()
 
 
-@pytest.mark.parametrize('mode', ['overwrite', 'append'])
+@pytest.mark.parametrize('mode', ['overwrite', 'append_all'])
 def test_dataset_collisions(output, mode):
     output.fs.entries['/configured/Files/orders'] = None
     result = write_lakehouse_file(output.frame, 'orders', mode=mode)
@@ -138,8 +138,8 @@ def test_single_file_collisions(output):
     {'relative_path': 'Files/orders.csv'}, {'relative_path': 'a/*.csv'}, {'relative_path': 'a/%2e'},
     {'relative_path': 'https://elsewhere'}, {'file_format': 'excel'}, {'file_format': 'xml'},
     {'write_options': {'path': 'elsewhere'}}, {'write_options': {'maxRecordsPerFile': 2}},
-    {'mode': 'errorifexists'}, {'mode': 'ignore'},
-    {'single_file': True, 'mode': 'append'}, {'single_file': True, 'write_options': {'Compression': 'gzip'}}, {'single_file': True, 'relative_path': 'orders'},
+    {'mode': 'errorifexists'}, {'mode': 'ignore'}, {'mode': 'append'},
+    {'single_file': True, 'mode': 'append_all'}, {'single_file': True, 'write_options': {'Compression': 'gzip'}}, {'single_file': True, 'relative_path': 'orders'},
     {'single_file': True, 'repartition_by': 2}, {'max_single_file_bytes': 0},
 ])
 def test_invalid_foundation_requests(output, changes):
@@ -153,7 +153,7 @@ def test_invalid_foundation_requests(output, changes):
 def test_existing_physical_file_cannot_be_appended_as_dataset(output):
     output.fs.entries['/configured/Files/orders'] = 12
     with pytest.raises(ValueError, match='layout'):
-        write_lakehouse_file(output.frame, 'orders', mode='append')
+        write_lakehouse_file(output.frame, 'orders', mode='append_all')
     output.writer.save.assert_not_called()
 
 
@@ -213,7 +213,7 @@ def test_orchestrated_files_track_sources_and_do_not_finalize(files, monkeypatch
 
 
 @pytest.mark.parametrize('changes', [{'schema': 'demo'}, {'table_name': 'orders'}, {'file_format': None},
-    {'write_mode': 'scd1'}, {'write_mode': 'append_all'}, {'write_parameters': {}}, {'write_options': {'path': 'x'}}])
+    {'write_mode': 'scd1'}, {'write_mode': 'append_new_only'}, {'write_mode': 'append'}, {'write_parameters': {}}, {'write_options': {'path': 'x'}}])
 def test_invalid_orchestrated_file_destinations(files, changes):
     session = setup_pipeline(pipeline_mode='Dry Run')
     args = dict(store='Silver', relative_path='orders.csv', file_format='csv', write_mode='overwrite')
@@ -248,9 +248,9 @@ def test_foundation_resolves_configured_store(output, monkeypatch):
 
 @pytest.mark.parametrize('protected_path', ['nested/orders.csv', 'nested', 'nested/*.csv', '*'])
 
-@pytest.mark.parametrize('mode', ['errorifexists', 'ignore'])
+@pytest.mark.parametrize('mode', ['errorifexists', 'ignore', 'append'])
 def test_orchestrator_rejects_removed_file_modes_before_publication(files, mode):
-    with pytest.raises(ValueError, match='overwrite or append'):
+    with pytest.raises(ValueError, match='overwrite or append_all'):
         orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
                           file_format='csv', write_mode=mode)
 
@@ -286,7 +286,7 @@ def test_profiling_failure_retains_published_file_status(files, monkeypatch):
     monkeypatch.setattr(shared, 'schedule_file_profiling', Mock(side_effect=RuntimeError('profile failed')))
     session = setup_pipeline(pipeline_mode='Ungoverned')
     with pytest.raises(RuntimeError) as caught:
-        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='append')
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='append_all')
     assert caught.value.published is True
     record = next(iter(session.plan.evidence['operations'].values()))
     assert record['publication_status'] == 'published' and record['status'] == 'failed'
