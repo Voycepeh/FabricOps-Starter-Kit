@@ -269,6 +269,7 @@ def test_foundation_resolves_configured_store(output, monkeypatch):
 
 @pytest.mark.parametrize('mode', ['errorifexists', 'ignore', 'append'])
 def test_orchestrator_rejects_removed_file_modes_before_publication(files, mode):
+    setup_pipeline(pipeline_mode='Dry Run')
     with pytest.raises(ValueError, match='overwrite or append_all'):
         orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
                           file_format='csv', write_mode=mode)
