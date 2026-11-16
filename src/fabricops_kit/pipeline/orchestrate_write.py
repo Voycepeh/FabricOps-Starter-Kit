@@ -96,6 +96,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         Spark file writer options. Cannot override destination, mode or layout.
     single_file : bool, default=False
         Opt into one named artifact; default output is a Spark dataset folder.
+        append_all requires single_file=False and adds part files to the folder.
     max_single_file_rows : int, default=1000000
         Bounded count safeguard before single-file staging.
     max_single_file_bytes : int, default=134217728
