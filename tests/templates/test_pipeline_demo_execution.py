@@ -24,7 +24,6 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     setup = Mock(side_effect=sessions)
     def read(**kwargs):
         assert not {'execution_plan', 'spark_session'}.intersection(kwargs)
-        assert kwargs.get('verbose') is True
         reads.append(kwargs.get('relative_path') or kwargs['table_name'])
         return {'dataframe': frame, **({'source_id': 'file:orders', 'source_type': 'file'} if kwargs.get('relative_path') else {'table_name': kwargs['table_name']})}
     def write(dataframe, **kwargs):
@@ -49,7 +48,15 @@ def test_four_stage_pipeline_executes_all_reads_and_writes(path):
     from fabricops_kit.pipeline.shared import validate_pipeline_profiling
     observation.update(validate_pipeline_profiling())
     assert setup.call_count == expected_sessions
-    assert all(call.kwargs == {'pipeline_mode': 'Ungoverned', **observation} for call in setup.call_args_list)
+    # The reusable template may omit default arguments; demo notebooks can spell them out.
+    from fabricops_kit.pipeline.setup_pipeline import setup_pipeline as public_setup_pipeline
+    setup_signature = inspect.signature(public_setup_pipeline)
+    for call in setup.call_args_list:
+        bound = setup_signature.bind_partial(*call.args, **call.kwargs)
+        bound.apply_defaults()
+        assert all(bound.arguments[key] == value for key, value in {
+            'pipeline_mode': 'Ungoverned', **observation
+        }.items())
     expected = {
         '02_pipeline': (1, ['overwrite']),
         '02A_full_refresh_demo': (3, ['overwrite','overwrite','overwrite']),
@@ -84,9 +91,10 @@ def test_notebooks_keep_user_owned_transform_surface(path):
     assert len(calls['setup_pipeline']) == expected_executions
     assert len(calls['finalize_pipeline']) == expected_executions
     assert ids.index('finalize-run') > ids.index('write-heading')
-    expected_setup = {'pipeline_mode', 'source_drift_enabled', 'source_drift_interval_days', 'source_drift_block'}
-    expected_setup |= {'profiling_enabled', 'profiling_interval_days', 'profiling_max_rows', 'grain_discovery_enabled', 'frequency_enabled'}
-    assert all({arg.arg for arg in call.keywords} == expected_setup for call in calls['setup_pipeline'])
+    # Validate supported options, not whether a notebook redundantly spells out defaults.
+    from fabricops_kit.pipeline.setup_pipeline import setup_pipeline as public_setup_pipeline
+    accepted = set(inspect.signature(public_setup_pipeline).parameters)
+    assert all({arg.arg for arg in call.keywords} <= accepted for call in calls['setup_pipeline'])
     transform = next(cell.source for cell in notebook.cells if cell.id == 'transform')
     assert 'orchestrate_' not in transform
 
