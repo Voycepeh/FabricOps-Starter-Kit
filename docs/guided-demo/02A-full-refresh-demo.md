@@ -156,12 +156,11 @@ writes["curated_orders_csv"] = orchestrate_write(
     file_format="csv",
     write_mode="overwrite",
     write_options={"header": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"},
-    single_file=True,
     verbose=True,
 )
 ```
 
-`single_file=True` creates one named CSV; the default creates a Spark dataset folder. File outputs retain the supplied business columns without table audit columns or row hashes. File profiling stays in memory. Finalize shows the configured Store, `Files/demo/curated_orders.csv`, format, layout, publication status, and available output file/byte counts. These filesystem counts describe the output; they do not establish rows committed by this attempt.
+Overwrite automatically attempts one named CSV. Exceeding the internal 1-million-row or 100 MB encoded-byte threshold writes all rows as a distributed dataset folder at the same path. The result reports the actual layout; no public layout or threshold parameters are needed. File outputs retain the supplied business columns without table audit columns or row hashes. File profiling stays in memory. Finalize shows the configured Store, `Files/demo/curated_orders.csv`, format, layout, publication status, and available output file/byte counts. These filesystem counts describe the output; they do not establish rows committed by this attempt.
 
 ![Curated Orders Write output](../assets/2a/Write_Block_Output.png)
 

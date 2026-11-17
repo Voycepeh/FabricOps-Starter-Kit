@@ -116,40 +116,54 @@ result = orchestrate_write(
 ```
 
 Supply either table coordinates (`store`, `schema`, `table_name`) or file coordinates
-(`store`, `relative_path`, `file_format`). File modes are `errorifexists`, `overwrite`,
-`append` and `ignore`; the foundational default is `errorifexists`. Orchestration
-requires an explicit `write_mode`. Files do not support `append_all`, Append New Only,
-SCD1 or SCD2. A suffix does not select output layout: `orders.csv` is a **dataset
-folder** by default. Set `single_file=True` for one artifact with a matching extension;
-append is then rejected. Dataset output preserves distributed Spark parallelism and
-supports the same `repartition_by` conventions as foundational table writing.
+(`store`, `relative_path`, `file_format`). File modes are `overwrite` (the
+foundational default) and `append_all`; orchestration requires an explicit
+`write_mode`. Files do not support Append New Only, SCD1 or SCD2.
+Overwrite automatically attempts one physical file with a matching format
+extension. If either internal safety limit is exceeded, it writes every input row
+as a **distributed dataset folder at the exact requested path**, including its
+extension. No `_parts` destination is created. There is no public layout selector
+or size-limit parameter. `append_all` always selects dataset-folder output and
+rejects an existing physical file. `repartition_by` is applied before writing:
+small exports then coalesce to one part; overflow and append batches retain the
+requested repartitioning. CSV/JSON overwrite exports require uncompressed output;
+append batches support compression, and Parquet supports internal compression.
 
 Single-file output uses one executor, stages one part and renames it into place. It
-checks up to `max_single_file_rows + 1` rows before staging (default limit 1,000,000)
-and checks encoded output size before publication (default 128 MiB). These limits
+checks at most 1,000,001 rows before staging (internal threshold: 1,000,000 rows)
+and skips single-partition staging entirely when that row limit is exceeded.
+It checks encoded output size before publication (internal threshold: 100,000,000 bytes / 100 MB).
+Byte overflow discards the unsuccessful staging and rewrites the full input in
+distributed form. Neither route truncates or samples business data. Only these
+limit checks trigger overflow; permissions, filesystem failures and executor
+out-of-memory errors propagate without retrying as distributed output. These limits
 do not bound executor working memory, especially for wide rows. No business rows
-are collected on the driver. Use a stable input during the count and write actions.
-Single CSV/JSON artifacts are uncompressed; dataset folders support compression
-options, and single Parquet supports internal compression. Temporary paths are
+are collected on the driver. Use stable, deterministic input during the count,
+staging and fallback actions: byte overflow re-executes the original DataFrame.
+The thresholds are FabricOps implementation policy, not a universal Microsoft
+OneLake file-size limit.
+Temporary paths are
 removed after successful publication or failures before publication begins. Dataset
 overwrite also stages the complete output before moving the original destination,
 so lazy reads from the same destination finish safely. Overwrites first rename the
-old output to a unique backup and attempt restoration if publication fails while
+old file or folder to a unique backup and attempt restoration if publication fails while
 the target is absent. Publication failures retain recovery copies and expose their
 locations through the exception's `recovery_paths`; inspect these before deleting
 anything. Overwrite and rename remain nontransactional: serialize writers to each
 destination and validate recovery behavior in Fabric.
 
-The result includes the actual `resolved_path`, publication status and available
-filesystem metrics. `file_count` and `output_bytes` describe the resulting target,
+The result includes the actual `resolved_path`, `output_layout` (`single_file` or
+`dataset_folder`), publication status, `overflow_occurred`, `overflow_reason`
+(`row_limit`, `byte_limit` or `None`), and available filesystem metrics. `file_count` and `output_bytes` describe the resulting target,
 including prior dataset parts after append. `rows_committed` remains unknown.
-`ignore` returns `published=False` when a destination exists. Paths must be exact,
+Paths must be exact,
 nested paths beneath the configured `Files/` root; absolute paths, traversal, reader
 wildcards and destination/layout overrides in `write_options` are rejected.
 
 File writes support Dry Run and Ungoverned. Dry Run validates arguments and profiles
 the supplied DataFrame when due, but never stages or publishes files and cannot verify
-permissions, collisions or output-size limits. Governed file targets fail closed:
+permissions, collisions or output-size limits. Its actual `output_layout` and
+overflow fields are `None`, and publication status is `not_published`. Governed file targets fail closed:
 the current Pipeline Promotion authorization supports file Reads only. Ungoverned
 still rejects protected file destinations and overlapping folders. File targets use
 the existing physical file `source_id`, never a `table_id`, and do not use table
@@ -161,8 +175,10 @@ DataFrame, with session-local file history and no persisted table profile snapsh
 File overwrite profiles its input before publication so a lazy read of the destination
 is evaluated while the original source files still exist.
 It does not reread the published destination. `METADATA_PIPELINE_RUN` operations retain
-source participation, destination, options/layout limits, mode, output path,
-publication status and available metrics. Call `finalize_pipeline()` at the normal
+source participation, destination, writer options, mode, output path,
+publication status and available metrics. `file_write_parameters_json` retains
+requested options together with actual `output_layout`, `overflow_occurred` and
+`overflow_reason`; the final summary uses the actual layout. Call `finalize_pipeline()` at the normal
 notebook boundary; successful publication does not finalize the pipeline.
 
 Configured paths may traverse shortcuts. Fabric must support the underlying write,

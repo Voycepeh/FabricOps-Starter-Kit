@@ -55,9 +55,6 @@ def orchestrate_write(
     relative_path: str | None=None,
     file_format: str | None=None,
     write_options: dict[str, Any] | None=None,
-    single_file: bool=False,
-    max_single_file_rows: int=1000000,
-    max_single_file_bytes: int=134217728,
 ) -> dict[str, Any]:
 ```
 
@@ -79,16 +76,13 @@ Required describes the Python signature. An optional parameter may still be need
 | `table_name` | `str \| None` | No | `None` | Physical target table name; omit for file destinations. |
 | `write_mode` | `str` | Yes | `—` | Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: overwrite, append_all. |
 | `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
-| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. |
+| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. File exports apply this before staging: small output coalesces to one file; distributed overflow and append_all preserve the requested partition count. |
 | `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in persistent workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Dry Run and reused/updated during persistent writes. Failures release the cache. |
 | `verbose` | `bool` | No | `False` | Print concise stages and outcome when True; the execution widget reports automatically by default. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 | `relative_path` | `str \| None` | No | `None` | Exact destination beneath the configured Lakehouse Files area. |
 | `file_format` | `str \| None` | No | `None` | Required with relative_path. JSON is newline-delimited. |
 | `write_options` | `dict[str, Any] \| None` | No | `None` | Spark file writer options. Cannot override destination, mode or layout. |
-| `single_file` | `bool` | No | `False` | Opt into one named artifact; default output is a Spark dataset folder. append_all requires single_file=False and adds part files to the folder. |
-| `max_single_file_rows` | `int` | No | `1000000` | Bounded count safeguard before single-file staging. |
-| `max_single_file_bytes` | `int` | No | `134217728` | Encoded-byte safeguard before single-file publication. Coalescing uses one executor; these caps do not bound its working memory. Single CSV/JSON is uncompressed. See write_lakehouse_file for filesystem limitations. |
 
 </div>
 
@@ -122,6 +116,10 @@ dict
     call ``result["dataframe"].unpersist()`` when inspection is complete.
     File results instead return the supplied DataFrame without caching or
     table preparation, a source_id, resolved_path and filesystem write_metrics.
+    File output_layout, overflow_occurred and overflow_reason describe the actual
+    publication and are retained in file_write_parameters_json on the operation.
+    Dry Run leaves actual layout and overflow unknown (None) and returns a
+    publication_status=not_published because it does not stage or publish output.
     ``rows_committed`` measures this attempt; ``total_target_rows`` is the
     destination total where profiling provides it.
 
@@ -151,6 +149,14 @@ session-local, and persists no table profile snapshots. File overwrite profiles
 its supplied input before publication so lazy reads of the target remain valid.
 A bounded profile cannot
 establish complete row counts.
+File overwrite attempts one physical file and automatically overflows above
+internal limits of 1,000,000 rows or 100,000,000 encoded bytes (100 MB), keeping
+every row at the exact requested path. append_all always uses a dataset folder.
+These are internal safety limits, not Microsoft OneLake limits. CSV/JSON
+overwrite exports are uncompressed; Parquet retains internal compression.
+Stable, deterministic input is required across count, staging and fallback
+actions. Size checks never bound executor memory; unrelated failures propagate.
+See write_lakehouse_file for nontransactional publication and recovery caveats.
 File options, physical location, publication status and available filesystem
 metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
 receive table audit columns, row hashes, SCD processing or table lineage.
@@ -190,9 +196,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:30`
+`fabricops_kit/pipeline/orchestrate_write.py:32`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L346">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L350">View on GitHub</a>
 </div>
 
 

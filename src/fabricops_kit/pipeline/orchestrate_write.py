@@ -1,5 +1,7 @@
 """Public owner for the standard governed target lifecycle."""
 from __future__ import annotations
+
+import json
 from typing import Any, Iterable
 from datetime import UTC, datetime
 from fabricops_kit.pipeline.check_dq import check_dq
@@ -27,7 +29,7 @@ from fabricops_kit.pipeline.shared import (
 )
 
 
-def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample", relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]:
+def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample", relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]:
     """Evaluate or publish a target using the active pipeline's runtime.
 
     Define the dataframe, destination, write_mode and processing parameters.
@@ -45,6 +47,14 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     its supplied input before publication so lazy reads of the target remain valid.
     A bounded profile cannot
     establish complete row counts. 
+    File overwrite attempts one physical file and automatically overflows above
+    internal limits of 1,000,000 rows or 100,000,000 encoded bytes (100 MB), keeping
+    every row at the exact requested path. append_all always uses a dataset folder.
+    These are internal safety limits, not Microsoft OneLake limits. CSV/JSON
+    overwrite exports are uncompressed; Parquet retains internal compression.
+    Stable, deterministic input is required across count, staging and fallback
+    actions. Size checks never bound executor memory; unrelated failures propagate.
+    See write_lakehouse_file for nontransactional publication and recovery caveats.
     File options, physical location, publication status and available filesystem
     metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
     receive table audit columns, row hashes, SCD processing or table lineage.
@@ -94,15 +104,6 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         Required with relative_path. JSON is newline-delimited.
     write_options : dict, optional
         Spark file writer options. Cannot override destination, mode or layout.
-    single_file : bool, default=False
-        Opt into one named artifact; default output is a Spark dataset folder.
-        append_all requires single_file=False and adds part files to the folder.
-    max_single_file_rows : int, default=1000000
-        Bounded count safeguard before single-file staging.
-    max_single_file_bytes : int, default=134217728
-        Encoded-byte safeguard before single-file publication. Coalescing uses
-        one executor; these caps do not bound its working memory. Single CSV/JSON
-        is uncompressed. See write_lakehouse_file for filesystem limitations.
     write_parameters : dict, optional
         Strategy parameters including SCD key_columns and SCD2 effective_column.
     existing_mapping : object, optional
@@ -112,7 +113,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         cache after consumption. A configured restricted mapping store is read-only
         during Dry Run and reused/updated during persistent writes. Failures release the cache.
     repartition_by : int, optional
-        Physical write partition count for persistent modes.
+        Physical write partition count for persistent modes. File exports apply
+        this before staging: small output coalesces to one file; distributed
+        overflow and append_all preserve the requested partition count.
     verbose : bool
         Print concise stages and outcome when True; the execution widget reports automatically by default.
     dq_diagnostics : {"sample", "none", "full"}
@@ -135,6 +138,10 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         call ``result["dataframe"].unpersist()`` when inspection is complete.
         File results instead return the supplied DataFrame without caching or
         table preparation, a source_id, resolved_path and filesystem write_metrics.
+        File output_layout, overflow_occurred and overflow_reason describe the actual
+        publication and are retained in file_write_parameters_json on the operation.
+        Dry Run leaves actual layout and overflow unknown (None) and returns a
+        publication_status=not_published because it does not stage or publish output.
         ``rows_committed`` measures this attempt; ``total_target_rows`` is the
         destination total where profiling provides it.
 
@@ -152,7 +159,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     session = current_pipeline_session()
     spark_session = session.spark
     try:
-        is_file = relative_path is not None or file_format is not None or write_options is not None or single_file
+        is_file = relative_path is not None or file_format is not None or write_options is not None
         if is_file:
             from fabricops_kit.io.shared import validate_file_write, repartition_dataframe_for_write
             if table_name is not None or schema is not None or write_parameters is not None or existing_mapping is not None:
@@ -161,9 +168,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
                 raise ValueError("File writes require relative_path and file_format.")
             if session.plan.execution_mode == "governed":
                 raise ValueError("Governed file targets require explicit destination authorization; file-target Pipeline Promotion is not supported.")
-            write_mode, write_options = validate_file_write(relative_path, file_format, write_mode, write_options,
-                single_file=single_file, repartition_by=repartition_by,
-                max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes)
+            write_mode, write_options = validate_file_write(relative_path, file_format, write_mode, write_options)
             if repartition_by is not None and (type(repartition_by) is not int or repartition_by < 1):
                 raise ValueError("Orchestrated repartition_by must be a positive integer.")
             repartition_dataframe_for_write(dataframe, repartition_by)
@@ -182,8 +187,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         if is_file:
             return _write_file(dataframe, operation=operation, execution_plan=execution_plan, sources=sources,
                 store=store, relative_path=relative_path, file_format=file_format, write_mode=write_mode,
-                write_options=write_options, repartition_by=repartition_by, single_file=single_file,
-                max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes,
+                write_options=write_options, repartition_by=repartition_by,
                 verbose=verbose, spark_session=spark_session)
         summary = ExecutionSummary("WRITE", verbose=verbose)
         presentations = []
@@ -347,8 +351,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
 
 
 def _write_file(dataframe, *, operation, execution_plan, sources, store, relative_path, file_format,
-                write_mode, write_options, repartition_by, single_file, max_single_file_rows,
-                max_single_file_bytes, verbose, spark_session):
+                write_mode, write_options, repartition_by, verbose, spark_session):
     """Publish an admitted exact file destination under the existing run boundary."""
     from fabricops_kit.io import write_lakehouse_file
     from fabricops_kit.io.shared import resolve_configured_file_path
@@ -390,17 +393,29 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
             exc.failed_stage = "Profile"
             raise
     if execution_plan.permits_persistence:
-        result = run("Write", lambda: write_lakehouse_file(dataframe, relative_path, store=store,
-            file_format=file_format, mode=write_mode, write_options=write_options,
-            repartition_by=repartition_by, single_file=single_file,
-            max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes,
-            verbose=False, context=context))
+        try:
+            result = run("Write", lambda: write_lakehouse_file(dataframe, relative_path, store=store,
+                file_format=file_format, mode=write_mode, write_options=write_options,
+                repartition_by=repartition_by,
+                verbose=False, context=context))
+        except RuntimeError as exc:
+            if getattr(exc, "published", False):
+                parameters = json.loads(operation.record["file_write_parameters_json"])
+                parameters.update({key: getattr(exc, key, None) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
+                operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
+            raise
     else:
         result = run("Processing", lambda: {"published": False, "publication_status": "not_published",
             "resolved_path": path, "relative_path": relative_path, "write_metrics": {"rows_committed": None,
-            "measurement_source": "dry_run"}, "dry_run": {"status": "passed",
+            "measurement_source": "dry_run", "file_count": None, "output_bytes": None},
+            "output_layout": None, "overflow_occurred": None, "overflow_reason": None,
+            "file_count": None, "output_bytes": None,
+            "dry_run": {"status": "passed",
             "not_verified": ["destination permissions, collisions, size limits and publication"]}})
     operation.record.update(output_path=result["resolved_path"], publication_status=result["publication_status"])
+    parameters = json.loads(operation.record["file_write_parameters_json"])
+    parameters.update({key: result.get(key) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
+    operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
     metrics = {**result["write_metrics"], "input_columns": len(dataframe.columns)}
     operation.capture_metrics(metrics)
     if profile is None:
@@ -420,7 +435,7 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     display_profile_presentations(presentations)
     return {**execution_result(context, target_id, stages=stages), **result, "source_type": "file",
         "source_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
-        "file_format": file_format, "output_layout": "single_file" if single_file else "dataset_folder",
+        "file_format": file_format,
         "validation_passed": all(row["can_continue"] for row in checks) and drift.get("can_continue", True)
             and all(stage.get("status") != "blocked" for source in sources for stage in source.get("orchestration_stages", [])),
         "tested_contracts": tested_contract_identities(context, [participant_id(source) for source in sources]),

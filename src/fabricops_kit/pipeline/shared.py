@@ -223,7 +223,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
         for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
-                           "recovery_paths", "resolved_path", "publication_status"):
+                           "recovery_paths", "resolved_path", "publication_status", "output_layout", "overflow_occurred", "overflow_reason"):
             if hasattr(exc, field_name):
                 setattr(failure, field_name, getattr(exc, field_name))
         raise failure from exc
@@ -5895,7 +5895,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
 def resolve_file_write_participant(*, store, relative_path, file_format, context):
     """Resolve exact file target identity independently of writer options."""
     from fabricops_kit.io.shared import validate_file_write
-    validate_file_write(relative_path, file_format, "overwrite")
+    validate_file_write(relative_path, file_format, "append_all")
     return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
 
 
@@ -6132,7 +6132,7 @@ def validate_pipeline_run(row):
                     raise ValueError("Governed file target authorization is unsupported.")
                 if item.get("contract_id") is not None:
                     raise ValueError("File targets cannot use table contracts.")
-                if item["status"] == "succeeded" and item["write_mode"] not in {"overwrite", "append", "errorifexists", "ignore"}:
+                if item["status"] == "succeeded" and item["write_mode"] not in {"overwrite", "append_all", "append", "errorifexists", "ignore"}:
                     raise ValueError("Unsupported file write mode.")
         elif item.get("source_id") is not None or str(item["table_id"]).startswith("file:"):
             raise ValueError("Table operations cannot use a file Source ID as a Table ID.")
@@ -6146,7 +6146,7 @@ def validate_pipeline_run(row):
             # Run records retain historical strategy facts; execution validates the five current choices.
             allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "append_all", "append_new_only", "scd1", "scd2"}
             if item.get("source_type") == "file" and item["pipeline_role"] == "target":
-                allowed = {"overwrite", "append", "errorifexists", "ignore"}
+                allowed = {"overwrite", "append_all", "append", "errorifexists", "ignore"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
@@ -6342,7 +6342,7 @@ class PipelineOperation:
                 if plan.execution_mode == "governed":
                     raise ValueError("Governed file targets require explicit destination authorization; file-target Pipeline Promotion is not supported.")
                 self.record["file_write_parameters_json"] = canonical_pipeline_json({key: args.get(key) for key in
-                    ("write_options", "single_file", "max_single_file_rows", "max_single_file_bytes")})
+                    ("write_options",)})
             self.record.update(
                 store=str(identity["store"]),
                 requested_schema=args.get("schema"),
@@ -6437,7 +6437,7 @@ class PipelineOperation:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
                 for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
-                           "recovery_paths", "resolved_path", "publication_status"):
+                           "recovery_paths", "resolved_path", "publication_status", "output_layout", "overflow_occurred", "overflow_reason"):
                     if exc is not None and hasattr(exc, name):
                         setattr(persistence_error, name, getattr(exc, name))
                 if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"
