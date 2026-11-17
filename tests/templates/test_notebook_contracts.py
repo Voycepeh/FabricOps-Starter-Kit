@@ -472,7 +472,7 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
         for cell in write_cells:
             assert cell.source.lstrip().startswith('writes["')
             if 'relative_path=' in cell.source:
-                assert 'single_file=True' in cell.source
+                assert 'single_file=' not in cell.source
                 assert 'file_format="csv"' in cell.source
                 assert 'store="Silver"' in cell.source
                 assert 'relative_path="demo/curated_orders.csv"' in cell.source
@@ -746,3 +746,36 @@ def test_finalization_is_one_call_without_manual_observation_profiling(notebook_
     assert [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call)] == ["finalize_pipeline"]
     source = "\n".join("".join(cell.source) for cell in notebook.cells)
     assert "observation_profiles" not in source
+
+
+def test_02_pipeline_file_write_guidance_matches_automatic_layout_api():
+    """The parameter table describes current modes and the internal layout policy."""
+    notebook = _load_notebook(NOTEBOOK_DIR / '02_pipeline.ipynb')
+    guidance = next(cell.source for cell in notebook.cells if cell.id == 'write-heading')
+    assert '| `single_file` |' not in guidance
+    assert '| `max_single_file_rows` |' not in guidance
+    assert '| `max_single_file_bytes` |' not in guidance
+    assert 'one physical file by default' in guidance
+    assert '1,000,000 rows' in guidance and '100,000,000 encoded bytes (100 MB)' in guidance
+    assert 'exact requested path' in guidance
+    assert 'Files: `"overwrite"` or `"append_all"`' in guidance
+    assert 'omit the `Files/` prefix' in guidance
+    for field in ('output_layout', 'overflow_reason', 'file_count', 'output_bytes', 'publication_status'):
+        assert f'`{field}`' in guidance
+
+
+@pytest.mark.parametrize('relative', [
+    'notebooks/02_pipeline.ipynb', 'DemoData/02A_full_refresh_demo.ipynb', 'DemoData/00C_demo_setup.ipynb',
+])
+def test_living_file_write_callers_use_current_public_keywords(relative):
+    """Demo and standard writer calls bind to the public API without removed knobs."""
+    import inspect
+    from fabricops_kit import orchestrate_write, write_lakehouse_file
+
+    functions = {'orchestrate_write': orchestrate_write, 'write_lakehouse_file': write_lakehouse_file}
+    for _, source in _code_cells(ROOT / 'templates' / relative):
+        for call in ast.walk(ast.parse(source)):
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id in functions:
+                signature = inspect.signature(functions[call.func.id])
+                keywords = {keyword.arg: object() for keyword in call.keywords if keyword.arg is not None}
+                signature.bind(*[object() for _ in call.args], **keywords)
