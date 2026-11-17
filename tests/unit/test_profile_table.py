@@ -937,7 +937,7 @@ def test_grain_catalogue_update_retries_only_aborted_conflicts(spark_session, mo
         return target
 
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=for_path)))
-    monkeypatch.setattr("time.sleep", lambda _: None)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", lambda _: None)
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *a, **kw: (None, None, None, "/metadata/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: "engineering")
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kw: {"_activity_id": "activity"})

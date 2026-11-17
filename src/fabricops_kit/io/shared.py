@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from time import sleep
 from typing import Any, Mapping
 import re
 import json
@@ -401,7 +402,6 @@ def retry_delta_metadata(action):
     Unknown acknowledgements, permission failures and stale approvals propagate.
     """
     import random
-    import time
 
     transient = {
         "ConcurrentAppendException", "ConcurrentWriteException",
@@ -426,7 +426,7 @@ def retry_delta_metadata(action):
                 condition = getter()
             if (name not in transient and str(condition).split(".", 1)[0] not in conditions) or attempt == 31:
                 raise
-            time.sleep(random.uniform(0.1, min(8.0, 0.2 * 2 ** attempt)))
+            sleep(random.uniform(0.1, min(8.0, 0.2 * 2 ** attempt)))
 
 
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:
