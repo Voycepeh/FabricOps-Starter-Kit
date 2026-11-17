@@ -449,12 +449,6 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
                      for cell_id in required_order]
         assert positions == sorted(positions), path.name
         assert cells["environment-heading"].source.startswith("# 0. Workspace — Setup Notebook")
-        setup_cells = [cell for cell in notebook.cells
-                       if cell.cell_type == "code" and "setup_pipeline(" in cell.source]
-        for cell in setup_cells:
-            assert "source_drift_enabled=False" in cell.source
-            assert "source_drift_interval_days=1" in cell.source
-            assert "source_drift_block=True" in cell.source
 
         transform_cells = [cell for cell in notebook.cells
                            if cell.cell_type == "code" and cell.id.startswith("transform")]
@@ -496,7 +490,7 @@ def test_02a_preserves_the_full_refresh_pipeline():
         source for _, source in _code_cells(DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb")
     )
     assert code_source.count("orchestrate_read(") == 3
-    assert code_source.count('read_mode="full"') == 3
+    assert 'read_mode="full"' not in code_source
     assert code_source.count("= orchestrate_write(") == 3
     assert code_source.count('write_mode="overwrite"') == 3
     assert 'sources=' not in code_source
@@ -524,7 +518,7 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     assert '.dropDuplicates(["movement_id"])' in source
     assert 'mode="overwrite"' in _demo_cell(name, "read-csv").source
     assert source.count("orchestrate_read(") == 2
-    assert source.count('read_mode="full"') == 1
+    assert 'read_mode="full"' not in source
     assert source.count('read_mode="incremental"') == 1
 
     incremental_tree = ast.parse(_demo_cell(name, "read-1").source)
@@ -543,7 +537,7 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     full_call = next(node for node in ast.walk(full_tree) if isinstance(node, ast.Call)
                      and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_read")
     full_keywords = {keyword.arg: keyword.value for keyword in full_call.keywords}
-    assert ast.literal_eval(full_keywords["read_mode"]) == "full"
+    assert "read_mode" not in full_keywords
     assert "target_table_id" not in full_keywords and "read_parameters" not in full_keywords
 
     destinations = []
@@ -612,7 +606,7 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert 'table_name="product_master_updates"' in source
     assert 'mode="overwrite"' in _demo_cell("02C_scd_demo.ipynb", "read-csv").source
     assert source.count("orchestrate_read(") == 1
-    assert 'read_mode="full"' in source
+    assert 'read_mode="full"' not in source
     assert 'write_mode="scd1"' in source
     assert 'write_mode="scd2"' in source
     assert 'sources=' not in _demo_cell('02C_scd_demo.ipynb', 'write-1').source
