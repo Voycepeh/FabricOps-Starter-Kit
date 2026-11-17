@@ -5895,7 +5895,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
 def resolve_file_write_participant(*, store, relative_path, file_format, context):
     """Resolve exact file target identity independently of writer options."""
     from fabricops_kit.io.shared import validate_file_write
-    validate_file_write(relative_path, file_format, "errorifexists")
+    validate_file_write(relative_path, file_format, "overwrite")
     return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
 
 

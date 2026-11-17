@@ -7219,9 +7219,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.lakehouse_file_filesystem",
-      "source_end_line": 975,
+      "source_end_line": 977,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 971,
+      "source_start_line": 973,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7237,7 +7237,6 @@
       "function_name": "normalize_write_mode",
       "function_type": "shared_function",
       "inbound_source_references": [
-        "fabricops_kit.io.shared.validate_file_write",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_lakehouse_table::<module>"
       ],
@@ -7248,10 +7247,6 @@
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 246,
       "supports_live_contract": true,
-      "transitive_live_dependents": [
-        "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-        "fabricops_kit.pipeline.setup_pipeline.setup_pipeline"
-      ],
       "usage": "public_flow_reachable"
     },
     {
@@ -7845,7 +7840,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.validate_file_write",
-      "source_end_line": 968,
+      "source_end_line": 970,
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 932,
       "supports_live_contract": true,
@@ -7941,9 +7936,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._publish_staged",
-      "source_end_line": 234,
+      "source_end_line": 229,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-      "source_start_line": 198,
+      "source_start_line": 195,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7961,9 +7956,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._result",
-      "source_end_line": 195,
+      "source_end_line": 192,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-      "source_start_line": 177,
+      "source_start_line": 174,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -8008,10 +8003,10 @@
           "type": "{\"csv\", \"parquet\", \"json\"}"
         },
         {
-          "description": "Spark collision policy. Append is supported only for dataset folders.",
+          "description": "Overwrite replaces the destination; append_all adds data to a dataset folder only.",
           "name": "mode",
           "required": "No",
-          "type": "{\"errorifexists\", \"overwrite\", \"append\", \"ignore\"}"
+          "type": "{\"overwrite\", \"append_all\"}"
         },
         {
           "description": "Spark writer options, such as header, sep or compression. Destination, mode and output layout overrides are rejected.",
@@ -8026,7 +8021,7 @@
           "type": "int or str or list or tuple, optional"
         },
         {
-          "description": "Explicitly produce one named artifact with a matching format extension. Otherwise the path is a dataset directory, even if it has an extension.",
+          "description": "Explicitly produce one named artifact with a matching format extension. Incompatible with append_all; use a dataset folder for append batches. Otherwise the path is a dataset directory, even if it has an extension.",
           "name": "single_file",
           "required": "No",
           "type": "bool, default=False"
@@ -8060,8 +8055,8 @@
       "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
       "raises_documentation": "Not documented yet",
       "returns_documentation": "dict\n    Actual resolved_path, relative_path, published, publication_status,\n    file_format, output_layout, mode and write_metrics. Row commit counts\n    are unknown; file_count and output_bytes describe the resulting target.",
-      "signature": "def write_lakehouse_file(dataframe, relative_path, *, store='Silver', file_format='parquet', mode='errorifexists', write_options=None, repartition_by=None, single_file=False, max_single_file_rows=1000000, max_single_file_bytes=134217728, verbose=True, context=None)",
-      "source_end_line": 174,
+      "signature": "def write_lakehouse_file(dataframe, relative_path, *, store='Silver', file_format='parquet', mode='overwrite', write_options=None, repartition_by=None, single_file=False, max_single_file_rows=1000000, max_single_file_bytes=134217728, verbose=True, context=None)",
+      "source_end_line": 171,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
       "source_start_line": 16,
       "summary": "Write CSV, Parquet or newline-delimited JSON beneath configured Files.",
@@ -8728,7 +8723,7 @@
           "type": "str | None"
         },
         {
-          "description": "Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: errorifexists, overwrite, append, ignore.",
+          "description": "Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: overwrite, append_all.",
           "name": "write_mode",
           "required": "Yes",
           "type": "str"
@@ -8782,7 +8777,7 @@
           "type": "dict[str, Any] | None"
         },
         {
-          "description": "Opt into one named artifact; default output is a Spark dataset folder.",
+          "description": "Opt into one named artifact; default output is a Spark dataset folder. append_all requires single_file=False and adds part files to the folder.",
           "name": "single_file",
           "required": "No",
           "type": "bool"
@@ -17724,7 +17719,6 @@
         "fabricops_kit.io.shared.execute_warehouse_sql",
         "fabricops_kit.io.shared.get_spark_session",
         "fabricops_kit.io.shared.lakehouse_file_filesystem",
-        "fabricops_kit.io.shared.normalize_write_mode",
         "fabricops_kit.io.shared.read_warehouse_synapsesql",
         "fabricops_kit.io.shared.repartition_dataframe_for_write",
         "fabricops_kit.io.shared.resolve_configured_file_path",
@@ -17917,7 +17911,7 @@
       ],
       "metrics": {
         "depth": 19,
-        "scope": 285,
+        "scope": 284,
         "width": 21
       },
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -17940,7 +17934,7 @@
               "function_name": "write_lakehouse_file",
               "function_type": "public_dependency",
               "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-              "source_end_line": 174,
+              "source_end_line": 171,
               "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
               "source_start_line": 16,
               "violation_details": [
@@ -18811,7 +18805,6 @@
         "fabricops_kit.io.shared._validate_relative_path",
         "fabricops_kit.io.shared._validate_warehouse_store",
         "fabricops_kit.io.shared.get_spark_session",
-        "fabricops_kit.io.shared.normalize_write_mode",
         "fabricops_kit.io.shared.resolve_configured_file_path",
         "fabricops_kit.io.shared.resolve_lakehouse_file_location",
         "fabricops_kit.io.shared.resolve_lakehouse_file_path",
@@ -18850,7 +18843,7 @@
       ],
       "metrics": {
         "depth": 14,
-        "scope": 102,
+        "scope": 101,
         "width": 3
       },
       "qualified_name": "fabricops_kit.pipeline.setup_pipeline.setup_pipeline",
@@ -19173,7 +19166,7 @@
       ],
       "metrics": {
         "depth": 6,
-        "scope": 23,
+        "scope": 22,
         "width": 7
       },
       "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
@@ -22502,10 +22495,6 @@
     },
     {
       "callee_qualified_name": "fabricops_kit.data_contract.shared.file_source_identity",
-      "caller_qualified_name": "fabricops_kit.io.shared.validate_file_write"
-    },
-    {
-      "callee_qualified_name": "fabricops_kit.io.shared.normalize_write_mode",
       "caller_qualified_name": "fabricops_kit.io.shared.validate_file_write"
     },
     {

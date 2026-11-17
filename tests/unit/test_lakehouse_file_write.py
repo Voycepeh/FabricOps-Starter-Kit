@@ -117,32 +117,19 @@ def test_foundation_layout_formats_and_metrics(output, fmt, single):
         output.frame.coalesce.assert_not_called()
 
 
-@pytest.mark.parametrize('mode', ['overwrite', 'append', 'ignore', 'errorifexists'])
+@pytest.mark.parametrize('mode', ['overwrite', 'append_all'])
 def test_dataset_collisions(output, mode):
-    target = '/configured/Files/orders'
-    output.fs.entries[target] = None
-    if mode == 'errorifexists':
-        with pytest.raises(FileExistsError):
-            write_lakehouse_file(output.frame, 'orders', mode=mode)
-    else:
-        result = write_lakehouse_file(output.frame, 'orders', mode=mode)
-        assert result['published'] == (mode != 'ignore')
-        if mode != 'ignore':
-            output.writer.mode.assert_called_once_with("errorifexists" if mode == "overwrite" else mode)
-    if mode in {'ignore', 'errorifexists'}:
-        output.writer.save.assert_not_called()
+    output.fs.entries['/configured/Files/orders'] = None
+    result = write_lakehouse_file(output.frame, 'orders', mode=mode)
+    assert result['published'] is True
+    output.writer.mode.assert_called_once_with('errorifexists' if mode == 'overwrite' else 'append')
 
 
-@pytest.mark.parametrize('mode', ['overwrite', 'ignore', 'errorifexists'])
-def test_single_file_collisions(output, mode):
+def test_single_file_collisions(output):
     output.fs.entries['/configured/Files/orders.csv'] = 8
-    if mode == 'errorifexists':
-        with pytest.raises(FileExistsError):
-            write_lakehouse_file(output.frame, 'orders.csv', file_format='csv', single_file=True, mode=mode)
-    else:
-        result = write_lakehouse_file(output.frame, 'orders.csv', file_format='csv', single_file=True, mode=mode)
-        assert result['published'] == (mode == 'overwrite')
-        assert output.fs.entries['/configured/Files/orders.csv'] == (12 if mode == 'overwrite' else 8)
+    result = write_lakehouse_file(output.frame, 'orders.csv', file_format='csv', single_file=True, mode='overwrite')
+    assert result['published'] is True
+    assert output.fs.entries['/configured/Files/orders.csv'] == 12
     assert not any('.fabricops-' in key for key in output.fs.entries)
 
 
@@ -151,7 +138,8 @@ def test_single_file_collisions(output, mode):
     {'relative_path': 'Files/orders.csv'}, {'relative_path': 'a/*.csv'}, {'relative_path': 'a/%2e'},
     {'relative_path': 'https://elsewhere'}, {'file_format': 'excel'}, {'file_format': 'xml'},
     {'write_options': {'path': 'elsewhere'}}, {'write_options': {'maxRecordsPerFile': 2}},
-    {'single_file': True, 'mode': 'append'}, {'single_file': True, 'write_options': {'Compression': 'gzip'}}, {'single_file': True, 'relative_path': 'orders'},
+    {'mode': 'errorifexists'}, {'mode': 'ignore'}, {'mode': 'append'},
+    {'single_file': True, 'mode': 'append_all'}, {'single_file': True, 'write_options': {'Compression': 'gzip'}}, {'single_file': True, 'relative_path': 'orders'},
     {'single_file': True, 'repartition_by': 2}, {'max_single_file_bytes': 0},
 ])
 def test_invalid_foundation_requests(output, changes):
@@ -162,10 +150,31 @@ def test_invalid_foundation_requests(output, changes):
     output.writer.save.assert_not_called()
 
 
+
+def test_append_all_single_file_rejected_before_filesystem_mutation(output):
+    target = '/configured/Files/orders.csv'
+    output.fs.entries[target] = 8
+    with pytest.raises(ValueError, match='single_file=True.*single_file=False.*overwrite.*No data was written'):
+        write_lakehouse_file(output.frame, 'orders.csv', file_format='csv',
+                             mode='append_all', single_file=True)
+    assert output.fs.entries[target] == 8
+    assert output.fs.renames == []
+    assert output.fs.deleted == []
+    output.writer.save.assert_not_called()
+
+
+def test_orchestrated_append_all_single_file_rejected_before_publication(files):
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    with pytest.raises(ValueError, match='single_file=True.*single_file=False.*overwrite.*No data was written'):
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
+                          file_format='csv', write_mode='append_all', single_file=True)
+    assert not session.plan.evidence['operations']
+
+
 def test_existing_physical_file_cannot_be_appended_as_dataset(output):
     output.fs.entries['/configured/Files/orders'] = 12
     with pytest.raises(ValueError, match='layout'):
-        write_lakehouse_file(output.frame, 'orders', mode='append')
+        write_lakehouse_file(output.frame, 'orders', mode='append_all')
     output.writer.save.assert_not_called()
 
 
@@ -225,7 +234,7 @@ def test_orchestrated_files_track_sources_and_do_not_finalize(files, monkeypatch
 
 
 @pytest.mark.parametrize('changes', [{'schema': 'demo'}, {'table_name': 'orders'}, {'file_format': None},
-    {'write_mode': 'scd1'}, {'write_mode': 'append_all'}, {'write_parameters': {}}, {'write_options': {'path': 'x'}}])
+    {'write_mode': 'scd1'}, {'write_mode': 'append_new_only'}, {'write_mode': 'append'}, {'write_parameters': {}}, {'write_options': {'path': 'x'}}])
 def test_invalid_orchestrated_file_destinations(files, changes):
     session = setup_pipeline(pipeline_mode='Dry Run')
     args = dict(store='Silver', relative_path='orders.csv', file_format='csv', write_mode='overwrite')
@@ -256,6 +265,14 @@ def test_foundation_resolves_configured_store(output, monkeypatch):
     assert result['resolved_path'] == config.path_config.paths['dev']['Silver'].root + '/Files/nested/orders.csv'
     with pytest.raises(ValueError, match='lakehouse'):
         write_lakehouse_file(output.frame, 'orders.csv', store='Gold', context=context)
+
+
+@pytest.mark.parametrize('mode', ['errorifexists', 'ignore', 'append'])
+def test_orchestrator_rejects_removed_file_modes_before_publication(files, mode):
+    setup_pipeline(pipeline_mode='Dry Run')
+    with pytest.raises(ValueError, match='overwrite or append_all'):
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
+                          file_format='csv', write_mode=mode)
 
 
 @pytest.mark.parametrize('protected_path', ['nested/orders.csv', 'nested', 'nested/*.csv', '*'])
@@ -290,7 +307,7 @@ def test_profiling_failure_retains_published_file_status(files, monkeypatch):
     monkeypatch.setattr(shared, 'schedule_file_profiling', Mock(side_effect=RuntimeError('profile failed')))
     session = setup_pipeline(pipeline_mode='Ungoverned')
     with pytest.raises(RuntimeError) as caught:
-        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='append')
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='append_all')
     assert caught.value.published is True
     record = next(iter(session.plan.evidence['operations'].values()))
     assert record['publication_status'] == 'published' and record['status'] == 'failed'

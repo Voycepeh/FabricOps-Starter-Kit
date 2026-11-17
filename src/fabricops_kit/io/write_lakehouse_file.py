@@ -14,7 +14,7 @@ from .shared import (
 
 
 def write_lakehouse_file(
-    dataframe, relative_path, *, store="Silver", file_format="parquet", mode="errorifexists",
+    dataframe, relative_path, *, store="Silver", file_format="parquet", mode="overwrite",
     write_options=None, repartition_by=None, single_file=False,
     max_single_file_rows=1000000, max_single_file_bytes=134217728, verbose=True, context=None,
 ):
@@ -30,8 +30,8 @@ def write_lakehouse_file(
         Lakehouse key from 00_env_config.
     file_format : {"csv", "parquet", "json"}
         Spark output format.
-    mode : {"errorifexists", "overwrite", "append", "ignore"}
-        Spark collision policy. Append is supported only for dataset folders.
+    mode : {"overwrite", "append_all"}
+        Overwrite replaces the destination; append_all adds data to a dataset folder only.
     write_options : dict, optional
         Spark writer options, such as header, sep or compression. Destination,
         mode and output layout overrides are rejected.
@@ -39,6 +39,7 @@ def write_lakehouse_file(
         Same Spark repartitioning conventions as write_lakehouse_table.
     single_file : bool, default=False
         Explicitly produce one named artifact with a matching format extension.
+        Incompatible with append_all; use a dataset folder for append batches.
         Otherwise the path is a dataset directory, even if it has an extension.
     max_single_file_rows : int, default=1000000
         Single-file input row limit, checked with a bounded Spark count.
@@ -107,10 +108,6 @@ def write_lakehouse_file(
         exists = fs.exists(target)
         if exists and fs.isFile(target) != single_file:
             raise ValueError("Destination layout differs from requested single-file/dataset-folder output.")
-        if exists and mode == "errorifexists":
-            raise FileExistsError("Lakehouse Files destination already exists.")
-        if exists and mode == "ignore":
-            return _result(fs, target, path, relative_path, file_format, single_file, mode, False)
         if single_file:
             if dataframe.limit(max_single_file_rows + 1).count() > max_single_file_rows:
                 raise ValueError("Single-file row limit exceeded; use dataset-folder output.")
@@ -132,7 +129,7 @@ def write_lakehouse_file(
             _publish_staged(fs, staging, target, mode=mode, path_type=path_type, single_file=False)
             retain_staging = False
         else:
-            frame.write.format(file_format).mode(mode).options(**options).save(path)
+            frame.write.format(file_format).mode("append").options(**options).save(path)
         result = _result(fs, target, path, relative_path, file_format, single_file, mode, published if single_file else True)
     except (ValueError, FileExistsError) as exc:
         if retain_staging and getattr(exc, "recovery_paths", None):
@@ -191,7 +188,7 @@ def _result(fs, target, path, relative_path, file_format, single_file, mode, pub
         pass  # Publication succeeded even if optional listing metrics are unavailable.
     return {"resolved_path": path, "relative_path": relative_path, "file_format": file_format,
             "output_layout": "single_file" if single_file else "dataset_folder", "mode": mode,
-            "published": published, "publication_status": "published" if published else "ignored",
+            "published": published, "publication_status": "published" if published else "not_published",
             "write_metrics": metrics}
 
 
@@ -202,8 +199,6 @@ def _publish_staged(fs, source, target, *, mode, path_type, single_file):
         if fs.exists(target):
             if fs.isFile(target) != single_file:
                 raise ValueError("Destination layout differs from requested output.")
-            if mode == "ignore":
-                return False
             if mode != "overwrite":
                 raise FileExistsError("Lakehouse Files destination already exists.")
             backup = path_type(str(target) + ".fabricops-backup-" + uuid4().hex)

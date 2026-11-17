@@ -8,6 +8,9 @@
 
 Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.
 
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">00C_demo_setup</span>
+</p>
 
 ## Usage notes
 
@@ -39,7 +42,7 @@ def write_lakehouse_file(
     *,
     store='Silver',
     file_format='parquet',
-    mode='errorifexists',
+    mode='overwrite',
     write_options=None,
     repartition_by=None,
     single_file=False,
@@ -66,10 +69,10 @@ Required describes the Python signature. An optional parameter may still be need
 | `relative_path` | `str` | Yes | `—` | Exact nested path beneath Files, without absolute paths or selectors. |
 | `store` | `str` | No | `'Silver'` | Lakehouse key from 00_env_config. |
 | `file_format` | `{"csv", "parquet", "json"}` | No | `'parquet'` | Spark output format. |
-| `mode` | `{"errorifexists", "overwrite", "append", "ignore"}` | No | `'errorifexists'` | Spark collision policy. Append is supported only for dataset folders. |
+| `mode` | `{"overwrite", "append_all"}` | No | `'overwrite'` | Overwrite replaces the destination; append_all adds data to a dataset folder only. |
 | `write_options` | `dict` | No | `None` | Spark writer options, such as header, sep or compression. Destination, mode and output layout overrides are rejected. |
 | `repartition_by` | `int or str or list or tuple` | No | `None` | Same Spark repartitioning conventions as write_lakehouse_table. |
-| `single_file` | `bool` | No | `False` | Explicitly produce one named artifact with a matching format extension. Otherwise the path is a dataset directory, even if it has an extension. |
+| `single_file` | `bool` | No | `False` | Explicitly produce one named artifact with a matching format extension. Incompatible with append_all; use a dataset folder for append batches. Otherwise the path is a dataset directory, even if it has an extension. |
 | `max_single_file_rows` | `int` | No | `1000000` | Single-file input row limit, checked with a bounded Spark count. |
 | `max_single_file_bytes` | `int` | No | `134217728` | Maximum staged output bytes before publishing one artifact. |
 | `verbose` | `bool` | No | `True` | Print logical destination on completion. |
@@ -140,7 +143,7 @@ No related guides documented.
 
 `fabricops_kit/io/write_lakehouse_file.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_file.py#L16-L174">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_file.py#L16-L171">View on GitHub</a>
 </div>
 
 

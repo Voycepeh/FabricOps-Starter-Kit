@@ -4077,7 +4077,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -7774,7 +7774,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -11386,7 +11386,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -13518,7 +13518,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -15513,7 +15513,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -17500,7 +17500,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -19447,7 +19447,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -21622,7 +21622,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -21953,7 +21953,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -22528,7 +22528,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -23050,7 +23050,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -23425,7 +23425,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -23663,7 +23663,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -23901,7 +23901,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -24099,7 +24099,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -24285,7 +24285,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -38936,7 +38936,7 @@
             },
             {
               "annotation": null,
-              "default": "'errorifexists'",
+              "default": "'overwrite'",
               "has_default": true,
               "kind": "keyword_only",
               "name": "mode",
@@ -39001,7 +39001,7 @@
           ],
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "return_annotation": null,
-          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'errorifexists', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
           "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
           "source_qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
         },
@@ -39860,7 +39860,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:1f58dea6a209006d858f8ac32f3c013b51a33ee07724666ea2c1192cd7f6ff48",
+      "source_digest": "sha256:236eafc814198c1827cb34ab2160025ba8a8a581ac935baf7a51d2b55bb91e93",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

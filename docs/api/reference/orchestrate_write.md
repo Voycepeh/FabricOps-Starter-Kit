@@ -77,7 +77,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | No | `None` | Explicit physical table schema; pass None for a schemaless store or omit for files. |
 | `table_name` | `str \| None` | No | `None` | Physical target table name; omit for file destinations. |
-| `write_mode` | `str` | Yes | `—` | Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: errorifexists, overwrite, append, ignore. |
+| `write_mode` | `str` | Yes | `—` | Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: overwrite, append_all. |
 | `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
 | `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. |
 | `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in persistent workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Dry Run and reused/updated during persistent writes. Failures release the cache. |
@@ -86,7 +86,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `relative_path` | `str \| None` | No | `None` | Exact destination beneath the configured Lakehouse Files area. |
 | `file_format` | `str \| None` | No | `None` | Required with relative_path. JSON is newline-delimited. |
 | `write_options` | `dict[str, Any] \| None` | No | `None` | Spark file writer options. Cannot override destination, mode or layout. |
-| `single_file` | `bool` | No | `False` | Opt into one named artifact; default output is a Spark dataset folder. |
+| `single_file` | `bool` | No | `False` | Opt into one named artifact; default output is a Spark dataset folder. append_all requires single_file=False and adds part files to the folder. |
 | `max_single_file_rows` | `int` | No | `1000000` | Bounded count safeguard before single-file staging. |
 | `max_single_file_bytes` | `int` | No | `134217728` | Encoded-byte safeguard before single-file publication. Coalescing uses one executor; these caps do not bound its working memory. Single CSV/JSON is uncompressed. See write_lakehouse_file for filesystem limitations. |
 
@@ -138,8 +138,8 @@ Not documented yet
 
 Define the dataframe, destination, write_mode and processing parameters.
 Select either store/schema/table_name for tables or store/relative_path/file_format
-for Lakehouse Files. File modes are errorifexists, overwrite, append and ignore;
-table-only append_all, Append New Only and SCD strategies are rejected for files.
+for Lakehouse Files. File modes are overwrite and append_all;
+Append New Only and SCD strategies are table-only.
 Files support Dry Run and Ungoverned; Governed file targets fail closed because
 current Pipeline Promotion authorizes only file Reads. No file Table ID or
 table Data Contract is manufactured. Protected file destinations and overlapping
@@ -150,7 +150,7 @@ File profiling uses the supplied DataFrame and setup_pipeline settings, remains
 session-local, and persists no table profile snapshots. File overwrite profiles
 its supplied input before publication so lazy reads of the target remain valid.
 A bounded profile cannot
-establish complete row counts. Ignored output is never reported as published.
+establish complete row counts.
 File options, physical location, publication status and available filesystem
 metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
 receive table audit columns, row hashes, SCD processing or table lineage.
@@ -208,7 +208,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 279 |
+| Live-critical dependencies | 278 |
 
 ### Release history
 
@@ -312,7 +312,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.execute_warehouse_sql</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.lakehouse_file_filesystem</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
