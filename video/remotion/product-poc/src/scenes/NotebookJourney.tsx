@@ -17,9 +17,9 @@ const NOTEBOOK = {
 } as const;
 
 const IMPORT_GROUPS = [
-  ['pipeline_read,', 'pipeline_write,'],
-  ['widget_data_contract,', 'widget_select_data_contract,'],
-  ['check_schema,', 'check_dq,'],
+  ['setup_notebook,', 'setup_pipeline,'],
+  ['orchestrate_read,', 'profile_table,'],
+  ['orchestrate_write,', 'finalize_pipeline,'],
 ] as const;
 
 const CONTRACT_GUARDRAILS = ['Schema', 'Freshness', 'Data Quality', 'Sensitivity', 'Source Drift'] as const;

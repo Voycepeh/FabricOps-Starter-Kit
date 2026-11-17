@@ -24,6 +24,9 @@ const narrationFilename = 'FabricOps_full_narration_normalized.m4a';
 const sourceNarration = path.join(projectRoot, narrationFilename);
 const targetAudioDirectory = path.join(projectRoot, 'public', 'audio');
 const targetNarration = path.join(targetAudioDirectory, narrationFilename);
+const workspaceNarrationFilename = 'workspace-architecture-narration.m4a';
+const sourceWorkspaceNarration = path.join(projectRoot, workspaceNarrationFilename);
+const targetWorkspaceNarration = path.join(targetAudioDirectory, workspaceNarrationFilename);
 const checkOnly = process.argv.includes('--check');
 
 const readTargetEntries = async () => {
@@ -42,6 +45,7 @@ for (const filename of mascotFiles) {
   sourceAssets.set(filename, await readFile(path.join(sourceMascotDirectory, filename)));
 }
 const narration = await readFile(sourceNarration);
+const workspaceNarration = await readFile(sourceWorkspaceNarration);
 
 if (sourceAssets.get('robot-masking.png').equals(sourceAssets.get('robot-validate.png'))) {
   throw new Error('robot-masking.png and robot-validate.png must remain distinct assets.');
@@ -78,10 +82,22 @@ if (checkOnly) {
       throw error;
     }
   }
+  try {
+    const target = await readFile(targetWorkspaceNarration);
+    if (!workspaceNarration.equals(target)) {
+      problems.push(`out-of-sync target: public/audio/${workspaceNarrationFilename}`);
+    }
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      problems.push(`missing target: public/audio/${workspaceNarrationFilename}`);
+    } else {
+      throw error;
+    }
+  }
   if (problems.length > 0) {
     throw new Error(`Remotion asset check failed:\n${problems.join('\n')}`);
   }
-  console.log(`Verified narration and ${mascotFiles.length} synchronized mascot assets.`);
+  console.log(`Verified narration files and ${mascotFiles.length} synchronized mascot assets.`);
 } else {
   await mkdir(targetMascotDirectory, {recursive: true});
   await mkdir(targetAudioDirectory, {recursive: true});
@@ -90,6 +106,7 @@ if (checkOnly) {
     path.join(targetMascotDirectory, filename),
   )));
   await copyFile(sourceNarration, targetNarration);
+  await copyFile(sourceWorkspaceNarration, targetWorkspaceNarration);
   await Promise.all(obsoleteTargets.map((filename) => unlink(path.join(targetMascotDirectory, filename))));
-  console.log(`Synchronized narration and ${mascotFiles.length} mascot assets.`);
+  console.log(`Synchronized narration files and ${mascotFiles.length} mascot assets.`);
 }

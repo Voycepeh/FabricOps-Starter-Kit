@@ -34,14 +34,21 @@ def test_real_spark_file_output(spark_session, monkeypatch, tmp_path, fmt, singl
     elif fmt == 'json':
         reader = reader.schema(frame.schema)
     assert reader.load(str(destination)).count() == (0 if empty else 2)
-    ignored = write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt, single_file=single, mode='ignore', verbose=False)
-    assert ignored['published'] is False
-    with pytest.raises(FileExistsError):
-        write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt, single_file=single, verbose=False)
-    if not single:
-        write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt, mode='append', verbose=False,
-            write_options={'header': True} if fmt == 'csv' else {})
+    if single:
+        with pytest.raises(ValueError, match='append_all'):
+            write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt,
+                                 single_file=True, mode='append_all', verbose=False)
+    else:
+        appended = write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt,
+                                        mode='append_all', verbose=False,
+                                        write_options={'header': True} if fmt == 'csv' else {})
+        assert appended['mode'] == 'append_all'
         assert reader.load(str(destination)).count() == (0 if empty else 4)
+    replaced = write_lakehouse_file(frame, 'nested/orders.' + fmt, file_format=fmt,
+                                    single_file=single, mode='overwrite', verbose=False,
+                                    write_options={'header': True} if fmt == 'csv' else {})
+    assert replaced['published'] is True
+    assert reader.load(str(destination)).count() == (0 if empty else 2)
 
 
 @pytest.mark.parametrize('fmt', ['csv', 'parquet', 'json'])
