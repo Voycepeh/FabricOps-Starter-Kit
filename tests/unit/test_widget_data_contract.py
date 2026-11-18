@@ -493,6 +493,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["table_id"] == "orders"
     assert controls["selector_panel"].layout.display == "none", state["message"]
     assert controls["editor_shell"].layout.display == ""
+    assert controls["operation_progress"].value == ""
 
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
@@ -636,11 +637,11 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
     assert search.layout.width == "100%"
     assert search.layout.min_width == "0"
     assert search.layout.max_width == "100%"
-    assert "fabricops-searchable-selector" in search._dom_classes
+    assert "fabricops-searchable-selector-v2" in search._dom_classes
     assert selector.layout.width == "100%"
     assert selector.layout.min_width == "0"
     assert selector.layout.max_width == "100%"
-    assert ".fabricops-searchable-selector .widget-combobox-container" in style
+    assert ".fabricops-searchable-selector-v2 .widget-combobox-container" in style
     assert "grid-template-columns:minmax(0,1fr)" in style
 
 
@@ -668,7 +669,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     assert labels["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
     assert ("Development", "dev") in controls["workspace_select"].options
     context = controls["table_context"].children[0].value
-    assert "Development" in context and "Raw Lakehouse" in context and path in context
+    assert "Development" not in context and "Raw Lakehouse" in context and path in context
     assert "File path" in context and "Full table name" not in context
     assert "Unknown workspace" not in context and ">Unknown<" not in context
     assert controls["top_nav"].options[0] == ("File", "Table")
@@ -844,7 +845,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert tuple(controls["top_nav"].options) == (
         "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -1033,12 +1034,12 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert controls["table_context"].selected_index == 0
     table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
-    assert "Workspace" in table_summary
-    assert "Development" in table_summary
+    assert "Workspace</div>" not in table_summary
+    assert "Development" not in table_summary
     assert "Fabric object" in table_summary
     assert "Curated Lakehouse" in table_summary
-    assert "Full table name" in table_summary
-    assert "sales.orders" in table_summary
+    assert "Full table name" not in table_summary
+    assert "sales.orders" not in table_summary
     assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
@@ -1054,17 +1055,16 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
-    assert "Classification" in table_summary
-    assert "Grain" in table_summary
-    assert "Row Key" in table_summary
+    assert "Classification" not in table_summary
+    assert "Grain" not in table_summary
+    assert "Row Key" not in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
     assert ".fabricops-lineage-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
-    assert table_summary.index("Grain") < table_summary.index("Classification")
-    assert table_summary.index("Classification") < table_summary.index("Row Key")
+    assert "Expected source refresh" not in table_summary
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children[1:]
     assert [section.children[0].value for section in table_sections[:4]] == [
@@ -1188,7 +1188,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["column_select"] in controls["right_pane"].children
     assert controls["column_search"] in controls["right_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert controls["column_select"].layout.height == "180px"
     assert controls["column_select"].layout.min_height == "130px"
     assert controls["column_select"].layout.flex == "0 0 auto"
@@ -1702,9 +1702,10 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["table_context"].children[0].value
-    assert "Row Key" in table_summary
-    assert "column_1" in table_summary
+    assert tuple(controls["row_key_columns"].value) == ("column_1",)
+    table_context = controls["table_context"].children[0].value
+    assert "Row Key" not in table_context
+    assert "column_1" not in table_context
 
     controls["accept_grain"].click()
     assert controls["accept_grain"].description == "Use grain wording"
@@ -1712,9 +1713,9 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["table_context"].children[0].value
-    assert "One row represents a single order line." in table_summary
-    assert "column_1" in table_summary
+    table_context = controls["table_context"].children[0].value
+    assert "One row represents a single order line." not in table_context
+    assert "column_1" not in table_context
 
 
 def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runtime):
@@ -3209,16 +3210,17 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     assert len(column_definition.children) == 2
 
 
-def test_table_classification_updates_left_summary_immediately(widget_runtime):
-    """Table classification feedback follows the staged editor value without a save."""
+def test_table_classification_stays_in_the_authoring_control_without_context_duplication(widget_runtime):
+    """Classification remains editable without repeating it in the context summary."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["table_context"].children[0]
+    context = controls["table_context"].children[0]
 
-    assert "Confidential" in summary.value
+    assert controls["table_classification"].value == "Confidential"
+    assert "Confidential" not in context.value
     controls["table_classification"].value = "Restricted"
-    assert "Restricted" in summary.value
-    assert "Confidential</div>" not in summary.value
+    assert controls["table_classification"].value == "Restricted"
+    assert "Restricted" not in context.value
     assert widget_runtime["calls"]["enrichment"] == []
 
 
@@ -4302,7 +4304,7 @@ def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, mo
     assert not controls["column_select"].disabled
     assert not controls["top_nav"].disabled
     assert controls["accept_column_description"].disabled
-    assert "Ready." in controls["operation_progress"].value
+    assert controls["operation_progress"].value == ""
     assert state["_operation_timings"][-1]["seconds"] >= 0
 
 

@@ -59,7 +59,7 @@ def test_dataset_popup_follows_input_width_and_supports_search_and_keyboard(monk
             for width in (1613, 1050, 700):
                 page.set_viewport_size({"width": width, "height": 1000})
                 page.goto(f"http://127.0.0.1:{server.server_port}/selector.html")
-                field = page.locator(".fabricops-searchable-selector input").first
+                field = page.locator(".fabricops-searchable-selector-v2 input").first
                 field.wait_for()
                 page.add_script_tag(content=_FABRIC_NOTEBOOK_UX_JAVASCRIPT)
                 # Reinstalling the safeguard must not add a second popup.
@@ -70,16 +70,19 @@ def test_dataset_popup_follows_input_width_and_supports_search_and_keyboard(monk
                 page.wait_for_timeout(150)  # pointer focus safeguard must leave the search usable
                 assert field.evaluate("e => e === document.activeElement")
                 geometry = page.evaluate("""() => {
-                    const input = document.querySelector('.fabricops-searchable-selector input');
+                    const input = document.querySelector('.fabricops-searchable-selector-v2 input');
+                    const owner = input.closest('.fabricops-searchable-selector-v2');
                     const popup = document.querySelector('.fabricops-selector-popup');
-                    const a = input.getBoundingClientRect(), b = popup.getBoundingClientRect();
-                    return {inputWidth:a.width, popupWidth:b.width, leftDelta:Math.abs(a.left-b.left),
+                    const a = owner.getBoundingClientRect(), b = popup.getBoundingClientRect();
+                    return {anchorWidth:a.width, popupWidth:b.width, leftDelta:Math.abs(a.left-b.left),
                             overflow:popup.scrollWidth > popup.clientWidth,
                             pageOverflow:document.documentElement.scrollWidth > innerWidth,
+                            withinViewport:b.left >= 0 && b.right <= innerWidth,
                             bounded:popup.clientHeight <= 320 && popup.scrollHeight > popup.clientHeight};
                 }""")
-                assert abs(geometry["inputWidth"] - geometry["popupWidth"]) < 2, geometry
-                assert geometry["leftDelta"] < 2 and not geometry["overflow"] and not geometry["pageOverflow"]
+                assert abs(geometry["anchorWidth"] - geometry["popupWidth"]) < 2, geometry
+                assert geometry["leftDelta"] < 2 and geometry["withinViewport"]
+                assert not geometry["overflow"] and not geometry["pageOverflow"]
                 assert geometry["bounded"]
                 assert popup.count() == 1
                 if os.environ.get("FABRICOPS_WIDGET_SCREENSHOT_DIR"):
@@ -183,6 +186,8 @@ def test_sidebar_and_single_content_scroll_region(monkeypatch, tmp_path):
                             && !e.matches('select, textarea') && !e.closest('.widget-select, .widget-select-multiple, .widget-textarea'));
                         return {
                             horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+                            rootWidth: root.getBoundingClientRect().width,
+                            sidebarWidth: sidebar.getBoundingClientRect().width,
                             regionClasses: regions.map(e => e.className),
                             sidebarMoved: sidebar.getBoundingClientRect().top !== before,
                             actionsVisible: [...sidebar.querySelectorAll('button')].filter(e =>
@@ -192,6 +197,7 @@ def test_sidebar_and_single_content_scroll_region(monkeypatch, tmp_path):
                         };
                     }""")
                     assert not result["horizontalOverflow"], (section, width, result)
+                    assert result["sidebarWidth"] <= min(380, result["rootWidth"] * 0.4) + 2, (section, width, result)
                     assert len(result["regionClasses"]) <= 1, (section, width, result)
                     assert all("fabricops-contract-detail" in value for value in result["regionClasses"])
                     assert not result["sidebarMoved"] and result["actionsVisible"], (section, width, result)
