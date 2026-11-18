@@ -468,7 +468,6 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
-    assert controls["operation_progress"].value == ""
     assert controls["table_search"].options == [
         "Select dataset",
         "Curated Lakehouse · sales.orders — Table · Development",
@@ -494,6 +493,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["table_id"] == "orders"
     assert controls["selector_panel"].layout.display == "none", state["message"]
     assert controls["editor_shell"].layout.display == ""
+    assert controls["operation_progress"].value == ""
 
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
