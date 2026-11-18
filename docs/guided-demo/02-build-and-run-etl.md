@@ -111,7 +111,7 @@ The template keeps complete Read results in `sources`, preserving both the DataF
 ```python
 sources = {}
 
-source = orchestrate_read(
+sources["source"] = orchestrate_read(
     store="Bronze",
     schema="demo",
     table_name="source_table",
@@ -119,7 +119,6 @@ source = orchestrate_read(
     query="SELECT * FROM demo.source_table",  # Optional Full Read SQL; None disables it.
     dq_diagnostics="sample",
 )
-sources["source"] = source
 
 display(sources["source"]["dataframe"].limit(10))
 ```
