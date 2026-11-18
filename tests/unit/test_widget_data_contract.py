@@ -1702,9 +1702,10 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["table_context"].children[0].value
-    assert "Row Key" in table_summary
-    assert "column_1" in table_summary
+    assert tuple(controls["row_key_columns"].value) == ("column_1",)
+    table_context = controls["table_context"].children[0].value
+    assert "Row Key" not in table_context
+    assert "column_1" not in table_context
 
     controls["accept_grain"].click()
     assert controls["accept_grain"].description == "Use grain wording"
@@ -1712,9 +1713,9 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["table_context"].children[0].value
-    assert "One row represents a single order line." in table_summary
-    assert "column_1" in table_summary
+    table_context = controls["table_context"].children[0].value
+    assert "One row represents a single order line." not in table_context
+    assert "column_1" not in table_context
 
 
 def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runtime):
@@ -3209,16 +3210,17 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     assert len(column_definition.children) == 2
 
 
-def test_table_classification_updates_left_summary_immediately(widget_runtime):
-    """Table classification feedback follows the staged editor value without a save."""
+def test_table_classification_stays_in_the_authoring_control_without_context_duplication(widget_runtime):
+    """Classification remains editable without repeating it in the context summary."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["table_context"].children[0]
+    context = controls["table_context"].children[0]
 
-    assert "Confidential" in summary.value
+    assert controls["table_classification"].value == "Confidential"
+    assert "Confidential" not in context.value
     controls["table_classification"].value = "Restricted"
-    assert "Restricted" in summary.value
-    assert "Confidential</div>" not in summary.value
+    assert controls["table_classification"].value == "Restricted"
+    assert "Restricted" not in context.value
     assert widget_runtime["calls"]["enrichment"] == []
 
 
@@ -4302,7 +4304,7 @@ def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, mo
     assert not controls["column_select"].disabled
     assert not controls["top_nav"].disabled
     assert controls["accept_column_description"].disabled
-    assert "Ready." in controls["operation_progress"].value
+    assert controls["operation_progress"].value == ""
     assert state["_operation_timings"][-1]["seconds"] >= 0
 
 
