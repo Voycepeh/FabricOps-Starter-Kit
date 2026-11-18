@@ -232,10 +232,10 @@ _CONTRACT_STYLE = """<style>
 @container (max-width:1000px) {
     .fabricops-data-contract .fabricops-contract-assistant-grid,
     .fabricops-data-contract .fabricops-contract-labeled-grid { grid-template-columns:minmax(0,1fr) !important; }
-    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:320px minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:280px minmax(0,1fr) !important; }
 }
 @container (max-width:600px) {
-    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:220px minmax(0,1fr) !important; }
+    .fabricops-data-contract .fabricops-contract-workspace { grid-template-columns:200px minmax(0,1fr) !important; }
     .fabricops-data-contract .fabricops-contract-sidebar { padding:10px; }
     .fabricops-data-contract .fabricops-contract-nav button { flex-basis:100px; }
     .fabricops-data-contract .fabricops-contract-detail > .widget-vbox { padding:12px; }
@@ -1284,10 +1284,7 @@ def widget_data_contract(
                         if not ai_available():
                             for control in state["_ai_buttons"]:
                                 control.disabled = True
-                        operation_progress.value = (
-                            "<div role='status' style='font-size:12px;color:#667085;'>"
-                            "Ready.</div>"
-                        )
+                        operation_progress.value = ""
             return run
         return decorate
     top_nav = widgets.ToggleButtons(
@@ -1299,7 +1296,7 @@ def widget_data_contract(
     left = widgets.VBox(
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            border="1px solid #e1e6eb", padding="20px", gap="8px",
+            border="1px solid #e1e6eb", padding="14px", gap="8px",
             align_items="stretch",
         )
     )
@@ -1319,7 +1316,7 @@ def widget_data_contract(
         [left, right_column],
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            grid_template_columns="480px minmax(0, 1fr)",
+            grid_template_columns="380px minmax(0, 1fr)",
             grid_gap="12px", align_items="flex-start", overflow="visible",
         ),
     )
@@ -2520,6 +2517,15 @@ def widget_data_contract(
                         and observation.get("_workspace_name")
                     ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
+                selected_workspace_name = str(
+                    workspace_names.get(str(table.get("workspace_id") or ""))
+                    or table.get("workspace_id") or "Workspace unavailable"
+                ).strip()
+                profile_origin = (
+                    pipeline_name
+                    if workspace_name == selected_workspace_name
+                    else f"{workspace_name} · {pipeline_name}"
+                )
                 committed_by = str(profile.get("committed_by") or "Unknown")
                 rank, instant = metadata_timestamp_sort_key(profile.get("committed_at"))
                 age = f"{max(0, (datetime.now(UTC) - instant).days)} days" if rank and isinstance(instant, datetime) else "Unknown"
@@ -2528,17 +2534,16 @@ def widget_data_contract(
                 scope_label = ("Sampled rows (bounded selection only)" if profile.get("profile_scope") == "bounded_selection"
                                else "Rows in supplied DataFrame" if profile.get("profile_scope") == "supplied_dataframe" else "Rows")
                 profile_html = (
-                    "<div style='margin-top:14px;'>"
+                    "<div style='margin-top:8px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
-                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)} · "
-                    f"{html.escape(pipeline_name)}</div>"
+                    f"<div style='font-weight:600;margin-top:3px;'>{html.escape(profile_origin)}</div>"
                     f"<div style='color:#667085;font-size:12px;margin-top:2px;'>{html.escape(committed_by)} · "
                     f"{html.escape(context_timestamp(profile.get('committed_at')))}</div>"
                     f"<div style='color:#667085;font-size:12px;'>Age: {html.escape(age)} · {scope_label}: {html.escape(str(row_count))}</div></div>"
                 )
             else:
                 profile_html = (
-                    "<div style='margin-top:14px;'>"
+                    "<div style='margin-top:8px;'>"
                     "<div style='color:#667085;font-size:11px;'>Latest profile</div>"
                     "<div style='color:#667085;font-size:12px;margin-top:3px;'>Not yet profiled</div></div>"
                 )
@@ -2597,7 +2602,7 @@ def widget_data_contract(
                 detail_html = "<div style='color:#667085;font-size:12px;margin-top:3px;'>No lineage recorded</div>"
             return (
                 profile_html
-                + "<div style='margin-top:14px;'>"
+                + "<div style='margin-top:8px;'>"
                 "<div style='color:#667085;font-size:11px;'>Pipeline usage</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{writer_count} {writer_label} · "
                 f"{reader_count} {reader_label}</div>"
@@ -2606,23 +2611,19 @@ def widget_data_contract(
             )
 
         def table_identity_html() -> str:
-            workspace_name = str(
-                workspace_names.get(str(table.get("workspace_id") or ""))
-                or table.get("workspace_id") or "Workspace unavailable"
-            )
             item_name = configured_item_name(table) or "Fabric object unavailable"
-            full_table_name = str(source["relative_path"]) if is_file_source else qualified_table_name(table)
-            name_label = "File path" if is_file_source else "Full table name"
-            return (
-                "<div style='margin-top:14px;'>"
-                "<div style='color:#667085;font-size:11px;'>Workspace</div>"
-                f"<div style='font-weight:600;margin-top:3px;'>{html.escape(workspace_name)}</div>"
-                "<div style='color:#667085;font-size:11px;margin-top:10px;'>Fabric object</div>"
+            identity_html = (
+                "<div style='margin-top:4px;'>"
+                "<div style='color:#667085;font-size:11px;'>Fabric object</div>"
                 f"<div style='font-weight:600;margin-top:3px;'>{html.escape(item_name)}</div>"
-                f"<div style='color:#667085;font-size:11px;margin-top:10px;'>{name_label}</div>"
-                f"<div style='font-weight:600;margin-top:3px;overflow-wrap:anywhere;'>"
-                f"{html.escape(full_table_name)}</div></div>"
             )
+            if is_file_source:
+                identity_html += (
+                    "<div style='color:#667085;font-size:11px;margin-top:8px;'>File path</div>"
+                    "<div style='font-weight:600;margin-top:3px;overflow-wrap:anywhere;'>"
+                    f"{html.escape(str(source['relative_path']))}</div>"
+                )
+            return identity_html + "</div>"
 
         table_summary = widgets.HTML()
         table_context_content = widgets.HTML()
@@ -2912,16 +2913,11 @@ def widget_data_contract(
             close_sidebar_widgets(previous)
 
         runtime_summary_html = (
-            "<div style='color:#667085;font-size:12px;margin-top:14px;'>"
+            "<div style='color:#667085;font-size:12px;margin-top:8px;'>"
             "Expand to read saved profile, lineage and pipeline usage metadata.</div>"
         )
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
-            freshness_controls = table_rules["freshness"]
-            source_refresh_expectation = "Not configured"
-            if freshness_controls["enabled"].value:
-                source_refresh_expectation = f"metadata · full_dataset · {freshness_age.value} {freshness_unit.value}"
-
             table_summary.value = (
                 "<div style='color:var(--form-accent);font-size:11px;font-weight:800;"
                 f"'>{'File' if is_file_source else 'Table'}</div>"
@@ -2933,23 +2929,7 @@ def widget_data_contract(
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
                 + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(workspace_names.get(str(table.get('workspace_id') or '')) or table.get('workspace_id') or 'Workspace unavailable'))}</div>"
             )
-            table_context_content.value = (
-                table_identity_html()
-                + runtime_summary_html
-                + "<div style='border-top:1px solid #e6eaef;margin:14px 0;'></div>"
-                + "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Grain</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(table_grain.value or 'Not defined'))}</div></div>"
-                "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Classification</div>"
-                f"<div style='font-weight:600;'>{html.escape(str(table_classification.value or 'Not classified'))}</div></div>"
-                "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Row Key</div>"
-                f"<div style='font-weight:600;'>{html.escape(', '.join(row_key_columns.value) or 'Not defined')}</div></div>"
-                "<div style='margin-top:12px;'>"
-                "<div style='color:#667085;font-size:11px;'>Expected source refresh</div>"
-                f"<div style='font-weight:600;'>{html.escape(source_refresh_expectation)}</div></div>"
-            )
+            table_context_content.value = table_identity_html() + runtime_summary_html
             if state.get("workspace_id"):
                 difference = state.get("observation_difference", {})
                 for key, label in (("unaccounted_columns", "New / unaccounted columns"),
@@ -2958,9 +2938,6 @@ def widget_data_contract(
                         table_summary.value += f"<p><b>{label}:</b> {html.escape(', '.join(difference[key]))}</p>"
             render_guardrail_sidebar()
 
-        table_grain.observe(render_table_summary, names="value")
-        row_key_columns.observe(render_table_summary, names="value")
-        table_classification.observe(render_table_summary, names="value")
         for rule_controls in table_rules.values():
             rule_controls["enabled"].observe(render_table_summary, names="value")
         for freshness_control in table_rules["freshness"]["parameters"]:

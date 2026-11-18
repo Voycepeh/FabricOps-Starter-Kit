@@ -468,6 +468,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
+    assert controls["operation_progress"].value == ""
     assert controls["table_search"].options == [
         "Select dataset",
         "Curated Lakehouse · sales.orders — Table · Development",
@@ -668,7 +669,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     assert labels["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
     assert ("Development", "dev") in controls["workspace_select"].options
     context = controls["table_context"].children[0].value
-    assert "Development" in context and "Raw Lakehouse" in context and path in context
+    assert "Development" not in context and "Raw Lakehouse" in context and path in context
     assert "File path" in context and "Full table name" not in context
     assert "Unknown workspace" not in context and ">Unknown<" not in context
     assert controls["top_nav"].options[0] == ("File", "Table")
@@ -844,7 +845,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert tuple(controls["top_nav"].options) == (
         "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -1033,12 +1034,12 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert controls["table_context"].selected_index == 0
     table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
-    assert "Workspace" in table_summary
-    assert "Development" in table_summary
+    assert "Workspace</div>" not in table_summary
+    assert "Development" not in table_summary
     assert "Fabric object" in table_summary
     assert "Curated Lakehouse" in table_summary
-    assert "Full table name" in table_summary
-    assert "sales.orders" in table_summary
+    assert "Full table name" not in table_summary
+    assert "sales.orders" not in table_summary
     assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
@@ -1054,17 +1055,16 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
-    assert "Classification" in table_summary
-    assert "Grain" in table_summary
-    assert "Row Key" in table_summary
+    assert "Classification" not in table_summary
+    assert "Grain" not in table_summary
+    assert "Row Key" not in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
     assert ".fabricops-lineage-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
-    assert table_summary.index("Grain") < table_summary.index("Classification")
-    assert table_summary.index("Classification") < table_summary.index("Row Key")
+    assert "Expected source refresh" not in table_summary
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children[1:]
     assert [section.children[0].value for section in table_sections[:4]] == [
@@ -1188,7 +1188,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["column_select"] in controls["right_pane"].children
     assert controls["column_search"] in controls["right_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert controls["column_select"].layout.height == "180px"
     assert controls["column_select"].layout.min_height == "130px"
     assert controls["column_select"].layout.flex == "0 0 auto"

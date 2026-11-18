@@ -186,6 +186,8 @@ def test_sidebar_and_single_content_scroll_region(monkeypatch, tmp_path):
                             && !e.matches('select, textarea') && !e.closest('.widget-select, .widget-select-multiple, .widget-textarea'));
                         return {
                             horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+                            rootWidth: root.getBoundingClientRect().width,
+                            sidebarWidth: sidebar.getBoundingClientRect().width,
                             regionClasses: regions.map(e => e.className),
                             sidebarMoved: sidebar.getBoundingClientRect().top !== before,
                             actionsVisible: [...sidebar.querySelectorAll('button')].filter(e =>
@@ -195,6 +197,7 @@ def test_sidebar_and_single_content_scroll_region(monkeypatch, tmp_path):
                         };
                     }""")
                     assert not result["horizontalOverflow"], (section, width, result)
+                    assert result["sidebarWidth"] <= min(380, result["rootWidth"] * 0.4) + 2, (section, width, result)
                     assert len(result["regionClasses"]) <= 1, (section, width, result)
                     assert all("fabricops-contract-detail" in value for value in result["regionClasses"])
                     assert not result["sidebarMoved"] and result["actionsVisible"], (section, width, result)
