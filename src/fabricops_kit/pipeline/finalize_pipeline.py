@@ -89,7 +89,10 @@ def _operation_summary_rows(result, *, pipeline=None):
                 except (TypeError, ValueError):
                     parameters = {}
                 single_file = parameters.get("single_file") if isinstance(parameters, dict) else None
-                layout = "Single file" if single_file is True else "Dataset folder" if single_file is False else "Not captured"
+                if isinstance(parameters, dict) and "output_layout" in parameters:
+                    layout = {"single_file": "Single file", "dataset_folder": "Dataset folder"}.get(parameters["output_layout"], "Not published")
+                else:
+                    layout = "Single file" if single_file is True else "Dataset folder" if single_file is False else "Not captured"
                 publication = str(operation.get("publication_status") or runtime.get("publication_status")
                                   or "Not captured").replace("_", " ").title()
         rows_read_display = (

@@ -247,3 +247,15 @@ def test_file_dry_run_summary_uses_runtime_fallback_without_publication_counts()
     assert row[1] == "Silver"
     assert row[6:8] == ("Not published", "0 processed")
     assert row[-3:] == ("csv", "Single file", "Not Published")
+
+
+@pytest.mark.parametrize('actual,expected', [('dataset_folder', 'Dataset folder'), ('single_file', 'Single file'), (None, 'Not published')])
+def test_file_summary_uses_actual_layout_including_overflow(actual, expected):
+    """Actual publication takes precedence over the requested single-file default."""
+    result = _result()
+    target = result['operations'][1]
+    target.update(source_type='file', source_id='file:target', table_id=None,
+        destination={'source_type': 'file', 'relative_path': 'exports/orders.csv', 'file_format': 'csv'},
+        file_write_parameters_json=json.dumps({'single_file': True, 'output_layout': actual,
+            'overflow_occurred': actual == 'dataset_folder', 'overflow_reason': 'row_limit' if actual == 'dataset_folder' else None}))
+    assert finalize_module._operation_summary_rows(result)[1][-2] == expected

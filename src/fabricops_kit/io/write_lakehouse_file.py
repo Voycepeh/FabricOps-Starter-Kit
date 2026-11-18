@@ -13,10 +13,13 @@ from .shared import (
 )
 
 
+_MAX_SINGLE_FILE_ROWS = 1_000_000
+_MAX_SINGLE_FILE_BYTES = 100_000_000
+
+
 def write_lakehouse_file(
     dataframe, relative_path, *, store="Silver", file_format="parquet", mode="overwrite",
-    write_options=None, repartition_by=None, single_file=False,
-    max_single_file_rows=1000000, max_single_file_bytes=134217728, verbose=True, context=None,
+    write_options=None, repartition_by=None, verbose=True, context=None,
 ):
     """Write CSV, Parquet or newline-delimited JSON beneath configured Files.
 
@@ -36,15 +39,9 @@ def write_lakehouse_file(
         Spark writer options, such as header, sep or compression. Destination,
         mode and output layout overrides are rejected.
     repartition_by : int or str or list or tuple, optional
-        Same Spark repartitioning conventions as write_lakehouse_table.
-    single_file : bool, default=False
-        Explicitly produce one named artifact with a matching format extension.
-        Incompatible with append_all; use a dataset folder for append batches.
-        Otherwise the path is a dataset directory, even if it has an extension.
-    max_single_file_rows : int, default=1000000
-        Single-file input row limit, checked with a bounded Spark count.
-    max_single_file_bytes : int, default=134217728
-        Maximum staged output bytes before publishing one artifact.
+        Same Spark repartitioning conventions as write_lakehouse_table. Applied
+        before staging; a small export then coalesces to one part, while distributed
+        overflow and append_all preserve the requested repartitioning.
     verbose : bool, default=True
         Print logical destination on completion.
     context : dict, optional
@@ -54,18 +51,29 @@ def write_lakehouse_file(
     -------
     dict
         Actual resolved_path, relative_path, published, publication_status,
-        file_format, output_layout, mode and write_metrics. Row commit counts
+        file_format, actual output_layout, mode, file_count, output_bytes,
+        overflow_occurred, overflow_reason
+        (row_limit, byte_limit or None) and write_metrics. Row commit counts
         are unknown; file_count and output_bytes describe the resulting target.
 
     Notes
     -----
+    Overwrite automatically attempts one physical file. Internal safety policy
+    selects a distributed dataset folder at the exact same path above 1,000,000
+    rows or 100,000,000 encoded bytes (100 MB). These limits are implementation
+    policy, not a Microsoft OneLake file-size limit. append_all always writes a
+    dataset folder and rejects an existing physical file. No rows are truncated.
+    Use deterministic input from stable sources across the count and write actions;
+    byte overflow re-executes the original DataFrame after discarding staging.
+    Lazy reads from the destination finish before overwrite moves that destination.
     Single-file output uses one executor, a bounded count, temporary Spark output
     and a filesystem rename. It never collects business rows on the driver.
     Coalescing limits parallelism and can exhaust executor memory for wide rows;
     row and encoded-byte safeguards do not bound executor working memory. The
-    byte check occurs after staging, before publication. Single CSV/JSON uses uncompressed
+    byte check occurs after staging, before publication. Only row/byte limit
+    checks trigger overflow; unrelated failures propagate without fallback. Single CSV/JSON uses uncompressed
     output; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing
-    artifact only after staging succeeds; rename/replace is not transactional.
+    file or folder only after staging succeeds; rename/replace is not transactional.
     Dataset overwrite also stages all rows before replacing the target, so lazy
     reads of that target finish before it is moved. Existing output is renamed to
     a unique backup and restored when publication fails and the target is absent.
@@ -88,52 +96,60 @@ def write_lakehouse_file(
     >>> write_lakehouse_file(dataframe=final_df, relative_path="Exports/orders.csv",
     ...     store="Silver", file_format="csv", write_options={"header": True})
     >>> write_lakehouse_file(final_df, "Exports/orders.json", file_format="json",
-    ...     single_file=True, mode="overwrite")
+    ...     mode="overwrite")
 
     """
     validate_dataframe_writer(dataframe)
-    mode, options = validate_file_write(relative_path, file_format, mode, write_options,
-        single_file=single_file, repartition_by=repartition_by,
-        max_single_file_rows=max_single_file_rows, max_single_file_bytes=max_single_file_bytes)
+    mode, options = validate_file_write(relative_path, file_format, mode, write_options)
     frame = repartition_dataframe_for_write(dataframe, repartition_by)
-    if single_file:
-        options["maxRecordsPerFile"] = 0
-        if file_format in {"csv", "json"}:
-            options["compression"] = "none"
     _, relative_path, path = resolve_configured_file_path(store, relative_path, context=context)
     fs, target, path_type = lakehouse_file_filesystem(dataframe, path, context=context)
     staging = None
     retain_staging = False
+    actual_single_file = mode != "append_all"
+    overflow_reason = None
     try:
-        exists = fs.exists(target)
-        if exists and fs.isFile(target) != single_file:
-            raise ValueError("Destination layout differs from requested single-file/dataset-folder output.")
-        if single_file:
-            if dataframe.limit(max_single_file_rows + 1).count() > max_single_file_rows:
-                raise ValueError("Single-file row limit exceeded; use dataset-folder output.")
-            staging = path_type(path + ".fabricops-" + uuid4().hex)
-            frame.coalesce(1).write.format(file_format).mode("errorifexists").options(**options).save(str(staging))
-            parts = [entry for entry in fs.listStatus(staging) if entry.isFile() and entry.getPath().getName().startswith("part-")]
-            if len(parts) != 1:
-                raise RuntimeError("Single-file staging did not produce exactly one data part.")
-            if parts[0].getLen() > max_single_file_bytes:
-                raise ValueError("Single-file byte limit exceeded; use dataset-folder output.")
+        if mode != "overwrite" and fs.exists(target) and fs.isFile(target):
+            raise ValueError("Destination layout is a physical file; append_all requires a dataset folder.")
+        if actual_single_file:
+            if dataframe.limit(_MAX_SINGLE_FILE_ROWS + 1).count() > _MAX_SINGLE_FILE_ROWS:
+                actual_single_file = False
+                overflow_reason = "row_limit"
+            else:
+                single_options = {**options, "maxRecordsPerFile": 0}
+                if file_format in {"csv", "json"}:
+                    single_options["compression"] = "none"
+                staging = path_type(path + ".fabricops-" + uuid4().hex)
+                frame.coalesce(1).write.format(file_format).mode("errorifexists").options(**single_options).save(str(staging))
+                parts = [entry for entry in fs.listStatus(staging) if entry.isFile() and entry.getPath().getName().startswith("part-")]
+                if len(parts) != 1:
+                    raise RuntimeError("Single-file staging did not produce exactly one data part.")
+                if parts[0].getLen() > _MAX_SINGLE_FILE_BYTES:
+                    # No publication has begun. Discard only this unsuccessful staging.
+                    if not fs.delete(staging, True) and fs.exists(staging):
+                        raise RuntimeError("Filesystem refused oversized single-file staging cleanup.")
+                    staging = None
+                    actual_single_file = False
+                    overflow_reason = "byte_limit"
+        if actual_single_file:
             retain_staging = True
-            published = _publish_staged(fs, parts[0].getPath(), target, mode=mode, path_type=path_type, single_file=True)
+            published = _publish_staged(fs, parts[0].getPath(), target, mode=mode, path_type=path_type)
             retain_staging = False
         elif mode == "overwrite":
             # Evaluate every lazy input before moving or replacing the destination.
             staging = path_type(path + ".fabricops-" + uuid4().hex)
             frame.write.format(file_format).mode("errorifexists").options(**options).save(str(staging))
             retain_staging = True
-            _publish_staged(fs, staging, target, mode=mode, path_type=path_type, single_file=False)
+            published = _publish_staged(fs, staging, target, mode=mode, path_type=path_type)
             retain_staging = False
         else:
             frame.write.format(file_format).mode("append").options(**options).save(path)
-        result = _result(fs, target, path, relative_path, file_format, single_file, mode, published if single_file else True)
+            published = True
+        result = _result(fs, target, path, relative_path, file_format, actual_single_file, mode, published,
+                         overflow_reason=overflow_reason)
     except (ValueError, FileExistsError) as exc:
-        if retain_staging and getattr(exc, "recovery_paths", None):
-            exc.recovery_paths = [str(staging), *exc.recovery_paths]
+        if retain_staging:
+            exc.recovery_paths = [str(staging), *getattr(exc, "recovery_paths", ())]
         else:
             retain_staging = False  # Pre-publication validation/collision rejection.
         raise
@@ -143,11 +159,14 @@ def write_lakehouse_file(
             recovery = [str(staging), *getattr(exc, "recovery_paths", ())]
             failure.recovery_paths = list(dict.fromkeys(recovery))
             failure.args = (str(failure) + " Recovery paths retained for inspection: " + ", ".join(failure.recovery_paths),)
+        failure.output_layout = "single_file" if actual_single_file else "dataset_folder"
+        failure.overflow_occurred = overflow_reason is not None
+        failure.overflow_reason = overflow_reason
         if getattr(exc, "published", False):
             failure.published = True
             failure.resolved_path = path
             failure.publication_status = "published"
-            failure.write_metrics = _result(fs, target, path, relative_path, file_format, single_file, mode, True)["write_metrics"]
+            failure.write_metrics = _result(fs, target, path, relative_path, file_format, actual_single_file, mode, True)["write_metrics"]
         raise failure from exc
     finally:
         if staging is not None and not retain_staging:
@@ -159,19 +178,24 @@ def write_lakehouse_file(
             except Exception as cleanup:
                 if pending is not None:
                     pending.add_note("Temporary file-output cleanup also failed; inspect the staging destination.")
+                    pending.recovery_paths = list(dict.fromkeys([str(staging), *getattr(pending, "recovery_paths", ())]))
                 else:
                     failure = RuntimeError("File publication completed but temporary output cleanup failed.")
                     failure.published = result["published"]
                     failure.resolved_path = path
                     failure.publication_status = result["publication_status"]
                     failure.write_metrics = result["write_metrics"]
+                    failure.output_layout = result["output_layout"]
+                    failure.overflow_occurred = result["overflow_occurred"]
+                    failure.overflow_reason = result["overflow_reason"]
+                    failure.recovery_paths = [str(staging)]
                     raise failure from cleanup
     if verbose and not (context or {}).get("_fabricops_suppress_io_log"):
         print(f"Written to → Object: Lakehouse | Store: {store} | Area: Files | Path: {relative_path}")
     return result
 
 
-def _result(fs, target, path, relative_path, file_format, single_file, mode, published):
+def _result(fs, target, path, relative_path, file_format, single_file, mode, published, *, overflow_reason=None):
     """Describe physical output without claiming transactional row metrics."""
     metrics = {"rows_committed": None, "measurement_source": "filesystem",
                "file_count": None, "output_bytes": None}
@@ -189,18 +213,19 @@ def _result(fs, target, path, relative_path, file_format, single_file, mode, pub
     return {"resolved_path": path, "relative_path": relative_path, "file_format": file_format,
             "output_layout": "single_file" if single_file else "dataset_folder", "mode": mode,
             "published": published, "publication_status": "published" if published else "not_published",
+            "overflow_occurred": overflow_reason is not None, "overflow_reason": overflow_reason,
+            "file_count": metrics["file_count"], "output_bytes": metrics["output_bytes"],
             "write_metrics": metrics}
 
 
-def _publish_staged(fs, source, target, *, mode, path_type, single_file):
+def _publish_staged(fs, source, target, *, mode, path_type):
     """Replace a completed artifact with rollback and retained recovery copies."""
     backup = None
     try:
         if fs.exists(target):
-            if fs.isFile(target) != single_file:
-                raise ValueError("Destination layout differs from requested output.")
             if mode != "overwrite":
                 raise FileExistsError("Lakehouse Files destination already exists.")
+            backup_is_directory = not fs.isFile(target)
             backup = path_type(str(target) + ".fabricops-backup-" + uuid4().hex)
             if not fs.rename(target, backup):
                 raise RuntimeError("Filesystem refused to preserve existing output before publication.")
@@ -219,7 +244,7 @@ def _publish_staged(fs, source, target, *, mode, path_type, single_file):
         raise
     if backup is not None:
         try:
-            if not fs.delete(backup, not single_file) and fs.exists(backup):
+            if not fs.delete(backup, backup_is_directory) and fs.exists(backup):
                 raise RuntimeError("Filesystem refused backup cleanup.")
         except Exception as exc:
             failure = RuntimeError("Output published but previous-output backup cleanup failed.")

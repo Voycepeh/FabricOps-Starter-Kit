@@ -4077,7 +4077,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -4151,7 +4151,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -7774,7 +7774,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -7882,7 +7882,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -11386,7 +11386,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -11516,17 +11516,14 @@
             "Optional parameter added: dq_diagnostics.",
             "Optional parameter added: existing_mapping.",
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -13518,7 +13515,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -13550,16 +13547,13 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -15513,7 +15507,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -15545,16 +15539,13 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -17500,7 +17491,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -17532,16 +17523,13 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -19447,7 +19435,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -19479,16 +19467,13 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -21622,7 +21607,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -21650,16 +21635,13 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Optional parameter added: file_format.",
-            "Optional parameter added: max_single_file_bytes.",
-            "Optional parameter added: max_single_file_rows.",
             "Optional parameter added: relative_path.",
-            "Optional parameter added: single_file.",
             "Optional parameter added: write_options.",
             "Parameter became optional: schema.",
             "Parameter became optional: table_name.",
             "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
@@ -21953,7 +21935,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -22027,7 +22009,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -22528,7 +22510,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -22636,7 +22618,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23050,7 +23032,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -23174,10 +23156,7 @@
             "Parameter removed: dq_diagnostics.",
             "Parameter removed: existing_mapping.",
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Optional parameter added: contracts.",
             "Optional parameter added: frequency_enabled.",
@@ -23190,7 +23169,7 @@
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23425,7 +23404,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -23456,17 +23435,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Parameter became required: schema.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23663,7 +23639,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -23694,17 +23670,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Parameter became required: schema.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -23901,7 +23874,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -23932,17 +23905,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Parameter became required: schema.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -24099,7 +24069,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -24130,17 +24100,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Parameter became required: schema.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -24285,7 +24252,7 @@
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)"
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -24312,17 +24279,14 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "reasons": [
             "Parameter removed: file_format.",
-            "Parameter removed: max_single_file_bytes.",
-            "Parameter removed: max_single_file_rows.",
             "Parameter removed: relative_path.",
-            "Parameter removed: single_file.",
             "Parameter removed: write_options.",
             "Parameter became required: schema.",
             "Parameter became required: table_name.",
             "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -38960,30 +38924,6 @@
             },
             {
               "annotation": null,
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "single_file",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "1000000",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "max_single_file_rows",
-              "required": false
-            },
-            {
-              "annotation": null,
-              "default": "134217728",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "max_single_file_bytes",
-              "required": false
-            },
-            {
-              "annotation": null,
               "default": "True",
               "has_default": true,
               "kind": "keyword_only",
@@ -39001,7 +38941,7 @@
           ],
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "return_annotation": null,
-          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, single_file = False, max_single_file_rows = 1000000, max_single_file_bytes = 134217728, verbose = True, context = None)",
+          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
           "source_qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
         },
@@ -39433,35 +39373,11 @@
               "kind": "keyword_only",
               "name": "write_options",
               "required": false
-            },
-            {
-              "annotation": "bool",
-              "default": "False",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "single_file",
-              "required": false
-            },
-            {
-              "annotation": "int",
-              "default": "1000000",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "max_single_file_rows",
-              "required": false
-            },
-            {
-              "annotation": "int",
-              "default": "134217728",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "max_single_file_bytes",
-              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None, single_file: bool = False, max_single_file_rows: int = 1000000, max_single_file_bytes: int = 134217728) -> dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
         },
@@ -39860,7 +39776,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:4f2894b2d78bdb50b0f19eaa758a4cf0bedac6bebd39de64a86e8042729dec03",
+      "source_digest": "sha256:8947fbe06e66a73e1af8181bb164998ee9bc2bf26129a51eb8457db794629c7a",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

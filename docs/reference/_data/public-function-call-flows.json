@@ -7218,9 +7218,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.lakehouse_file_filesystem",
-      "source_end_line": 977,
+      "source_end_line": 968,
       "source_path": "src/fabricops_kit/io/shared.py",
-      "source_start_line": 973,
+      "source_start_line": 964,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7839,7 +7839,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.validate_file_write",
-      "source_end_line": 970,
+      "source_end_line": 961,
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 932,
       "supports_live_contract": true,
@@ -7935,9 +7935,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._publish_staged",
-      "source_end_line": 229,
+      "source_end_line": 254,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-      "source_start_line": 195,
+      "source_start_line": 221,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7955,9 +7955,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._result",
-      "source_end_line": 192,
+      "source_end_line": 218,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-      "source_start_line": 174,
+      "source_start_line": 198,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7968,7 +7968,7 @@
       "architecture_classification": "capability",
       "contract_classification": "preview_public_function",
       "contract_risk": "preview",
-      "examples": ">>> write_lakehouse_file(dataframe=final_df, relative_path=\"Exports/orders.csv\",\n...     store=\"Silver\", file_format=\"csv\", write_options={\"header\": True})\n>>> write_lakehouse_file(final_df, \"Exports/orders.json\", file_format=\"json\",\n...     single_file=True, mode=\"overwrite\")",
+      "examples": ">>> write_lakehouse_file(dataframe=final_df, relative_path=\"Exports/orders.csv\",\n...     store=\"Silver\", file_format=\"csv\", write_options={\"header\": True})\n>>> write_lakehouse_file(final_df, \"Exports/orders.json\", file_format=\"json\",\n...     mode=\"overwrite\")",
       "function_name": "write_lakehouse_file",
       "function_type": "public_function",
       "inbound_source_references": [
@@ -8014,28 +8014,10 @@
           "type": "dict, optional"
         },
         {
-          "description": "Same Spark repartitioning conventions as write_lakehouse_table.",
+          "description": "Same Spark repartitioning conventions as write_lakehouse_table. Applied before staging; a small export then coalesces to one part, while distributed overflow and append_all preserve the requested repartitioning.",
           "name": "repartition_by",
           "required": "No",
           "type": "int or str or list or tuple, optional"
-        },
-        {
-          "description": "Explicitly produce one named artifact with a matching format extension. Incompatible with append_all; use a dataset folder for append batches. Otherwise the path is a dataset directory, even if it has an extension.",
-          "name": "single_file",
-          "required": "No",
-          "type": "bool, default=False"
-        },
-        {
-          "description": "Single-file input row limit, checked with a bounded Spark count.",
-          "name": "max_single_file_rows",
-          "required": "No",
-          "type": "int, default=1000000"
-        },
-        {
-          "description": "Maximum staged output bytes before publishing one artifact.",
-          "name": "max_single_file_bytes",
-          "required": "No",
-          "type": "int, default=134217728"
         },
         {
           "description": "Print logical destination on completion.",
@@ -8053,14 +8035,14 @@
       "public_import_path": "fabricops_kit.write_lakehouse_file",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
       "raises_documentation": "Not documented yet",
-      "returns_documentation": "dict\n    Actual resolved_path, relative_path, published, publication_status,\n    file_format, output_layout, mode and write_metrics. Row commit counts\n    are unknown; file_count and output_bytes describe the resulting target.",
-      "signature": "def write_lakehouse_file(dataframe, relative_path, *, store='Silver', file_format='parquet', mode='overwrite', write_options=None, repartition_by=None, single_file=False, max_single_file_rows=1000000, max_single_file_bytes=134217728, verbose=True, context=None)",
-      "source_end_line": 171,
+      "returns_documentation": "dict\n    Actual resolved_path, relative_path, published, publication_status,\n    file_format, actual output_layout, mode, file_count, output_bytes,\n    overflow_occurred, overflow_reason\n    (row_limit, byte_limit or None) and write_metrics. Row commit counts\n    are unknown; file_count and output_bytes describe the resulting target.",
+      "signature": "def write_lakehouse_file(dataframe, relative_path, *, store='Silver', file_format='parquet', mode='overwrite', write_options=None, repartition_by=None, verbose=True, context=None)",
+      "source_end_line": 195,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-      "source_start_line": 16,
+      "source_start_line": 20,
       "summary": "Write CSV, Parquet or newline-delimited JSON beneath configured Files.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Single-file output uses one executor, a bounded count, temporary Spark output\nand a filesystem rename. It never collects business rows on the driver.\nCoalescing limits parallelism and can exhaust executor memory for wide rows;\nrow and encoded-byte safeguards do not bound executor working memory. The\nbyte check occurs after staging, before publication. Single CSV/JSON uses uncompressed\noutput; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing\nartifact only after staging succeeds; rename/replace is not transactional.\nDataset overwrite also stages all rows before replacing the target, so lazy\nreads of that target finish before it is moved. Existing output is renamed to\na unique backup and restored when publication fails and the target is absent.\nFailed/ambiguous publication retains staging and backup recovery paths on the\nraised exception; never delete these until the output has been inspected.\nConcurrent writers to the same physical path or overlapping folders are\nunsupported, including aliases through different stores. There is no distributed\nlock. Serialize writers externally and coordinate readers: replacement can\nexpose a temporary gap between renames. Resolve ambiguous failures before\nretrying. Production use requires signed-in Fabric validation of permissions,\nshortcut support, rename outcomes, rollback and recovery.\nTemporary output is\nremoved after successful publication or failures before publication begins. Empty frames use Spark's native empty output.\nPermission and read-only/unsupported shortcut failures propagate with a clear\ndestination error. SharePoint shortcuts are not assumed writable; no fallback\ndestination is used. Fabric Hadoop rename semantics require live validation."
+      "usage_notes": "Overwrite automatically attempts one physical file. Internal safety policy\nselects a distributed dataset folder at the exact same path above 1,000,000\nrows or 100,000,000 encoded bytes (100 MB). These limits are implementation\npolicy, not a Microsoft OneLake file-size limit. append_all always writes a\ndataset folder and rejects an existing physical file. No rows are truncated.\nUse deterministic input from stable sources across the count and write actions;\nbyte overflow re-executes the original DataFrame after discarding staging.\nLazy reads from the destination finish before overwrite moves that destination.\nSingle-file output uses one executor, a bounded count, temporary Spark output\nand a filesystem rename. It never collects business rows on the driver.\nCoalescing limits parallelism and can exhaust executor memory for wide rows;\nrow and encoded-byte safeguards do not bound executor working memory. The\nbyte check occurs after staging, before publication. Only row/byte limit\nchecks trigger overflow; unrelated failures propagate without fallback. Single CSV/JSON uses uncompressed\noutput; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing\nfile or folder only after staging succeeds; rename/replace is not transactional.\nDataset overwrite also stages all rows before replacing the target, so lazy\nreads of that target finish before it is moved. Existing output is renamed to\na unique backup and restored when publication fails and the target is absent.\nFailed/ambiguous publication retains staging and backup recovery paths on the\nraised exception; never delete these until the output has been inspected.\nConcurrent writers to the same physical path or overlapping folders are\nunsupported, including aliases through different stores. There is no distributed\nlock. Serialize writers externally and coordinate readers: replacement can\nexpose a temporary gap between renames. Resolve ambiguous failures before\nretrying. Production use requires signed-in Fabric validation of permissions,\nshortcut support, rename outcomes, rollback and recovery.\nTemporary output is\nremoved after successful publication or failures before publication begins. Empty frames use Spark's native empty output.\nPermission and read-only/unsupported shortcut failures propagate with a clear\ndestination error. SharePoint shortcuts are not assumed writable; no fallback\ndestination is used. Fabric Hadoop rename semantics require live validation."
     },
     {
       "architecture_classification": "foundational_io",
@@ -8444,7 +8426,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows",
-      "source_end_line": 158,
+      "source_end_line": 161,
       "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
       "source_start_line": 45,
       "supports_live_contract": true,
@@ -8467,9 +8449,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary",
-      "source_end_line": 213,
+      "source_end_line": 216,
       "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
-      "source_start_line": 160,
+      "source_start_line": 163,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -8523,9 +8505,9 @@
       ],
       "returns_documentation": "dict\n    Final execution summary. For persistent modes this is the\n    METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.\n    When pipeline Source Drift is enabled, adds a source_drift diagnostic\n    summary and separate baseline acceptance status without altering the\n    immutable Run record. Failed or unconfirmed baseline acceptance does\n    not roll back completed target publications. An unconfirmed outcome\n    requires inspection of immutable acceptance history before retrying.\n    Each operation retains legacy rows_read/rows_written plus its available\n    detailed Read or strategy-specific Write metrics. Missing fields on\n    historical records remain valid and display as not captured.\n    When no session is active, returns the resolved pipeline_id and handoff\n    (the displayed controls and their state/actions), without a Run record.",
       "signature": "def finalize_pipeline(pipeline=None, *, failed=False)",
-      "source_end_line": 335,
+      "source_end_line": 338,
       "source_path": "src/fabricops_kit/pipeline/finalize_pipeline.py",
-      "source_start_line": 216,
+      "source_start_line": 219,
       "summary": "Finalize execution or reopen persisted Engineering deployment/recovery controls.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -8677,9 +8659,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.orchestrate_write._write_file",
-      "source_end_line": 434,
+      "source_end_line": 449,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
-      "source_start_line": 349,
+      "source_start_line": 353,
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
@@ -8734,7 +8716,7 @@
           "type": "dict[str, Any] | None"
         },
         {
-          "description": "Physical write partition count for persistent modes.",
+          "description": "Physical write partition count for persistent modes. File exports apply this before staging: small output coalesces to one file; distributed overflow and append_all preserve the requested partition count.",
           "name": "repartition_by",
           "required": "No",
           "type": "int | None"
@@ -8774,24 +8756,6 @@
           "name": "write_options",
           "required": "No",
           "type": "dict[str, Any] | None"
-        },
-        {
-          "description": "Opt into one named artifact; default output is a Spark dataset folder. append_all requires single_file=False and adds part files to the folder.",
-          "name": "single_file",
-          "required": "No",
-          "type": "bool"
-        },
-        {
-          "description": "Bounded count safeguard before single-file staging.",
-          "name": "max_single_file_rows",
-          "required": "No",
-          "type": "int"
-        },
-        {
-          "description": "Encoded-byte safeguard before single-file publication. Coalescing uses one executor; these caps do not bound its working memory. Single CSV/JSON is uncompressed. See write_lakehouse_file for filesystem limitations.",
-          "name": "max_single_file_bytes",
-          "required": "No",
-          "type": "int"
         }
       ],
       "public_import_path": "fabricops_kit.orchestrate_write",
@@ -8819,11 +8783,11 @@
           "version": "0.4.1"
         }
       ],
-      "returns_documentation": "dict\n    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Per-source\n    Source Drift results remain under ``source_drift_results``; the independent\n    pipeline decision is under ``source_drift_decision``. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome. The DataFrame includes Sensitive Data treatment,\n    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.\n    Append New Only returns only rows submitted for insertion. SCD previews\n    represent processing input, not the reconstructed post-merge destination.\n    Persistent modes return an eagerly materialized, caller-owned snapshot of\n    the exact physical writer input. It remains inspectable after publication;\n    call ``result[\"dataframe\"].unpersist()`` when inspection is complete.\n    File results instead return the supplied DataFrame without caching or\n    table preparation, a source_id, resolved_path and filesystem write_metrics.\n    ``rows_committed`` measures this attempt; ``total_target_rows`` is the\n    destination total where profiling provides it.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
-      "signature": "def orchestrate_write(dataframe: Any, *, store: str, schema: str | None=None, table_name: str | None=None, write_mode: str, write_parameters: dict[str, Any] | None=None, repartition_by: int | None=None, existing_mapping=None, verbose: bool=False, dq_diagnostics: str='sample', relative_path: str | None=None, file_format: str | None=None, write_options: dict[str, Any] | None=None, single_file: bool=False, max_single_file_rows: int=1000000, max_single_file_bytes: int=134217728) -> dict[str, Any]",
-      "source_end_line": 346,
+      "returns_documentation": "dict\n    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Per-source\n    Source Drift results remain under ``source_drift_results``; the independent\n    pipeline decision is under ``source_drift_decision``. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome. The DataFrame includes Sensitive Data treatment,\n    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.\n    Append New Only returns only rows submitted for insertion. SCD previews\n    represent processing input, not the reconstructed post-merge destination.\n    Persistent modes return an eagerly materialized, caller-owned snapshot of\n    the exact physical writer input. It remains inspectable after publication;\n    call ``result[\"dataframe\"].unpersist()`` when inspection is complete.\n    File results instead return the supplied DataFrame without caching or\n    table preparation, a source_id, resolved_path and filesystem write_metrics.\n    File output_layout, overflow_occurred and overflow_reason describe the actual\n    publication and are retained in file_write_parameters_json on the operation.\n    Dry Run leaves actual layout and overflow unknown (None) and returns a\n    publication_status=not_published because it does not stage or publish output.\n    ``rows_committed`` measures this attempt; ``total_target_rows`` is the\n    destination total where profiling provides it.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
+      "signature": "def orchestrate_write(dataframe: Any, *, store: str, schema: str | None=None, table_name: str | None=None, write_mode: str, write_parameters: dict[str, Any] | None=None, repartition_by: int | None=None, existing_mapping=None, verbose: bool=False, dq_diagnostics: str='sample', relative_path: str | None=None, file_format: str | None=None, write_options: dict[str, Any] | None=None) -> dict[str, Any]",
+      "source_end_line": 350,
       "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
-      "source_start_line": 30,
+      "source_start_line": 32,
       "summary": "Evaluate or publish a target using the active pipeline's runtime.",
       "supports_live_contract": true,
       "usage": "public_flow_reachable"
@@ -17933,9 +17897,9 @@
               "function_name": "write_lakehouse_file",
               "function_type": "public_dependency",
               "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-              "source_end_line": 171,
+              "source_end_line": 195,
               "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
-              "source_start_line": 16,
+              "source_start_line": 20,
               "violation_details": [
                 "Private function calls a non-foundational public function directly."
               ],
