@@ -75,7 +75,7 @@ def test_shared_form_viewport_is_bounded_while_sections_expand_naturally():
     assert 'fabricops-page-header' in css
     assert '--form-tint:#eaf3fb' in css
     assert '--form-tint:#f1edf8' in css
-    assert '.fabricops-form .fabricops-searchable-selector .widget-combobox-container' in css
+    assert '.fabricops-form .fabricops-searchable-selector-v2 .widget-combobox-container' in css
 
     common = shared.widget_common(_FakeWidgets, "Example")
     assert common["style"]["description_width"] == "150px"

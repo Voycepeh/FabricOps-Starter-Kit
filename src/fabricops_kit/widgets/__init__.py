@@ -27,16 +27,16 @@ def __getattr__(name: str):
 # Form styling belongs to shared.form_page, not a second injected stylesheet.
 _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
 (() => {
-  if (window.__fabricopsNotebookUXVersion === 4) {
+  if (window.__fabricopsNotebookUXVersion === 5) {
     return;
   }
   window.__fabricopsFocusReleaseInstalled = true;
-  window.__fabricopsNotebookUXVersion = 4;
+  window.__fabricopsNotebookUXVersion = 5;
 
   // A single-line input cannot wrap its selected value. A grid overlay supplies
   // the readable resting label and sizes the field; focus reveals native search.
   const wrapSelector = (input) => {
-    const owner = input.closest(".fabricops-searchable-selector");
+    const owner = input.closest(".fabricops-searchable-selector-v2");
     if (!owner || owner.classList.contains("fabricops-selector-wrapped")) return;
     const label = document.createElement("div");
     label.className = "fabricops-selector-value";
@@ -60,8 +60,8 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
   };
   const wrapSelectors = (root) => {
     if (!(root instanceof Element || root instanceof Document)) return;
-    if (root.matches?.(".fabricops-form .fabricops-searchable-selector input")) wrapSelector(root);
-    root.querySelectorAll(".fabricops-form .fabricops-searchable-selector input").forEach(wrapSelector);
+    if (root.matches?.(".fabricops-form .fabricops-searchable-selector-v2 input")) wrapSelector(root);
+    root.querySelectorAll(".fabricops-form .fabricops-searchable-selector-v2 input").forEach(wrapSelector);
   };
   wrapSelectors(document);
   new MutationObserver(records => {
@@ -87,15 +87,22 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     if (!activeSelector) return;
     const {input, popup} = activeSelector;
     if (!input.isConnected || input.disabled) { closeSelector(); return; }
-    const rect = input.getBoundingClientRect();
-    const below = innerHeight - rect.bottom - 8;
-    const above = rect.top - 8;
+    const fieldRect = input.getBoundingClientRect();
+    // Anchor horizontally to the full selector field, not the inner input.
+    // ipywidgets may inset the input inside its wrapper, which made the popup
+    // narrower and offset from the visible control in Fabric notebooks.
+    const owner = input.closest(".fabricops-searchable-selector-v2");
+    const anchorRect = owner?.getBoundingClientRect() ?? fieldRect;
+    const below = innerHeight - fieldRect.bottom - 8;
+    const above = fieldRect.top - 8;
     const upwards = below < 200 && above > below;
-    popup.style.left = `${Math.max(4, Math.min(rect.left, innerWidth - rect.width - 4))}px`;
-    popup.style.width = `${Math.min(rect.width, innerWidth - 8)}px`;
+    const popupWidth = Math.max(0, Math.min(anchorRect.width, innerWidth - 8));
+    const popupLeft = Math.max(4, Math.min(anchorRect.left, innerWidth - popupWidth - 4));
+    popup.style.left = `${popupLeft}px`;
+    popup.style.width = `${popupWidth}px`;
     popup.style.maxHeight = `${Math.max(0, Math.min(320, upwards ? above : below))}px`;
-    popup.style.top = upwards ? "auto" : `${rect.bottom + 2}px`;
-    popup.style.bottom = upwards ? `${innerHeight - rect.top + 2}px` : "auto";
+    popup.style.top = upwards ? "auto" : `${fieldRect.bottom + 2}px`;
+    popup.style.bottom = upwards ? `${innerHeight - fieldRect.top + 2}px` : "auto";
   };
   const highlightSelector = (index) => {
     const state = activeSelector;
@@ -168,7 +175,7 @@ _FABRIC_NOTEBOOK_UX_JAVASCRIPT = r"""
     renderSelector(filter);
   };
   const selectorInput = target => target instanceof HTMLInputElement &&
-    target.closest(".fabricops-form .fabricops-searchable-selector") ? target : null;
+    target.closest(".fabricops-form .fabricops-searchable-selector-v2") ? target : null;
   document.addEventListener("pointerdown", event => {
     const input = selectorInput(event.target);
     if (input) openSelector(input);

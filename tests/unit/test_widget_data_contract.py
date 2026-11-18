@@ -636,11 +636,11 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
     assert search.layout.width == "100%"
     assert search.layout.min_width == "0"
     assert search.layout.max_width == "100%"
-    assert "fabricops-searchable-selector" in search._dom_classes
+    assert "fabricops-searchable-selector-v2" in search._dom_classes
     assert selector.layout.width == "100%"
     assert selector.layout.min_width == "0"
     assert selector.layout.max_width == "100%"
-    assert ".fabricops-searchable-selector .widget-combobox-container" in style
+    assert ".fabricops-searchable-selector-v2 .widget-combobox-container" in style
     assert "grid-template-columns:minmax(0,1fr)" in style
 
 

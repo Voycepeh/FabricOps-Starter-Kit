@@ -89,18 +89,18 @@ _FORM_STYLE = """<style>
     border-radius:5px; padding:7px 10px; background:#fff; color:var(--form-text);
     font:13px/1.5 'Segoe UI',Arial,sans-serif;
 }
-.fabricops-form .fabricops-searchable-selector,
-.fabricops-form .fabricops-searchable-selector .widget-combobox-container,
-.fabricops-form .fabricops-searchable-selector .widget-combobox-container input {
+.fabricops-form .fabricops-searchable-selector-v2,
+.fabricops-form .fabricops-searchable-selector-v2 .widget-combobox-container,
+.fabricops-form .fabricops-searchable-selector-v2 .widget-combobox-container input {
     width:100% !important; min-width:0 !important; max-width:100% !important;
 }
-.fabricops-form .fabricops-searchable-selector { position:relative; }
-.fabricops-form .fabricops-searchable-selector::after {
+.fabricops-form .fabricops-searchable-selector-v2 { position:relative; }
+.fabricops-form .fabricops-searchable-selector-v2::after {
     content:"▾"; position:absolute; right:12px; bottom:9px; pointer-events:none; color:#526477;
 }
-.fabricops-form .fabricops-searchable-selector input { padding-right:30px; }
-.fabricops-form .fabricops-searchable-selector input::-webkit-calendar-picker-indicator { display:none !important; }
-.fabricops-form .fabricops-searchable-selector.fabricops-selector-wrapped input {
+.fabricops-form .fabricops-searchable-selector-v2 input { padding-right:30px; }
+.fabricops-form .fabricops-searchable-selector-v2 input::-webkit-calendar-picker-indicator { display:none !important; }
+.fabricops-form .fabricops-searchable-selector-v2.fabricops-selector-wrapped input {
     grid-area:2 / 1; height:100%;
 }
 .fabricops-form .fabricops-selector-value {
@@ -591,7 +591,7 @@ def render_searchable_selector(
     )
     add_class = getattr(combobox, "add_class", None)
     if callable(add_class):
-        add_class("fabricops-searchable-selector")
+        add_class("fabricops-searchable-selector-v2")
     selector = widgets.Select(options=[])
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
