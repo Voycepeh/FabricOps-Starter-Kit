@@ -57,6 +57,8 @@ EXPECTED_CURRENT_LIVE_CALLABLES = LIVE_V010_CALLABLES | {
     "setup_pipeline",
     "widget_data_agreement",
     "widget_data_steward",
+    "write_lakehouse_file",
+    "orchestrate_demo_reset",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -150,8 +152,8 @@ def test_supported_public_api_contract_uses_orchestrated_reads():
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 19, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 19
+    assert len(SUPPORTED_PUBLIC_API) == 21, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 21
     assert APPROVED_V1_CALLABLES == EXPECTED_CURRENT_LIVE_CALLABLES
 
 

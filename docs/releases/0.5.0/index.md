@@ -13,7 +13,7 @@
 ## Formal release scope
 
 <details class="fabricops-release-inventory" markdown>
-<summary>22 Live functions</summary>
+<summary>21 Live functions</summary>
 
 | Function | Description |
 | --- | --- |
@@ -34,7 +34,6 @@
 | [`setup_metadata_tables`](functions/setup_metadata_tables.md) | Create, validate and safely evolve the 14 canonical metadata tables. |
 | [`setup_notebook`](functions/setup_notebook.md) | Validate notebook startup configuration and resolve required Fabric targets. |
 | [`setup_pipeline`](functions/setup_pipeline.md) | Start a pipeline using the current Fabric notebook identity and one execution mode. |
-| [`widget_activate_data_contract`](functions/widget_activate_data_contract.md) | Select and review a table or file dataset, frozen Contract and applicable Agreement. |
 | [`widget_data_agreement`](functions/widget_data_agreement.md) | Render a wide, single-flow data-agreement editor. |
 | [`widget_data_steward`](functions/widget_data_steward.md) | Render append-only data steward create/update maintenance. |
 | [`write_lakehouse_table`](functions/write_lakehouse_table.md) | Write a Spark DataFrame to a configured Fabric lakehouse Delta table. |

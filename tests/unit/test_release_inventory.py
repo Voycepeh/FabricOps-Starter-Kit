@@ -365,9 +365,9 @@ def test_release_manifest_lifecycle_counts_include_live_orchestrators():
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     live_functions = {item["name"] for item in manifest["functions"] if item["status"] == "live"}
-    assert len(live_functions) == 22
+    assert len(live_functions) == 21
     assert {"setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"} <= live_functions
-    assert "widget_activate_data_contract" in live_functions
+    assert "widget_activate_data_contract" not in live_functions
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"

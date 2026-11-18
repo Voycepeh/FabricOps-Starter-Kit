@@ -167,8 +167,7 @@ functions:
     qualified_name: fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract
     source_path: src/fabricops_kit/widgets/widget_activate_data_contract.py
     documentation_path: docs/api/reference/widget_activate_data_contract.md
-    status: live
-    live_since: 0.4.0
+    status: preview
     introduced_in: 0.2.0
     rationale: Supported Governance entry point for retaining exact frozen Data Contract selections and scoped Agreement associations per physical workspace and Table ID.
   - name: widget_activate_pipeline

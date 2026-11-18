@@ -137,7 +137,7 @@ No related guides documented.
 | Discontinued | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
-| Live | 0.5.0 |
+| Preview | 0.5.0 |
 
 
 </details>
