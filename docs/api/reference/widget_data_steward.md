@@ -117,6 +117,12 @@ No session is created; Spark-dependent work raises
 | Contract risk | Live |
 | Live-critical dependencies | 58 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.5.0 |
+
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">

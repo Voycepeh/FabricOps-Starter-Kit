@@ -1,10 +1,11 @@
 # `write_lakehouse_file`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.5.0</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.
 
@@ -159,12 +160,45 @@ No related guides documented.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.5.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 22 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.5.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.lakehouse_file_filesystem</code></li>
+<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.validate_file_write</code></li>
+<li><code>fabricops_kit.io.write_lakehouse_file._publish_staged</code></li>
+<li><code>fabricops_kit.io.write_lakehouse_file._result</code></li>
+</ul>
 
 
 </details>

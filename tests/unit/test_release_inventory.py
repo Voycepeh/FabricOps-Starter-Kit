@@ -348,8 +348,8 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Retry confirmed Delta conflicts in Catalogue" in notes
-    assert "no schema migration" in notes
+    assert "Promote `write_lakehouse_file()` to Live" in notes
+    assert "`read_lakehouse_query()`" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -365,7 +365,7 @@ def test_release_manifest_lifecycle_counts_include_live_orchestrators():
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     live_functions = {item["name"] for item in manifest["functions"] if item["status"] == "live"}
-    assert len(live_functions) == 21
+    assert len(live_functions) == 22
     assert {"setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"} <= live_functions
     assert "widget_activate_data_contract" in live_functions
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")

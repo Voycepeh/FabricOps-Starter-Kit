@@ -617,6 +617,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``access`` contains consolidated person/table/surface observations,\n    explicit verification status, confirmed effective permissions, and\n    provenance. ``coverage`` contains visibility gaps, unsupported cases,\n    restrictions, contradictions, and errors.",
@@ -783,6 +787,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
@@ -943,6 +951,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``access`` contains rows aligned to ``METADATA_DATA_ACCESS``. By\n    default those rows are appended before return. ``unmatched`` contains observed permissions that could\n    not be linked to an active registered physical table, so observations\n    are never silently discarded.",
@@ -1126,6 +1138,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, pyspark.sql.DataFrame]\n    ``observations`` holds raw permission observations; ``access`` holds\n    normalized METADATA_DATA_ACCESS rows; ``unmatched`` holds observations\n    that could not be linked to registered tables. Review unmatched rows\n    before interpreting missing access as absence of permission.",
@@ -2382,6 +2398,7 @@
       "source_start_line": 723,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -2915,6 +2932,7 @@
       "source_start_line": 284,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -2945,6 +2963,7 @@
       "source_start_line": 185,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -3195,6 +3214,7 @@
       "source_start_line": 112,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -3213,6 +3233,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
       ],
       "function_name": "metadata_table_physical_schema",
@@ -3347,6 +3368,7 @@
       "source_start_line": 289,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -3454,23 +3476,30 @@
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_assert_source",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_assert_source",
       "source_end_line": 68,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 62,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_check_metadata_scope",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -3478,48 +3507,57 @@
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
       "source_end_line": 109,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 71,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "_demo_clear_gold_output",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_gold_output",
       "source_end_line": 164,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 157,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_clear_metadata",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
       "source_end_line": 237,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 224,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
       "function_name": "_demo_gold_output_exists",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -3527,102 +3565,127 @@
         "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_gold_output_exists",
       "source_end_line": 144,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 138,
+      "supports_live_contract": true,
+      "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_metadata_counts",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
       "source_end_line": 59,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 41,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_metadata_files",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
       "source_end_line": 135,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 112,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_prepare_gold_empty_output",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_prepare_gold_empty_output",
       "source_end_line": 154,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 147,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_remove_outputs",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
       "source_end_line": 192,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 167,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
+      "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "_demo_verify_outputs",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
       "source_end_line": 221,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 195,
+      "supports_live_contract": true,
       "usage": "public_flow_reachable"
     },
     {
       "architecture_classification": "capability",
-      "contract_classification": "preview_public_function",
-      "contract_risk": "preview",
+      "contract_classification": "live_public_function",
+      "contract_risk": "live",
       "examples": ">>> from fabricops_kit import setup_notebook, orchestrate_demo_reset\n>>> context = setup_notebook()\n>>> RESET_DEMO = False  # Set True only to discard the dedicated demo state.\n>>> orchestrate_demo_reset(reset=RESET_DEMO)",
       "function_name": "orchestrate_demo_reset",
       "function_type": "public_function",
-      "lifecycle_status": "preview",
-      "live_impact_level": "preview_only",
+      "lifecycle_status": "live",
+      "live_impact_level": "direct_public_contract",
+      "live_since": "0.5.0",
       "parameters": [
         {
           "description": "False prints configured store identities, metadata row counts and the eleven business tables in scope without writing. True opts into the destructive reset after all preflight checks pass. Only booleans are accepted; strings and integers are rejected.",
@@ -3634,12 +3697,19 @@
       "public_import_path": "fabricops_kit.orchestrate_demo_reset",
       "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
       "raises_documentation": "ValueError\n    If reset is not a boolean.\nRuntimeError\n    If notebook setup is not ready, required stores or metadata schemas\n    are invalid, non-demo references are found, fixtures\n    are unavailable, or reset verification fails. Fabric/Spark permission,\n    transport and storage failures propagate; correct the cause and rerun.",
+      "release_history": [
+        {
+          "status": "live",
+          "version": "0.5.0"
+        }
+      ],
       "returns_documentation": "None\n    Prints a preview or verified reset summary, including actual removed\n    metadata counts. ``RESET COMPLETE`` is printed only after verification.",
       "signature": "def orchestrate_demo_reset(*, reset: bool=False) -> None",
       "source_end_line": 444,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 240,
       "summary": "Preview or reset the dedicated FabricOps Guided Demo to Day 1.",
+      "supports_live_contract": true,
       "usage": "public_flow_reachable",
       "usage_notes": "True clears all current canonical metadata rows in the dedicated item,\nincluding frozen Contracts, activations, approvals, promotion history,\nRuns and Processing State. Saved submissions, Dry Run evidence and notebook\nsnapshots in its three native lifecycle folders are removed too. Table\ndefinitions remain; no metadata migration is performed.\n\nFour Day 1 tables are overwritten, Orders CSV is validated and retained,\nand five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved\n``demo`` schemas of the configured Bronze/Silver stores. The Gold customer_summary\ntable is retained with zero rows when present. Other business\ntables and source files are preserved. Exact demo table/workspace references,\nartifact contents, fixture counts and catalog locations are\nchecked before deletion. A dedicated name alone cannot prove ownership;\nnever share this Metadata item or these eleven tables with other projects.\n\nMissing outputs and repeated resets are supported. A failure may leave a\npartial reset: this operation is not atomic across tables/stores. Stop all\nwriters, correct the reported cause and rerun. Deployed notebooks, schedules\nand apps are not removed. Live Fabric acceptance is still required."
     },
@@ -3940,6 +4010,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    Overall readiness, configured ownership schemas, canonical table names,\n    created/evolved/validated/failed tables, per-table results, steward\n    readiness and advisory diagnostics for noncanonical metadata tables.",
@@ -4037,6 +4111,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "NotebookSetupContext\n    A ``NotebookSetupContext`` containing the selected workspace_id,\n    resolved Fabric stores, runtime and user identity, startup validation\n    results, generated or detected run ID, and overall readiness status.\n    Returned fields are ``run_id`` (generated or detected run identifier),\n    ``notebook_name`` (resolved notebook name), ``workspace_name``\n    (resolved workspace name when available), ``user_name`` (resolved user\n    identity), ``workspace_id`` (selected workspace_id key), ``paths``\n    (requested target names mapped to resolved Fabric store objects),\n    ``validation_results`` (startup check results), ``runtime_metadata``\n    (best-effort runtime metadata), and ``readiness_status`` (overall\n    readiness outcome).",
@@ -4066,6 +4144,7 @@
       "source_start_line": 1201,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
@@ -4076,6 +4155,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4105,6 +4185,7 @@
       "source_start_line": 1218,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
@@ -4115,6 +4196,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4143,6 +4225,7 @@
       "source_start_line": 824,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
@@ -4153,6 +4236,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4274,6 +4358,7 @@
       "source_start_line": 944,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -4365,6 +4450,7 @@
       "source_start_line": 32,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -4374,6 +4460,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -4430,6 +4517,7 @@
       "source_start_line": 867,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_notebook.setup_notebook",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -4439,6 +4527,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4587,6 +4676,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
         "fabricops_kit.widgets.widget_data_steward.widget_data_steward"
@@ -4679,6 +4769,7 @@
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -4737,6 +4828,7 @@
       "source_start_line": 933,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -4872,6 +4964,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict[str, Any]\n    Created agent and datasource identities, workspace, display name, source\n    ``table_id``, and the final useful configuration status.",
@@ -5499,6 +5595,9 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "file_source_identity",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -5509,7 +5608,7 @@
         "fabricops_kit.pipeline.shared.resolve_file_participant"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.data_contract.shared.file_source_identity",
       "source_end_line": 72,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
@@ -5517,6 +5616,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -6005,6 +6105,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the CSV file or compatible CSV\n    files found at the resolved Lakehouse ``Files`` path. Column types\n    follow Spark CSV reader behavior and generally remain strings unless\n    schema inference or other schema handling is explicitly requested.",
@@ -6087,6 +6191,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame converted from the selected Excel worksheet.",
@@ -6159,6 +6267,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame backed by the resolved JSON file or compatible\n    files in the supplied folder path.",
@@ -6241,6 +6353,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame backed by either the original resolved Parquet path\n    or the compatible ``_tsus`` fallback path. Before returning, the\n    function executes a one-row Spark action to verify that the selected\n    data can be decoded.",
@@ -6262,7 +6378,7 @@
       "function_type": "public_function",
       "lifecycle_status": "live",
       "live_impact_level": "direct_public_contract",
-      "live_since": "0.4.2",
+      "live_since": "0.5.0",
       "parameters": [
         {
           "description": "One read-only Spark SQL SELECT or CTE referencing the declared source. Simple integer T-SQL TOP projections are also supported.",
@@ -6298,6 +6414,12 @@
       "public_import_path": "fabricops_kit.read_lakehouse_query",
       "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
       "raises_documentation": "ValueError\n    If the declared source is invalid, SQL is not read-only, another source\n    is referenced, or unsupported T-SQL cannot be converted safely.\nRuntimeError\n    If no active Spark session or configured Lakehouse target is available.",
+      "release_history": [
+        {
+          "status": "live",
+          "version": "0.5.0"
+        }
+      ],
       "returns_documentation": "pyspark.sql.DataFrame\n    Lazy query result bound to the configured physical source. A downstream\n    Spark action evaluates the data.",
       "signature": "def read_lakehouse_query(query: str, *, table_name: str, store: str='Bronze', schema: str | None=None, context: dict[str, Any] | None=None)",
       "source_end_line": 89,
@@ -6419,6 +6541,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the governed rows and all columns\n    in the resolved Lakehouse Delta table. The data is evaluated when a\n    downstream Spark action runs.",
@@ -6507,6 +6633,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing exactly the rows and columns returned by\n    the supplied Warehouse SQL query.",
@@ -6595,6 +6725,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing all rows and columns returned from the\n    resolved Warehouse table.",
@@ -6624,6 +6758,7 @@
       "source_start_line": 34,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -6671,6 +6806,7 @@
       "source_start_line": 29,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -6678,6 +6814,7 @@
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
@@ -6725,6 +6862,7 @@
       "source_start_line": 51,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -6758,6 +6896,7 @@
       "source_start_line": 39,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -6835,6 +6974,7 @@
       "source_start_line": 89,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -6863,6 +7003,7 @@
       "source_start_line": 94,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -6891,6 +7032,7 @@
       "source_start_line": 67,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -6900,6 +7042,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -6931,6 +7074,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -6955,6 +7099,7 @@
       "source_start_line": 73,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -6964,6 +7109,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -7098,6 +7244,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -7198,6 +7345,7 @@
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.config.setup_notebook.setup_notebook",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -7209,6 +7357,9 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
+      ],
       "function_name": "lakehouse_file_filesystem",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -7216,7 +7367,7 @@
         "fabricops_kit.io.write_lakehouse_file::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.shared.lakehouse_file_filesystem",
       "source_end_line": 968,
       "source_path": "src/fabricops_kit/io/shared.py",
@@ -7369,6 +7520,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
@@ -7401,7 +7553,8 @@
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
-        "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+        "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
       ],
       "function_name": "resolve_configured_file_path",
       "function_type": "shared_function",
@@ -7495,6 +7648,7 @@
       "source_start_line": 180,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -7571,6 +7725,7 @@
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
         "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -7603,6 +7758,7 @@
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
         "fabricops_kit.io.read_lakehouse_json.read_lakehouse_json",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
         "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
@@ -7632,6 +7788,7 @@
       "source_start_line": 212,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
@@ -7663,6 +7820,7 @@
       "source_start_line": 156,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
         "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
@@ -7672,6 +7830,7 @@
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -7700,6 +7859,7 @@
       "source_start_line": 233,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
@@ -7732,6 +7892,7 @@
       "source_start_line": 238,
       "supports_live_contract": true,
       "transitive_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
@@ -7797,6 +7958,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
         "fabricops_kit.io.write_warehouse_table.write_warehouse_table"
       ],
@@ -7826,6 +7988,7 @@
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
       "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
         "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
       ],
       "function_name": "validate_file_write",
@@ -7927,13 +8090,16 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
+      ],
       "function_name": "_publish_staged",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._publish_staged",
       "source_end_line": 254,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
@@ -7947,13 +8113,16 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
+      ],
       "function_name": "_result",
       "function_type": "private_function",
       "inbound_source_references": [
         "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file._result",
       "source_end_line": 218,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
@@ -7966,16 +8135,17 @@
     },
     {
       "architecture_classification": "capability",
-      "contract_classification": "preview_public_function",
-      "contract_risk": "preview",
+      "contract_classification": "live_public_function",
+      "contract_risk": "live",
       "examples": ">>> write_lakehouse_file(dataframe=final_df, relative_path=\"Exports/orders.csv\",\n...     store=\"Silver\", file_format=\"csv\", write_options={\"header\": True})\n>>> write_lakehouse_file(final_df, \"Exports/orders.json\", file_format=\"json\",\n...     mode=\"overwrite\")",
       "function_name": "write_lakehouse_file",
       "function_type": "public_function",
       "inbound_source_references": [
         "fabricops_kit.pipeline.orchestrate_write._write_file"
       ],
-      "lifecycle_status": "preview",
-      "live_impact_level": "preview_only",
+      "lifecycle_status": "live",
+      "live_impact_level": "direct_public_contract",
+      "live_since": "0.5.0",
       "parameters": [
         {
           "description": "Prepared input; no profiling, scanning or metadata persistence occurs.",
@@ -8035,12 +8205,19 @@
       "public_import_path": "fabricops_kit.write_lakehouse_file",
       "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
       "raises_documentation": "Not documented yet",
+      "release_history": [
+        {
+          "status": "live",
+          "version": "0.5.0"
+        }
+      ],
       "returns_documentation": "dict\n    Actual resolved_path, relative_path, published, publication_status,\n    file_format, actual output_layout, mode, file_count, output_bytes,\n    overflow_occurred, overflow_reason\n    (row_limit, byte_limit or None) and write_metrics. Row commit counts\n    are unknown; file_count and output_bytes describe the resulting target.",
       "signature": "def write_lakehouse_file(dataframe, relative_path, *, store='Silver', file_format='parquet', mode='overwrite', write_options=None, repartition_by=None, verbose=True, context=None)",
       "source_end_line": 195,
       "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
       "source_start_line": 20,
       "summary": "Write CSV, Parquet or newline-delimited JSON beneath configured Files.",
+      "supports_live_contract": true,
       "usage": "public_flow_reachable",
       "usage_notes": "Overwrite automatically attempts one physical file. Internal safety policy\nselects a distributed dataset folder at the exact same path above 1,000,000\nrows or 100,000,000 encoded bytes (100 MB). These limits are implementation\npolicy, not a Microsoft OneLake file-size limit. append_all always writes a\ndataset folder and rejects an existing physical file. No rows are truncated.\nUse deterministic input from stable sources across the count and write actions;\nbyte overflow re-executes the original DataFrame after discarding staging.\nLazy reads from the destination finish before overwrite moves that destination.\nSingle-file output uses one executor, a bounded count, temporary Spark output\nand a filesystem rename. It never collects business rows on the driver.\nCoalescing limits parallelism and can exhaust executor memory for wide rows;\nrow and encoded-byte safeguards do not bound executor working memory. The\nbyte check occurs after staging, before publication. Only row/byte limit\nchecks trigger overflow; unrelated failures propagate without fallback. Single CSV/JSON uses uncompressed\noutput; compressed CSV/JSON requires dataset-folder output. Overwrite replaces an existing\nfile or folder only after staging succeeds; rename/replace is not transactional.\nDataset overwrite also stages all rows before replacing the target, so lazy\nreads of that target finish before it is moved. Existing output is renamed to\na unique backup and restored when publication fails and the target is absent.\nFailed/ambiguous publication retains staging and backup recovery paths on the\nraised exception; never delete these until the output has been inspected.\nConcurrent writers to the same physical path or overlapping folders are\nunsupported, including aliases through different stores. There is no distributed\nlock. Serialize writers externally and coordinate readers: replacement can\nexpose a temporary gap between renames. Resolve ambiguous failures before\nretrying. Production use requires signed-in Fabric validation of permissions,\nshortcut support, rename outcomes, rollback and recovery.\nTemporary output is\nremoved after successful publication or failures before publication begins. Empty frames use Spark's native empty output.\nPermission and read-only/unsupported shortcut failures propagate with a clear\ndestination error. SharePoint shortcuts are not assumed writable; no fallback\ndestination is used. Fabric Hadoop rename semantics require live validation."
     },
@@ -8163,6 +8340,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "None\n    The function performs the Spark Delta write before returning.",
@@ -8271,6 +8452,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
@@ -8501,6 +8686,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Final execution summary. For persistent modes this is the\n    METADATA_PIPELINE_RUN snapshot; Dry Run returns the in-memory equivalent.\n    When pipeline Source Drift is enabled, adds a source_drift diagnostic\n    summary and separate baseline acceptance status without altering the\n    immutable Run record. Failed or unconfirmed baseline acceptance does\n    not roll back completed target publications. An unconfirmed outcome\n    requires inspection of immutable acceptance history before retrying.\n    Each operation retains legacy rows_read/rows_written plus its available\n    detailed Read or strategy-specific Write metrics. Missing fields on\n    historical records remain valid and display as not captured.\n    When no session is active, returns the resolved pipeline_id and handoff\n    (the displayed controls and their state/actions), without a Run record.",
@@ -8634,6 +8823,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.\n    ``read_metrics.rows_read`` and the notebook summary describe the exact\n    returned scope. For incremental reads this is the target-specific batch,\n    never the complete physical Source Observation count.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
@@ -8781,6 +8974,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,\n    write metrics, publication state and profiling outcome. Per-source\n    Source Drift results remain under ``source_drift_results``; the independent\n    pipeline decision is under ``source_drift_decision``. Dry Run returns\n    processing diagnostics without publication; persistent modes return the\n    actual publication outcome. The DataFrame includes Sensitive Data treatment,\n    row hash and target audit columns, plus SCD2 lifecycle columns where applicable.\n    Append New Only returns only rows submitted for insertion. SCD previews\n    represent processing input, not the reconstructed post-merge destination.\n    Persistent modes return an eagerly materialized, caller-owned snapshot of\n    the exact physical writer input. It remains inspectable after publication;\n    call ``result[\"dataframe\"].unpersist()`` when inspection is complete.\n    File results instead return the supplied DataFrame without caching or\n    table preparation, a source_id, resolved_path and filesystem write_metrics.\n    File output_layout, overflow_occurred and overflow_reason describe the actual\n    publication and are retained in file_write_parameters_json on the operation.\n    Dry Run leaves actual layout and overflow unknown (None) and returns a\n    publication_status=not_published because it does not stage or publish output.\n    ``rows_committed`` measures this attempt; ``total_target_rows`` is the\n    destination total where profiling provides it.\n\nRaises RuntimeError when no pipeline is active or a persistent stage fails, and\nValueError for an invalid operation or inconsistent approved configuration.",
@@ -9204,6 +9401,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    ``profile`` contains the canonical statistical Spark DataFrame and\n    ``frequency_profile`` contains the applicable canonical frequency\n    Spark DataFrame, or ``None`` when no columns were selected. Governed\n    ``profile`` rows additionally contain persisted snapshot identities\n    and audit fields.",
@@ -9410,6 +9611,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "PipelineSession\n    Context-local Read/Write execution and in-memory report. Call\n    finalize_pipeline after every Read, transformation and Write completes.",
@@ -13895,6 +14100,9 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "live_critical_internal",
+      "direct_live_dependents": [
+        "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset"
+      ],
       "function_name": "resolve_physical_table_identity",
       "function_type": "shared_function",
       "inbound_source_references": [
@@ -13914,7 +14122,7 @@
         "fabricops_kit.pipeline.shared::<module>"
       ],
       "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
+      "live_impact_level": "direct_live_dependency",
       "qualified_name": "fabricops_kit.pipeline.shared.resolve_physical_table_identity",
       "source_end_line": 695,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
@@ -16282,6 +16490,10 @@
         {
           "status": "live",
           "version": "0.4.1"
+        },
+        {
+          "status": "live",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Widget, selection/review state, controls and review/activate/refresh actions.\n    Opening changes no metadata. Backend mutation independently revalidates\n    exact bindings, policy hashes and the reviewed current activation ID.",
@@ -16335,6 +16547,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Widget, controls, state and review/decide/refresh actions. Approval\n    grants deployment authority; Engineering must separately deploy it.",
@@ -16584,6 +16800,12 @@
       "public_import_path": "fabricops_kit.widget_data_agreement",
       "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
       "raises_documentation": "ValueError\n    If required authored fields are invalid. Complete the highlighted fields\n    before saving. Widget callbacks display validation failures.\nRuntimeError\n    If configured metadata routing or persistence fails; check the Metadata\n    store configuration and write permissions.",
+      "release_history": [
+        {
+          "status": "live",
+          "version": "0.5.0"
+        }
+      ],
       "returns_documentation": "dict[str, Any]\n    Stable root, section, field, document, steward, and save controls.",
       "signature": "def widget_data_agreement(*, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 497,
@@ -16907,6 +17129,10 @@
         {
           "status": "preview",
           "version": "0.4.1"
+        },
+        {
+          "status": "preview",
+          "version": "0.5.0"
         }
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.\n    Retain this exact instance for ``ai_settings``, ``ai_usage``, and\n    ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception\n    chains in diagnostics are for maintainers and can include provider context;\n    review before sharing. Opening makes no AI requests.",
@@ -16995,6 +17221,12 @@
       "public_import_path": "fabricops_kit.widget_data_steward",
       "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
       "raises_documentation": "ValueError\n    If required authored fields are invalid. Complete the highlighted fields\n    before saving. Widget callbacks display validation failures.\nRuntimeError\n    If configured metadata routing or persistence fails; check the Metadata\n    store configuration and write permissions.",
+      "release_history": [
+        {
+          "status": "live",
+          "version": "0.5.0"
+        }
+      ],
       "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
       "signature": "def widget_data_steward(*, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 269,
@@ -17241,6 +17473,48 @@
         "src/fabricops_kit/io/shared.py",
         "src/fabricops_kit/io/write_warehouse_table.py",
         "src/fabricops_kit/pipeline/shared.py"
+      ],
+      "live_critical_dependencies": [
+        "fabricops_kit.activated_pipeline.shared.snapshot_file",
+        "fabricops_kit.config.metadata_schemas.audit_schema_fields",
+        "fabricops_kit.config.metadata_schemas.build_metadata_schema",
+        "fabricops_kit.config.metadata_schemas.metadata_table_owner",
+        "fabricops_kit.config.metadata_schemas.metadata_table_physical_schema",
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_assert_source",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_gold_output",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_gold_output_exists",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_prepare_gold_empty_output",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs",
+        "fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs",
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
+        "fabricops_kit.config.shared._get_fabric_runtime_metadata",
+        "fabricops_kit.config.shared._normalize_path_config",
+        "fabricops_kit.config.shared.build_table_id",
+        "fabricops_kit.config.shared.get_default_fabric_context",
+        "fabricops_kit.config.shared.get_store",
+        "fabricops_kit.config.shared.resolve_fabric_context",
+        "fabricops_kit.config.shared.stable_metadata_id",
+        "fabricops_kit.data_contract.shared.file_source_identity",
+        "fabricops_kit.io.shared._build_warehouse_object_name",
+        "fabricops_kit.io.shared._join_lakehouse_area_path",
+        "fabricops_kit.io.shared._normalize_schema_name",
+        "fabricops_kit.io.shared._normalize_table_name",
+        "fabricops_kit.io.shared._resolve_lakehouse_schema",
+        "fabricops_kit.io.shared._resolve_lakehouse_table_path",
+        "fabricops_kit.io.shared._validate_lakehouse_store",
+        "fabricops_kit.io.shared._validate_warehouse_store",
+        "fabricops_kit.io.shared.get_spark_session",
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.resolve_warehouse_name",
+        "fabricops_kit.io.shared.resolve_warehouse_table_location",
+        "fabricops_kit.pipeline.shared.resolve_physical_table_identity"
       ],
       "metrics": {
         "depth": 7,
@@ -19126,6 +19400,30 @@
         "src/fabricops_kit/data_contract/shared.py",
         "src/fabricops_kit/io/shared.py",
         "src/fabricops_kit/io/write_lakehouse_file.py"
+      ],
+      "live_critical_dependencies": [
+        "fabricops_kit.config.shared._get_fabric_runtime_context",
+        "fabricops_kit.config.shared._get_fabric_runtime_metadata",
+        "fabricops_kit.config.shared._normalize_path_config",
+        "fabricops_kit.config.shared.get_default_fabric_context",
+        "fabricops_kit.config.shared.get_store",
+        "fabricops_kit.config.shared.resolve_fabric_context",
+        "fabricops_kit.data_contract.shared.file_source_identity",
+        "fabricops_kit.io.shared._join_lakehouse_area_path",
+        "fabricops_kit.io.shared._validate_lakehouse_store",
+        "fabricops_kit.io.shared._validate_relative_path",
+        "fabricops_kit.io.shared._validate_warehouse_store",
+        "fabricops_kit.io.shared.get_spark_session",
+        "fabricops_kit.io.shared.lakehouse_file_filesystem",
+        "fabricops_kit.io.shared.repartition_dataframe_for_write",
+        "fabricops_kit.io.shared.resolve_configured_file_path",
+        "fabricops_kit.io.shared.resolve_lakehouse_file_location",
+        "fabricops_kit.io.shared.resolve_lakehouse_file_path",
+        "fabricops_kit.io.shared.resolve_store",
+        "fabricops_kit.io.shared.validate_dataframe_writer",
+        "fabricops_kit.io.shared.validate_file_write",
+        "fabricops_kit.io.write_lakehouse_file._publish_staged",
+        "fabricops_kit.io.write_lakehouse_file._result"
       ],
       "metrics": {
         "depth": 6,
@@ -26626,6 +26924,7 @@
     "0.3.0",
     "0.3.1",
     "0.4.0",
-    "0.4.1"
+    "0.4.1",
+    "0.5.0"
   ]
 }
