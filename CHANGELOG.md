@@ -6,6 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
+### Added
+
+- Promote `write_lakehouse_file()` to Live for configured Lakehouse Files exports in CSV, Parquet, and newline-delimited JSON, with bounded single-file output and automatic dataset-folder overflow handling.
+- Promote `orchestrate_demo_reset()` to Live for previewing and restoring the dedicated Guided Demo environment with preflight checks and post-reset verification.
+- Add `read_lakehouse_query()` as the Lakehouse SQL counterpart to `read_warehouse_query()`.
+
+### Changed
+
+- Improve notebook display clarity across setup, Governance, and pipeline workflows.
+
+### Upgrade instructions
+
+- Upgrade the package and use the matching v0.5.0 `00_env_config.ipynb` and `02_pipeline.ipynb` release snapshots.
+- The current `00_env_config.ipynb`, `01_governance.ipynb`, and `02_pipeline.ipynb` templates were maintainer-tested with v0.5.0 in Microsoft Fabric on 18 Nov 2026.
+
 ## [0.4.1] - 2026-11-07
 
 ### Fixed

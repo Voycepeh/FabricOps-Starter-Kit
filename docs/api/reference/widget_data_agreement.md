@@ -120,6 +120,12 @@ appends one complete agreement row only after final validation.
 | Contract risk | Live |
 | Live-critical dependencies | 72 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.5.0 |
+
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">

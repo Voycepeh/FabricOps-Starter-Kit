@@ -1,0 +1,46 @@
+<!-- Generated file. Edit docs/releases/manifests/0.5.0.yml or the authoritative source metadata and regenerate. -->
+
+# `METADATA_DATA_CONTRACT`
+
+<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+
+Package version: `0.5.0`
+
+Live since: `0.3.0`
+
+Schema since: `0.5.0`
+
+Schema fingerprint: `dad5b5ed17ebf6b682cb58feba6f2e57c4aef53bf28f2547ea6d689e71367041`
+
+Source path: `src/fabricops_kit/config/metadata_schemas.py`
+
+Frozen source ref: `v0.5.0`
+
+[View frozen source](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.5.0/src/fabricops_kit/config/metadata_schemas.py)
+
+Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`
+
+Description: Supported FabricOps metadata table for data contract.
+
+## Schema
+
+| Column name | Data type | Nullable | Managed by | Description |
+| --- | --- | --- | --- | --- |
+| `contract_id` | `string` | No | FabricOps metadata schema registry | `contract_id` field in `METADATA_DATA_CONTRACT`. |
+| `contract_version` | `integer` | No | FabricOps metadata schema registry | `contract_version` field in `METADATA_DATA_CONTRACT`. |
+| `table_id` | `string` | Yes | FabricOps metadata schema registry | `table_id` field in `METADATA_DATA_CONTRACT`. |
+| `source_id` | `string` | Yes | FabricOps metadata schema registry | `source_id` field in `METADATA_DATA_CONTRACT`. |
+| `table_name` | `string` | Yes | FabricOps metadata schema registry | `table_name` field in `METADATA_DATA_CONTRACT`. |
+| `evidence_workspace_id` | `string` | No | FabricOps metadata schema registry | `evidence_workspace_id` field in `METADATA_DATA_CONTRACT`. |
+| `contract_payload_json` | `string` | Yes | FabricOps metadata schema registry | `contract_payload_json` field in `METADATA_DATA_CONTRACT`. |
+| `status` | `string` | No | FabricOps metadata schema registry | `status` field in `METADATA_DATA_CONTRACT`. |
+| `_committed_by` | `string` | No | FabricOps metadata schema registry | `_committed_by` field in `METADATA_DATA_CONTRACT`. |
+| `_committed_at` | `timestamp` | No | FabricOps metadata schema registry | `_committed_at` field in `METADATA_DATA_CONTRACT`. |
+| `_workspace_id` | `string` | No | FabricOps metadata schema registry | `_workspace_id` field in `METADATA_DATA_CONTRACT`. |
+| `_workspace_name` | `string` | No | FabricOps metadata schema registry | `_workspace_name` field in `METADATA_DATA_CONTRACT`. |
+| `_notebook_id` | `string` | No | FabricOps metadata schema registry | `_notebook_id` field in `METADATA_DATA_CONTRACT`. |
+| `_notebook_name` | `string` | No | FabricOps metadata schema registry | `_notebook_name` field in `METADATA_DATA_CONTRACT`. |
+| `_metadata_lakehouse_name` | `string` | No | FabricOps metadata schema registry | `_metadata_lakehouse_name` field in `METADATA_DATA_CONTRACT`. |
+| `_activity_id` | `string` | No | FabricOps metadata schema registry | `_activity_id` field in `METADATA_DATA_CONTRACT`. |
+
+[Back to release overview](../index.md)

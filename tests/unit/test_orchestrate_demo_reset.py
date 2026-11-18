@@ -73,13 +73,13 @@ def test_false_preserves_every_populated_metadata_table(monkeypatch, table, caps
     assert 'Preview only' in capsys.readouterr().out
 
 
-def test_export_is_preview_and_has_one_safe_switch():
+def test_export_is_live_and_has_one_safe_switch():
     import inspect
     from fabricops_kit import orchestrate_demo_reset
-    from fabricops_kit.public_api import PREVIEW_PUBLIC_API, SUPPORTED_PUBLIC_API
+    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
     qualified = 'fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset'
     assert orchestrate_demo_reset is API.orchestrate_demo_reset
-    assert qualified in PREVIEW_PUBLIC_API and qualified not in SUPPORTED_PUBLIC_API
+    assert qualified in SUPPORTED_PUBLIC_API
     signature = inspect.signature(orchestrate_demo_reset)
     assert list(signature.parameters) == ['reset']
     assert signature.parameters['reset'].default is False

@@ -2,7 +2,7 @@
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.4.2</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.5.0</span>
 </p>
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
@@ -143,11 +143,17 @@ No related guides documented.
 | Property | Value |
 | --- | --- |
 | Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | 0.4.2 |
+| Live since | 0.5.0 |
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
 | Live-critical dependencies | 20 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 

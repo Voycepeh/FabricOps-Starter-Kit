@@ -3901,7 +3901,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -4071,7 +4071,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -7618,7 +7618,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -7768,7 +7768,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -11230,7 +11230,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -11380,7 +11380,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -13485,7 +13485,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -13509,7 +13509,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -15477,7 +15477,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -15501,7 +15501,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -17461,7 +17461,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -17485,7 +17485,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -19405,7 +19405,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -19429,7 +19429,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -21587,6 +21587,18 @@
       "baseline": "main",
       "changes": [
         {
+          "change_type": "modified",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Lifecycle changed: Preview to Live."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
           "change_type": "added",
           "classification": "nonbreaking",
           "lifecycle_after": "Live",
@@ -21601,7 +21613,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
@@ -21695,12 +21707,12 @@
       ],
       "summary": {
         "added": 4,
-        "modified": 2,
-        "nonbreaking": 4,
+        "modified": 3,
+        "nonbreaking": 5,
         "potentially_breaking": 2,
         "removed": 2,
         "review_required": 2,
-        "total": 8
+        "total": 9
       },
       "target": "working-tree"
     },
@@ -21757,12 +21769,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -21927,12 +21939,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -22280,9 +22292,9 @@
         "added": 16,
         "modified": 10,
         "nonbreaking": 16,
-        "potentially_breaking": 19,
+        "potentially_breaking": 21,
         "removed": 19,
-        "review_required": 10,
+        "review_required": 8,
         "total": 45
       },
       "target": "v0.1.0"
@@ -22352,12 +22364,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -22502,12 +22514,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -22822,9 +22834,9 @@
         "added": 15,
         "modified": 11,
         "nonbreaking": 15,
-        "potentially_breaking": 18,
+        "potentially_breaking": 20,
         "removed": 16,
-        "review_required": 9,
+        "review_required": 7,
         "total": 42
       },
       "target": "v0.2.0"
@@ -22874,12 +22886,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -23024,12 +23036,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -23360,9 +23372,9 @@
         "added": 13,
         "modified": 18,
         "nonbreaking": 14,
-        "potentially_breaking": 22,
+        "potentially_breaking": 24,
         "removed": 8,
-        "review_required": 3,
+        "review_required": 1,
         "total": 39
       },
       "target": "v0.2.5"
@@ -23372,12 +23384,12 @@
       "changes": [
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -23396,12 +23408,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -23595,9 +23607,9 @@
         "added": 4,
         "modified": 6,
         "nonbreaking": 4,
-        "potentially_breaking": 7,
+        "potentially_breaking": 9,
         "removed": 6,
-        "review_required": 5,
+        "review_required": 3,
         "total": 16
       },
       "target": "v0.3.0"
@@ -23607,12 +23619,12 @@
       "changes": [
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -23631,12 +23643,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -23830,9 +23842,9 @@
         "added": 4,
         "modified": 6,
         "nonbreaking": 4,
-        "potentially_breaking": 7,
+        "potentially_breaking": 9,
         "removed": 6,
-        "review_required": 5,
+        "review_required": 3,
         "total": 16
       },
       "target": "v0.3.1"
@@ -23842,12 +23854,12 @@
       "changes": [
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -23866,12 +23878,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -24025,9 +24037,9 @@
         "added": 4,
         "modified": 4,
         "nonbreaking": 4,
-        "potentially_breaking": 6,
+        "potentially_breaking": 8,
         "removed": 5,
-        "review_required": 3,
+        "review_required": 1,
         "total": 13
       },
       "target": "v0.4.0"
@@ -24037,12 +24049,12 @@
       "changes": [
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -24061,12 +24073,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -24220,9 +24232,9 @@
         "added": 4,
         "modified": 4,
         "nonbreaking": 4,
-        "potentially_breaking": 6,
+        "potentially_breaking": 8,
         "removed": 5,
-        "review_required": 3,
+        "review_required": 1,
         "total": 13
       },
       "target": "v0.4.1"
@@ -24230,6 +24242,18 @@
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Lifecycle changed: Live to Preview."
+          ],
+          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
         {
           "change_type": "removed",
           "classification": "potentially_breaking",
@@ -24244,12 +24268,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
@@ -24339,12 +24363,12 @@
       ],
       "summary": {
         "added": 2,
-        "modified": 2,
+        "modified": 3,
         "nonbreaking": 2,
-        "potentially_breaking": 5,
+        "potentially_breaking": 7,
         "removed": 4,
-        "review_required": 1,
-        "total": 8
+        "review_required": 0,
+        "total": 9
       },
       "target": "main"
     }
@@ -38240,7 +38264,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "bool",
@@ -38864,7 +38888,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": null,
@@ -39776,7 +39800,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:e6773a4fcd994ffa17c76f163870b95d800ffe286c41fd0a4d4a736484b49b5b",
+      "source_digest": "sha256:4c6e5f54d7d9873dbbae380abb84cebe1493183539289ceca642aecb2abfed26",
       "source_kind": "working_tree",
       "version": "working-tree"
     }
