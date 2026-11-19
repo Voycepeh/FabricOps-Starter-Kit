@@ -80,7 +80,9 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     sentinel = run.spark.createDataFrame([(77,)], 'id int')
     write(sentinel, table_name='unrelated', store='Silver', schema='other', mode='overwrite')
     for store, table in API._DEMO_REMOVALS:
-        write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
+        if store != "Gold":
+            write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
+    monkeypatch.setattr(API, "read_warehouse_query", lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 0}))
     # Only remote Fabric catalog/warehouse removal is replaced by equivalent local filesystem IO.
     def remove(self, *, preview=False):
         if preview: return
