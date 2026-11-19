@@ -16,10 +16,10 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
-  - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
-  - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
+  - `METADATA_DATA_CATALOGUE` stores typed TABLE/FILE assets: one common table_id asset key and deterministic column_id for either type, physical location, data type, and table processing-definition fields. Files reuse their existing selector identity as table_id; released source descriptors retain source_id.
+  - `METADATA_DATA_PROFILED` stores table-column or file-column snapshot metrics. Both types use table_id and column_id, distinguished by asset_type.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
-  - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
+  - `METADATA_DATA_LINEAGE` stores typed table/file source/target pipeline participation within a Fabric Activity, not proven DataFrame transformation dependencies.
   - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
   - `METADATA_DATA_CONTRACT_ACTIVATION` stores retained Governance-owned exact frozen Contract selections and scoped Agreement associations per physical workspace/Table ID.
   - `METADATA_PIPELINE_ACTIVATION` stores immutable accepted submission packages and conditional Governance decision history. Governance owns the whole Metadata Lakehouse; Engineering has scoped writes only.

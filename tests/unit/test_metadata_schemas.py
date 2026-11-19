@@ -78,6 +78,8 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
         "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
         "column_id",
         "workspace_id",
@@ -105,7 +107,8 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:21] == [
+    assert fields[:24] == [
+        "asset_type", "run_id", "pipeline_role",
         "profile_id",
         "profile_snapshot_id",
         "table_id",
@@ -148,6 +151,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
     assert "frequency_json" not in registry["METADATA_DATA_PROFILED"].fieldNames()
     fields = registry["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames()
     assert fields == [
+        "asset_type", "run_id", "pipeline_role",
         "frequency_id",
         "profile_id",
         "profile_snapshot_id",
@@ -175,6 +179,7 @@ def test_stage2_lineage_schema_uses_pipeline_language():
     fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
     assert fields == [
         "lineage_id",
+        "asset_type", "asset_name",
         "table_id",
         "table_name",
         "workspace_id",

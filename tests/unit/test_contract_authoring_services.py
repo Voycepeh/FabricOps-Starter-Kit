@@ -535,7 +535,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
-    context = service.get_table_runtime_context(
+    context = service.get_asset_runtime_context(
         config=object(), active_workspace_id="PROD", spark_session=object(), table_id="orders"
     )
 
@@ -641,7 +641,7 @@ def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
     kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
-    bulk = service.get_table_runtime_context(**kwargs)["profile_contexts"]
+    bulk = service.get_asset_runtime_context(**kwargs)["profile_contexts"]
     assert len(reads) == 3
     assert len(bulk) == 60
     for column_id, context in bulk.items():

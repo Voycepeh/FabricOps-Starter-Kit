@@ -72,7 +72,7 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, a distinct file `source_id`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
 
-Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; they do not place file paths in table lineage or prove transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, remain in memory per execution and do not consume durable table profiling schedules. Bounded profile counts do not claim total file rows read.
+Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_DATA_LINEAGE`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
 
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
@@ -220,7 +220,7 @@ layout/overflow as unknown (`None`) and publication status as `not_published`.
 No additional metadata table is introduced.
 
 File profiling honors pipeline settings, evaluates the supplied DataFrame and
-remains session-local without table profile snapshots. Successful publication leaves
+persists typed Source ID snapshots after successful publication; Dry Run stays in memory. Successful publication leaves
 the execution open for `finalize_pipeline()`. Incremental checkpoint publication
 remains table-only; use Full Read sources for file targets.
 
@@ -405,3 +405,95 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
     Lineage records table participation in a pipeline; it does not infer exact column transformations from arbitrary PySpark. This preserves an honest boundary between framework evidence and project code.
 
 </div>
+
+
+## How is file metadata persisted?
+
+**Files use the same metadata tables and operation boundary as tables.** `asset_type`
+is `TABLE` or `FILE`. Table IDs and Column IDs retain their existing meaning;
+files reuse the stable identity value resolved from physical workspace, Lakehouse item
+and normalized relative selector as `table_id`. Both asset types use deterministic
+`column_id` values derived from that identity and normalized column name. Replacing content at the same path preserves
+that selector identity. Format and reader options do not change it.
+
+| Metadata table | File behavior |
+| --- | --- |
+| `METADATA_DATA_CATALOGUE` | One `metadata_level=file` row per selector; physical workspace/item, store, path, format, active flag and first/last observations. The common `table_id` identifies the file; observed fields register `column_id` rows. |
+| `METADATA_DATA_LINEAGE` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
+| `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file; observed fields register `column_id` rows. |
+| `METADATA_DATA_PROFILED_FREQUENCY` | Ranked file distributions linked to the profile snapshot; independent frequency work has no statistical `profile_id`. |
+| `METADATA_GUARDRAIL_RESULTS` | Schema, Data Quality, Grain and Freshness writers retain common Table IDs and explicit asset_type and exact selected Contract and rule versions. Failed checks remain outcomes, not successful lineage. No Contract means no invented checks. |
+| `METADATA_PIPELINE_RUN` | Existing typed file operations and source associations; profiling JSON also records file identity and committed snapshots. Run ID identifies the attempt; `_activity_id` correlates the Fabric activity used by Lineage. |
+| `METADATA_DATA_CONTRACT`, `METADATA_DATA_CONTRACT_ACTIVATION` | Existing file source selectors and authored/activated Contract versions; execution does not manufacture Contracts or Governance decisions. |
+| `METADATA_PIPELINE_ACTIVATION`, `METADATA_PIPELINE_REGISTRY` | Existing reviewed file Read configuration. Governed file targets remain unsupported and fail closed. |
+| `METADATA_PROCESSING_STATE` | Table incremental checkpoints, Source Drift baselines and publication receipts retain their existing semantics; files have no equivalent incremental/SCD implementation. |
+| `METADATA_DATA_ACCESS`, `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` | SQL permission scans and Governance-owned authored records keep their current responsibilities; file IO does not create synthetic rows. |
+
+File Reads commit successful participation before returning, including Reads with
+profiling disabled. File Writes commit target participation after publication.
+Profile aggregates calculated before overwrite are staged until the operation
+succeeds. Failures propagate through the existing operation and Run handling;
+a metadata failure after publication reports that publication already occurred.
+Commits across metadata tables are not atomic: inspect the failed Run before
+retrying, because an earlier profile or Catalogue merge may already have committed.
+Metadata conflict retries do not replay the business Write.
+Dry Run and standalone foundational file IO do not persist these records.
+Repeated merges use deterministic participation and snapshot IDs. Finalization
+does not replay file IO or insert duplicate participants.
+
+Table publication keeps its existing lineage lifecycle. A table Read followed by
+a file Write also registers the table source. Multiple sources are participants
+in the same activity: this does not prove which DataFrame transformations connect
+each source to each target.
+
+### Upgrade existing metadata
+
+Run `setup_metadata_tables()` using the configured Metadata store while pipelines
+are stopped. Nullable additions use the existing empty Delta schema-evolution append.
+Existing operational `source_id` columns are consolidated into `table_id` by the
+existing atomic migration utility. Conflicting populated identities block the
+upgrade. Only after values are copied and validated is the redundant column removed.
+File profile/frequency rows receive canonical Column IDs from their identity and
+column name. Historical lineage IDs, profile IDs, audit values, extension columns,
+and retained Run/Contract JSON remain intact. Repeated setup is safe.
+
+| Table | Common identity and schema changes |
+| --- | --- |
+| Catalogue | `table_id` and `column_id` apply to tables and files; `asset_type`, file coordinates and observation timestamps describe the asset. File columns register even when profiling is disabled. |
+| Lineage | Common `table_id`, `asset_type`, `asset_name`; table and file participation share the existing activity lifecycle. |
+| Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
+| Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |
+| Pipeline Run | Released file operation JSON retains `source_id`. New profiling entries use common `table_id` and `asset_type`; historical JSON is unchanged. |
+
+For tables, historical null asset types are interpreted as TABLE. Source descriptors
+in authored Contracts, activations and public file results retain their supported
+`source_id` format. No second operational identity column is needed. File-specific
+processing still checks `asset_type`; a common identifier does not enable table-only
+SCD, incremental checkpoint or SQL access processing for files.
+
+The migration records its pre-upgrade Delta version. Restore that version together
+with the prior package before resuming pipelines if rollback is required. Do not
+roll back only the package after consolidating populated operational columns.
+
+### Table and file participation examples
+
+```python
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
+source = orchestrate_read(store="Bronze", relative_path="inventory/inventory.xlsx", file_format="excel")
+orchestrate_write(source["dataframe"], store="Silver", schema="demo",
+                  table_name="inventory_clean", write_mode="overwrite")
+finalize_pipeline(pipeline)
+
+pipeline = setup_pipeline(pipeline_mode="Ungoverned")
+source = orchestrate_read(store="Silver", schema="demo", table_name="inventory_clean")
+orchestrate_write(source["dataframe"], store="Bronze", relative_path="exports/inventory.csv",
+                  file_format="csv", write_mode="overwrite")
+finalize_pipeline(pipeline)
+```
+
+The second example records a TABLE source and FILE target. File profiles describe
+the supplied Write DataFrame, not a post-publication scan of an appended dataset.
+The Data Contract editor reads persisted file profiles and frequency values by
+the shared Table/Column IDs, and reads file usage from the same Lineage table.
+File profiling eligibility remains per execution because selectors can change
+contents without changing identity. Bounded profiles never claim full coverage.

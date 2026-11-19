@@ -270,9 +270,9 @@
       "Data Catalogue"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "The canonical metadata record for a governed table and its columns.",
-    "long_definition": "FabricOps Data Catalogue metadata identifies governed tables and columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.",
-    "preferred_usage": "Use data catalogue for FabricOps table and column metadata.",
+    "short_definition": "The canonical metadata registry for table and file assets and their columns.",
+    "long_definition": "FabricOps Data Catalogue metadata identifies table and file assets and their columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.",
+    "preferred_usage": "Use data catalogue for FabricOps table and file asset metadata and table columns.",
     "avoid_usage": "catalog when referring to the FabricOps metadata entity"
   },
   {
@@ -723,9 +723,9 @@
       "data lineage"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Metadata that records how governed data moves from source to target through a pipeline.",
-    "long_definition": "FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.",
-    "preferred_usage": "Use lineage for recorded source-to-target relationships.",
+    "short_definition": "Metadata recording table and file source/target participation within a pipeline activity.",
+    "long_definition": "FabricOps records table and file participation as sources and targets within a Fabric activity. These records do not prove exact DataFrame transformation dependencies.",
+    "preferred_usage": "Use lineage for recorded source and target asset participation; it does not prove exact transformation dependencies.",
     "avoid_usage": "dependency when recorded data movement is meant",
     "tooltip_labels": [
       "Data Lineage",
@@ -739,9 +739,9 @@
       "table ID"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "The stable FabricOps identifier for one governed table.",
-    "long_definition": "FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.",
-    "preferred_usage": "Use table_id when referring to the canonical FabricOps table identifier.",
+    "short_definition": "The shared FabricOps identifier for a table or file asset, distinguished by asset_type.",
+    "long_definition": "Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.",
+    "preferred_usage": "Use table_id for the common operational asset identity, with asset_type identifying TABLE or FILE.",
     "avoid_usage": "table name when the governed identity is meant",
     "tooltip_labels": [
       "table_id"

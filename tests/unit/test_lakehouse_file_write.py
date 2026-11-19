@@ -78,6 +78,7 @@ def output(monkeypatch):
     owner = importlib.import_module('fabricops_kit.io.write_lakehouse_file')
     fs = Filesystem()
     frame = Mock(columns=['id'])
+    frame.schema = SimpleNamespace(fields=[SimpleNamespace(name='id', dataType=SimpleNamespace(simpleString=lambda: 'bigint'))])
     frame.repartition.return_value = frame
     frame.coalesce.return_value = frame
     frame.limit.return_value.count.return_value = 2

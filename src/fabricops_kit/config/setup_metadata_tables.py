@@ -18,6 +18,7 @@ from .metadata_schemas import (
     parse_metadata_json,
     RETIRED_PREVIEW_METADATA_TABLES,
     RETIRED_METADATA_COLUMNS,
+    UNIFIED_ASSET_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
     metadata_table_physical_schema,
@@ -221,6 +222,24 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
 
     def convert(row):
         values = row.asDict(recursive=True)
+        if table_name in UNIFIED_ASSET_TABLES:
+            from fabricops_kit.config.shared import build_column_id
+            old_source = values.get("source_id")
+            identity = values.get("table_id")
+            if old_source:
+                if identity not in (None, old_source):
+                    raise ValueError(f"{table_name}: conflicting asset identities; existing data preserved.")
+                identity = old_source
+                values["table_id"] = identity
+            is_file = bool(old_source) or str(identity or "").startswith("file:")
+            if is_file and values.get("asset_type") not in (None, "FILE"):
+                raise ValueError(f"{table_name}: conflicting asset_type; existing data preserved.")
+            if is_file:
+                values["asset_type"] = "FILE"
+            if (is_file and values.get("column_name") and not values.get("column_id")
+                    and (table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}
+                         or values.get("metadata_level") == "column")):
+                values["column_id"] = build_column_id(identity, values["column_name"])
         for name, kind in logical_fields.items():
             value = values.get(name)
             if table_name == "METADATA_DATA_CATALOGUE" and isinstance(value, str):
@@ -294,6 +313,10 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 if replacement_name not in actual or actual[name].dataType != actual[replacement_name].dataType:
                     raise ValueError(f"{table_name}.{name}: replacement type is incompatible; existing data preserved.")
                 safe = safe | column.eqNullSafe(F.col(replacement_name))
+                if table_name in UNIFIED_ASSET_TABLES and name == "source_id":
+                    # convert() fills the common identity inside this same Delta
+                    # transaction; conflicting populated identities remain blocked.
+                    safe = safe | (F.col(replacement_name).isNull() & (F.length(F.trim(column)) > 0))
             if source.where(~safe).limit(1).count():
                 raise ValueError(f"{table_name}.{name}: populated retired column is not provably redundant; existing data preserved.")
     target_schema = StructType([
@@ -482,6 +505,11 @@ def setup_metadata_tables(
     listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
     value is null or equals its declared canonical replacement. Other extension
     columns are preserved where the table's identity contract permits them.
+    Operational file source_id values are copied into the common table_id and
+    validated before source_id is retired. Conflicting identities block migration.
+    File profile columns gain deterministic Column IDs without changing retained
+    profile or lineage IDs. Stop pipelines for this schema migration; recovery
+    restores the returned pre-upgrade Delta version together with the prior code.
     Unproven populated retirements fail with data preserved. Cleanup and supported
     JSON conversions commit atomically, with the pre-upgrade Delta version
     returned for recovery before VACUUM or further writes. Setup never vacuums.

@@ -165,13 +165,14 @@ the supplied DataFrame when due, but never stages or publishes files and cannot 
 permissions, collisions or output-size limits. Its actual `output_layout` and
 overflow fields are `None`, and publication status is `not_published`. Governed file targets fail closed:
 the current Pipeline Promotion authorization supports file Reads only. Ungoverned
-still rejects protected file destinations and overlapping folders. File targets use
-the existing physical file `source_id`, never a `table_id`, and do not use table
-contracts, table audit columns, row hashes or table lineage. Full Read sources can
+still rejects protected file destinations and overlapping folders. File results retain
+the existing physical file `source_id`; shared metadata stores that same value as
+`table_id` with `asset_type=FILE` and registers stable Column IDs. File targets do not use table
+contracts, table audit columns or row hashes. They persist FILE participation in `METADATA_DATA_LINEAGE`. Full Read sources can
 participate; incremental checkpoint publication remains table-only.
 
 Pipeline profiling honors `setup_pipeline()` settings and profiles the supplied
-DataFrame, with session-local file history and no persisted table profile snapshots.
+DataFrame. Persistent operations save typed file Profile and Frequency snapshots by Source ID; eligibility remains per execution.
 File overwrite profiles its input before publication so a lazy read of the destination
 is evaluated while the original source files still exist.
 It does not reread the published destination. `METADATA_PIPELINE_RUN` operations retain

@@ -1001,6 +1001,8 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
 
     assert catalogue_names == [
         "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
         "column_id",
         "workspace_id",
@@ -1365,7 +1367,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["first_profiled_at", "last_profiled_at", "_committed_at"]
+            assert timestamp_fields == ["first_observed_at", "last_observed_at", "first_profiled_at", "last_profiled_at", "_committed_at"]
         elif table_name == "METADATA_DATA_PROFILED":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
         else:
@@ -1382,6 +1384,7 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
     audit_names = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
     assert schema.fieldNames() == [
         "lineage_id",
+        "asset_type", "asset_name",
         "table_id",
         "table_name",
         "workspace_id",
