@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-Lists registered tables and columns, where they are stored, their data types and whether they are still active.
+Lists registered table and file assets and their columns, their physical location and active status.
 
 ## Writer functions
 
@@ -18,7 +18,7 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One current table or column observation in one workspace.
+**Grain:** One current table/file asset or one of its columns in one workspace.
 
 **Primary key:** `workspace_id` + `table_id` + `column_id`
 
@@ -26,13 +26,13 @@ No starter template or solution is traced for the public writer functions.
 
 No immediate table relationship is defined in the current implementation.
 
-**Implementation details:** The current structural registry of known table and column assets. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
+**Implementation details:** The current structural registry of table and file assets. asset_type is TABLE or FILE; historical null types with table_id mean TABLE. table_id is the common asset key. File asset rows use metadata_level=file and their existing selector identity in table_id. Column rows use metadata_level=column, asset_type=FILE and canonical column_id derived from table_id and normalized column name. Physical workspace_id/item_id, layer and normalized relative_path identify the Lakehouse selector; replacement at the same path preserves identity. first_observed_at is retained and last_observed_at advances on successful observations. Both asset types use workspace_id + table_id + column_id. Asset rows have null column_id. Tabular files register their observed columns even when profiling is disabled; removed columns become inactive and reappearing columns reuse their IDs. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">28</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">20</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">34</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">26</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -44,8 +44,14 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>metadata_level</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>metadata_level</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, table, and column context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
+<tr class="metadata-column--engineering"><td><code>item_id</code></td><td><code>string</code></td><td>Identifier stored for <code>item_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>relative_path</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>relative_path</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>file_format</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>file_format</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>first_observed_at</code></td><td><code>timestamp</code></td><td>First successful observation of a file selector; preserved on subsequent registration.</td></tr>
+<tr class="metadata-column--engineering"><td><code>last_observed_at</code></td><td><code>timestamp</code></td><td>Most recent successful observation of a file selector.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, asset, and column context.</td></tr>
 <tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>store_type</code></td><td><code>string</code></td><td>Configured Fabric store type recorded for the profiled dataset.</td></tr>
 <tr class="metadata-column--engineering"><td><code>layer</code></td><td><code>string</code></td><td>The configured medallion layer where the table is stored.</td></tr>
@@ -116,5 +122,6 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 | `metadata_key` | Every value is SQL NULL |
 | `metadata_table_key` | Every value is SQL NULL |
 | `metadata_column_key` | Every value is SQL NULL |
+| `source_id` | SQL NULL or equal to `table_id` |
 
 See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

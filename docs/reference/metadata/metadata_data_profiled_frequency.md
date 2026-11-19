@@ -27,13 +27,13 @@ No starter template or solution is traced for the public writer functions.
 `METADATA_DATA_PROFILED` **(N → 1)**
 via `profile_id`
 
-**Implementation details:** Frequency distributions retain Table ID, Column ID, workspace, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
+**Implementation details:** Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">25</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">17</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">28</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">20</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -44,11 +44,14 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
+<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
+<tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Identifier stored for <code>run_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>pipeline_role</code></td><td><code>string</code></td><td>Participation role: source for a Read or target for a Write.</td></tr>
 <tr class="metadata-column--engineering"><td><code>frequency_id</code></td><td><code>string</code></td><td>Identifier stored for <code>frequency_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>profile_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>profile_snapshot_id</code></td><td><code>string</code></td><td>Identifier stored for <code>profile_snapshot_id</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, table, and column context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, asset, and column context.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
 <tr class="metadata-column--engineering"><td><code>column_name</code></td><td><code>string</code></td><td>Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
 <tr class="metadata-column--engineering"><td><code>data_type</code></td><td><code>string</code></td><td>Stable data type label recorded for the column.</td></tr>
@@ -80,5 +83,6 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 | --- | --- |
 | `metadata_column_key` | Every value is SQL NULL |
 | `profiled_at` | SQL NULL or equal to `_committed_at` |
+| `source_id` | SQL NULL or equal to `table_id` |
 
 See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

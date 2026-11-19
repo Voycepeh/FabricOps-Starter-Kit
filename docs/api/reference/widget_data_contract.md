@@ -105,7 +105,7 @@ the selector; enter a validated configured Files path and reader settings to
 observe a new file schema without registering a table. File contracts preserve
 Source ID and exact format/options through Save, Freeze and Activation.
 Returned state uses source_id for files and table_id for physical tables;
-dataset_id identifies either selection. File profiles remain session-only.
+dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
 Activation and governed execution still require configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
@@ -193,7 +193,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:990`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L990-L7466">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L990-L7479">View on GitHub</a>
 </div>
 
 

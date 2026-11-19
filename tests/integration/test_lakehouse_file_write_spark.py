@@ -80,6 +80,14 @@ def test_overwrite_finishes_lazy_input_before_replacing_destination(spark_sessio
 
 @pytest.mark.parametrize('single', [False, True])
 def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, spark_session, monkeypatch, tmp_path, single):  # noqa: F811
+    from datetime import datetime
+    from fabricops_kit.pipeline import shared
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    audit = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'audit-' + field.name
+             for field in metadata_table_schema_registry()['METADATA_DATA_PROFILED'] if field.name.startswith('_')}
+    monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: dict(audit))
+    snapshots = []
+    monkeypatch.setattr(shared, '_replace_snapshot_rows', lambda **kw: snapshots.extend(kw['dataframe'].collect()))
     routing = importlib.import_module('fabricops_kit.io.shared')
     owner = importlib.import_module('fabricops_kit.io.write_lakehouse_file')
     def resolve(store, path, **kwargs):
@@ -95,6 +103,10 @@ def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, s
     result = orchestrate_write(source, store='Silver', relative_path='orders.parquet', file_format='parquet',
         write_mode='overwrite')
     assert result['published'] is True and result['profile_result']['row_count'] == 2
+    assert result['profile_result']['results_persisted'] is True
+    assert snapshots and all(row.asset_type == 'FILE' and row.table_id.startswith('file:') and row.column_id is not None for row in snapshots)
+    assert result['profile_result']['profile'].select('ROW_COUNT').first()[0] == 2
+    assert result['profile_result']['profile'].select('MIN_VALUE').first()[0] == '11'
     assert [stage['stage'] for stage in result['orchestration_stages']] == ['Profile', 'Write']
     assert sorted(row.id for row in spark_session.read.parquet(result['resolved_path']).collect()) == [11, 12]
     assert finalize_pipeline(session)['status'] == 'ungoverned_completed'

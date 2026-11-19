@@ -1040,7 +1040,7 @@ def widget_data_contract(
     observe a new file schema without registering a table. File contracts preserve
     Source ID and exact format/options through Save, Freeze and Activation.
     Returned state uses source_id for files and table_id for physical tables;
-    dataset_id identifies either selection. File profiles remain session-only.
+    dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
     Activation and governed execution still require configured environment mapping.
     Save overwrites the complete canonical JSON for the selected draft version, then reloads
     that exact version. A new draft is seeded from the previous frozen version when one exists.
@@ -1619,21 +1619,28 @@ def widget_data_contract(
             set_status("Unsaved Data Contract changes discarded.")
 
     def load_profile_context(column_id: str) -> dict[str, Any]:
-        """Load one column profile once per governed table and reuse it within the widget."""
+        """Load and cache one table or file column profile within the widget."""
         selected_table = str(state.get("dataset_id") or "").strip()
         selected_column = str(column_id or "").strip()
         if not selected_table or not selected_column:
             raise ValueError("Select a governed table and column before loading profile context.")
         cache_key = (active_workspace_id, selected_table, selected_column)
         profile_cache: dict[tuple[str, str, str], dict[str, Any]] = state["_profile_cache"]
-        if selected_table.startswith("file:") and cache_key not in profile_cache:
-            profile_cache[cache_key] = {"kind": "unavailable", "message": "File profiles are session-only; no persisted table profile is available."}
         if cache_key not in profile_cache:
             began = perf_counter()
             try:
+                profile_arguments = {"table_id": selected_table, "column_id": selected_column}
+                profile_workspace = active_workspace_id
+                if selected_table.startswith("file:"):
+                    source = state["manifest"]["source"]
+                    column = next(item for item in state["current"]["available_columns"]
+                                  if item["column_id"] == selected_column)
+                    from fabricops_kit.config.shared import build_column_id
+                    profile_arguments = {"table_id": selected_table, "column_id": build_column_id(selected_table, column["column_name"])}
+                    profile_workspace = source["workspace_id"]
                 profile_cache[cache_key] = contracts.get_column_profile_context(
-                    config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-                    table_id=selected_table, column_id=selected_column,
+                    config=config, active_workspace_id=profile_workspace, spark_session=spark,
+                    **profile_arguments,
                     metadata_workspace_id=routing_workspace_id,
                 )
             finally:
@@ -2948,15 +2955,21 @@ def widget_data_contract(
             nonlocal runtime_context, runtime_summary_html
             if runtime_context:
                 return
-            if current.get("payload", {}).get("source", {}).get("source_type") == "file":
-                runtime_context = {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "pipeline_usage": []}
-                runtime_summary_html = runtime_context_html()
-                return
-            loaded = contracts.get_table_runtime_context(
-                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
-                table_id=str(state.get("dataset_id") or ""),
+            source = current.get("payload", {}).get("source", {})
+            is_file = source.get("source_type") == "file"
+            identity_arguments = ({"table_id": source["source_id"]} if is_file
+                                  else {"table_id": str(state.get("dataset_id") or "")})
+            loaded = contracts.get_asset_runtime_context(
+                config=config, active_workspace_id=source["workspace_id"] if is_file else active_workspace_id,
+                spark_session=spark, **identity_arguments,
                 metadata_workspace_id=routing_workspace_id,
             )
+            if is_file:
+                from fabricops_kit.config.shared import build_column_id
+                columns = {build_column_id(source["source_id"], column["column_name"]): column["column_id"] for column in authoring_columns}
+                for field in ("column_profiles", "profile_contexts"):
+                    loaded[field] = {columns[name]: value for name, value in loaded.get(field, {}).items()
+                                     if name in columns}
             runtime_context = loaded
             # Reuse the bulk profile read when Columns is opened.
             if "profile_contexts" in loaded:

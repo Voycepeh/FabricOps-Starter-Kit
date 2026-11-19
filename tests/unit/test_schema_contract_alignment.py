@@ -173,7 +173,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     frame, table, routing = writes[0]
     persisted = frame.rows[0]
     assert create_frame.call_args.kwargs["schema"] == shared.metadata_table_schema_registry()["METADATA_GUARDRAIL_RESULTS"]
-    assert persisted["source_id"] is None
+    assert "source_id" not in persisted and persisted["asset_type"] == "TABLE"
     assert table == "METADATA_GUARDRAIL_RESULTS"
     assert routing["store"] == "Metadata"
     expected_status = "failed" if blocking else "failed" if difference == "additional" else "passed"

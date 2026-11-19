@@ -124,9 +124,13 @@ Not documented yet
 Define store, schema, table_name and any full/incremental/query options.
 Alternatively select a Lakehouse file, folder or wildcard using relative_path,
 file_format and read_options. Files support full reads only and retain their
-stable Source ID, with no Table ID. Foundational readers remain independent.
-File profiles are calculated in memory per execution (including persistent
-modes), using the pipeline row limit; no table profile snapshot is persisted.
+stable Source ID in the public response. Shared metadata stores that same
+identity value in table_id with asset_type=FILE. Foundational readers remain independent.
+Successful persistent Reads register the file in METADATA_DATA_CATALOGUE
+and METADATA_DATA_LINEAGE under the existing Fabric Activity ID. File profiles
+and frequency results use that common Table ID and stable Column IDs in
+METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
+in memory. Profiling uses the pipeline row limit and records selection scope.
 A replaced file can be read again in a new execution; no exactly-once or
 immutable-file guarantee is provided.
 Spark, execution authority and reporting come from setup_pipeline. The result
@@ -166,7 +170,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L233">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L237">View on GitHub</a>
 </div>
 
 

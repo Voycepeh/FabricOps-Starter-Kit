@@ -37,13 +37,15 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     for Lakehouse Files. File modes are overwrite and append_all;
     Append New Only and SCD strategies are table-only.
     Files support Dry Run and Ungoverned; Governed file targets fail closed because
-    current Pipeline Promotion authorizes only file Reads. No file Table ID or
-    table Data Contract is manufactured. Protected file destinations and overlapping
+    current Pipeline Promotion authorizes only file Reads. Files reuse their existing identity as the common metadata table_id;
+    asset_type=FILE distinguishes them from tables. Table Contracts do not apply. Protected file destinations and overlapping
     folders remain blocked in Ungoverned mode. Incremental checkpoint publication
     is table-only; file writes require Full Read sources.
 
-    File profiling uses the supplied DataFrame and setup_pipeline settings, remains
-    session-local, and persists no table profile snapshots. File overwrite profiles
+    File profiling uses the supplied DataFrame and setup_pipeline settings.
+    Successful publication persists typed file snapshots in
+    METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY, using common
+    Table IDs and deterministic Column IDs; Dry Run stays in memory. File overwrite profiles
     its supplied input before publication so lazy reads of the target remain valid.
     A bounded profile cannot
     establish complete row counts. 
@@ -57,12 +59,15 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     See write_lakehouse_file for nontransactional publication and recovery caveats.
     File options, physical location, publication status and available filesystem
     metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
-    receive table audit columns, row hashes, SCD processing or table lineage.
+    receive table audit columns, row hashes or SCD processing. Successful file Writes register FILE target
+    participation in METADATA_DATA_LINEAGE and the selector in METADATA_DATA_CATALOGUE.
     A successful file Write leaves the pipeline open for finalize_pipeline().
     All reads registered in this execution are associated with this target as
     pipeline participants, not proven transformation dependencies. File participation
     is returned under source_ids and retained separately from source_table_ids in
-    Run operations; it never manufactures table lineage. Dry Run evaluates
+    Run operations as source_ids, and in METADATA_DATA_LINEAGE as common table_id
+    values, using the existing
+    Activity ID. These records describe participation rather than transformation edges. Dry Run evaluates
     processing and applicable Guardrails without publishing or committing metadata.
     Ungoverned writes without contract checks but cannot target an already governed
     table. Governed requires activated contracts, ownership and a pinned revision.

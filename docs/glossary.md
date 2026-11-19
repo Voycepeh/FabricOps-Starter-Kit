@@ -133,8 +133,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="data-catalogue">
-<summary><strong>Data Catalogue</strong> — The canonical metadata record for a governed table and its columns.</summary>
-<p>FabricOps Data Catalogue metadata identifies governed tables and columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
+<summary><strong>Data Catalogue</strong> — The canonical metadata registry for table and file assets and their columns.</summary>
+<p>FabricOps Data Catalogue metadata identifies table and file assets and their columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
 <p><strong>Also known as:</strong> Data Catalogue</p>
 </details>
 
@@ -197,14 +197,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="lineage">
-<summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
-<p>FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.</p>
+<summary><strong>Lineage</strong> — Metadata recording table and file source/target participation within a pipeline activity.</summary>
+<p>FabricOps records table and file participation as sources and targets within a Fabric activity. These records do not prove exact DataFrame transformation dependencies.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 
 <details id="table-id">
-<summary><strong>table_id</strong> — The stable FabricOps identifier for one governed table.</summary>
-<p>FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.</p>
+<summary><strong>table_id</strong> — The shared FabricOps identifier for a table or file asset, distinguished by asset_type.</summary>
+<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.</p>
 <p><strong>Also known as:</strong> table ID</p>
 </details>
 

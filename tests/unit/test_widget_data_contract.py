@@ -349,7 +349,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",
             "workspace_id": "PROD",
@@ -662,6 +662,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
         return loaded
 
     monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **kw: {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "lineage": []})
     state = widget_runtime["open"]()
     controls = state["_controls"]
     labels = {value: label for label, value in controls["table"].options}
@@ -4206,7 +4207,7 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
     """Profile provenance and lineage use the same configured audit zone."""
     widget_runtime["config"].audit_timezone = "Asia/Singapore"
     module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {"committed_at": value},
         "lineage": [{"last_seen": value}],
     })
@@ -4220,13 +4221,13 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
 def test_open_loads_profile_and_lineage_once_for_expanded_context(widget_runtime, monkeypatch):
     """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
-    original = module.contracts.get_table_runtime_context
+    original = module.contracts.get_asset_runtime_context
 
     def load_context(**kwargs):
         reads.append(kwargs)
         return original(**kwargs)
 
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
     assert len(reads) == 1
     assert controls["table_context"].selected_index == 0
@@ -4244,7 +4245,7 @@ def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, m
     profiles = {f"col-{index}": {"kind": "profile", "profile": {"row_count": 10},
                 "values": [{"value": f"sample-{index}", "count": 1, "percent": 10}]}
                 for index in range(59)}
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "profile_contexts": profiles,
     })
     state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
@@ -4743,3 +4744,29 @@ def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     )
     assert module._parameters(saved)["evidence_method"] == "metadata"
     assert "freshness_column" not in module._parameters(saved)
+
+
+def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeypatch):
+    """File profiles remain Source ID records while the editor uses authored column tokens."""
+    from unittest.mock import Mock
+    from fabricops_kit.config.shared import build_column_id
+    source = module.contracts.file_source_identity(
+        workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
+    dataset = {**source, 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+    monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
+    original = module.contracts.get_contract_review_state
+    def file_review(**kwargs):
+        loaded = original(**kwargs)
+        loaded['catalogue_rows'] = []
+        loaded['payload'] = {**json.loads(loaded['contract']['contract_payload_json']), 'source': source}
+        return loaded
+    monkeypatch.setattr(module.contracts, 'get_contract_review_state', file_review)
+    profile = {'kind': 'profile', 'profile': {'row_count': 42, 'table_id': source['source_id'],
+                                           'column_id': build_column_id(source['source_id'], 'column_0')}}
+    reader = Mock(return_value={'latest_profile': None, 'column_profiles': {},
+        'profile_contexts': {build_column_id(source['source_id'], 'column_0'): profile}, 'lineage': [], 'reader_count': 1, 'writer_count': 0})
+    monkeypatch.setattr(module.contracts, 'get_asset_runtime_context', reader)
+    state = widget_runtime['open']()
+    assert reader.call_args.kwargs['table_id'] == source['source_id']
+    assert 'source_id' not in reader.call_args.kwargs
+    assert state['load_profile_context']('col-0') == profile

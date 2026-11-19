@@ -108,7 +108,9 @@ def execution_result(context, table_id, *, stages=()):
     return {
         "execution_mode": plan.execution_mode, "execution_plan_id": plan.plan_id,
         "execution_workspace_id": plan.workspace_id,
-        "guardrail_outcomes": [dict(row) for row in plan.results if (row.get("source_id") or row.get("table_id")) == table_id],
+        "guardrail_outcomes": [({**row, "source_id": table_id, "table_id": None}
+                                if row.get("asset_type") == "FILE" else dict(row))
+                               for row in plan.results if (row.get("source_id") or row.get("table_id")) == table_id],
         "simulation_outcomes": list(plan.simulations),
         "selected_contract": ({"contract_id": contract["contract_id"],
                                "contract_version": contract["contract_version"]} if contract else None),
@@ -564,15 +566,23 @@ def get_current_freshness_evidence(
     return _CURRENT_FRESHNESS_EVIDENCE[key]
 
 
-def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
-    """Return the deterministic identity for pipeline participation."""
+def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str,
+               asset_type: str = "TABLE") -> str:
+    """Identify typed participation, preserving released table hash inputs exactly."""
+    asset_type = str(asset_type).strip().upper()
+    table_id = str(table_id or "").strip()
+    if asset_type not in {"TABLE", "FILE"} or not table_id:
+        raise ValueError("A canonical table_id and asset_type TABLE or FILE are required.")
     values = {
         "activity_id": str(activity_id or "").strip(),
         "table_id": str(table_id or "").strip(),
         "pipeline_role": str(pipeline_role or "").strip().lower(),
     }
-    if not values["activity_id"] or not values["table_id"]:
-        raise ValueError("activity_id and table_id must be non-empty strings.")
+    if not values["activity_id"]:
+        raise ValueError("activity_id must be a non-empty string.")
+    if asset_type == "FILE":
+        values.pop("table_id")
+        values.update(asset_type="FILE", source_id=table_id)
     if values["pipeline_role"] not in {"source", "target"}:
         raise ValueError("pipeline_role must be source or target.")
     return hashlib.sha256(
@@ -586,6 +596,8 @@ def persist_lineage_participation(
     pipeline_role: str,
     activity_id: str | None = None,
     context: dict[str, Any] | None = None,
+    asset_type: str = "TABLE",
+    file_identity: Mapping[str, Any] | None = None,
 ) -> str:
     """Upsert one canonical source or target participant for an activity."""
     if not persistence_permitted(context):
@@ -598,13 +610,31 @@ def persist_lineage_participation(
         activity_id=effective_activity_id,
         table_id=table_id,
         pipeline_role=pipeline_role,
+        asset_type=asset_type,
     )
+    asset_type = str(asset_type).strip().upper()
+    if asset_type == "FILE":
+        from fabricops_kit.data_contract.shared import file_source_identity
+        identity = dict(file_identity or {})
+        expected = file_source_identity(**{key: identity.get(key) for key in
+            ("workspace_id", "item_id", "relative_path", "file_format")})
+        if expected["source_id"] != str(table_id).strip() or not identity.get("store"):
+            raise ValueError("File lineage requires the resolved selector and configured store.")
+        table_name = expected["relative_path"]
+        asset_name = f"{identity['store']}/Files/{expected['relative_path']}"
+    else:
+        table_name = (_CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name")
+                      or resolve_catalogue_table_identity(config, active_workspace_id, table_id,
+                                                          context=resolved_context).get("table_name"))
+        asset_name = table_name
     record = coerce_metadata_row_types(
         _LINEAGE_TABLE,
         {
             "lineage_id": identifier,
+            "asset_type": asset_type,
             "table_id": str(table_id).strip(),
-            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=resolved_context).get("table_name"),
+            "table_name": table_name,
+            "asset_name": asset_name,
             "workspace_id": active_workspace_id,
             "pipeline_role": str(pipeline_role).strip().lower(),
             **audit,
@@ -630,8 +660,8 @@ def persist_lineage_participation(
             frame.alias("source"),
             "target.workspace_id = source.workspace_id AND target.lineage_id = source.lineage_id",
         )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
+        .whenMatchedUpdate(set={name: f"source.{name}" for name in record})
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in record})
         .execute())
     )
     return identifier
@@ -2813,8 +2843,8 @@ def write_guardrail_result_row(
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
-        "table_id": None if str(table_id).startswith("file:") else str(table_id or result.get("table_id") or "").strip(),
-        "source_id": table_id if str(table_id).startswith("file:") else None,
+        "table_id": str(table_id or result.get("table_id") or result.get("source_id") or "").strip(),
+        "asset_type": "FILE" if str(table_id).startswith("file:") else "TABLE",
         "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
@@ -3297,8 +3327,8 @@ def source_guardrail_results(context, sources):
                         return False
                     if scope not in {"read_full", "read_incremental_batch"}:
                         return False
-                return all(row.get(key) == value for key, value in {
-                    identity_field: table_id, "contract_id": contract["contract_id"],
+                return (row.get("table_id") or row.get("source_id")) == table_id and all(row.get(key) == value for key, value in {
+                    "contract_id": contract["contract_id"],
                     "contract_version": contract["contract_version"], "guardrail_type": kind,
                     "guardrail_rule_id": rule["guardrail_rule_id"],
                     "guardrail_version": rule.get("guardrail_version", 1),
@@ -3381,6 +3411,7 @@ def resolve_catalogue_table_id(
         actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
         if (
             str(row.get("workspace_id") or "") == active_workspace_id
+            and str(row.get("asset_type") or "TABLE").upper() == "TABLE"
             and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
             and row.get("is_active") is not False
             and actual == expected
@@ -4930,8 +4961,8 @@ def check_dq_runtime(
             "guardrail_result_id": str(uuid4()),
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "guardrail_version": rule["guardrail_version"],
-            "table_id": None if str(table_id).startswith("file:") else table_id,
-            "source_id": table_id if str(table_id).startswith("file:") else None,
+            "table_id": table_id,
+            "asset_type": "FILE" if str(table_id).startswith("file:") else "TABLE",
             "contract_id": str(contract_id or ""),
             "contract_version": int(contract_version or 0),
             "execution_type": execution_mode,
@@ -5899,6 +5930,67 @@ def resolve_file_write_participant(*, store, relative_path, file_format, context
     return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
 
 
+def persist_file_catalogue(identity, *, context, profile_summary=None, columns=None):
+    """Upsert a FILE asset and its observed columns using the shared identity grain."""
+    if not persistence_permitted(context):
+        raise RuntimeError("Dry Run cannot commit Catalogue.")
+    from delta.tables import DeltaTable
+    from fabricops_kit.data_contract.shared import file_source_identity
+    expected = file_source_identity(**{key: identity.get(key) for key in
+        ("workspace_id", "item_id", "relative_path", "file_format")})
+    table_id = expected["source_id"]
+    if table_id != identity.get("source_id") or not identity.get("store"):
+        raise ValueError("File Catalogue requires a resolved file participant.")
+    config, workspace_id, runtime = resolve_fabric_context(context=context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=workspace_id, runtime_context=runtime)
+    common = {
+        "asset_type": "FILE", "table_id": table_id,
+        "workspace_id": expected["workspace_id"], "item_id": expected["item_id"],
+        "layer": identity["store"], "store_type": "lakehouse", "table_name": expected["relative_path"],
+        "relative_path": expected["relative_path"], "file_format": expected["file_format"], "is_active": True,
+        "first_observed_at": audit["_committed_at"], "last_observed_at": audit["_committed_at"], **audit,
+    }
+    asset = {**common, "metadata_level": "file", "column_id": None}
+    if profile_summary and "grain" in profile_summary.get("activities", []):
+        asset["profile_key_candidates_json"] = {"status": "resolved", "max_combination_width": 3,
+            **profile_summary["scope"], "candidates": profile_summary["grain_candidates"]}
+    rows = [asset]
+    for column in columns or []:
+        if not column.get("column_name") or not column.get("data_type"):
+            raise ValueError("Observed file columns require column_name and data_type.")
+        rows.append({**common, "metadata_level": "column", "column_name": column["column_name"],
+            "column_id": build_column_id(table_id, column["column_name"]), "data_type": column["data_type"]})
+    if len({row["column_id"] for row in rows}) != len(rows):
+        raise ValueError("Observed file column names collide after canonical normalization.")
+    spark = get_spark_session(context=runtime)
+    frame = spark.createDataFrame([encode_metadata_row(CATALOGUE_TABLE,
+        coerce_metadata_row_types(CATALOGUE_TABLE, row)) for row in rows],
+        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
+    _, _, _, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
+        metadata_table_physical_schema(config, CATALOGUE_TABLE), context=runtime)
+    updates = {name: f"source.{name}" for name in set().union(*(row.keys() for row in rows))
+               if name not in {"first_observed_at", "table_id", "column_id", "profile_key_candidates_json"}}
+    updates["last_observed_at"] = "greatest(target.last_observed_at, source.last_observed_at)"
+    if "profile_key_candidates_json" in asset:
+        updates["profile_key_candidates_json"] = "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
+    def commit():
+        mutation = (DeltaTable.forPath(spark, path).alias("target")
+            .merge(frame.alias("source"), "target.workspace_id = source.workspace_id "
+                "AND target.table_id = source.table_id AND target.metadata_level = source.metadata_level "
+                "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')")
+            .whenMatchedUpdate(set=updates)
+            .whenNotMatchedInsert(values={name: f"source.{name}" for name in
+                metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()}))
+        if columns is not None:
+            mutation = mutation.whenNotMatchedBySourceUpdate(condition=(
+                f"target.table_id = '{table_id}' AND target.asset_type = 'FILE' "
+                "AND target.metadata_level = 'column' AND target.is_active = true"),
+                set={"is_active": "false"})
+        mutation.execute()
+    retry_delta_metadata(commit)
+    return table_id
+
+
 def read_file_participant(identity, *, context, spark_session):
     """Read a planned file using foundational I/O and the execution-owned Spark session."""
     from fabricops_kit.io import read_lakehouse_csv, read_lakehouse_json, read_lakehouse_parquet, read_lakehouse_excel
@@ -5917,7 +6009,7 @@ def read_file_participant(identity, *, context, spark_session):
 
 
 def schedule_file_profiling(dataframe, *, source_id, context, presentations, operation="read"):
-    """Run pipeline-owned profiling activities without creating table snapshots.
+    """Calculate typed file snapshots; commit them only after operation success.
 
     File completion history is session-local. No durable interval is consumed;
     each new execution reevaluates eligibility because files may be replaced.
@@ -5945,15 +6037,78 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
         if "standard" in due:
             presentation = capture_profile_presentation(profile, scope=scope, dry_run=not plan.permits_persistence)
             if presentation:
-                presentation["title"] += " · File selection (session only)"
+                presentation["title"] += " · File selection"
                 presentations.append(presentation)
+        # Materialize only bounded per-column aggregates, never business rows.
+        # File overwrite may replace a lazy source before operation completion.
+        if plan.permits_persistence:
+            spark = dataframe.sparkSession
+            captured = spark.createDataFrame(profile.collect(), profile.schema)
+            captured_frequency = (spark.createDataFrame(frequency.collect(), frequency.schema)
+                                  if frequency is not None else None)
+            plan.evidence.setdefault("pending_file_profiles", {})[(source_id, operation)] = {
+                "profile": captured, "frequency": captured_frequency, "activities": sorted(due),
+                "grain_candidates": candidates, "scope": scope,
+            }
         for activity in due:
             history[activity] = {"last_success": datetime.now(UTC).isoformat()}
-        return {"status": "completed", "source_id": source_id, "profile": profile, "row_count": row_count,
-                "results_persisted": False, **scope, "grain_candidates": candidates, "frequency_profile": frequency,
+        result = {"status": "completed", "source_id": source_id,
+                "profile": captured if plan.permits_persistence else profile, "row_count": row_count,
+                "results_persisted": False, **scope, "grain_candidates": candidates,
+                "frequency_profile": captured_frequency if plan.permits_persistence else frequency,
                 "activities": sorted(due)}
+        if plan.permits_persistence:
+            plan.evidence["pending_file_profiles"][(source_id, operation)]["result"] = result
+        else:
+            for activity in sorted(due):
+                plan.evidence.setdefault("profiling", []).append({
+                    "context_key": source_id, "table_id": source_id, "asset_type": "FILE",
+                    "activity": activity, "status": "passed", "results_persisted": False,
+                    "trigger": operation, "pipeline_run_id": plan.plan_id, "row_count": row_count, **scope})
+        return result
     finally:
         profile.unpersist()
+
+
+def _persist_file_profile(identity, *, operation, context):
+    plan = context["execution_plan"]
+    pending = plan.evidence.get("pending_file_profiles", {}).get((identity["source_id"], operation))
+    if pending is None:
+        return None
+    if not persistence_permitted(context):
+        raise RuntimeError("Dry Run cannot commit file profiles.")
+    role = "source" if operation == "read" else "target"
+    snapshot = str(uuid5(NAMESPACE_URL, f"fabricops-file-profile|{plan.workspace_id}|{plan.plan_id}|{identity['source_id']}|{role}"))
+    runtime = {**context, "_profile_scope": pending["scope"], "_profile_run_id": plan.plan_id,
+               "_profile_role": role, "table_name": identity["relative_path"]}
+    spark = pending["profile"].sparkSession
+    profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
+        active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["workspace_id"],
+        table_id=identity["source_id"], asset_type="FILE", profile_snapshot_id=snapshot)
+    if "standard" in pending["activities"]:
+        _replace_snapshot_rows(dataframe=profiled, table_name=PROFILED_TABLE, row_id="profile_id",
+            config=context["config"], active_workspace_id=plan.workspace_id, spark_session=spark)
+    if "frequency" in pending["activities"]:
+        frequency = (_frequency_metadata_dataframe(pending["frequency"], profiled_df=profiled, table_id=identity["source_id"], config=context["config"], active_workspace_id=plan.workspace_id,
+            runtime_context=runtime) if pending["frequency"] is not None else None)
+        if frequency is not None and "standard" not in pending["activities"]:
+            from pyspark.sql import functions as F
+            frequency = frequency.withColumn("profile_id", F.lit(None).cast("string"))
+        _replace_frequency_rows(frequency_df=frequency, profiled_df=profiled, config=context["config"],
+            active_workspace_id=plan.workspace_id, spark_session=spark)
+    pending["profile_snapshot_id"] = snapshot
+    pending["result"].update(results_persisted=True, profile_snapshot_id=snapshot)
+    for activity in pending["activities"]:
+        event = {"context_key": identity["source_id"], "table_id": identity["source_id"], "asset_type": "FILE",
+            "activity": activity, "status": "passed", "results_persisted": True,
+            "profile_snapshot_id": snapshot if activity != "grain" else None,
+            "trigger": operation, "pipeline_run_id": plan.plan_id,
+            "workspace_id": identity["workspace_id"], "row_count": pending["result"]["row_count"],
+            **pending["scope"]}
+        journal = plan.evidence.setdefault("profiling", [])
+        if event not in journal:
+            journal.append(event)
+    return pending
 
 
 def file_participant_source(identity):
@@ -6310,6 +6465,7 @@ class PipelineOperation:
                 if self.role == "target" and args.get("relative_path") is not None else
                 resolve_physical_table_identity(plan.runtime_context["config"], plan.workspace_id,
                     **{key: args[key] for key in ("store", "schema", "table_name")}))
+            self.physical_identity = physical_identity
             table_id = participant_id(physical_identity)
             identities = json.loads(plan.participants_json)
             identity = identities.get(table_id)
@@ -6405,7 +6561,7 @@ class PipelineOperation:
             self.record["rows_written"] = int(self.record["metrics"]["rows_committed"])
 
     def complete(self, stages, *, rows_read=None, rows_written=None, metrics=None):
-        """Keep safe stage outcomes and actual row metrics; never trigger Spark actions."""
+        """Capture outcomes and persist successful file participation before returning."""
         if metrics is not None:
             self.capture_metrics(metrics)
         if rows_read is not None:
@@ -6418,6 +6574,34 @@ class PipelineOperation:
         self.record["status"] = "failed" if any(
             stage.get("status") in {"blocked", "failed"} or stage.get("evaluation_status") == "not_fully_evaluated"
             for stage in stages) else "succeeded"
+        if (self.record["status"] == "succeeded" and self.plan.permits_persistence
+                and self.physical_identity.get("source_type") == "file"
+                and (self.role == "source" or self.record.get("publication_status") == "published")):
+            context = {**self.plan.runtime_context, "execution_plan": self.plan,
+                       "_spark_session": self.arguments.get("spark_session")}
+            try:
+                profile = _persist_file_profile(self.physical_identity,
+                    operation="read" if self.role == "source" else "write", context=context)
+                columns = (json.loads(self.record["observed_columns_json"]) if self.role == "source" and self.record.get("observed_columns_json") is not None
+                           else None if self.role == "source"
+                           else [{"column_name": field.name, "data_type": field.dataType.simpleString()}
+                                 for field in getattr(getattr(self.arguments.get("dataframe"), "schema", None), "fields", [])])
+                persist_file_catalogue(self.physical_identity, context=context, profile_summary=profile, columns=columns)
+                persist_lineage_participation(asset_type="FILE", table_id=self.physical_identity["source_id"],
+                    file_identity=self.physical_identity, pipeline_role=self.role, context=context)
+                if self.role == "target":
+                    for source in self.arguments.get("sources", ()):
+                        if source.get("table_id"):
+                            persist_lineage_participation(table_id=source["table_id"],
+                                pipeline_role="source", context=context)
+            except Exception as exc:
+                error = RuntimeError("File Catalogue or Lineage persistence failed after successful file IO.")
+                if self.role == "target":
+                    error.published = self.record.get("publication_status") == "published"
+                    error.write_metrics = dict(self.record.get("metrics") or {})
+                    error.failed_stage = "File metadata"
+                    error.resolved_path = self.record.get("output_path")
+                raise error from exc
 
     def __exit__(self, exc_type, exc, traceback):
         """Persist the outcome and release the plan even when storage fails."""
@@ -6711,6 +6895,7 @@ class PipelineSession:
             atexit.unregister(self.close)
             for frame in self.plan.evidence.pop("source_observation_caches", []):
                 frame.unpersist()
+            self.plan.evidence.pop("pending_file_profiles", None)
             self.closed = True
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
@@ -8022,6 +8207,7 @@ def _canonical_profiled_dataframe(
     workspace_id: str,
     table_id: str,
     profile_snapshot_id: str,
+    asset_type: str = "TABLE",
 ):
     """Map statistical profiler output to the normalized Profile schema."""
     from pyspark.sql import functions as F
@@ -8051,6 +8237,9 @@ def _canonical_profiled_dataframe(
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
     return base.select(
+        F.lit(asset_type).alias("asset_type"),
+        F.lit(runtime_context.get("_profile_run_id")).cast("string").alias("run_id"),
+        F.lit(runtime_context.get("_profile_role")).cast("string").alias("pipeline_role"),
         profile_id_udf(F.col("_column_name")).alias("profile_id"),
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
@@ -8094,11 +8283,13 @@ def _frequency_metadata_dataframe(
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select(
         "column_id", "column_name", "table_id", "table_name", "data_type",
-        "workspace_id", "profile_id", "profile_snapshot_id",
+        "workspace_id", "profile_id", "profile_snapshot_id", "asset_type", "run_id", "pipeline_role",
     )
-    joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
+    source = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME")))
+    joined = source.join(
         identities,
-        (F.col("_column_id") == identities.column_id) & (frequency_df.DATA_TYPE == identities.data_type),
+        (F.col("_column_id") == identities.column_id)
+        & (frequency_df.DATA_TYPE == identities.data_type),
         "inner",
     )
     audit_columns = _audit_literal_columns(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
@@ -8107,6 +8298,7 @@ def _frequency_metadata_dataframe(
         T.StringType(),
     )
     return joined.select(
+        identities.asset_type, identities.run_id, identities.pipeline_role,
         frequency_id_udf(identities.profile_id, F.col("FREQUENCY_RANK")).alias("frequency_id"),
         identities.profile_id.cast("string").alias("profile_id"),
         identities.profile_snapshot_id.cast("string").alias("profile_snapshot_id"),
@@ -8148,8 +8340,8 @@ def _replace_snapshot_rows(
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
+        .whenMatchedUpdate(set={name: f"source.{name}" for name in dataframe.columns})
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in dataframe.columns})
         .whenNotMatchedBySourceDelete(
             condition=f"target.profile_snapshot_id = '{snapshot_id}'"
         )
@@ -8287,6 +8479,7 @@ def _catalogue_dataframe_from_profiled(
         return profiled_df.sparkSession.createDataFrame([], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
     audit = {name: first[name] for name in CATALOGUE_COLUMNS if name.startswith("_")}
     common = {
+        "asset_type": "TABLE",
         "table_id": first["table_id"],
         "workspace_id": first["workspace_id"],
         "store_type": store_type,
@@ -8375,6 +8568,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_works
         )
         .whenMatchedUpdate(
             set={
+                "asset_type": "source.asset_type",
                 "store_type": "source.store_type",
                 "layer": "source.layer",
                 "schema_name": "source.schema_name",

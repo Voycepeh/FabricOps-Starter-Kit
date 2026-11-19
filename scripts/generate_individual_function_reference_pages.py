@@ -82,12 +82,12 @@ METADATA_FIELD_DESCRIPTIONS = {
     "effective_to": "Date when the record stops being effective.",
     "is_active": "Whether the row is currently active.",
     "table_id": (
-        "Stable governed data asset key that identifies a table across workspace, dataset, "
+        "Common operational asset key for TABLE or FILE assets across workspace, dataset, "
         "and table context."
     ),
     "column_id": (
         "Stable governed data asset key that identifies a column across workspace, dataset, "
-        "table, and column context."
+        "asset, and column context."
     ),
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
     "workspace_id": "Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.",
@@ -190,7 +190,12 @@ METADATA_FIELD_DESCRIPTIONS = {
     "bypass_reason": "Reason recorded when governance review was bypassed.",
     "superseded_by_rule_key": "Rule key that supersedes the current guardrail row.",
     "supersedes_rule_id": "Rule identifier superseded by the current row.",
-    "source_id": "Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.",
+    "asset_type": "Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.",
+    "pipeline_role": "Participation role: source for a Read or target for a Write.",
+    "asset_name": "Human-readable asset reference captured at participation time; files retain store/Files/relative_path.",
+    "first_observed_at": "First successful observation of a file selector; preserved on subsequent registration.",
+    "last_observed_at": "Most recent successful observation of a file selector.",
+    "source_id": "Stable file identity retained by released source descriptors and historical Run operations; operational tables store this same value in table_id.",
     "guardrail_result_id": "Stable identifier for the aggregate Guardrail result row.",
     "execution_type": "Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.",
     "result_id": "Stable identifier for the runtime result payload.",

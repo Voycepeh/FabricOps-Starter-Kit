@@ -15,7 +15,7 @@
 | Order History | Gold Warehouse · `demo.order_history` |
 
 !!! note "First run: Observe for Governance"
-    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists table source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Orders CSV profiles remain session-only; select its path in the existing Data Contract editor to observe its schema. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
+    Run the complete initial Ungoverned run, ending with `pipeline_result = finalize_pipeline(pipeline)`. Read and Write calculate due profiles automatically; a successful Ungoverned execution publishes the target and persists table source and target observations in workspace-scoped Catalogue/profile metadata for Data Contract authoring. Orders CSV profiles persist with their Source ID; select its path in the existing Data Contract editor to observe its schema and inspect saved profiles. It does not grant Governance approval. Governed execution continues to profile persisted targets after successful publication. No manual profiling calls or duplicated observation coordinates are needed.
 
     Author and freeze global Contracts in `01_governance`, validate them in Dry Run where useful, then activate exact versions for that workspace. An Ungoverned run cannot activate itself, and it cannot write a target that is already governed.
 
@@ -160,7 +160,7 @@ writes["curated_orders_csv"] = orchestrate_write(
 )
 ```
 
-Overwrite automatically attempts one named CSV. Exceeding the internal 1-million-row or 100 MB encoded-byte threshold writes all rows as a distributed dataset folder at the same path. The result reports the actual layout; no public layout or threshold parameters are needed. File outputs retain the supplied business columns without table audit columns or row hashes. File profiling stays in memory. Finalize shows the configured Store, `Files/demo/curated_orders.csv`, format, layout, publication status, and available output file/byte counts. These filesystem counts describe the output; they do not establish rows committed by this attempt.
+Overwrite automatically attempts one named CSV. Exceeding the internal 1-million-row or 100 MB encoded-byte threshold writes all rows as a distributed dataset folder at the same path. The result reports the actual layout; no public layout or threshold parameters are needed. File outputs retain the supplied business columns without table audit columns or row hashes. File profiling persists typed file snapshots with common Table/Column IDs after successful publication; Dry Run stays in memory. Finalize shows the configured Store, `Files/demo/curated_orders.csv`, format, layout, publication status, and available output file/byte counts. These filesystem counts describe the output; they do not establish rows committed by this attempt.
 
 ![Curated Orders Write output](../assets/2a/Write_Block_Output.png)
 
@@ -232,10 +232,10 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | --- | --- |
 | `METADATA_PIPELINE_REGISTRY` | No rows from this Ungoverned demo. The separate promotion workflow retains immutable per-workspace versions and Governed notebook snapshots; neither Ungoverned nor Dry Run automatically registers a Pipeline. |
 | `METADATA_PIPELINE_RUN` | All six operations, including file locations, file Write options, publication status and available filesystem metrics, plus the finalized execution outcome and run identity. Persistent executions record the outcome at `finalize_pipeline(pipeline)`. |
-| `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets, plus applicable target processing and profile metadata. |
-| `METADATA_DATA_PROFILED` | Profile snapshots for the two table sources and two table targets when profiling completes; file profiles remain session-only. |
+| `METADATA_DATA_CATALOGUE` | TABLE and FILE asset identities, table column identities, file selector locations and observation timestamps, plus applicable table processing and profile metadata. |
+| `METADATA_DATA_PROFILED` | Profile snapshots for the two table sources and two table targets when profiling completes; file profiles persist by Source ID with the common Table ID and deterministic Column IDs. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Table source and target participation recorded for this notebook pipeline; file participation is retained in Run operations. |
+| `METADATA_DATA_LINEAGE` | TABLE and FILE source and target participation recorded for this notebook pipeline and retained in Run operations. |
 | `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
@@ -249,3 +249,13 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 **Continue the main Guided Demo:** [Step 3. Author and freeze the Data Contract](03-author-and-freeze-data-contract.md)
 
 Run `pipeline_result = finalize_pipeline(pipeline)` after the last Write. Dry Run returns a session-only summary; Ungoverned and Governed record the actual execution outcome.
+
+
+### Inspect file metadata
+
+After an Ungoverned run, the orders CSV selector is a `FILE` row in
+`METADATA_DATA_CATALOGUE` and a source in `METADATA_DATA_LINEAGE`. Both use its
+stable Source ID; both reuse that value as the common table_id. Enabled file profiling and frequency
+results persist with that same identity as table_id and stable Column IDs. Dry Run keeps them
+in memory. See [file metadata and export examples](../engineering.md#how-is-file-metadata-persisted)
+for all metadata owners, schema upgrades, and a table-to-file Write.

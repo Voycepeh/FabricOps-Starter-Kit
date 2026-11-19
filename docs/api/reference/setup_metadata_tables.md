@@ -125,6 +125,11 @@ Compatible missing columns are added automatically. Only columns explicitly
 listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
 value is null or equals its declared canonical replacement. Other extension
 columns are preserved where the table's identity contract permits them.
+Operational file source_id values are copied into the common table_id and
+validated before source_id is retired. Conflicting identities block migration.
+File profile columns gain deterministic Column IDs without changing retained
+profile or lineage IDs. Stop pipelines for this schema migration; recovery
+restores the returned pre-upgrade Delta version together with the prior code.
 Unproven populated retirements fail with data preserved. Cleanup and supported
 JSON conversions commit atomically, with the pre-upgrade Delta version
 returned for recovery before VACUUM or further writes. Setup never vacuums.
@@ -157,9 +162,9 @@ read as canonical authority or automatically deleted.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:433`
+`fabricops_kit/config/setup_metadata_tables.py:456`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L433-L731">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L456-L759">View on GitHub</a>
 </div>
 
 
@@ -175,7 +180,7 @@ read as canonical authority or automatically deleted.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 49 |
+| Live-critical dependencies | 51 |
 
 ### Release history
 
@@ -220,10 +225,12 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
 <li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
