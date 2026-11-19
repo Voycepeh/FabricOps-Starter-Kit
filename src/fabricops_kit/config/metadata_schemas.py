@@ -19,7 +19,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_PROCESSING_STATE",
 ]
 
 # Explicit column retirements, never inferred from a schema difference. Values
@@ -94,7 +93,7 @@ RETIRED_PREVIEW_METADATA_TABLES = {
     },
     "METADATA_SOURCE_OBSERVATION": {
         "retired_in": "0.3.0",
-        "guidance": "METADATA_PROCESSING_STATE stores current source observations, checkpoints and publication receipts.",
+        "guidance": "Processing State stores current source observations, checkpoints and publication receipts.",
     },
 }
 
@@ -544,41 +543,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 *audit,
             ],
         ),
-        "METADATA_PROCESSING_STATE": build_metadata_schema(
-            "METADATA_PROCESSING_STATE",
-            [
-                ("record_id", "string", False),
-                ("record_type", "string", False),
-                ("status", "string", False),
-                ("observation_id", "string"),
-                ("run_id", "string"),
-                ("pipeline_id", "string"),
-                ("source_table_id", "string"),
-                ("source_table_name", "string"),
-                ("target_table_id", "string"),
-                ("target_table_name", "string"),
-                ("workspace_id", "string", False),
-                ("observed_at", "timestamp"),
-                ("accepted_at", "timestamp"),
-                ("partition_column", "string"),
-                ("change_column", "string"),
-                ("watermark_type", "string"),
-                ("partition_value", "string"),
-                ("row_count", "long"),
-                ("min_change_value", "string"),
-                ("max_change_value", "string"),
-                ("content_fingerprint", "string"),
-                ("is_present", "boolean"),
-                ("publication_id", "string"),
-                ("publication_batch_id", "string"),
-                ("publication_activity_id", "string"),
-                ("publication_at", "timestamp"),
-                ("publication_input_rows", "long"),
-                ("publication_strategy", "string"),
-                ("snapshot_payload_json", "string"),
-                *audit,
-            ],
-        ),
     }
 
     schemas = {name: schemas[name] for name in CANONICAL_METADATA_TABLES}
@@ -694,6 +658,11 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
         schema = None
     if schema is None:
         return dict(row)
+    return coerce_schema_row_types(schema, row, table_name=table_name)
+
+
+def coerce_schema_row_types(schema: Any, row: dict[str, Any], *, table_name: str = "") -> dict[str, Any]:
+    """Coerce row values using a Spark-like schema."""
     coerced = dict(row)
     for field in getattr(schema, "fields", []):
         if field.name in coerced:

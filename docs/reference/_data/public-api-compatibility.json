@@ -4533,6 +4533,18 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
           "reasons": [
             "Public API added."
@@ -5003,13 +5015,13 @@
         }
       ],
       "summary": {
-        "added": 19,
+        "added": 20,
         "modified": 10,
-        "nonbreaking": 19,
+        "nonbreaking": 20,
         "potentially_breaking": 10,
         "removed": 16,
         "review_required": 16,
-        "total": 45
+        "total": 46
       },
       "target": "working-tree"
     },
@@ -8787,6 +8799,18 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.data_agent.create_data_agent.create_data_agent",
           "reasons": [
             "Public API added."
@@ -9209,13 +9233,13 @@
         }
       ],
       "summary": {
-        "added": 16,
+        "added": 17,
         "modified": 11,
-        "nonbreaking": 16,
+        "nonbreaking": 17,
         "potentially_breaking": 16,
         "removed": 15,
         "review_required": 10,
-        "total": 42
+        "total": 43
       },
       "target": "working-tree"
     },
@@ -12933,6 +12957,18 @@
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -13375,13 +13411,13 @@
         }
       ],
       "summary": {
-        "added": 8,
+        "added": 9,
         "modified": 18,
-        "nonbreaking": 8,
+        "nonbreaking": 9,
         "potentially_breaking": 23,
         "removed": 13,
         "review_required": 8,
-        "total": 39
+        "total": 40
       },
       "target": "working-tree"
     },
@@ -15395,6 +15431,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
@@ -15602,13 +15650,13 @@
         }
       ],
       "summary": {
-        "added": 6,
+        "added": 7,
         "modified": 6,
-        "nonbreaking": 7,
+        "nonbreaking": 8,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 3,
-        "total": 16
+        "total": 17
       },
       "target": "working-tree"
     },
@@ -17622,6 +17670,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
@@ -17829,13 +17889,13 @@
         }
       ],
       "summary": {
-        "added": 6,
+        "added": 7,
         "modified": 6,
-        "nonbreaking": 7,
+        "nonbreaking": 8,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 3,
-        "total": 16
+        "total": 17
       },
       "target": "working-tree"
     },
@@ -19801,6 +19861,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
@@ -19968,13 +20040,13 @@
         }
       ],
       "summary": {
-        "added": 5,
+        "added": 6,
         "modified": 4,
-        "nonbreaking": 5,
+        "nonbreaking": 6,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 2,
-        "total": 13
+        "total": 14
       },
       "target": "working-tree"
     },
@@ -21940,6 +22012,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
@@ -22107,13 +22191,13 @@
         }
       ],
       "summary": {
-        "added": 5,
+        "added": 6,
         "modified": 4,
-        "nonbreaking": 5,
+        "nonbreaking": 6,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 2,
-        "total": 13
+        "total": 14
       },
       "target": "working-tree"
     },
@@ -24775,15 +24859,28 @@
     },
     {
       "baseline": "v0.5.0",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        }
+      ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -26927,6 +27024,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
@@ -27032,13 +27141,13 @@
         }
       ],
       "summary": {
-        "added": 4,
+        "added": 5,
         "modified": 3,
-        "nonbreaking": 5,
+        "nonbreaking": 6,
         "potentially_breaking": 2,
         "removed": 2,
         "review_required": 2,
-        "total": 9
+        "total": 10
       },
       "target": "working-tree"
     },
@@ -27139,6 +27248,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -27619,9 +27740,9 @@
         "modified": 10,
         "nonbreaking": 16,
         "potentially_breaking": 21,
-        "removed": 19,
-        "review_required": 8,
-        "total": 45
+        "removed": 20,
+        "review_required": 9,
+        "total": 46
       },
       "target": "v0.1.0"
     },
@@ -27729,6 +27850,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -28161,9 +28294,9 @@
         "modified": 11,
         "nonbreaking": 15,
         "potentially_breaking": 20,
-        "removed": 16,
-        "review_required": 7,
-        "total": 42
+        "removed": 17,
+        "review_required": 8,
+        "total": 43
       },
       "target": "v0.2.0"
     },
@@ -28251,6 +28384,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -28699,9 +28844,9 @@
         "modified": 18,
         "nonbreaking": 14,
         "potentially_breaking": 24,
-        "removed": 8,
-        "review_required": 1,
-        "total": 39
+        "removed": 9,
+        "review_required": 2,
+        "total": 40
       },
       "target": "v0.2.5"
     },
@@ -28722,6 +28867,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -28934,9 +29091,9 @@
         "modified": 6,
         "nonbreaking": 4,
         "potentially_breaking": 9,
-        "removed": 6,
-        "review_required": 3,
-        "total": 16
+        "removed": 7,
+        "review_required": 4,
+        "total": 17
       },
       "target": "v0.3.0"
     },
@@ -28957,6 +29114,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -29169,9 +29338,9 @@
         "modified": 6,
         "nonbreaking": 4,
         "potentially_breaking": 9,
-        "removed": 6,
-        "review_required": 3,
-        "total": 16
+        "removed": 7,
+        "review_required": 4,
+        "total": 17
       },
       "target": "v0.3.1"
     },
@@ -29192,6 +29361,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -29364,9 +29545,9 @@
         "modified": 4,
         "nonbreaking": 4,
         "potentially_breaking": 8,
-        "removed": 5,
-        "review_required": 1,
-        "total": 13
+        "removed": 6,
+        "review_required": 2,
+        "total": 14
       },
       "target": "v0.4.0"
     },
@@ -29387,6 +29568,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -29559,23 +29752,36 @@
         "modified": 4,
         "nonbreaking": 4,
         "potentially_breaking": 8,
-        "removed": 5,
-        "review_required": 1,
-        "total": 13
+        "removed": 6,
+        "review_required": 2,
+        "total": 14
       },
       "target": "v0.4.1"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        }
+      ],
       "summary": {
         "added": 0,
         "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "v0.5.0"
     },
@@ -29593,6 +29799,18 @@
           ],
           "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -29706,9 +29924,9 @@
         "modified": 3,
         "nonbreaking": 2,
         "potentially_breaking": 7,
-        "removed": 4,
-        "review_required": 0,
-        "total": 9
+        "removed": 5,
+        "review_required": 1,
+        "total": 10
       },
       "target": "main"
     }
@@ -45513,6 +45731,34 @@
           "lifecycle": "Preview",
           "parameters": [
             {
+              "annotation": "FrameworkConfig | dict[str, Any]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "config",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "workspace_id",
+              "required": true
+            }
+          ],
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "return_annotation": "dict[str, Any]",
+          "signature": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/config/setup_processing_state.py",
+          "source_qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
               "annotation": "str",
               "default": null,
               "has_default": false,
@@ -46906,7 +47152,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:0cff91eb84ebf6b2d20303c435bb75870e82e85a22c33bb5a7b92f45a9562a8c",
+      "source_digest": "sha256:4bd3014fc0ab471af8167a39aeed1f01a83316291248d36dfde73feab73f6e26",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

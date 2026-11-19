@@ -17,19 +17,17 @@ def snapshots(spark_session, monkeypatch, tmp_path):
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
     spark_session.conf.set("spark.databricks.delta.snapshotPartitions", "2")
-    schema = shared.metadata_table_schema_registry()[shared._PROCESSING_STATE_TABLE]
-    path = str(tmp_path / 'configured-metadata' / 'engineering' / 'state')
+    schema = shared.processing_state_schema()
+    path = str(tmp_path / 'configured-metadata' / 'Files' / shared.PROCESSING_STATE_PATH)
     spark_session.createDataFrame([], schema).write.format('delta').option('delta.isolationLevel', 'Serializable').save(path)
     sources = {'orders': spark_session.createDataFrame([(1, 'a'), (2, 'b'), (3, 'c')], 'id int, value string')}
-    def read(table, **kwargs):
-        return spark_session.read.format('delta').load(path) if table == shared._PROCESSING_STATE_TABLE else sources[table]
-    def write(frame, table, **kwargs):
-        assert table == shared._PROCESSING_STATE_TABLE and kwargs['store'] == 'Metadata' and kwargs['schema'] == 'engineering'
-        frame.write.format('delta').mode(kwargs['mode']).options(**(kwargs.get('options') or {})).save(path)
-    monkeypatch.setattr(shared, 'read_lakehouse_table', read)
+    def read_state(**kwargs):
+        return spark_session.read.format('delta').load(path)
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kw: sources[table])
+    monkeypatch.setattr(shared, 'read_processing_state', read_state)
+    monkeypatch.setattr(shared, 'processing_state_path', lambda context: path)
     warehouse = Mock(side_effect=lambda schema, table, **kw: sources[table])
     monkeypatch.setattr(__import__('fabricops_kit.io', fromlist=['read_warehouse_table']), 'read_warehouse_table', warehouse)
-    monkeypatch.setattr(shared, 'write_lakehouse_table', write)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, None, None, path))
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
@@ -52,7 +50,7 @@ def snapshots(spark_session, monkeypatch, tmp_path):
                 'operations': {}, 'source_drift_decision': {'can_continue': True},
                 'final_result': {'status': 'ungoverned_completed', 'boundary_completed': True}})
         return plan, {**runtime, 'execution_plan': plan}, identity
-    return SimpleNamespace(run=run, state=lambda: read(shared._PROCESSING_STATE_TABLE), sources=sources,
+    return SimpleNamespace(run=run, state=read_state, sources=sources,
         warehouse=warehouse, spark=spark_session, path=path, diagnostics=diagnostics)
 
 

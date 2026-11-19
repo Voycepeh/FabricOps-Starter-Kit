@@ -138,7 +138,7 @@ Use `widget_activate_data_contract(TABLE_ID, CONTRACT_ID, VERSION, workspace_id=
 
 Review the complete release and explicitly approve it once. The backend independently rechecks every selected candidate, complete operation/rule results, processing configuration, contract payloads and Agreement. It checks the current authority token again at commit. Failed validation, missing tests, competing writers, inconsistent contracts, stale review or a failed commit expose no partial release. Refresh and review again after a conflict.
 
-`METADATA_PIPELINE_REGISTRY` retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity. `METADATA_DATA_CONTRACT_ACTIVATION` independently selects frozen Contracts in each physical table workspace. The canonical inventory contains 14 tables, including the Governance-owned `METADATA_PIPELINE_ACTIVATION` decision history. `setup_metadata_tables()` creates missing tables, evolves compatible schemas automatically and preserves existing metadata. Incompatible schemas fail explicitly without deleting data.
+`METADATA_PIPELINE_REGISTRY` retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity. `METADATA_DATA_CONTRACT_ACTIVATION` independently selects frozen Contracts in each physical table workspace. The canonical inventory contains 13 tables, including the Governance-owned `METADATA_PIPELINE_ACTIVATION` decision history. `setup_metadata_tables()` creates missing tables, evolves compatible schemas automatically and preserves existing metadata. Incompatible schemas fail explicitly without deleting data.
 
 Every Read and Write checks its resolved physical destination against the plan's frozen binding. Ungoverned publication rejects a protected Table ID or physical alias. Governed publication takes an exclusive physical target claim; Contract Activation uses the same claim before changing protection. All Metadata targets resolve to the same central Lakehouse. `METADATA_DATA_CONTRACT.workspace_id` records authoring provenance, not version identity.
 
@@ -219,7 +219,7 @@ Profiling history without a confirmed physical binding and independent activity 
 
 ### Metadata and runtime boundaries
 
-`setup_metadata_tables()` creates missing tables and evolves compatible schemas automatically. Catalogue, Run history and Processing State are preserved; repeated setup does not rewrite compliant tables. Frozen Contract definitions are global and immutable. Physical table activation and per-workspace Pipeline Promotion are independent reviewed decisions. Notebook publication, business-table transactions, Guardrail diagnostics and Run records retain separate failure boundaries. See the [final architecture](../../docs/maintainer/governed-pipeline-promotion.md) for the concurrency and integrity invariants.
+`setup_metadata_tables()` creates missing tables and evolves compatible schemas automatically. Repeated setup preserves Catalogue and Run history. Run the separate Processing State setup cell once per shared Lakehouse. See the [setup guide](../../docs/maintainer/processing-state.md). Frozen Contract definitions are global and immutable. Physical table activation and per-workspace Pipeline Promotion are independent reviewed decisions. Notebook publication, business-table transactions, Guardrail diagnostics and Run records retain separate failure boundaries. See the [final architecture](../../docs/maintainer/governed-pipeline-promotion.md) for the concurrency and integrity invariants.
 
 ### Permanent pipeline identity
 

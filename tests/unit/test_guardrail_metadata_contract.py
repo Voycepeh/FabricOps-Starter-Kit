@@ -319,7 +319,9 @@ def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
 
 def test_source_observation_uses_standard_audit_timestamp_only() -> None:
     """Capture and acceptance retain distinct lifecycle timestamps."""
-    assert _field_names("METADATA_PROCESSING_STATE") == _PROCESSING_STATE_COLUMNS
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    assert processing_state_schema().fieldNames() == _PROCESSING_STATE_COLUMNS
     assert "observed_at" in _PROCESSING_STATE_COLUMNS
     assert "_committed_at" in _PROCESSING_STATE_COLUMNS
 

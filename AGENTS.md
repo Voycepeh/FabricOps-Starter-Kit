@@ -27,7 +27,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_PIPELINE_RUN` stores one authoritative execution with validated JSON STRING operations, profiling and failures. New version 3 records include Pipeline Promotion provenance and execution identity. Preserve released Run content/hash semantics and exact Contract references per operation.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
-  - `METADATA_PROCESSING_STATE` stores typed Processing State: source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before metadata progress is accepted.
+- Processing State uses a private Delta table at `Files/fabricops/misc/processing_state` in the configured shared Lakehouse. It stores typed source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before progress is accepted.
 
 ## Canonical terminology and glossary
 
@@ -244,7 +244,7 @@ Validation builds do not make generated files on `main` current unless those fil
 - Do not maintain duplicate manual callable lists.
 - Public callable pages are sourced from `src/fabricops_kit/` docstrings and source metadata.
 - Do not manually edit generated reference pages as source of truth.
-- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
+- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source. The pipeline owns the separate Processing State schema.
 - `Managed by` entries should identify exact source functions when traceable.
 - Use `.agents/skills/fabricops-docs-maintenance/SKILL.md` for documentation ownership, readability, Guided Demo, Featured Solutions, and diagram procedure.
 - Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Only `00_env_config.ipynb` and `02_pipeline.ipynb` are currently part of the release snapshot contract.

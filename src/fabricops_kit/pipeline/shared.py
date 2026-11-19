@@ -258,13 +258,20 @@ from fabricops_kit.config.shared import (
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
+    read_delta_path,
+    resolve_configured_file_path,
     resolve_configured_lakehouse_table,
+    write_delta_path,
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_column_id, build_table_id, get_store
 from ..config.metadata_schemas import (
+    audit_schema_fields,
+    build_metadata_schema,
+    coerce_schema_row_types,
+    metadata_schema_type_name,
     coerce_metadata_row_types,
     encode_metadata_row,
     decode_metadata_row,
@@ -326,7 +333,7 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
-_PROCESSING_STATE_TABLE = "METADATA_PROCESSING_STATE"
+PROCESSING_STATE_PATH = "fabricops/misc/processing_state"
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
@@ -1228,14 +1235,8 @@ def source_snapshot_context(identity, *, context):
 def _source_snapshot_state(context):
     """Keep source hash rows distributed and history independent of Pipeline ID."""
     from pyspark.sql import functions as F
-    try:
-        return read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context).where(
-                F.col("workspace_id") == context["execution_plan"].workspace_id)
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise
-        return get_spark_session(context=context).createDataFrame([], metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+    return read_processing_state(context=context).where(F.col("workspace_id") == context["execution_plan"].workspace_id)
+
 
 
 def _source_snapshot_keys(identity, context):
@@ -1351,17 +1352,16 @@ def compare_source_snapshot_evidence(current, previous, *, keyed):
 def _persist_source_snapshot(evidence, header, *, context):
     """Append immutable distributed row evidence, then its completeness manifest."""
     from pyspark.sql import functions as F
-    schema = metadata_table_schema_registry()[_PROCESSING_STATE_TABLE]
+    schema = processing_state_schema()
     row_fields = {**header, "record_type": "source_row_evidence", "snapshot_payload_json": None}
     identity = F.sha2(F.concat_ws(":", F.lit(header["observation_id"]), F.col("partition_value"), F.col("content_fingerprint")), 256)
     frame = evidence.select(*[
         (identity if field.name == "record_id" else F.col(field.name) if field.name in evidence.columns else
          F.lit(row_fields.get(field.name))).cast(field.dataType).alias(field.name) for field in schema])
-    write_lakehouse_table(frame, _PROCESSING_STATE_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context, mode="append", options={"mergeSchema": "true"})
-    write_lakehouse_table(get_spark_session(context=context).createDataFrame([header], schema),
-        _PROCESSING_STATE_TABLE, store="Metadata", schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE),
-        context=context, mode="append")
+    path = processing_state_path(context)
+    write_delta_path(frame, path, mode="append")
+    write_delta_path(get_spark_session(context=context).createDataFrame([header], schema), path, mode="append")
+
 
 
 def _validated_source_snapshot(state, observation_id, *, context_key):
@@ -1644,12 +1644,11 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
         records.extend([head, {**head, "record_id": _processing_state_id(head["record_id"], header["observation_id"], "acceptance"),
             "record_type": "source_snapshot_acceptance"}])
     spark = get_spark_session(spark_session, context=context)
-    frame = spark.createDataFrame(records, metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
-    _, _, _, path = resolve_configured_lakehouse_table("Metadata", _PROCESSING_STATE_TABLE,
-        metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
+    frame = spark.createDataFrame(records, processing_state_schema())
+    path = processing_state_path(context)
     target = DeltaTable.forPath(spark, path)
     if target.detail().select("properties").first()["properties"].get("delta.isolationLevel") != "Serializable":
-        raise RuntimeError("Source baseline acceptance requires Serializable Processing State; run metadata setup before enabling Source Drift.")
+        raise RuntimeError("Source baseline acceptance requires Serializable Processing State; run setup_processing_state() before enabling Source Drift.")
     parent = "get_json_object(source.snapshot_payload_json, '$.parent_observation_id')"
     same = f"target.observation_id <=> {parent}"
     values = {name: f"source.`{name}`" for name in frame.columns}
@@ -1744,7 +1743,6 @@ class PublicationBatch:
                             "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows,
                             "run_id": source_observation_run_id(self.context),
                             "strategy": self.processing["load_strategy"]}
-            history_rows = []
             execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
             journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
             recoveries = journal.setdefault("publication_recoveries", {})
@@ -1752,33 +1750,25 @@ class PublicationBatch:
             alias = recoveries.get(alias_key)
             if alias and _accepts_publication_receipt(self, alias):
                 self.receipt, self.already_applied = alias, True
-            try:
-                history = read_lakehouse_table(
-                    _PROCESSING_STATE_TABLE, store="Metadata",
-                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE),
-                    context=self.context,
-                )
-                receipts = []
-                history_rows = _processing_state_rows(history)
-                for row in history_rows:
-                    if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
-                            or row.get("target_table_id") != self.identity["table_id"]):
-                        continue
-                    receipt = _publication_receipt(row, history_rows)
-                    if (receipt.get("batch_id") == batch_id or (
-                            self.execution_scoped
-                            and row.get("status") == "staged"
-                            and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
-                        )) and receipt not in receipts:
-                        receipts.append(receipt)
-                for receipt in receipts:
-                    if _accepts_publication_receipt(self, receipt):
-                        self.receipt = receipt
-                        self.already_applied = True
-                        break
-            except Exception as exc:
-                if not is_table_not_found_error(exc):
-                    raise
+            history = read_processing_state(context=self.context)
+            receipts = []
+            history_rows = _processing_state_rows(history)
+            for row in history_rows:
+                if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
+                        or row.get("target_table_id") != self.identity["table_id"]):
+                    continue
+                receipt = _publication_receipt(row, history_rows)
+                if (receipt.get("batch_id") == batch_id or (
+                        self.execution_scoped
+                        and row.get("status") == "staged"
+                        and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
+                    )) and receipt not in receipts:
+                    receipts.append(receipt)
+            for receipt in receipts:
+                if _accepts_publication_receipt(self, receipt):
+                    self.receipt = receipt
+                    self.already_applied = True
+                    break
             if not self.already_applied:
                 receipt = _find_applied_publication(
                     self.identity, batch_id, context=self.context, spark_session=self.dataframe.sparkSession,
@@ -1831,10 +1821,7 @@ class PublicationBatch:
             if receipt:
                 self.receipt = receipt
                 self.already_applied = True
-                history = read_lakehouse_table(
-                    _PROCESSING_STATE_TABLE, store="Metadata",
-                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE), context=self.context,
-                )
+                history = read_processing_state(context=self.context)
                 self._freeze_publication_snapshot(_processing_state_rows(history))
                 return
             raise RuntimeError(
@@ -1980,13 +1967,80 @@ def _find_applied_publication(identity, batch_id, *, context, spark_session):
     return None
 
 
+def processing_state_schema():
+    """Build the physical schema shared by runtime and operator setup."""
+    return build_metadata_schema(
+        "Processing State",
+        [
+            ("record_id", "string", False),
+            ("record_type", "string", False),
+            ("status", "string", False),
+            ("observation_id", "string"),
+            ("run_id", "string"),
+            ("pipeline_id", "string"),
+            ("source_table_id", "string"),
+            ("source_table_name", "string"),
+            ("target_table_id", "string"),
+            ("target_table_name", "string"),
+            ("workspace_id", "string", False),
+            ("observed_at", "timestamp"),
+            ("accepted_at", "timestamp"),
+            ("partition_column", "string"),
+            ("change_column", "string"),
+            ("watermark_type", "string"),
+            ("partition_value", "string"),
+            ("row_count", "long"),
+            ("min_change_value", "string"),
+            ("max_change_value", "string"),
+            ("content_fingerprint", "string"),
+            ("is_present", "boolean"),
+            ("publication_id", "string"),
+            ("publication_batch_id", "string"),
+            ("publication_activity_id", "string"),
+            ("publication_at", "timestamp"),
+            ("publication_input_rows", "long"),
+            ("publication_strategy", "string"),
+            ("snapshot_payload_json", "string"),
+            *audit_schema_fields(),
+        ],
+    )
+
+
+def validate_processing_state_schema(schema):
+    """Check exact field names and types independently of Delta nullability."""
+    def fields_by_type(value):
+        return {field.name: metadata_schema_type_name(field.dataType) for field in value.fields}
+
+    if fields_by_type(schema) != fields_by_type(processing_state_schema()):
+        raise RuntimeError(
+            "Incompatible Processing State schema. Existing checkpoints and publication receipts are preserved."
+        )
+
+
+def processing_state_path(context):
+    """Resolve the private Delta location in the configured shared Lakehouse."""
+    return resolve_configured_file_path("Metadata", PROCESSING_STATE_PATH, context=context)[2]
+
+
+def read_processing_state(*, context):
+    """Read Processing State, surfacing missing or inaccessible storage."""
+    path = processing_state_path(context)
+    try:
+        return read_delta_path(get_spark_session(context=context), path)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Unable to read Processing State. Check access to Files/{PROCESSING_STATE_PATH} "
+            f"in the configured Lakehouse and run setup_processing_state() if needed. {exc}"
+        ) from None
+
+
 def _processing_state_rows(history):
     """Reject unsupported Preview layouts before interpreting any persisted progress."""
-    required = set(metadata_table_schema_registry()[_PROCESSING_STATE_TABLE].fieldNames()) - {"snapshot_payload_json"}
+    required = set(processing_state_schema().fieldNames()) - {"snapshot_payload_json"}
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
     ):
-        raise RuntimeError("Incompatible METADATA_PROCESSING_STATE schema; existing progress is preserved and cannot be inferred safely.")
+        raise RuntimeError("Incompatible Processing State schema; existing progress is preserved and cannot be inferred safely.")
     snapshot_types = {"source_snapshot", "source_row_evidence", "source_drift_baseline", "source_snapshot_acceptance"}
     if hasattr(history, "where"):
         from pyspark.sql import functions as F
@@ -1997,7 +2051,7 @@ def _processing_state_rows(history):
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
-            raise RuntimeError("Incompatible or invalid METADATA_PROCESSING_STATE record; existing progress is preserved and cannot be inferred safely.")
+            raise RuntimeError("Incompatible or invalid Processing State record; existing progress is preserved and cannot be inferred safely.")
     return rows
 
 
@@ -2091,9 +2145,9 @@ def _physical_target_has_publication(
 
 
 def _merge_source_observation_records(
-    records: list[dict[str, Any]], *, config: Any, context: Mapping[str, Any]
+    records: list[dict[str, Any]], *, context: Mapping[str, Any]
 ) -> None:
-    """Idempotently merge typed Processing State records at the configured metadata target."""
+    """Idempotently merge typed Processing State records at the configured Lakehouse Files path."""
     if not records or not persistence_permitted(context):
         return
     try:
@@ -2103,11 +2157,8 @@ def _merge_source_observation_records(
             "Delta Lake merge support is required for idempotent Source Observation commits."
         ) from exc
     spark = get_spark_session(context=context)
-    frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata", _PROCESSING_STATE_TABLE,
-        metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE), context=context,
-    )
+    frame = spark.createDataFrame(records, schema=processing_state_schema())
+    path = processing_state_path(context)
     target = DeltaTable.forPath(spark, path)
     _processing_state_rows(target.toDF().limit(0))
     _processing_state_rows(records)
@@ -2149,7 +2200,7 @@ def _recover_completed_source_observations(
     if recovered and not persistence_permitted(context):
         context["execution_plan"].simulations.append({"check": "Source Observation recovery", "outcome": "simulated",
                                                     "source_table_id": source_table_id, "target_table_id": target_table_id})
-    _merge_source_observation_records(recovered, config=config, context=context)
+    _merge_source_observation_records(recovered, context=context)
     if recovered:
         context.setdefault("_fabricops_source_observation_recovery", []).append({
             "source_table_id": source_table_id, "target_table_id": target_table_id,
@@ -2195,33 +2246,21 @@ def resolve_incremental_source_scope(
     current = observation_rows(observation)
     if not current:
         raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
-    try:
-        history = read_lakehouse_table(
-            _PROCESSING_STATE_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
-            context=context,
-        )
-        history = _recover_completed_source_observations(
-            history,
-            config=config,
-            active_workspace_id=active_workspace_id,
-            context=context,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-        )
-        previous = _latest_source_target_observation(
-            history,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-            workspace_id=active_workspace_id,
-        )
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise RuntimeError(
-                f"Unable to load Source Observation history for {source_table_id!r}: {exc}"
-            ) from exc
-        previous = []
+    history = read_processing_state(context=context)
+    history = _recover_completed_source_observations(
+        history,
+        config=config,
+        active_workspace_id=active_workspace_id,
+        context=context,
+        source_table_id=source_table_id,
+        target_table_id=target_table_id,
+    )
+    previous = _latest_source_target_observation(
+        history,
+        source_table_id=source_table_id,
+        target_table_id=target_table_id,
+        workspace_id=active_workspace_id,
+    )
 
     first = current[0]
     partition_column = str(first.get("partition_column") or "").strip()
@@ -2391,7 +2430,7 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
                     "source_table_id": source_id, "source_table_name": source_name,
                     "run_id": source_observation_run_id(context),
                     "observed_at": row.get("observed_at") or row.get("_committed_at")})
-    return [coerce_metadata_row_types(_PROCESSING_STATE_TABLE, row) for row in records]
+    return [coerce_schema_row_types(processing_state_schema(), row) for row in records]
 
 
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -2423,7 +2462,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
         activity_id=activity_id,
         context=context,
     )
-    _merge_source_observation_records(records, config=config, context=context)
+    _merge_source_observation_records(records, context=context)
     record_pipeline_publication(target_table_id, "committed", receipt=success_context.get("publication"), context=context)
     for source_table_id in source_table_ids:
         key = (active_workspace_id, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
@@ -2445,7 +2484,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     audit["_activity_id"] = activity_id
     records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="staged")
-    _merge_source_observation_records(records, config=config, context=context)
+    _merge_source_observation_records(records, context=context)
     return records
 
 
@@ -5832,8 +5871,8 @@ def capture_source_observation(
         observation_id = str(uuid4())
         values = [
             {
-                **coerce_metadata_row_types(
-                    _PROCESSING_STATE_TABLE,
+                **coerce_schema_row_types(
+                    processing_state_schema(),
                     {
                         **row,
                         "observation_id": observation_id,
@@ -5854,8 +5893,8 @@ def capture_source_observation(
             }
             for row in current
         ]
-        _merge_source_observation_records(values, config=config, context=context)
-        return spark.createDataFrame(values, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+        _merge_source_observation_records(values, context=context)
+        return spark.createDataFrame(values, schema=processing_state_schema())
 
     if incremental_columns is not None:
         return capture_columns(*incremental_columns, watermark_only=True)

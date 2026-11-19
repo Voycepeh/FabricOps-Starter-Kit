@@ -140,7 +140,7 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This initializes empty governance and engineering schemas in the dedicated demo lakehouse before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations.
+`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations. Run the separate Processing State setup cell with `INITIALIZE_PROCESSING_STATE = True` once per shared Lakehouse, then restore it to `False`. [Processing State setup](../maintainer/processing-state.md)
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

@@ -129,14 +129,6 @@ def _validate_existing_metadata_schema(
             "Existing data has been preserved; automatic schema evolution is unsafe for this layout. "
             "Inspect the differences and plan an explicit migration or reset."
         )
-    if table_name == "METADATA_PROCESSING_STATE" and (
-        "observation_status" in existing or "publication_payload_json" in existing or missing
-    ):
-        raise ValueError(
-            "Incompatible METADATA_PROCESSING_STATE schema. Existing checkpoints and publication receipts have been preserved. "
-            f"Required processing identity and progress fields cannot be inferred safely. {detail}. "
-            "Inspect the differences and plan an explicit migration or reset."
-        )
     if mismatches:
         raise ValueError(
             f"{table_name} physical schema does not match the canonical FabricOps metadata schema: {detail}."
@@ -461,7 +453,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the 14 canonical metadata tables.
+    """Create, validate and safely evolve the 13 canonical metadata tables.
 
     Parameters
     ----------
@@ -584,21 +576,12 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None,
+                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
-            if table_name == "METADATA_PROCESSING_STATE" and not created and hasattr(table, "sparkSession"):
-                from delta.tables import DeltaTable
-                from fabricops_kit.io.shared import resolve_configured_lakehouse_table
-                from fabricops_kit.io.shared import retry_delta_metadata
-                _, _, _, state_path = resolve_configured_lakehouse_table("Metadata", table_name,
-                    resolved_metadata_schema, context=context)
-                properties = DeltaTable.forPath(spark, state_path).detail().select("properties").first()["properties"]
-                if properties.get("delta.isolationLevel") != "Serializable":
-                    retry_delta_metadata(lambda: spark.sql(f"ALTER TABLE delta.`{state_path.replace('`', '``')}` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')"))
             upgrade = None
             if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)

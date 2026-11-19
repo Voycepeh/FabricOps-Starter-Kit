@@ -53,12 +53,13 @@ def test_setup_preserves_retained_runs_and_processing_state(runs_delta, monkeypa
                  'source_table_id': 'table0', 'target_table_id': 'table1',
                  'max_change_value': '2025-01-02T00:00:00', 'watermark_type': 'timestamp'}
                 for kind in ('incremental_checkpoint', 'drift_baseline', 'publication_receipt')]
-    r.spark.createDataFrame(progress, registry[state_table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(r.paths[state_table])
+    r.spark.createDataFrame(progress, shared.processing_state_schema()).write.format('delta').option('delta.isolationLevel', 'Serializable').save(r.paths[state_table])
     state_delta = DeltaTable.forPath(r.spark, r.paths[state_table])
     state_before = r.spark.read.format('delta').load(r.paths[state_table]).collect()
     state_version = state_delta.history(1).first()['version']
     def read(table, **kwargs):
-        if table in {run_table, state_table}:
+        assert table != state_table
+        if table == run_table:
             return r.spark.read.format('delta').load(r.paths[table])
         if table not in registry:
             raise RuntimeError('[PATH_NOT_FOUND]')

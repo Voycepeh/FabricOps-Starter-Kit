@@ -23,14 +23,15 @@ def test_retirement_inventory_matches_released_lifecycle():
     inventories = [yaml.safe_load(path.read_text()) for path in Path('docs/releases/manifests').glob('*.yml')]
     released = {item['name'] for manifest in inventories for item in manifest['metadata_tables']}
     retired = RETIRED_PREVIEW_METADATA_TABLES
-    assert set(retired) == released - set(CANONICAL_METADATA_TABLES)
+    relocated = "METADATA_PROCESSING_STATE"
+    assert set(retired) | {relocated} == released - set(CANONICAL_METADATA_TABLES)
     for name in ('METADATA_ENRICHMENT', 'METADATA_GUARDRAIL', 'METADATA_SOURCE_OBSERVATION'):
         assert retired[name]['retired_in'] == '0.3.0'
     for manifest in inventories:
         for item in manifest['metadata_tables']:
             name = item['name']
             if item['status'] == 'live':
-                assert name in CANONICAL_METADATA_TABLES
+                assert name in CANONICAL_METADATA_TABLES or name == relocated
                 assert name not in retired
             if name not in retired:
                 continue

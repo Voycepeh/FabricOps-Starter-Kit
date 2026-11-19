@@ -66,8 +66,8 @@ def runtime(monkeypatch, spark_session):
             self.row = frame.collect()[0].asDict(recursive=True)
             return self
         def toDF(self):
-            from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-            return spark_session.createDataFrame([], metadata_table_schema_registry()["METADATA_PROCESSING_STATE"])
+            from fabricops_kit.pipeline.shared import processing_state_schema
+            return spark_session.createDataFrame([], processing_state_schema())
         def whenMatchedUpdate(self, **kwargs): return self
         def whenMatchedUpdateAll(self): return self
         def whenNotMatchedInsertAll(self): return self
@@ -84,6 +84,8 @@ def runtime(monkeypatch, spark_session):
     runtime_context = context
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
     monkeypatch.setattr(shared, "get_spark_session", lambda *a, **_kwargs: spark_session)
+    monkeypatch.setattr(shared, "processing_state_path", lambda context: "private-state")
+    monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
     caller_snapshot = {"dataframe": None}
@@ -248,7 +250,7 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
     create_spark = Mock(side_effect=AssertionError("must not reach physical merge"))
     monkeypatch.setattr(shared, "get_spark_session", create_spark)
     shared._merge_source_observation_records([{"observation_status": "committed"}],
-        config=context["config"], context={**context, "execution_plan": plan})
+        context={**context, "execution_plan": plan})
     create_spark.assert_not_called()
 
 

@@ -175,7 +175,7 @@ Bronze ends at 12 unique movements. Both Silver targets end at 12 business rows,
 | `METADATA_DATA_PROFILED` | Due source or published-target profile snapshots. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to applicable profiles. |
 | `METADATA_DATA_LINEAGE` | Source and target participation for each independently finalized execution. |
-| `METADATA_PROCESSING_STATE` | Path A's target-specific source observations and accepted incremental checkpoints, plus target-specific publication receipts and applicable accepted baselines. |
+| Processing State | Path A's target-specific source observations and accepted incremental checkpoints, plus target-specific publication receipts and applicable accepted baselines. |
 | `METADATA_GUARDRAIL_RESULTS` | Results of applicable selected Contract Guardrails. |
 
 ### Repeat and recover safely

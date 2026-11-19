@@ -11,6 +11,7 @@ from .shared import (
 )
 from .setup_metadata_tables import setup_metadata_tables
 from .setup_notebook import setup_notebook
+from .setup_processing_state import setup_processing_state
 from .orchestrate_demo_reset import orchestrate_demo_reset
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "setup_processing_state",
     "orchestrate_demo_reset",
 ]
