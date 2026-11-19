@@ -55,7 +55,7 @@ finalize_pipeline()
 
 FabricOps derives the logical Pipeline ID from the current Fabric Notebook ID. The Pipeline Registry preserves that identity when a notebook is promoted and maps each promoted physical Notebook ID to the same logical pipeline. Engineers do not declare or manage Pipeline IDs in notebook source. Neither setup function requires a workspace argument.
 
-Configuration loads do not create metadata tables. At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once, then restore `False` before ordinary use.
+At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once to bootstrap the shared Lakehouse. Configuration loads from `setup_notebook()` skip bootstrap.
 
 ## Logical aliases and physical Fabric names
 
@@ -138,7 +138,7 @@ Use `widget_activate_data_contract(TABLE_ID, CONTRACT_ID, VERSION, workspace_id=
 
 Review the complete release and explicitly approve it once. The backend independently rechecks every selected candidate, complete operation/rule results, processing configuration, contract payloads and Agreement. It checks the current authority token again at commit. Failed validation, missing tests, competing writers, inconsistent contracts, stale review or a failed commit expose no partial release. Refresh and review again after a conflict.
 
-`METADATA_PIPELINE_REGISTRY` retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity. `METADATA_DATA_CONTRACT_ACTIVATION` independently selects frozen Contracts in each physical table workspace. The canonical inventory contains 14 tables, including the Governance-owned `METADATA_PIPELINE_ACTIVATION` decision history. `setup_metadata_tables()` creates missing tables, evolves compatible schemas automatically and preserves existing metadata. Incompatible schemas fail explicitly without deleting data.
+`METADATA_PIPELINE_REGISTRY` retains immutable per-workspace Pipeline Promotion versions and the active Governed notebook identity. `METADATA_DATA_CONTRACT_ACTIVATION` independently selects frozen Contracts in each physical table workspace. The canonical inventory contains 13 tables, including the Governance-owned `METADATA_PIPELINE_ACTIVATION` decision history. `setup_metadata_tables()` creates missing tables, evolves compatible schemas automatically and preserves existing metadata. Incompatible schemas fail explicitly without deleting data.
 
 Every Read and Write checks its resolved physical destination against the plan's frozen binding. Ungoverned publication rejects a protected Table ID or physical alias. Governed publication takes an exclusive physical target claim; Contract Activation uses the same claim before changing protection. All Metadata targets resolve to the same central Lakehouse. `METADATA_DATA_CONTRACT.workspace_id` records authoring provenance, not version identity.
 
@@ -166,7 +166,7 @@ A successful first snapshot establishes a baseline without inventing earlier cha
 
 Successful finalization accepts due candidates only after all required target publications are verified. Failed/incomplete runs, unavailable source observations and nonpublishing Writes cannot consume observation eligibility. Concurrent acceptance compares each candidate's parent and updates all participating source heads atomically under Serializable isolation. A stale run leaves its immutable candidates for investigation and cannot overwrite a newer baseline. Read-only pipelines have no required target publications. Dry Run computes diagnostics without persisting snapshots, baselines or publication state.
 
-`METADATA_PROCESSING_STATE` adds one nullable `snapshot_payload_json` column. It stores `source_snapshot` manifests, distributed `source_row_evidence` hash multiplicities, shared `source_drift_baseline` heads, and immutable `source_snapshot_acceptance` history. Metadata setup ensures Serializable isolation. Existing source observations, checkpoints and publication receipts are retained; incremental readers exclude distributed snapshot rows before collecting compact checkpoint history. `METADATA_GUARDRAIL_RESULTS` stores per-source and consolidated diagnostics with at most ten hash-only examples per category and scoped investigation queries. No new tables or historical business rows are stored.
+The Delta table `misc.PROCESSING_STATE` holds incremental checkpoints, publication receipts, `source_snapshot` manifests, distributed `source_row_evidence` hash multiplicities, shared `source_drift_baseline` heads, and immutable `source_snapshot_acceptance` history. Lakehouse bootstrap initializes the table with Serializable isolation. The first run after the switch starts with empty state. Incremental readers exclude distributed snapshot rows before collecting compact checkpoint history. `METADATA_GUARDRAIL_RESULTS` stores per-source and consolidated diagnostics with up to ten hash-only examples per category. See the [Processing State setup guide](../../docs/maintainer/processing-state.md).
 
 Recovered publication receipts from earlier executions retain their original incremental checkpoints; they cannot accept a newly observed Source Drift baseline. Every required target receipt must identify the current run and pass physical verification.
 
@@ -219,7 +219,7 @@ Profiling history without a confirmed physical binding and independent activity 
 
 ### Metadata and runtime boundaries
 
-`setup_metadata_tables()` creates missing tables and evolves compatible schemas automatically. Catalogue, Run history and Processing State are preserved; repeated setup does not rewrite compliant tables. Frozen Contract definitions are global and immutable. Physical table activation and per-workspace Pipeline Promotion are independent reviewed decisions. Notebook publication, business-table transactions, Guardrail diagnostics and Run records retain separate failure boundaries. See the [final architecture](../../docs/maintainer/governed-pipeline-promotion.md) for the concurrency and integrity invariants.
+`setup_metadata_tables()` creates missing tables and evolves compatible schemas automatically. Repeated setup preserves Catalogue and Run history. Lakehouse bootstrap also initializes `misc.PROCESSING_STATE` for the shared Lakehouse. See the [setup guide](../../docs/maintainer/processing-state.md). Frozen Contract definitions are global and immutable. Physical table activation and per-workspace Pipeline Promotion are independent reviewed decisions. Notebook publication, business-table transactions, Guardrail diagnostics and Run records retain separate failure boundaries. See the [final architecture](../../docs/maintainer/governed-pipeline-promotion.md) for the concurrency and integrity invariants.
 
 ### Permanent pipeline identity
 

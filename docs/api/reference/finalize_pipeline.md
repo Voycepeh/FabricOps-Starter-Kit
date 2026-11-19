@@ -153,7 +153,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 121 |
+| Live-critical dependencies | 122 |
 
 ### Release history
 
@@ -220,6 +220,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>

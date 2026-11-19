@@ -94,8 +94,8 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 True clears all current canonical metadata rows in the dedicated item,
-including frozen Contracts, activations, approvals, promotion history,
-Runs and Processing State. Saved submissions, Dry Run evidence and notebook
+including frozen Contracts, activations, approvals, promotion history and
+Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
 snapshots in its three native lifecycle folders are removed too. Table
 definitions remain; no metadata migration is performed.
 
@@ -133,9 +133,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:240`
+`fabricops_kit/config/orchestrate_demo_reset.py:255`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L240-L444">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L255-L459">View on GitHub</a>
 </div>
 
 
@@ -151,7 +151,7 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 40 |
+| Live-critical dependencies | 46 |
 
 ### Release history
 
@@ -165,6 +165,7 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
@@ -196,12 +197,17 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
+<li><code>fabricops_kit.pipeline.shared.read_processing_state</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_processing_state_schema</code></li>
 </ul>
 
 

@@ -17,6 +17,7 @@ from .config import (
     setup_metadata_tables,
     orchestrate_demo_reset,
     setup_notebook,
+    setup_processing_state,
 )
 from .data_agent import create_data_agent
 
@@ -58,6 +59,7 @@ CONFIG_EXPORTS = (
     "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
+    "setup_processing_state",
     "orchestrate_demo_reset",
 )
 

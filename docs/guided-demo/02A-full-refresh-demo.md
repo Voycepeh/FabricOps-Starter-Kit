@@ -236,7 +236,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | `METADATA_DATA_PROFILED` | Profile snapshots for the two table sources and two table targets when profiling completes; file profiles persist by Source ID with the common Table ID and deterministic Column IDs. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
 | `METADATA_DATA_LINEAGE` | TABLE and FILE source and target participation recorded for this notebook pipeline and retained in Run operations. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
+| Processing State | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
 

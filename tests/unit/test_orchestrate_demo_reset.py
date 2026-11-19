@@ -12,7 +12,9 @@ API = import_module('fabricops_kit.config.orchestrate_demo_reset')
 
 
 def _environment(monkeypatch):
-    registry = metadata_table_schema_registry()
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    registry = {**metadata_table_schema_registry(), API._DEMO_PROCESSING_STATE: processing_state_schema()}
     rows = {table: [] for table in registry}
     stores = {key: SimpleNamespace(workspace_id='dev', item_id=key, name=key,
               kind='warehouse' if key == 'Gold' else 'lakehouse', schema_enabled=True)
@@ -32,6 +34,7 @@ def _environment(monkeypatch):
         return {'displayName': 'demo_metadata' if path.endswith('metadata-id') else 'configured'}
     monkeypatch.setattr(API, 'resolve_fabric_context', lambda: (config, 'dev', runtime))
     monkeypatch.setattr(API, 'read_lakehouse_table', read)
+    monkeypatch.setattr(API, 'read_processing_state', lambda **kw: read(API._DEMO_PROCESSING_STATE))
     monkeypatch.setattr(API, 'metadata_table_physical_schema', lambda config, table: 'configured-schema')
     monkeypatch.setattr(API, 'FabricNotebookClient', lambda: SimpleNamespace(request=request))
     monkeypatch.setattr(API, 'resolve_physical_table_identity', lambda *a, **kw: {'table_id': kw['table_name']})
@@ -134,7 +137,7 @@ def test_reset_rejects_mismatched_metadata_item_before_deleting(monkeypatch, ite
 
 @pytest.mark.parametrize('table,row', [
     ('METADATA_DATA_CATALOGUE', {'table_id': 'production-orders'}),
-    ('METADATA_PROCESSING_STATE', {'source_table_id': 'orders', 'target_table_id': 'production-target'}),
+    (API._DEMO_PROCESSING_STATE, {'source_table_id': 'orders', 'target_table_id': 'production-target'}),
     ('METADATA_DATA_CONTRACT', {'table_id': 'orders', 'contract_payload_json': '{"table":{"table_id":"other"}}'}),
     ('METADATA_PIPELINE_RUN', {'operations': '[{"table_id":"orders","source_table_ids":["other"]}]'}),
     ('METADATA_PIPELINE_ACTIVATION', {'package_json': '{"manifest":{"execution_workspace_id":"outside"}}'}),
@@ -159,7 +162,6 @@ def test_owned_contract_and_activation_references_are_in_scope(monkeypatch):
 @pytest.mark.parametrize('table,field,wrong_type', [
     ('METADATA_DATA_CATALOGUE', 'load_strategy_parameters_json', 'struct<watermark_column:string>'),
     ('METADATA_PIPELINE_RUN', 'operations', 'array<struct<table_id:string>>'),
-    ('METADATA_PROCESSING_STATE', 'row_count', 'string'),
 ])
 def test_schema_migration_must_precede_reset(monkeypatch, table, field, wrong_type):
     env = _environment(monkeypatch); expected = metadata_table_schema_registry()[table]
@@ -308,11 +310,11 @@ def test_true_clears_all_tables_children_first_and_repeated_reset_is_safe(monkey
     for table in env.rows: env.rows[table] = [{'table_id': 'orders'}]
     API.orchestrate_demo_reset(reset=True)
     assert not any(env.rows.values())
-    assert set(env.removed) == set(CANONICAL_METADATA_TABLES)
+    assert set(env.removed) == {*CANONICAL_METADATA_TABLES, API._DEMO_PROCESSING_STATE}
     assert env.removed.index('METADATA_DATA_PROFILED_FREQUENCY') < env.removed.index('METADATA_DATA_PROFILED')
     assert env.removed.index('METADATA_DATA_CONTRACT_ACTIVATION') < env.removed.index('METADATA_DATA_CONTRACT')
     API.orchestrate_demo_reset(reset=True)
-    assert len(env.removed) == len(CANONICAL_METADATA_TABLES)
+    assert len(env.removed) == len(env.rows)
     output = capsys.readouterr().out
     assert output.count('RESET COMPLETE') == 2
     assert all(f'{table}: removed 0' in output for table in env.rows)
@@ -327,7 +329,7 @@ def test_fixture_failure_precedes_metadata_or_output_deletion(monkeypatch):
 
 
 def test_incomplete_metadata_deletion_cannot_report_success(monkeypatch, capsys):
-    env = _ready(monkeypatch); env.rows['METADATA_PROCESSING_STATE'] = [{'source_table_id': 'orders'}]
+    env = _ready(monkeypatch); env.rows[API._DEMO_PROCESSING_STATE] = [{'source_table_id': 'orders'}]
     monkeypatch.setattr(API, '_demo_clear_metadata', lambda *a: None)
     with pytest.raises(RuntimeError, match='Metadata reset incomplete'):
         API.orchestrate_demo_reset(reset=True)

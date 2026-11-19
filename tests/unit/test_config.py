@@ -454,7 +454,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None)
+        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None)
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns
@@ -865,7 +865,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
             "provider_steward_name", "recipient_steward_name", "guardrail_type",
             "rule_id", "rule_type", "action",
         }]
-        old_tables[name] = Frame(schema if name == "METADATA_PROCESSING_STATE" else type(schema)(fields))
+        old_tables[name] = Frame(type(schema)(fields))
 
     def read_table(name, **_kwargs):
         return old_tables[name]
@@ -949,6 +949,8 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["created_tables"] == list(registry)
+    assert result["active_metadata_table_count"] == 13
+    assert "METADATA_PROCESSING_STATE" not in created
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
     access_fields = {field.name: field for field in created["METADATA_DATA_ACCESS"].fields}
     assert all(not access_fields[field].nullable for field in {"_activity_id", "_committed_at", "_workspace_id"})

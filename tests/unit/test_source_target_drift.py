@@ -69,11 +69,11 @@ def test_sampled_discovery_never_supplies_source_drift_identity(authored, expect
 def test_snapshot_filter_keeps_invalid_legacy_rows_for_fail_closed_validation(spark_session):
     from pyspark.sql.types import StructField, StructType
     schema = StructType([StructField(field.name, field.dataType, True)
-        for field in shared.metadata_table_schema_registry()[shared._PROCESSING_STATE_TABLE]])
+        for field in shared.processing_state_schema()])
     legacy = {'workspace_id': 'dev', 'record_id': 'checkpoint', 'record_type': 'incremental_checkpoint', 'status': 'committed'}
     snapshot = {'workspace_id': 'dev', 'record_id': 'hash', 'record_type': 'source_row_evidence', 'status': 'observed'}
     corrupt = {'workspace_id': 'dev', 'record_id': 'invalid', 'record_type': None, 'status': 'committed'}
     valid = spark_session.createDataFrame([legacy, snapshot], schema)
     assert [row['record_id'] for row in shared._processing_state_rows(valid)] == ['checkpoint']
-    with pytest.raises(RuntimeError, match='invalid METADATA_PROCESSING_STATE'):
+    with pytest.raises(RuntimeError, match='invalid Processing State'):
         shared._processing_state_rows(spark_session.createDataFrame([legacy, snapshot, corrupt], schema))

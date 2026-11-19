@@ -51,7 +51,7 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
     | Activate physical Contracts | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
     | Approve saved submission | [`widget_activate_pipeline()`](api/reference/widget_activate_pipeline.md) | [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
     | Deploy and retain versions | [`finalize_pipeline()`](api/reference/finalize_pipeline.md) Engineering controls | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) and immutable notebook snapshots |
-    | Persistent run state | [`finalize_pipeline()`](api/reference/finalize_pipeline.md) and orchestration internals | [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md), [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) |
+    | Persistent run state | [`finalize_pipeline()`](api/reference/finalize_pipeline.md) and orchestration internals | [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md), [Processing State](maintainer/processing-state.md) |
 
     Guardrail Results store aggregate outcomes and continuation decisions, not full failed business rows. DQ `failed_values` and token `support_mapping` are returned to the caller and are not automatically persisted.
 
@@ -60,25 +60,25 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
 <a class="fabricops-metadata-preview fabricops-metadata-preview--compact" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Interactive relationship map</span>
-    <strong class="fabricops-metadata-preview__title">Fourteen canonical tables, one traceable model</strong>
+    <strong class="fabricops-metadata-preview__title">Thirteen canonical tables, one traceable model</strong>
     <span class="fabricops-metadata-preview__description">Inspect keys, columns, writer functions and Governance ↔ Engineering relationships.</span>
     <span class="fabricops-metadata-preview__action">Open metadata explorer <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true"><img src="../assets/fabricops-metadata-approved.svg" alt="" loading="lazy" decoding="async"></span>
 </a>
 
-The configured Metadata Lakehouse holds five Governance-owned tables and nine Engineering-owned tables. The ownership boundary identifies authoritative writers; it does not imply separate physical Lakehouses. Governance owns the central Lakehouse itself; schema ownership describes which workflow is authoritative for each record.
+The configured Metadata Lakehouse holds five Governance-owned tables and eight Engineering-owned tables. The ownership boundary identifies authoritative writers; it does not imply separate physical Lakehouses. Governance owns the central Lakehouse itself; schema ownership describes which workflow is authoritative for each record.
 
 | Group | Canonical tables |
 | --- | --- |
 | Governance | [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md), [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md), [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md), [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
-| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md), [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) |
+| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
 ??? info "Under the Hood — identity, timing and transaction boundaries"
 
     `METADATA_DATA_CATALOGUE` is the canonical table/column and physical-location record. Profile snapshots link back through `table_id` and `column_id`; lineage records a table's pipeline participation. `METADATA_DATA_CONTRACT` stores one exact authored payload per version, while `METADATA_DATA_CONTRACT_ACTIVATION` selects it for a physical workspace/table and applicable Agreement.
 
-    Governance decisions in `METADATA_PIPELINE_ACTIVATION`, Engineering deployments in `METADATA_PIPELINE_REGISTRY`, business-table publication and metadata progress are deliberately separate boundaries. FabricOps accepts incremental checkpoints and publication receipts in `METADATA_PROCESSING_STATE` only after it can verify publication. Pipeline-owned Source Drift baseline heads wait for successful whole-run finalization and every required verified target publication; all candidate heads advance in one Serializable conditional transaction. The Pipeline Registry coordinates managed mutations in a Serializable transaction, but multiple target writes are not one cross-target atomic transaction.
+    Governance decisions in `METADATA_PIPELINE_ACTIVATION`, Engineering deployments in `METADATA_PIPELINE_REGISTRY`, business-table publication and metadata progress are deliberately separate boundaries. FabricOps accepts incremental checkpoints and publication receipts in Processing State only after it can verify publication. Pipeline-owned Source Drift baseline heads wait for successful whole-run finalization and every required verified target publication; all candidate heads advance in one Serializable conditional transaction. The Pipeline Registry coordinates managed mutations in a Serializable transaction, but multiple target writes are not one cross-target atomic transaction.
 
     The [Metadata Reference](reference/metadata.md) is generated from `src/fabricops_kit/config/metadata_schemas.py` and writer ownership metadata. Use it instead of inferring columns from a diagram.
 

@@ -75,8 +75,7 @@ def _configure_scope(monkeypatch, history):
         "build_runtime_audit_fields",
         lambda **kwargs: {"_activity_id": "run-1"},
     )
-    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: "engineering")
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: Frame(history))
+    monkeypatch.setattr(shared, "read_processing_state", lambda **kwargs: Frame(history))
 
 
 def test_incremental_read_requires_target_before_context_resolution(monkeypatch):

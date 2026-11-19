@@ -8,7 +8,7 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">29</strong>
+    <strong class="reference-kpi-value">30</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -18,14 +18,14 @@ Need the complete implementation-level dependency graph? Use the [Call Flow Dash
 
 ## Find a function
 
-Use the finder below to search 29 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 30 public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 29 public functions.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 30 public functions.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>
 </div>
 
@@ -34,9 +34,9 @@ Use the finder below to search 29 public functions. Config classes stay out of t
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 53
-    - Total callables: 838
-    - Supporting functions: 451
+    - Source Python files count: 54
+    - Total callables: 845
+    - Supporting functions: 457
     - Private helpers to review: 351
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -88,13 +88,18 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 </details>
 
 <details class="reference-function-group" data-callable-group="governance" data-default-open="false">
-<summary><span class="reference-function-group-title">Governance Functions</span><span class="reference-function-group-meta">6 functions · Author and review governed context</span></summary>
+<summary><span class="reference-function-group-title">Governance Functions</span><span class="reference-function-group-meta">7 functions · Author and review governed context</span></summary>
 <p class="reference-function-group-description">Initialize metadata tables, then use the public Governance widgets. Each function retains its own lifecycle status.</p>
 <div class="reference-catalogue-list">
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create missing FabricOps metadata tables, add compatible missing columns, and safely remove explicitly retired columns.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create missing FabricOps metadata tables, add compatible missing columns, and safely remove explicitly retired columns.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.2.0</span><span class="reference-chip">00_env_config</span></p>
+</article>
+<article id="config.setup_processing_state-setup_processing_state" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_processing_state" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create or validate the operational Processing State Delta table.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_processing_state/"><code>setup_processing_state</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Create or validate the operational Processing State Delta table.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">00_env_config</span></p>
 </article>
 <article id="widgets.widget_data_steward-widget_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_data_steward" data-callable-module="widgets.widget_data_steward" data-callable-starter-path="01_governance" data-callable-usage-source="01_governance" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-steward intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_data_steward/"><code>widget_data_steward</code></a></h3>

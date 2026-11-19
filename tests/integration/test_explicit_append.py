@@ -36,9 +36,8 @@ def test_append_new_only_is_distributed_and_preserves_changed_rows(spark_session
 @pytest.mark.parametrize('strategy', ['overwrite', 'append_all', 'append_new_only', 'scd1', 'scd2'])
 def test_publication_identity_distinguishes_new_executions(spark_session, monkeypatch, strategy):
     incoming = spark_session.createDataFrame([(1,), (1,)], 'id int')
-    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: [])
+    monkeypatch.setattr(shared, 'read_processing_state', lambda **kw: [])
     monkeypatch.setattr(shared, '_find_applied_publication', lambda *a, **kw: None)
-    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: None)
     ids = []
     for run_id in ('first', 'second', 'first'):
         context = dict(config=object(), scope_workspace_id='dev', execution_plan=SimpleNamespace(plan_id=run_id))

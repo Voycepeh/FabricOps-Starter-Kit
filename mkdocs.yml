@@ -59,6 +59,7 @@ nav:
       - Initial Specs: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
+      - Processing State setup: maintainer/processing-state.md
 
 markdown_extensions:
   - abbr

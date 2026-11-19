@@ -50,7 +50,7 @@ retry handling. An uncertain target commit must be reconciled, not replayed.
 | `METADATA_DATA_CATALOGUE` | Retry scoped workspace/Table ID MERGEs and profiling marker updates; missing-column deactivation stays scoped. |
 | `METADATA_DATA_PROFILED` | Retry deterministic snapshot/row-ID replacement MERGE and uncommitted-snapshot cleanup. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Retry snapshot-scoped replacement and deletion; never retry the entire profiling workflow. |
-| `METADATA_PROCESSING_STATE` | Retry one atomic record-ID MERGE; checkpoint/baseline progress still requires its publication receipt and physical target marker. |
+| Processing State | Retry one atomic record-ID MERGE; checkpoint/baseline progress still requires its publication receipt and physical target marker. |
 | `METADATA_DATA_LINEAGE` | Retry workspace/lineage-ID MERGE. |
 | `METADATA_GUARDRAIL_RESULTS` | Retry canonical Metadata append of aggregate results. |
 | `METADATA_DATA_ACCESS` | Retry canonical Metadata append of scanner observations. |

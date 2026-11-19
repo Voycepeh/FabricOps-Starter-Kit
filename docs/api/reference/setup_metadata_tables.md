@@ -162,9 +162,9 @@ read as canonical authority or automatically deleted.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:456`
+`fabricops_kit/config/setup_metadata_tables.py:448`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L456-L759">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L448-L742">View on GitHub</a>
 </div>
 
 
@@ -180,7 +180,7 @@ read as canonical authority or automatically deleted.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 51 |
+| Live-critical dependencies | 50 |
 
 ### Release history
 
@@ -245,7 +245,6 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>

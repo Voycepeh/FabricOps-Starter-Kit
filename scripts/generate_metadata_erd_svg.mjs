@@ -17,8 +17,6 @@ function renderMetadataSvg(layout, models) {
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
     ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
-    ["PIPELINE_RUN","PROCESSING_STATE","1-N","physical","M815 504H725",[815,504],[725,504],"Pipeline run to typed processing state"],
-    ["DATA_CATALOGUE","PROCESSING_STATE","1-N","physical","M335 545H425",[335,545],[425,545],"Catalogue table to source and target processing state"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
     ["DATA_CATALOGUE","DATA_LINEAGE","1-N","physical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
@@ -68,7 +66,7 @@ function renderMetadataSvg(layout, models) {
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==14||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
   // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.

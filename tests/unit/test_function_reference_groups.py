@@ -13,7 +13,7 @@ EXPECTED_GROUPS = [
         "orchestrate_write", "finalize_pipeline",
     ]),
     ("governance", "Governance Functions", [
-        "setup_metadata_tables", "widget_data_steward", "widget_data_agreement",
+        "setup_metadata_tables", "setup_processing_state", "widget_data_steward", "widget_data_agreement",
         "widget_data_contract", "widget_activate_data_contract", "widget_activate_pipeline",
     ]),
     ("foundational-io", "Foundational I/O", [

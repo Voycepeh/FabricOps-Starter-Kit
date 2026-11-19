@@ -219,7 +219,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 278 |
+| Live-critical dependencies | 281 |
 
 ### Release history
 
@@ -269,6 +269,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_dataframe</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
@@ -476,6 +477,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>

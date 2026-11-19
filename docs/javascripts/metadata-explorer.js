@@ -16,7 +16,6 @@
     ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id", "table_id"], "metadata_data_profiled_frequency/"],
     ["DATA_LINEAGE", "engineering", ["lineage_id"], ["table_id"], "metadata_data_lineage/"],
-    ["PROCESSING_STATE", "engineering", ["record_id"], ["source_table_id", "target_table_id", "run_id", "publication_id"], "metadata_processing_state/"],
     ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
   ];
 
@@ -33,8 +32,6 @@
     ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
-    ["PIPELINE_RUN", "PROCESSING_STATE", "1-N", "Run processing state"],
-    ["DATA_CATALOGUE", "PROCESSING_STATE", "1-N", "Source and target processing state"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
     ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],

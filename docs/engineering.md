@@ -173,7 +173,7 @@ Use the [Read & Write Modes reference](reference/read-and-load-strategies.md) fo
 
 ??? info "Under the Hood — accepted checkpoints and SCD state"
 
-    [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves the last accepted source-to-target watermark and captures the upper bound for the current batch. Internal [`pipeline_write()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py) accepts that progress only after it can verify publication in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md).
+    [`orchestrate_read()`](api/reference/orchestrate_read.md) resolves the last accepted source-to-target watermark and captures the upper bound for the current batch. Internal [`pipeline_write()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/pipeline_write.py) accepts that progress only after it can verify publication in [Processing State](maintainer/processing-state.md).
 
     SCD2 maintains `_effective_from`, `_effective_to` and `_is_current`. FabricOps also recalculates `_row_hash` from final incoming business values after transformation and Sensitive Data treatment. Incorrect business keys still produce incorrect SCD semantics; the framework cannot infer business identity for you.
 
@@ -265,7 +265,7 @@ Every managed output receives a lowercase SHA256 `_row_hash` through internal [`
 
     The publication identity includes the prepared business-row multiset, Processing definition, source membership, workspace and target. Lakehouse recovery verifies Delta commit evidence. Warehouse recovery requires the exact audit-marker row count. Partial or unverifiable publication fails closed instead of advancing the checkpoint.
 
-    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md). Each business target has one owning pipeline; scheduling prevents overlapping writes, including old and new notebook versions. Stop that pipeline before changing its Contract Activation. Runtime does not acquire target leases or use a publication coordination Files ledger.
+    Source observations, incremental checkpoints, drift baselines and publication receipts are separate typed records in [Processing State](maintainer/processing-state.md). Each business target has one owning pipeline; scheduling prevents overlapping writes, including old and new notebook versions. Stop that pipeline before changing its Contract Activation. Runtime does not acquire target leases or use a publication coordination Files ledger.
 
 ## What happens when pipelines write to the same Metadata table?
 
@@ -322,13 +322,13 @@ Read all sources before any Write. The first Write consolidates every source obs
 
 The first successful exact snapshot establishes history; changes before it are unknown. Distributed SHA256 identity/content hashes preserve row multiplicities without storing historical business values. Validated authored unique keys support exact modified-row counts. Without trustworthy keys, added/missing content is measurable but modifications remain unknown; unrelated rows are never paired. Diagnostics retain at most ten hash-only examples per category.
 
-`METADATA_PROCESSING_STATE` stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, Data Quality, Freshness and Sensitive Data requirements; **Processing mode, profiling and Source Drift execution policy are Engineering-owned**, outside the frozen Data Contract.
+Processing State stores immutable snapshot manifests, distributed hash rows and acceptance history, plus one current head per physical source context. Different pipelines share confirmed acceptance history and apply their own configured intervals. Serializable conditional acceptance rejects stale parents across all candidates atomically. Failed, incomplete, blocked and nonpublishing executions do not consume eligibility. Dry Run never persists source baselines or publication state. Data Contracts retain Schema, Grain, Data Quality, Freshness and Sensitive Data requirements; **Processing mode, profiling and Source Drift execution policy are Engineering-owned**, outside the frozen Data Contract.
 
 ??? info "Scope, cost and recovery"
 
     A SQL result of 100 rows and a profiling cap of 100,000 rows do not restrict Source Drift observation. Due complete-source hashing scans the full source and uses distributed aggregation/shuffles. For a billion-row table with mostly distinct content, each due snapshot can retain close to a billion hash-evidence records. Repeated snapshots accumulate; automatic retention/pruning is not provided. Validate Fabric capacity, metadata storage and a retention policy before enabling this at that scale. Disabled Source Drift performs no additional observation scan. Freshness and incremental Processing retain their independent required scopes.
 
-    A candidate becomes accepted only after successful finalization and verified required target publications. Warning mode does not bypass that boundary. Baseline acceptance failure is reported separately from already completed publications. If acknowledgement cannot be verified, `acceptance_unknown` means the transaction may already have committed; inspect immutable acceptance history before retrying. For a confirmed failure, repeat from Read and inspect retained `METADATA_GUARDRAIL_RESULTS` and `METADATA_PROCESSING_STATE` before relying on the next interval. See [pipeline configuration and Source Drift boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#read--write-modes).
+    A candidate becomes accepted only after successful finalization and verified required target publications. Warning mode does not bypass that boundary. Baseline acceptance failure is reported separately from already completed publications. If acknowledgement cannot be verified, `acceptance_unknown` means the transaction may already have committed; inspect immutable acceptance history before retrying. For a confirmed failure, repeat from Read and inspect retained `METADATA_GUARDRAIL_RESULTS` and Processing State before relying on the next interval. See [pipeline configuration and Source Drift boundaries](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#read--write-modes).
 
 
 ## How does a Governance Data Contract affect my ETL?
@@ -346,7 +346,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Publication | Uses the explicitly configured Engineering Write strategy and parameters; any applicable activated Contract Guardrails still govern the prepared data. |
 | Profiling | Follows `setup_pipeline()` settings, not a frozen Data Contract schedule: Standard is enabled by default; Grain discovery and Frequency are opt-in. |
 
-Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) progress.
+Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [Processing State](maintainer/processing-state.md) progress.
 
 Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode resolves activated contracts, an independently approved submission and the deployed notebook identity; it currently fails closed pending signed-in Fabric acceptance.
 
@@ -395,7 +395,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
-- publication receipts, accepted checkpoints and Source Drift baselines in [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md);
+- publication receipts, accepted checkpoints and Source Drift baselines in [Processing State](maintainer/processing-state.md);
 - the authoritative complete, failed or incomplete outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md).
 
 ??? info "Under the Hood — persistence and trade-offs"
@@ -426,7 +426,7 @@ that selector identity. Format and reader options do not change it.
 | `METADATA_PIPELINE_RUN` | Existing typed file operations and source associations; profiling JSON also records file identity and committed snapshots. Run ID identifies the attempt; `_activity_id` correlates the Fabric activity used by Lineage. |
 | `METADATA_DATA_CONTRACT`, `METADATA_DATA_CONTRACT_ACTIVATION` | Existing file source selectors and authored/activated Contract versions; execution does not manufacture Contracts or Governance decisions. |
 | `METADATA_PIPELINE_ACTIVATION`, `METADATA_PIPELINE_REGISTRY` | Existing reviewed file Read configuration. Governed file targets remain unsupported and fail closed. |
-| `METADATA_PROCESSING_STATE` | Table incremental checkpoints, Source Drift baselines and publication receipts retain their existing semantics; files have no equivalent incremental/SCD implementation. |
+| Processing State | Table incremental checkpoints, Source Drift baselines and publication receipts retain their existing semantics; files have no equivalent incremental/SCD implementation. |
 | `METADATA_DATA_ACCESS`, `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` | SQL permission scans and Governance-owned authored records keep their current responsibilities; file IO does not create synthetic rows. |
 
 File Reads commit successful participation before returning, including Reads with
