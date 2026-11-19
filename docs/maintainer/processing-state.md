@@ -4,7 +4,7 @@ FabricOps stores source observations, incremental checkpoints, Source Drift base
 
 ## Initialize the store
 
-Run `00_env_config` directly as the Lakehouse owner with `INITIALIZE_PROCESSING_STATE = True`. This calls `setup_processing_state(config=CONFIG, workspace_id=WORKSPACE_ID)`. The first run creates an empty Delta store. Later runs validate its schema and preserve its rows. Restore the setting to `False` for routine configuration runs.
+Run `00_env_config` directly as the Lakehouse owner with `INITIALIZE_PROCESSING_STATE = True`. This calls `setup_processing_state(config=CONFIG, workspace_id=WORKSPACE_ID)`. The first run creates an empty Delta store. Later runs validate its schema and Serializable isolation and preserve its rows. Restore the setting to `False` for routine configuration runs.
 
 ## Switch an existing installation
 

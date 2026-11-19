@@ -31,7 +31,7 @@ def setup_processing_state(
     Raises
     ------
     RuntimeError
-        If the existing store has an incompatible schema.
+        If the existing store has an incompatible schema or lacks Serializable isolation.
         Spark and storage errors also propagate.
 
     Notes
@@ -49,6 +49,7 @@ def setup_processing_state(
         PROCESSING_STATE_PATH,
         processing_state_path,
         processing_state_schema,
+        validate_processing_state_isolation,
         validate_processing_state_schema,
     )
 
@@ -68,6 +69,9 @@ def setup_processing_state(
         state = read_delta_path(spark, path)
         status = "created"
     validate_processing_state_schema(state.schema)
+    from delta.tables import DeltaTable
+
+    validate_processing_state_isolation(DeltaTable.forPath(spark, path))
     return {"status": status, "path": f"Files/{PROCESSING_STATE_PATH}"}
 
 

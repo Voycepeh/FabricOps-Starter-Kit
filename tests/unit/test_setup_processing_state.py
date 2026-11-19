@@ -1,5 +1,6 @@
 """Processing State setup transitions using Spark data and isolated Delta I/O."""
 from importlib import import_module
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -18,12 +19,22 @@ class MissingPath(Exception):
         return "PATH_NOT_FOUND"
 
 
+def _stub_delta_isolation(monkeypatch, expected_path, properties):
+    def for_path(spark, path):
+        assert path == expected_path
+        detail = SimpleNamespace(select=lambda name: SimpleNamespace(first=lambda: {name: properties}))
+        return SimpleNamespace(detail=lambda: detail)
+
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=for_path)))
+
+
 def test_setup_creates_empty_state_once(monkeypatch):
     """Use the configured Files path and preserve the existing store on reruns."""
     config = framework_config()
     context = {"config": config, "scope_workspace_id": "dev"}
     destination = processing_state.processing_state_path(context)
     frame = SimpleNamespace(schema=processing_state.processing_state_schema())
+    _stub_delta_isolation(monkeypatch, destination, {"delta.isolationLevel": "Serializable"})
     tables = {}
 
     def read(_spark, path):
@@ -51,6 +62,20 @@ def test_setup_creates_empty_state_once(monkeypatch):
     }
     assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "validated"
     assert tables == {destination: frame}
+
+
+@pytest.mark.parametrize("properties", [{}, {"delta.isolationLevel": "WriteSerializable"}])
+def test_setup_rejects_existing_store_without_serializable_isolation(monkeypatch, properties):
+    """Check the required isolation before reporting the existing store as validated."""
+    config = framework_config()
+    destination = processing_state.processing_state_path({"config": config, "scope_workspace_id": "dev"})
+    frame = SimpleNamespace(schema=processing_state.processing_state_schema())
+    _stub_delta_isolation(monkeypatch, destination, properties)
+    monkeypatch.setattr(setup, "get_spark_session", lambda: object())
+    monkeypatch.setattr(setup, "read_delta_path", lambda spark, path: frame)
+    monkeypatch.setattr(setup, "write_delta_path", lambda *a, **kw: pytest.fail("must not write"))
+    with pytest.raises(RuntimeError, match="requires Serializable Delta isolation"):
+        setup.setup_processing_state(config=config, workspace_id="dev")
 
 
 def test_missing_state_fails_runtime_read_with_setup_guidance(monkeypatch):

@@ -75,12 +75,12 @@ Created indicates an empty store was initialized. Validated indicates an existin
 ## Raises / Errors
 
 RuntimeError
-    If the existing store has an incompatible schema.
+    If the existing store has an incompatible schema or lacks Serializable isolation.
     Spark and storage errors also propagate.
 
 ### Common failure causes
 
-- The existing store has an incompatible schema.
+- The existing store has an incompatible schema or lacks Serializable isolation.
 - The caller lacks access to the shared Lakehouse.
 
 ## Notes
@@ -101,7 +101,7 @@ Processing State. Repeated setup preserves rows already in the private store.
 
 `fabricops_kit/config/setup_processing_state.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_processing_state.py#L12-L71">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_processing_state.py#L12-L75">View on GitHub</a>
 </div>
 
 

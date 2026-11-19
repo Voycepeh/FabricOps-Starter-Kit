@@ -91,6 +91,30 @@ def test_complete_source_first_baseline_shared_schedule_and_exact_changes(snapsh
         assert rt.warehouse.call_args.args == ('demo', 'orders')
 
 
+@pytest.mark.parametrize("failed_append", [0, 1], ids=["evidence", "manifest"])
+def test_snapshot_retries_only_the_aborted_append(snapshots, monkeypatch, failed_append):
+    class ConcurrentAppendException(RuntimeError):
+        pass
+
+    writes = []
+    write_delta_path = shared.write_delta_path
+
+    def write(frame, path, *, mode):
+        writes.append(frame)
+        if len(writes) - 1 == failed_append:
+            raise ConcurrentAppendException("aborted append")
+        write_delta_path(frame, path, mode=mode)
+
+    monkeypatch.setattr(shared, "write_delta_path", write)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", lambda delay: None)
+    _, context, identity = snapshots.run()
+    assert shared.observe_full_source(identity, context=context)["status"] == "baseline_pending"
+    assert len(writes) == 3
+    assert writes[failed_append] is writes[failed_append + 1]
+    counts = {row["record_type"]: row["count"] for row in snapshots.state().groupBy("record_type").count().collect()}
+    assert counts == {"source_snapshot": 1, "source_row_evidence": 3}
+
+
 def test_dry_run_diagnostics_never_persist_or_consume_history(snapshots):
     rt = snapshots
     plan, context, identity = rt.run()

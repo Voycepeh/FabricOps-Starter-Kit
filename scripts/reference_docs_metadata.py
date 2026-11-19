@@ -1051,7 +1051,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Run as the Lakehouse owner to initialize Processing State before running pipelines.',
   'side_effects': 'Creates or validates a Delta store in the configured shared Lakehouse Files area.',
   'return_interpretation': 'Created indicates an empty store was initialized. Validated indicates an existing store was checked.',
-  'common_failure_causes': ['The existing store has an incompatible schema.',
+  'common_failure_causes': ['The existing store has an incompatible schema or lacks Serializable isolation.',
                             'The caller lacks access to the shared Lakehouse.'],
   'related_functions': ['setup_metadata_tables'],
   'related_guides': [{'title': 'Processing State setup', 'path': '../../maintainer/processing-state.md'}]},

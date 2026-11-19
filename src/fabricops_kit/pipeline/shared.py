@@ -1359,9 +1359,9 @@ def _persist_source_snapshot(evidence, header, *, context):
         (identity if field.name == "record_id" else F.col(field.name) if field.name in evidence.columns else
          F.lit(row_fields.get(field.name))).cast(field.dataType).alias(field.name) for field in schema])
     path = processing_state_path(context)
-    write_delta_path(frame, path, mode="append")
-    write_delta_path(get_spark_session(context=context).createDataFrame([header], schema), path, mode="append")
-
+    retry_delta_metadata(lambda: write_delta_path(frame, path, mode="append"))
+    manifest = get_spark_session(context=context).createDataFrame([header], schema)
+    retry_delta_metadata(lambda: write_delta_path(manifest, path, mode="append"))
 
 
 def _validated_source_snapshot(state, observation_id, *, context_key):
@@ -1647,8 +1647,7 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
     frame = spark.createDataFrame(records, processing_state_schema())
     path = processing_state_path(context)
     target = DeltaTable.forPath(spark, path)
-    if target.detail().select("properties").first()["properties"].get("delta.isolationLevel") != "Serializable":
-        raise RuntimeError("Source baseline acceptance requires Serializable Processing State; run setup_processing_state() before enabling Source Drift.")
+    validate_processing_state_isolation(target)
     parent = "get_json_object(source.snapshot_payload_json, '$.parent_observation_id')"
     same = f"target.observation_id <=> {parent}"
     values = {name: f"source.`{name}`" for name in frame.columns}
@@ -2014,6 +2013,16 @@ def validate_processing_state_schema(schema):
     if fields_by_type(schema) != fields_by_type(processing_state_schema()):
         raise RuntimeError(
             "Incompatible Processing State schema. Existing checkpoints and publication receipts are preserved."
+        )
+
+
+def validate_processing_state_isolation(target):
+    """Require Serializable isolation for concurrent Source Drift baseline acceptance."""
+    properties = target.detail().select("properties").first()["properties"]
+    if properties.get("delta.isolationLevel") != "Serializable":
+        raise RuntimeError(
+            "Processing State requires Serializable Delta isolation. "
+            "Set the existing store's delta.isolationLevel property to Serializable and rerun setup."
         )
 
 
