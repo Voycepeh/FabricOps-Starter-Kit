@@ -12,7 +12,10 @@ from uuid import uuid4
 import pytest
 
 from fabricops_kit.pipeline import shared
-from fabricops_kit.pipeline.shared import PROCESSING_STATE_PATH, processing_state_schema
+from fabricops_kit.pipeline.shared import PROCESSING_STATE_SCHEMA, PROCESSING_STATE_TABLE, processing_state_schema
+
+PROCESSING_STATE_PATH = f"Tables/{PROCESSING_STATE_SCHEMA}/{PROCESSING_STATE_TABLE}"
+
 
 writer = import_module("fabricops_kit.pipeline.pipeline_write")
 io = import_module("fabricops_kit.io")
@@ -667,18 +670,17 @@ def test_durable_checkpoint_recovery_preserves_exact_progress(durable_processing
     assert run.read("target").count() == 12
 
 
-def test_fresh_processing_state_is_an_unregistered_delta_table(publication_runtime, monkeypatch):
+def test_fresh_processing_state_is_created_once_in_misc_schema(publication_runtime, monkeypatch):
     run = publication_runtime
     setup = import_module("fabricops_kit.config.setup_processing_state")
     from tests.helpers import framework_config
 
     monkeypatch.setattr(setup, "get_spark_session", lambda: run.spark)
-    before = run.spark.catalog.listTables()
     config = framework_config()
     assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "created"
     assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "validated"
     assert not run.spark.read.format("delta").load(str(run.path / PROCESSING_STATE_PATH)).take(1)
-    assert run.spark.catalog.listTables() == before
+    assert run.delta.forPath(run.spark, str(run.path / PROCESSING_STATE_PATH)).history().count() == 1
 
 
 def test_durable_multi_source_recovery_is_one_transaction(durable_processing_state):

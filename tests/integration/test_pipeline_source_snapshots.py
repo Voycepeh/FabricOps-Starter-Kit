@@ -18,7 +18,7 @@ def snapshots(spark_session, monkeypatch, tmp_path):
         pytest.skip('requires Delta Spark extensions')
     spark_session.conf.set("spark.databricks.delta.snapshotPartitions", "2")
     schema = shared.processing_state_schema()
-    path = str(tmp_path / 'configured-metadata' / 'Files' / shared.PROCESSING_STATE_PATH)
+    path = str(tmp_path / 'configured-metadata' / 'Tables' / shared.PROCESSING_STATE_SCHEMA / shared.PROCESSING_STATE_TABLE)
     spark_session.createDataFrame([], schema).write.format('delta').option('delta.isolationLevel', 'Serializable').save(path)
     sources = {'orders': spark_session.createDataFrame([(1, 'a'), (2, 'b'), (3, 'c')], 'id int, value string')}
     def read_state(**kwargs):

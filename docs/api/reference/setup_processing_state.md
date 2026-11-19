@@ -6,7 +6,7 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Create or validate the private Processing State Delta store.
+Create or validate the operational Processing State Delta table.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">00_env_config</span>
@@ -14,7 +14,7 @@ Create or validate the private Processing State Delta store.
 
 ## Usage notes
 
-Run as the Lakehouse owner to initialize Processing State before running pipelines.
+Lakehouse bootstrap calls this under the owner’s identity before pipelines run.
 
 
 ## Example usage
@@ -26,7 +26,7 @@ setup_processing_state(config=CONFIG, workspace_id=WORKSPACE_ID)
 ```
 
 ```text
-{'status': 'created', 'path': 'Files/fabricops/misc/processing_state'}
+{'status': 'created', 'path': 'Tables/misc/PROCESSING_STATE'}
 ```
 
 </div>
@@ -88,7 +88,7 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Run under the Lakehouse owner's identity. Initial creation starts with empty
-Processing State. Repeated setup preserves rows already in the private store.
+Processing State. Repeated setup preserves rows already in the table.
 
 </div>
 
@@ -101,7 +101,7 @@ Processing State. Repeated setup preserves rows already in the private store.
 
 `fabricops_kit/config/setup_processing_state.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_processing_state.py#L12-L75">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_processing_state.py#L12-L76">View on GitHub</a>
 </div>
 
 

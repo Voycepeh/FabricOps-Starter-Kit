@@ -27,7 +27,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_PIPELINE_RUN` stores one authoritative execution with validated JSON STRING operations, profiling and failures. New version 3 records include Pipeline Promotion provenance and execution identity. Preserve released Run content/hash semantics and exact Contract references per operation.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
-- Processing State uses a private Delta table at `Files/fabricops/misc/processing_state` in the configured shared Lakehouse. It stores typed source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before progress is accepted.
+- Processing State uses the operational Delta table `misc.PROCESSING_STATE` in the configured shared Lakehouse. It stores typed source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before progress is accepted.
 
 ## Canonical terminology and glossary
 

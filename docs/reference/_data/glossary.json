@@ -281,7 +281,7 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Pipeline-owned complete-source change observation against confirmed physical-source history.",
-    "long_definition": "setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. the private Processing State Delta store accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.",
+    "long_definition": "setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. the operational Processing State table accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.",
     "preferred_usage": "Distinguish pipeline Source Drift from Freshness, profiling and incremental checkpoints. Initial history starts at the first accepted exact snapshot.",
     "avoid_usage": "a freshness rule, change-required expectation, or load strategy"
   },
@@ -690,8 +690,8 @@
     "aliases": [],
     "category": "FabricOps concepts",
     "short_definition": "Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.",
-    "long_definition": "The private Processing State Delta store holds incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.",
-    "preferred_usage": "Use Processing State for the typed records in the private Processing State Delta store.",
+    "long_definition": "The operational Processing State table holds incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.",
+    "preferred_usage": "Use Processing State for the typed records in the operational Processing State table.",
     "avoid_usage": "pipeline run or activation state when Processing State is meant",
     "tooltip_labels": [
       "Processing State",
@@ -706,7 +706,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Captured source state for incremental execution, Source Drift or full physical-source comparison.",
-    "long_definition": "Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. the private Processing State Delta store retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.",
+    "long_definition": "Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. the operational Processing State table retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.",
     "preferred_usage": "Use Source Observation for capture and name source_drift_baseline for accepted complete-source history.",
     "avoid_usage": "profile when the drift baseline is specifically meant",
     "tooltip_labels": [

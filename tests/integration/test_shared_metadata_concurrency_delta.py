@@ -10,7 +10,7 @@ import pytest
 
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.pipeline import shared
-from fabricops_kit.pipeline.shared import PROCESSING_STATE_PATH, processing_state_schema
+from fabricops_kit.pipeline.shared import PROCESSING_STATE_SCHEMA, PROCESSING_STATE_TABLE, processing_state_schema
 from tests.integration.test_pipeline_run_delta import runs_delta
 
 pytestmark = pytest.mark.spark
@@ -22,16 +22,16 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     r = runs_delta
     schemas = metadata_table_schema_registry()
     extra = ['METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY',
-             'METADATA_DATA_CATALOGUE', PROCESSING_STATE_PATH, 'METADATA_DATA_LINEAGE']
+             'METADATA_DATA_CATALOGUE', PROCESSING_STATE_TABLE, 'METADATA_DATA_LINEAGE']
     for table in extra:
-        r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + '-files/' + table if table == PROCESSING_STATE_PATH else r.paths['METADATA_PIPELINE_RUN'] + '-' + table
-        r.spark.createDataFrame([], (processing_state_schema() if table == PROCESSING_STATE_PATH else schemas[table])).write.format('delta').save(r.paths[table])
+        r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + f'-lakehouse/Tables/{PROCESSING_STATE_SCHEMA}/' + table if table == PROCESSING_STATE_TABLE else r.paths['METADATA_PIPELINE_RUN'] + '-' + table
+        r.spark.createDataFrame([], (processing_state_schema() if table == PROCESSING_STATE_TABLE else schemas[table])).write.format('delta').save(r.paths[table])
     import importlib
     writer = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
     monkeypatch.setattr(writer, 'resolve_configured_lakehouse_table',
         lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)
-    monkeypatch.setattr(shared, 'processing_state_path', lambda context: r.paths[PROCESSING_STATE_PATH])
+    monkeypatch.setattr(shared, 'processing_state_path', lambda context: r.paths[PROCESSING_STATE_TABLE])
     monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_name': 'orders'})
     # Route all workspaces to the same paths while preserving their logical scope.
     monkeypatch.setattr(shared, 'persistence_permitted', lambda context: True)
@@ -92,11 +92,11 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
 def test_checkpoint_and_receipt_packages_remain_atomic_across_workspaces(runs_delta, monkeypatch):
     """Concurrent checkpoint progress never separates from its matching publication receipt."""
     r = runs_delta
-    table = PROCESSING_STATE_PATH
-    r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + '-files/' + PROCESSING_STATE_PATH
+    table = PROCESSING_STATE_TABLE
+    r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + f'-lakehouse/Tables/{PROCESSING_STATE_SCHEMA}/{PROCESSING_STATE_TABLE}'
     r.spark.createDataFrame([], processing_state_schema()).write.format('delta').save(r.paths[table])
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)
-    monkeypatch.setattr(shared, 'processing_state_path', lambda context: r.paths[PROCESSING_STATE_PATH])
+    monkeypatch.setattr(shared, 'processing_state_path', lambda context: r.paths[PROCESSING_STATE_TABLE])
     monkeypatch.setattr(shared, 'persistence_permitted', lambda context: True)
     ready = Barrier(2)
     def commit(workspace):

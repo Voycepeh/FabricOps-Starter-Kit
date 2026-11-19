@@ -259,7 +259,6 @@ from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_l
 from ..io.shared import (
     get_spark_session,
     read_delta_path,
-    resolve_configured_file_path,
     resolve_configured_lakehouse_table,
     write_delta_path,
     resolve_lakehouse_table_location,
@@ -333,7 +332,8 @@ _TARGET_TECHNICAL_COLUMNS = {
 
 
 _LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
-PROCESSING_STATE_PATH = "fabricops/misc/processing_state"
+PROCESSING_STATE_SCHEMA = "misc"
+PROCESSING_STATE_TABLE = "PROCESSING_STATE"
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
@@ -2027,8 +2027,13 @@ def validate_processing_state_isolation(target):
 
 
 def processing_state_path(context):
-    """Resolve the private Delta location in the configured shared Lakehouse."""
-    return resolve_configured_file_path("Metadata", PROCESSING_STATE_PATH, context=context)[2]
+    """Resolve the operational Delta table in the configured shared Lakehouse."""
+    store, _, _, path = resolve_configured_lakehouse_table(
+        "Metadata", PROCESSING_STATE_TABLE, PROCESSING_STATE_SCHEMA, context=context,
+    )
+    if not store.schema_enabled:
+        raise ValueError("The Processing State Lakehouse must be schema-enabled.")
+    return path
 
 
 def read_processing_state(*, context):
@@ -2038,7 +2043,7 @@ def read_processing_state(*, context):
         return read_delta_path(get_spark_session(context=context), path)
     except Exception as exc:
         raise RuntimeError(
-            f"Unable to read Processing State. Check access to Files/{PROCESSING_STATE_PATH} "
+            f"Unable to read {PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}. Check access "
             f"in the configured Lakehouse and run setup_processing_state() if needed. {exc}"
         ) from None
 
@@ -2156,7 +2161,7 @@ def _physical_target_has_publication(
 def _merge_source_observation_records(
     records: list[dict[str, Any]], *, context: Mapping[str, Any]
 ) -> None:
-    """Idempotently merge typed Processing State records at the configured Lakehouse Files path."""
+    """Idempotently merge typed Processing State records at the configured Lakehouse table path."""
     if not records or not persistence_permitted(context):
         return
     try:

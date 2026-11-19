@@ -1,4 +1,4 @@
-"""Operator entry point for initializing the private Processing State store."""
+"""Operator entry point for initializing the operational Processing State table."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ def setup_processing_state(
     config: FrameworkConfig | dict[str, Any],
     workspace_id: str,
 ) -> dict[str, Any]:
-    """Create an empty private Delta store or validate the existing store.
+    """Create an empty Processing State table or validate the existing table.
 
     Parameters
     ----------
@@ -37,16 +37,17 @@ def setup_processing_state(
     Notes
     -----
     Run under the Lakehouse owner's identity. Initial creation starts with empty
-    Processing State. Repeated setup preserves rows already in the private store.
+    Processing State. Repeated setup preserves rows already in the table.
 
     Examples
     --------
     >>> setup_processing_state(config=CONFIG, workspace_id=WORKSPACE_ID)
-    {'status': 'created', 'path': 'Files/fabricops/misc/processing_state'}
+    {'status': 'created', 'path': 'Tables/misc/PROCESSING_STATE'}
 
     """
     from fabricops_kit.pipeline.shared import (
-        PROCESSING_STATE_PATH,
+        PROCESSING_STATE_SCHEMA,
+        PROCESSING_STATE_TABLE,
         processing_state_path,
         processing_state_schema,
         validate_processing_state_isolation,
@@ -72,7 +73,7 @@ def setup_processing_state(
     from delta.tables import DeltaTable
 
     validate_processing_state_isolation(DeltaTable.forPath(spark, path))
-    return {"status": status, "path": f"Files/{PROCESSING_STATE_PATH}"}
+    return {"status": status, "path": f"Tables/{PROCESSING_STATE_SCHEMA}/{PROCESSING_STATE_TABLE}"}
 
 
 __all__ = ["setup_processing_state"]

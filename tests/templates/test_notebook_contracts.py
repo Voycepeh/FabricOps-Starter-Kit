@@ -89,6 +89,33 @@ def _fabricops_attribute_references(tree: ast.Module) -> set[str]:
     return references
 
 
+@pytest.mark.parametrize(
+    "initialize,caller_workspace_id,expected",
+    [(True, "", ["metadata", "state"]), (True, "dev", []), (False, "", [])],
+)
+def test_lakehouse_bootstrap_initializes_processing_state_only_on_direct_runs(
+    initialize: bool, caller_workspace_id: str, expected: list[str],
+) -> None:
+    """Only the direct Lakehouse bootstrap provisions the two stores."""
+    cell = _cell_by_id("00_env_config.ipynb", "f56e6cc7-6ef8-4562-b6e6-99a50996d735")
+    tree = ast.parse(cell.source)
+    calls = []
+    namespace = {
+        "CONFIG": object(),
+        "WORKSPACE_ID": "dev",
+        "caller_workspace_id": caller_workspace_id,
+        "INITIALIZE_METADATA": initialize,
+        "setup_metadata_tables": lambda **kwargs: calls.append("metadata"),
+        "setup_processing_state": lambda **kwargs: calls.append("state"),
+    }
+    assert isinstance(tree.body[0], ast.Assign)
+    assert isinstance(tree.body[0].targets[0], ast.Name)
+    assert tree.body[0].targets[0].id == "INITIALIZE_METADATA"
+    tree.body.pop(0)  # Supply the operator's flag value from the test case.
+    exec(compile(tree, "00_env_config bootstrap", "exec"), namespace)
+    assert calls == expected
+
+
 @pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
 def test_template_notebooks_are_valid_and_code_cells_compile(notebook_path: Path):
     """Validate committed template notebooks and portable Python syntax."""

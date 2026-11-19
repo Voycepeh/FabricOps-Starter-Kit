@@ -29,10 +29,11 @@ def _stub_delta_isolation(monkeypatch, expected_path, properties):
 
 
 def test_setup_creates_empty_state_once(monkeypatch):
-    """Use the configured Files path and preserve the existing store on reruns."""
+    """Use the configured Lakehouse table path and preserve the existing store on reruns."""
     config = framework_config()
     context = {"config": config, "scope_workspace_id": "dev"}
     destination = processing_state.processing_state_path(context)
+    assert destination.endswith("/Tables/misc/PROCESSING_STATE")
     frame = SimpleNamespace(schema=processing_state.processing_state_schema())
     _stub_delta_isolation(monkeypatch, destination, {"delta.isolationLevel": "Serializable"})
     tables = {}
@@ -58,7 +59,7 @@ def test_setup_creates_empty_state_once(monkeypatch):
     monkeypatch.setattr(setup, "write_delta_path", write)
 
     assert setup.setup_processing_state(config=config, workspace_id="dev") == {
-        "status": "created", "path": "Files/fabricops/misc/processing_state",
+        "status": "created", "path": "Tables/misc/PROCESSING_STATE",
     }
     assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "validated"
     assert tables == {destination: frame}

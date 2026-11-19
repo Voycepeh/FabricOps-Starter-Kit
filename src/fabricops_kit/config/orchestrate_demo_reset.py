@@ -19,14 +19,15 @@ from fabricops_kit.io.shared import (
     resolve_configured_lakehouse_table,
 )
 from fabricops_kit.pipeline.shared import (
-    PROCESSING_STATE_PATH,
+    PROCESSING_STATE_SCHEMA,
+    PROCESSING_STATE_TABLE,
     processing_state_path,
     read_processing_state,
     resolve_physical_table_identity,
     validate_processing_state_schema,
 )
 
-_DEMO_PROCESSING_STATE = f"Files/{PROCESSING_STATE_PATH}"
+_DEMO_PROCESSING_STATE = f"{PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}"
 
 _DEMO_SOURCES = {
     ("Bronze", "orders"): ("demo/orders.csv", 120),
@@ -287,7 +288,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     -----
     True clears all current canonical metadata rows in the dedicated item,
     including frozen Contracts, activations, approvals, promotion history and
-    Runs. It also clears the dedicated private Processing State store. Saved submissions, Dry Run evidence and notebook
+    Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
     snapshots in its three native lifecycle folders are removed too. Table
     definitions remain; no metadata migration is performed.
 
