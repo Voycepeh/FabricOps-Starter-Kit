@@ -1,0 +1,524 @@
+expression MetadataWorkspaceId = "" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = false]
+
+expression MetadataLakehouseId = "" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = false]
+
+expression EngineeringMetadataSchema = "engineering" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = false]
+
+expression WorkspaceNames = "{}" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = false]
+
+expression AssetObservations =
+		let
+		    H = Helpers,
+		    ops = Table.SelectRows(Operations, each [Kind] = "Table" and [AssetKey] <> null),
+		    catalog = Metadata("METADATA_DATA_CATALOGUE", {"metadata_level", "table_id", "workspace_id", "store_type",
+		        "layer", "schema_name", "table_name", "is_active", "_committed_at"}, true),
+		    catalogueKeys = Table.TransformColumns(catalog, {{"workspace_id", each H[Scope](H[TextOrNull](_))},
+		        {"table_id", H[TextOrNull]}, {"_committed_at", H[Utc]}}),
+		    scoped = Table.SelectRows(catalogueKeys, each [workspace_id] <> null and [table_id] <> null),
+		    current = Table.Group(scoped, {"workspace_id", "table_id"}, {{"Current", (rows) =>
+		        let last = List.Max(List.RemoveNulls(rows[_committed_at]), null),
+		            candidates = Table.Distinct(Table.SelectRows(rows, each [_committed_at] = last))
+		        in if Table.RowCount(candidates) <> 1 then null else candidates{0}, type nullable record}}),
+		    bindings = Table.Group(ops, {"WorkspaceId", "TableId"}, {{"AssetKey", each H[One]([AssetKey]), type nullable text}}),
+		    bound = Table.NestedJoin(current, {"workspace_id", "table_id"}, bindings, {"WorkspaceId", "TableId"}, "Binding", JoinKind.LeftOuter),
+		    active = Table.AddColumn(bound, "ResolvedKey", each if Table.IsEmpty([Binding]) then null else [Binding]{0}[AssetKey]),
+		    byAsset = Table.Group(Table.SelectRows(active, each [ResolvedKey] <> null and [Current] <> null),
+		        {"ResolvedKey"}, {{"Catalogue", each [Current], type list}}),
+		    byOperation = Table.Group(ops, {"AssetKey"}, {{"Binding", each Table.Sort(_, {{"RunOrder", Order.Descending}, {"OperationKey", Order.Ascending}}){0}, type record}}),
+		    enriched = Table.NestedJoin(byOperation, {"AssetKey"}, byAsset, {"ResolvedKey"}, "Details", JoinKind.LeftOuter),
+		    physical = Table.TransformRows(enriched, (asset) =>
+		        let a = asset[Binding],
+		            details = if Table.IsEmpty(asset[Details]) then {} else asset[Details]{0}[Catalogue],
+		            layer = H[One](List.Transform(details, each [layer])),
+		            isActive = H[One](List.Transform(details, each [is_active]))
+		        in [AssetKey=asset[AssetKey], TableId=a[TableId], WorkspaceId=a[AssetWorkspace], ItemId=a[ItemId],
+		            Label=a[AssetLabel] & " · " & H[WorkspaceLabel](a[AssetWorkspace]) & " · " & H[Label]("item", a[ItemId]),
+		            Name=a[AssetLabel], Workspace=H[WorkspaceLabel](a[AssetWorkspace]), Store=a[StoreKind], Layer=layer,
+		            SchemaName=a[SchemaName], TableName=a[TableName], Active=isActive, BindingState="Resolved physical binding"]),
+		    unresolved = Table.TransformRows(Table.SelectRows(active, each [ResolvedKey] = null and [Current] <> null), (asset) =>
+		        let c = asset[Current],
+		            label = Text.Combine(List.RemoveNulls({c[schema_name], c[table_name]}), ".")
+		        in [AssetKey=H[Key]({"unresolved", c[workspace_id], c[table_id]}), TableId=c[table_id], WorkspaceId=null,
+		            ItemId=null, Label=label & " · " & H[WorkspaceLabel](c[workspace_id]) & " · unresolved",
+		            Name=label, Workspace="Unknown physical workspace", Store=c[store_type], Layer=c[layer],
+		            SchemaName=c[schema_name], TableName=c[table_name], Active=c[is_active], BindingState="Unresolved Catalogue binding"]),
+		    columns = {"AssetKey", "TableId", "WorkspaceId", "ItemId", "Label", "Name", "Workspace", "Store", "Layer",
+		        "SchemaName", "TableName", "Active", "BindingState"}
+		in
+		    H[Rows](List.Combine({physical, unresolved}), columns)
+
+expression Calendar =
+		let
+		    today = Date.From(DateTimeZone.RemoveZone(DateTimeZone.FixedUtcNow())),
+		    dates = List.Buffer(List.Combine({Runs[UtcDate], TableProfiles[UtcDate], {today}})),
+		    start = List.Min(dates),
+		    end = List.Max(dates)
+		in
+		    Table.FromColumns({List.Dates(start, Duration.Days(end-start)+1, #duration(1, 0, 0, 0))}, type table [UtcDate=date])
+
+expression Failures =
+		let
+		    H = Helpers,
+		    rows = List.Combine(Table.TransformRows(Runs, (r) =>
+		        List.Transform(List.Positions(r[FailureJson]), (i) =>
+		            let f = r[FailureJson]{i}
+		            in [RunId=r[RunId], Ordinal=i+1, Code=f[code], Exception=H[Get](f, "exception_type")])))
+		in
+		    H[Rows](rows, {"RunId", "Ordinal", "Code", "Exception"})
+
+expression Guardrails =
+		let
+		    H = Helpers,
+		    source = Metadata("METADATA_GUARDRAIL_RESULTS", {"guardrail_result_id", "run_id", "workspace_id", "table_id",
+		        "source_id", "table_name", "guardrail_rule_id", "guardrail_version", "contract_id", "contract_version",
+		        "status", "can_continue", "severity", "guardrail_type", "rule_type", "action", "reason"}),
+		    normalized = Table.TransformColumns(source, {{"workspace_id", each H[Scope](H[TextOrNull](_))},
+		        {"run_id", H[TextOrNull]}, {"table_id", H[TextOrNull]}, {"source_id", H[TextOrNull]},
+		        {"contract_id", H[TextOrNull]}, {"reason", H[SafeReason]}}),
+		    linked = Table.NestedJoin(normalized, {"run_id", "workspace_id"}, Table.SelectColumns(Runs, {"RunId", "WorkspaceId"}),
+		        {"RunId", "WorkspaceId"}, "Run", JoinKind.Inner),
+		    matching = Table.RemoveColumns(linked, {"Run"}),
+		    unique = H[Unique](matching, {"guardrail_result_id"}, "METADATA_GUARDRAIL_RESULTS"),
+		    typed = Table.AddColumn(unique, "TypedId", each if [source_id] <> null then [source_id] else [table_id]),
+		    kind = Table.AddColumn(typed, "Kind", each if [source_id] <> null then "File" else "Table"),
+		    candidates = Table.Group(Operations, {"RunId", "Kind", "TypedId"}, {
+		        {"AssetKey", each if List.Contains([AssetKey], null) then null else H[One]([AssetKey]), type nullable text},
+		        {"AssetLabel", each H[One]([AssetLabel]), type nullable text}}),
+		    attributed = Table.NestedJoin(kind, {"run_id", "Kind", "TypedId"}, candidates, {"RunId", "Kind", "TypedId"}, "Asset", JoinKind.LeftOuter),
+		    rows = Table.TransformRows(attributed, (r) =>
+		        let a = if r[TypedId] = null or Table.IsEmpty(r[Asset]) then null else r[Asset]{0},
+		            family = H[TextOrNull](r[guardrail_type]), status = r[status],
+		            evaluated = r[rule_type] <> "contract_validation" and (List.Contains({"passed", "warning", "failed", "blocked"}, status)
+		                or (family = "source_drift" and List.Contains({"no_change", "changes_detected"}, status)))
+		        in
+		            [ResultId=r[guardrail_result_id], RunId=r[run_id], AssetKey=H[Get](a, "AssetKey"),
+		             AssetLabel=H[Get](a, "AssetLabel") ?? H[TextOrNull](r[table_name]) ?? H[Label](r[Kind], r[TypedId]),
+		             RuleId=r[guardrail_rule_id], GuardrailVersion=r[guardrail_version], ContractId=r[contract_id],
+		             ContractVersion=if r[contract_id] = null then null else r[contract_version],
+		             Status=status, Continue=r[can_continue], Severity=r[severity], GuardrailType=family, RuleType=r[rule_type],
+		             Action=r[action], Reason=r[reason], Evaluated=evaluated]),
+		    columns = {"ResultId", "RunId", "AssetKey", "AssetLabel", "RuleId", "GuardrailVersion", "ContractId",
+		        "ContractVersion", "Status", "Continue", "Severity", "GuardrailType", "RuleType", "Action", "Reason", "Evaluated"}
+		in
+		    H[Rows](rows, columns)
+
+expression Helpers =
+		let
+		    Get = (row as nullable record, field as text) as any =>
+		        if row = null then null else Record.FieldOrDefault(row, field),
+		    TextOrNull = (value as any) as nullable text =>
+		        if value = null then null else let text = Text.Trim(Text.From(value, "en-US")) in if text = "" then null else text,
+		    Key = (parts as list) as text =>
+		        Text.Upper(Binary.ToText(Json.FromValue(parts), BinaryEncoding.Hex)),
+		    Label = (prefix as text, id as nullable text) as text =>
+		        if id = null then prefix & " unknown" else prefix & " " & Text.End(id, 12),
+		    Utc = (value as any) as nullable datetime =>
+		        if value = null then null
+		        else if Value.Is(value, type datetimezone) then DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(value, 0))
+		        else if Value.Is(value, type datetime) then value
+		        else
+		            let
+		                text = Text.From(value),
+		                clock = if Text.Length(text) > 10 then Text.Range(text, 10) else "",
+		                hasZone = Text.EndsWith(text, "Z", Comparer.OrdinalIgnoreCase) or Text.Contains(clock, "+") or Text.Contains(clock, "-")
+		            in
+		                if hasZone then try DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(DateTimeZone.FromText(text, [Culture = "en-US"]), 0)) otherwise null
+		                else try DateTime.FromText(text, [Culture = "en-US"]) otherwise null,
+		    DateUtc = (value as nullable datetime) as nullable date => if value = null then null else Date.From(value),
+		    Elapsed = (start as nullable datetime, finish as nullable datetime) as nullable number =>
+		        if start = null or finish = null or finish < start then null else Duration.TotalSeconds(finish - start),
+		    Array = (value as any, field as text, run as text, optional absentAsEmpty as nullable logical) as list =>
+		        let parsed = try (if value = null and absentAsEmpty = true then {} else if Value.Is(value, type text) then Json.Document(value) else value)
+		        in
+		            if parsed[HasError] or not Value.Is(parsed[Value], type list)
+		            then error Error.Record("Invalid Run payload", field & " must be a complete JSON array.", [RunId = run])
+		            else parsed[Value],
+		    Scope = (id as nullable text) as nullable text => if id = null then null else Text.Lower(id),
+		    Asset = (kind as text, tableId as nullable text, fileId as nullable text, binding as nullable record) as nullable text =>
+		        let
+		            workspace = Scope(TextOrNull(Get(binding, "workspace_id"))),
+		            item = Scope(TextOrNull(Get(binding, "item_id"))),
+		            store = TextOrNull(Get(binding, "kind")),
+		            name = TextOrNull(Get(binding, "table_name"))
+		        in
+		            if workspace = null or item = null then null
+		            else if kind = "File" then if fileId = null then null else Key({"file", workspace, item, fileId})
+		            else if tableId = null or store = null or name = null then null
+		            else Key({"table", workspace, item, Text.Lower(store), TextOrNull(Get(binding, "schema")), name}),
+		    Rows = (items as list, columns as list) as table =>
+		        Table.FromRecords(items, columns, MissingField.UseNull),
+		    Unique = (source as table, keys as list, name as text) as table =>
+		        let
+		            distinctRows = Table.Distinct(source),
+		            groups = Table.Group(distinctRows, keys, {{"Count", each Table.RowCount(_), Int64.Type}}),
+		            invalid = Table.SelectRows(groups, each [Count] <> 1)
+		        in
+		            if Table.IsEmpty(invalid) then distinctRows
+		            else error Error.Record("Conflicting metadata keys", name, [Keys = keys]),
+		    One = (values as list) as any =>
+		        let distinctValues = List.Distinct(List.RemoveNulls(values))
+		        in if List.Count(distinctValues) = 1 then distinctValues{0} else null,
+		    SafeReason = (value as any) as nullable text =>
+		        let
+		            reason = TextOrNull(value),
+		            allowed = {"disabled", "already_completed", "interval_not_elapsed", "No successful publication",
+		                "read_only_diagnostic", "Not due for this operation", "Source Drift disabled."},
+		            words = if reason = null then {} else Text.Split(reason, " "),
+		            expected = {"observed", "violation(s)", "in"},
+		            digit = (s as text) as logical => s <> "" and Text.Select(s, {"0".."9"}) = s
+		        in
+		            if reason = null then null
+		            else if List.Contains(allowed, reason) then reason
+		            else if List.Count(words) = 9 and digit(words{0}) and List.Range(words, 1, 3) = expected
+		                and digit(words{4}) and List.Range(words, 5, 2) = {"applicable", "row(s);"}
+		                and List.Contains({"within tolerance.", "tolerance exceeded."}, Text.Combine(List.Range(words, 7), " "))
+		            then reason
+		            else "Reason withheld",
+		    WorkspaceLabel = (id as nullable text) as text =>
+		        let mapping = Json.Document(WorkspaceNames)
+		        in if not Value.Is(mapping, type record) then error "WorkspaceNames must be a JSON object."
+		           else if id = null then "Workspace unknown"
+		           else TextOrNull(Get(mapping, id)) ?? Label("Workspace", id)
+		in
+		    [Get=Get, TextOrNull=TextOrNull, Key=Key, Label=Label, Utc=Utc, DateUtc=DateUtc,
+		     Elapsed=Elapsed, Array=Array, Scope=Scope, Asset=Asset, Rows=Rows, Unique=Unique, One=One,
+		     SafeReason=SafeReason, WorkspaceLabel=WorkspaceLabel]
+
+expression Lineage =
+		let
+		    H = Helpers,
+		    successes = Table.SelectRows(Runs, each [Outcome] = "Success"),
+		    latest = Table.Group(successes, {"PipelineKey"}, {{"RunId", each Table.Sort(_, {{"Started", Order.Descending},
+		        {"RunId", Order.Ascending}}){0}[RunId], type text}}),
+		    previousRuns = List.Buffer(latest[RunId]),
+		    participants = Table.Group(Operations, {"RunId", "Kind", "TypedId"}, {{"Known", (rows) =>
+		        let key = if List.Contains(rows[AssetKey], null) then null else H[One](rows[AssetKey])
+		        in if key = null then null else Table.SelectRows(rows, each [AssetKey] = key){0}, type nullable record}}),
+		    byRun = Table.Group(participants, {"RunId"}, {{"Participants", each Table.ToRecords(_), type list}}),
+		    writes = Table.SelectRows(Operations, each [Role] = "Write" and [Started] <> null),
+		    joined = Table.NestedJoin(writes, {"RunId"}, byRun, {"RunId"}, "SameRun", JoinKind.LeftOuter),
+		    all = List.Combine(Table.TransformRows(joined, (write) =>
+		        let
+		            declared = List.Distinct(List.Combine({List.Transform(write[SourceTables], each [Kind="Table", Id=_]),
+		                List.Transform(write[SourceFiles], each [Kind="File", Id=_])})),
+		            references = if List.IsEmpty(declared) then {[Kind="Unknown", Id=null]} else declared,
+		            same = if Table.IsEmpty(write[SameRun]) then {} else write[SameRun]{0}[Participants]
+		        in List.Transform(references, (ref) =>
+		            let
+		                matches = if ref[Id] = null then {} else List.Select(same, each [Kind] = ref[Kind] and [TypedId] = ref[Id]),
+		                src = if List.Count(matches) = 1 then matches{0}[Known] else null,
+		                from = H[Get](src, "AssetKey"),
+		                to = write[AssetKey],
+		                state = if to = null then "Unresolved target" else if from <> null then "Resolved"
+		                    else if ref[Id] = null then "No recorded source association" else "Unresolved source",
+		                source = if src <> null then src[AssetLabel] else if ref[Id] = null then "Unknown source" else H[Label](ref[Kind], ref[Id])
+		            in
+		                [EdgeKey=H[Key]({from ?? H[Key]({"unknown source", ref[Kind], ref[Id]}), write[PipelineKey],
+		                    to ?? H[Key]({"unknown target", write[Kind], write[TypedId]})}),
+		                 PipelineKey=write[PipelineKey], RunId=write[RunId], At=write[RunStart],
+		                 Current=List.Contains(previousRuns, write[RunId]),
+		                 SourceKey=from, SourceKind=ref[Kind], Source=source, SourceWorkspace=H[WorkspaceLabel](H[Get](src, "AssetWorkspace")),
+		                 TargetKey=to, TargetKind=write[Kind], Target=write[AssetLabel], TargetWorkspace=H[WorkspaceLabel](write[AssetWorkspace]),
+		                 Resolution=state]))),
+		    columns = {"EdgeKey", "PipelineKey", "RunId", "At", "Current", "SourceKey", "SourceKind", "Source", "SourceWorkspace",
+		        "TargetKey", "TargetKind", "Target", "TargetWorkspace", "Resolution"},
+		    edges = H[Rows](all, columns),
+		    bounds = Table.Group(edges, {"EdgeKey"}, {{"First UTC", each List.Min([At]), type datetime},
+		        {"Last UTC", each List.Max([At]), type datetime}}),
+		    current = Table.Distinct(Table.SelectColumns(Table.SelectRows(edges, each [Current]), List.RemoveItems(columns, {"At", "Current"}))),
+		    added = Table.Join(current, {"EdgeKey"}, bounds, {"EdgeKey"}),
+		    result = Table.RenameColumns(added, {{"First UTC", "FirstUtc"}, {"Last UTC", "LastUtc"}})
+		in
+		    H[Unique](result, {"EdgeKey"}, "Current dependency edges")
+
+expression Metadata =
+		(tableName as text, columns as list, optional catalogueOnly as nullable logical) as table =>
+		let
+		    selected =
+		        if MetadataWorkspaceId = "" and MetadataLakehouseId = "" then #table(columns, {})
+		        else if MetadataWorkspaceId = "" or MetadataLakehouseId = "" or EngineeringMetadataSchema = "" then
+		            error "Set MetadataWorkspaceId, MetadataLakehouseId and EngineeringMetadataSchema in Power Query."
+		        else
+		            let
+		                catalog = Lakehouse.Contents([HierarchicalNavigation = true]),
+		                workspace = catalog{[workspaceId = Text.Lower(Text.Trim(MetadataWorkspaceId))]}[Data],
+		                lakehouse = workspace{[lakehouseId = Text.Lower(Text.Trim(MetadataLakehouseId))]}[Data],
+		                // The connector exposes schema-qualified table navigation.
+		                schema = lakehouse{[Id = Text.Trim(EngineeringMetadataSchema), ItemKind = "Schema"]}[Data],
+		                table = schema{[Id = tableName, ItemKind = "Table"]}[Data]
+		            in
+		                Table.SelectColumns(table, columns),
+		    result = if catalogueOnly = true then Table.SelectRows(selected, each [metadata_level] = "table") else selected
+		in
+		    result
+
+expression OperationSeries =
+		let
+		    H = Helpers,
+		    byKey = Table.Group(Operations, {"SeriesKey"}, {{"Last", each Table.Sort(_, {{"RunOrder", Order.Descending}}){0}, type record}}),
+		    scopedPipelines = Record.FromList(Pipelines[Label], Pipelines[PipelineKey]),
+		    rows = Table.TransformRows(byKey, each
+		        let o = [Last], workspace = H[WorkspaceLabel](o[AssetWorkspace]),
+		            pipeline = Record.FieldOrDefault(scopedPipelines, o[PipelineKey], "Pipeline unknown"),
+		            item = if o[ItemId] = null then "" else " · " & Text.End(o[ItemId], 8),
+		            label = o[Role] & " · " & o[AssetLabel] & " · " & (o[OperationMode] ?? "mode unknown")
+		                & " · " & workspace & item & " · " & o[RecordedKey]
+		        in [SeriesKey=[SeriesKey], Label=label, ScopedLabel=(pipeline ?? "Pipeline unknown") & " / " & label,
+		            Role=o[Role], Mode=o[OperationMode] ?? "Not captured"])
+		in
+		    H[Rows](rows, {"SeriesKey", "Label", "ScopedLabel", "Role", "Mode"})
+
+expression Operations =
+		let
+		    H = Helpers,
+		    ReadCount = (metric as nullable record, row as record, nested as text, legacy as text) as nullable number =>
+		        let a = H[Get](metric, nested), b = H[Get](row, legacy)
+		        in if a <> null and b <> null and a <> b then null else a ?? b,
+		    rows = List.Combine(Table.TransformRows(Runs, (r) =>
+		        List.Transform(r[OperationJson], (o) =>
+		            let
+		                operation = H[TextOrNull](H[Get](o, "operation_key")),
+		                opKey = if operation = null then error Error.Record("Missing operation key", r[RunId]) else H[Key]({r[RunId], operation}),
+		                tableId = H[TextOrNull](H[Get](o, "table_id")),
+		                fileId = H[TextOrNull](H[Get](o, "source_id")),
+		                kind = if H[Get](o, "source_type") = "file" then "File" else "Table",
+		                role = if o[pipeline_role] = "source" then "Read" else if o[pipeline_role] = "target" then "Write"
+		                    else error Error.Record("Unknown operation role", r[RunId]),
+		                typed = if kind = "File" then fileId else tableId,
+		                binding = H[Get](o, "destination"),
+		                asset = H[Asset](kind, tableId, fileId, binding),
+		                metric = H[Get](o, "metrics"),
+		                name = Text.Combine(List.RemoveNulls({H[TextOrNull](H[Get](binding, "schema")), H[TextOrNull](H[Get](binding, "table_name"))}), "."),
+		                assetLabel = if kind = "File" then H[Label]("File", fileId)
+		                    else if name <> "" then name else H[Label]("Table", tableId),
+		                start = H[Utc](H[Get](o, "started_at")),
+		                end = H[Utc](H[Get](o, "completed_at")),
+		                opMode = H[TextOrNull](if role = "Read" then H[Get](o, "read_mode") else H[Get](o, "write_mode")),
+		                series = H[Key]({r[PipelineKey], operation, role, asset, opMode}),
+		                cohort = if r[Outcome] <> "Success" or o[status] <> "succeeded" or asset = null or opMode = null
+		                    or (r[Mode] = "governed" and r[Version] = null) then null
+		                    else H[Key]({series, r[Mode], r[Version], H[Get](o, "query_sha256")}),
+		                files = if kind = "File" and role = "Write" then H[Get](metric, "file_count") else null,
+		                bytes = if kind = "File" and role = "Write" then H[Get](metric, "output_bytes") else null
+		            in
+		                [RunId=r[RunId], RunOrder=r[RunOrder], PipelineKey=r[PipelineKey], WorkspaceId=r[WorkspaceId],
+		                 SeriesKey=series, OperationKey=opKey, RecordedKey=operation, AssetKey=asset, TypedId=typed,
+		                 TableId=tableId, FileId=fileId, Kind=kind, FileFormat=H[Get](binding, "file_format"),
+		                 Role=role, OperationMode=opMode, Status=o[status], Started=start, Completed=end, Duration=H[Elapsed](start, end),
+		                 AssetLabel=assetLabel, AssetWorkspace=H[Scope](H[TextOrNull](H[Get](binding, "workspace_id"))),
+		                 ItemId=H[TextOrNull](H[Get](binding, "item_id")), StoreKind=H[Get](binding, "kind"),
+		                 SchemaName=H[Get](binding, "schema"), TableName=H[Get](binding, "table_name"),
+		                 ContractId=H[TextOrNull](H[Get](o, "contract_id")), ContractVersion=H[Get](o, "contract_version"),
+		                 Publication=if kind = "File" and role = "Write" then H[Get](o, "publication_status") else null,
+		                 RowsRead=if role = "Read" then ReadCount(metric, o, "rows_read", "rows_read") else null,
+		                 Columns=if role = "Read" then H[Get](metric, "columns") else null,
+		                 InputRows=if role = "Write" then H[Get](metric, "input_rows") else null,
+		                 Committed=if role = "Write" and kind = "Table" then ReadCount(metric, o, "rows_committed", "rows_written") else null,
+		                 Inserted=if kind = "Table" and role = "Write" and List.Contains({"append", "append_all", "append_new_only", "scd1"}, opMode) then H[Get](metric, "rows_inserted") else null,
+		                 Updated=if kind = "Table" and role = "Write" and opMode = "scd1" then H[Get](metric, "rows_updated") else null,
+		                 Unchanged=if kind = "Table" and role = "Write" and List.Contains({"scd1", "scd2"}, opMode) then H[Get](metric, "rows_unchanged") else null,
+		                 VersionsInserted=if kind = "Table" and role = "Write" and opMode = "scd2" then H[Get](metric, "versions_inserted") else null,
+		                 VersionsExpired=if kind = "Table" and role = "Write" and opMode = "scd2" then H[Get](metric, "versions_expired") else null,
+		                 TargetRows=if kind = "Table" and role = "Write" then H[Get](metric, "total_target_rows") else null,
+		                 Measurement=H[TextOrNull](H[Get](metric, "measurement_source")), OutputFiles=files, OutputBytes=bytes,
+		                 SourceTables=H[Array](H[Get](o, "source_table_ids"), "source_table_ids", r[RunId], true),
+		                 SourceFiles=H[Array](H[Get](o, "source_ids"), "source_ids", r[RunId], true),
+		                 StageJson=H[Array](H[Get](o, "stages"), "stages", r[RunId], true),
+		                 Cohort=cohort, RunStart=r[Started]]))),
+		    columns = {"RunId", "RunOrder", "PipelineKey", "WorkspaceId", "SeriesKey", "OperationKey", "RecordedKey",
+		        "AssetKey", "TypedId", "TableId", "FileId", "Kind", "FileFormat", "Role", "OperationMode", "Status",
+		        "Started", "Completed", "Duration", "AssetLabel", "AssetWorkspace", "ItemId", "StoreKind", "SchemaName",
+		        "TableName", "ContractId", "ContractVersion", "Publication", "RowsRead", "Columns", "InputRows",
+		        "Committed", "Inserted", "Updated", "Unchanged", "VersionsInserted", "VersionsExpired", "TargetRows",
+		        "Measurement", "OutputFiles", "OutputBytes", "SourceTables", "SourceFiles", "StageJson", "Cohort", "RunStart"},
+		    table = H[Rows](rows, columns),
+		    duplicate = Table.SelectRows(Table.Group(table, {"OperationKey"}, {{"Count", each Table.RowCount(_), Int64.Type}}), each [Count] <> 1)
+		in
+		    if Table.IsEmpty(duplicate) then table else error "Duplicate Run operation key."
+
+expression Pipelines =
+		let
+		    H = Helpers,
+		    grouped = Table.Group(Runs, {"PipelineKey"}, {{"Latest", each Table.Sort(_, {{"Started", Order.Descending}, {"RunId", Order.Ascending}}){0}, type record}}),
+		    rows = Table.TransformRows(grouped, each
+		        let r = [Latest]
+		        in [PipelineKey=[PipelineKey], PipelineId=r[PipelineId], WorkspaceId=r[WorkspaceId],
+		            Workspace=H[WorkspaceLabel](r[WorkspaceId]), Label=r[PipelineId] & " · " & H[WorkspaceLabel](r[WorkspaceId]),
+		            LatestRunId=r[RunId], LatestStatus=r[Status], LatestOutcome=r[Outcome], LatestUtc=r[Started],
+		            LatestDuration=r[Duration], LatestFailure=r[FailureSummary], Notebook=r[Notebook]])
+		in
+		    H[Rows](rows, {"PipelineKey", "PipelineId", "WorkspaceId", "Workspace", "Label", "LatestRunId",
+		        "LatestStatus", "LatestOutcome", "LatestUtc", "LatestDuration", "LatestFailure", "Notebook"})
+
+expression ProfileEvents =
+		let
+		    H = Helpers,
+		    list = List.Combine(Table.TransformRows(Runs, (r) =>
+		        List.Transform(List.Positions(r[ProfileJson]), (i) =>
+		            let
+		                e = r[ProfileJson]{i},
+		                tableId = H[TextOrNull](H[Get](e, "table_id")),
+		                physical = H[Get](e, "physical"),
+		                asset = H[Asset]("Table", tableId, null, physical),
+		                workspace = H[Scope](H[TextOrNull](H[Get](e, "workspace_id"))),
+		                contextRun = H[TextOrNull](H[Get](e, "pipeline_run_id")),
+		                status = H[Get](e, "status")
+		            in
+		                [RunId=r[RunId], Ordinal=i+1, TableId=tableId, AssetKey=asset, WorkspaceId=workspace,
+		                 ContextKey=H[Get](e, "context_key"), ContextRun=contextRun,
+		                 Activity=H[Get](e, "activity"), Status=status, Persisted=H[Get](e, "results_persisted"),
+		                 EmptyResult=H[Get](e, "empty_result"), Snapshot=H[Get](e, "profile_snapshot_id"),
+		                 Completed=H[Utc](H[Get](e, "completed_at")), Executed=H[Utc](H[Get](e, "executed_at")),
+		                 Reason=H[SafeReason](H[Get](e, "reason")), ProfileScope=H[Get](e, "profile_scope"),
+		                 RowCount=H[Get](e, "row_count"), Limit=H[Get](e, "profiling_max_rows"), Trigger=H[Get](e, "trigger"),
+		                 AssetLabel=if tableId = null then "Unresolved profile context" else
+		                    H[TextOrNull](H[Get](physical, "table_name")) ?? H[Label]("Table", tableId)]))),
+		    result = H[Rows](list, {"RunId", "Ordinal", "TableId", "AssetKey", "WorkspaceId", "ContextKey", "ContextRun",
+		        "Activity", "Status", "Persisted", "EmptyResult", "Snapshot", "Completed", "Executed", "Reason",
+		        "ProfileScope", "RowCount", "Limit", "Trigger", "AssetLabel"})
+		in
+		    result
+
+expression Reachability =
+		let
+		    H = Helpers,
+		    edges = Table.Buffer(Table.SelectRows(Lineage, each [Resolution] = "Resolved")),
+		    pipelineNames = Record.FromList(Pipelines[Label], Pipelines[PipelineKey]),
+		    nodeNames = Record.FromList(AssetObservations[Label], AssetObservations[AssetKey]),
+		    known = Table.SelectRows(AssetObservations, each [BindingState] = "Resolved physical binding"),
+		    rootKeys = List.Buffer(known[AssetKey]),
+		    Directions = (origin as text, next as text, nextLabel as text, nextKind as text, direction as text) as list =>
+		        let
+		            buckets = Table.Group(edges, {origin}, {{"Members", each Table.ToRecords(_), type list}}),
+		            adjacency = Record.FromList(buckets[Members], Table.Column(buckets, origin)),
+		            Walk = (root as text) as list =>
+		                let
+		                    level = (frontier as list, visited as list, hop as number) as record =>
+		                        let found = List.Buffer(List.Combine(List.Transform(frontier, each Record.FieldOrDefault(adjacency, _, {})))),
+		                            nextKeys = List.Buffer(List.Difference(List.Distinct(List.Transform(found, each Record.Field(_, next))), visited))
+		                        in [Frontier=frontier, Visited=List.Combine({visited, nextKeys}), Next=nextKeys, Hop=hop, Edges=found],
+		                    levels = List.Generate(() => level({root}, {root}, 1), each not List.IsEmpty([Frontier]),
+		                        each level([Next], [Visited], [Hop]+1)),
+		                    rows = List.Combine(List.Transform(levels, (state) =>
+		                        List.Combine(List.Transform(state[Edges], (edge) =>
+		                            let key = Record.Field(edge, next),
+		                                asset = if key = root then {} else {
+		                                    [RootKey=root, Direction=direction, NodeKey=key, NodeKind=Record.Field(edge, nextKind),
+		                                     Node=Record.FieldOrDefault(nodeNames, key, Record.Field(edge, nextLabel)),
+		                                     Hop=state[Hop], FirstUtc=edge[FirstUtc], LastUtc=edge[LastUtc]]},
+		                                pipeline = [RootKey=root, Direction=direction, NodeKey=edge[PipelineKey], NodeKind="Pipeline",
+		                                    Node=Record.FieldOrDefault(pipelineNames, edge[PipelineKey], "Pipeline unknown"),
+		                                    Hop=state[Hop], FirstUtc=edge[FirstUtc], LastUtc=edge[LastUtc]]
+		                            in asset & {pipeline}))))
+		                in rows
+		        in List.Combine(List.Transform(rootKeys, Walk)),
+		    raw = List.Combine({Directions("SourceKey", "TargetKey", "Target", "TargetKind", "Downstream"),
+		        Directions("TargetKey", "SourceKey", "Source", "SourceKind", "Upstream")}),
+		    table = H[Rows](raw, {"RootKey", "Direction", "NodeKey", "NodeKind", "Node", "Hop", "FirstUtc", "LastUtc"}),
+		    closure = Table.Group(table, {"RootKey", "Direction", "NodeKind", "NodeKey"}, {
+		        {"Node", each H[One]([Node]), type nullable text}, {"Hop", each List.Min([Hop]), Int64.Type},
+		        {"FirstUtc", each List.Min([FirstUtc]), type datetime}, {"LastUtc", each List.Max([LastUtc]), type datetime}})
+		in
+		    Table.AddColumn(closure, "Direct", each [Hop] = 1, type logical)
+
+expression Runs =
+		let
+		    H = Helpers,
+		    raw = Metadata("METADATA_PIPELINE_RUN", {
+		        "run_id", "pipeline_id", "workspace_id", "execution_mode", "started_at", "completed_at", "status",
+		        "boundary_completed", "execution_identity", "pipeline_version", "run_schema_version", "_notebook_name",
+		        "operations", "profiling", "failures"}),
+		    normalized = Table.TransformColumns(raw, {
+		        {"run_id", H[TextOrNull]}, {"workspace_id", each H[Scope](H[TextOrNull](_))}, {"pipeline_id", H[TextOrNull]},
+		        {"started_at", H[Utc]}, {"completed_at", H[Utc]}, {"execution_identity", H[TextOrNull]},
+		        {"_notebook_name", H[TextOrNull]}, {"execution_mode", each H[TextOrNull](_) ?? "Not captured"}}),
+		    valid = if Table.IsEmpty(Table.SelectRows(normalized, each [run_id] = null or [workspace_id] = null
+		        or [pipeline_id] = null or [started_at] = null)) then normalized else error "A Run is missing an identity or start timestamp.",
+		    unique = H[Unique](valid, {"run_id"}, "METADATA_PIPELINE_RUN"),
+		    parsed = Table.TransformRows(unique, (r) =>
+		        let
+		            operation = H[Array](r[operations], "operations", r[run_id]),
+		            profile = H[Array](r[profiling], "profiling", r[run_id], r[run_schema_version] = null),
+		            failure = H[Array](r[failures], "failures", r[run_id], r[run_schema_version] = null),
+		            status = if List.Contains({"succeeded", "ungoverned_completed"}, r[status])
+		                    and r[boundary_completed] = true and r[completed_at] <> null then "Success"
+		                else if r[status] = "failed" then "Failed" else if r[status] = "incomplete" then "Incomplete" else "Other",
+		            key = H[Key]({r[workspace_id], r[pipeline_id]}),
+		            started = r[started_at],
+		            operationAsset = (o as record) => H[Asset](
+		                if H[Get](o, "source_type") = "file" then "File" else "Table",
+		                H[Get](o, "table_id"), H[Get](o, "source_id"), H[Get](o, "destination")),
+		            signature = if List.IsEmpty(operation) or List.AnyTrue(List.Transform(operation, each
+		                H[Get](_, "operation_key") = null or operationAsset(_) = null or
+		                (H[Get](_, "read_mode") = null and H[Get](_, "write_mode") = null))) then null
+		                else H[Key](List.Sort(List.Transform(operation, (o) =>
+		                    H[Key]({o[operation_key], H[Get](o, "pipeline_role"),
+		                        operationAsset(o),
+		                        H[Get](o, "read_mode"), H[Get](o, "write_mode"), H[Get](o, "query_sha256")})))),
+		            cohort = if status <> "Success" or signature = null or r[execution_mode] = null
+		                or (r[execution_mode] = "governed" and r[pipeline_version] = null) then null
+		                else H[Key]({key, r[execution_mode], r[pipeline_version], signature}),
+		            codes = List.RemoveNulls(List.Transform(failure, each H[TextOrNull](H[Get](_, "code"))))
+		        in
+		            [RunId=r[run_id], PipelineKey=key, PipelineId=r[pipeline_id], WorkspaceId=r[workspace_id],
+		             Mode=r[execution_mode], Started=started, Completed=r[completed_at], UtcDate=H[DateUtc](started),
+		             Duration=H[Elapsed](started, r[completed_at]), Status=r[status], Outcome=status, Boundary=r[boundary_completed],
+		             Identity=r[execution_identity], Version=r[pipeline_version], SchemaVersion=r[run_schema_version],
+		             Notebook=r[_notebook_name], Point=DateTime.ToText(started, [Format = "yyyy-MM-dd HH:mm:ss", Culture = "en-US"]),
+		             Cohort=cohort, OperationJson=operation, ProfileJson=profile, FailureJson=failure,
+		             FailureSummary=if List.IsEmpty(codes) then null else Text.Combine(codes, ", ")]),
+		    columns = {"RunId", "PipelineKey", "PipelineId", "WorkspaceId", "Mode", "Started", "Completed", "UtcDate",
+		        "Duration", "Status", "Outcome", "Boundary", "Identity", "Version", "SchemaVersion", "Notebook", "Point",
+		        "Cohort", "OperationJson", "ProfileJson", "FailureJson", "FailureSummary"},
+		    table = H[Rows](parsed, columns),
+		    cohorts = Table.AddIndexColumn(Table.Distinct(Table.SelectColumns(Table.SelectRows(table, each [Cohort] <> null), {"Cohort"})), "CohortNumber", 1, 1, Int64.Type),
+		    withCohort = Table.NestedJoin(table, {"Cohort"}, cohorts, {"Cohort"}, "CohortLookup", JoinKind.LeftOuter),
+		    expanded = Table.ExpandTableColumn(withCohort, "CohortLookup", {"CohortNumber"}),
+		    ordered = Table.Sort(expanded, {{"Started", Order.Ascending}, {"RunId", Order.Ascending}}),
+		    numbered = Table.AddIndexColumn(ordered, "RunOrder", 1, 1, Int64.Type),
+		    labelled = Table.AddColumn(numbered, "RunPoint", each [Point] & " · " & Text.From([RunOrder], "en-US"), type text)
+		in
+		    labelled
+
+expression Stages =
+		let
+		    H = Helpers,
+		    rows = List.Combine(Table.TransformRows(Operations, (operation) =>
+		        List.Transform(List.Positions(operation[StageJson]), (i) =>
+		            let s = operation[StageJson]{i}
+		            in [OperationKey=operation[OperationKey], Ordinal=i+1, Stage=s[stage], Status=s[status],
+		                Evaluation=H[Get](s, "evaluation_status"), Operation=operation[Role] & " · " & operation[AssetLabel] & " · " & operation[RecordedKey]])))
+		in
+		    H[Rows](rows, {"OperationKey", "Ordinal", "Stage", "Status", "Evaluation", "Operation"})
+
+expression TableProfiles =
+		let
+		    H = Helpers,
+		    raw = Metadata("METADATA_DATA_PROFILED", {"profile_snapshot_id", "table_id", "workspace_id", "row_count",
+		        "profile_scope", "profiling_max_rows", "_committed_at"}),
+		    normalized = Table.TransformColumns(raw, {{"workspace_id", each H[Scope](H[TextOrNull](_))}, {"_committed_at", H[Utc]}}),
+		    named = Table.SelectRows(normalized, each [profile_snapshot_id] <> null and [table_id] <> null and [workspace_id] <> null),
+		    grouped = Table.Group(named, {"profile_snapshot_id", "table_id", "workspace_id"}, {{"SnapshotRow", (rows) =>
+		        let counts = List.Distinct(rows[row_count]), valid = List.Count(counts) = 1 and counts{0} <> null and counts{0} >= 0
+		            and List.AllTrue(List.Transform(Table.ToRecords(rows), each [profile_scope] = "full_table" and [profiling_max_rows] = null))
+		        in if valid then [RowCount=counts{0}, Committed=List.Max(List.RemoveNulls(rows[_committed_at]), null)] else null, type nullable record}}),
+		    complete = Table.SelectRows(grouped, each [SnapshotRow] <> null),
+		    events = Table.SelectRows(ProfileEvents, each [Activity] = "standard" and [Status] = "passed"
+		        and [Persisted] = true and [EmptyResult] <> true and [ProfileScope] = "full_table" and [Limit] = null
+		        and [AssetKey] <> null and [Snapshot] <> null and [ContextRun] = [RunId]),
+		    joined = Table.NestedJoin(complete, {"profile_snapshot_id", "table_id", "workspace_id"},
+		        events, {"Snapshot", "TableId", "WorkspaceId"}, "Events", JoinKind.Inner),
+		    resolved = Table.TransformRows(joined, each
+		        let a = H[One]([Events][AssetKey]), done = H[One]([Events][Completed]), item = [SnapshotRow],
+		            date = done ?? item[Committed], snap = [profile_snapshot_id],
+		            same = List.AllTrue(List.Transform([Events][RowCount], each _ = null or _ = item[RowCount]))
+		        in if a = null or date = null or not same then null
+		        else [SnapshotKey=H[Key]({a, snap}), Snapshot=snap, AssetKey=a, SnapshotUtc=date, UtcDate=Date.From(date),
+		            Point=DateTime.ToText(date, [Format = "yyyy-MM-dd HH:mm:ss", Culture = "en-US"]), RowCount=item[RowCount], ProfileScope="full_table"]),
+		    table = H[Rows](List.RemoveNulls(resolved), {"SnapshotKey", "Snapshot", "AssetKey", "SnapshotUtc", "UtcDate",
+		        "Point", "RowCount", "ProfileScope"}),
+		    unique = H[Unique](table, {"SnapshotKey"}, "Full table profiles"),
+		    sorted = Table.Sort(unique, {{"SnapshotUtc", Order.Ascending}, {"Snapshot", Order.Ascending}, {"AssetKey", Order.Ascending}}),
+		    numbered = Table.AddIndexColumn(sorted, "SnapshotOrder", 1, 1, Int64.Type)
+		in
+		    Table.AddColumn(numbered, "SnapshotPoint", each [Point] & " · " & Text.From([SnapshotOrder], "en-US"), type text)

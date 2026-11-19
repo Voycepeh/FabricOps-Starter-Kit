@@ -1,0 +1,108 @@
+table FactTableProfile
+	lineageTag: 1eadedbb-fa9f-55a1-8b11-b5b7852fe2ae
+
+	measure 'Profiled Table Row Count' =
+			IF ( HASONEVALUE ( FactTableProfile[Snapshot key] ), SELECTEDVALUE ( FactTableProfile[Physical rows] ) )
+		lineageTag: 48cf22f8-28ec-5766-bb11-511edbcadd49
+		formatString: #,0
+
+	measure 'Previous Table Row Count' =
+			VAR Point = SELECTEDVALUE ( FactTableProfile[Snapshot order] )
+			VAR Asset = SELECTEDVALUE ( FactTableProfile[Asset key] )
+			VAR Dates = ALLSELECTED ( DimDate[UTC date] )
+			VAR Options =
+			    CALCULATETABLE (
+			        FILTER ( FactTableProfile, FactTableProfile[Asset key] = Asset && FactTableProfile[Snapshot order] < Point ),
+			        REMOVEFILTERS ( FactTableProfile ), TREATAS ( Dates, FactTableProfile[UTC date] )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( Point ), MAXX ( TOPN ( 1, Options, FactTableProfile[Snapshot order], DESC ), FactTableProfile[Physical rows] ) )
+		lineageTag: 2ba31e23-d0d7-5ef3-a2b2-858598f94d93
+		formatString: #,0
+
+	measure 'Table Row Count Change' =
+			VAR Previous = [Previous Table Row Count]
+			RETURN IF ( NOT ISBLANK ( Previous ), [Profiled Table Row Count] - Previous )
+		lineageTag: d44c2383-c3ba-523c-a900-d58bde9e3f6b
+		formatString: #,0
+
+	measure 'Table Row Count Change Percent' =
+			DIVIDE ( [Table Row Count Change], [Previous Table Row Count] )
+		lineageTag: 212061f8-a06b-50fb-8b1a-9ae997725492
+		formatString: +0.0%;-0.0%;0.0%
+
+	column 'Snapshot key'
+		dataType: string
+		sourceColumn: SnapshotKey
+		summarizeBy: none
+		lineageTag: fa7db489-529a-5cac-882d-a7748137c4e4
+		isHidden
+		isKey
+
+	column 'Snapshot ID'
+		dataType: string
+		sourceColumn: Snapshot
+		summarizeBy: none
+		lineageTag: 11d02e01-fd97-543f-a5fe-74ca894e2c3a
+
+	column 'Asset key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: 2db209d1-3b6a-51de-aa22-8ad68fe8b24a
+		isHidden
+
+	column 'Snapshot UTC'
+		dataType: dateTime
+		sourceColumn: SnapshotUtc
+		summarizeBy: none
+		lineageTag: 869404ab-8fb8-53c8-ba58-60d5cacd6109
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'UTC date'
+		dataType: dateTime
+		sourceColumn: UtcDate
+		summarizeBy: none
+		lineageTag: d4534994-45f0-524d-a9f0-cc5f6f60ae82
+		isHidden
+		formatString: yyyy-MM-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Snapshot point'
+		dataType: string
+		sourceColumn: SnapshotPoint
+		summarizeBy: none
+		lineageTag: 62e385f4-6f2d-52ed-86dc-259ebc0e9aeb
+		sortByColumn: 'Snapshot order'
+
+	column 'Physical rows'
+		dataType: int64
+		sourceColumn: RowCount
+		summarizeBy: none
+		lineageTag: 354f1428-7c2a-54b8-8fa6-77a3f48df040
+		formatString: #,0
+
+	column 'Snapshot order'
+		dataType: int64
+		sourceColumn: SnapshotOrder
+		summarizeBy: none
+		lineageTag: 9bc97e1f-d336-5cb5-873a-9faaaca524f7
+		isHidden
+		formatString: #,0
+
+	column 'Profile scope'
+		dataType: string
+		sourceColumn: ProfileScope
+		summarizeBy: none
+		lineageTag: 1d2ca236-60e3-5d75-b1ec-96dc3f65cf61
+
+	partition FactTableProfile = m
+		mode: import
+		source =
+			let
+			    Source = TableProfiles,
+			    Projected = Table.SelectColumns(Source, {"SnapshotKey", "Snapshot", "AssetKey", "SnapshotUtc", "UtcDate", "SnapshotPoint", "RowCount", "SnapshotOrder", "ProfileScope"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"SnapshotKey", type text}, {"Snapshot", type text}, {"AssetKey", type text}, {"SnapshotUtc", type datetime}, {"UtcDate", type date}, {"SnapshotPoint", type text}, {"RowCount", Int64.Type}, {"SnapshotOrder", Int64.Type}, {"ProfileScope", type text}}, "en-US")
+			in
+			    Typed

@@ -1,0 +1,4 @@
+.pbi/
+*.abf
+localSettings.json
+unappliedChanges.json

@@ -1,0 +1,419 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "f36e39424ad662330436",
+  "position": {
+    "x": 24,
+    "y": 767,
+    "z": 80,
+    "height": 168,
+    "width": 1392,
+    "tabOrder": 80
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Guardrail Result ID"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Guardrail Result ID",
+              "nativeQueryRef": "Guardrail Result ID (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Data asset"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Data asset",
+              "nativeQueryRef": "Data asset (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Guardrail type"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Guardrail type",
+              "nativeQueryRef": "Guardrail type (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Guardrail rule ID"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Guardrail rule ID",
+              "nativeQueryRef": "Guardrail rule ID (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Guardrail version"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Guardrail version",
+              "nativeQueryRef": "Guardrail version (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Rule type"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Rule type",
+              "nativeQueryRef": "Rule type (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Contract ID"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Contract ID",
+              "nativeQueryRef": "Contract ID (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Contract version"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Contract version",
+              "nativeQueryRef": "Contract version (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Status"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Status",
+              "nativeQueryRef": "Status (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Severity"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Severity",
+              "nativeQueryRef": "Severity (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Action"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Action",
+              "nativeQueryRef": "Action (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Can continue"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Can continue",
+              "nativeQueryRef": "Can continue (FactGuardrailResult)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactGuardrailResult"
+                    }
+                  },
+                  "Property": "Recorded reason"
+                }
+              },
+              "queryRef": "FactGuardrailResult.Recorded reason",
+              "nativeQueryRef": "Recorded reason (FactGuardrailResult)"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Recorded Guardrail outcomes'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13L"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#19243A'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#DDE3F3'"
+                    }
+                  }
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "5L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filter71def51da9ab452049f371d2",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "FactPipelineRun"
+              }
+            },
+            "Property": "Show Run Detail"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "m",
+              "Entity": "FactPipelineRun",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Comparison": {
+                  "ComparisonKind": 0,
+                  "Left": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Source": "m"
+                        }
+                      },
+                      "Property": "Show Run Detail"
+                    }
+                  },
+                  "Right": {
+                    "Literal": {
+                      "Value": "1L"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "isHiddenInViewMode": true,
+        "isLockedInViewMode": true
+      }
+    ]
+  }
+}

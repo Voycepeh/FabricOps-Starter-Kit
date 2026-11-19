@@ -1,0 +1,115 @@
+table BridgeLineage
+	lineageTag: 896b959e-421f-5f6b-929e-a8388bfa9ab9
+
+	measure 'Show Known Edge' =
+			VAR Root = SELECTEDVALUE ( DimLineageRoot[Root key] )
+			VAR Source = SELECTEDVALUE ( BridgeLineage[Source key] )
+			VAR Target = SELECTEDVALUE ( BridgeLineage[Target key] )
+			VAR Down = CALCULATETABLE ( VALUES ( FactDependencyReach[Node key] ), FactDependencyReach[Direction] = "Downstream" )
+			VAR Up = CALCULATETABLE ( VALUES ( FactDependencyReach[Node key] ), FactDependencyReach[Direction] = "Upstream" )
+			VAR Upstream = ( Source = Root || Source IN Up ) && ( Target = Root || Target IN Up )
+			VAR Downstream = ( Source = Root || Source IN Down ) && ( Target = Root || Target IN Down )
+			RETURN IF ( ISBLANK ( Root ) || Upstream || Downstream || Source = Root || Target = Root, 1 )
+		lineageTag: 28517d6c-7f86-5b99-9ea7-4e7204dd9a28
+		formatString: #,0
+
+	column 'Edge key'
+		dataType: string
+		sourceColumn: EdgeKey
+		summarizeBy: none
+		lineageTag: 44b303ee-279f-5175-9474-1877de4430d7
+		isHidden
+		isKey
+
+	column 'Pipeline key'
+		dataType: string
+		sourceColumn: PipelineKey
+		summarizeBy: none
+		lineageTag: 07075e14-7140-5f36-851a-6e9686dfcc6d
+		isHidden
+
+	column 'Reference Run ID'
+		dataType: string
+		sourceColumn: RunId
+		summarizeBy: none
+		lineageTag: 018f0bd0-7492-5515-b908-c17ec932190c
+
+	column 'Source key'
+		dataType: string
+		sourceColumn: SourceKey
+		summarizeBy: none
+		lineageTag: 54a32d79-ed05-59e0-966b-6bb0d53f804e
+		isHidden
+
+	column 'Source type'
+		dataType: string
+		sourceColumn: SourceKind
+		summarizeBy: none
+		lineageTag: 0a101bb1-7c0b-5584-a939-4d1a6a74e497
+
+	column 'Source'
+		dataType: string
+		sourceColumn: Source
+		summarizeBy: none
+		lineageTag: b56410b9-b668-514e-a837-fe17f21dd0cc
+
+	column 'Source workspace'
+		dataType: string
+		sourceColumn: SourceWorkspace
+		summarizeBy: none
+		lineageTag: 8fe6c9f2-1e57-5b14-8cf6-ecfd71ef4985
+
+	column 'Target key'
+		dataType: string
+		sourceColumn: TargetKey
+		summarizeBy: none
+		lineageTag: 1beb2dc4-01e8-5d4a-a513-d6b9942329fb
+		isHidden
+
+	column 'Target type'
+		dataType: string
+		sourceColumn: TargetKind
+		summarizeBy: none
+		lineageTag: 71605207-4373-5c82-943c-a5011e827c1f
+
+	column 'Target'
+		dataType: string
+		sourceColumn: Target
+		summarizeBy: none
+		lineageTag: 4279d7bd-4eac-56d7-90cf-72721765f991
+
+	column 'Target workspace'
+		dataType: string
+		sourceColumn: TargetWorkspace
+		summarizeBy: none
+		lineageTag: 1105374a-b69a-5c24-b324-dfbbaef72c5a
+
+	column 'Resolution'
+		dataType: string
+		sourceColumn: Resolution
+		summarizeBy: none
+		lineageTag: e119741b-b20d-5850-977c-de8439ac5f17
+
+	column 'First observed UTC'
+		dataType: dateTime
+		sourceColumn: FirstUtc
+		summarizeBy: none
+		lineageTag: 63ba7fa6-e01c-50a7-9877-687c35592f60
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Last observed UTC'
+		dataType: dateTime
+		sourceColumn: LastUtc
+		summarizeBy: none
+		lineageTag: 249150b6-4c4c-5828-8eab-eff2a4c38e9e
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	partition BridgeLineage = m
+		mode: import
+		source =
+			let
+			    Source = Lineage,
+			    Projected = Table.SelectColumns(Source, {"EdgeKey", "PipelineKey", "RunId", "SourceKey", "SourceKind", "Source", "SourceWorkspace", "TargetKey", "TargetKind", "Target", "TargetWorkspace", "Resolution", "FirstUtc", "LastUtc"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"EdgeKey", type text}, {"PipelineKey", type text}, {"RunId", type text}, {"SourceKey", type text}, {"SourceKind", type text}, {"Source", type text}, {"SourceWorkspace", type text}, {"TargetKey", type text}, {"TargetKind", type text}, {"Target", type text}, {"TargetWorkspace", type text}, {"Resolution", type text}, {"FirstUtc", type datetime}, {"LastUtc", type datetime}}, "en-US")
+			in
+			    Typed

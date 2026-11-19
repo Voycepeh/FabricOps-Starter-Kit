@@ -1,0 +1,67 @@
+relationship e96c8478-ead1-5dae-813f-98c072ebb5f1
+	fromColumn: DimPipeline.'Workspace ID'
+	toColumn: DimWorkspace.'Workspace ID'
+
+relationship cb786ce7-58b3-5b43-b06c-3e1db122290f
+	fromColumn: FactPipelineRun.'Pipeline key'
+	toColumn: DimPipeline.'Pipeline key'
+
+relationship 0c5447c7-f32f-54c8-aa7f-fc528b78370b
+	fromColumn: FactPipelineRun.'Execution mode'
+	toColumn: DimMode.'Execution mode'
+
+relationship 3cedca4d-7e91-53fa-b5db-e97001b36453
+	fromColumn: FactPipelineRun.'UTC date'
+	toColumn: DimDate.'UTC date'
+
+relationship 3ce198c6-1d5a-5945-90f2-1fde93bab216
+	fromColumn: FactTableProfile.'UTC date'
+	toColumn: DimDate.'UTC date'
+
+relationship 74496ace-bfd7-5478-8ea0-a0a1aa63007b
+	fromColumn: FactRunOperation.'Run ID'
+	toColumn: FactPipelineRun.'Run ID'
+
+relationship d8479b62-f4f7-54e8-9374-63fcbd79efa7
+	fromColumn: FactGuardrailResult.'Run ID'
+	toColumn: FactPipelineRun.'Run ID'
+
+relationship 9bca4bf8-fd72-5ecd-8b22-aa4bc03a3b3d
+	fromColumn: FactProfileEvent.'Run ID'
+	toColumn: FactPipelineRun.'Run ID'
+
+relationship 276796d1-b17e-596d-acf3-345d311feea2
+	fromColumn: FactRunFailure.'Run ID'
+	toColumn: FactPipelineRun.'Run ID'
+
+relationship 915d006d-f0ff-59a6-b9a0-bdf79b110dbe
+	fromColumn: FactRunOperation.'Series key'
+	toColumn: DimOperation.'Series key'
+
+relationship aec5e2ee-65dc-5bbf-98d3-db853178975b
+	fromColumn: FactOperationStage.'Run operation key'
+	toColumn: FactRunOperation.'Run operation key'
+
+relationship 861132fc-bddc-52ab-abdd-622aad73b4e6
+	fromColumn: FactRunOperation.'Asset key'
+	toColumn: DimTable.'Asset key'
+
+relationship b69fcae4-f020-56d8-b50f-d1b8a4bc2b87
+	fromColumn: FactGuardrailResult.'Asset key'
+	toColumn: DimTable.'Asset key'
+
+relationship 53316e35-2863-5b8d-918d-235c52eda097
+	fromColumn: FactProfileEvent.'Asset key'
+	toColumn: DimTable.'Asset key'
+
+relationship 4f4498e8-482a-5884-82b5-3d588baab1bc
+	fromColumn: FactTableProfile.'Asset key'
+	toColumn: DimTable.'Asset key'
+
+relationship 4a827a45-4c9a-5d2b-9da8-230ca91093c2
+	fromColumn: FactDependencyReach.'Root key'
+	toColumn: DimLineageRoot.'Root key'
+
+relationship 3ab9a4a6-6833-52e1-b3f8-e8f6ef163e9e
+	fromColumn: BridgeLineage.'Pipeline key'
+	toColumn: DimPipeline.'Pipeline key'

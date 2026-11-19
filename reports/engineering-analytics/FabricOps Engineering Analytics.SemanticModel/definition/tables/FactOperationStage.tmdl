@@ -1,0 +1,55 @@
+table FactOperationStage
+	lineageTag: 7709b570-d381-5f26-8265-ea5ad95e02c5
+
+	measure 'Stage Outcome Counts' =
+			COUNTROWS ( FactOperationStage )
+		lineageTag: ee7e79e1-1244-5463-98e7-5fccff8d97c4
+		formatString: #,0
+
+	column 'Run operation key'
+		dataType: string
+		sourceColumn: OperationKey
+		summarizeBy: none
+		lineageTag: 2ac848d8-2e43-541d-aba2-6d2b190c0be0
+		isHidden
+
+	column 'Stage order'
+		dataType: int64
+		sourceColumn: Ordinal
+		summarizeBy: none
+		lineageTag: 8c7a0b63-8a81-5268-a00f-c589754e4d7c
+		formatString: #,0
+
+	column 'Stage'
+		dataType: string
+		sourceColumn: Stage
+		summarizeBy: none
+		lineageTag: d437f6c2-6005-5fec-b20c-e60aa3020e05
+
+	column 'Status'
+		dataType: string
+		sourceColumn: Status
+		summarizeBy: none
+		lineageTag: f788ff07-ea6a-5529-be0a-b4f349ce5169
+
+	column 'Evaluation status'
+		dataType: string
+		sourceColumn: Evaluation
+		summarizeBy: none
+		lineageTag: 205edc8c-ae9d-56db-a152-bee8479c35f5
+
+	column 'Operation'
+		dataType: string
+		sourceColumn: Operation
+		summarizeBy: none
+		lineageTag: 793d84a8-684b-5f94-a0b6-d0c2e41bff84
+
+	partition FactOperationStage = m
+		mode: import
+		source =
+			let
+			    Source = Stages,
+			    Projected = Table.SelectColumns(Source, {"OperationKey", "Ordinal", "Stage", "Status", "Evaluation", "Operation"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"OperationKey", type text}, {"Ordinal", Int64.Type}, {"Stage", type text}, {"Status", type text}, {"Evaluation", type text}, {"Operation", type text}}, "en-US")
+			in
+			    Typed

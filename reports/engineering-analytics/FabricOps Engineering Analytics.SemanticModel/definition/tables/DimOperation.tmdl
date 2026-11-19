@@ -1,0 +1,44 @@
+table DimOperation
+	lineageTag: 310b4047-b17c-5f82-9c1d-e568d62ebe37
+
+	column 'Series key'
+		dataType: string
+		sourceColumn: SeriesKey
+		summarizeBy: none
+		lineageTag: 837910d8-513c-5a15-ac1a-ef64caa51f0f
+		isHidden
+		isKey
+
+	column 'Operation'
+		dataType: string
+		sourceColumn: Label
+		summarizeBy: none
+		lineageTag: 6313a456-b410-5a4c-b795-abb53a60eb1d
+
+	column 'Pipeline operation'
+		dataType: string
+		sourceColumn: ScopedLabel
+		summarizeBy: none
+		lineageTag: 00088d85-e9d8-5000-92fb-30e1ea3e2227
+
+	column 'Role'
+		dataType: string
+		sourceColumn: Role
+		summarizeBy: none
+		lineageTag: 27d4cc93-fc2f-560e-8bd8-9d5f287821a2
+
+	column 'Strategy'
+		dataType: string
+		sourceColumn: Mode
+		summarizeBy: none
+		lineageTag: 597a221e-0140-5089-8afa-b1786391eff8
+
+	partition DimOperation = m
+		mode: import
+		source =
+			let
+			    Source = OperationSeries,
+			    Projected = Table.SelectColumns(Source, {"SeriesKey", "Label", "ScopedLabel", "Role", "Mode"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"SeriesKey", type text}, {"Label", type text}, {"ScopedLabel", type text}, {"Role", type text}, {"Mode", type text}}, "en-US")
+			in
+			    Typed

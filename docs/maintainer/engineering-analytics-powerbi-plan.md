@@ -1,6 +1,6 @@
 # FabricOps Engineering Analytics Power BI plan
 
-**Draft implementation contract.** Source reviewed at `0d90fed8181c61a11474420a2a894f906a8e3263` on `main`. The report is designed for engineers investigating persisted FabricOps Runs, operation workload, Guardrails, profiling and known dependencies. The draft pull request contains the design. Power BI project construction is gated on proving a lossless, refreshable connection to the configured Metadata Lakehouse.
+**Approved implementation contract.** Source reviewed at `0d90fed8181c61a11474420a2a894f906a8e3263` on `main`. The report is designed for engineers investigating persisted FabricOps Runs, operation workload, Guardrails, profiling and known dependencies. The Import project lives in [reports/engineering-analytics](../../reports/engineering-analytics/README.md). Production deployment is gated on proving a lossless, refreshable connection to the configured Metadata Lakehouse.
 
 ## 1. Release gate and connection
 
@@ -215,7 +215,7 @@ The network graph is U for the baseline. The native table and matrix provide the
 | PBIP and PBIR | Start from a small Desktop-authored baseline. Validate report definitions against declared public JSON schemas, including transitive references. Parse TMDL using Microsoft's Tabular Object Model TMDL serializer and check all relationships, DAX references and visual field bindings. |
 | Desktop and Fabric | Open and refresh the PBIP, validate cardinality and plotted point counts, check each mode, all slicers, date-independent latest status, drillthrough keys, empty states and live service refresh. Test authentication and downstream closure size under expected production history. |
 
-### Proposed project tree
+### Project tree
 
 ~~~text
 docs/maintainer/
@@ -244,14 +244,23 @@ reports/engineering-analytics/
       relationships.tmdl
       tables/*.tmdl
   tests/
-    fixtures/
     validate_project.py
 ~~~
 
-The draft pull request contains the specification and model schematic. PBIP construction depends on proving that the proposed connection yields complete JSON after Desktop and service refresh. The public connector documentation establishes a Lakehouse Import route and a separate SQL endpoint, while the configured Delta snapshot and long-payload behavior remain unverified in this environment.
+The PBIP implements the native Lakehouse Import route and rejects malformed required arrays. Desktop rendering, connector runtime checks and service refresh remain deployment acceptance tests.
 
 ### Completed design validation
 
 - Checked the proposed four physical projections against `metadata_table_schema_registry()`. Verified nested stage shape and the absence of a typed File Source ID in the profiling event schema.
 - Exercised the repository Run fixture and production Run serializer locally. A synthetic 16-operation Run had a 17,681-byte operations array. Its synthetic 40-entry profiling journal required 13,681 bytes. Both full payloads parsed at the expected grain. Slicing each to the documented SQL byte ceiling caused JSON parsing to fail. This simulates truncation locally. Fabric endpoint transport was not tested.
 - The 78 existing focused unit tests for Run records, Run persistence evidence, profiling observations and finalize summaries passed. These validate source behavior and do not exercise Power Query, DAX, PBIR or live refresh.
+
+### Implemented behavior to verify in Desktop
+
+The report uses a table for the selected physical asset and for the Run header so technical fields remain inspectable. The Run history and Overview latest Runs expose native drillthrough on the exact Run ID. Table Analytics opens the lineage page, where the root is selected independently. File outputs remain typed and are available in operation and direct dependency views, while the lineage root selector is for physical tables. Complete dependency reachability uses the native matrix.
+
+### Static implementation verification
+
+Microsoft Tabular Object Model deserialized the TMDL database with 17 tables, 17 active single-direction relationships and 78 measures. Microsoft's Power Query parser accepted the embedded M queries and partitions. The checked-in validator passed 106 public JSON definitions, visual bindings on all five pages, relationship endpoints and static DAX field references. The four physical projections matched their canonical schema columns. The 78 focused FabricOps tests passed again.
+
+These checks cover project structure and source contracts. DAX results, Power Query execution, connector losslessness, visual rendering, selected-visual bookmark behavior, drillthrough and scheduled service refresh require the Desktop and Fabric acceptance run in the [project README](../../reports/engineering-analytics/README.md).

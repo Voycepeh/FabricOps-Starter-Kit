@@ -1,0 +1,26 @@
+table DimWorkspace
+	lineageTag: 9e404746-ea9e-5a3d-966f-48c6d4614e87
+
+	column 'Workspace ID'
+		dataType: string
+		sourceColumn: WorkspaceId
+		summarizeBy: none
+		lineageTag: 0b10df1b-4e3c-5535-b3e0-eb6e0e73f088
+		isHidden
+		isKey
+
+	column 'Workspace'
+		dataType: string
+		sourceColumn: Workspace
+		summarizeBy: none
+		lineageTag: 4467dbe5-5ee8-5788-96d4-26917a01f4a8
+
+	partition DimWorkspace = m
+		mode: import
+		source =
+			let
+			    Source = Table.Distinct(Table.SelectColumns(Pipelines, {"WorkspaceId", "Workspace"})),
+			    Projected = Table.SelectColumns(Source, {"WorkspaceId", "Workspace"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"WorkspaceId", type text}, {"Workspace", type text}}, "en-US")
+			in
+			    Typed
