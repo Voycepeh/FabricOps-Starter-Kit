@@ -167,14 +167,15 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_PIPELINE_RUN": {
-        "purpose": "Records actual pipeline execution outcomes and exact per-operation Contract versions.",
+        "purpose": "Records Run participation, execution outcomes and exact per-operation Contract versions.",
         "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
-        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
+        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join table operations to table-level Catalogue observations by table_id and execution workspace, retaining the physical destination separately. File participants reuse their existing Source ID as the common Catalogue asset key; released Run descriptors are unchanged. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
         "primary_key": ["run_id"],
         "foreign_keys": [
             {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
             {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Composite exact per-operation Contract identity with version and payload SHA."},
             {"local_field": "operations[].contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Exact frozen version used by the operation."},
+            {"local_field": "operations[].table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:M", "statement": "Join table participation to table-level Catalogue observations using table_id and the Run execution workspace; physical destination is retained separately."},
         ],
         "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["promotion_id"], "cardinality": "N:1", "statement": "Captured frozen version and promotion identity."},
                           {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Exact Contract definitions used by actual operations."}],
@@ -244,16 +245,6 @@ METADATA_TABLE_MODELS = {
             {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id"], "cardinality": "N:1", "statement": "Combined standalone distributions optionally reference their statistical Profile. Independent scheduled distributions leave that reference null."},
         ],
     },
-    "METADATA_DATA_LINEAGE": {
-        "purpose": "Records TABLE and FILE source/target participation within a Fabric Activity.",
-        "grain": "One asset identity and role within one Fabric Activity.",
-        "implementation_notes": "asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path and table_id joins the Catalogue asset. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
-        "primary_key": ["lineage_id"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many lineage participation records can refer to the same logical Catalogue table identity."},
-        ],
-        "relationships": [],
-    },
     "METADATA_DATA_ACCESS": {
         "purpose": "Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.",
         "grain": "One observed permission for a principal or access selector on a table during one scan.",
@@ -288,11 +279,10 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_CONTRACT_ACTIVATION": ["widget_activate_data_contract"],
     "METADATA_PIPELINE_ACTIVATION": ["widget_activate_pipeline"],
     "METADATA_PIPELINE_REGISTRY": ["finalize_pipeline"],
-    "METADATA_PIPELINE_RUN": ["finalize_pipeline"],
+    "METADATA_PIPELINE_RUN": ["setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"],
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
-    "METADATA_DATA_LINEAGE": ["orchestrate_read", "orchestrate_write"],
     "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
     "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
@@ -308,7 +298,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
-    "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
     "METADATA_GUARDRAIL_RESULTS",
 ]
@@ -452,19 +441,6 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.shared._frequency_metadata_dataframe",
             "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
         ],
-    },
-    "METADATA_DATA_LINEAGE": {
-        "__default__": [
-            "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-            "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-            "fabricops_kit.pipeline.shared.persist_lineage_participation",
-            "fabricops_kit.pipeline.pipeline_read.pipeline_read",
-        ],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "lineage_id": ["fabricops_kit.pipeline.shared.lineage_id"],
-        "table_id": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
-        "table_name": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
-        "pipeline_role": ["fabricops_kit.pipeline.shared.persist_lineage_participation"],
     },
     "METADATA_DATA_ACCESS": {
         "__default__": [
@@ -1769,8 +1745,8 @@ PUBLIC_SYMBOL_DOCS.append({
     'template_notebook': '00C_demo_setup', 'template_segment': 'Reset demo',
     'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
     'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
-    'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. Live compatibility does not replace signed-in Fabric acceptance.',
-    'side_effects': 'With reset=True, clears all 14 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
+    'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.',
+    'side_effects': 'With reset=True, clears all 12 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
     'fabric_context': 'Requires successful setup_notebook, a manually created schema-enabled demo_metadata Lakehouse and configured Bronze/Silver/Gold stores with uploaded Files/demo fixtures.',
     'preferred_example': 'from fabricops_kit import setup_notebook, orchestrate_demo_reset\n\ncontext = setup_notebook()\nRESET_DEMO = False\norchestrate_demo_reset(reset=RESET_DEMO)',
     'related_functions': ['setup_notebook', 'setup_metadata_tables'],

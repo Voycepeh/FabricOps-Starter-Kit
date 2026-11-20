@@ -45,7 +45,7 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
     | Handoff | Functions | Persisted state |
     | --- | --- | --- |
     | Governance context | [`widget_data_steward()`](api/reference/widget_data_steward.md), [`widget_data_agreement()`](api/reference/widget_data_agreement.md) | `METADATA_DATA_STEWARD`, `METADATA_DATA_AGREEMENT` |
-    | Observe and profile | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md), [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_DATA_LINEAGE` |
+    | Observe and profile | [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md), [`profile_table()`](api/reference/profile_table.md) | `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, `METADATA_PIPELINE_RUN.operations` |
     | Author and freeze | [`widget_data_contract()`](api/reference/widget_data_contract.md) | `METADATA_DATA_CONTRACT.contract_payload_json` |
     | Preview enforcement | [`setup_pipeline()`](api/reference/setup_pipeline.md), [`orchestrate_read()`](api/reference/orchestrate_read.md), [`orchestrate_write()`](api/reference/orchestrate_write.md) | Dry Run keeps results in memory and commits no target or operational state |
     | Activate physical Contracts | [`widget_activate_data_contract()`](api/reference/widget_activate_data_contract.md) | [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md) |
@@ -72,7 +72,7 @@ The configured Metadata Lakehouse holds five Governance-owned tables and eight E
 | Group | Canonical tables |
 | --- | --- |
 | Governance | [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md), [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md), [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md), [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
-| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
+| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
 ??? info "Under the Hood — identity, timing and transaction boundaries"
 

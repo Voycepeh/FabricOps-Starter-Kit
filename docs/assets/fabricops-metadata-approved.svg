@@ -8,77 +8,77 @@
 <g class="metadata-er-relationship" data-from="DATA_STEWARD" data-to="DATA_AGREEMENT" data-cardinality="1-N" data-kind="physical">
 <title>One steward may participate in many agreements (1-N; keyed reference; application-enforced)</title>
 <path d="M1205 170H1115" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="1169" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1129" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="1167" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1180" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1127" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1140" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_AGREEMENT" data-to="DATA_CONTRACT_ACTIVATION" data-cardinality="1-N" data-kind="physical">
 <title>One exact Agreement version may govern many physical frozen Contract selections (1-N; keyed reference; application-enforced)</title>
 <path d="M815 170H725" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="779" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="739" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="777" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="790" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="737" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="750" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_ACTIVATION" data-to="PIPELINE_REGISTRY" data-cardinality="1-N" data-kind="physical">
 <title>Exact independently approved package authorizes Engineering deployment; approval does not deploy (1-N; keyed reference; application-enforced)</title>
 <path d="M1745 253V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="1734" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1734" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="1732" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1732" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT_ACTIVATION" data-cardinality="N-N" data-kind="logical">
 <title>Logical approved physical workspace/Table ID association; active Contract selection is independent (N-N; logical identity reference)</title>
 <path d="M1630 423V300H575V253" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="1619" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1630" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text><rect x="564" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="575" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
+<rect x="1617" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1630" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text><rect x="562" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="575" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT_ACTIVATION" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
 <title>Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion (N-1; keyed reference; application-enforced)</title>
 <path d="M425 170H335" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="389" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="349" y="159" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text>
+<rect x="387" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="347" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
 <title>Run operations reference exact table contract versions (N-N; exact nested reference; application-enforced)</title>
 <path d="M815 464H785V388H365V218H335" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="779" y="453" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="790" y="468.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="349" y="207" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="777" y="453" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="790" y="468.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="347" y="207" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1-N" data-kind="logical">
 <title>Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending (1-N; logical identity reference)</title>
 <path d="M1595 475H1548V380H1363Q1355 372 1347 380H965V423" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="1559" y="464" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1570" y="479.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">1</text><rect x="954" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="965" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
+<rect x="1557" y="464" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1570" y="479.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">1</text><rect x="952" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="965" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_CONTRACT" data-cardinality="1-N" data-kind="physical">
 <title>Catalogue table to contract versions (1-N; keyed reference; application-enforced)</title>
 <path d="M185 423V253" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="174" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="174" y="267" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="172" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="172" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="GUARDRAIL_RESULTS" data-cardinality="1-N" data-kind="physical">
 <title>Pipeline run to recorded guardrail outcomes (1-N; keyed reference; application-enforced)</title>
 <path d="M1115 515H1205" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="1129" y="504" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1140" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1169" y="504" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1180" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="1127" y="504" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1140" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1167" y="504" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1180" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED" data-cardinality="1-N" data-kind="physical">
 <title>Catalogue asset to column statistics (1-N; keyed reference; application-enforced)</title>
 <path d="M185 598V735" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="174" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="174" y="699" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="172" y="612" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="172" y="699" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="1-N" data-kind="logical">
 <title>Catalogue asset to frequency observations (1-N; logical identity reference)</title>
 <path d="M235 598V680H575V735" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="224" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="235" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">1</text><rect x="564" y="699" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="575" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
+<rect x="222" y="612" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="235" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">1</text><rect x="562" y="699" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="575" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_LINEAGE" data-cardinality="1-N" data-kind="physical">
-<title>Catalogue asset to source and target participation (1-N; keyed reference; application-enforced)</title>
-<path d="M270 598V655H965V735" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="259" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="270" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="954" y="699" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="965" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="PIPELINE_RUN" data-cardinality="N-N" data-kind="nested">
+<title>Run asset participation by Table ID and execution workspace; not transformation dependencies (N-N; exact nested reference; application-enforced)</title>
+<path d="M270 423V400H915V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="257" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="270" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="902" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="915" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_ACCESS" data-cardinality="1-N" data-kind="physical">
 <title>Catalogue table to observed permissions (1-N; keyed reference; application-enforced)</title>
-<path d="M305 598V630H1355V735" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="294" y="612" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="305" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1344" y="699" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1355" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<path d="M305 598V630H965V735" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="292" y="612" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="305" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="952" y="699" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="965" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_PROFILED" data-to="DATA_PROFILED_FREQUENCY" data-cardinality="1-N" data-kind="physical">
 <title>Optional statistical profile reference on frequency rows (1-N; keyed reference; application-enforced)</title>
 <path d="M335 821H425" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="349" y="810" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="825.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="389" y="810" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="825.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="347" y="810" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="825.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="387" y="810" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="825.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT" data-to="GUARDRAIL_RESULTS" data-cardinality="1-N" data-kind="physical">
 <title>Contract versions to their Guardrail results (1-N; keyed reference; application-enforced)</title>
 <path d="M335 194H395V363H1355V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="349" y="183" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="198.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1344" y="387" width="22" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1355" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<rect x="347" y="183" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="198.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1342" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1355" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 </g>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
@@ -147,6 +147,8 @@
 <text x="866" y="504" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">promotion_id</text>
 <text x="828" y="528" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
 <text x="866" y="528" fill="#19243A" font-size="12" font-family="Segoe UI, Arial, sans-serif">operations[].contract_id/version</text>
+<text x="828" y="552" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="866" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].table_id</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
@@ -162,46 +164,37 @@
 <text x="86" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_type: TABLE | FILE</text>
 <title>Open metadata documentation: DATA_CATALOGUE</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled_frequency/" target="_blank" transform="translate(0 -80)">
-<rect x="425" y="815" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
-<path d="M429 815H721Q725 815 725 819V852H425V819Q425 815 429 815Z" fill="#2563EB"/>
-<text x="575" y="839" text-anchor="middle" font-size="13.1" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_PROFILED_FREQUENCY</text>
-<text x="438" y="872" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="476" y="872" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">frequency_id</text>
-<text x="438" y="896" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="476" y="896" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">profile_id</text>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled_frequency/" target="_blank">
+<rect x="425" y="735" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
+<path d="M429 735H721Q725 735 725 739V772H425V739Q425 735 429 735Z" fill="#2563EB"/>
+<text x="575" y="759" text-anchor="middle" font-size="13.1" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_PROFILED_FREQUENCY</text>
+<text x="438" y="792" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
+<text x="476" y="792" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">frequency_id</text>
+<text x="438" y="816" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="476" y="816" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">profile_id</text>
 <title>Open metadata documentation: DATA_PROFILED_FREQUENCY</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled/" target="_blank" transform="translate(0 -80)">
-<rect x="35" y="815" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
-<path d="M39 815H331Q335 815 335 819V852H35V819Q35 815 39 815Z" fill="#2563EB"/>
-<text x="185" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_PROFILED</text>
-<text x="48" y="872" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="86" y="872" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">profile_id</text>
-<text x="48" y="896" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="86" y="896" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
-<text x="48" y="920" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="86" y="920" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">column_id</text>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_profiled/" target="_blank">
+<rect x="35" y="735" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
+<path d="M39 735H331Q335 735 335 739V772H35V739Q35 735 39 735Z" fill="#2563EB"/>
+<text x="185" y="759" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_PROFILED</text>
+<text x="48" y="792" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
+<text x="86" y="792" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">profile_id</text>
+<text x="48" y="816" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="86" y="816" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
+<text x="48" y="840" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="86" y="840" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">column_id</text>
 <title>Open metadata documentation: DATA_PROFILED</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_lineage/" target="_blank" transform="translate(0 -80)">
-<rect x="815" y="815" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
-<path d="M819 815H1111Q1115 815 1115 819V852H815V819Q815 815 819 815Z" fill="#2563EB"/>
-<text x="965" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_LINEAGE</text>
-<text x="828" y="872" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="866" y="872" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">lineage_id</text>
-<text x="828" y="896" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="866" y="896" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
-<title>Open metadata documentation: DATA_LINEAGE</title>
-</a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_access/" target="_blank" transform="translate(0 -80)">
-<rect x="1205" y="815" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
-<path d="M1209 815H1501Q1505 815 1505 819V852H1205V819Q1205 815 1209 815Z" fill="#2563EB"/>
-<text x="1355" y="839" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_ACCESS</text>
-<text x="1218" y="872" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
-<text x="1256" y="872" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">access_id</text>
-<text x="1218" y="896" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="1256" y="896" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
+
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_access/" target="_blank">
+<rect x="815" y="735" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
+<path d="M819 735H1111Q1115 735 1115 739V772H815V739Q815 735 739 735Z" fill="#2563EB"/>
+<text x="965" y="759" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_ACCESS</text>
+<text x="828" y="792" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
+<text x="866" y="792" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">access_id</text>
+<text x="828" y="816" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="866" y="816" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
 <title>Open metadata documentation: DATA_ACCESS</title>
 </a>
 

@@ -16,21 +16,8 @@ from tests.unit.test_pipeline_session import runtime  # noqa: F401
 from tests.unit.test_unified_file_read import files  # noqa: F401
 
 
-def test_released_table_hash_and_typed_file_identity():
-    values = {"activity_id": "activity", "table_id": "orders", "pipeline_role": "source"}
-    released = hashlib.sha256(json.dumps(values, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-    assert shared.lineage_id(**values) == released
-    first = shared.lineage_id(activity_id="activity", asset_type="FILE", table_id="orders", pipeline_role="source")
-    assert first != released
-    assert first != shared.lineage_id(activity_id="other", asset_type="FILE", table_id="orders", pipeline_role="source")
-    assert first != shared.lineage_id(activity_id="activity", asset_type="FILE", table_id="orders", pipeline_role="target")
-    assert first == shared.lineage_id(activity_id="activity", asset_type="FILE", table_id="orders", pipeline_role="source")
 
 
-@pytest.mark.parametrize("ids", [dict(table_id=""), dict(asset_type="OTHER", table_id="t")])
-def test_lineage_rejects_invalid_identity(ids):
-    with pytest.raises(ValueError, match="canonical table_id"):
-        shared.lineage_id(activity_id="a", pipeline_role="source", **ids)
 
 
 def test_file_selector_identity_and_active_catalogue_grain():
@@ -69,18 +56,6 @@ def writer(monkeypatch):
     return SimpleNamespace(spark=spark, merge=merge, delta=delta, identity=identity)
 
 
-@pytest.mark.parametrize("role", ["source", "target"])
-def test_file_lineage_writer_has_exact_identity_and_activity(writer, role):
-    source = writer.identity
-    identifier = shared.persist_lineage_participation(asset_type="FILE", table_id=source["source_id"],
-        file_identity=source, pipeline_role=role, context={})
-    row = writer.spark.createDataFrame.call_args.args[0][0]
-    assert row["lineage_id"] == identifier
-    assert row["table_id"] == source["source_id"] and row["table_name"] == "a.csv"
-    assert "source_id" not in row and row["asset_type"] == "FILE"
-    assert row["_activity_id"] == "fabric-activity" and row["asset_name"] == "Bronze/Files/a.csv"
-    assert writer.delta.forPath.call_args.args[1] == "configured-path"
-    assert "lineage_id" in writer.merge.merge.call_args.args[1]
 
 
 def test_file_catalogue_preserves_first_observation_and_extension_fields(writer):
@@ -100,14 +75,14 @@ def test_multiple_file_reads_persist_before_table_write_and_finalize(files, mode
     first = orchestrate_read(store="Bronze", relative_path="a.csv", file_format="csv")
     second = orchestrate_read(store="Bronze", relative_path="b.csv", file_format="csv")
     expected = 0 if mode == "Dry Run" else 2
-    assert files.lineage.call_count == files.catalogue.call_count == expected
-    if expected:
-        assert {call.kwargs["table_id"] for call in files.lineage.call_args_list} == {first["source_id"], second["source_id"]}
-        assert all(call.kwargs["context"]["execution_plan"].plan_id == session.plan.plan_id for call in files.lineage.call_args_list)
+    assert files.catalogue.call_count == expected
+    source_operations = shared.pipeline_run_row(session.plan, status="incomplete")["operations"]
+    assert {op["source_id"] for op in source_operations} == {first["source_id"], second["source_id"]}
+    assert all(op["status"] == "succeeded" for op in source_operations)
     orchestrate_write(first["dataframe"], store="Gold", schema="demo", table_name="summary", write_mode="overwrite")
     result = finalize_pipeline(session)
     finalize_pipeline(session)
-    assert files.lineage.call_count == expected
+    assert files.catalogue.call_count == expected
     assert len([op for op in result["operations"] if op.get("source_id")]) == 2
 
 
@@ -118,7 +93,6 @@ def test_failed_read_and_metadata_failure_do_not_report_success(files):
         orchestrate_read(store="Bronze", relative_path="a.csv", file_format="csv")
     assert session.closed
     assert next(iter(session.plan.evidence["operations"].values()))["status"] == "failed"
-    files.lineage.assert_not_called()
 
 
 def test_failed_file_read_does_not_register_success(files):
@@ -128,7 +102,6 @@ def test_failed_file_read_does_not_register_success(files):
         orchestrate_read(store='Bronze', relative_path='a.csv', file_format='csv')
     assert session.closed
     files.catalogue.assert_not_called()
-    files.lineage.assert_not_called()
 
 
 @pytest.mark.parametrize("metadata_fails", [False, True])
@@ -147,17 +120,17 @@ def test_table_source_to_file_target_uses_shared_activity(files, monkeypatch, me
             orchestrate_write(source['dataframe'], store='Gold', relative_path='export.csv', file_format='csv', write_mode='overwrite')
         assert caught.value.published is True and caught.value.failed_stage == 'File metadata'
         assert session.closed
-        files.lineage.assert_not_called()
         return
     orchestrate_write(source['dataframe'], store='Gold', relative_path='export.csv', file_format='csv', write_mode='overwrite')
-    calls = [call.kwargs for call in files.lineage.call_args_list]
-    assert len(calls) == 2
-    assert calls[0]['asset_type'] == 'FILE' and calls[0]['pipeline_role'] == 'target'
-    assert calls[1]['table_id'] == 'orders' and calls[1]['pipeline_role'] == 'source'
-    assert calls[0]['context'] is calls[1]['context']
+    result = finalize_pipeline(session)
     finalize_pipeline(session)
-    finalize_pipeline(session)
-    assert files.lineage.call_count == 2
+    sources = [op for op in result['operations'] if op['pipeline_role'] == 'source']
+    targets = [op for op in result['operations'] if op['pipeline_role'] == 'target']
+    assert len(sources) == len(targets) == 1
+    assert sources[0]['table_id'] == 'orders'
+    assert targets[0]['source_type'] == 'file' and targets[0]['source_id'].startswith('file:')
+    assert targets[0]['publication_status'] == 'published'
+    assert all(op['status'] == 'succeeded' for op in result['operations'])
 
 
 def test_retained_profiling_json_does_not_gain_file_fields():
@@ -183,8 +156,11 @@ def test_profile_consumers_load_file_columns_and_activity_participation(monkeypa
         'value': '1', 'frequency_count': 1, 'frequency_percent': 50.0}
     metadata = {'METADATA_DATA_PROFILED': [profile, {**profile, 'table_id': 'file:other'}],
         'METADATA_DATA_PROFILED_FREQUENCY': [frequency],
-        'METADATA_DATA_LINEAGE': [dict(table_id=source_id, pipeline_role=role, workspace_id='execution',
-            _notebook_name='pipeline', _committed_at=datetime(2026, 1, 1)) for role in ('source', 'target')]}
+        }
+    participation = [dict(table_id=source_id, pipeline_role=role, execution_workspace_id='execution',
+        pipeline_id='pipeline', run_id='run', operation_status='succeeded', run_status='succeeded',
+        _notebook_name='pipeline', operation_completed_at=datetime(2026, 1, 1)) for role in ('source', 'target')]
+    monkeypatch.setattr(contracts, 'get_asset_pipeline_participation', lambda **kw: participation)
     monkeypatch.setattr(contracts, 'read_lakehouse_table', lambda name, **kw: metadata[name])
     monkeypatch.setattr(contracts, '_scoped_rows', lambda rows, *filters: rows)
     arguments = dict(config={}, active_workspace_id='physical', spark_session=object(), table_id=source_id)

@@ -288,7 +288,6 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CATALOGUE": ["profile_table", "widget_data_contract"],
     "METADATA_DATA_PROFILED": ["profile_table"],
-    "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_data_steward"],
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "orchestrate_read", "orchestrate_write", "finalize_pipeline", "check_dq",

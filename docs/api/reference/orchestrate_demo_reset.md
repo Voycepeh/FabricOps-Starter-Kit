@@ -15,7 +15,7 @@ Preview or reset the dedicated Guided Demo to Day 1.
 
 ## Usage notes
 
-Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. Live compatibility does not replace signed-in Fabric acceptance.
+Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.
 
 
 ## Example usage
@@ -135,7 +135,7 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 
 `fabricops_kit/config/orchestrate_demo_reset.py:255`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L255-L459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L255-L458">View on GitHub</a>
 </div>
 
 

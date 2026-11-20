@@ -54,10 +54,10 @@ def notebook(code=None):
             "source": code or 'setup_pipeline(pipeline_mode="Dry Run")'}]}).encode()
 
 
-def test_canonical_13_tables_and_separate_grains():
-    """Verify canonical 13 tables and separate grains."""
+def test_canonical_12_tables_and_separate_grains():
+    """Verify canonical 12 tables and separate grains."""
     registry = metadata_table_schema_registry()
-    assert len(registry) == 13
+    assert len(registry) == 12
     assert metadata_table_owner(service.ACTIVATION_TABLE) == "governance"
     assert {"record_type", "leases_json", "git_commit_sha", "deployment_id", "table_id", "contract_id"}.isdisjoint(registry[service.REGISTRY_TABLE].fieldNames())
     assert {"execution_workspace_id", "pipeline_id", "pipeline_version", "snapshot_uri"} <= set(registry[service.REGISTRY_TABLE].fieldNames())

@@ -724,7 +724,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Metadata recording table and file source/target participation within a pipeline activity.",
-    "long_definition": "FabricOps records table and file participation as sources and targets within a Fabric activity. These records do not prove exact DataFrame transformation dependencies.",
+    "long_definition": "Data lineage describes source-to-target dependencies, optionally at column level. FabricOps records typed table/file Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.",
     "preferred_usage": "Use lineage for recorded source and target asset participation; it does not prove exact transformation dependencies.",
     "avoid_usage": "dependency when recorded data movement is meant",
     "tooltip_labels": [

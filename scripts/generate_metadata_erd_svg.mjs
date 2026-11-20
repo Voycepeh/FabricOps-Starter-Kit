@@ -19,8 +19,8 @@ function renderMetadataSvg(layout, models) {
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","1-N","physical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
-    ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H1355V735",[305,598],[1355,735],"Catalogue table to observed permissions"],
+    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by Table ID and execution workspace; not transformation dependencies"],
+    ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]
   ];
@@ -66,7 +66,7 @@ function renderMetadataSvg(layout, models) {
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==12||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
   // Every canonical cross-table physical FK requires a visible connector; logical links
   // are also deliberate and carry explanatory SVG <title> tooltips.
@@ -85,7 +85,7 @@ function renderMetadataSvg(layout, models) {
   const badge=(x,y,label,color)=>{
     if(!label)return "";
     const str=esc(label);
-    return `<rect x="${x-11}" y="${y-11}" width="22" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="${color}">${str}</text>`;
+    return `<rect x="${x-13}" y="${y-11}" width="26" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="${color}">${str}</text>`;
   };
   const direction=(a,b)=>{
     const dx=b[0]-a[0],dy=b[1]-a[1];

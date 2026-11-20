@@ -198,7 +198,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="lineage">
 <summary><strong>Lineage</strong> — Metadata recording table and file source/target participation within a pipeline activity.</summary>
-<p>FabricOps records table and file participation as sources and targets within a Fabric activity. These records do not prove exact DataFrame transformation dependencies.</p>
+<p>Data lineage describes source-to-target dependencies, optionally at column level. FabricOps records typed table/file Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 

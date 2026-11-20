@@ -462,7 +462,7 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
         {"value": "113.15", "count": 30, "percent": 25.0},
     ]
 
-def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_lineage(monkeypatch):
+def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_participation(monkeypatch):
     """Summarize one logical table across workspaces without duplicating deployed pipelines."""
     profiled = [
         {
@@ -489,7 +489,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
         },
     ]
-    lineage = [
+    participation = [
         {
             "lineage_id": "dev-writer-old", "table_id": "orders", "workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
@@ -528,10 +528,14 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             return profiled
         if name == "METADATA_DATA_PROFILED_FREQUENCY":
             return frequency
-        if name == "METADATA_DATA_LINEAGE":
-            return lineage
         raise AssertionError(name)
 
+    for row in participation:
+        row.update(execution_workspace_id=row["workspace_id"],
+                   pipeline_id="reporting" if row["pipeline_role"] == "source" else "pipeline",
+                   run_id=row["_activity_id"], operation_status="succeeded", run_status="succeeded",
+                   operation_completed_at=row["_committed_at"])
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: participation)
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
@@ -562,10 +566,10 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     }
     assert context["writer_count"] == 1
     assert context["reader_count"] == 1
-    assert len(context["lineage"]) == 3
+    assert len(context["participation"]) == 3
     assert {
         (row["workspace_id"], row["relationship"], row["pipeline_name"], row["last_seen"])
-        for row in context["lineage"]
+        for row in context["participation"]
     } == {
         ("DEV", "Writer", "02_pipeline", "2026-09-26T03:00:00"),
         ("PROD", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
@@ -637,9 +641,10 @@ def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
         reads.append(name)
         return {"METADATA_DATA_PROFILED": profiles,
                 "METADATA_DATA_PROFILED_FREQUENCY": frequency,
-                "METADATA_DATA_LINEAGE": []}[name]
+                "METADATA_PIPELINE_RUN": []}[name]
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: read("METADATA_PIPELINE_RUN"))
     kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
     bulk = service.get_asset_runtime_context(**kwargs)["profile_contexts"]
     assert len(reads) == 3

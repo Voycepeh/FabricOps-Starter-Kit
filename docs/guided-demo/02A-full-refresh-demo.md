@@ -235,7 +235,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | `METADATA_DATA_CATALOGUE` | TABLE and FILE asset identities, table column identities, file selector locations and observation timestamps, plus applicable table processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for the two table sources and two table targets when profiling completes; file profiles persist by Source ID with the common Table ID and deterministic Column IDs. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | TABLE and FILE source and target participation recorded for this notebook pipeline and retained in Run operations. |
+| `METADATA_PIPELINE_RUN.operations` | TABLE and FILE source and target participation recorded for this notebook pipeline and retained in Run operations. |
 | Processing State | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 
@@ -254,7 +254,7 @@ Run `pipeline_result = finalize_pipeline(pipeline)` after the last Write. Dry Ru
 ### Inspect file metadata
 
 After an Ungoverned run, the orders CSV selector is a `FILE` row in
-`METADATA_DATA_CATALOGUE` and a source in `METADATA_DATA_LINEAGE`. Both use its
+`METADATA_DATA_CATALOGUE` and a source in `METADATA_PIPELINE_RUN.operations`. Both use its
 stable Source ID; both reuse that value as the common table_id. Enabled file profiling and frequency
 results persist with that same identity as table_id and stable Column IDs. Dry Run keeps them
 in memory. See [file metadata and export examples](../engineering.md#how-is-file-metadata-persisted)

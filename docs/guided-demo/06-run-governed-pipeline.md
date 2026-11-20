@@ -35,7 +35,7 @@ The governed execution runs the reviewed workflow in its configured Engineering 
 Read → Transform → Write
 ```
 
-Source reads, transformations, Guardrail checks, governed write logic, profiling, [Lineage](../reference/metadata/metadata_data_lineage.md), and [Processing State](../maintainer/processing-state.md) run against the configured resources.
+Source reads, transformations, Guardrail checks, governed write logic, profiling, [Run participation](../reference/metadata/metadata_pipeline_run.md), and [Processing State](../maintainer/processing-state.md) run against the configured resources.
 
 Governed uses the **same pipeline workflow in its approved Engineering workspace**, with Contracts resolved exclusively from activated workspace authority. It verifies the exact effective Agreement, Data Contract versions, active approval and configured physical bindings before execution. Read and Write behavior must match the activated operation configuration.
 

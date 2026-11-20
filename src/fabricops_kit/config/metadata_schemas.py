@@ -13,7 +13,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
-    "METADATA_DATA_LINEAGE",
     "METADATA_DATA_ACCESS",
     "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
@@ -43,21 +42,27 @@ RETIRED_METADATA_COLUMNS.update({
     "METADATA_DATA_PROFILED_FREQUENCY": {
         "metadata_column_key": None, "profiled_at": "_committed_at",
     },
-    "METADATA_DATA_LINEAGE": {
-        "lineage_event_id": None, "profile_role": None,
-        "profiled_at": "_committed_at", "recorded_at": "_committed_at",
-    },
 })
 
 # Approved identity consolidation: migration copies and validates the file identity
 # before retiring the redundant operational source_id column.
-UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE", "METADATA_DATA_LINEAGE",
+UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE",
     "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_GUARDRAIL_RESULTS")
 for _asset_table in UNIFIED_ASSET_TABLES:
     RETIRED_METADATA_COLUMNS[_asset_table]["source_id"] = "table_id"
 
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
+# Retained historical tables are neither canonical nor automatically deleted.
+# This retirement has no release number until the next release is prepared.
+HISTORICAL_METADATA_TABLES = {
+    "METADATA_DATA_LINEAGE": {
+        "guidance": "Participation now comes from METADATA_PIPELINE_RUN.operations. "
+        "Existing rows remain historical activity records; run_id cannot be inferred universally. "
+        "Use reconcile_pipeline_participation() for a read-only matching report.",
+    },
+}
+
 RETIRED_PREVIEW_METADATA_TABLES = {
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
         "retired_in": "0.2.0",
@@ -65,7 +70,7 @@ RETIRED_PREVIEW_METADATA_TABLES = {
     },
     "METADATA_DATA_LINEAGE_TABLE": {
         "retired_in": "0.2.0",
-        "guidance": "Current pipeline participation is stored in METADATA_DATA_LINEAGE.",
+        "guidance": "Current pipeline participation is stored in METADATA_PIPELINE_RUN.operations.",
     },
     "METADATA_ENRICHMENT_RULES": {
         "retired_in": "0.2.0",
@@ -404,19 +409,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("profiled_non_null_count", "long"),
                 ("profile_scope", "string"),
                 ("profiling_max_rows", "long"),
-                *audit,
-            ],
-        ),
-        "METADATA_DATA_LINEAGE": build_metadata_schema(
-            "METADATA_DATA_LINEAGE",
-            [
-                ("lineage_id", "string"),
-                ("asset_type", "string"),
-                ("asset_name", "string"),
-                ("table_id", "string"),
-                ("table_name", "string"),
-                ("workspace_id", "string"),
-                ("pipeline_role", "string"),
                 *audit,
             ],
         ),

@@ -127,7 +127,7 @@ file_format and read_options. Files support full reads only and retain their
 stable Source ID in the public response. Shared metadata stores that same
 identity value in table_id with asset_type=FILE. Foundational readers remain independent.
 Successful persistent Reads register the file in METADATA_DATA_CATALOGUE
-and METADATA_DATA_LINEAGE under the existing Fabric Activity ID. File profiles
+and record participation in METADATA_PIPELINE_RUN.operations with the Run ID. File profiles
 and frequency results use that common Table ID and stable Column IDs in
 METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
 in memory. Profiling uses the pipeline row limit and records selection scope.
@@ -135,6 +135,7 @@ A replaced file can be read again in a new execution; no exactly-once or
 immutable-file guarantee is provided.
 Spark, execution authority and reporting come from setup_pipeline. The result
 retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+record their own participation in METADATA_PIPELINE_RUN.operations and
 register pipeline-level participation for subsequent Writes; this is not
 exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
 FabricOps resolves source and target Table IDs through configured workspace routing.
@@ -170,7 +171,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L237">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L238">View on GitHub</a>
 </div>
 
 

@@ -72,7 +72,7 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, a distinct file `source_id`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
 
-Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_DATA_LINEAGE`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
+Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_PIPELINE_RUN.operations`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
 
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
@@ -346,7 +346,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Publication | Uses the explicitly configured Engineering Write strategy and parameters; any applicable activated Contract Guardrails still govern the prepared data. |
 | Profiling | Follows `setup_pipeline()` settings, not a frozen Data Contract schedule: Standard is enabled by default; Grain discovery and Frequency are opt-in. |
 
-Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [Processing State](maintainer/processing-state.md) progress.
+Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [Processing State](maintainer/processing-state.md) progress.
 
 Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode resolves activated contracts, an independently approved submission and the deployed notebook identity; it currently fails closed pending signed-in Fabric acceptance.
 
@@ -393,7 +393,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 - technical table and column identity plus observed processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
-- registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
+- registered source/target pipeline participation in [`METADATA_PIPELINE_RUN.operations`](reference/metadata/metadata_pipeline_run.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
 - publication receipts, accepted checkpoints and Source Drift baselines in [Processing State](maintainer/processing-state.md);
 - the authoritative complete, failed or incomplete outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md).
@@ -419,7 +419,7 @@ that selector identity. Format and reader options do not change it.
 | Metadata table | File behavior |
 | --- | --- |
 | `METADATA_DATA_CATALOGUE` | One `metadata_level=file` row per selector; physical workspace/item, store, path, format, active flag and first/last observations. The common `table_id` identifies the file; observed fields register `column_id` rows. |
-| `METADATA_DATA_LINEAGE` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
+| `METADATA_PIPELINE_RUN.operations` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
 | `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file; observed fields register `column_id` rows. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Ranked file distributions linked to the profile snapshot; independent frequency work has no statistical `profile_id`. |
 | `METADATA_GUARDRAIL_RESULTS` | Schema, Data Quality, Grain and Freshness writers retain common Table IDs and explicit asset_type and exact selected Contract and rule versions. Failed checks remain outcomes, not successful lineage. No Contract means no invented checks. |

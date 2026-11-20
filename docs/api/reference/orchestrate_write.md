@@ -162,19 +162,20 @@ See write_lakehouse_file for nontransactional publication and recovery caveats.
 File options, physical location, publication status and available filesystem
 metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
 receive table audit columns, row hashes or SCD processing. Successful file Writes register FILE target
-participation in METADATA_DATA_LINEAGE and the selector in METADATA_DATA_CATALOGUE.
+participation in METADATA_PIPELINE_RUN.operations and the selector in METADATA_DATA_CATALOGUE.
 A successful file Write leaves the pipeline open for finalize_pipeline().
 All reads registered in this execution are associated with this target as
 pipeline participants, not proven transformation dependencies. File participation
 is returned under source_ids and retained separately from source_table_ids in
-Run operations as source_ids, and in METADATA_DATA_LINEAGE as common table_id
-values, using the existing
-Activity ID. These records describe participation rather than transformation edges. Dry Run evaluates
+Run operations as source_ids. The participation projection reuses these as
+common table_id asset keys and retains the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
 processing and applicable Guardrails without publishing or committing metadata.
 Ungoverned writes without contract checks but cannot target an already governed
 table. Governed requires activated contracts, ownership and a pinned revision.
 Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
 available. The result includes publication metrics and Guardrail diagnostics.
+Every attempted Write is recorded in METADATA_PIPELINE_RUN.operations;
+known table publication status survives later operation or notebook failure.
 A successful Write does not imply successful completion of the notebook.
 
 Dry Run profiles the prepared DataFrame in memory without publishing the target.
@@ -203,7 +204,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:32`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L355">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L356">View on GitHub</a>
 </div>
 
 
@@ -219,7 +220,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 281 |
+| Live-critical dependencies | 279 |
 
 ### Release history
 
@@ -462,11 +463,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
-<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>

@@ -168,7 +168,7 @@ the current Pipeline Promotion authorization supports file Reads only. Ungoverne
 still rejects protected file destinations and overlapping folders. File results retain
 the existing physical file `source_id`; shared metadata stores that same value as
 `table_id` with `asset_type=FILE` and registers stable Column IDs. File targets do not use table
-contracts, table audit columns or row hashes. They persist FILE participation in `METADATA_DATA_LINEAGE`. Full Read sources can
+contracts, table audit columns or row hashes. They persist FILE participation in `METADATA_PIPELINE_RUN.operations`. Full Read sources can
 participate; incremental checkpoint publication remains table-only.
 
 Pipeline profiling honors `setup_pipeline()` settings and profiles the supplied
