@@ -31,7 +31,7 @@ Each graph contains:
 - Dependency roles: `VALUE`, `JOIN`, `FILTER`, `GROUP`, `ORDER`, `CONDITION`, `PARTITION`, `ROW_SET` and internal `TRANSFORM` links. Root summaries retain multiple roles when appropriate.
 - `output_count`, `omitted_output_count` and graph-level `gaps`, so bounded fallback is visible.
 
-Literal values, row samples, SQL strings and UDF bodies are excluded. Operation classes, column/alias names and types explain structure, such as a Multiply followed by Sum, without storing the exact calculation constants. Python variable assignment names are unavailable in Catalyst; aliases and Spark plan stages provide the intermediate structure.
+Literal expression payloads, row samples, raw SQL strings and UDF bodies are excluded. Column and alias names remain verbatim metadata, including any expression text Spark uses for an automatically named column. Operation classes, names and types explain structure, such as a Multiply followed by Sum, without storing the exact calculation constants. Python variable assignment names are unavailable in Catalyst; aliases and Spark plan stages provide the intermediate structure.
 
 ## Coverage and publication
 
@@ -52,7 +52,7 @@ Always examine the operation's `status` and `publication_status` as well as the 
 | Native Spark SQL over registered Lakehouse sources/views | Traverse its analyzed plan |
 | Spark Connect, inaccessible JVM plans or changed Catalyst APIs | Record `plan_access_unavailable`; business publication can continue |
 
-The detector bounds each traversal to 10,000 nodes, 30,000 edges, plan depth 160, 1,000 outputs and a serialized graph of 1,000,000 bytes. It keeps at most 128 registered source leaves and 32 framework snapshot bridges per session. Evicted boundaries become unknown. Exceeding traversal/serialization limits produces an unknown graph with `lineage_limit`; any omitted output count is explicit. These are implementation budgets, not Spark or Fabric limits.
+The detector bounds each traversal to 10,000 nodes, 30,000 edges, plan depth 160, 1,000 outputs and a serialized graph of 1,000,000 bytes. It keeps at most 128 registered source leaves and 32 framework snapshot bridges per session. Exceeding the source registry budget makes subsequent captures unknown, preserving ambiguity rather than evicting conflicting identities. Evicted snapshot bridges become unknown. Exceeding traversal/serialization limits produces an unknown graph with `lineage_limit`; any omitted output count is explicit. These are implementation budgets, not Spark or Fabric limits.
 
 ## Query a retained Run
 

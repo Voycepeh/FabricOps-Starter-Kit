@@ -6373,6 +6373,7 @@ class LineageTracker:
     reads: list = dataclass_field(default_factory=list)
     bridges: list = dataclass_field(default_factory=list)
     serial: int = 0
+    source_limit_reached: bool = False
 
     def register(self, dataframe, asset, *, opaque=False):
         """Bind physical Read leaves, or retain an explicit opaque query boundary."""
@@ -6382,6 +6383,7 @@ class LineageTracker:
         while pending:
             visited += 1
             if visited > _LINEAGE_MAX_NODES:
+                self.source_limit_reached = True
                 raise ValueError("lineage_limit")
             node = pending.pop()
             children = _lineage_seq(node.children())
@@ -6390,13 +6392,19 @@ class LineageTracker:
             else:
                 leaves.append(node)
             if len(leaves) + len(pending) > 128:
+                self.source_limit_reached = True
                 raise ValueError("Read plan exceeds the bounded source registry.")
+        if len(self.reads) + len(leaves) > 128:
+            # Eviction could hide a conflicting identity for an equivalent plan.
+            self.source_limit_reached = True
+            raise ValueError("lineage_limit")
         for node in leaves:
             self.reads.append((node, dict(asset), opaque))
-        self.reads[:] = self.reads[-128:]
 
     def analyse(self, dataframe):
         """Build a bounded expression graph without evaluating business rows."""
+        if self.source_limit_reached:
+            raise ValueError("lineage_limit")
         return _ColumnLineageBuilder(self).analyse(_lineage_plan(dataframe))
 
     def bridge(self, dataframe, fragment):

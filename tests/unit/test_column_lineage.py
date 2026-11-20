@@ -302,3 +302,16 @@ def test_aggregate_filter_influence_is_not_a_value_dependency(tracked):
     assert roots(graph, 'total') == {('a', 'amount')}
     assert roots(graph, 'total', 'FILTER') == {('a', 'accepted')}
     assert any(node['operation'] == 'AggregateExpression' and node.get('name') == 'DISTINCT' for node in graph['nodes'])
+
+
+def test_source_registry_limit_cannot_erase_a_conflicting_identity(tracked):
+    """Exhausting the registry must not make an ambiguous plan appear attributable."""
+    t = tracked
+    a = t.read(t.spark.createDataFrame([(1,)], 'id long'), 'first')
+    tracker = t.plan.lineage['tracker']
+    tracker.reads *= 128  # Fill the bounded registry before a conflicting Read arrives.
+    t.read(a, 'second')
+    graph, _ = t.write(a)
+    assert len(tracker.reads) == 128
+    assert graph['status'] == 'unknown' and graph['gaps'] == ['lineage_limit']
+    assert roots(graph, 'id') == set()
