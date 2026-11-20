@@ -3730,7 +3730,7 @@
       ],
       "returns_documentation": "None\n    Prints a preview or verified reset summary, including actual removed\n    metadata counts. ``RESET COMPLETE`` is printed only after verification.",
       "signature": "def orchestrate_demo_reset(*, reset: bool=False) -> None",
-      "source_end_line": 457,
+      "source_end_line": 458,
       "source_path": "src/fabricops_kit/config/orchestrate_demo_reset.py",
       "source_start_line": 255,
       "summary": "Preview or reset the dedicated FabricOps Guided Demo to Day 1.",

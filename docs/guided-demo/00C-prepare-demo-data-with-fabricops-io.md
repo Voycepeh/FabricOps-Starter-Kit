@@ -47,7 +47,7 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
 !!! warning "Dedicated demo environment only"
 
-    `True` deletes **all rows in the 12 canonical metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Historical `METADATA_DATA_LINEAGE` rows are retained. Stop demo jobs first. Never use shared or production assets.
+    `True` deletes **all rows in the 12 canonical metadata tables**, including Contracts, activations and history, plus `misc.PROCESSING_STATE` and saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Historical `METADATA_DATA_LINEAGE` rows are retained. Stop demo jobs first. Never use shared or production assets.
 
 ??? info "Checks before deletion and reset scope"
 

@@ -383,6 +383,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo._demo_workspaces.update((store.workspace_id.casefold() for store in _demo.context.paths.values()))
     _demo_order = (
         "METADATA_GUARDRAIL_RESULTS",
+        _DEMO_PROCESSING_STATE,
         "METADATA_DATA_ACCESS",
         "METADATA_PIPELINE_RUN",
         "METADATA_PIPELINE_REGISTRY",
