@@ -326,7 +326,7 @@ def test_orchestration_retains_actual_layout_and_sources(files, output, monkeypa
     record = next(row for row in session.plan.evidence['operations'].values() if row.get('write_mode'))
     outcome = json.loads(record['file_write_parameters_json'])
     assert result['resolved_path'] == record['output_path']
-    assert result['source_ids'] == [source['source_id']]
+    assert result['source_assets'] == [{'table_id': source['table_id'], 'asset_type': 'FILE'}]
     assert not session.closed
     if mode == 'Dry Run':
         assert result['output_layout'] is result['overflow_occurred'] is result['overflow_reason'] is None
@@ -429,9 +429,9 @@ def test_ungoverned_file_protection_ignores_format_and_options(monkeypatch, prot
         file_format='json', reader_options={'multiLine': True})
     destination = file_source_identity(workspace_id='workspace', item_id='item', relative_path='nested/orders.csv', file_format='csv')
     monkeypatch.setattr(activation, 'read_activations', lambda **kw: [{'asset_workspace_id': 'workspace',
-        'table_id': None, 'destination_json': json.dumps(protected)}])
+        'destination_json': json.dumps(protected)}])
     with pytest.raises(ValueError, match='protected file'):
-        activation.guard_ungoverned_write(SimpleNamespace(runtime_context={}), destination['source_id'], destination)
+        activation.guard_ungoverned_write(SimpleNamespace(runtime_context={}), destination['table_id'], destination)
 
 
 

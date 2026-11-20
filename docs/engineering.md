@@ -70,7 +70,7 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 ## How do I read Lakehouses, Warehouses and files?
 
-Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, a distinct file `source_id`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
+Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, the stable file `table_id` and `asset_type="FILE"`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
 
 Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_PIPELINE_RUN.operations`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
 
@@ -210,7 +210,7 @@ for both APIs and output safeguards.
 Dry Run never stages or publishes files. Ungoverned checks protection of physical
 file destinations and overlapping folders. Governed file targets remain blocked
 because current Pipeline Promotion authorizes file Reads only. File targets carry
-file `source_id` values separately from table identities. Existing
+the same `table_id` and `asset_type` fields as table targets. Existing
 [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) operations
 capture source participation, physical output, writer settings, status and available
 filesystem metrics. File Write results expose actual `output_layout`,
@@ -483,11 +483,13 @@ and retained Run/Contract JSON remain intact. Repeated setup is safe.
 | Catalogue | One row per physical `asset_workspace_id`, `table_id` and `asset_type`. Successful full-schema observations update `columns_json` even when profiling is disabled. |
 | Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
 | Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |
-| Pipeline Run | Released file operation JSON retains `source_id`. New profiling entries use common `table_id` and `asset_type`; historical JSON is unchanged. |
+| Contracts and activations | Common `table_id` and `asset_type`; frozen historical payload bytes and hashes remain unchanged. New payloads use format version 2. |
+| Pipeline Run | New version 4 operations use `table_id`, `asset_type` and typed `source_assets` for table and file inputs. Historical JSON is unchanged. |
 
 For tables, historical null asset types are interpreted as TABLE. Source descriptors
-in authored Contracts, activations and public file results retain their supported
-`source_id` format. No second operational identity column is needed. File-specific
+in new authored Contracts, activations and public file results all use
+`table_id` and `asset_type`. Submission packages use format version 2; existing
+approved version 1 packages retain their original digests. No second operational identity column is needed. File-specific
 processing still checks `asset_type`; a common identifier does not enable table-only
 SCD, incremental checkpoint or SQL access processing for files.
 

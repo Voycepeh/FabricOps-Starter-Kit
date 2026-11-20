@@ -103,8 +103,8 @@ Metadata Lakehouse even when the notebook workspace is not a pipeline environmen
 Tables retain their selected Catalogue observation. Named file datasets share
 the selector; enter a validated configured Files path and reader settings to
 observe a new file schema without registering a table. File contracts preserve
-Source ID and exact format/options through Save, Freeze and Activation.
-Returned state uses source_id for files and table_id for physical tables;
+common Table ID, asset type and exact format/options through Save, Freeze and Activation.
+Returned state uses table_id and asset_type for either kind;
 dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
 Activation and governed execution still require configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
@@ -191,9 +191,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:992`
+`fabricops_kit/widgets/widget_data_contract.py:994`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L992-L7487">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L994-L7486">View on GitHub</a>
 </div>
 
 

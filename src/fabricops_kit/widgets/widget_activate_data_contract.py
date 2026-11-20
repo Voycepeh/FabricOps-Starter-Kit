@@ -1,6 +1,8 @@
 """Governance selection and conditional activation of exact physical Contracts."""
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import migrate_asset_references
+
 import hashlib
 import html
 import json
@@ -130,17 +132,17 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         return render_history()
     def render_history():
         scoped = [row for row in state["history"] if (not workspace.value or row["asset_workspace_id"] == workspace.value)
-            and (not table.value or (row.get("source_id") or row.get("table_id")) == table.value)]
+            and (not table.value or (row.get("table_id")) == table.value)]
         history.value = "<details><summary>Contract Activation history and current state</summary><pre style='white-space:pre-wrap'>" + html.escape(json.dumps(scoped, indent=2, default=str)) + "</pre></details>"
         return scoped
     def selection_binding():
         if not table.value or not contract.value:
             raise ValueError("Select an exact dataset and frozen Contract/version.")
         row = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=routed(), spark_session=spark),
-            **({"source_id": table.value} if str(table.value).startswith("file:") else {"table_id": table.value}),
+            table_id=table.value,
             contract_id=contract.value[0], contract_version=contract.value[1], status="frozen")
-        if row.get("source_id"):
-            destination = json.loads(row["contract_payload_json"])["source"]
+        if row.get("asset_type") == "FILE":
+            destination = migrate_asset_references(json.loads(row["contract_payload_json"]))["source"]
         else:
             identity = resolve_catalogue_table_identity(config, current_workspace, table.value, context=base,
                 spark_session=spark, physical_workspace_id=workspace.value)
@@ -161,7 +163,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         if terms:
             validate_agreement(terms)
         state["review"] = {"workspace_id": workspace.value, "dataset_id": table.value,
-            "table_id": row.get("table_id"), "source_id": row.get("source_id"), "contract": contract.value,
+            "table_id": row.get("table_id"), "asset_type": row.get("asset_type"), "contract": contract.value,
             "reference": reference, "agreement_sha256": manifest_digest(agreement_definition(terms)) if terms else None,
             "destination": destination, "payload_sha256": hashlib.sha256(row["contract_payload_json"].encode()).hexdigest(),
             "expected_activation_id": current[0]["activation_id"] if current else None, "activation_id": str(uuid4())}
@@ -173,10 +175,10 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         if not reviewed or not confirm.value:
             raise ValueError("Review and explicitly confirm the exact frozen Contract first.")
         terms = reviewed["reference"]
-        is_file = reviewed["destination"].get("source_type") == "file"
-        file_dataset = next((item for item in files if item["source_id"] == reviewed["source_id"]), {}) if is_file else {}
+        is_file = reviewed["destination"].get("asset_type") == "FILE"
+        file_dataset = next((item for item in files if item["table_id"] == reviewed["table_id"]), {}) if is_file else {}
         file_store = file_dataset.get("store")
-        state["result"] = set_table_contract_activation(None if is_file else reviewed["table_id"], *reviewed["contract"],
+        state["result"] = set_table_contract_activation(reviewed["table_id"], *reviewed["contract"],
             **({"file_source": reviewed["destination"], "file_store": file_store,
                 "file_configuration_workspace_id": file_dataset.get("configuration_workspace_id", reviewed["workspace_id"])} if is_file else {}),
             expected_activation_id=reviewed["expected_activation_id"], activation_id=reviewed["activation_id"], governance_confirmed=True,

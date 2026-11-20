@@ -57,14 +57,14 @@ def test_data_contract_uses_versioned_table_or_file_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
         "contract_id", "contract_version",
-        "table_id", "source_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
+        "table_id", "asset_type", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
     ]
     assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
-        ("table_id", "StringType", True), ("source_id", "StringType", True), ("table_name", "StringType", True),
+        ("table_id", "StringType", True), ("asset_type", "StringType", True), ("table_name", "StringType", True),
         ("evidence_workspace_id", "StringType", False),
         ("contract_payload_json", "StringType", True),
         ("status", "StringType", False),

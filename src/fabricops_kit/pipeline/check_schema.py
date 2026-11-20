@@ -71,7 +71,7 @@ def check_schema(
     table_name = identity.get("relative_path") or identity["table_name"]
     store = get_store(config, active_workspace_id, store_key)
     store_type = str(store.kind).lower()
-    is_file = identity.get("source_type") == "file"
+    is_file = identity.get("asset_type") == "FILE"
     if not is_file and store_type != identity["store_type"]:
         raise ValueError(
             f"Catalogue table_id {table_id!r} declares store_type {identity['store_type']!r}, "
@@ -128,8 +128,8 @@ def check_schema(
         table_id=table_id,
     )
     if is_file:
-        result.pop("table_id", None)
-        result["source_id"] = table_id
+        result["table_id"] = table_id
+        result["asset_type"] = "FILE"
     result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
     result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
     result["expected"] = {"schema_rule": result.get("rule_type")}

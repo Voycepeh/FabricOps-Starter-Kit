@@ -14,7 +14,7 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
         relative_path="demo/orders.csv", file_format="csv",
         reader_options={"header": True, "inferSchema": True})
     run = {"completed_at": "2026-11-12T10:00:00Z", "operations": json.dumps([{
-        "pipeline_role": "source", "source_type": "file", "source_id": source["source_id"],
+        "pipeline_role": "source", "asset_type": "FILE", "table_id": source["table_id"],
         "status": "succeeded", "destination": {
             **{key: source[key] for key in ("workspace_id", "item_id", "relative_path", "file_format")},
             "reader_options_json": json.dumps(source["reader_options"])},
@@ -26,12 +26,12 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
         lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run],
             "observations": [{**source, "asset_workspace_id": source["workspace_id"], "asset_workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
-                              "table_id": source["source_id"], "columns_json": [
+                              "table_id": source["table_id"], "columns_json": [
                                   {"column_id": "original-id", "column_name": "order_id", "data_type": "long"}]}]})
     state = module.widget_data_contract()
     labels = {value: label for label, value in state["_controls"]["table"].options}
-    assert source["source_id"] in labels
-    assert "demo/orders.csv" in labels[source["source_id"]]
+    assert source["table_id"] in labels
+    assert "demo/orders.csv" in labels[source["table_id"]]
     assert "select_file" not in state["_controls"]
     assert "file_path" not in state["_controls"]
 
@@ -41,7 +41,7 @@ def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
     source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     source['store'] = 'Bronze'
     options = contracts.dataset_selector_options([table], [source], workspace_id='w')
-    assert set(options['tables']) == {'table-orders', source['source_id']}
+    assert set(options['tables']) == {'table-orders', source['table_id']}
     assert contracts.dataset_selector_options([table], [source], workspace_id='other')['tables'] == []
     assert 'Table' in contracts.dataset_display_name(table)
     assert 'demo/orders.csv' in contracts.dataset_display_name(source)
@@ -53,11 +53,10 @@ def test_authored_file_keeps_physical_identity_and_separate_configuration_route(
     stores = {'gov': {'Metadata': SimpleNamespace(workspace_id='gov', item_id='meta')},
               'engineering': {'Bronze': SimpleNamespace(workspace_id='physical-source', item_id='item')}}
     monkeypatch.setattr(config_shared, 'get_store', lambda config, route, key: stores[route][key])
-    rows = [{'source_id': source['source_id'], 'contract_version': 1,
+    rows = [{'table_id': source['table_id'], 'contract_version': 1,
              'contract_payload_json': json.dumps({'source': source, 'table': {'columns': []}})}]
     datasets = contracts.contract_file_datasets(rows, config={'path_config': {'paths': stores}}, workspace_id='gov')
     assert len(datasets) == 1
     assert datasets[0]['configuration_workspace_id'] == 'engineering'
     assert datasets[0]['workspace_id'] == 'physical-source'
-    assert datasets[0]['source_id'] == source['source_id']
-    assert 'table_id' not in datasets[0]
+    assert datasets[0]['table_id'] == source['table_id'] and datasets[0]['asset_type'] == 'FILE'

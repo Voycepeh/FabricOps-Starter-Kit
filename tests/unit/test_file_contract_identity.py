@@ -16,13 +16,13 @@ def source(path="incoming/*.csv", **changes):
 def test_identity_is_stable_case_sensitive_and_independent_of_reader_options():
     """Membership and parsing options do not manufacture table-like identities."""
     original = source()
-    assert source("incoming//*.csv")["source_id"] == original["source_id"]
-    assert source("Incoming/*.csv")["source_id"] != original["source_id"]
+    assert source("incoming//*.csv")["table_id"] == original["table_id"]
+    assert source("Incoming/*.csv")["table_id"] != original["table_id"]
     changed = source(reader_options={"header": True})
-    assert changed["source_id"] == original["source_id"] and changed != original
-    assert "table_id" not in original
+    assert changed["table_id"] == original["table_id"] and changed != original
+    assert "source_id" not in original and original["asset_type"] == "FILE"
     validate_contract_source({"source": original, "table": {}})
-    with pytest.raises(ValueError, match="without a Table ID"):
+    with pytest.raises(ValueError, match="stable asset identity"):
         validate_contract_source({"source": original, "table": {"table_id": "fake"}})
 
 
@@ -46,7 +46,7 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
     """Shared contract semantics use file source identity with no Catalogue table row."""
     descriptor = source()
-    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "asset_workspace_id": descriptor["workspace_id"],
+    row = {"asset_type": "FILE", "table_id": descriptor["table_id"], "asset_workspace_id": descriptor["workspace_id"],
            "table_name": descriptor["relative_path"], "columns_json": json.dumps([
                {"column_id": "id", "column_name": "id", "data_type": "long"}])}
     monkeypatch.setattr(contracts, "read_lakehouse_table",
@@ -58,10 +58,10 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     draft = contracts.create_contract_draft(file_source=descriptor,
         config={}, active_workspace_id="authoring-workspace", spark_session=spark)
     assert draft["evidence_workspace_id"] == descriptor["workspace_id"]
-    assert draft["table_id"] is None and draft["source_id"] == descriptor["source_id"]
+    assert draft["asset_type"] == "FILE" and draft["table_id"] == descriptor["table_id"]
     payload = json.loads(draft["contract_payload_json"])
     assert payload["table"]["evidence_workspace_id"] == descriptor["workspace_id"]
-    assert "table_id" not in payload["table"] and "processing" not in payload["table"]
+    assert payload["table"]["table_id"] == descriptor["table_id"] and "processing" not in payload["table"]
     payload["guardrails"] = [{"guardrail_rule_id": "grain", "guardrail_type": "grain", "rule_type": "uniqueness",
         "rule_parameters": {"columns": ["id"]}, "action": "Block", "is_active": True},
         {"guardrail_rule_id": "fresh", "guardrail_type": "freshness", "rule_type": "freshness", "action": "Warn",
@@ -70,7 +70,7 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     assert json.loads(frozen["contract_payload_json"])["source"] == descriptor
     changed = deepcopy(payload)
     changed["source"]["relative_path"] = "different/*.csv"
-    with pytest.raises(ValueError, match="stable file identity"):
+    with pytest.raises(ValueError, match="stable asset identity"):
         contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(changed)}, audit={})
 
 
@@ -83,8 +83,8 @@ def test_pipeline_submission_binds_exact_file_selector_and_reader_options():
         "source": descriptor, "table": {"columns": []}, "enrichment": {"table": [], "columns": []}, "guardrails": []}
     content = json.dumps(payload)
     package = package_candidate()
-    package["contracts"][descriptor["source_id"]] = {"contract_id": "files", "contract_version": 1, "status": "frozen",
-        "source_id": descriptor["source_id"], "table_id": None, "contract_payload_json": content}
+    package["contracts"][descriptor["table_id"]] = {"contract_id": "files", "contract_version": 1, "status": "frozen",
+        "table_id": descriptor["table_id"], "asset_type": "FILE", "contract_payload_json": content}
     package["manifest"]["file_authorizations"] = [{"source": descriptor, "store": "Bronze", "contract_id": "files",
         "contract_version": 1, "payload_sha256": activation.hashlib.sha256(content.encode()).hexdigest()}]
     activation.validate_submission(resign(package))
@@ -94,7 +94,7 @@ def test_pipeline_submission_binds_exact_file_selector_and_reader_options():
         activation.validate_submission(resign(changed))
     changed = deepcopy(package)
     changed["manifest"]["file_authorizations"][0]["source"]["relative_path"] = "other/*.csv"
-    with pytest.raises(ValueError, match="stable file identity"):
+    with pytest.raises(ValueError, match="stable asset identity"):
         activation.validate_submission(resign(changed))
 
 
@@ -106,7 +106,7 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
     from fabricops_kit.io import shared as io
     descriptor = source()
     payload = {"source": descriptor, "table": {"columns": []}, "enrichment": {"table": [], "columns": []}, "guardrails": []}
-    contract = {"contract_id": "files", "contract_version": 1, "source_id": descriptor["source_id"], "table_id": None,
+    contract = {"contract_id": "files", "contract_version": 1, "table_id": descriptor["table_id"],
         "status": "frozen", "contract_payload_json": json.dumps(payload)}
     context = {"config": {}, "scope_workspace_id": "workspace"}
     monkeypatch.setattr(activation, "resolve_fabric_context", lambda context=None: ({}, "workspace", context))
@@ -124,16 +124,16 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
         activation.validate_activations(rows)
         return result
     monkeypatch.setattr(activation, "mutate_metadata", mutate)
-    result = activation.set_table_contract_activation(None, "files", 1, expected_activation_id=None,
+    result = activation.set_table_contract_activation(descriptor["table_id"], "files", 1, expected_activation_id=None,
         activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context,
         file_configuration_workspace_id="configuration-route")
     assert file_scopes == ["configuration-route"]
     assert result["asset_workspace_id"] == "workspace"
-    assert result["table_id"] is None and result["source_id"] == descriptor["source_id"]
+    assert result["asset_type"] == "FILE" and result["table_id"] == descriptor["table_id"]
     assert json.loads(result["destination_json"]) == descriptor
     store.item_id = "other-item"
     with pytest.raises(ValueError, match="physical authorization"):
-        activation.set_table_contract_activation(None, "files", 1, expected_activation_id=None,
+        activation.set_table_contract_activation(descriptor["table_id"], "files", 1, expected_activation_id=None,
             activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context)
 
 

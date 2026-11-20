@@ -90,7 +90,7 @@
 <text x="476" y="175" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id/version</text>
 <text x="476" y="195" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_workspace_id</text>
 <text x="476" y="215" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
-<text x="476" y="235" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">source_id</text>
+<text x="476" y="235" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_type</text>
 <title>Open metadata documentation: DATA_CONTRACT_ACTIVATION</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_contract/" target="_blank">
@@ -100,10 +100,10 @@
 <text x="86" y="135" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id</text>
 <text x="86" y="159" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_version</text>
 <text x="86" y="183" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">evidence_workspace_id</text>
-<text x="86" y="207" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id (TABLE)</text>
-<text x="86" y="231" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">source_id (FILE)</text>
+<text x="86" y="207" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
+<text x="86" y="231" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_type</text>
 <g data-key-role="PK" data-key-fields="contract_id,contract_version"><title>Composite primary key</title><path d="M80 125H74V163H80" fill="none" stroke="#7C3AED"/><text x="48" y="147" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text></g>
-<g data-key-role="REF" data-key-fields="evidence_workspace_id,table_id,source_id"><title>Catalogue authoring reference checked at draft creation</title><path d="M80 173H74V235H80" fill="none" stroke="#7C3AED"/><text x="48" y="207" fill="#7C3AED" font-weight="700" font-size="12" font-family="Segoe UI, Arial, sans-serif">REF</text></g>
+<g data-key-role="REF" data-key-fields="evidence_workspace_id,table_id,asset_type"><title>Catalogue authoring reference checked at draft creation</title><path d="M80 173H74V235H80" fill="none" stroke="#7C3AED"/><text x="48" y="207" fill="#7C3AED" font-weight="700" font-size="12" font-family="Segoe UI, Arial, sans-serif">REF</text></g>
 <title>Open metadata documentation: DATA_CONTRACT</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_guardrail_results/" target="_blank">
@@ -112,12 +112,13 @@
 <text x="1355" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">GUARDRAIL_RESULTS</text>
 <text x="1218" y="480" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
 <text x="1256" y="480" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">guardrail_result_id</text>
-<text x="1218" y="504" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="1256" y="504" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">run_id</text>
-<text x="1218" y="528" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="1256" y="528" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id/version</text>
-<text x="1256" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_workspace_id</text>
-<text x="1256" y="576" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
+<text x="1218" y="500" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="1256" y="500" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">run_id</text>
+<text x="1218" y="520" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="1256" y="520" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">contract_id/version</text>
+<text x="1256" y="540" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_workspace_id</text>
+<text x="1256" y="560" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
+<text x="1256" y="580" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_type</text>
 <title>Open metadata documentation: GUARDRAIL_RESULTS</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_run/" target="_blank">
@@ -128,7 +129,7 @@
 <text x="866" y="480" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">run_id</text>
 <text x="866" y="504" fill="#19243A" font-size="11" font-family="Segoe UI, Arial, sans-serif">operations[].destination.workspace_id</text>
 <text x="866" y="528" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].table_id</text>
-<text x="866" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].source_id</text>
+<text x="866" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].asset_type</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">

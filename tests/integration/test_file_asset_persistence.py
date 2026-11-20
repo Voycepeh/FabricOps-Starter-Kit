@@ -40,7 +40,7 @@ def profile_runtime(spark_session, monkeypatch):
 @pytest.mark.parametrize("operation", ["read", "write"])
 def test_file_profile_and_frequency_use_common_ids_and_commit_only_after_success(profile_runtime, operation):
     r = profile_runtime
-    source = r.identity["source_id"]
+    source = r.identity["table_id"]
     frame = r.spark.createDataFrame([(1, "a"), (2, "a")], "id int, label string")
     result = shared.schedule_file_profiling(frame, source_id=source, context=r.context, presentations=[], operation=operation)
     assert not r.rows and result["results_persisted"] is False
@@ -172,7 +172,7 @@ def test_orchestrated_file_read_commits_run_participation_before_finalization(ca
     result = orchestrate_read(store='Bronze', relative_path='inventory/inventory.csv', file_format='csv')
     runs = r.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN'])
     participant = shared.pipeline_participation(runs).first().asDict()
-    assert participant['table_id'] == result['source_id'] and participant['pipeline_role'] == 'source'
+    assert participant['table_id'] == result['table_id'] and participant['pipeline_role'] == 'source'
     assert participant['run_id'] == session.plan.plan_id and participant['asset_type'] == 'FILE'
     assert participant['_activity_id'] == audit['_activity_id']
     rows = r.spark.read.format('delta').load(paths['METADATA_DATA_CATALOGUE']).collect()
@@ -198,7 +198,7 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, table, schema, **kw:
         (store, table, schema, paths[table]))
     frame = r.spark.createDataFrame([(1, 'a'), (2, 'a')], 'id int, label string')
-    result = shared.schedule_file_profiling(frame, source_id=r.identity['source_id'],
+    result = shared.schedule_file_profiling(frame, source_id=r.identity['table_id'],
         context=r.context, presentations=[])
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
     monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
@@ -211,7 +211,7 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     profiles = r.spark.read.format('delta').load(paths['METADATA_DATA_PROFILED']).collect()
     frequency = r.spark.read.format('delta').load(paths['METADATA_DATA_PROFILED_FREQUENCY']).collect()
     assert len(profiles) == 2 and len(frequency) == 1
-    assert all(row.table_id == r.identity['source_id'] and row.asset_type == 'FILE'
+    assert all(row.table_id == r.identity['table_id'] and row.asset_type == 'FILE'
                and row.column_id is not None for row in [*profiles, *frequency])
     assert {row.profile_id for row in frequency} <= {row.profile_id for row in profiles}
     assert result['results_persisted'] is True
@@ -299,7 +299,7 @@ def test_file_columns_keep_ids_across_schema_changes_and_reappearance(catalogue_
         return {column['column_name']: column for column in json.loads(r.read().first()['columns_json'])}
     initial = observe([('id', 'bigint'), ('name', 'string')])
     changed = observe([('ID', 'string')])
-    assert changed['ID']['column_id'] == initial['id']['column_id'] == build_column_id(identity['source_id'], 'id')
+    assert changed['ID']['column_id'] == initial['id']['column_id'] == build_column_id(identity['table_id'], 'id')
     assert changed['ID']['data_type'] == 'string'
     assert 'name' not in changed
     restored = observe([('id', 'bigint'), ('name', 'string')])

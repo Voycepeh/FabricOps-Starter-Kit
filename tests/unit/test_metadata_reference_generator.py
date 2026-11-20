@@ -151,7 +151,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "via `approval_id`" in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 0..1)**" in contract_page
     assert "Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id" in contract_page
-    assert "via `evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)" in contract_page
+    assert "via `evidence_workspace_id` + `table_id` + `asset_type`" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
     assert "monotonically increasing" not in contract_page
 
@@ -290,17 +290,17 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
             (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
             for fk in model["foreign_keys"]
         ]
-    assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
+    assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
     assert payload["DATA_CONTRACT"]["catalogue_authoring_fields"] == [
-        "evidence_workspace_id", "table_id", "source_id"
+        "evidence_workspace_id", "table_id", "asset_type"
     ]
-    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["asset_workspace_id", "table_id"]
+    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
-        "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id"
+        "operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type"
     ]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [
@@ -471,8 +471,8 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
 
     contract = next(node for node in svg_tree.findall(f".//{namespace}a")
                     if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_CONTRACT")
-    assert {"table_id (TABLE)", "source_id (FILE)"} <= {node.text for node in contract.findall(f"{namespace}text")}
-    for role, fields in (("PK", "contract_id,contract_version"), ("REF", "evidence_workspace_id,table_id,source_id")):
+    assert {"table_id", "asset_type"} <= {node.text for node in contract.findall(f"{namespace}text")}
+    for role, fields in (("PK", "contract_id,contract_version"), ("REF", "evidence_workspace_id,table_id,asset_type")):
         assert contract.find(f"{namespace}g[@data-key-role='{role}']").get("data-key-fields") == fields
     assert contract.find(f"{namespace}g[@data-key-role='FK']") is None
 

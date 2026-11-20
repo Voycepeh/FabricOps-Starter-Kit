@@ -28,8 +28,8 @@ def consumer_metadata(monkeypatch):
     """Keep consumer validation real while supplying registered metadata records."""
     binding = dict(workspace_id='DEV', item_id='item-A', kind='warehouse', schema='demo', table_name='orders')
     payload = json.dumps({'table': {'table_id': 'orders', 'columns': []}, 'enrichment': {}, 'guardrails': []})
-    contract = dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json=payload)
-    activation = dict(asset_workspace_id='DEV', table_id='orders', contract_id='contract', contract_version=1,
+    contract = dict(table_id='orders', asset_type='TABLE', contract_id='contract', contract_version=1, status='frozen', contract_payload_json=payload)
+    activation = dict(asset_workspace_id='DEV', table_id='orders', asset_type='TABLE', contract_id='contract', contract_version=1,
         payload_sha256=hashlib.sha256(payload.encode()).hexdigest(), activation_id='activation', revision=1,
         status='active', destination_json=json.dumps(binding), _committed_by='reviewer', activated_at=date.today())
     op = operation(); op['destination'] = binding
@@ -104,10 +104,10 @@ def test_schema_resolution_keeps_source_and_incremental_target_references_consis
         op = operation(role=role, table=table); op.update(table_id=identity['table_id'], destination=binding, requested_schema=None)
         ops.append(op)
     ops[0]['incremental_target_table_id'] = ops[1]['table_id']
-    ops[1]['source_table_ids'] = [ops[0]['table_id']]
+    ops[1]['source_assets'] = [{'table_id': ops[0]['table_id'], 'asset_type': 'TABLE'}]
     resolved = authority.resolve_promoted_operations(ops, context={'config':cfg, 'scope_workspace_id':'PROD'})
     assert resolved[0]['incremental_target_table_id'] == resolved[1]['table_id']
-    assert resolved[1]['source_table_ids'] == [resolved[0]['table_id']]
+    assert resolved[1]['source_assets'] == [{'table_id': resolved[0]['table_id'], 'asset_type': 'TABLE'}]
 
 
 def test_consumer_cannot_borrow_agreement_from_engineering_registry(consumer_metadata):

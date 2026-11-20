@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import migrate_asset_references
+
 from fabricops_kit.config.metadata_schemas import decode_metadata_row
 
 import html
@@ -737,7 +739,7 @@ def _manifest_sections(
         for row in columns
     )
     guardrail_count = len(table_guardrails) + len(column_guardrails) + len(business_rules)
-    dataset_label = "File" if payload.get("source", {}).get("source_type") == "file" else "Table"
+    dataset_label = "File" if payload.get("source", {}).get("asset_type") == "FILE" else "Table"
     guardrail_sections = (
         f"<div style='margin-top:8px;'><b>{dataset_label}</b>"
         + rule_list(table_guardrails)
@@ -1040,8 +1042,8 @@ def widget_data_contract(
     Tables retain their selected Catalogue observation. Named file datasets share
     the selector; enter a validated configured Files path and reader settings to
     observe a new file schema without registering a table. File contracts preserve
-    Source ID and exact format/options through Save, Freeze and Activation.
-    Returned state uses source_id for files and table_id for physical tables;
+    common Table ID, asset type and exact format/options through Save, Freeze and Activation.
+    Returned state uses table_id and asset_type for either kind;
     dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
     Activation and governed execution still require configured environment mapping.
     Save overwrites the complete canonical JSON for the selected draft version, then reloads
@@ -1198,16 +1200,16 @@ def widget_data_contract(
         file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
         observed_files = contracts.catalogue_file_datasets(catalogue.get("observations", ()), config=config,
             workspace_id=active_workspace_id, pipeline_runs=catalogue.get("pipeline_runs", []))
-        existing_files = {row["source_id"]: row for row in file_rows}
+        existing_files = {row["table_id"]: row for row in file_rows}
         for row in observed_files:
-            existing_files.setdefault(row["source_id"], row)
+            existing_files.setdefault(row["table_id"], row)
         file_rows = list(existing_files.values())
         if table_id is not None and str(table_id) not in {str(row.get("table_id")) for row in table_rows}:
             raise ValueError("table_id has no active table-level Catalogue row in central governance metadata.")
     state: dict[str, Any] = {
         "authoring_workspace_id": authoring_workspace_id,
-        "workspace_id": None, "dataset_id": None, "table_id": None, "source_id": None, "contract_version": None,
-        "pending_dataset_id": table_id, "pending_table_id": table_id, "pending_source_id": None, "pending_contract_version": contract_version,
+        "workspace_id": None, "dataset_id": None, "table_id": None, "asset_type": None, "contract_version": None,
+        "pending_dataset_id": table_id, "pending_contract_version": contract_version,
         "contracts": catalogue["contracts"], "tables": table_rows, "current": None,
         "manifest": None, "profile_context": None, "message": "", "_controls": {},
         "_column_drafts": {}, "_profile_cache": {},
@@ -1339,7 +1341,7 @@ def widget_data_contract(
         """Route usage to central Metadata while preserving notebook and asset identity."""
         contract = (state.get("current") or {}).get("contract") or {}
         return {**resolved, "config": config, "scope_workspace_id": routing_workspace_id,
-                "ai_usage_metadata": {"table_id": None if str(state.get("dataset_id")).startswith("file:") else state.get("dataset_id"), "column_id": column_id,
+                "ai_usage_metadata": {"table_id": state.get("dataset_id"), "asset_type": state.get("asset_type"), "column_id": column_id,
                                       "contract_id": contract.get("contract_id"),
                                       "contract_version": state.get("contract_version"),
                                       "evidence_workspace_id": contract.get("evidence_workspace_id") or state["workspace_id"]}}
@@ -1433,11 +1435,11 @@ def widget_data_contract(
         state["_validation_errors"].clear()
         state["dataset_id"] = str(selected_table or "").strip() or None
         is_file = str(state["dataset_id"]).startswith("file:")
-        state["table_id"] = None if is_file else state["dataset_id"]
-        state["source_id"] = state["dataset_id"] if is_file else None
+        state["table_id"] = state["dataset_id"]
+        state["asset_type"] = "FILE" if is_file else "TABLE"
         matches = [
             row for row in state["contracts"]
-            if str(row.get("source_id") or row.get("table_id") or "") == str(state["dataset_id"] or "")
+            if str(row.get("table_id") or "") == str(state["dataset_id"] or "")
         ]
         if not matches:
             state["current"] = None
@@ -1482,10 +1484,10 @@ def widget_data_contract(
         if not state.get("dataset_id") or not state.get("workspace_id"):
             raise ValueError("Select a dataset and workspace before creating a draft.")
         dataset = str(state["dataset_id"])
-        file_source = next((row for row in file_rows if row["source_id"] == dataset), None)
+        file_source = next((row for row in file_rows if row["table_id"] == dataset), None)
         selection = {"table_id": dataset} if file_source is None else {
             "file_source": {key: file_source[key] for key in
-                ("source_type", "source_id", "workspace_id", "item_id", "relative_path", "file_format", "reader_options")},
+                ("asset_type", "table_id", "workspace_id", "item_id", "relative_path", "file_format", "reader_options")},
         }
         draft = contracts.create_contract_draft(
             **selection, config=config, active_workspace_id=state["workspace_id"],
@@ -1803,7 +1805,7 @@ def widget_data_contract(
     def table_selector_label(row: Mapping[str, Any]) -> str:
         kind = "Table"
         name = qualified_table_name(row)
-        if row.get("source_type") == "file":
+        if row.get("asset_type") == "FILE":
             name = str(row["relative_path"])
             kind = "Folder" if name.endswith("/") else "File selector" if any(char in name for char in "*?[") else "File"
         item = configured_item_name(row)
@@ -1859,7 +1861,7 @@ def widget_data_contract(
         active: bool = True,
     ) -> dict[str, Any]:
         current = state["current"]
-        contract_payload = json.loads(str(current["contract"].get("contract_payload_json") or "{}"))
+        contract_payload = migrate_asset_references(json.loads(str(current["contract"].get("contract_payload_json") or "{}")))
         table_payload = contract_payload.get("table") or {}
         old = dict(existing or {})
         scope = (str(current["contract_id"]), int(current["contract_version"]))
@@ -1984,10 +1986,10 @@ def widget_data_contract(
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
         source = current.get("payload", {}).get("source", {})
-        dataset_label = "File" if source.get("source_type") == "file" else "Table"
-        if source.get("source_type") == "file":
+        dataset_label = "File" if source.get("asset_type") == "FILE" else "Table"
+        if source.get("asset_type") == "FILE":
             # Display physical file context without changing the authored payload.
-            dataset = next((item for item in file_rows if item["source_id"] == source["source_id"]), source)
+            dataset = next((item for item in file_rows if item["table_id"] == source["table_id"]), source)
             table = {**table, **dataset, "table_name": source["relative_path"]}
         observed_names = {item["column_name"] for item in observed_columns}
         contracted_names = {str(item.get("column_name")) for item in columns}
@@ -2322,7 +2324,7 @@ def widget_data_contract(
         table_rules: dict[str, Any] = {}
         existing_freshness = next((r for r in guardrails if r.get("guardrail_type") == "freshness"), {})
         freshness_parameters = _parameters(existing_freshness)
-        is_file_source = current.get("payload", {}).get("source", {}).get("source_type") == "file"
+        is_file_source = current.get("payload", {}).get("source", {}).get("asset_type") == "FILE"
         freshness_evidence_method = "metadata"
         freshness_enabled = widgets.Checkbox(value=bool(existing_freshness and existing_freshness.get("is_active", True)), description="Enabled", disabled=not editable)
         freshness_block = widgets.Checkbox(value=existing_freshness.get("action") == "Block", description="Block on failure", disabled=not editable)
@@ -2964,8 +2966,8 @@ def widget_data_contract(
             if runtime_context:
                 return
             source = current.get("payload", {}).get("source", {})
-            is_file = source.get("source_type") == "file"
-            identity_arguments = ({"table_id": source["source_id"]} if is_file
+            is_file = source.get("asset_type") == "FILE"
+            identity_arguments = ({"table_id": source["table_id"]} if is_file
                                   else {"table_id": str(state.get("dataset_id") or "")})
             loaded = contracts.get_asset_runtime_context(
                 config=config, active_workspace_id=source["workspace_id"] if is_file else active_workspace_id,
@@ -2974,7 +2976,7 @@ def widget_data_contract(
             )
             if is_file:
                 from fabricops_kit.config.shared import build_column_id
-                columns = {build_column_id(source["source_id"], column["column_name"]): column["column_id"] for column in authoring_columns}
+                columns = {build_column_id(source["table_id"], column["column_name"]): column["column_id"] for column in authoring_columns}
                 for field in ("column_profiles", "profile_contexts"):
                     loaded[field] = {columns[name]: value for name, value in loaded.get(field, {}).items()
                                      if name in columns}
@@ -4410,7 +4412,7 @@ def widget_data_contract(
                 set_validation_error(key, exc)
 
         def build_required_record() -> dict[str, Any]:
-            payload = json.loads(str(current["contract"]["contract_payload_json"]))
+            payload = migrate_asset_references(json.loads(str(current["contract"]["contract_payload_json"])))
             required_ids = [str(column["column_id"]) for column in payload.get("table", {}).get("columns", [])
                             if column.get("presence", "required") == "required"]
             current_rule = next((rule for rule in session_guardrails() if rule.get("guardrail_type") == "schema"), {})
@@ -4420,7 +4422,7 @@ def widget_data_contract(
             if hydrating["active"] or not editable:
                 return
             cid = str(column_select.value or "")
-            payload = json.loads(str(current["contract"]["contract_payload_json"]))
+            payload = migrate_asset_references(json.loads(str(current["contract"]["contract_payload_json"])))
             for column in payload.get("table", {}).get("columns", []):
                 if str(column.get("column_id") or "") == cid:
                     column["presence"] = "required" if required.value else "optional"
@@ -4686,7 +4688,7 @@ def widget_data_contract(
                 return
             cid = str(column_select.value or "")
             contracted_types[cid] = str(change["new"])
-            payload = json.loads(str(current["contract"].get("contract_payload_json") or "{}"))
+            payload = migrate_asset_references(json.loads(str(current["contract"].get("contract_payload_json") or "{}")))
             for item in payload.get("table", {}).get("columns", []):
                 if str(item.get("column_id") or "") == cid:
                     item["data_type"] = contracted_types[cid]
@@ -7191,7 +7193,7 @@ def widget_data_contract(
     def refresh_ai_usage() -> None:
         """Display measured input/output totals separately from estimated AI capacity."""
         source = (state.get("current") or {}).get("payload", {}).get("source", {})
-        ai_usage_view.value = _ai_usage_html(state["ai_usage"], dataset_label="File" if source.get("source_type") == "file" else "Table")
+        ai_usage_view.value = _ai_usage_html(state["ai_usage"], dataset_label="File" if source.get("asset_type") == "FILE" else "Table")
 
     refresh_ai_usage()
     selector_ai_information = ai_information()
@@ -7289,10 +7291,8 @@ def widget_data_contract(
         for row in eligible:
             rows_by_table_id.setdefault(str(row["table_id"]), row)
 
-        rows_by_table_id.update({row["source_id"]: row for row in file_rows})
+        rows_by_table_id.update({row["table_id"]: row for row in file_rows})
         selected = str(state.get("pending_dataset_id") or "")
-        state["pending_table_id"] = None if selected.startswith("file:") else selected or None
-        state["pending_source_id"] = selected if selected.startswith("file:") else None
         state["_selector_refreshing"] = True
         try:
             table_control.refresh_rows(
@@ -7323,7 +7323,7 @@ def widget_data_contract(
             state["workspace_id"] = None
         refresh_table_options()
         matches = sorted(
-            [row for row in state["contracts"] if str(row.get("source_id") or row.get("table_id") or "") == selected],
+            [row for row in state["contracts"] if str(row.get("table_id") or "") == selected],
             key=lambda row: -int(row.get("contract_version") or 0),
         )
         rows = [{"label": f"v{row['contract_version']} · {str(row.get('status') or '').title()}",
@@ -7417,7 +7417,6 @@ def widget_data_contract(
         state["manifest"] = None
         state["dataset_id"] = None
         state["table_id"] = None
-        state["source_id"] = None
         state["contract_version"] = None
         editor_shell.layout.display = "none"
         selector_panel.layout.display = ""

@@ -16,16 +16,16 @@ PIPELINE_ID = "4c7ae400-85ab-4023-9427-e8fde20bd596"
 
 def operation(role="target", table="orders", mode="overwrite", workspace="DEV"):
     """Return one exact operation used by unit and actual Delta tests."""
-    return dict(operation_key=role + ":Silver/" + table, table_id=table, pipeline_role=role,
+    return dict(operation_key=role + ":Silver/" + table, table_id=table, asset_type="TABLE", pipeline_role=role,
         destination=dict(workspace_id=workspace, item_id="item", kind="lakehouse", schema="demo", table_name=table),
         read_mode="full" if role == "source" else None, write_mode=mode if role == "target" else None,
-        query_sha256=None, incremental_target_table_id=None, source_table_ids=[], requested_schema="demo",
+        query_sha256=None, incremental_target_table_id=None, source_assets=[], requested_schema="demo",
         read_parameters={} if role == "source" else None, write_parameters={} if role == "target" else None, repartition_by=None)
 
 
 def contract_candidate(workspace="DEV"):
     """Return an independent per-physical-workspace Contract Activation."""
-    return dict(asset_workspace_id=workspace, table_id="orders", contract_id="contract", contract_version=1,
+    return dict(asset_workspace_id=workspace, table_id="orders", asset_type="TABLE", contract_id="contract", contract_version=1,
         payload_sha256="a" * 64, activation_id="activation-"+workspace, revision=1, status="active",
         destination_json=json.dumps(operation(workspace=workspace)["destination"]), _committed_by="governance",
         activated_at=datetime(2026, 1, 1))

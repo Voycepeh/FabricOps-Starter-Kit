@@ -124,8 +124,8 @@ METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
 METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT_ACTIVATION": {
         "purpose": "Selects one exact globally frozen Contract for each physical table or file source.",
-        "grain": "One retained activation revision per workspace and Table ID or file source_id; one current active selection.",
-        "implementation_notes": "asset_workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
+        "grain": "One retained activation revision per physical workspace, table_id and asset_type; one current active selection.",
+        "implementation_notes": "asset_workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Tables and files both use table_id and asset_type. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
         "primary_key": ["activation_id"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Optional exact Agreement governing this physical frozen Contract selection."},
@@ -157,7 +157,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_RUN": {
         "purpose": "Records Run participation, execution outcomes and exact per-operation Contract versions.",
         "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
-        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using the physical destination workspace, common table_id and asset_type. File participants reuse their existing Source ID as the common Catalogue asset key; released Run descriptors are unchanged. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
+        "implementation_notes": "Fresh runs use schema version 4 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using the physical destination workspace, common table_id and asset_type. Operations use table_id and asset_type for every asset, with one typed source_assets array for inputs. Released Run JSON remains unchanged and is interpreted when read. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
         "primary_key": ["run_id"],
         "foreign_keys": [
             {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
@@ -166,7 +166,7 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [{"related_table": "METADATA_PIPELINE_REGISTRY", "fields": ["promotion_id"], "cardinality": "N:1", "statement": "Captured frozen version and promotion identity."},
                           {"related_table": "METADATA_DATA_CONTRACT", "fields": ["operations"], "cardinality": "N:M", "statement": "Exact Contract definitions used by actual operations."},
-                          {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id"], "cardinality": "N:M", "statement": "Project Run operations to the Catalogue using destination workspace, common Table ID and asset type. One Run can contain many assets."}],
+                          {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type"], "cardinality": "N:M", "statement": "Project Run operations to the Catalogue using destination workspace, common Table ID and asset type. One Run can contain many assets."}],
     },
     "METADATA_DATA_STEWARD": {
         "purpose": "Identifies the people responsible for governing data.",
@@ -193,13 +193,13 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT": {
         "purpose": "Defines one immutable table or file dataset contract history. Workspace observations supply authoring evidence; physical activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table or file-backed dataset.",
-        "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id records the physical workspace of the Catalogue asset selected at draft creation. The Catalogue supplies asset_workspace_name. Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id and Catalogue table_id to the Contract table_id for TABLE or source_id for FILE. New drafts require one active Catalogue asset with an observed schema. Frozen versions retain their captured schema and remain usable independently of the current Catalogue row. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id. Their exact selector, format and reader options are frozen in the payload. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
+        "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id records the physical workspace of the Catalogue asset selected at draft creation. The Catalogue supplies asset_workspace_name. Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id and Catalogue table_id and asset_type to the same Contract fields. New drafts require one active Catalogue asset with an observed schema. Frozen versions retain their captured schema and remain usable independently of the current Catalogue row. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files retain their stable selector identity in table_id with asset_type FILE. New payloads use format_version 2; frozen historical payload bytes and hashes remain unchanged. Their exact selector, format and reader options are frozen in the payload. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [],
         "relationships": [{
             "cardinality": "N:0..1", "related_table": "METADATA_DATA_CATALOGUE",
-            "fields": ["evidence_workspace_id", "table_id", "source_id"],
-            "statement": "The authoring reference maps evidence_workspace_id to asset_workspace_id. For TABLE, join table_id to table_id. For FILE, join source_id to table_id. The populated asset ID determines asset_type. FabricOps checks this reference when creating a draft. Retained versions may have no matching current Catalogue asset.",
+            "fields": ["evidence_workspace_id", "table_id", "asset_type"],
+            "statement": "The authoring reference maps evidence_workspace_id to asset_workspace_id. For both TABLE and FILE, join table_id and asset_type to the same Catalogue fields. FabricOps checks this reference when creating a draft. Retained versions may have no matching current Catalogue asset.",
         }, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
     },
     "METADATA_DATA_CATALOGUE": {
@@ -488,7 +488,6 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.shared.check_dq_runtime",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "source_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_result_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "table_name": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_type": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],

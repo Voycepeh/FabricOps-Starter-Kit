@@ -80,8 +80,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
             operation.update(status='succeeded', read_mode='full' if key.startswith('source:') else None,
-                write_mode='overwrite' if key.startswith('target:') else None, source_table_ids=sorted(
-                    table for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']) if key.startswith('target:') else [],
+                write_mode='overwrite' if key.startswith('target:') else None, source_assets=sorted(
+                    [{'table_id': table, 'asset_type': 'TABLE'} for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']], key=lambda ref: ref['table_id']) if key.startswith('target:') else [],
                 stages=[{'stage': 'Read' if key.startswith('source:') else 'Processing', 'status': 'passed'},
                         {'stage': 'Schema', 'status': 'passed'}, {'stage': 'Profile', 'status': 'passed'}])
         plan.evidence['guardrail_history'] = [

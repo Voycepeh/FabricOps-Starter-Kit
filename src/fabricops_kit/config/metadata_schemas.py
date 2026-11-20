@@ -44,10 +44,65 @@ RETIRED_METADATA_COLUMNS.update({
     },
 })
 
+def migrate_asset_references(value):
+    """Interpret retained pre-unification asset records without rewriting stored JSON.
+
+    Conflicting populated identities are never guessed. The file selector hash
+    and existing column IDs are retained. Serialized payload strings stay intact.
+    """
+    if isinstance(value, list):
+        return [migrate_asset_references(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    # Only metadata containers carry asset references. User-authored rule
+    # parameters, reader options, Enrichment and notebook parameters are opaque.
+    containers = {"manifest", "dry_run", "operations", "tested_operations", "source",
+                  "table", "destination", "profiling", "source_assets", "file_authorizations"}
+    result = {key: migrate_asset_references(item) if key in containers else item
+              for key, item in value.items()}
+    if isinstance(result.get("contracts"), dict):
+        result["contracts"] = {key: migrate_asset_references(item)
+                               for key, item in result["contracts"].items()}
+    if "source_id" in result:
+        old = result.pop("source_id")
+        if old is not None:
+            if result.get("table_id") not in (None, old):
+                raise ValueError("Conflicting table_id and source_id; retained data is unchanged.")
+            result["table_id"] = old
+            result.setdefault("asset_type", "FILE")
+    old_type = result.get("source_type")
+    if old_type in {"file", "table"}:
+        result.pop("source_type")
+        kind = old_type.upper()
+        if result.get("asset_type") not in (None, kind):
+            raise ValueError("Conflicting retained asset types.")
+        result["asset_type"] = kind
+    if result.get("table_id"):
+        kind = "FILE" if str(result["table_id"]).startswith("file:") else "TABLE"
+        if result.get("asset_type") not in (None, kind):
+            raise ValueError("Asset identity conflicts with asset_type.")
+        result["asset_type"] = kind
+    if "operation_key" in result:
+        ids = [*result.pop("source_table_ids", []), * (result.pop("source_ids", []) or [])]
+        refs = [{"table_id": identity, "asset_type": "FILE" if identity.startswith("file:") else "TABLE"}
+                for identity in sorted(set(ids))]
+        if ids and result.get("source_assets") not in (None, refs):
+            raise ValueError("Conflicting retained source associations.")
+        result.setdefault("source_assets", refs)
+        result.setdefault("asset_type", "TABLE")
+    source = result.get("source")
+    if isinstance(source, dict) and source.get("asset_type") == "FILE" and isinstance(result.get("table"), dict):
+        if result["table"].get("table_id") not in (None, source["table_id"]):
+            raise ValueError("Conflicting retained file Contract identities.")
+        result["table"].update(table_id=source["table_id"], asset_type="FILE")
+    return result
+
+
 # Approved identity consolidation: migration copies and validates the file identity
 # before retiring the redundant operational source_id column.
 UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE",
-    "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_GUARDRAIL_RESULTS")
+    "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_GUARDRAIL_RESULTS",
+    "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION")
 for _asset_table in UNIFIED_ASSET_TABLES:
     RETIRED_METADATA_COLUMNS[_asset_table]["source_id"] = "table_id"
 
@@ -198,7 +253,7 @@ BINDING_FIELDS = [("table_id", "string", False), ("workspace_id", "string", Fals
                   ("item_id", "string", False), ("kind", "string", False),
                   ("schema", "string", True), ("table_name", "string", False)]
 PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
-                        ("asset_type", "string"), ("source_id", "string"),
+                        ("asset_type", "string"),
                         ("status", "string", False), ("results_persisted", "boolean"),
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
                         ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
@@ -360,7 +415,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
                 ("table_id", "string"),
-                ("source_id", "string"),
+                ("asset_type", "string"),
                 ("table_name", "string"),
                 ("evidence_workspace_id", "string", False),
                 ("contract_payload_json", "string"),
@@ -482,7 +537,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         ),
         "METADATA_DATA_CONTRACT_ACTIVATION": build_metadata_schema(
             "METADATA_DATA_CONTRACT_ACTIVATION",
-            [("asset_workspace_id", "string", False), ("table_id", "string"), ("source_id", "string"),
+            [("asset_workspace_id", "string", False), ("table_id", "string"), ("asset_type", "string"),
              ("contract_id", "string", False), ("contract_version", "integer", False),
              ("payload_sha256", "string", False), ("activation_id", "string", False),
              ("revision", "integer", False), ("status", "string", False),
@@ -527,11 +582,10 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("promotion_id", "string"), ("governed_notebook_id", "string"), ("execution_identity", "string"),
              ("run_schema_version", "integer"),
              ("operations", [("operation_key", "string", False),
-                 ("table_id", "string"), ("source_type", "string"), ("source_id", "string"),
-                 ("source_ids", "strings"), ("pipeline_role", "string", False),
+                 ("table_id", "string", False), ("asset_type", "string", False), ("pipeline_role", "string", False),
                  ("contract_id", "string"), ("contract_version", "integer"), ("payload_sha256", "string"),
                  ("destination", {"struct": [(n,t,True if n in {"kind", "table_name"} else z) for n,t,z in BINDING_FIELDS if n != "table_id"] +
-                     [("source_type", "string"), ("source_id", "string"), ("relative_path", "string"),
+                     [("asset_type", "string"), ("table_id", "string"), ("relative_path", "string"),
                       ("file_format", "string"), ("reader_options_json", "string")]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
                  ("observed_columns_json", "string"),
@@ -539,7 +593,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                  ("read_parameters", {"struct": [("watermark_column", "string")]}),
                  ("write_parameters", {"struct": [(key, kind) for key, kind in CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"].items()]}),
                  ("repartition_by", "integer"),
-                 ("source_table_ids", "strings", False), ("incremental_target_table_id", "string"),
+                 ("source_assets", [("table_id", "string", False), ("asset_type", "string", False)], False), ("incremental_target_table_id", "string"),
                  ("rows_read", "long"), ("rows_written", "long"),
                  ("metrics", {"struct": [
                      ("rows_read", "long"), ("columns", "long"),
@@ -709,9 +763,11 @@ def coerce_schema_row_types(schema: Any, row: dict[str, Any], *, table_name: str
             if field.name in METADATA_JSON_COLUMNS.get(table_name, ()):
                 # Runtime coercion requires native logical values; only the
                 # physical row decoder accepts JSON text.
-                coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
                 if table_name == "METADATA_PIPELINE_RUN" and field.name in {"operations", "profiling"}:
-                    coerced[field.name] = decode_metadata_row(table_name, {field.name: row[field.name]})[field.name]
+                    coerced[field.name] = decode_metadata_row(table_name, {
+                        field.name: row[field.name], "run_schema_version": row.get("run_schema_version")})[field.name]
+                else:
+                    coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
             elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
             else:
@@ -760,6 +816,7 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
     """
     result = dict(row)
     required = table_name == "METADATA_PIPELINE_RUN"
+    legacy_run = required and row.get("run_schema_version") != 4
     for name, kind in metadata_json_schema(table_name).items():
         if name not in result:
             continue
@@ -770,6 +827,13 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
                 raise ValueError("columns_json must be an array or SQL NULL.")
         if value is None and required:
             raise ValueError(f"{table_name}.{name} cannot be null.")
+        retained_value = value
+        if required and not legacy_run and name == "operations" and any(
+                ({"source_id", "source_type", "source_ids", "source_table_ids"} & operation.keys()
+                 or not {"table_id", "asset_type", "source_assets"} <= operation.keys()) for operation in value):
+            raise ValueError("Run version 4 requires table_id, asset_type and typed source_assets.")
+        if required:
+            value = migrate_asset_references(value)
         result[name] = validate_metadata_value(value, kind, field=name)
         if name == "columns_json" and result[name] is not None:
             columns = result[name]
@@ -779,7 +843,14 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
             if (len({column["column_id"] for column in columns}) != len(columns)
                     or len({column["column_name"].strip().lower() for column in columns}) != len(columns)):
                 raise ValueError("columns_json contains duplicate column identities or names.")
-        if required and name == "operations":
+        if legacy_run:
+            # Retain the released field set while restoring typed timestamp
+            # instants used by Python callers and canonical content hashing.
+            if name == "operations":
+                retained_value = [{**original, **{key: decoded[key] for key in ("started_at", "completed_at") if key in original}}
+                                  for original, decoded in zip(retained_value, result[name])]
+            result[name] = retained_value
+        if required and not legacy_run and name == "operations":
             for original, decoded in zip(value, result[name]):
                 for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids",
                               "file_write_parameters_json", "output_path", "publication_status"):
@@ -792,7 +863,7 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
                         if field not in original["metrics"]:
                             decoded["metrics"].pop(field, None)
                 decoded["destination"] = {key: decoded["destination"][key] for key in original["destination"]}
-        if required and name == "profiling":
+        if required and not legacy_run and name == "profiling":
             # Scope fields are additive JSON members. Do not inject them into
             # retained Run content and change a previously approved content hash.
             for original, decoded in zip(value, result[name]):
@@ -842,11 +913,15 @@ def decode_metadata_dataframe(table_name: str, frame: Any) -> Any:
         if name not in frame.columns:
             continue
 
-        def validate(value, name=name):
-            decode_metadata_row(table_name, {name: value})
+        def validate(value, version, name=name):
+            decode_metadata_row(table_name, {name: value, "run_schema_version": version})
+            if table_name == "METADATA_PIPELINE_RUN":
+                import json
+                return json.dumps(migrate_asset_references(parse_metadata_json(value, field=name)), separators=(",", ":"))
             return value
 
-        checked = F.udf(validate, StringType())(F.col(name))
+        version = F.col("run_schema_version") if table_name == "METADATA_PIPELINE_RUN" and "run_schema_version" in frame.columns else F.lit(None)
+        checked = F.udf(validate, StringType())(F.col(name), version)
         frame = frame.withColumn(name, F.from_json(checked, kind, {"mode": "FAILFAST", "timeZone": "UTC"}))
     return frame
 

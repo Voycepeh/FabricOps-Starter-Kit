@@ -64,9 +64,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     A successful file Write leaves the pipeline open for finalize_pipeline().
     All reads registered in this execution are associated with this target as
     pipeline participants, not proven transformation dependencies. File participation
-    is returned under source_ids and retained separately from source_table_ids in
-    Run operations as source_ids. The participation projection reuses these as
-    common table_id asset keys and retains the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
+    is returned in source_assets as typed table_id/asset_type references and retained
+    in the same form in Run operations with the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
     processing and applicable Guardrails without publishing or committing metadata.
     Ungoverned writes without contract checks but cannot target an already governed
     table. Governed requires activated contracts, ownership and a pinned revision.
@@ -143,7 +142,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         the exact physical writer input. It remains inspectable after publication;
         call ``result["dataframe"].unpersist()`` when inspection is complete.
         File results instead return the supplied DataFrame without caching or
-        table preparation, a source_id, resolved_path and filesystem write_metrics.
+        table preparation, a table_id, asset_type=FILE, resolved_path and filesystem write_metrics.
         File output_layout, overflow_occurred and overflow_reason describe the actual
         publication and are retained in file_write_parameters_json on the operation.
         Dry Run leaves actual layout and overflow unknown (None) and returns a
@@ -202,8 +201,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         if any(source.get("execution_plan_id") != execution_plan.plan_id for source in sources):
             raise ValueError("Every source must be a Read result from the same execution plan.")
         participant_ids = [participant_id(source) for source in sources]
-        source_ids = [source["table_id"] for source in sources if source.get("table_id")]
-        file_source_ids = [source["source_id"] for source in sources if source.get("source_type") == "file"]
+        source_ids = [source["table_id"] for source in sources if source.get("asset_type", "TABLE") == "TABLE"]
         target_id = resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([target_id, *participant_ids], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
@@ -243,7 +241,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
             schema_result = run("Schema", lambda: check_schema(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session})) if "schema" in active else dict(skipped)
             dq_result = run("Data Quality", lambda: check_dq(prepared, table_id=target_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}, diagnostics=dq_diagnostics)) if "data_quality" in active else dict(skipped)
             common_results = {
-                "table_id": target_id,
+                "table_id": target_id, "asset_type": "TABLE",
                 **execution_result(context, target_id, stages=stages),
                 "schema_result": schema_result,
                 "sensitive_result": sensitive,
@@ -252,7 +250,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
                 "dq_result": dq_result,
                 "source_guardrail_results": source_checks,
                 "source_association": "pipeline_participation",
-                "source_ids": file_source_ids,
+                "source_assets": [{"table_id": source["table_id"], "asset_type": source.get("asset_type", "TABLE")} for source in sources],
                 "orchestration_stages": stages,
             }
             if not execution_plan.permits_persistence:
@@ -364,7 +362,7 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     from fabricops_kit.pipeline.shared import resolve_file_write_participant, schedule_file_profiling
     identity = resolve_file_write_participant(store=store, relative_path=relative_path,
         file_format=file_format, context=execution_plan.runtime_context)
-    target_id = identity["source_id"]
+    target_id = identity["table_id"]
     if any(source.get("execution_plan_id") != execution_plan.plan_id for source in sources):
         raise ValueError("Every source must be a Read result from the same execution plan.")
     context = prepare_pipeline_execution([target_id, *[participant_id(source) for source in sources]],
@@ -439,8 +437,8 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     duration = summary.finish([("Target", f"{store}/Files/{relative_path}"),
         ("Mode", PIPELINE_MODE_NAMES[execution_plan.execution_mode]), ("Published", result["published"])])
     display_profile_presentations(presentations)
-    return {**execution_result(context, target_id, stages=stages), **result, "source_type": "file",
-        "source_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
+    return {**execution_result(context, target_id, stages=stages), **result, "asset_type": "FILE",
+        "table_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
         "file_format": file_format,
         "validation_passed": all(row["can_continue"] for row in checks) and drift.get("can_continue", True)
             and all(stage.get("status") != "blocked" for source in sources for stage in source.get("orchestration_stages", [])),
@@ -448,8 +446,7 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
         **({"testing_completed_at": datetime.now(UTC).isoformat()} if not execution_plan.permits_persistence else {}),
         "source_drift_results": [row for row in drift.get("sources", []) if row.get("table_id") in
             {source.get("table_id") for source in sources if source.get("table_id")}],
-        "source_table_ids": [source["table_id"] for source in sources if source.get("table_id")],
-        "source_ids": [source["source_id"] for source in sources if source.get("source_type") == "file"],
+        "source_assets": [{"table_id": source["table_id"], "asset_type": source.get("asset_type", "TABLE")} for source in sources],
         "source_association": "pipeline_participation", "source_guardrail_results": checks,
         "source_drift_decision": drift, "profile_result": profile, "write_metrics": metrics,
         "orchestration_stages": stages, "total_duration_seconds": duration}

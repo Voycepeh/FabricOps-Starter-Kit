@@ -24,9 +24,9 @@ def test_file_selector_identity_and_active_catalogue_grain():
     def identity(**kw):
         return file_source_identity(**{**dict(workspace_id="w", item_id="i", relative_path="a/./b.csv", file_format="csv"), **kw})
     source = identity()
-    assert source["source_id"] == identity(relative_path="a/b.csv", file_format="json")["source_id"]
-    assert len({source["source_id"], identity(workspace_id="other")["source_id"], identity(item_id="other")["source_id"]}) == 3
-    rows = [dict(asset_type="FILE", table_id=identity(relative_path=path)["source_id"],
+    assert source["table_id"] == identity(relative_path="a/b.csv", file_format="json")["table_id"]
+    assert len({source["table_id"], identity(workspace_id="other")["table_id"], identity(item_id="other")["table_id"]}) == 3
+    rows = [dict(asset_type="FILE", table_id=identity(relative_path=path)["table_id"],
                  asset_workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
     rows += [dict(asset_type="TABLE", asset_workspace_id="w", table_id="legacy", is_active=True)]
     assert len(current_catalogue_observations(rows)) == 3
@@ -64,7 +64,7 @@ def test_file_catalogue_preserves_first_observation_and_extension_fields(writer)
     shared.persist_file_catalogue(writer.identity, context={})
     row = writer.spark.createDataFrame.call_args.args[0][0]
     assert row["columns_json"] is None
-    assert row["table_id"] == writer.identity["source_id"]
+    assert row["table_id"] == writer.identity["table_id"]
     assert row["asset_workspace_id"] == "physical" and row["item_id"] == "lakehouse"
     assert row["first_observed_at"] == row["last_observed_at"]
     updates = writer.merge.whenMatchedUpdate.call_args.kwargs["set"]
@@ -80,13 +80,13 @@ def test_multiple_file_reads_persist_before_table_write_and_finalize(files, mode
     expected = 0 if mode == "Dry Run" else 2
     assert files.catalogue.call_count == expected
     source_operations = shared.pipeline_run_row(session.plan, status="incomplete")["operations"]
-    assert {op["source_id"] for op in source_operations} == {first["source_id"], second["source_id"]}
+    assert {op["table_id"] for op in source_operations} == {first["table_id"], second["table_id"]}
     assert all(op["status"] == "succeeded" for op in source_operations)
     orchestrate_write(first["dataframe"], store="Gold", schema="demo", table_name="summary", write_mode="overwrite")
     result = finalize_pipeline(session)
     finalize_pipeline(session)
     assert files.catalogue.call_count == expected
-    assert len([op for op in result["operations"] if op.get("source_id")]) == 2
+    assert len([op for op in result["operations"] if op.get("asset_type") == "FILE"]) == 2
 
 
 def test_failed_read_and_metadata_failure_do_not_report_success(files):
@@ -131,7 +131,7 @@ def test_table_source_to_file_target_uses_shared_activity(files, monkeypatch, me
     targets = [op for op in result['operations'] if op['pipeline_role'] == 'target']
     assert len(sources) == len(targets) == 1
     assert sources[0]['table_id'] == 'orders'
-    assert targets[0]['source_type'] == 'file' and targets[0]['source_id'].startswith('file:')
+    assert targets[0]['asset_type'] == "FILE" and targets[0]['table_id'].startswith('file:')
     assert targets[0]['publication_status'] == 'published'
     assert all(op['status'] == 'succeeded' for op in result['operations'])
 
@@ -140,7 +140,7 @@ def test_retained_profiling_json_does_not_gain_file_fields():
     from fabricops_kit.config.metadata_schemas import decode_metadata_row, coerce_metadata_row_types, encode_metadata_row
     event = {'context_key': 'table', 'activity': 'standard', 'status': 'passed'}
     legacy = decode_metadata_row('METADATA_PIPELINE_RUN', {'profiling': [event]})
-    assert 'source_id' not in legacy['profiling'][0] and 'asset_type' not in legacy['profiling'][0]
+    assert 'table_id' not in legacy['profiling'][0] and 'asset_type' not in legacy['profiling'][0]
     assert coerce_metadata_row_types('METADATA_PIPELINE_RUN', legacy) == legacy
     physical = {'profiling': json.dumps([event], indent=2)}
     assert encode_metadata_row('METADATA_PIPELINE_RUN', physical) == physical
@@ -179,7 +179,7 @@ def test_file_profile_commit_rechecks_persistence_policy():
     plan = SimpleNamespace(execution_mode='dry_run', permits_persistence=False,
         evidence={'pending_file_profiles': {('file:test', 'read'): {}}})
     with pytest.raises(RuntimeError, match='Dry Run cannot commit file profiles'):
-        shared._persist_file_profile({'source_id': 'file:test'}, operation='read', context={'execution_plan': plan})
+        shared._persist_file_profile({'table_id': 'file:test'}, operation='read', context={'execution_plan': plan})
 
 
 def test_file_catalogue_registers_deterministic_columns(writer):
@@ -188,7 +188,7 @@ def test_file_catalogue_registers_deterministic_columns(writer):
         {"column_name": "id", "data_type": "bigint"}, {"column_name": "name", "data_type": "string"}])
     rows = writer.spark.createDataFrame.call_args.args[0]
     assert len(rows) == 1
-    assert rows[0]["table_id"] == writer.identity["source_id"] and rows[0]["asset_type"] == "FILE"
+    assert rows[0]["table_id"] == writer.identity["table_id"] and rows[0]["asset_type"] == "FILE"
     columns = json.loads(rows[0]["columns_json"])
     assert [row["column_id"] for row in columns] == [
-        build_column_id(writer.identity["source_id"], name) for name in ("id", "name")]
+        build_column_id(writer.identity["table_id"], name) for name in ("id", "name")]

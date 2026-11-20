@@ -204,7 +204,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="table-id">
 <summary><strong>table_id</strong> — The shared FabricOps identifier for a table or file asset, distinguished by asset_type.</summary>
-<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.</p>
+<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Contracts, activations and new Pipeline Run operations use the same table_id and asset_type fields. Released JSON keeps its original bytes and hashes and is interpreted when read.</p>
 <p><strong>Also known as:</strong> table ID</p>
 </details>
 

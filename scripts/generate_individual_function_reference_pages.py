@@ -193,7 +193,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "asset_name": "Human-readable asset reference captured at participation time; files retain store/Files/relative_path.",
     "first_observed_at": "First successful observation of a file selector; preserved on subsequent registration.",
     "last_observed_at": "Most recent successful observation of a file selector.",
-    "source_id": "Stable file identity retained by released source descriptors and historical Run operations; operational tables store this same value in table_id.",
+    "source_assets": "Typed input asset references, each containing table_id and asset_type for a TABLE or FILE.",
     "guardrail_result_id": "Stable identifier for the aggregate Guardrail result row.",
     "execution_type": "Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.",
     "result_id": "Stable identifier for the runtime result payload.",
@@ -293,10 +293,10 @@ METADATA_JSON_EXAMPLES = {
         ]},
     },
     "METADATA_PIPELINE_RUN": {
-        "operations": [{"operation_key": "write:orders", "table_id": "orders", "pipeline_role": "target",
+        "operations": [{"operation_key": "write:orders", "table_id": "orders", "asset_type": "TABLE", "pipeline_role": "target",
             "destination": {"workspace_id": "example-workspace", "item_id": "example-lakehouse",
                 "kind": "lakehouse", "schema": "demo", "table_name": "orders"},
-            "write_mode": "append", "source_table_ids": ["source-orders"], "status": "succeeded",
+            "write_mode": "append", "source_assets": [{"table_id": "source-orders", "asset_type": "TABLE"}], "status": "succeeded",
             "stages": [{"stage": "Processing", "status": "passed"}]}],
         "profiling": [{"context_key": "example-context", "activity": "standard", "status": "passed",
             "results_persisted": True, "profile_snapshot_id": "example-snapshot", "table_id": "orders",
@@ -4621,8 +4621,8 @@ def render_metadata_reference_index(
                 and relation.get("cardinality") == "N:0..1"
             ), []),
             "asset_identity_fields": [
-                field for field in ("asset_workspace_id", "table_id", "source_id",
-                    "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id")
+                field for field in ("asset_workspace_id", "table_id", "asset_type",
+                    "operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type")
                 if field in field_names_by_table[name]
             ],
             "foreign_keys": [
@@ -4761,7 +4761,7 @@ def generate_metadata_reference_pages() -> None:
         ):
             reference = _model_key_text(relationship["fields"])
             if table_name == "METADATA_DATA_CONTRACT" and relationship["table"] == "METADATA_DATA_CATALOGUE":
-                reference = "`evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)"
+                reference = "`evidence_workspace_id` + `table_id` + `asset_type`"
             rendered.extend([
                 f"`{relationship['table']}` "
                 f"**({_metadata_cardinality_display(relationship['cardinality'])})**",

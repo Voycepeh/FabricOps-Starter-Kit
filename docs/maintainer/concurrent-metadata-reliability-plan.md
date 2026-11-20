@@ -245,8 +245,9 @@ usage = participants.join(
 The projection uses the physical workspace from the operation’s destination to
 join the Catalogue. The full destination also retains the item and schema.
 A left join preserves unregistered participants and attempts. Files reuse their
-existing `source_id` as the projected `table_id`. Released Run JSON retains the
-original descriptor fields.
+existing selector hash as `table_id`, distinguished by `asset_type="FILE"`.
+New version 4 Runs use these common fields; released Run JSON retains its
+original descriptor fields and is interpreted on read.
 
 The projection excludes `not_started` declarations and includes successful,
 incomplete and failed attempts, even when the whole Run fails. Read-only runs and

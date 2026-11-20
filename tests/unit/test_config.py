@@ -1222,7 +1222,7 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
         if hasattr(data_type, "elementType"):
             return [sample_value(data_type.elementType, native=native)]
         if hasattr(data_type, "fields"):
-            return {field.name: sample_value(field.dataType, native=native) for field in data_type.fields}
+            return {field.name: "TABLE" if field.name == "asset_type" else sample_value(field.dataType, native=native) for field in data_type.fields}
         if native and type(data_type).__name__ in {"BooleanType", "LongType", "DoubleType"}:
             return {"BooleanType": True, "LongType": 7, "DoubleType": 7.5}[type(data_type).__name__]
         return {"TimestampType": "2026-06-29T12:34:56+08:00", "DateType": "2026-06-29",
@@ -1251,6 +1251,8 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     for table_name, schema in registry.items():
         assert audit_columns.issubset({field.name for field in schema.fields})
         sample = {field.name: sample_value(field.dataType, native=(table_name in {"METADATA_DATA_CATALOGUE", "METADATA_PIPELINE_RUN"})) for field in schema.fields}
+        if table_name == "METADATA_PIPELINE_RUN":
+            sample["run_schema_version"] = 4
         row = coerce_metadata_row_types(table_name, sample)
         for field in schema.fields:
             assert_runtime_type(row[field.name], field.dataType, table_name + "." + field.name)

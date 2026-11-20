@@ -740,7 +740,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The shared FabricOps identifier for a table or file asset, distinguished by asset_type.",
-    "long_definition": "Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.",
+    "long_definition": "Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Contracts, activations and new Pipeline Run operations use the same table_id and asset_type fields. Released JSON keeps its original bytes and hashes and is interpreted when read.",
     "preferred_usage": "Use table_id for the common operational asset identity, with asset_type identifying TABLE or FILE.",
     "avoid_usage": "table name when the governed identity is meant",
     "tooltip_labels": [

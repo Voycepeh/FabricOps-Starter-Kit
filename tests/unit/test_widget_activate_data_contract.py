@@ -88,13 +88,13 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     assert ui['state']['review'] is None and ui['controls']['activate'].disabled
 
 
-def test_named_file_activation_never_uses_a_table_id(monkeypatch):
+def test_named_file_activation_uses_common_asset_identity(monkeypatch):
     """The shared activation widget passes exact file source/configuration to its service."""
     import json
     from fabricops_kit.data_contract import shared as contracts
     module = importlib.import_module('fabricops_kit.widgets.widget_activate_data_contract')
     source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
-    frozen = dict(table_id=None, source_id=source['source_id'], contract_id='file-contract', contract_version=1,
+    frozen = dict(table_id=source['table_id'], asset_type='FILE', contract_id='file-contract', contract_version=1,
                   status='frozen', contract_payload_json=json.dumps({'source': source, 'table': {'columns': []}}))
     from IPython import display as ip
     monkeypatch.setattr(ip, 'display', lambda *a, **kw: None)
@@ -103,19 +103,19 @@ def test_named_file_activation_never_uses_a_table_id(monkeypatch):
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
     monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
-    action = Mock(return_value={'status': 'active', 'source_id': source['source_id'], 'table_id': None})
+    action = Mock(return_value={'status': 'active', 'table_id': source['table_id'], 'asset_type': 'FILE'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()
     ui['controls']['workspace'].value = 'w'
     choices = ui['controls']['table'].options
-    assert any('demo/orders.csv' in label and value == source['source_id'] for label, value in choices)
-    ui['controls']['table'].value = source['source_id']
+    assert any('demo/orders.csv' in label and value == source['table_id'] for label, value in choices)
+    ui['controls']['table'].value = source['table_id']
     ui['controls']['contract'].value = ('file-contract', 1)
     reviewed = ui['actions']['review']()
-    assert reviewed['table_id'] is None and reviewed['source_id'] == source['source_id']
+    assert reviewed['asset_type'] == 'FILE' and reviewed['table_id'] == source['table_id']
     ui['controls']['confirm'].value = True
-    assert ui['actions']['activate']()['table_id'] is None
-    assert action.call_args.args[0] is None
+    assert ui['actions']['activate']()['table_id'] == source['table_id']
+    assert action.call_args.args[0] == source['table_id']
     assert action.call_args.kwargs['file_source'] == source
     assert action.call_args.kwargs['file_store'] == 'Bronze'
     assert action.call_args.kwargs['file_configuration_workspace_id'] == 'engineering-route'

@@ -93,7 +93,7 @@ def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, s
         assert table == "METADATA_DATA_CATALOGUE"
         identity = files.catalogue.call_args.args[0]
         return spark_session.createDataFrame(
-            [(identity["workspace_id"], identity["source_id"], "FILE", True)],
+            [(identity["workspace_id"], identity["table_id"], "FILE", True)],
             "asset_workspace_id string, table_id string, asset_type string, is_active boolean",
         )
 

@@ -31,8 +31,8 @@ def package_candidate():
         execution_mode="dry_run", workspace_id="DEV", started_at="2026-11-01T00:00:00", completed_at="2026-11-01T00:01:00",
         status="dry_run_completed", boundary_completed=True, operations=[run_op], profiling=[], failures=[], warnings_json="[]",
         pipeline_version=None, promotion_id=None, governed_notebook_id=None,
-        execution_identity="engineer", run_schema_version=3)
-    manifest = dict(format_version=1, submission_id=str(uuid4()), pipeline_id=PIPELINE_ID,
+        execution_identity="engineer", run_schema_version=4)
+    manifest = dict(format_version=2, submission_id=str(uuid4()), pipeline_id=PIPELINE_ID,
         source_workspace_id="DEV", source_notebook_id=PIPELINE_ID, execution_workspace_id="DEV",
         source_snapshot_sha256=service.hashlib.sha256(source).hexdigest(), executed_snapshot_sha256=service.hashlib.sha256(source).hexdigest(),
         source_executable_sha256=service.notebook_executable_digest(source), executed_executable_sha256=service.notebook_executable_digest(source), snapshot_sha256=service.hashlib.sha256(snapshot).hexdigest(),
@@ -276,8 +276,7 @@ def test_agreement_association_not_engineering_registry_is_authority(monkeypatch
     activation = {"asset_workspace_id": "OTHER"}
     with pytest.raises(ValueError, match="Agreement"):
         service.check_contract_agreement(activation, execution_workspace_id="DEV", context={})
-    today = datetime.now(UTC).date()
-    agreement = {"agreement_id": "terms", "agreement_version": "1", "start_date": today, "expiry_date": today}
+    agreement = {"agreement_id": "terms", "agreement_version": "1", "start_date": "2000-01-01", "expiry_date": "2099-01-01"}
     monkeypatch.setattr(service, "metadata_records", lambda *a, **kw: [agreement])
     activation.update(agreement_id="terms", agreement_version="1", agreement_sha256=service.manifest_digest(service.agreement_definition(agreement)))
     service.check_contract_agreement(activation, execution_workspace_id="DEV", context={})
@@ -538,13 +537,12 @@ def test_file_authorization_survives_export_and_independent_policy_review(author
     source = file_source_identity(workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
     payload = canonical_pipeline_json({'source': source, 'table': {'columns': []},
         'enrichment': {'table': [], 'columns': []}, 'guardrails': []})
-    contract = dict(contract_id='files', contract_version=1, source_id=source['source_id'],
-        table_id=None, status='frozen', contract_payload_json=payload)
+    contract = dict(contract_id='files', contract_version=1, table_id=source['table_id'], asset_type='FILE', status='frozen', contract_payload_json=payload)
     authorization = dict(source=source, store='Bronze', contract_id='files', contract_version=1,
         payload_sha256=service.hashlib.sha256(payload.encode()).hexdigest())
     file_activation = {**contract_candidate('dev'), **{key: authorization[key] for key in
         ('contract_id', 'contract_version', 'payload_sha256')}, 'activation_id': 'file-activation',
-        'table_id': None, 'source_id': source['source_id'], 'destination_json': canonical_pipeline_json(source)}
+        'table_id': source['table_id'], 'asset_type': 'FILE', 'destination_json': canonical_pipeline_json(source)}
     authority.tables[service.ACTIVATION_TABLE] = [contract_candidate('dev'), file_activation]
     authority.tables['METADATA_DATA_CONTRACT'] = [contract]
     monkeypatch.setattr(service, 'reviewed_contracts', lambda *a, **kw: {'orders': {'contract_id': 'contract'}})
@@ -562,9 +560,9 @@ def test_file_authorization_survives_export_and_independent_policy_review(author
 
     exported = service.export_pipeline_submission(session, destination_workspace_id='dev',
         file_authorizations=[authorization], context=authority.eng)
-    assert exported['contracts'][source['source_id']]['contract_payload_json'] == payload
+    assert exported['contracts'][source['table_id']]['contract_payload_json'] == payload
     policy = POLICY_REVIEW(exported, context=authority.gov)
-    assert policy[source['source_id']]['activation_id'] == 'file-activation'
+    assert policy[source['table_id']]['activation_id'] == 'file-activation'
     changed = deepcopy(exported)
     changed['manifest']['file_authorizations'][0]['contract_version'] = 2
     with pytest.raises(ValueError, match='exact frozen file Contract'):

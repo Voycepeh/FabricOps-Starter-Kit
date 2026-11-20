@@ -93,10 +93,12 @@ def test_files_and_legacy_run_hashes(runtime, spark_session):
     plan = make(mode='ungoverned', roles=('source',))
     operation(plan, 0)
     row = shared.pipeline_run_row(plan, status='incomplete')
+    row['run_schema_version'] = 3
+    row['operations'][0].pop('asset_type')
     row['operations'][0].update(source_type='file', source_id='file:example', table_id=None)
     before = shared.canonical_pipeline_json(row)
     result = shared.pipeline_participation(_frame(spark_session, [row])).first()
-    assert result.source_id == result.table_id == 'file:example' and result.asset_type == 'FILE'
+    assert result.table_id == 'file:example' and result.asset_type == 'FILE'
     assert result.asset_workspace_id == result.participant_workspace_id == 'workspace'
     catalogue = spark_session.createDataFrame(
         [('workspace', 'file:example', 'FILE'), ('canary', 'file:example', 'FILE')],
