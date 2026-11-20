@@ -14,8 +14,8 @@ See how the Plug-and-Play 02 template is structured and how its governed pipelin
 </div>
 
 <video class="fabricops-page-video" controls preload="metadata" aria-label="Plug-and-Play 02 Pipeline Template walkthrough">
-  <source src="/FabricOps-Starter-Kit/assets/plug-and-play-pipeline-template.mp4" type="video/mp4">
-  Your browser does not support embedded video. <a href="/FabricOps-Starter-Kit/assets/plug-and-play-pipeline-template.mp4">Open the Pipeline Template walkthrough</a>.
+  <source src="/FabricOps-Starter-Kit/assets/Plug%20%26%20Play%20Pipeline.mp4" type="video/mp4">
+  Your browser does not support embedded video. <a href="/FabricOps-Starter-Kit/assets/Plug%20%26%20Play%20Pipeline.mp4">Open the Pipeline Template walkthrough</a>.
 </video>
 
 The walkthrough is the primary guided introduction. This page remains a standalone reference for the template's concepts, examples, strategy choices, and execution output.
@@ -111,7 +111,7 @@ The template keeps complete Read results in `sources`, preserving both the DataF
 ```python
 sources = {}
 
-source = orchestrate_read(
+sources["source"] = orchestrate_read(
     store="Bronze",
     schema="demo",
     table_name="source_table",
@@ -119,7 +119,6 @@ source = orchestrate_read(
     query="SELECT * FROM demo.source_table",  # Optional Full Read SQL; None disables it.
     dq_diagnostics="sample",
 )
-sources["source"] = source
 
 display(sources["source"]["dataframe"].limit(10))
 ```

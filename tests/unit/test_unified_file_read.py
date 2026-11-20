@@ -35,7 +35,10 @@ def files(runtime, monkeypatch):  # noqa: F811
         readers[fmt] = reader
     monkeypatch.setattr(runtime.read, 'schedule_file_profiling', lambda *a, **kw:
         {'status': 'completed', 'row_count': 2, 'results_persisted': False})
-    return SimpleNamespace(runtime=runtime, readers=readers, configured=configured)
+    catalogue = Mock()
+    monkeypatch.setattr(shared, 'persist_file_catalogue', catalogue)
+    return SimpleNamespace(runtime=runtime, readers=readers, configured=configured,
+                           catalogue=catalogue)
 
 
 @pytest.mark.parametrize('fmt', ['csv', 'json', 'parquet', 'excel'])
@@ -218,7 +221,7 @@ def test_file_contract_shared_schema_dq_grain_and_metadata_freshness(files, spar
     assert schema['can_continue'] is True
     assert dq['can_continue'] is False and len(dq['checks']) == 1
     assert fresh['can_continue'] is True and fresh['evidence_outcome'] == 'available'
-    assert session.plan.results and all(row.get('table_id') is None and row['source_id'] == source_id for row in session.plan.results)
+    assert session.plan.results and all(row.get('table_id') == source_id and row['asset_type'] == 'FILE' for row in session.plan.results)
     assert any(row['guardrail_type'] == 'data_quality' for row in session.plan.results)
 
 
@@ -349,6 +352,6 @@ def test_persisted_file_guardrail_uses_explicit_nullable_identity_schema(files, 
         result={'guardrail_rule_id': 'schema', 'guardrail_version': 1, 'status': 'passed', 'can_continue': True},
         context={'config': {}, 'scope_workspace_id': 'dev'})
     frame = written.call_args.args[0]
-    assert frame.schema['table_id'].nullable and frame.schema['source_id'].nullable
+    assert frame.schema['table_id'].nullable and 'source_id' not in frame.columns
     row = frame.first()
-    assert row['table_id'] is None and row['source_id'] == source['source_id']
+    assert row['table_id'] == source['source_id'] and row['asset_type'] == 'FILE'

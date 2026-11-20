@@ -19,6 +19,7 @@ from .metadata_schemas import (
     RETIRED_PREVIEW_METADATA_TABLES,
     HISTORICAL_METADATA_TABLES,
     RETIRED_METADATA_COLUMNS,
+    UNIFIED_ASSET_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
     metadata_table_physical_schema,
@@ -146,14 +147,6 @@ def _validate_existing_metadata_schema(
             "Existing data has been preserved; automatic schema evolution is unsafe for this layout. "
             "Inspect the differences and plan an explicit migration or reset."
         )
-    if table_name == "METADATA_PROCESSING_STATE" and (
-        "observation_status" in existing or "publication_payload_json" in existing or missing
-    ):
-        raise ValueError(
-            "Incompatible METADATA_PROCESSING_STATE schema. Existing checkpoints and publication receipts have been preserved. "
-            f"Required processing identity and progress fields cannot be inferred safely. {detail}. "
-            "Inspect the differences and plan an explicit migration or reset."
-        )
     if mismatches:
         raise ValueError(
             f"{table_name} physical schema does not match the canonical FabricOps metadata schema: {detail}."
@@ -239,6 +232,24 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
 
     def convert(row):
         values = row.asDict(recursive=True)
+        if table_name in UNIFIED_ASSET_TABLES:
+            from fabricops_kit.config.shared import build_column_id
+            old_source = values.get("source_id")
+            identity = values.get("table_id")
+            if old_source:
+                if identity not in (None, old_source):
+                    raise ValueError(f"{table_name}: conflicting asset identities; existing data preserved.")
+                identity = old_source
+                values["table_id"] = identity
+            is_file = bool(old_source) or str(identity or "").startswith("file:")
+            if is_file and values.get("asset_type") not in (None, "FILE"):
+                raise ValueError(f"{table_name}: conflicting asset_type; existing data preserved.")
+            if is_file:
+                values["asset_type"] = "FILE"
+            if (is_file and values.get("column_name") and not values.get("column_id")
+                    and (table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}
+                         or values.get("metadata_level") == "column")):
+                values["column_id"] = build_column_id(identity, values["column_name"])
         for name, kind in logical_fields.items():
             value = values.get(name)
             if table_name == "METADATA_DATA_CATALOGUE" and isinstance(value, str):
@@ -312,6 +323,10 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 if replacement_name not in actual or actual[name].dataType != actual[replacement_name].dataType:
                     raise ValueError(f"{table_name}.{name}: replacement type is incompatible; existing data preserved.")
                 safe = safe | column.eqNullSafe(F.col(replacement_name))
+                if table_name in UNIFIED_ASSET_TABLES and name == "source_id":
+                    # convert() fills the common identity inside this same Delta
+                    # transaction; conflicting populated identities remain blocked.
+                    safe = safe | (F.col(replacement_name).isNull() & (F.length(F.trim(column)) > 0))
             if source.where(~safe).limit(1).count():
                 raise ValueError(f"{table_name}.{name}: populated retired column is not provably redundant; existing data preserved.")
     target_schema = StructType([
@@ -456,7 +471,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the 13 canonical metadata tables.
+    """Create, validate and safely evolve the 12 canonical metadata tables.
 
     Parameters
     ----------
@@ -500,6 +515,11 @@ def setup_metadata_tables(
     listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
     value is null or equals its declared canonical replacement. Other extension
     columns are preserved where the table's identity contract permits them.
+    Operational file source_id values are copied into the common table_id and
+    validated before source_id is retired. Conflicting identities block migration.
+    File profile columns gain deterministic Column IDs without changing retained
+    profile IDs. Stop pipelines for this schema migration; recovery
+    restores the returned pre-upgrade Delta version together with the prior code.
     Unproven populated retirements fail with data preserved. Cleanup and supported
     JSON conversions commit atomically, with the pre-upgrade Delta version
     returned for recovery before VACUUM or further writes. Setup never vacuums.
@@ -577,21 +597,12 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None,
+                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None,
                 )
                 created = True
                 table = read_lakehouse_table(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
-            if table_name == "METADATA_PROCESSING_STATE" and not created and hasattr(table, "sparkSession"):
-                from delta.tables import DeltaTable
-                from fabricops_kit.io.shared import resolve_configured_lakehouse_table
-                from fabricops_kit.io.shared import retry_delta_metadata
-                _, _, _, state_path = resolve_configured_lakehouse_table("Metadata", table_name,
-                    resolved_metadata_schema, context=context)
-                properties = DeltaTable.forPath(spark, state_path).detail().select("properties").first()["properties"]
-                if properties.get("delta.isolationLevel") != "Serializable":
-                    retry_delta_metadata(lambda: spark.sql(f"ALTER TABLE delta.`{state_path.replace('`', '``')}` SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')"))
             upgrade = None
             if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)

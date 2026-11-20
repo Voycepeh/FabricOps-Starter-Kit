@@ -105,7 +105,7 @@ the selector; enter a validated configured Files path and reader settings to
 observe a new file schema without registering a table. File contracts preserve
 Source ID and exact format/options through Save, Freeze and Activation.
 Returned state uses source_id for files and table_id for physical tables;
-dataset_id identifies either selection. File profiles remain session-only.
+dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
 Activation and governed execution still require configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
@@ -121,7 +121,7 @@ from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
 Columns section contains column metadata and non-DQ settings only.
 Open Data Contract loads a manual-first editor without AI inference or AI-only
-profile reads. Top navigation keeps Table, Columns, Data Quality, Review,
+profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
 and AI Usage above the editor; lifecycle actions remain in the sidebar.
 Every AI request requires an explicit Generate, Suggest or Re-run action.
 Suggestions persist during navigation and require explicit acceptance.
@@ -191,9 +191,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:989`
+`fabricops_kit/widgets/widget_data_contract.py:990`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7463">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L990-L7483">View on GitHub</a>
 </div>
 
 
@@ -220,6 +220,7 @@ No related guides documented.
 | Preview | 0.3.1 |
 | Preview | 0.4.0 |
 | Preview | 0.4.1 |
+| Preview | 0.5.0 |
 
 
 </details>

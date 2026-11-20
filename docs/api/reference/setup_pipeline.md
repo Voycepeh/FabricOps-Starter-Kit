@@ -160,7 +160,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 101 |
+| Live-critical dependencies | 100 |
 
 ### Release history
 
@@ -170,6 +170,7 @@ No related guides documented.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -239,7 +240,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_path</code></li>

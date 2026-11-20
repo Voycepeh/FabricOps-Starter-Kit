@@ -125,6 +125,11 @@ Compatible missing columns are added automatically. Only columns explicitly
 listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
 value is null or equals its declared canonical replacement. Other extension
 columns are preserved where the table's identity contract permits them.
+Operational file source_id values are copied into the common table_id and
+validated before source_id is retired. Conflicting identities block migration.
+File profile columns gain deterministic Column IDs without changing retained
+profile IDs. Stop pipelines for this schema migration; recovery
+restores the returned pre-upgrade Delta version together with the prior code.
 Unproven populated retirements fail with data preserved. Cleanup and supported
 JSON conversions commit atomically, with the pre-upgrade Delta version
 returned for recovery before VACUUM or further writes. Setup never vacuums.
@@ -159,9 +164,9 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:451`
+`fabricops_kit/config/setup_metadata_tables.py:466`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L451-L752">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L466-L763">View on GitHub</a>
 </div>
 
 
@@ -177,7 +182,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 50 |
+| Live-critical dependencies | 51 |
 
 ### Release history
 
@@ -190,6 +195,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -222,10 +228,12 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
 <li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
 <li><code>fabricops_kit.data_contract.shared.validate_contract_source</code></li>
@@ -240,7 +248,6 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
-<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>

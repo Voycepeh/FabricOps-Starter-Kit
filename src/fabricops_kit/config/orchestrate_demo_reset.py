@@ -18,7 +18,16 @@ from fabricops_kit.io.shared import (
     get_spark_session,
     resolve_configured_lakehouse_table,
 )
-from fabricops_kit.pipeline.shared import resolve_physical_table_identity
+from fabricops_kit.pipeline.shared import (
+    PROCESSING_STATE_SCHEMA,
+    PROCESSING_STATE_TABLE,
+    processing_state_path,
+    read_processing_state,
+    resolve_physical_table_identity,
+    validate_processing_state_schema,
+)
+
+_DEMO_PROCESSING_STATE = f"{PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}"
 
 _DEMO_SOURCES = {
     ("Bronze", "orders"): ("demo/orders.csv", 120),
@@ -56,6 +65,9 @@ def _demo_metadata_counts(_state):
                 f"{table} has missing columns or incompatible types: {', '.join(incompatible)}. Run the installed package metadata setup in the demo lakehouse, then restart 00C."
             )
         counts[table] = frame.count()
+    state = read_processing_state(context=_state._demo_runtime)
+    validate_processing_state_schema(state.schema)
+    counts[_DEMO_PROCESSING_STATE] = state.count()
     return counts
 
 
@@ -226,9 +238,12 @@ def _demo_clear_metadata(_state, counts, order):
     from delta.tables import DeltaTable
 
     for _table in order:
-        _, _, _, _path = resolve_configured_lakehouse_table(
-            "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table)
-        )
+        if _table == _DEMO_PROCESSING_STATE:
+            _path = processing_state_path(_state._demo_runtime)
+        else:
+            _, _, _, _path = resolve_configured_lakehouse_table(
+                "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table)
+            )
         _removed = 0
         if counts[_table]:
             _delta = DeltaTable.forPath(_state.spark, _path)
@@ -272,8 +287,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     Notes
     -----
     True clears all current canonical metadata rows in the dedicated item,
-    including frozen Contracts, activations, approvals, promotion history,
-    Runs and Processing State. Saved submissions, Dry Run evidence and notebook
+    including frozen Contracts, activations, approvals, promotion history and
+    Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
     snapshots in its three native lifecycle folders are removed too. Table
     definitions remain; no metadata migration is performed.
 
@@ -368,7 +383,6 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo._demo_workspaces.update((store.workspace_id.casefold() for store in _demo.context.paths.values()))
     _demo_order = (
         "METADATA_GUARDRAIL_RESULTS",
-        "METADATA_PROCESSING_STATE",
         "METADATA_DATA_ACCESS",
         "METADATA_PIPELINE_RUN",
         "METADATA_PIPELINE_REGISTRY",
@@ -384,9 +398,9 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     if set(_demo_counts) != set(_demo_order):
         raise RuntimeError("Metadata inventory changed. Review reset dependencies before deleting records.")
     for _table in _demo_counts:
-        for _row in read_lakehouse_table(
-            _table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)
-        ).toLocalIterator():
+        _frame = (read_processing_state(context=runtime) if _table == _DEMO_PROCESSING_STATE else
+                  read_lakehouse_table(_table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)))
+        for _row in _frame.toLocalIterator():
             _demo_check_metadata_scope(_demo, _row.asDict(recursive=True))
     _demo_file_counts = _demo_metadata_files(_demo)
     for _folder, _count in _demo_file_counts.items():

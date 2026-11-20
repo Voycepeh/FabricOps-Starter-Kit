@@ -82,12 +82,12 @@ METADATA_FIELD_DESCRIPTIONS = {
     "effective_to": "Date when the record stops being effective.",
     "is_active": "Whether the row is currently active.",
     "table_id": (
-        "Stable governed data asset key that identifies a table across workspace, dataset, "
+        "Common operational asset key for TABLE or FILE assets across workspace, dataset, "
         "and table context."
     ),
     "column_id": (
         "Stable governed data asset key that identifies a column across workspace, dataset, "
-        "table, and column context."
+        "asset, and column context."
     ),
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
     "workspace_id": "Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.",
@@ -190,7 +190,12 @@ METADATA_FIELD_DESCRIPTIONS = {
     "bypass_reason": "Reason recorded when governance review was bypassed.",
     "superseded_by_rule_key": "Rule key that supersedes the current guardrail row.",
     "supersedes_rule_id": "Rule identifier superseded by the current row.",
-    "source_id": "Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.",
+    "asset_type": "Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.",
+    "pipeline_role": "Participation role: source for a Read or target for a Write.",
+    "asset_name": "Human-readable asset reference captured at participation time; files retain store/Files/relative_path.",
+    "first_observed_at": "First successful observation of a file selector; preserved on subsequent registration.",
+    "last_observed_at": "Most recent successful observation of a file selector.",
+    "source_id": "Stable file identity retained by released source descriptors and historical Run operations; operational tables store this same value in table_id.",
     "guardrail_result_id": "Stable identifier for the aggregate Guardrail result row.",
     "execution_type": "Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.",
     "result_id": "Stable identifier for the runtime result payload.",
@@ -277,34 +282,6 @@ METADATA_JSON_EXAMPLES = {
     },
 }
 
-PROCESSING_STATE_FIELD_DESCRIPTIONS = {
-    "record_id": "Stable SHA-256 primary key. Publication acceptance updates staged records; source baseline heads update conditionally while snapshot manifests, hash rows and acceptance history remain immutable.",
-    "record_type": "source_observation, incremental_checkpoint and publication_receipt for processing; source_snapshot, source_row_evidence, source_drift_baseline and source_snapshot_acceptance for complete-source history. Historical drift_baseline/full_source_baseline records remain retained.",
-    "snapshot_payload_json": "Versioned complete-source manifest: physical context, schema, validated authored keys, parent observation and hash completeness totals. Row hash evidence is distributed, never a driver-collected business snapshot.",
-    "status": "observed for source observations and complete-source snapshots; staged for publication members; committed for verified publication receipts/checkpoints and successfully finalized Source Drift acceptance.",
-    "observation_id": "Identifier grouping one source observation or a complete-source manifest and its distributed hash rows.",
-    "run_id": "Originating logical pipeline attempt, shared with METADATA_PIPELINE_RUN.run_id; null for standalone execution. Recovery retains the original run.",
-    "pipeline_id": "Stable pipeline identity when execution uses a pipeline plan.",
-    "source_table_name": "Physical source table name captured with the observation; null on publication receipts.",
-    "target_table_name": "Physical target table name captured at publication; null on unbound observations.",
-    "observed_at": "Original source capture timestamp; distinct from acknowledgement time.",
-    "accepted_at": "Timestamp of successful metadata acknowledgement, shared by the receipt and all members accepted in one merge; null before acceptance.",
-    "partition_column": "Column defining observed source partitions, or the incremental watermark column.",
-    "change_column": "Source column supplying minimum and maximum change values.",
-    "watermark_type": "Source scalar type for lossless change-value bounds, including distinct timestamp and timestamp_ntz semantics. Numeric and temporal values can be cast explicitly for queries.",
-    "partition_value": "Canonical partition text for incremental/historical partition records; SHA256 identity hash for source_row_evidence. Null applies to receipts and complete-source manifests/heads.",
-    "row_count": "Partition row count for incremental observations, exact hash multiplicity for source_row_evidence, or total complete-source rows for manifests and accepted heads.",
-    "min_change_value": "Lossless minimum change value encoded according to watermark_type; null for empty observations/removals.",
-    "max_change_value": "Lossless maximum change value encoded according to watermark_type; used as progress only on committed incremental_checkpoint records.",
-    "content_fingerprint": "Partition fingerprint for incremental/historical records, typed SHA256 content hash for source_row_evidence, or multiset completeness fingerprint for complete-source manifests/heads. Independent of publication batch fingerprints.",
-    "is_present": "True for a present source partition; false for an absent partition or empty incremental aggregate; null when no source partition applies, including empty-source headers and receipts.",
-    "publication_id": "Reference to the exact target-specific publication_receipt record_id; a receipt references itself.",
-    "publication_batch_id": "Prepared business content, schema, source membership and processing fingerprint; stored only on the receipt.",
-    "publication_activity_id": "Fabric activity whose atomic target write stamped the batch; recovery does not substitute the retry activity.",
-    "publication_at": "UTC timestamp stamped atomically with target rows; paired with publication_activity_id for verification.",
-    "publication_input_rows": "Prepared batch row count. Warehouse append/overwrite recovery verifies the complete marker count.",
-    "publication_strategy": "Physical append, overwrite, scd1 or scd2 strategy of the receipt.",
-}
 
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_data_agreement"],
@@ -315,7 +292,6 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "orchestrate_read", "orchestrate_write", "finalize_pipeline", "check_dq",
     ],
-    "METADATA_PROCESSING_STATE": ["pipeline_read"],
 }
 
 
@@ -334,6 +310,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.shared": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
+    "config.setup_processing_state": "config",
     "pipeline.profile_table": "pipeline",
     "io": "io",
     "pipeline.guardrails_shared": "pipeline",
@@ -4400,8 +4377,6 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
     if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
         return PIPELINE_METADATA_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PROCESSING_STATE" and column_name in PROCESSING_STATE_FIELD_DESCRIPTIONS:
-        return PROCESSING_STATE_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
     if column_name.endswith("_json"):
@@ -5759,7 +5734,7 @@ def main() -> None:
             "note": "Author and review governed context",
             "description": "Initialize metadata tables, then use the public Governance widgets. Each function retains its own lifecycle status.",
             "functions": (
-                "setup_metadata_tables", "widget_data_steward", "widget_data_agreement",
+                "setup_metadata_tables", "setup_processing_state", "widget_data_steward", "widget_data_agreement",
                 "widget_data_contract", "widget_activate_data_contract", "widget_activate_pipeline",
             ),
             "open": False,

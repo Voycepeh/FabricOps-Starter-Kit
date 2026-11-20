@@ -535,11 +535,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
                    pipeline_id="reporting" if row["pipeline_role"] == "source" else "pipeline",
                    run_id=row["_activity_id"], operation_status="succeeded", run_status="succeeded",
                    operation_completed_at=row["_committed_at"])
-    monkeypatch.setattr(service, "get_table_pipeline_participation", lambda **kwargs: participation)
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: participation)
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
-    context = service.get_table_runtime_context(
+    context = service.get_asset_runtime_context(
         config=object(), active_workspace_id="PROD", spark_session=object(), table_id="orders"
     )
 
@@ -644,9 +644,9 @@ def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
                 "METADATA_PIPELINE_RUN": []}[name]
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
-    monkeypatch.setattr(service, "get_table_pipeline_participation", lambda **kwargs: read("METADATA_PIPELINE_RUN"))
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: read("METADATA_PIPELINE_RUN"))
     kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
-    bulk = service.get_table_runtime_context(**kwargs)["profile_contexts"]
+    bulk = service.get_asset_runtime_context(**kwargs)["profile_contexts"]
     assert len(reads) == 3
     assert len(bulk) == 60
     for column_id, context in bulk.items():

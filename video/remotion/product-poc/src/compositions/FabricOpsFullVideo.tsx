@@ -2,6 +2,7 @@ import {Audio} from '@remotion/media';
 import {AbsoluteFill, Sequence, staticFile, useVideoConfig} from 'remotion';
 import {font, theme} from '../theme';
 import {
+  CTA_TRIM_START_FRAMES,
   FULL_VIDEO_DURATION,
   FULL_VIDEO_TIMELINE,
   NARRATION_START_FRAME,
@@ -11,7 +12,6 @@ import {
   BusinessRulesScene,
   ClosingScene,
   DataEngineersScene,
-  PromotionScene,
   RepeatablePipelineScene,
   SensitiveDataScene,
 } from '../scenes/GuidedDemoScenes';
@@ -20,6 +20,7 @@ import {FabricOpsReveal} from '../scenes/FabricOpsReveal';
 import {LifecycleScene} from '../scenes/LifecycleScene';
 import {NotebookJourney} from '../scenes/NotebookJourney';
 import {OpeningPlatform} from '../scenes/OpeningPlatform';
+import {WorkspaceArchitecture} from '../scenes/WorkspaceArchitecture';
 
 export const FabricOpsFullVideo = () => {
   const {fps} = useVideoConfig();
@@ -28,8 +29,25 @@ export const FabricOpsFullVideo = () => {
   return (
     <AbsoluteFill style={{background: theme.background, color: theme.text, fontFamily: font, overflow: 'hidden'}}>
       <Audio
-        name="Normalized master narration"
+        name="Normalized master narration before workspace architecture"
         from={NARRATION_START_FRAME}
+        durationInFrames={timeline.workspaceArchitecture.start - NARRATION_START_FRAME}
+        src={staticFile('audio/FabricOps_full_narration_normalized.m4a')}
+        volume={1}
+      />
+      <Audio
+        name="Normalized master narration after workspace architecture"
+        from={timeline.workspaceArchitecture.start + timeline.workspaceArchitecture.duration}
+        trimBefore={timeline.workspaceArchitecture.start - NARRATION_START_FRAME}
+        durationInFrames={timeline.closing.start - (timeline.workspaceArchitecture.start + timeline.workspaceArchitecture.duration)}
+        src={staticFile('audio/FabricOps_full_narration_normalized.m4a')}
+        volume={1}
+      />
+      <Audio
+        name="Normalized master narration after removed promotion section"
+        from={timeline.closing.start}
+        trimBefore={timeline.closing.sourceStart - NARRATION_START_FRAME}
+        durationInFrames={timeline.closing.duration}
         src={staticFile('audio/FabricOps_full_narration_normalized.m4a')}
         volume={1}
       />
@@ -50,6 +68,14 @@ export const FabricOpsFullVideo = () => {
       </Sequence>
       <Sequence name="Notebook journey" from={timeline.notebooks.start} durationInFrames={timeline.notebooks.duration} premountFor={fps}>
         <NotebookJourney />
+      </Sequence>
+      <Sequence
+        name="Workspace architecture"
+        from={timeline.workspaceArchitecture.start}
+        durationInFrames={timeline.workspaceArchitecture.duration}
+        premountFor={fps}
+      >
+        <WorkspaceArchitecture />
       </Sequence>
       <Sequence name="Lifecycle" from={timeline.lifecycle.start} durationInFrames={timeline.lifecycle.duration} premountFor={fps}>
         <LifecycleScene />
@@ -86,11 +112,8 @@ export const FabricOpsFullVideo = () => {
       <Sequence name="The big picture" from={timeline.bigPicture.start} durationInFrames={timeline.bigPicture.duration} premountFor={fps}>
         <BigPictureScene />
       </Sequence>
-      <Sequence name="Promotion" from={timeline.promotion.start} durationInFrames={timeline.promotion.duration} premountFor={fps}>
-        <PromotionScene />
-      </Sequence>
       <Sequence name="CTA" from={timeline.closing.start} durationInFrames={timeline.closing.duration} premountFor={fps}>
-        <ClosingScene />
+        <ClosingScene startFrameOffset={CTA_TRIM_START_FRAMES} />
       </Sequence>
     </AbsoluteFill>
   );

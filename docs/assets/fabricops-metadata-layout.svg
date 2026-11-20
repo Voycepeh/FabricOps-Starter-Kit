@@ -40,12 +40,6 @@
 <text x="965" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">PIPELINE_RUN</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
-<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_processing_state/" target="_blank">
-<rect x="425" y="423" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
-<path d="M429 423H721Q725 423 725 427V460H425V427Q425 423 429 423Z" fill="#2563EB"/>
-<text x="575" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">PROCESSING_STATE</text>
-<title>Open metadata documentation: PROCESSING_STATE</title>
-</a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
 <rect x="35" y="423" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
 <path d="M39 423H331Q335 423 335 427V460H35V427Q35 423 39 423Z" fill="#2563EB"/>

@@ -8,13 +8,43 @@ from fabricops_kit.io.shared import retry_delta_metadata
 from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
 
+def test_retry_sleep_mock_is_isolated_from_background_threads(monkeypatch):
+    """Background polling must keep its real sleep and never inflate retry counts."""
+    from threading import Thread
+    import time
+
+    original_sleep = time.sleep
+    delays, background_sleeps, calls = [], [], []
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
+
+    def poll():
+        background_sleeps.append(time.sleep)
+        time.sleep(0)
+
+    def action():
+        calls.append(1)
+        thread = Thread(target=poll)
+        thread.start()
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+        if len(calls) == 1:
+            raise type('ConcurrentAppendException', (Exception,), {})()
+        return 'committed'
+
+    assert retry_delta_metadata(action) == 'committed'
+    assert background_sleeps == [original_sleep, original_sleep]
+    assert time.sleep is original_sleep
+    assert len(calls) == 2 and len(delays) == 1
+    assert 0.1 <= delays[0] <= 0.2
+
+
 @pytest.mark.parametrize('name', ['ConcurrentAppendException', 'ConcurrentWriteException',
     'ConcurrentDeleteReadException', 'ConcurrentDeleteDeleteException', 'ConcurrentTransactionException'])
 @pytest.mark.parametrize('wrapped', [False, True])
 def test_retry_known_delta_conflicts_with_backoff(monkeypatch, name, wrapped):
     """Support both captured Python Delta exceptions and their JVM equivalents."""
     calls, delays = [], []
-    monkeypatch.setattr('time.sleep', delays.append)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
     def action():
         calls.append(1)
         if len(calls) < 3:
@@ -45,7 +75,7 @@ def test_metadata_retry_is_bounded(monkeypatch):
     """Persistent contention eventually propagates rather than blocking indefinitely."""
     error = type('ConcurrentAppendException', (Exception,), {})
     calls, delays = [], []
-    monkeypatch.setattr('time.sleep', delays.append)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
     def action():
         calls.append(1)
         raise error()
@@ -60,7 +90,7 @@ def test_metadata_retry_is_bounded(monkeypatch):
 def test_metadata_append_retries_without_replaying_business_writes(monkeypatch, table, store, retried):
     """Canonical table and configured Metadata store must both match before retrying."""
     module = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
-    monkeypatch.setattr('time.sleep', lambda _: None)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', lambda _: None)
     monkeypatch.setattr(module, 'validate_dataframe_writer', lambda _: None)
     monkeypatch.setattr(module, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table, 'engineering', 'path'))
     monkeypatch.setattr(module, 'repartition_dataframe_for_write', lambda df, _: df)
@@ -84,7 +114,7 @@ def test_publication_coordination_is_removed():
     from pathlib import Path
     from fabricops_kit.activated_pipeline import shared
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
-    assert len(CANONICAL_METADATA_TABLES) == 13
+    assert len(CANONICAL_METADATA_TABLES) == 12
     assert not hasattr(shared, 'publication_claim')
     assert not hasattr(shared, 'release_pipeline_lease')
     assert 'publication_coordination' not in Path(shared.__file__).read_text()
@@ -95,7 +125,7 @@ def test_fabric_structured_delta_conflict_is_retried(monkeypatch):
     class FabricException(Exception):
         def getErrorClass(self):  # noqa: N802
             return 'DELTA_CONCURRENT_APPEND.WITHOUT_HINT'
-    monkeypatch.setattr('time.sleep', lambda _: None)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', lambda _: None)
     calls = []
     def action():
         calls.append(1)
@@ -117,7 +147,7 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
 
     writer = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
     calls, frames, delays, reads, audits = [], [], [], [], []
-    monkeypatch.setattr("time.sleep", delays.append)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", delays.append)
     monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _: None)
     monkeypatch.setattr(writer, "resolve_configured_lakehouse_table",
         lambda store, table, schema, **kw: (None, table.strip(), schema, "configured-path"))

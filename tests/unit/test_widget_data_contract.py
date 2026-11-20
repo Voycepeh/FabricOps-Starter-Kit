@@ -335,7 +335,7 @@ def widget_runtime(monkeypatch):
         }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
-            classification_levels=["Public", "Restricted", "Confidential", "Highly Sensitive"],
+            classification_levels=dict(module.DEFAULT_CLASSIFICATION_LEVELS),
         ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
@@ -349,7 +349,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",
             "workspace_id": "PROD",
@@ -493,10 +493,12 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
     assert state["table_id"] == "orders"
     assert controls["selector_panel"].layout.display == "none", state["message"]
     assert controls["editor_shell"].layout.display == ""
+    assert controls["operation_progress"].value == ""
 
     controls["table_description"].value = "Unsaved edit"
     assert state["dirty"] is True
-    assert controls["change_table"].description == "Exit"
+    assert controls["change_table"].description == "Back to datasets"
+    assert controls["table_exit_row"].layout.display == "none"
     assert controls["table_exit_row"].layout.justify_content == "flex-end"
 
     controls["change_table"].click()
@@ -635,12 +637,79 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
     assert search.layout.width == "100%"
     assert search.layout.min_width == "0"
     assert search.layout.max_width == "100%"
-    assert "fabricops-searchable-selector" in search._dom_classes
+    assert "fabricops-searchable-selector-v2" in search._dom_classes
     assert selector.layout.width == "100%"
     assert selector.layout.min_width == "0"
     assert selector.layout.max_width == "100%"
-    assert ".fabricops-searchable-selector .widget-combobox-container" in style
+    assert ".fabricops-searchable-selector-v2 .widget-combobox-container" in style
     assert "grid-template-columns:minmax(0,1fr)" in style
+
+
+@pytest.mark.parametrize("path,kind", [("demo/orders.csv", "File"), ("demo/*.csv", "File selector")])
+def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, monkeypatch, path, kind):
+    """Files use configured item names and known workspace names without changing their identity."""
+    source = module.contracts.file_source_identity(
+        workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
+    )
+    dataset = {**source, "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
+    original_review = module.contracts.get_contract_review_state
+
+    def file_review(**kwargs):
+        loaded = original_review(**kwargs)
+        loaded["catalogue_rows"] = []
+        loaded["payload"] = {**json.loads(loaded["contract"]["contract_payload_json"]), "source": dict(source)}
+        return loaded
+
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **kw: {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "lineage": []})
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    labels = {value: label for label, value in controls["table"].options}
+    assert labels[source["source_id"]] == f"Raw Lakehouse · {path} — {kind} · Development"
+    assert labels["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
+    assert ("Development", "dev") in controls["workspace_select"].options
+    context = controls["table_context"].children[0].value
+    assert "Development" not in context and "Raw Lakehouse" in context and path in context
+    assert "File path" in context and "Full table name" not in context
+    assert "Unknown workspace" not in context and ">Unknown<" not in context
+    assert controls["top_nav"].options[0] == ("File", "Table")
+    assert ">File</h3>" in controls["right_pane"].children[0].value
+    assert "File definition" in _sidebar_text(controls["table_definition"])
+    assert "<b>File</b>" in module._manifest_html(state["current"]["payload"])
+    controls["top_nav"].value = "Data Quality"
+    assert "File tab" in _sidebar_text(controls["right_pane"])
+    controls["top_nav"].value = "Table"
+    sidebar = controls["left_pane"].children
+    assert ">File</div>" in sidebar[0].value
+    assert sidebar[1:4] == (controls["operation_progress"], controls["status"], controls["table_context"])
+    assert state["current"]["payload"]["source"] == source
+    assert state["dirty"] is False
+
+
+def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_runtime):
+    """An unnamed workspace has one useful fallback instead of ID (ID)."""
+    for row in widget_runtime["catalogue"]:
+        row.pop("_workspace_name", None)
+    state = widget_runtime["start"]()
+    assert ("dev", "dev") in state["_controls"]["workspace_select"].options
+
+
+@pytest.mark.parametrize("status", ["draft", "frozen"])
+def test_editor_keeps_one_columns_heading_and_navigation_for_frozen_contracts(widget_runtime, status):
+    """Draft actions already navigate; frozen reviews retain a way back to datasets."""
+    widget_runtime["contract"]["status"] = status
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["table_exit_row"].layout.display == ("none" if status == "draft" else "")
+    controls["top_nav"].value = "Columns"
+    assert controls["right_pane"].children[1] is controls["column_search"]
+    assert "Select a column to review its details and rules." not in _sidebar_text(controls["right_pane"])
+    if status == "frozen":
+        controls["change_table"].click()
+        assert state["current"] is None
+        assert controls["selector_panel"].layout.display == ""
+        assert widget_runtime["calls"]["draft"] == []
 
 
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):
@@ -777,7 +846,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert tuple(controls["top_nav"].options) == (
         "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -966,12 +1035,12 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert controls["table_context"].selected_index == 0
     table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
-    assert "Workspace" in table_summary
-    assert "Development" in table_summary
+    assert "Workspace</div>" not in table_summary
+    assert "Development" not in table_summary
     assert "Fabric object" in table_summary
     assert "Curated Lakehouse" in table_summary
-    assert "Full table name" in table_summary
-    assert "sales.orders" in table_summary
+    assert "Full table name" not in table_summary
+    assert "sales.orders" not in table_summary
     assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
@@ -988,17 +1057,16 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
-    assert "Classification" in table_summary
-    assert "Grain" in table_summary
-    assert "Row Key" in table_summary
+    assert "Classification" not in table_summary
+    assert "Grain" not in table_summary
+    assert "Row Key" not in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
     assert ".fabricops-participation-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
-    assert table_summary.index("Grain") < table_summary.index("Classification")
-    assert table_summary.index("Classification") < table_summary.index("Row Key")
+    assert "Expected source refresh" not in table_summary
     assert "table_save" not in controls
     table_sections = controls["right_pane"].children[1:]
     assert [section.children[0].value for section in table_sections[:4]] == [
@@ -1122,7 +1190,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["column_select"] in controls["right_pane"].children
     assert controls["column_search"] in controls["right_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "380px minmax(0, 1fr)"
     assert controls["column_select"].layout.height == "180px"
     assert controls["column_select"].layout.min_height == "130px"
     assert controls["column_select"].layout.flex == "0 0 auto"
@@ -1419,6 +1487,7 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
             "action": "Block",
             "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"} if column["data_type"] == "string" else {},
             "is_active": True,
+            "output_classification": "Restricted", "classification_reason": "Residual sensitivity requires internal access.",
         }]
 
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
@@ -1635,9 +1704,10 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["table_context"].children[0].value
-    assert "Row Key" in table_summary
-    assert "column_1" in table_summary
+    assert tuple(controls["row_key_columns"].value) == ("column_1",)
+    table_context = controls["table_context"].children[0].value
+    assert "Row Key" not in table_context
+    assert "column_1" not in table_context
 
     controls["accept_grain"].click()
     assert controls["accept_grain"].description == "Use grain wording"
@@ -1645,9 +1715,9 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["table_context"].children[0].value
-    assert "One row represents a single order line." in table_summary
-    assert "column_1" in table_summary
+    table_context = controls["table_context"].children[0].value
+    assert "One row represents a single order line." not in table_context
+    assert "column_1" not in table_context
 
 
 def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runtime):
@@ -1757,8 +1827,59 @@ def test_ai_requests_report_progress_only_after_explicit_click(widget_runtime, m
     assert any(t["operation"] == "Opening Data Contract…" for t in state["_operation_timings"])
 
 
+@pytest.mark.parametrize("assessment", ["direct", "none"])
+@pytest.mark.parametrize("use_real_widgets", [False, True])
+def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_runtime, monkeypatch, assessment, use_real_widgets):
+    """AI uses policy definitions; classification stays advisory until Apply and saves as Enrichment."""
+    real_suggest = module.suggest_sensitive_data
+    _enable_ai(widget_runtime, monkeypatch)
+    if use_real_widgets:
+        widgets = pytest.importorskip("ipywidgets")
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
+    levels = {"Open": "External sharing", "Team": "Only <approved> internal users", "Secret": "Severely restricted"}
+    widget_runtime["config"].governance_config.classification_levels = levels
+    contexts = []
+
+    def suggest(context, **kwargs):
+        contexts.append(context)
+        return real_suggest(context, prompt=kwargs["prompt"], invoke=lambda _: json.dumps([{
+            "column": "column_0", "pii_type": assessment, "reason": "Reviewed identifying potential.",
+            "treatment": "tokenize" if assessment == "direct" else None, "action": "Block" if assessment == "direct" else None, "parameters": {},
+            "output_classification": "Team", "classification_reason": "Tokenized identifiers remain internal business data.",
+        }]))
+
+    monkeypatch.setattr(module, "suggest_sensitive_data", suggest)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_classification"].value = "Secret"
+    controls["rerun_sensitive"].click()
+    assert contexts[-1]["classification_levels"] == levels
+    assert controls["column_classification"].value == "Secret"
+    assert "Tokenized identifiers remain internal business data." in controls["sensitive_ai"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["accept_sensitive"].click()
+    assert controls["column_classification"].value == "Team"
+    assert controls["table_classification"].value == "Team"
+    assert "Only &lt;approved&gt; internal users" in controls["classification_context"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["save_data_contract"].click()
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert any(row["column_id"] == "col-0" and row["enrichment_type"] == "Classification" and row["value"] == "Team"
+               for row in saved["enrichment"]["columns"])
+
+
+def test_enabling_sensitive_treatment_does_not_automatically_lower_classification(widget_runtime):
+    """Classification requires a reviewed policy decision instead of a one-rank downgrade."""
+    controls = widget_runtime["open"]()["_controls"]
+    controls["sensitive_enabled"].value = False
+    controls["column_classification"].value = "Highly Sensitive"
+    controls["pii_type"].value = "direct"
+    controls["sensitive_enabled"].value = True
+    assert controls["column_classification"].value == "Highly Sensitive"
+
+
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
-    """Description and Sensitive Data acceptance stay isolated from manual Classification."""
+    """Sensitive Data acceptance applies its proposed classification and preserves unrelated fields."""
     state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
@@ -1777,7 +1898,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["sensitive_treatment"].value == "tokenize"
     assert "sensitive_block" not in controls
     assert controls["column_description"].value == description
-    assert controls["column_classification"].value == "Confidential"
+    assert controls["column_classification"].value == "Restricted"
     assert controls["required"].value is False
     assert controls["dq_whitelist_values"].value == "keep-me"
     assert widget_runtime["calls"]["guardrails"] == []
@@ -3091,16 +3212,17 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     assert len(column_definition.children) == 2
 
 
-def test_table_classification_updates_left_summary_immediately(widget_runtime):
-    """Table classification feedback follows the staged editor value without a save."""
+def test_table_classification_stays_in_the_authoring_control_without_context_duplication(widget_runtime):
+    """Classification remains editable without repeating it in the context summary."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["table_context"].children[0]
+    context = controls["table_context"].children[0]
 
-    assert "Confidential" in summary.value
+    assert controls["table_classification"].value == "Confidential"
+    assert "Confidential" not in context.value
     controls["table_classification"].value = "Restricted"
-    assert "Restricted" in summary.value
-    assert "Confidential</div>" not in summary.value
+    assert controls["table_classification"].value == "Restricted"
+    assert "Restricted" not in context.value
     assert widget_runtime["calls"]["enrichment"] == []
 
 
@@ -3225,7 +3347,9 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
     def file_review(**kwargs):
         loaded = original_review(**kwargs)
         loaded["payload"] = {
-            "source": {"source_type": "file"},
+            "source": module.contracts.file_source_identity(
+                workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
+            ),
             "table": {"table_id": "orders"},
         }
         return loaded
@@ -3811,6 +3935,7 @@ def test_invalid_ai_acceptance_leaves_all_authored_fields_unchanged(widget_runti
         column = context['columns'][0]
         return [{'column_name': column['column_name'], 'column_id': column['column_id'],
             'pii_type': 'indirect', 'pii_label': 'Indirect PII', 'reason': 'Coarse detail',
+            'output_classification': 'Restricted', 'classification_reason': 'Internal output.',
             'treatment': 'bucket', 'action': 'Block', 'parameters': {'bins': [0, 10], 'labels': ['low', 'high']}, 'is_active': True}]
     monkeypatch.setattr(module, 'suggest_sensitive_data', bucket)
     controls['rerun_sensitive'].click()
@@ -3990,7 +4115,7 @@ def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(
         if operation == "grain_key":
             return '```json\n{"grain":"One order", "rationale":"Governed context"}\n```'
         if operation == "sensitive_data":
-            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}}]'
+            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}, "output_classification":"Restricted", "classification_reason":"Internal business data"}]'
         if operation == "business_rule_ai":
             return '[{"requirement":"Positive values", "rule_type":"range", "columns":["column_0"], "parameters":{"minimum":0,"minimum_inclusive":true,"maximum_inclusive":true}, "rationale":"Requested minimum"}]'
         return "Suggested description"
@@ -4083,7 +4208,7 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
     """Profile provenance and participation use the same configured audit zone."""
     widget_runtime["config"].audit_timezone = "Asia/Singapore"
     module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {"committed_at": value},
         "participation": [{"last_seen": value}],
     })
@@ -4097,13 +4222,13 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
 def test_open_loads_profile_and_participation_once_for_expanded_context(widget_runtime, monkeypatch):
     """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
-    original = module.contracts.get_table_runtime_context
+    original = module.contracts.get_asset_runtime_context
 
     def load_context(**kwargs):
         reads.append(kwargs)
         return original(**kwargs)
 
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
     assert len(reads) == 1
     assert controls["table_context"].selected_index == 0
@@ -4121,7 +4246,7 @@ def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, m
     profiles = {f"col-{index}": {"kind": "profile", "profile": {"row_count": 10},
                 "values": [{"value": f"sample-{index}", "count": 1, "percent": 10}]}
                 for index in range(59)}
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "profile_contexts": profiles,
     })
     state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
@@ -4181,7 +4306,7 @@ def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, mo
     assert not controls["column_select"].disabled
     assert not controls["top_nav"].disabled
     assert controls["accept_column_description"].disabled
-    assert "Ready." in controls["operation_progress"].value
+    assert controls["operation_progress"].value == ""
     assert state["_operation_timings"][-1]["seconds"] >= 0
 
 
@@ -4620,3 +4745,29 @@ def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     )
     assert module._parameters(saved)["evidence_method"] == "metadata"
     assert "freshness_column" not in module._parameters(saved)
+
+
+def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeypatch):
+    """File profiles remain Source ID records while the editor uses authored column tokens."""
+    from unittest.mock import Mock
+    from fabricops_kit.config.shared import build_column_id
+    source = module.contracts.file_source_identity(
+        workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
+    dataset = {**source, 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+    monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
+    original = module.contracts.get_contract_review_state
+    def file_review(**kwargs):
+        loaded = original(**kwargs)
+        loaded['catalogue_rows'] = []
+        loaded['payload'] = {**json.loads(loaded['contract']['contract_payload_json']), 'source': source}
+        return loaded
+    monkeypatch.setattr(module.contracts, 'get_contract_review_state', file_review)
+    profile = {'kind': 'profile', 'profile': {'row_count': 42, 'table_id': source['source_id'],
+                                           'column_id': build_column_id(source['source_id'], 'column_0')}}
+    reader = Mock(return_value={'latest_profile': None, 'column_profiles': {},
+        'profile_contexts': {build_column_id(source['source_id'], 'column_0'): profile}, 'lineage': [], 'reader_count': 1, 'writer_count': 0})
+    monkeypatch.setattr(module.contracts, 'get_asset_runtime_context', reader)
+    state = widget_runtime['open']()
+    assert reader.call_args.kwargs['table_id'] == source['source_id']
+    assert 'source_id' not in reader.call_args.kwargs
+    assert state['load_profile_context']('col-0') == profile

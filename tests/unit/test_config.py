@@ -454,7 +454,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None)
+        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None)
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns
@@ -865,7 +865,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
             "provider_steward_name", "recipient_steward_name", "guardrail_type",
             "rule_id", "rule_type", "action",
         }]
-        old_tables[name] = Frame(schema if name == "METADATA_PROCESSING_STATE" else type(schema)(fields))
+        old_tables[name] = Frame(type(schema)(fields))
 
     def read_table(name, **_kwargs):
         return old_tables[name]
@@ -949,6 +949,8 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["created_tables"] == list(registry)
+    assert result["active_metadata_table_count"] == 12
+    assert "METADATA_PROCESSING_STATE" not in created
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
     access_fields = {field.name: field for field in created["METADATA_DATA_ACCESS"].fields}
     assert all(not access_fields[field].nullable for field in {"_activity_id", "_committed_at", "_workspace_id"})
@@ -1001,6 +1003,8 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
 
     assert catalogue_names == [
         "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
         "column_id",
         "workspace_id",
@@ -1365,7 +1369,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["first_profiled_at", "last_profiled_at", "_committed_at"]
+            assert timestamp_fields == ["first_observed_at", "last_observed_at", "first_profiled_at", "last_profiled_at", "_committed_at"]
         elif table_name == "METADATA_DATA_PROFILED":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
         else:
@@ -1704,10 +1708,17 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
     assert result["data_agreement"]["active_steward_count"] == 0
 
 
+@pytest.mark.parametrize("levels", [[], ["Public"], {}, {"": "Meaning"}, {"Public": ""}, {"Public": None}, {1: "Meaning"}])
+def test_classification_definitions_require_labels_and_policy_explanations(levels):
+    """Reject the old list format and incomplete definitions before the widget opens."""
+    with pytest.raises(ValueError, match="classification_levels"):
+        GovernanceConfig(classification_levels=levels)
+
+
 def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     """Keep prompts configurable and AI optional alongside Classification labels."""
     config = GovernanceConfig(
-        classification_levels=[" Public ", "Restricted"],
+        classification_levels={" Public ": " External sharing ", "Restricted": "Internal use"},
         ai_enrichment={
             "enabled": True,
             "table_description_prompt": " describe table ",
@@ -1715,9 +1726,9 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "sensitive_data_prompt": " sensitive rules ",
         },
     )
-    assert config.classification_levels == ["Public", "Restricted"]
+    assert config.classification_levels == {"Public": "External sharing", "Restricted": "Internal use"}
     with pytest.raises(ValueError, match="unique ranked values"):
-        GovernanceConfig(classification_levels=["Public", "Restricted", "Restricted"])
+        GovernanceConfig(classification_levels={"Public": "External", " Public ": "Duplicate"})
     assert config.ai_enrichment == {
         "enabled": True,
         "model_deployment_name": "gpt-5-mini", "reasoning_effort": "low", "verbosity": None,

@@ -13,7 +13,6 @@ const {
   sensitiveData: SENSITIVE_DATA_DURATION,
   businessRules: BUSINESS_RULES_DURATION,
   bigPicture: BIG_PICTURE_DURATION,
-  promotion: PROMOTION_DURATION,
   closing: CLOSING_DURATION,
 } = GUIDED_SCENE_DURATIONS;
 
@@ -523,107 +522,8 @@ export const BigPictureScene = () => {
   </SceneShell>;
 };
 
-export const PromotionScene = () => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const cue = NARRATION_CUE_SHEET.promotion;
-  const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;
-  const devEnter = enterProgress(frame, fps, seconds(0.4));
-  const nodeLabels = ['00 Env Config', '02 Pipeline', 'Data Contract'];
-  const nodePositions = [480, 800, 1120];
-  const nodeDelays = [localCue(2), localCue(3), localCue(4)];
-  const connectorSegments = [
-    {left: 418, width: 62, delay: localCue(0)},
-    {left: 740, width: 60, delay: localCue(2) + seconds(0.65)},
-    {left: 1060, width: 60, delay: localCue(3) + seconds(0.65)},
-    {left: 1380, width: 112, delay: localCue(4) + seconds(0.65)},
-  ];
-  const productionEnter = enterProgress(frame, fps, localCue(6));
-  const sentenceEnter = enterProgress(frame, fps, 180);
-  const pulseTravel = interpolate(frame, [localCue(5), localCue(6)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.inOut(Easing.cubic),
-  });
-  const pulseOpacity = interpolate(
-    frame,
-    [localCue(5) - seconds(0.25), localCue(5), localCue(6), localCue(6) + seconds(0.35)],
-    [0, 1, 1, 0],
-    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
-  );
-
-  return <AbsoluteFill style={{
-    opacity: sceneOpacity(frame, PROMOTION_DURATION),
-    color: theme.text,
-    fontFamily: font,
-  }}>
-    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 54%, #12365099 0%, #07101f00 58%)'}} />
-
-    <div style={{
-      position: 'absolute', top: 132, left: 240, right: 240,
-      color: '#f7f9fd', fontSize: 52, fontWeight: 850, letterSpacing: -0.7,
-      lineHeight: 1.15, textAlign: 'center', opacity: sentenceEnter,
-      translate: `0 ${(1 - sentenceEnter) * 16}px`,
-    }}>
-      The data pipeline is promoted from Development to Production.
-    </div>
-
-    {connectorSegments.map(({left, width, delay}) => {
-      const progress = interpolate(frame, [delay, delay + seconds(0.65)], [0, 1], {
-        extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic),
-      });
-      if (progress <= 0) return null;
-
-      return <div key={left} style={{
-        position: 'absolute', left, top: 538, width, height: 4, borderRadius: 99,
-        background: FLOW_COLOR, boxShadow: `0 0 18px ${FLOW_COLOR}99`, opacity: progress,
-        scale: `${progress} 1`, transformOrigin: 'left center',
-      }}>
-        <div style={{
-          position: 'absolute', right: -1, top: -7, width: 0, height: 0,
-          borderTop: '9px solid transparent', borderBottom: '9px solid transparent',
-          borderLeft: `13px solid ${FLOW_COLOR}`,
-        }} />
-      </div>;
-    })}
-
-    {pulseOpacity > 0 ? <div aria-hidden="true" style={{
-      position: 'absolute', left: 420 + pulseTravel * 1058, top: 529, zIndex: 1,
-      width: 22, height: 22, borderRadius: '50%', background: '#c7fff8',
-      boxShadow: `0 0 10px #ffffff, 0 0 28px ${FLOW_COLOR}`, opacity: pulseOpacity,
-    }} /> : null}
-
-    {devEnter > 0 ? <div style={{
-      position: 'absolute', left: 88, top: 350, zIndex: 2, width: 340, height: 430,
-      opacity: devEnter, translate: `${(1 - devEnter) * -32}px 0`,
-    }}><MascotArtwork pose="dev" shadow="drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #ff8a2844)" /></div> : null}
-
-    {nodeLabels.map((label, index) => {
-      const progress = enterProgress(frame, fps, nodeDelays[index]);
-      if (progress <= 0) return null;
-
-      return <div key={label} style={{
-        position: 'absolute', left: nodePositions[index], top: 465, zIndex: 2,
-        width: 260, height: 150, boxSizing: 'border-box', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', padding: '0 28px', borderRadius: 24,
-        border: `2px solid ${FLOW_COLOR}99`, background: 'linear-gradient(145deg, #15304a, #0b192c)',
-        boxShadow: `0 20px 44px #0008, inset 0 1px 0 #ffffff18, 0 0 22px ${FLOW_COLOR}18`,
-        color: '#eefcfb', fontSize: 29, fontWeight: 850, lineHeight: 1.15,
-        textAlign: 'center', opacity: progress, translate: `0 ${(1 - progress) * 20}px`, scale: progress,
-      }}>
-        {label}
-      </div>;
-    })}
-
-    {productionEnter > 0 ? <div style={{
-      position: 'absolute', left: 1492, top: 350, zIndex: 2, width: 340, height: 430,
-      opacity: productionEnter, translate: `${(1 - productionEnter) * 32}px 0`,
-    }}><MascotArtwork pose="prod" shadow="drop-shadow(0 20px 34px #0009) drop-shadow(0 0 18px #38d99144)" /></div> : null}
-  </AbsoluteFill>;
-};
-
-export const ClosingScene = () => {
-  const frame = useCurrentFrame();
+export const ClosingScene = ({startFrameOffset = 0}: {startFrameOffset?: number}) => {
+  const frame = useCurrentFrame() + startFrameOffset;
   const {fps} = useVideoConfig();
   const cue = NARRATION_CUE_SHEET.closing;
   const localCue = (index: number) => cue.keyPhrases[index].triggerFrame - cue.startFrame;

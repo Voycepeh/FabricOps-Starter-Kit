@@ -256,6 +256,7 @@ def test_public_callable_list_uses_compact_contract_authoring_surface():
         'NotebookSetupContext',
         'setup_notebook',
         'setup_metadata_tables',
+        'setup_processing_state',
         'orchestrate_demo_reset',
         'create_data_agent',
         'read_lakehouse_table',
@@ -420,7 +421,8 @@ def test_persistent_checkpoint_tables_are_not_registered():
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     registry = metadata_table_schema_registry()
-    assert "METADATA_PROCESSING_STATE" in CANONICAL_METADATA_TABLES
+    assert "METADATA_PROCESSING_STATE" not in CANONICAL_METADATA_TABLES
+    assert "METADATA_PROCESSING_STATE" not in registry
     assert "METADATA_SOURCE_CONSUMPTION" not in CANONICAL_METADATA_TABLES
     assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
     assert all("CHECKPOINT" not in table_name for table_name in registry)

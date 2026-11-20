@@ -12,9 +12,9 @@ pipeline before changing its Contract Activation. Ungoverned writes still reject
 active protected Table IDs and physical destination aliases.
 
 Publication claims and `Files/fabricops/publication_coordination` are no longer
-part of runtime execution. No new claim table or Run event table is introduced. The 13 canonical tables
-retain their physical schemas. Participation moves to existing Run operations;
-see the participation migration below. Checkpoint receipts remain unchanged.
+part of runtime execution. No new claim table, Run event table, SQL view or consumer
+migration is introduced. All 14 existing canonical schemas, Run JSON contracts,
+checkpoint receipts and Power BI-facing columns remain unchanged.
 
 Deploy the same updated package to every writer after stopping old executions.
 Any old Files ledger is left untouched; archive or remove it only after confirming
@@ -50,7 +50,7 @@ retry handling. An uncertain target commit must be reconciled, not replayed.
 | `METADATA_DATA_CATALOGUE` | Retry scoped workspace/Table ID MERGEs and profiling marker updates; missing-column deactivation stays scoped. |
 | `METADATA_DATA_PROFILED` | Retry deterministic snapshot/row-ID replacement MERGE and uncommitted-snapshot cleanup. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Retry snapshot-scoped replacement and deletion; never retry the entire profiling workflow. |
-| `METADATA_PROCESSING_STATE` | Retry one atomic record-ID MERGE; checkpoint/baseline progress still requires its publication receipt and physical target marker. |
+| Processing State | Retry one atomic record-ID MERGE; checkpoint/baseline progress still requires its publication receipt and physical target marker. |
 | `METADATA_GUARDRAIL_RESULTS` | Retry canonical Metadata append of aggregate results. |
 | `METADATA_DATA_ACCESS` | Retry canonical Metadata append of scanner observations. |
 | `METADATA_DATA_STEWARD` | Retry canonical Metadata append from authoring widgets, including configured Steward table aliases. |
@@ -232,20 +232,21 @@ from pyspark.sql import functions as F
 participants = pipeline_participation(runs).alias("p")
 catalogue = read_lakehouse_table(
     "METADATA_DATA_CATALOGUE", store="Metadata", schema=engineering_schema,
-).filter(F.col("metadata_level") == "table").alias("c")
+).filter(F.col("metadata_level").isin("table", "file")).alias("c")
 usage = participants.join(
     catalogue,
     (F.col("p.table_id") == F.col("c.table_id"))
-    & (F.col("p.execution_workspace_id") == F.col("c.workspace_id")),
+    & (F.col("p.catalogue_workspace_id") == F.col("c.workspace_id")),
     "left",
 )
 ```
 
-Catalogue observations are keyed by logical Table ID and observation workspace;
+Catalogue observations use the common asset ID and observation workspace. The
+projection's catalogue_workspace_id selects the execution scope for tables and
+the physical destination workspace for files;
 physical destination workspace/item/schema remain available under `destination`.
-A left join preserves unregistered tables and file participants. Files have
-`source_id` with no manufactured Table ID. Select one current table-level Catalogue
-observation per workspace/Table ID before joining if the consumer retains snapshots.
+A left join preserves unregistered tables and file participants. Files reuse their existing `source_id` as the projected `table_id` Catalogue asset key; released Run JSON fields are unchanged. Select one current table/file-level Catalogue
+observation per workspace/asset ID before joining if the consumer retains snapshots.
 
 The projection excludes `not_started` declarations and includes successful,
 incomplete and failed attempts, even when the whole Run fails. Read-only runs and

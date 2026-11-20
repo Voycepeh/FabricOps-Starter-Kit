@@ -18,7 +18,6 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
     "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_PROCESSING_STATE",
 ]
 
 # Explicit column retirements, never inferred from a schema difference. Values
@@ -44,6 +43,13 @@ RETIRED_METADATA_COLUMNS.update({
         "metadata_column_key": None, "profiled_at": "_committed_at",
     },
 })
+
+# Approved identity consolidation: migration copies and validates the file identity
+# before retiring the redundant operational source_id column.
+UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE",
+    "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_GUARDRAIL_RESULTS")
+for _asset_table in UNIFIED_ASSET_TABLES:
+    RETIRED_METADATA_COLUMNS[_asset_table]["source_id"] = "table_id"
 
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
@@ -92,7 +98,7 @@ RETIRED_PREVIEW_METADATA_TABLES = {
     },
     "METADATA_SOURCE_OBSERVATION": {
         "retired_in": "0.3.0",
-        "guidance": "METADATA_PROCESSING_STATE stores current source observations, checkpoints and publication receipts.",
+        "guidance": "Processing State stores current source observations, checkpoints and publication receipts.",
     },
 }
 
@@ -153,6 +159,7 @@ BINDING_FIELDS = [("table_id", "string", False), ("workspace_id", "string", Fals
                   ("item_id", "string", False), ("kind", "string", False),
                   ("schema", "string", True), ("table_name", "string", False)]
 PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
+                        ("asset_type", "string"), ("source_id", "string"),
                         ("status", "string", False), ("results_persisted", "boolean"),
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
                         ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
@@ -321,6 +328,12 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
             "METADATA_DATA_CATALOGUE",
             [
                 ("metadata_level", "string"),
+                ("asset_type", "string"),
+                ("item_id", "string"),
+                ("relative_path", "string"),
+                ("file_format", "string"),
+                ("first_observed_at", "timestamp"),
+                ("last_observed_at", "timestamp"),
                 ("table_id", "string"),
                 ("column_id", "string"),
                 ("workspace_id", "string"),
@@ -346,6 +359,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         "METADATA_DATA_PROFILED": build_metadata_schema(
             "METADATA_DATA_PROFILED",
             [
+                ("asset_type", "string"),
+                ("run_id", "string"), ("pipeline_role", "string"),
                 ("profile_id", "string"),
                 ("profile_snapshot_id", "string"),
                 ("table_id", "string"),
@@ -375,6 +390,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         "METADATA_DATA_PROFILED_FREQUENCY": build_metadata_schema(
             "METADATA_DATA_PROFILED_FREQUENCY",
             [
+                ("asset_type", "string"),
+                ("run_id", "string"), ("pipeline_role", "string"),
                 ("frequency_id", "string"),
                 ("profile_id", "string"),
                 ("profile_snapshot_id", "string"),
@@ -499,7 +516,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("guardrail_result_id", "string", False),
                 ("guardrail_rule_id", "string", False),
                 ("guardrail_version", "integer", False),
-                ("table_id", "string"), ("source_id", "string"),
+                ("table_id", "string"), ("asset_type", "string"),
                 ("table_name", "string"),
                 ("contract_id", "string", False),
                 ("contract_version", "integer", False),
@@ -515,41 +532,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("action", "string"),
                 ("reason", "string"),
                 ("result_payload_json", "string", False),
-                *audit,
-            ],
-        ),
-        "METADATA_PROCESSING_STATE": build_metadata_schema(
-            "METADATA_PROCESSING_STATE",
-            [
-                ("record_id", "string", False),
-                ("record_type", "string", False),
-                ("status", "string", False),
-                ("observation_id", "string"),
-                ("run_id", "string"),
-                ("pipeline_id", "string"),
-                ("source_table_id", "string"),
-                ("source_table_name", "string"),
-                ("target_table_id", "string"),
-                ("target_table_name", "string"),
-                ("workspace_id", "string", False),
-                ("observed_at", "timestamp"),
-                ("accepted_at", "timestamp"),
-                ("partition_column", "string"),
-                ("change_column", "string"),
-                ("watermark_type", "string"),
-                ("partition_value", "string"),
-                ("row_count", "long"),
-                ("min_change_value", "string"),
-                ("max_change_value", "string"),
-                ("content_fingerprint", "string"),
-                ("is_present", "boolean"),
-                ("publication_id", "string"),
-                ("publication_batch_id", "string"),
-                ("publication_activity_id", "string"),
-                ("publication_at", "timestamp"),
-                ("publication_input_rows", "long"),
-                ("publication_strategy", "string"),
-                ("snapshot_payload_json", "string"),
                 *audit,
             ],
         ),
@@ -668,6 +650,11 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
         schema = None
     if schema is None:
         return dict(row)
+    return coerce_schema_row_types(schema, row, table_name=table_name)
+
+
+def coerce_schema_row_types(schema: Any, row: dict[str, Any], *, table_name: str = "") -> dict[str, Any]:
+    """Coerce row values using a Spark-like schema."""
     coerced = dict(row)
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
@@ -675,7 +662,7 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
                 # Runtime coercion requires native logical values; only the
                 # physical row decoder accepts JSON text.
                 coerced[field.name] = validate_metadata_value(coerced[field.name], field.dataType, field=field.name)
-                if table_name == "METADATA_PIPELINE_RUN" and field.name == "operations":
+                if table_name == "METADATA_PIPELINE_RUN" and field.name in {"operations", "profiling"}:
                     coerced[field.name] = decode_metadata_row(table_name, {field.name: row[field.name]})[field.name]
             elif coerced[field.name] is None and field.nullable:
                 coerced[field.name] = None
@@ -751,7 +738,7 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
             # Scope fields are additive JSON members. Do not inject them into
             # retained Run content and change a previously approved content hash.
             for original, decoded in zip(value, result[name]):
-                for field in ("profile_scope", "profiling_max_rows"):
+                for field in ("profile_scope", "profiling_max_rows", "asset_type", "source_id"):
                     if field not in original:
                         decoded.pop(field, None)
     return result

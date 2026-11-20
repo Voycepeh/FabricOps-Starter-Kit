@@ -123,7 +123,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="source-drift">
 <summary><strong>Source Drift</strong> — Pipeline-owned complete-source change observation against confirmed physical-source history.</summary>
-<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. METADATA_PROCESSING_STATE accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
+<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. the operational Processing State table accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
 </details>
 
 <details id="writer-ownership">
@@ -133,8 +133,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="data-catalogue">
-<summary><strong>Data Catalogue</strong> — The canonical metadata record for a governed table and its columns.</summary>
-<p>FabricOps Data Catalogue metadata identifies governed tables and columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
+<summary><strong>Data Catalogue</strong> — The canonical metadata registry for table and file assets and their columns.</summary>
+<p>FabricOps Data Catalogue metadata identifies table and file assets and their columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
 <p><strong>Also known as:</strong> Data Catalogue</p>
 </details>
 
@@ -182,12 +182,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="processing-state">
 <summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
-<p>METADATA_PROCESSING_STATE stores incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>
+<p>The operational Processing State table holds incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>
 </details>
 
 <details id="source-observation">
 <summary><strong>Source Observation</strong> — Captured source state for incremental execution, Source Drift or full physical-source comparison.</summary>
-<p>Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. METADATA_PROCESSING_STATE retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.</p>
+<p>Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. the operational Processing State table retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.</p>
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 
@@ -197,14 +197,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="lineage">
-<summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
-<p>Data lineage describes source-to-target dependencies, optionally at column level. FabricOps currently records Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.</p>
+<summary><strong>Lineage</strong> — Metadata recording table and file source/target participation within a pipeline activity.</summary>
+<p>Data lineage describes source-to-target dependencies, optionally at column level. FabricOps records typed table/file Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 
 <details id="table-id">
-<summary><strong>table_id</strong> — The stable FabricOps identifier for one governed table.</summary>
-<p>FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.</p>
+<summary><strong>table_id</strong> — The shared FabricOps identifier for a table or file asset, distinguished by asset_type.</summary>
+<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.</p>
 <p><strong>Also known as:</strong> table ID</p>
 </details>
 

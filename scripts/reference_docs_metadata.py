@@ -9,7 +9,9 @@ from typing import NotRequired, TypedDict
 # manifests keep the released names; these entries do not claim releases of the
 # new spelling and do not provide import or callable compatibility.
 CURRENT_PUBLIC_LIVE_SINCE = {
-    "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query": "0.4.2",
+    "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset": "0.5.0",
+    "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file": "0.5.0",
+    "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query": "0.5.0",
     "fabricops_kit.widgets.widget_data_steward.widget_data_steward": "0.2.0",
     "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement": "0.2.0",
 }
@@ -115,7 +117,7 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` connects physical table assets across both schemas. File-backed contracts, activations and Guardrail results use a distinct stable `source_id` and have no Table ID. `contract_id` and `contract_version` identify one exact Data Contract version."""
+`table_id` is the common operational table/file asset key, distinguished by `asset_type`. Registered columns of either type use deterministic `column_id`. Released file source descriptors in Contracts, activations and Run operations retain `source_id`; operational writers store that same identity value in `table_id`. `contract_id` and `contract_version` identify one exact Data Contract version."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -167,7 +169,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_PIPELINE_RUN": {
         "purpose": "Records Run participation, execution outcomes and exact per-operation Contract versions.",
         "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
-        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join table operations to table-level Catalogue observations by table_id and execution workspace, retaining the physical destination separately. File participants retain Source IDs without Table IDs. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
+        "implementation_notes": "Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join table operations to table-level Catalogue observations by table_id and execution workspace, retaining the physical destination separately. File participants reuse their existing Source ID as the common Catalogue asset key; released Run descriptors are unchanged. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
         "primary_key": ["run_id"],
         "foreign_keys": [
             {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
@@ -209,33 +211,19 @@ METADATA_TABLE_MODELS = {
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "Lists registered tables and columns, where they are stored, their data types and whether they are still active.",
-        "grain": "One current table or column observation in one workspace.",
-        "implementation_notes": "The current structural registry of known table and column assets. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
+        "purpose": "Lists registered table and file assets and their columns, their physical location and active status.",
+        "grain": "One current table/file asset or one of its columns in one workspace.",
+        "implementation_notes": "The current structural registry of table and file assets. asset_type is TABLE or FILE; historical null types with table_id mean TABLE. table_id is the common asset key. File asset rows use metadata_level=file and their existing selector identity in table_id. Column rows use metadata_level=column, asset_type=FILE and canonical column_id derived from table_id and normalized column name. Physical workspace_id/item_id, layer and normalized relative_path identify the Lakehouse selector; replacement at the same path preserves identity. first_observed_at is retained and last_observed_at advances on successful observations. Both asset types use workspace_id + table_id + column_id. Asset rows have null column_id. Tabular files register their observed columns even when profiling is disabled; removed columns become inactive and reappearing columns reuse their IDs. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
         "primary_key": ["workspace_id", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [
-            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Processing State, Enrichment, Access and Guardrail rows over time."},
+            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Enrichment, Access and Guardrail rows over time."},
         ],
-    },
-    "METADATA_PROCESSING_STATE": {
-        "purpose": "Stores source observations, accepted checkpoints, Source Drift baselines and publication receipts so pipelines can resume and recover processing safely.",
-        "grain": "One source snapshot partition/header, source-to-target progress member, or exact target publication receipt.",
-        "implementation_notes": "Stores incremental source observations/checkpoints and target publication receipts, plus pipeline-owned complete-source snapshots. source_snapshot manifests and source_row_evidence hash multiplicities are immutable; source_drift_baseline heads are shared by execution workspace and physical workspace/item/table. source_snapshot_acceptance retains successful history. Source Drift heads advance together only after confirmed whole-run finalization and verified required publications through a Serializable conditional transaction. Historical drift_baseline and full_source_baseline records are retained without new Contract authority. Hash rows stay distributed and are excluded before compact checkpoint history is collected.",
-        "primary_key": ["record_id"],
-
-        "foreign_keys": [
-            {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned records retain the originating logical run; standalone records may have no run record."},
-            {"local_field": "source_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Observed source identity; null on target-only publication receipts. Physical sources can be observed before Catalogue registration."},
-            {"local_field": "target_table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Target whose verified publication accepts progress; null on unbound source observations."},
-            {"local_field": "publication_id", "referenced_table": "METADATA_PROCESSING_STATE", "referenced_field": "record_id", "cardinality": "N:1", "statement": "Target-specific publication_receipt referenced by checkpoints and baselines; the receipt uses its own record_id."},
-        ],
-        "relationships": [],
     },
     "METADATA_DATA_PROFILED": {
-        "purpose": "Stores statistics about table columns from profiling runs, making it easier to understand the data and track changes over time.",
+        "purpose": "Stores column statistics for table or file profiling snapshots, with an explicit asset type and canonical identity.",
         "grain": "One column's statistics from one profiling snapshot.",
-        "implementation_notes": "See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
+        "implementation_notes": "Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
         "primary_key": ["profile_id"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many column profile snapshots can describe the same logical Catalogue table over time."},
@@ -248,7 +236,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_PROFILED_FREQUENCY": {
         "purpose": "Shows which values appear most often in a column and how frequently they occur.",
         "grain": "One recorded value and its frequency for a column in a profiling snapshot.",
-        "implementation_notes": "Frequency distributions retain Table ID, Column ID, workspace, captured names and datatype. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
+        "implementation_notes": "Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
             {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
@@ -270,7 +258,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
         "grain": "One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.",
-        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, canonical table_id or distinct file source_id, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
+        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
@@ -295,7 +283,6 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_CATALOGUE": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
-    "METADATA_PROCESSING_STATE": ["orchestrate_read", "orchestrate_write"],
     "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
     "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
@@ -309,7 +296,6 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_CONTRACT",
     "METADATA_DATA_CONTRACT_ACTIVATION",
     "METADATA_DATA_CATALOGUE",
-    "METADATA_PROCESSING_STATE",
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_ACCESS",
@@ -390,10 +376,14 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_DATA_CATALOGUE": {
         "__default__": [
             "fabricops_kit.pipeline.shared.execute_table_profile",
+            "fabricops_kit.pipeline.shared.persist_file_catalogue",
             "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled",
         ],
-        "__audit__": ["fabricops_kit.pipeline.shared._audit_literal_columns", "fabricops_kit.pipeline.shared._persist_grain_candidates"],
-        "profile_key_candidates_json": ["fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled", "fabricops_kit.pipeline.shared._persist_grain_candidates"],
+        **{field: ["fabricops_kit.pipeline.shared.persist_file_catalogue"] for field in
+           ("item_id", "relative_path", "file_format", "first_observed_at", "last_observed_at")},
+        "asset_type": ["fabricops_kit.pipeline.shared.persist_file_catalogue", "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled"],
+        "__audit__": ["fabricops_kit.pipeline.shared._audit_literal_columns", "fabricops_kit.pipeline.shared._persist_grain_candidates", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
+        "profile_key_candidates_json": ["fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled", "fabricops_kit.pipeline.shared._persist_grain_candidates", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
         "data_type": ["fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled"],
         "table_id": [
             "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
@@ -539,26 +529,6 @@ METADATA_COLUMN_OWNERS = {
         "__default__": ["fabricops_kit.pipeline.shared.pipeline_run_row", "fabricops_kit.pipeline.shared.persist_pipeline_run"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
-    "METADATA_PROCESSING_STATE": {
-        "__default__": [
-            "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-            "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-            "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "run_id": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared.stage_pipeline_write_observations", "fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "source_table_id": [
-            "fabricops_kit.pipeline.shared.commit_pipeline_write_success",
-            "fabricops_kit.config.shared.build_table_id",
-        ],
-        "target_table_id": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "source_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "target_table_name": ["fabricops_kit.pipeline.shared.commit_pipeline_write_success"],
-        "record_id": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records"],
-        "record_type": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records"],
-        "status": ["fabricops_kit.pipeline.shared.capture_source_observation", "fabricops_kit.pipeline.shared._pipeline_write_state_records", "fabricops_kit.pipeline.shared._recover_completed_source_observations"],
-        "publication_id": ["fabricops_kit.pipeline.shared._pipeline_write_state_records"],
-        "publication_at": ["fabricops_kit.pipeline.shared._pipeline_write_state_records"],
-    },
 }
 
 USAGE_NOTE_BY_FUNCTION = {
@@ -637,7 +607,7 @@ MODULE_DOCS_METADATA = [
 TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`00_env_config`',
   'segment_intro': 'Shared workspace bootstrap and metadata table setup.',
-  'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_metadata_tables'],
+  'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_metadata_tables', 'setup_processing_state'],
                 'title': 'Workspace setup'}],
   'template_path': 'templates/notebooks/00_env_config.ipynb'},
  {'notebook_key': '00C_demo_setup',
@@ -931,7 +901,7 @@ PUBLIC_SYMBOL_DOCS = [
  'do_not_use_when': 'Use lower-level capabilities directly when intentionally composing a non-standard lifecycle.',
  'parameters': 'Table coordinates and full/incremental/query options, or relative_path, file_format and read_options for full-only Lakehouse file reads. File selectors retain Source IDs and approved reader settings; incremental tables still require target coordinates.',
  'returns': 'Source DataFrame with canonical Table ID or distinct file Source ID, source location, metrics, profiling outcome and every stage result.',
- 'side_effects': 'Dry Run retains diagnostics and profiles in memory without operational commits. Persistent modes record Run and Guardrail results. File profiles remain session-only. Table reads retain existing '
+ 'side_effects': 'Dry Run retains diagnostics and profiles in memory without operational commits. Persistent modes record Run and Guardrail results. Successful file operations persist Catalogue, typed Profile/Frequency snapshots and Lineage using Source ID; Dry Run stays in memory. Table reads retain existing '
                  'Catalogue/Profile metadata.',
  'preferred_example': 'source = orchestrate_read(store="Bronze", schema="demo", '
                       'table_name="orders")',
@@ -1047,6 +1017,20 @@ PUBLIC_SYMBOL_DOCS = [
                       'path': 'https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks'},
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
+ {'kind': 'function',
+  'module': 'config.setup_processing_state',
+  'function_type': 'callable',
+  'symbol_name': 'setup_processing_state',
+  'template_notebook': '00_env_config',
+  'template_segment': 'Workspace setup',
+  'summary_override': 'Create or validate the operational Processing State Delta table.',
+  'when_to_use': 'Lakehouse bootstrap calls this under the owner’s identity before pipelines run.',
+  'side_effects': 'Creates or validates misc.PROCESSING_STATE in the configured shared Lakehouse.',
+  'return_interpretation': 'Created indicates an empty store was initialized. Validated indicates an existing store was checked.',
+  'common_failure_causes': ['The existing store has an incompatible schema or lacks Serializable isolation.',
+                            'The caller lacks access to the shared Lakehouse.'],
+  'related_functions': ['setup_metadata_tables'],
+  'related_guides': [{'title': 'Processing State setup', 'path': '../../maintainer/processing-state.md'}]},
  {'kind': 'function',
   'module': 'widgets.widget_data_steward',
   'function_type': 'callable',
@@ -1762,7 +1746,7 @@ PUBLIC_SYMBOL_DOCS.append({
     'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
     'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
     'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.',
-    'side_effects': 'With reset=True, clears all 13 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
+    'side_effects': 'With reset=True, clears all 12 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
     'fabric_context': 'Requires successful setup_notebook, a manually created schema-enabled demo_metadata Lakehouse and configured Bronze/Silver/Gold stores with uploaded Files/demo fixtures.',
     'preferred_example': 'from fabricops_kit import setup_notebook, orchestrate_demo_reset\n\ncontext = setup_notebook()\nRESET_DEMO = False\norchestrate_demo_reset(reset=RESET_DEMO)',
     'related_functions': ['setup_notebook', 'setup_metadata_tables'],
@@ -2156,7 +2140,7 @@ PUBLIC_SYMBOL_DOCS.append({
     "use_when": "Use for standalone physical output without pipeline profiling or metadata persistence.",
     "do_not_use_when": "Use orchestrate_write when a file must participate in an active pipeline.",
     "returns": "Dictionary with actual output path, publication status and available filesystem metrics.",
-    "raises": "ValueError for invalid arguments, FileExistsError for collisions, RuntimeError for destination failures.",
+    "raises": "ValueError for invalid arguments or append_all targeting a physical file; RuntimeError for destination failures.",
     "side_effects": "Writes Spark data; single-file output and dataset overwrite stage output before publication. Overwrite preserves a backup; failed publication retains recovery paths for inspection.",
     "fabric_context": "Uses configured Lakehouse routing and the DataFrame-owned Spark Hadoop filesystem.",
     "preferred_example": 'write_lakehouse_file(dataframe=final_df, relative_path="Exports/orders.csv", store="Silver", file_format="csv", write_options={"header": True})',

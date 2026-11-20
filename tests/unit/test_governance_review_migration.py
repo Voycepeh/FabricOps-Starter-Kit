@@ -138,6 +138,8 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     assert duplicate_legacy_fields.isdisjoint(catalogue_fields)
     expected_catalogue_fields = [
         "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
         "column_id",
         "workspace_id",

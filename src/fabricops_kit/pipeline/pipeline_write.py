@@ -434,7 +434,7 @@ def pipeline_write(
     suppress a newly requested keyed merge. Warehouse writes also stage target-only
     publication receipts when no incremental or Source Drift observations exist;
     these receipt records never establish or advance a source watermark.
-    ``METADATA_PROCESSING_STATE.record_type`` distinguishes source observations,
+    Processing State’s ``record_type`` distinguishes source observations,
     incremental checkpoints, drift baselines and publication receipts. Checkpoints
     and baselines link to one typed receipt through publication_id; staged members
     and their receipt are acknowledged in one Delta merge.

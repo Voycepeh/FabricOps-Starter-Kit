@@ -55,9 +55,6 @@ def orchestrate_write(
     relative_path: str | None=None,
     file_format: str | None=None,
     write_options: dict[str, Any] | None=None,
-    single_file: bool=False,
-    max_single_file_rows: int=1000000,
-    max_single_file_bytes: int=134217728,
 ) -> dict[str, Any]:
 ```
 
@@ -77,18 +74,15 @@ Required describes the Python signature. An optional parameter may still be need
 | `store` | `str` | Yes | `—` | Configured target store key. |
 | `schema` | `str \| None` | No | `None` | Explicit physical table schema; pass None for a schemaless store or omit for files. |
 | `table_name` | `str \| None` | No | `None` | Physical target table name; omit for file destinations. |
-| `write_mode` | `str` | Yes | `—` | Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: errorifexists, overwrite, append, ignore. |
+| `write_mode` | `str` | Yes | `—` | Table strategies: overwrite, append_all, append_new_only, scd1, scd2, captured exactly by Pipeline Activation. File modes: overwrite, append_all. |
 | `write_parameters` | `dict[str, Any] \| None` | No | `None` | Strategy parameters including SCD key_columns and SCD2 effective_column. |
-| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. |
+| `repartition_by` | `int \| None` | No | `None` | Physical write partition count for persistent modes. File exports apply this before staging: small output coalesces to one file; distributed overflow and append_all preserve the requested partition count. |
 | `existing_mapping` | `object` | No | `None` | Caller-managed Sensitive Data mapping; incompatible with a configured vault. Existing assignments are reused. The returned sensitive_result.support_mapping remains caller-owned; persist it only in persistent workflows, then unpersist() its cache after consumption. A configured restricted mapping store is read-only during Dry Run and reused/updated during persistent writes. Failures release the cache. |
 | `verbose` | `bool` | No | `False` | Print concise stages and outcome when True; the execution widget reports automatically by default. |
 | `dq_diagnostics` | `str` | No | `'sample'` | Exact metrics with bounded samples, no samples or lazy full violations. |
 | `relative_path` | `str \| None` | No | `None` | Exact destination beneath the configured Lakehouse Files area. |
 | `file_format` | `str \| None` | No | `None` | Required with relative_path. JSON is newline-delimited. |
 | `write_options` | `dict[str, Any] \| None` | No | `None` | Spark file writer options. Cannot override destination, mode or layout. |
-| `single_file` | `bool` | No | `False` | Opt into one named artifact; default output is a Spark dataset folder. |
-| `max_single_file_rows` | `int` | No | `1000000` | Bounded count safeguard before single-file staging. |
-| `max_single_file_bytes` | `int` | No | `134217728` | Encoded-byte safeguard before single-file publication. Coalescing uses one executor; these caps do not bound its working memory. Single CSV/JSON is uncompressed. See write_lakehouse_file for filesystem limitations. |
 
 </div>
 
@@ -122,6 +116,10 @@ dict
     call ``result["dataframe"].unpersist()`` when inspection is complete.
     File results instead return the supplied DataFrame without caching or
     table preparation, a source_id, resolved_path and filesystem write_metrics.
+    File output_layout, overflow_occurred and overflow_reason describe the actual
+    publication and are retained in file_write_parameters_json on the operation.
+    Dry Run leaves actual layout and overflow unknown (None) and returns a
+    publication_status=not_published because it does not stage or publish output.
     ``rows_committed`` measures this attempt; ``total_target_rows`` is the
     destination total where profiling provides it.
 
@@ -138,27 +136,39 @@ Not documented yet
 
 Define the dataframe, destination, write_mode and processing parameters.
 Select either store/schema/table_name for tables or store/relative_path/file_format
-for Lakehouse Files. File modes are errorifexists, overwrite, append and ignore;
-table-only append_all, Append New Only and SCD strategies are rejected for files.
+for Lakehouse Files. File modes are overwrite and append_all;
+Append New Only and SCD strategies are table-only.
 Files support Dry Run and Ungoverned; Governed file targets fail closed because
-current Pipeline Promotion authorizes only file Reads. No file Table ID or
-table Data Contract is manufactured. Protected file destinations and overlapping
+current Pipeline Promotion authorizes only file Reads. Files reuse their existing identity as the common metadata table_id;
+asset_type=FILE distinguishes them from tables. Table Contracts do not apply. Protected file destinations and overlapping
 folders remain blocked in Ungoverned mode. Incremental checkpoint publication
 is table-only; file writes require Full Read sources.
 
-File profiling uses the supplied DataFrame and setup_pipeline settings, remains
-session-local, and persists no table profile snapshots. File overwrite profiles
+File profiling uses the supplied DataFrame and setup_pipeline settings.
+Successful publication persists typed file snapshots in
+METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY, using common
+Table IDs and deterministic Column IDs; Dry Run stays in memory. File overwrite profiles
 its supplied input before publication so lazy reads of the target remain valid.
 A bounded profile cannot
-establish complete row counts. Ignored output is never reported as published.
+establish complete row counts.
+File overwrite attempts one physical file and automatically overflows above
+internal limits of 1,000,000 rows or 100,000,000 encoded bytes (100 MB), keeping
+every row at the exact requested path. append_all always uses a dataset folder.
+These are internal safety limits, not Microsoft OneLake limits. CSV/JSON
+overwrite exports are uncompressed; Parquet retains internal compression.
+Stable, deterministic input is required across count, staging and fallback
+actions. Size checks never bound executor memory; unrelated failures propagate.
+See write_lakehouse_file for nontransactional publication and recovery caveats.
 File options, physical location, publication status and available filesystem
 metrics are retained in METADATA_PIPELINE_RUN operations. File targets do not
-receive table audit columns, row hashes, SCD processing or table lineage.
+receive table audit columns, row hashes or SCD processing. Successful file Writes register FILE target
+participation in METADATA_PIPELINE_RUN.operations and the selector in METADATA_DATA_CATALOGUE.
 A successful file Write leaves the pipeline open for finalize_pipeline().
 All reads registered in this execution are associated with this target as
 pipeline participants, not proven transformation dependencies. File participation
 is returned under source_ids and retained separately from source_table_ids in
-Run operations; it never manufactures table lineage. Dry Run evaluates
+Run operations as source_ids. The participation projection reuses these as
+common table_id asset keys and retains the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
 processing and applicable Guardrails without publishing or committing metadata.
 Ungoverned writes without contract checks but cannot target an already governed
 table. Governed requires activated contracts, ownership and a pinned revision.
@@ -192,9 +202,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:30`
+`fabricops_kit/pipeline/orchestrate_write.py:32`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L348">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L356">View on GitHub</a>
 </div>
 
 
@@ -210,7 +220,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 277 |
+| Live-critical dependencies | 279 |
 
 ### Release history
 
@@ -221,6 +231,7 @@ No related guides documented.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -259,6 +270,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_dataframe</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
@@ -314,7 +326,6 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.execute_warehouse_sql</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
 <li><code>fabricops_kit.io.shared.lakehouse_file_filesystem</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
 <li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
 <li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
@@ -465,6 +476,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>

@@ -43,11 +43,11 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 
 1. Run with `False` to inspect metadata counts. No data is changed.
 2. Stop all demo schedules and executions, including earlier promoted copies. Set `True` and run the cell to reset.
-3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate all ten foundational I/O functions: four file readers, Lakehouse and Warehouse writers, table readers, and SQL query readers. The guarded write examples repeat the same Products and Order History Day 1 fixture writes, then check persisted row counts and display five-row SQL samples. Run them immediately after reset, before starting the scenario days; `RESET_DEMO = False` skips the table writes and reads.
+3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate all eleven foundational I/O functions: four file readers, Lakehouse Files and table writers, Warehouse table writing, table readers, and SQL query readers. The guarded write examples repeat the same Products and Order History Day 1 fixture writes, then check persisted row counts and display five-row SQL samples. Run them immediately after reset, before starting the scenario days; `RESET_DEMO = False` skips the table writes and reads.
 
 !!! warning "Dedicated demo environment only"
 
-    `True` deletes **all rows in the 13 canonical metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Historical `METADATA_DATA_LINEAGE` rows are retained. Stop demo jobs first. Never use shared or production assets.
+    `True` deletes **all rows in the 12 canonical metadata tables**, including Contracts, activations and history, plus saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Historical `METADATA_DATA_LINEAGE` rows are retained. Stop demo jobs first. Never use shared or production assets.
 
 ??? info "Checks before deletion and reset scope"
 
@@ -155,6 +155,22 @@ display(orders_csv_df)
     ✓ 1:1:1:1 data match
     ```
 
+
+## Validate foundational Lakehouse Files writing
+
+After the reset completes, run the **Foundational Lakehouse Files write smoke test** cell in `00C_demo_setup.ipynb`. It exercises the Preview `write_lakehouse_file()` function for all three supported formats, independently of the governed `orchestrate_write()` example in 02A.
+
+| Format | Disposable Silver destination | First write | Overwrite |
+| --- | --- | --- | --- |
+| CSV | `Files/demo/fabricops_io_smoke/orders.csv` | 121 rows | 120 rows |
+| JSON | `Files/demo/fabricops_io_smoke/orders.json` | 121 rows | 120 rows |
+| Parquet | `Files/demo/fabricops_io_smoke/orders.parquet` | 121 rows | 120 rows |
+
+The cell adds one unique test row to the original 120-row Orders DataFrame, writes each format as a single file, reads it back with the corresponding foundational reader, and verifies both the row count and the new row. It then overwrites each file with the original 120 rows and confirms the test row is absent. The final assertion checks that the original Bronze Orders CSV still contains 120 rows.
+
+These Silver files are disposable test outputs, **not** inputs to 02A, 02B or 02C. Do not modify `Bronze/Files/demo/orders.csv` or the other original fixtures. The test requires Silver Files write permissions. If a write reports an ambiguous publication failure or recovery paths, inspect them before retrying. This is a Fabric smoke test, not a substitute for testing governed file writing in 02A.
+
+Expected notebook messages: `PASS: CSV`, `PASS: JSON`, `PASS: PARQUET`, and `PASS: Bronze Orders fixture unchanged`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">

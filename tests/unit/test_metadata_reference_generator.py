@@ -201,8 +201,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 13
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
+    assert len(links) == 12
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -402,7 +402,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -411,7 +411,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) >= 14
+    assert len(connectors) >= 13
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
@@ -438,11 +438,13 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         a.find(f"{namespace}rect") for a in svg_tree.findall(f".//{namespace}a")}
     expected_rows = [
         ["DATA_CONTRACT", "DATA_CONTRACT_ACTIVATION", "DATA_AGREEMENT", "DATA_STEWARD", "PIPELINE_ACTIVATION"],
-        ["DATA_CATALOGUE", "PROCESSING_STATE", "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
+        ["DATA_CATALOGUE", None, "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
         ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"],
     ]
     for names in expected_rows:
-        assert [float(boxes[name].get("x")) for name in names] == [35 + 390 * i for i in range(len(names))]
+        for column, name in enumerate(names):
+            if name is not None:
+                assert float(boxes[name].get("x")) == 35 + 390 * column
     assert boxes["PIPELINE_ACTIVATION"].get("x") == "1595"
     assert boxes["DATA_CONTRACT_ACTIVATION"].get("x") == "425"
     assert "Engineering deployment evidence" in svg.read_text(encoding="utf-8")

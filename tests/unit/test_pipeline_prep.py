@@ -570,7 +570,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     rows = []
     attempts = []
     targets = []
-    monkeypatch.setattr("time.sleep", lambda _: None)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", lambda _: None)
 
     class FabricConflict(Exception):
         def getErrorClass(self):  # noqa: N802

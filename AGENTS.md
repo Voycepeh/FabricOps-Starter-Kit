@@ -16,10 +16,10 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
-  - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
-  - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
+  - `METADATA_DATA_CATALOGUE` stores typed TABLE/FILE assets: one common table_id asset key and deterministic column_id for either type, physical location, data type, and table processing-definition fields. Files reuse their existing selector identity as table_id; released source descriptors retain source_id.
+  - `METADATA_DATA_PROFILED` stores table-column or file-column snapshot metrics. Both types use table_id and column_id, distinguished by asset_type.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
-  - `METADATA_PIPELINE_RUN.operations` stores source/target participation for each Run; flatten operations for Catalogue joins. `METADATA_DATA_LINEAGE` is retained historical activity metadata and is never written or deleted by current workflows.
+  - `METADATA_PIPELINE_RUN.operations` stores typed table/file source/target participation per Run. Flatten operations for Catalogue joins using the existing asset identity. `METADATA_DATA_LINEAGE` is retained historical activity metadata; current workflows never write or delete it.
   - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
   - `METADATA_DATA_CONTRACT_ACTIVATION` stores retained Governance-owned exact frozen Contract selections and scoped Agreement associations per physical workspace/Table ID.
   - `METADATA_PIPELINE_ACTIVATION` stores immutable accepted submission packages and conditional Governance decision history. Governance owns the whole Metadata Lakehouse; Engineering has scoped writes only.
@@ -27,7 +27,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_PIPELINE_RUN` stores one authoritative execution with validated JSON STRING operations, profiling and failures. New version 3 records include Pipeline Promotion provenance and execution identity. Preserve released Run content/hash semantics and exact Contract references per operation.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
-  - `METADATA_PROCESSING_STATE` stores typed Processing State: source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before metadata progress is accepted.
+- Processing State uses the operational Delta table `misc.PROCESSING_STATE` in the configured shared Lakehouse. It stores typed source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before progress is accepted.
 
 ## Canonical terminology and glossary
 
@@ -244,7 +244,7 @@ Validation builds do not make generated files on `main` current unless those fil
 - Do not maintain duplicate manual callable lists.
 - Public callable pages are sourced from `src/fabricops_kit/` docstrings and source metadata.
 - Do not manually edit generated reference pages as source of truth.
-- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
+- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source. The pipeline owns the separate Processing State schema.
 - `Managed by` entries should identify exact source functions when traceable.
 - Use `.agents/skills/fabricops-docs-maintenance/SKILL.md` for documentation ownership, readability, Guided Demo, Featured Solutions, and diagram procedure.
 - Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Only `00_env_config.ipynb` and `02_pipeline.ipynb` are currently part of the release snapshot contract.

@@ -103,6 +103,13 @@ Open sessions require the current initialized notebook configuration and
 runtime identity, whether passed explicitly or selected implicitly. Already
 closed sessions retain their recorded outcome for repeat finalization.
 
+The notebook summary identifies table and file operations. Files show their
+configured Store, path beneath Files, format and, for Writes, output layout,
+publication status and available output file/byte counts. Filesystem counts
+describe the output, not rows committed by this attempt. Missing historical
+details remain not captured. Rendering uses retained operation records and
+session metadata without reading source or target data again.
+
 Dry Run returns a session-only summary and persists no target, watermark,
 processing state, profile observation or run metadata. A completed captured
 Dry Run retains complete saved-definition and test claims in Engineering
@@ -128,9 +135,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:192`
+`fabricops_kit/pipeline/finalize_pipeline.py:219`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L304">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L219-L338">View on GitHub</a>
 </div>
 
 
@@ -146,7 +153,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 121 |
+| Live-critical dependencies | 122 |
 
 ### Release history
 
@@ -156,6 +163,7 @@ No related guides documented.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -212,6 +220,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>

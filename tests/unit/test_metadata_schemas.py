@@ -32,7 +32,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_PIPELINE_RUN": "engineering",
         "METADATA_PIPELINE_REGISTRY": "engineering",
         "METADATA_PIPELINE_ACTIVATION": "governance",
-        "METADATA_PROCESSING_STATE": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -46,7 +45,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
         engineering_metadata_schema = "observed"
 
     assert metadata_table_physical_schema(Config(), "METADATA_DATA_CONTRACT") == "approved"
-    assert metadata_table_physical_schema(Config(), "METADATA_PROCESSING_STATE") == "observed"
+    assert metadata_table_physical_schema(Config(), "METADATA_PIPELINE_RUN") == "observed"
 
 
 def test_data_contract_uses_versioned_table_or_file_schema():
@@ -77,6 +76,8 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
         "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
         "column_id",
         "workspace_id",
@@ -104,7 +105,8 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:21] == [
+    assert fields[:24] == [
+        "asset_type", "run_id", "pipeline_role",
         "profile_id",
         "profile_snapshot_id",
         "table_id",
@@ -147,6 +149,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
     assert "frequency_json" not in registry["METADATA_DATA_PROFILED"].fieldNames()
     fields = registry["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames()
     assert fields == [
+        "asset_type", "run_id", "pipeline_role",
         "frequency_id",
         "profile_id",
         "profile_snapshot_id",
@@ -178,7 +181,9 @@ def test_participation_is_nested_in_run_operations():
 
 def test_stage2_source_observation_schema_is_guardrail_independent():
     """Persist reusable source evidence with the standard commit timestamp only."""
-    fields = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"].fieldNames()
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    fields = processing_state_schema().fieldNames()
     assert fields == [
         "record_id",
         "record_type",
@@ -292,17 +297,15 @@ def test_definition_tables_are_retired_but_results_remain():
 
 
 def test_incompatible_processing_state_is_rejected_without_changing_progress():
-    """Even an empty old table must not be evolved into accepted v2 progress."""
-    import importlib
-    import pytest
+    """Reject the legacy Preview layout at the Processing State boundary."""
     from pyspark.sql.types import StructType, StructField, StringType
-    setup = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
-    schema = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]
+
+    from fabricops_kit.pipeline.shared import processing_state_schema, validate_processing_state_schema
+
     legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
-    for allow_missing in (True, False):
-        with pytest.raises(ValueError, match="Incompatible.*Existing checkpoints"):
-            setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", legacy, schema, allow_missing=allow_missing)
-    assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
+    with pytest.raises(RuntimeError, match="Incompatible.*Existing checkpoints"):
+        validate_processing_state_schema(legacy)
+    validate_processing_state_schema(processing_state_schema())
 
 
 def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
@@ -313,18 +316,18 @@ def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
 
     setup = import_module("fabricops_kit.config.setup_metadata_tables")
     registry = metadata_table_schema_registry()
-    for table in ("METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PROCESSING_STATE"):
-        expected = registry[table]
-        existing = StructType([
-            *expected.fields[1:],
-            StructField("outdated_column", StringType()),
-        ])
-        with pytest.raises(ValueError) as error:
-            setup._validate_existing_metadata_schema(table, existing, expected)
-        message = str(error.value)
-        assert f"Missing columns: {expected.fields[0].name}" in message
-        assert "Unexpected columns: outdated_column" in message
-        assert "preserved" in message
+    table = "METADATA_DATA_CONTRACT_ACTIVATION"
+    expected = registry[table]
+    existing = StructType([
+        *expected.fields[1:],
+        StructField("outdated_column", StringType()),
+    ])
+    with pytest.raises(ValueError) as error:
+        setup._validate_existing_metadata_schema(table, existing, expected)
+    message = str(error.value)
+    assert f"Missing columns: {expected.fields[0].name}" in message
+    assert "Unexpected columns: outdated_column" in message
+    assert "preserved" in message
 
 
 def test_incompatible_metadata_schema_reports_wrong_column_types():
@@ -344,9 +347,9 @@ def test_incompatible_metadata_schema_reports_wrong_column_types():
 
 
 def test_processing_state_table_has_no_legacy_alias():
-    """Only the renamed table is canonical; release history does not grant an alias."""
+    """Neither legacy name is a canonical table."""
     registry = metadata_table_schema_registry()
-    assert "METADATA_PROCESSING_STATE" in registry
+    assert "METADATA_PROCESSING_STATE" not in registry
     assert "METADATA_SOURCE_OBSERVATION" not in registry
 
 

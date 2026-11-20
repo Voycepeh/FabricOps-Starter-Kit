@@ -124,9 +124,13 @@ Not documented yet
 Define store, schema, table_name and any full/incremental/query options.
 Alternatively select a Lakehouse file, folder or wildcard using relative_path,
 file_format and read_options. Files support full reads only and retain their
-stable Source ID, with no Table ID. Foundational readers remain independent.
-File profiles are calculated in memory per execution (including persistent
-modes), using the pipeline row limit; no table profile snapshot is persisted.
+stable Source ID in the public response. Shared metadata stores that same
+identity value in table_id with asset_type=FILE. Foundational readers remain independent.
+Successful persistent Reads register the file in METADATA_DATA_CATALOGUE
+and record participation in METADATA_PIPELINE_RUN.operations with the Run ID. File profiles
+and frequency results use that common Table ID and stable Column IDs in
+METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
+in memory. Profiling uses the pipeline row limit and records selection scope.
 A replaced file can be read again in a new execution; no exactly-once or
 immutable-file guarantee is provided.
 Spark, execution authority and reporting come from setup_pipeline. The result
@@ -167,7 +171,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L234">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L238">View on GitHub</a>
 </div>
 
 
@@ -183,7 +187,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 264 |
+| Live-critical dependencies | 270 |
 
 ### Release history
 
@@ -194,6 +198,7 @@ No related guides documented.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -232,6 +237,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_dataframe</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
@@ -274,6 +280,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared._validate_relative_path</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_file_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_file_location</code></li>
@@ -284,6 +291,7 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.io.shared.validate_select_query</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 <li><code>fabricops_kit.pipeline.check_dq.check_dq</code></li>
 <li><code>fabricops_kit.pipeline.check_freshness.check_freshness</code></li>
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
@@ -431,10 +439,13 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.prepare_pipeline_execution</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_guardrail_result</code></li>
 <li><code>fabricops_kit.pipeline.shared.print_pipeline_contract</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_completion_history</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_context_key</code></li>
 <li><code>fabricops_kit.pipeline.shared.profiling_due</code></li>
 <li><code>fabricops_kit.pipeline.shared.read_file_participant</code></li>
+<li><code>fabricops_kit.pipeline.shared.read_processing_state</code></li>
 <li><code>fabricops_kit.pipeline.shared.record_profiling_outcome</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_catalogue_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>

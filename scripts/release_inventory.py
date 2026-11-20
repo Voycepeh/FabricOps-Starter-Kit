@@ -572,14 +572,32 @@ def render_release_pages() -> list[Path]:
         raise SystemExit(f"Release manifest not found: {path}. Run scripts/generate_release_inventory.py first.")
     _validate_manifest(manifest, version)
     release_dir = ROOT / "docs" / "releases" / version
+    releases_index = release_dir.parent / "index.md"
     release_status_text = str(manifest.get("release_status") or "preparing").lower()
     notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
     if release_status_text != "live":
         if release_dir.exists():
             shutil.rmtree(release_dir)
-        releases_index = ROOT / "docs" / "releases" / "index.md"
         releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
         return [releases_index]
+    live = {group: live_release_items(manifest, group) for group in GROUPS}
+    current_tables = {asset.name for asset in discover_metadata_tables()}
+    removed_tables = [item["name"] for item in live["metadata_tables"] if item["name"] not in current_tables]
+    if removed_tables:
+        # Released pages already contain the schema from the tagged source.
+        source_ref = str(manifest.get("source_ref") or "")
+        pages = [release_dir / "index.md"] + [
+            release_dir / CATEGORY_DIRS[group] / _page_name(item["name"])
+            for group in GROUPS for item in live[group]
+        ]
+        if not TAG_SOURCE_REF_RE.fullmatch(source_ref) or not all(page.is_file() for page in pages):
+            names = ", ".join(removed_tables)
+            raise ValueError(
+                f"Release {version} includes historical tables ({names}). "
+                f"Restore its frozen pages from {source_ref or 'the release source'} before rendering."
+            )
+        releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
+        return [releases_index, *pages]
     try:
         notes = extract_changelog_notes(version)
     except ValueError as exc:
@@ -593,7 +611,6 @@ def render_release_pages() -> list[Path]:
             if child.is_dir() or child.suffix == ".md":
                 shutil.rmtree(child) if child.is_dir() else child.unlink()
     release_dir.mkdir(parents=True, exist_ok=True)
-    live = {group: live_release_items(manifest, group) for group in GROUPS}
     release_status = manifest.get("release_status") or "Live"
     release_date = _parse_release_date(manifest.get("release_date"))
 
@@ -648,7 +665,6 @@ def render_release_pages() -> list[Path]:
             page.write_text(content, encoding="utf-8")
             paths.append(page)
 
-    releases_index = ROOT / "docs" / "releases" / "index.md"
     releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
     return [releases_index, *paths]
 

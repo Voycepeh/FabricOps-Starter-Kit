@@ -97,13 +97,13 @@ def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any
 
 
 def current_catalogue_observations(rows):
-    """Return current active assets without reviving older inactive columns."""
+    """Return active table/file assets and their current registered columns."""
     latest = _latest(row_dicts(rows), ("workspace_id", "table_id", "metadata_level", "column_id"))
-    active_tables = {(str(row.get("workspace_id") or ""), str(row.get("table_id") or ""))
+    active_assets = {(str(row.get("workspace_id") or ""), str(row.get("table_id") or ""))
                      for row in latest if row.get("is_active") is not False
-                     and str(row.get("metadata_level") or "").lower() == "table"}
+                     and str(row.get("metadata_level") or "").lower() in {"table", "file"}}
     return [row for row in latest if row.get("is_active") is not False
-            and (str(row.get("workspace_id") or ""), str(row.get("table_id") or "")) in active_tables]
+            and (str(row.get("workspace_id") or ""), str(row.get("table_id") or "")) in active_assets]
 
 
 def observation_selector_options(rows, *, table_id=None, workspace_id=None):
@@ -154,7 +154,7 @@ def pipeline_file_datasets(rows, *, config, workspace_id):
     previously authored Contracts are handled independently.
     """
     from fabricops_kit.config.shared import get_store
-    from uuid import uuid5, NAMESPACE_URL
+    from fabricops_kit.config.shared import build_column_id
     paths = config.get("path_config", {}) if isinstance(config, Mapping) else config.path_config
     paths = paths.get("paths", paths) if isinstance(paths, Mapping) else paths.paths
     candidates = {}
@@ -185,7 +185,7 @@ def pipeline_file_datasets(rows, *, config, workspace_id):
                 )
                 if source["source_id"] != operation.get("source_id"):
                     continue
-                columns = [{"column_id": str(uuid5(NAMESPACE_URL, source["source_id"] + ":" + col["column_name"])),
+                columns = [{"column_id": build_column_id(source["source_id"], col["column_name"]),
                             "column_name": col["column_name"], "data_type": col["data_type"]}
                            for col in columns_raw if isinstance(col, Mapping)
                            and isinstance(col.get("column_name"), str) and isinstance(col.get("data_type"), str)]
@@ -1116,22 +1116,30 @@ def get_contract_review_state(
     }
 
 
-def get_table_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id):
-    """Load table participation across execution workspaces, filtering in Spark."""
+def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id):
+    """Load the latest asset attempt per pipeline/workspace/role, bounded in Spark."""
     from pyspark.sql import functions as F
+    from pyspark.sql import Window
     from fabricops_kit.pipeline.shared import pipeline_participation
 
     context = {**(_metadata_io_context(config, routing_workspace_id) or {}), "_spark_session": spark_session}
     runs = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
         schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
-    return row_dicts(pipeline_participation(runs).filter(F.col("table_id") == table_id))
+    participants = pipeline_participation(runs).filter(F.col("table_id") == table_id)
+    latest = Window.partitionBy("execution_workspace_id", "pipeline_id", "pipeline_role").orderBy(
+        F.coalesce(*[F.col(name).cast("timestamp") for name in (
+            "operation_completed_at", "operation_started_at", "run_completed_at", "run_started_at")]).desc(),
+        F.col("run_id").desc(),
+    )
+    return row_dicts(participants.withColumn("_participation_rank", F.row_number().over(latest))
+                    .filter(F.col("_participation_rank") == 1).drop("_participation_rank"))
 
 
-def get_table_runtime_context(
+def get_asset_runtime_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return latest profile provenance and cross-workspace pipeline usage for one table."""
+    """Return profile provenance and source/target usage for one typed data asset."""
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
@@ -1317,7 +1325,7 @@ def get_table_runtime_context(
         }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for row in get_table_pipeline_participation(config=config, routing_workspace_id=routing_workspace_id,
+    for row in get_asset_pipeline_participation(config=config, routing_workspace_id=routing_workspace_id,
                                                spark_session=spark_session, table_id=table_identity):
         raw_role = str(row.get("pipeline_role") or "").strip().lower()
         relationship = "Writer" if raw_role == "target" else "Reader" if raw_role == "source" else ""
@@ -1328,7 +1336,7 @@ def get_table_runtime_context(
         pipeline_id = str(row.get("pipeline_id") or row.get("_notebook_id") or "").strip()
         key = (workspace_id, relationship, pipeline_id)
         previous = grouped.get(key)
-        rank = (metadata_timestamp_sort_key(row.get("operation_completed_at") or row.get("operation_started_at")), str(row.get("run_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at")), str(row.get("run_id") or ""))
         previous_rank = (
             metadata_timestamp_sort_key(previous.get("last_seen")),
             str(previous.get("run_id") or ""),
@@ -1344,7 +1352,7 @@ def get_table_runtime_context(
                 "operation_status": row["operation_status"],
                 "run_status": row["run_status"],
                 "publication_status": row.get("publication_status"),
-                "last_seen": row.get("operation_completed_at") or row.get("operation_started_at"),
+                "last_seen": row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at"),
             }
 
     participation = [
@@ -1380,7 +1388,9 @@ def get_column_profile_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     column_id: str, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return the latest column profile with optional top frequency evidence."""
+    """Return a table-column or file-column profile and its matching frequencies."""
+    fields = {"table_id": table_id, "column_id": column_id}
+    filters = [f"{name} = {_sql_literal(value)}" for name, value in fields.items()]
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     context = _metadata_io_context(config, routing_workspace_id)
     profiled = _scoped_rows(
@@ -1389,14 +1399,12 @@ def get_column_profile_context(
             schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
             context={**(context or {}), "_spark_session": spark_session},
         ),
-        f"table_id = {_sql_literal(table_id)}",
-        f"column_id = {_sql_literal(column_id)}",
+        *filters,
         f"workspace_id = {_sql_literal(active_workspace_id)}",
     )
     candidates = [
         row for row in profiled
-        if str(row.get("table_id") or "") == str(table_id)
-        and str(row.get("column_id") or "") == str(column_id)
+        if all(str(row.get(name) or "") == str(value) for name, value in fields.items())
         and str(row.get("workspace_id") or "") == active_workspace_id
         and str(row.get("status") or "completed").lower() == "completed"
     ]
@@ -1420,8 +1428,7 @@ def get_column_profile_context(
             ),
             *frequency_filters,
             f"workspace_id = {_sql_literal(active_workspace_id)}",
-            f"table_id = {_sql_literal(table_id)}",
-            f"column_id = {_sql_literal(column_id)}",
+            *filters,
         )
     except Exception as exc:
         if not any(

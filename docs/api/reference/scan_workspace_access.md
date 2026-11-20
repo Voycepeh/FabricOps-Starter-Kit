@@ -158,6 +158,7 @@ inspect the result without writing metadata.
 | Preview | 0.3.1 |
 | Preview | 0.4.0 |
 | Preview | 0.4.1 |
+| Preview | 0.5.0 |
 
 
 </details>
