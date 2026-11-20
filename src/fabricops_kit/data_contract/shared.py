@@ -1127,8 +1127,11 @@ def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_sess
         schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
     participants = pipeline_participation(runs).filter(F.col("table_id") == table_id)
     latest = Window.partitionBy("execution_workspace_id", "pipeline_id", "pipeline_role").orderBy(
-        F.coalesce(*[F.col(name).cast("timestamp") for name in (
-            "operation_completed_at", "operation_started_at", "run_completed_at", "run_started_at")]).desc(),
+        # Released naive operation timestamps are UTC, independently of Spark's session zone.
+        F.coalesce(*[F.from_json(F.to_json(F.struct(F.col(name).alias("at"))),
+            "at TIMESTAMP", {"timeZone": "UTC", "mode": "FAILFAST"})["at"]
+            for name in ("operation_completed_at", "operation_started_at")],
+            F.col("run_completed_at"), F.col("run_started_at")).desc(),
         F.col("run_id").desc(),
     )
     return row_dicts(participants.withColumn("_participation_rank", F.row_number().over(latest))

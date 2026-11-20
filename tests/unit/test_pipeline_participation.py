@@ -180,3 +180,30 @@ def test_asset_usage_bounds_history_and_falls_back_to_run_time(runtime, spark_se
         spark_session=spark_session, table_id='table0')
     assert len(rows) == 1 and rows[0]['run_id'] == 'a-new'
     assert rows[0]['run_started_at'] == datetime(2026, 11, 20)
+
+
+@pytest.mark.parametrize('timezone', ['UTC', 'Asia/Singapore'])
+def test_latest_participation_treats_naive_operation_times_as_utc(runtime, spark_session, monkeypatch, timezone):
+    """Historical naive timestamps and explicit offsets sort by the same instant."""
+    from fabricops_kit.data_contract import shared as contracts
+
+    make, operation, *_ = runtime
+    plan = make(mode='ungoverned', roles=('source',))
+    operation(plan, 0)
+    latest = shared.pipeline_run_row(plan, status='incomplete')
+    latest['run_id'] = 'latest-naive'
+    latest['operations'][0].update(started_at='2026-11-20T01:00:00', completed_at=None)
+    older = deepcopy(latest)
+    older['run_id'] = 'older-aware'
+    older['operations'][0]['started_at'] = '2026-11-20T00:30:00+00:00'
+    runs = _frame(spark_session, [latest, older])
+    monkeypatch.setattr(contracts, 'read_lakehouse_table', lambda *a, **kw: runs)
+    monkeypatch.setattr(contracts, '_metadata_io_context', lambda *a: {})
+    previous = spark_session.conf.get('spark.sql.session.timeZone')
+    try:
+        spark_session.conf.set('spark.sql.session.timeZone', timezone)
+        rows = contracts.get_asset_pipeline_participation(config={}, routing_workspace_id='canary',
+            spark_session=spark_session, table_id='table0')
+        assert len(rows) == 1 and rows[0]['run_id'] == 'latest-naive'
+    finally:
+        spark_session.conf.set('spark.sql.session.timeZone', previous)

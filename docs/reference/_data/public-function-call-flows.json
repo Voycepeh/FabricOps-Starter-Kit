@@ -5508,9 +5508,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.assemble_contract_payload",
-      "source_end_line": 1731,
+      "source_end_line": 1734,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1595,
+      "source_start_line": 1598,
       "usage": "public_flow_reachable"
     },
     {
@@ -5525,9 +5525,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.data_contract.shared.build_enrichment_records",
-      "source_end_line": 1534,
+      "source_end_line": 1537,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1464,
+      "source_start_line": 1467,
       "usage": "unused"
     },
     {
@@ -5725,9 +5725,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract",
-      "source_end_line": 1801,
+      "source_end_line": 1804,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1734,
+      "source_start_line": 1737,
       "usage": "public_flow_reachable"
     },
     {
@@ -5741,9 +5741,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.freeze_contract_record",
-      "source_end_line": 1593,
+      "source_end_line": 1596,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1559,
+      "source_start_line": 1562,
       "usage": "public_flow_reachable"
     },
     {
@@ -5757,7 +5757,7 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.get_asset_pipeline_participation",
-      "source_end_line": 1135,
+      "source_end_line": 1138,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
       "source_start_line": 1119,
       "usage": "public_flow_reachable"
@@ -5773,9 +5773,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.get_asset_runtime_context",
-      "source_end_line": 1384,
+      "source_end_line": 1387,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1138,
+      "source_start_line": 1141,
       "usage": "public_flow_reachable"
     },
     {
@@ -5789,9 +5789,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.shared.get_column_profile_context",
-      "source_end_line": 1461,
+      "source_end_line": 1464,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1387,
+      "source_start_line": 1390,
       "usage": "public_flow_reachable"
     },
     {
@@ -6096,9 +6096,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "qualified_name": "fabricops_kit.data_contract.shared.validate_grain_contract",
-      "source_end_line": 1556,
+      "source_end_line": 1559,
       "source_path": "src/fabricops_kit/data_contract/shared.py",
-      "source_start_line": 1537,
+      "source_start_line": 1540,
       "supports_live_contract": true,
       "transitive_live_dependents": [
         "fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline",
