@@ -88,6 +88,17 @@ def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, s
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: dict(audit))
     snapshots = []
     monkeypatch.setattr(shared, '_replace_snapshot_rows', lambda **kw: snapshots.extend(kw['dataframe'].collect()))
+
+    def read_catalogue(table, **_kwargs):
+        assert table == "METADATA_DATA_CATALOGUE"
+        identity = files.catalogue.call_args.args[0]
+        return spark_session.createDataFrame(
+            [(identity["workspace_id"], identity["source_id"], "FILE", True)],
+            "workspace_id string, table_id string, asset_type string, is_active boolean",
+        )
+
+    reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    monkeypatch.setattr(reader, "read_lakehouse_table", read_catalogue)
     routing = importlib.import_module('fabricops_kit.io.shared')
     owner = importlib.import_module('fabricops_kit.io.write_lakehouse_file')
     def resolve(store, path, **kwargs):
