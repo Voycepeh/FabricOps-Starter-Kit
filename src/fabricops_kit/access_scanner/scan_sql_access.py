@@ -189,7 +189,6 @@ def _map_to_catalogue(observations, catalogue_tables):
 def _access_rows(
     mapped,
     *,
-    workspace_id: str,
     access_snapshot_id: str,
     audit_fields: dict[str, Any],
 ):
@@ -200,6 +199,7 @@ def _access_rows(
             "\u001f",
             F.lit(access_snapshot_id),
             F.col("_catalogue_table_id"),
+            F.col("_catalogue_workspace_id"),
             F.coalesce(F.col("user_name"), F.lit("")),
             F.coalesce(F.col("role_name"), F.lit("")),
             F.coalesce(F.col("permission_source"), F.lit("")),
@@ -218,7 +218,8 @@ def _access_rows(
             F.col("user_name").alias("user_principal"),
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(workspace_id).alias("workspace_id"),
+            F.col("_catalogue_workspace_id").alias("workspace_id"),
+            F.lit("TABLE").alias("asset_type"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),
             F.col("state_desc").alias("access_state"),
@@ -380,7 +381,6 @@ def scan_sql_access(
 
     access = _access_rows(
         mapped,
-        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )

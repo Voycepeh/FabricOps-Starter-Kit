@@ -724,6 +724,19 @@ def pipeline_write(
                 if strategy in {"append_all", "append_new_only"}:
                     write_metrics["rows_inserted"] = committed_rows
         try:
+            from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+            from fabricops_kit.io.shared import _quoted_warehouse_identifier
+
+            schema_context = {**io_context, "_spark_session": spark_session}
+            if store_kind == "lakehouse":
+                published_table = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                    schema=identity.get("schema"), context=schema_context)
+            else:
+                schema_name = _quoted_warehouse_identifier(identity["schema"])
+                table_name = _quoted_warehouse_identifier(identity["table_name"])
+                published_table = read_warehouse_query(
+                    f"SELECT TOP (0) * FROM {schema_name}.{table_name}", store=identity["store"], context=schema_context,
+                )
             scheduled_refresh = _writer_scheduled_refresh(audit=audit)
             _persist_target_processing(
                 identity=identity,
@@ -732,7 +745,7 @@ def pipeline_write(
                 audit=audit,
                 config=config,
                 active_workspace_id=active_workspace_id,
-                dataframe=prepared_df,
+                dataframe=published_table,
                 context=context,
                 spark_session=spark_session,
             )

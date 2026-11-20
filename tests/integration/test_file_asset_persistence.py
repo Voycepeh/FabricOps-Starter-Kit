@@ -64,7 +64,7 @@ def test_populated_legacy_catalogue_adds_asset_fields_without_losing_processing(
     r = catalogue_delta
     row = r.row(table_id=build_table_id("lakehouse", "Silver", "sales", "orders"),
                 asset_type=None, metadata_level="table", store_type="lakehouse",
-                layer="Silver", schema_name="sales", extension="keep")
+                layer="Silver", schema_name="sales", extension="keep", item_id=r.config.path_config.paths["dev"]["Silver"].item_id)
     r.seed([row], legacy=True)
     before = r.read().first().asDict(recursive=True)
     result = r.run()

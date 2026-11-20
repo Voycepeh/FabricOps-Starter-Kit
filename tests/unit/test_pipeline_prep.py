@@ -304,6 +304,8 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append_all", 
         lambda **_kwargs: {"status": "not_configured", "schedules": []},
     )
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
+    monkeypatch.setattr(io_package, "read_lakehouse_table", lambda *_a, **_kw: None)
+    monkeypatch.setattr(io_package, "read_warehouse_query", lambda *_a, **_kw: None)
     return identity, context
 
 
@@ -548,6 +550,8 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **kwargs: persisted.append(kwargs))
     dataframe = spark_session.createDataFrame([(1,)], ["id"])
+    published = dataframe.withColumnRenamed("id", "persisted_id")
+    monkeypatch.setattr(io_package, "read_lakehouse_table", lambda *_a, **_kw: published)
 
     write_module.pipeline_write(
         dataframe,
@@ -557,7 +561,7 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
 
     assert persisted[0]["identity"] == identity
     assert persisted[0]["processing"] is processing
-    assert persisted[0]["dataframe"] is dataframe
+    assert persisted[0]["dataframe"] is published
 
 
 @pytest.mark.parametrize("conflict", [None, "python", "jvm", "structured"])

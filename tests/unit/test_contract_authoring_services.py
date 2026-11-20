@@ -444,7 +444,9 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     ]
 
     def read(name, **_kwargs):
-        return frequency if name == "METADATA_DATA_PROFILED_FREQUENCY" else profiled
+        return {"METADATA_DATA_PROFILED_FREQUENCY": [
+            {**row, "workspace_id": "dev", "table_id": "orders", "column_id": "amount"} for row in frequency
+        ], "METADATA_DATA_PROFILED": profiled, "METADATA_PIPELINE_RUN": []}[name]
 
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
@@ -462,8 +464,8 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
         {"value": "113.15", "count": 30, "percent": 25.0},
     ]
 
-def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_lineage(monkeypatch):
-    """Summarize one logical table across workspaces without duplicating deployed pipelines."""
+def test_table_runtime_context_uses_exact_physical_profile_and_lineage(monkeypatch):
+    """Use Run evidence for remote historical activity and exclude other physical assets."""
     profiled = [
         {
             "profile_id": "profile-dev", "profile_snapshot_id": "snapshot-dev",
@@ -473,7 +475,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "amount", "workspace_id": "PROD",
+            "table_id": "orders", "column_id": "amount", "workspace_id": "CONFIG",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
             "min_value": "29.9", "max_value": "438.6", "example_value": "109.95",
@@ -482,7 +484,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
         {
             "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "customer_id", "workspace_id": "PROD",
+            "table_id": "orders", "column_id": "customer_id", "workspace_id": "CONFIG",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
@@ -496,17 +498,17 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             "_committed_at": "2026-09-25T10:00:00", "_activity_id": "1",
         },
         {
-            "lineage_id": "dev-writer-new", "table_id": "orders", "workspace_id": "DEV",
+            "lineage_id": "dev-writer-new", "table_id": "orders", "workspace_id": "DEV", "_workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T03:00:00", "_activity_id": "2",
         },
         {
-            "lineage_id": "prod-writer", "table_id": "orders", "workspace_id": "PROD",
+            "lineage_id": "prod-writer", "table_id": "orders", "workspace_id": "CONFIG",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T02:00:00", "_activity_id": "3",
         },
         {
-            "lineage_id": "prod-reader", "table_id": "orders", "workspace_id": "PROD",
+            "lineage_id": "prod-reader", "table_id": "orders", "workspace_id": "CONFIG",
             "pipeline_role": "source", "_notebook_name": "04_reporting",
             "_committed_at": "2026-09-26T02:30:00", "_activity_id": "4",
         },
@@ -514,11 +516,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
 
     frequency = [
         {
-            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "workspace_id": "CONFIG", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
             "value": "109.95", "frequency_count": 50, "frequency_rank": 1,
         },
         {
-            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "workspace_id": "CONFIG", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
             "value": "C001", "frequency_count": 1, "frequency_rank": 1,
         },
     ]
@@ -530,6 +532,17 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             return frequency
         if name == "METADATA_DATA_LINEAGE":
             return lineage
+        if name == "METADATA_PIPELINE_RUN":
+            return [
+                {"profiling": [{"table_id": "orders", "profile_snapshot_id": "snapshot-prod",
+                                "status": "passed", "results_persisted": True,
+                                "physical": {"workspace_id": "PROD"}}]},
+                {"_activity_id": "2", "operations": [{"table_id": "orders", "status": "succeeded",
+                    "pipeline_role": "target", "destination": {"workspace_id": "PROD"}}]},
+                *[{"_activity_id": activity, "operations": [{"table_id": "orders", "status": "succeeded",
+                    "pipeline_role": role, "destination": {"workspace_id": "PROD"}}]}
+                  for activity, role in (("3", "target"), ("4", "source"))],
+            ]
         raise AssertionError(name)
 
     monkeypatch.setattr(service, "read_lakehouse_table", read)
@@ -541,7 +554,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
 
     assert context["latest_profile"] == {
         "profile_snapshot_id": "snapshot-prod",
-        "workspace_id": "PROD",
+        "workspace_id": "CONFIG",
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
@@ -568,8 +581,8 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         for row in context["lineage"]
     } == {
         ("DEV", "Writer", "02_pipeline", "2026-09-26T03:00:00"),
-        ("PROD", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
-        ("PROD", "Reader", "04_reporting", "2026-09-26T02:30:00"),
+        ("CONFIG", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
+        ("CONFIG", "Reader", "04_reporting", "2026-09-26T02:30:00"),
     }
 
 
@@ -637,12 +650,12 @@ def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
         reads.append(name)
         return {"METADATA_DATA_PROFILED": profiles,
                 "METADATA_DATA_PROFILED_FREQUENCY": frequency,
-                "METADATA_DATA_LINEAGE": []}[name]
+                "METADATA_DATA_LINEAGE": [], "METADATA_PIPELINE_RUN": []}[name]
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
     kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
     bulk = service.get_asset_runtime_context(**kwargs)["profile_contexts"]
-    assert len(reads) == 3
+    assert len(reads) == 4
     assert len(bulk) == 60
     for column_id, context in bulk.items():
         assert context == service.get_column_profile_context(column_id=column_id, **kwargs)

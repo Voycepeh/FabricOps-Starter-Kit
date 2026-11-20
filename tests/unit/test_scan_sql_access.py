@@ -33,14 +33,15 @@ def test_scan_sql_access_is_exposed_from_access_scanner_package():
     assert scan_sql_access.__module__ == "fabricops_kit.access_scanner.scan_sql_access"
 
 
-def _catalogue(spark_session):
+def _catalogue(spark_session, workspace_id="dev"):
     return spark_session.createDataFrame(
         [
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
-                "workspace_id": "dev",
+                "workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "sales",
                 "table_name": "orders",
@@ -49,8 +50,9 @@ def _catalogue(spark_session):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
-                "workspace_id": "dev",
+                "workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "sales",
                 "table_name": "customers",
@@ -59,8 +61,9 @@ def _catalogue(spark_session):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
-                "workspace_id": "dev",
+                "workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "archive",
                 "table_name": "orders_archive",
@@ -69,8 +72,9 @@ def _catalogue(spark_session):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
-                "workspace_id": "dev",
+                "workspace_id": workspace_id,
                 "store_type": "Lakehouse",
+                "item_id": "lakehouse-item",
                 "layer": "Silver",
                 "schema_name": "sales",
                 "table_name": "orders",
@@ -182,8 +186,8 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     calls = []
     config = {"paths": {"dev": {
-        "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
-        "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+        "warehouse": FabricStore("remote", "warehouse-item", "warehouse"),
+        "curated_lakehouse": FabricStore("remote", "lakehouse-item", "lakehouse"),
     }}}
 
     def fake_read(query, *, store, spark_session=None, context=None, **options):
@@ -200,7 +204,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"warehouse": "warehouse"})
 
     result = call_with_spark(spark_session, module.scan_sql_access,
-        _catalogue(spark_session),
+        _catalogue(spark_session, workspace_id="remote"),
         targets="warehouse",
         access_snapshot_id="snapshot-1",
         context={"scope_workspace_id": "dev"},
@@ -229,7 +233,9 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert principal_types["fabricops-application"] == "EXTERNAL_LOGIN"
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
-    assert {row["workspace_id"] for row in access_rows} == {"dev"}
+    assert {row["workspace_id"] for row in access_rows} == {"remote"}
+    assert {row["_workspace_id"] for row in access_rows} == {AUDIT_FIELDS["_workspace_id"]}
+    assert {row["asset_type"] for row in access_rows} == {"TABLE"}
     assert all(row["access_id"] for row in access_rows)
     assert all(row["_committed_by"] == "tester@example.com" for row in access_rows)
 
@@ -364,7 +370,7 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
         "active_workspace_id": "requested-active_workspace_id",
         "runtime_context": expected_context,
     }
-    assert calls["access"]["workspace_id"] == "requested-active_workspace_id"
+    assert calls["access"]["access_snapshot_id"] == "snapshot"
     assert result == {"access": "access_df", "unmatched": "unmatched_df"}
 
 

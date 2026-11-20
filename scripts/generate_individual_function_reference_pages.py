@@ -4594,6 +4594,11 @@ def render_metadata_reference_index(
             "write_entrypoints": write_entrypoints[name],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
+            "catalogue_reference_fields": next((
+                relationship["fields"] for relationship in table_models[name].get("relationships", [])
+                if relationship.get("related_table") == "METADATA_DATA_CATALOGUE"
+                and relationship.get("cardinality") == "N:1"
+            ), []),
             "asset_identity_fields": [
                 field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
                 if field in field_names_by_table[name]

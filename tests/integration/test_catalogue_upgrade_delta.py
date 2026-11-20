@@ -106,7 +106,7 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
     file = file_source_identity(workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
     dev = rt.row(table_id=table_id, asset_type=None, metadata_level="table", layer="Silver", store_type="lakehouse",
-                 schema_name="sales", writer_workspace_id="writing-notebook-workspace", extension="keep",
+                 schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id, writer_workspace_id="writing-notebook-workspace", extension="keep",
                  load_strategy_parameters_json='{"key_columns":["id"]}')
     prod = {**dev, "workspace_id": "prod"}
     file_row = rt.row(table_id=file["source_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
@@ -147,6 +147,7 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
 
 @pytest.mark.parametrize(("problem", "diagnostic"), [
     ("unmapped", "Cannot establish the physical workspace"),
+    ("missing_binding", "neither a retained item ID nor a successful Run binding"),
     ("duplicate_asset", "duplicate or conflicting parent"),
     ("duplicate_column", "duplicate column identities"),
     ("missing_id", "column_id"),
@@ -158,7 +159,8 @@ def test_legacy_catalogue_migration_fails_closed(catalogue_delta, problem, diagn
     workspace = "unmapped" if problem == "unmapped" else "dev"
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
     row = rt.row(table_id=table_id, workspace_id=workspace, metadata_level="table",
-                 layer="Silver", store_type="lakehouse", schema_name="sales")
+                 layer="Silver", store_type="lakehouse", schema_name="sales",
+                 item_id=None if problem == "missing_binding" else rt.config.path_config.paths["dev"]["Silver"].item_id)
     column = {**row, "metadata_level": "column", "column_id": "legacy",
               "column_name": "customer_id", "data_type": "int"}
     rows = [row, column]
@@ -186,7 +188,7 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
     rt = catalogue_delta
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
     parent = rt.row(table_id=table_id, metadata_level="table", layer="Silver", store_type="lakehouse",
-                    schema_name="sales")
+                    schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id)
     column = {**parent, "metadata_level": "column", "column_id": "retired-id",
               "column_name": "retired", "data_type": "int", "is_active": False}
     rt.seed([parent, column], legacy=True)
@@ -676,3 +678,21 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
         spark_session=rt.spark, context=context, schema='governance')
     assert reopened['contract_payload_json'] == draft['contract_payload_json']
     assert rt.spark.read.format('delta').load(contract_path).count() == 1
+
+
+def test_same_asset_key_cannot_rebind_to_another_item(catalogue_delta, monkeypatch):
+    """Reject a Fabric item collision without changing the current asset."""
+    from fabricops_kit.pipeline import shared as pipeline
+
+    rt = catalogue_delta
+    monkeypatch.setattr(pipeline, "resolve_configured_lakehouse_table",
+                        lambda *args, **kwargs: (None, TABLE, "custom_engineering", rt.path))
+    parent = rt.row(item_id="original-item", load_strategy="scd1")
+    rt.seed([parent])
+    version = rt.version()
+    with pytest.raises(Exception, match="already registered to a different Fabric item"):
+        pipeline.merge_catalogue_asset({**parent, "item_id": "different-item", "load_strategy": "overwrite"},
+            context={"config": rt.config, "scope_workspace_id": "dev"}, spark_session=rt.spark)
+    assert rt.version() == version
+    row = rt.read().first()
+    assert (row["item_id"], row["load_strategy"]) == ("original-item", "scd1")

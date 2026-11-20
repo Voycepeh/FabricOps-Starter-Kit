@@ -260,6 +260,8 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
                 store = get_store(config, workspace, layer)
                 configured_location = (store.workspace_id.lower(), store.item_id.lower())
                 recorded_locations = known_locations.get((workspace, identity), set())
+                if not recorded_locations and not parent.get("item_id"):
+                    raise ValueError("The legacy row has neither a retained item ID nor a successful Run binding.")
                 if (store.kind != parent.get("store_type")
                         or (parent.get("item_id") and parent["item_id"].lower() != configured_location[1])
                         or (recorded_locations and recorded_locations != {configured_location})
@@ -269,7 +271,7 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
             except (TypeError, ValueError) as exc:
                 raise ValueError(
                     f"Cannot establish the physical workspace for legacy Catalogue TABLE {key!r}, store {layer!r}. "
-                    "Verify the original configuration-scope FabricStore mapping, stored coordinates and retained Pipeline Run destinations."
+                    f"{exc} Verify the original configuration-scope FabricStore mapping, stored coordinates and retained Pipeline Run destinations."
                 ) from exc
             workspace = store.workspace_id.lower()
             parent["item_id"] = parent.get("item_id") or store.item_id

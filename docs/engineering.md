@@ -402,14 +402,16 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
     Persistent evidence is committed only at the applicable execution and finalization boundaries. Multiple target writes are independent publications, not one cross-target atomic transaction. Whole-table profiling, Frequency distributions and full Source Observation add compute and should be scheduled deliberately.
 
-    Lineage records table participation in a pipeline; it does not infer exact column transformations from arbitrary PySpark. This preserves an honest boundary between framework evidence and project code.
+    The pipeline resolves each asset’s store through the active configuration. New Profile, Frequency, Lineage, and Access records reference the Data Catalogue through `workspace_id + table_id + asset_type`. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Lineage captures source and target participation.
+
+    Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile and Lineage lookups. Existing frozen Contracts and historical observations keep their saved payloads.
 
 </div>
 
 
 ### Upgrade an existing Data Catalogue
 
-Pause pipelines that write to the shared Metadata Lakehouse and run `setup_metadata_tables()` with the original configuration-scope FabricStore mappings available. Setup uses each legacy TABLE row's configuration workspace and store to resolve its physical workspace, and checks retained successful Pipeline Run bindings where available. FILE rows are validated against their stored physical selector. The setup identity needs permission to read the display names of remote workspaces.
+Pause pipelines that write to the shared Metadata Lakehouse and run `setup_metadata_tables()` with the original configuration-scope FabricStore mappings available. Setup checks each legacy TABLE row against its original FabricStore mapping and requires a matching stored item ID or retained successful Pipeline Run binding. Resolve any missing or conflicting evidence before proceeding. FILE rows are validated against their stored physical selector. The setup identity needs permission to read the display names of remote workspaces.
 
 Setup validates active and inactive legacy column definitions, copies the active definitions and their original IDs to `columns_json`, then retires the legacy rows and fields in one Delta commit. SQL NULL means the schema has not been observed. An empty JSON array means the observed schema is empty. If setup reports a missing or conflicting mapping, verify the original store and asset records before rerunning.
 
@@ -428,7 +430,7 @@ that selector identity. Format and reader options do not change it.
 | --- | --- |
 | `METADATA_DATA_CATALOGUE` | One `FILE` row per physical selector with workspace, item, path, format, active flag and observation timestamps. The existing file identity is stored in `table_id` and the latest observed fields are stored in `columns_json`. |
 | `METADATA_DATA_LINEAGE` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
-| `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file; observed fields register `column_id` rows. |
+| `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file. Each profiling observation records per-column statistics. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Ranked file distributions linked to the profile snapshot; independent frequency work has no statistical `profile_id`. |
 | `METADATA_GUARDRAIL_RESULTS` | Schema, Data Quality, Grain and Freshness writers retain common Table IDs and explicit asset_type and exact selected Contract and rule versions. Failed checks remain outcomes, not successful lineage. No Contract means no invented checks. |
 | `METADATA_PIPELINE_RUN` | Existing typed file operations and source associations; profiling JSON also records file identity and committed snapshots. Run ID identifies the attempt; `_activity_id` correlates the Fabric activity used by Lineage. |

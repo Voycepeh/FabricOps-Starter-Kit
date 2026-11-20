@@ -431,6 +431,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_id", "string", False),
                 ("table_name", "string"),
                 ("workspace_id", "string", False),
+                ("asset_type", "string"),
                 ("access_level", "string", False),
                 ("access_value", "string", False),
                 ("access_state", "string", False),

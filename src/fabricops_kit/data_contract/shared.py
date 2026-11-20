@@ -29,6 +29,7 @@ from fabricops_kit.config.metadata_schemas import (
     decode_metadata_row,
     metadata_table_physical_schema,
     metadata_table_schema_registry,
+    parse_metadata_json,
 )
 from fabricops_kit.pipeline.shared import validate_grain_parameters
 
@@ -1083,6 +1084,80 @@ def get_contract_review_state(
     }
 
 
+def _asset_history_reader(config, routing_workspace_id, spark_session, table_id, workspace_id):
+    """Read current asset history and resolve legacy scope references from exact Run evidence."""
+    context = _metadata_io_context(config, routing_workspace_id)
+    asset_type = "FILE" if table_id.startswith("file:") else "TABLE"
+    workspace = workspace_id.casefold()
+    profile_locations = {}
+    lineage_locations = {}
+    runs_loaded = False
+
+    def read(table_name, *predicates):
+        try:
+            frame = read_lakehouse_table(
+                table_name, store="Metadata", schema=metadata_table_physical_schema(config, table_name),
+                context={**(context or {}), "_spark_session": spark_session},
+            )
+        except Exception as exc:
+            if any(marker in str(exc).lower() for marker in ("not found", "does not exist")):
+                return []
+            raise
+        return _scoped_rows(frame, *predicates)
+
+    def load_runs():
+        nonlocal runs_loaded
+        if runs_loaded:
+            return
+        runs_loaded = True
+        # Run fields are JSON on Delta. Filter the journal before decoding candidate rows.
+        run_table = "METADATA_PIPELINE_RUN"
+        for record in read(run_table, f"instr(concat_ws(' ', operations, profiling), {_sql_literal(table_id)}) > 0"):
+            events = record.get("profiling")
+            if isinstance(events, str):
+                events = parse_metadata_json(events, field="METADATA_PIPELINE_RUN.profiling")
+            for event in events or []:
+                snapshot = event.get("profile_snapshot_id")
+                destination = (event.get("physical") or {}).get("workspace_id")
+                if (event.get("table_id") == table_id and snapshot and destination
+                        and event.get("status") == "passed" and event.get("results_persisted")):
+                    profile_locations.setdefault(snapshot, set()).add(destination.casefold())
+            operations = record.get("operations")
+            if isinstance(operations, str):
+                operations = parse_metadata_json(operations, field="METADATA_PIPELINE_RUN.operations")
+            for operation in operations or []:
+                activity = record.get("_activity_id")
+                destination = (operation.get("destination") or {}).get("workspace_id")
+                if (operation.get("table_id") == table_id and activity and destination
+                        and operation.get("status") == "succeeded"):
+                    key = (activity, operation.get("pipeline_role"))
+                    lineage_locations.setdefault(key, set()).add(destination.casefold())
+
+    def asset_rows(table_name, *predicates):
+        rows = [
+            row for row in read(table_name, f"table_id = {_sql_literal(table_id)}", *predicates)
+            if row.get("table_id") == table_id and (row.get("asset_type") or asset_type) == asset_type
+        ]
+        if table_name == "METADATA_DATA_PROFILED_FREQUENCY":
+            return rows
+        if asset_type == "FILE":
+            # The file selector itself encodes its physical workspace.
+            return rows
+        if rows:
+            load_runs()
+
+        def matches(row):
+            if table_name == "METADATA_DATA_PROFILED":
+                proven = profile_locations.get(row.get("profile_snapshot_id"))
+            else:
+                proven = lineage_locations.get((row.get("_activity_id"), row.get("pipeline_role")))
+            return proven == {workspace} if proven else str(row.get("workspace_id") or "").casefold() == workspace
+
+        return [row for row in rows if matches(row)]
+
+    return asset_rows
+
+
 def get_asset_runtime_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     metadata_workspace_id: str | None = None,
@@ -1091,32 +1166,9 @@ def get_asset_runtime_context(
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
-    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
-    context = _metadata_io_context(config, routing_workspace_id)
-
-    def table_rows(table_name: str) -> list[dict[str, Any]]:
-        try:
-            frame = read_lakehouse_table(
-                table_name, store="Metadata",
-                schema=metadata_table_physical_schema(config, table_name),
-                context={**(context or {}), "_spark_session": spark_session},
-            )
-        except Exception as exc:
-            if any(
-                marker in str(exc).lower()
-                for marker in ("not found", "does not exist", "path does not exist")
-            ):
-                return []
-            raise
-        return [
-            row for row in _scoped_rows(
-                frame, f"table_id = {_sql_literal(table_identity)}",
-                "" if table_name == "METADATA_DATA_LINEAGE"
-                else f"workspace_id = {_sql_literal(active_workspace_id)}",
-            )
-            if str(row.get("table_id") or "") == table_identity
-            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
-        ]
+    table_rows = _asset_history_reader(
+        config, metadata_workspace_id or active_workspace_id, spark_session, table_identity, active_workspace_id,
+    )
 
     profiled = table_rows("METADATA_DATA_PROFILED")
     latest_by_column: dict[str, dict[str, Any]] = {}
@@ -1202,37 +1254,13 @@ def get_asset_runtime_context(
             for row in latest_profile_rows
             if str(row.get("profile_id") or "") and str(row.get("column_id") or "")
         }
-        try:
-            frequency_frame = read_lakehouse_table(
-                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context={**(context or {}), "_spark_session": spark_session},
-            )
-            frequency_rows = row_dicts(_scoped_rows(
-                frequency_frame,
-                frequency_predicate,
-                f"workspace_id = {_sql_literal(active_workspace_id)}",
-                f"table_id = {_sql_literal(table_identity)}",
-            ))
-        except Exception as exc:
-            if any(
-                marker in str(exc).lower()
-                for marker in ("not found", "does not exist", "path does not exist")
-            ):
-                frequency_rows = []
-            else:
-                raise
-        frequency_rows = [
-            row for row in frequency_rows
-            if str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "") == table_identity
-        ]
+        frequency_rows = table_rows("METADATA_DATA_PROFILED_FREQUENCY", frequency_predicate)
+        profile_workspaces = {row.get("profile_id"): row.get("workspace_id") for row in latest_profile_rows}
         summary_frequency_rows = [
             row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
-            and str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "") == table_identity
+            and row.get("workspace_id") == profile_workspaces.get(row.get("profile_id"))
         ]
         summary_frequency_rows.sort(
             key=lambda row: (
@@ -1260,8 +1288,8 @@ def get_asset_runtime_context(
         snapshot = profile.get("profile_id") or profile.get("profile_snapshot_id")
         values = [
             row for row in frequency_by_column.get(column_id, [])
-            if snapshot is None or row.get("profile_id") == snapshot
-            or row.get("profile_snapshot_id") == snapshot
+            if row.get("workspace_id") == profile.get("workspace_id")
+            and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
         ]
         values.sort(key=lambda row: (
             int(row.get("frequency_rank") or 2_147_483_647),
@@ -1280,7 +1308,7 @@ def get_asset_runtime_context(
         if not relationship:
             continue
         pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
-        workspace_id = str(row.get("workspace_id") or "").strip()
+        workspace_id = str(row.get("_workspace_id") or row.get("workspace_id") or "").strip()
         key = (workspace_id, relationship, pipeline_name)
         previous = grouped.get(key)
         rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
@@ -1332,24 +1360,13 @@ def get_column_profile_context(
     column_id: str, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Return a table-column or file-column profile and its matching frequencies."""
-    fields = {"table_id": table_id, "column_id": column_id}
-    filters = [f"{name} = {_sql_literal(value)}" for name, value in fields.items()]
-    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
-    context = _metadata_io_context(config, routing_workspace_id)
-    profiled = _scoped_rows(
-        read_lakehouse_table(
-            "METADATA_DATA_PROFILED", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
-            context={**(context or {}), "_spark_session": spark_session},
-        ),
-        *filters,
-        f"workspace_id = {_sql_literal(active_workspace_id)}",
+    table_rows = _asset_history_reader(
+        config, metadata_workspace_id or active_workspace_id, spark_session, table_id, active_workspace_id,
     )
+    column_filter = f"column_id = {_sql_literal(column_id)}"
     candidates = [
-        row for row in profiled
-        if all(str(row.get(name) or "") == str(value) for name, value in fields.items())
-        and str(row.get("workspace_id") or "") == active_workspace_id
-        and str(row.get("status") or "completed").lower() == "completed"
+        row for row in table_rows("METADATA_DATA_PROFILED", column_filter)
+        if row.get("column_id") == column_id and str(row.get("status") or "completed").lower() == "completed"
     ]
     if not candidates:
         return {"kind": "unavailable", "message": "Not yet profiled."}
@@ -1359,33 +1376,14 @@ def get_column_profile_context(
         key=lambda row: metadata_timestamp_sort_key(row.get("profiled_at") or row.get("_committed_at")),
     )
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
-    try:
-        frequency_filters = []
-        if snapshot is not None:
-            frequency_filters.append(f"profile_id = {_sql_literal(snapshot)}")
-        frequency = _scoped_rows(
-            read_lakehouse_table(
-                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context={**(context or {}), "_spark_session": spark_session},
-            ),
-            *frequency_filters,
-            f"workspace_id = {_sql_literal(active_workspace_id)}",
-            *filters,
-        )
-    except Exception as exc:
-        if not any(
-            marker in str(exc).lower()
-            for marker in ("not found", "does not exist", "path does not exist")
-        ):
-            raise
-        frequency = []
-
+    frequency_filter = (
+        f"(profile_id = {_sql_literal(snapshot)} OR profile_snapshot_id = {_sql_literal(snapshot)})"
+        if snapshot else ""
+    )
     values = [
-        row for row in frequency
-        if snapshot is None
-        or row.get("profile_id") == snapshot
-        or row.get("profile_snapshot_id") == snapshot
+        row for row in table_rows("METADATA_DATA_PROFILED_FREQUENCY", column_filter, frequency_filter)
+        if row.get("column_id") == column_id and row.get("workspace_id") == latest.get("workspace_id")
+        and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
     ]
     values.sort(
         key=lambda row: (

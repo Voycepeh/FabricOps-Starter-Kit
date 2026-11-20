@@ -627,12 +627,16 @@ def persist_lineage_participation(
             ("workspace_id", "item_id", "relative_path", "file_format")})
         if expected["source_id"] != str(table_id).strip() or not identity.get("store"):
             raise ValueError("File lineage requires the resolved selector and configured store.")
+        physical_workspace = expected["workspace_id"]
         table_name = expected["relative_path"]
         asset_name = f"{identity['store']}/Files/{expected['relative_path']}"
     else:
-        table_name = (_CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name")
-                      or resolve_catalogue_table_identity(config, active_workspace_id, table_id,
-                                                          context=resolved_context).get("table_name"))
+        binding = (resolved_context.get("_pipeline_bindings") or {}).get(str(table_id))
+        if binding is None:
+            identity = resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=resolved_context)
+            binding = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
+        physical_workspace = str(binding["workspace_id"]).lower()
+        table_name = binding["table_name"]
         asset_name = table_name
     record = coerce_metadata_row_types(
         _LINEAGE_TABLE,
@@ -642,7 +646,7 @@ def persist_lineage_participation(
             "table_id": str(table_id).strip(),
             "table_name": table_name,
             "asset_name": asset_name,
-            "workspace_id": active_workspace_id,
+            "workspace_id": physical_workspace,
             "pipeline_role": str(pipeline_role).strip().lower(),
             **audit,
         },
@@ -1520,8 +1524,7 @@ def source_drift_investigation_query(plan, source_id, *, evaluation_id=None):
     return ("from fabricops_kit import read_lakehouse_table\nfrom pyspark.sql import functions as F\n"
             f"diagnostics = read_lakehouse_table('METADATA_GUARDRAIL_RESULTS', store='Metadata', schema={schema!r})\n"
             "display(diagnostics.where(\n"
-            f"    (F.col('workspace_id') == {plan.workspace_id!r})\n"
-            f"    & (F.col('run_id') == {plan.plan_id!r})\n"
+            f"    (F.col('run_id') == {plan.plan_id!r})\n"
             f"    & ((F.col('table_id') == {source_id!r}) | (F.col('rule_type') == 'pipeline_observation'))\n"
             "    & (F.col('guardrail_type') == 'source_drift')\n"
             f"    & (F.get_json_object('result_payload_json', '$.pipeline_id') == {plan.pipeline_id!r})\n"
@@ -2833,6 +2836,11 @@ def check_sensitive_data_rules(
         raise
 
 
+def _guardrail_asset_workspace(context, table_id, active_workspace_id):
+    binding = ((context or {}).get("_pipeline_bindings") or {}).get(table_id)
+    return str(binding["workspace_id"]).lower() if binding else active_workspace_id
+
+
 def write_guardrail_result_row(
     *,
     spark_session: Any,
@@ -2892,18 +2900,19 @@ def write_guardrail_result_row(
                     break
         except Exception:
             rule_context = {}
+    asset_identity = str(table_id or result.get("table_id") or result.get("source_id") or "").strip()
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
-        "table_id": str(table_id or result.get("table_id") or result.get("source_id") or "").strip(),
-        "asset_type": "FILE" if str(table_id).startswith("file:") else "TABLE",
+        "table_id": asset_identity,
+        "asset_type": "FILE" if asset_identity.startswith("file:") else "TABLE",
         "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
         "execution_type": resolved_execution_type,
         "run_id": resolved_run_id,
-        "workspace_id": active_workspace_id,
+        "workspace_id": _guardrail_asset_workspace(context, asset_identity, active_workspace_id),
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
@@ -5016,6 +5025,7 @@ def check_dq_runtime(
     if plan is not None:
         resolved_run_id = plan.plan_id
     result["run_id"] = resolved_run_id
+    asset_workspace_id = _guardrail_asset_workspace(context, table_id, active_workspace_id)
     summary_rows = []
     for rule, check in zip(rules, checks, strict=True):
         summary_rows.append({
@@ -5030,7 +5040,7 @@ def check_dq_runtime(
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "workspace_id": active_workspace_id,
+            "workspace_id": asset_workspace_id,
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": ",".join(rule["columns"]),
@@ -7162,8 +7172,9 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     def frame(table):
         return read_lakehouse_table(table, store="Metadata",
             schema=metadata_table_physical_schema(config, table),
-            context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True}).filter(F.col("workspace_id") == active_workspace_id)
-    events = (decode_metadata_dataframe("METADATA_PIPELINE_RUN", frame("METADATA_PIPELINE_RUN"))
+            context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True})
+    events = (decode_metadata_dataframe("METADATA_PIPELINE_RUN", frame("METADATA_PIPELINE_RUN").filter(
+        F.col("workspace_id") == active_workspace_id))
         .filter(F.col("execution_mode").isin("ungoverned", "governed", "live"))
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
@@ -7417,9 +7428,7 @@ def _show_previous_table_profile(table_id, previous, *, context, spark_session, 
             schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
             context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True},
         ).filter(
-            (F.col("workspace_id") == context["scope_workspace_id"])
-            & (F.col("table_id") == table_id)
-            & (F.col("profile_snapshot_id") == snapshot_id)
+            (F.col("table_id") == table_id) & (F.col("profile_snapshot_id") == snapshot_id)
         )
         scope = {"profile_scope": previous.get("profile_scope") or "full_table",
                  "profiling_max_rows": previous.get("profiling_max_rows")}
@@ -8518,6 +8527,12 @@ def merge_catalogue_asset(row, *, context, spark_session):
     )
     updates = {name: f"source.{name}" for name in row
                if name not in {"workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
+    if row.get("item_id"):
+        updates["item_id"] = (
+            "CASE WHEN target.item_id IS NOT NULL AND lower(target.item_id) <> lower(source.item_id) "
+            "THEN CAST(raise_error('Catalogue asset key is already registered to a different Fabric item') AS STRING) "
+            "ELSE source.item_id END"
+        )
     for name in ("first_observed_at", "first_profiled_at"):
         if name in row:
             updates[name] = f"coalesce(target.{name}, source.{name})"
@@ -8741,6 +8756,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
         return {"grain_candidates": profile_key_candidates, **profile_metrics}
 
+    physical_workspace_id = get_store(config, active_workspace_id, identity["store"]).workspace_id.lower()
     profile_snapshot_id = _profile_snapshot_id(
         config=config, active_workspace_id=active_workspace_id, context=context, table_id=identity["table_id"]
     )
@@ -8749,7 +8765,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
         config=config,
         active_workspace_id=active_workspace_id,
         runtime_context={**context, "table_name": identity.get("table_name")},
-        workspace_id=active_workspace_id,
+        workspace_id=physical_workspace_id,
         table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,
     ).cache()
@@ -8788,7 +8804,8 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
         try:
             same_activity_retry = _stage_catalogue_profile_retry(
                 profiled_df=profiled_df,
-                physical_workspace_id=get_store(config, active_workspace_id, identity["store"]).workspace_id.lower(), config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
+                physical_workspace_id=physical_workspace_id, config=config,
+                active_workspace_id=active_workspace_id, spark_session=spark_session
             )
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
@@ -8852,9 +8869,10 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
     table = DeltaTable.forPath(spark_session, path)
-    workspace = get_store(config, active_workspace_id, identity["store"]).workspace_id.lower()
-    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == workspace)
-                 & (F.col("asset_type") == "TABLE"))
+    store = get_store(config, active_workspace_id, identity["store"])
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == store.workspace_id.lower())
+                 & (F.col("asset_type") == "TABLE")
+                 & (F.col("item_id").isNull() | (F.lower(F.col("item_id")) == store.item_id.lower())))
     if table.toDF().where(condition).limit(2).count() != 1:
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)

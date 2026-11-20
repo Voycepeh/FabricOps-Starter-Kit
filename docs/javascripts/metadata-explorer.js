@@ -32,11 +32,11 @@
     ["DATA_CATALOGUE", "DATA_CONTRACT", "N-N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "N-N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "N-N", "Frequency snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "N-N", "Lineage records"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "N-N", "Access observations"],
+    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
+    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
     ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
   ];
 
@@ -235,7 +235,13 @@
       if (rows.length) return rows;
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
       if (assetTable) {
-        const identityFields = modelFor(assetTable).asset_identity_fields || [];
+        const model = modelFor(assetTable);
+        const physicalFields = model.catalogue_reference_fields || [];
+        if (physicalFields.length) {
+          const key = physicalFields.join(" + ");
+          return [assetTable + ".(" + key + ") → DATA_CATALOGUE.(" + key + ")"];
+        }
+        const identityFields = model.asset_identity_fields || [];
         return identityFields.map(field => assetTable + "." + field + " → DATA_CATALOGUE.table_id (logical asset reference)");
       }
       return ["Logical relationship; no physical FK declared"];

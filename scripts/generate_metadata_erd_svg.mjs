@@ -17,10 +17,10 @@ function renderMetadataSvg(layout, models) {
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
     ["DATA_CATALOGUE","DATA_CONTRACT","N-N","logical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
-    ["DATA_CATALOGUE","DATA_PROFILED","N-N","logical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","N-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","N-N","logical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
-    ["DATA_CATALOGUE","DATA_ACCESS","N-N","logical","M305 598V630H1355V735",[305,598],[1355,735],"Catalogue table to observed permissions"],
+    ["DATA_CATALOGUE","DATA_PROFILED","1-N","logical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","1-N","logical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
+    ["DATA_CATALOGUE","DATA_ACCESS","1-N","logical","M305 598V630H1355V735",[305,598],[1355,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]
   ];
@@ -52,7 +52,7 @@ function renderMetadataSvg(layout, models) {
       .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
     const keys = [...pk, ...nestedKeys, ...groupedFk];
-    const identityFields = model.asset_identity_fields.filter(value =>
+    const identityFields = [...new Set([...(model.catalogue_reference_fields || []), ...model.asset_identity_fields])].filter(value =>
       !pk.some(([, field]) => field === value) && !fk.some(([, field]) => field === value));
     const fields = identityFields.map(value => ["", value]);
     if (name === "DATA_CATALOGUE") fields.push(["", "columns_json (current schema)"]);
@@ -100,6 +100,8 @@ function renderMetadataSvg(layout, models) {
   };
   const rendered=routes.map(r=>{
     const [from,to,card,kind,d,p0,p1,label]=r;
+    const referenceFields = from === "DATA_CATALOGUE" ? models[to].catalogue_reference_fields : [];
+    const referenceLabel = referenceFields?.length ? " through " + referenceFields.join(" + ") + " on new records" : "";
     const color=kind==="logical"?"#7C3AED":"#2563EB";
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
@@ -112,7 +114,7 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split("-") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

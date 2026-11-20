@@ -24,16 +24,16 @@ Records permissions observed for governed tables across Workspace, OneLake and S
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → M)**
-via `table_id`
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `workspace_id` + `table_id` + `asset_type`
 
 **Implementation details:** See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">24</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">16</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">25</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">17</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -49,6 +49,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
 <tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_level</code></td><td><code>string</code></td><td>SQL permission class or scope, such as SCHEMA or OBJECT_OR_COLUMN.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_value</code></td><td><code>string</code></td><td>SQL permission name, such as SELECT.</td></tr>
 <tr class="metadata-column--engineering"><td><code>access_state</code></td><td><code>string</code></td><td>Observed SQL permission state, such as GRANT or DENY.</td></tr>

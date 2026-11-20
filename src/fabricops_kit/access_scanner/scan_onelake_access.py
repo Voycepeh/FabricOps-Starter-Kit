@@ -82,7 +82,7 @@ def _map_to_catalogue(observations, registered_tables):
     )
 
 
-def _access_rows(mapped, *, workspace_id: str, access_snapshot_id: str, audit_fields: dict[str, Any]):
+def _access_rows(mapped, *, access_snapshot_id: str, audit_fields: dict[str, Any]):
     """Project matched OneLake observations into METADATA_DATA_ACCESS."""
     from pyspark.sql import functions as F
 
@@ -91,6 +91,7 @@ def _access_rows(mapped, *, workspace_id: str, access_snapshot_id: str, audit_fi
             "\u001f",
             F.lit(access_snapshot_id),
             F.col("_catalogue_table_id"),
+            F.col("_catalogue_workspace_id"),
             F.coalesce(F.col("user_principal"), F.lit("")),
             F.coalesce(F.col("role_name"), F.lit("")),
             F.coalesce(F.col("access_state"), F.lit("")),
@@ -107,7 +108,8 @@ def _access_rows(mapped, *, workspace_id: str, access_snapshot_id: str, audit_fi
             "user_principal",
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(workspace_id).alias("workspace_id"),
+            F.col("_catalogue_workspace_id").alias("workspace_id"),
+            F.lit("TABLE").alias("asset_type"),
             F.lit("ONELAKE_PATH").alias("access_level"),
             "access_value",
             "access_state",
@@ -266,7 +268,6 @@ def scan_onelake_access(
     )
     access = _access_rows(
         mapped,
-        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )

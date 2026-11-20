@@ -487,6 +487,7 @@ def warehouse_publication_runtime(publication_runtime, monkeypatch):
         return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp))).agg(F.count('*').alias('fabricops_publication_rows'))
 
     monkeypatch.setattr(io, 'read_warehouse_table', lambda schema, name, **kw: run.read(name))
+    monkeypatch.setattr(io, 'read_warehouse_query', lambda sql, **kw: run.read('target').limit(0))
     monkeypatch.setattr(io, 'write_warehouse_table', warehouse_write)
     monkeypatch.setattr(shared, 'read_warehouse_query', warehouse_query)
     return run
@@ -933,3 +934,23 @@ def test_full_overwrite_replaces_legacy_schema_with_mandatory_hash(publication_r
     assert target.count() == frame.count()
     assert target.schema['_row_hash'].dataType.simpleString() == 'string'
     assert target.where('_row_hash IS NULL').count() == 0
+
+
+
+def test_append_registers_complete_published_schema(publication_runtime, monkeypatch):
+    """A Delta append can retain columns absent from the incoming batch."""
+    from pyspark.sql import functions as F
+
+    run = publication_runtime
+    schemas = []
+    monkeypatch.setattr(writer, "_persist_target_processing", lambda **kwargs: schemas.append(kwargs["dataframe"].schema))
+    first = run.stage(1, incremental=False).withColumn("retained", F.lit("value"))
+    run.publish(first)
+    run.context["execution_plan"].plan_id = "next-run"
+    second = run.stage(2, incremental=False)
+    run.publish(second)
+
+    target = run.read("target")
+    assert "retained" not in second.columns
+    assert "retained" in target.columns
+    assert schemas[-1] == target.schema

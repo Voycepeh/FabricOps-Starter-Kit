@@ -24,8 +24,8 @@ No starter template or solution is traced for the public writer functions.
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → M)**
-via `table_id`
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `workspace_id` + `table_id` + `asset_type`
 
 `METADATA_DATA_PROFILED_FREQUENCY` **(1 → N)**
 via `profile_id`

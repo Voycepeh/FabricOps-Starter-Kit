@@ -20,14 +20,14 @@ Records TABLE and FILE source/target participation within a Fabric Activity.
 
 **Grain:** One asset identity and role within one Fabric Activity.
 
-**Primary key:** `lineage_id`
+**Primary key:** `workspace_id` + `lineage_id`
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → M)**
-via `table_id`
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `workspace_id` + `table_id` + `asset_type`
 
-**Implementation details:** asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path and table_id joins the Catalogue asset. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
+**Implementation details:** asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path for FILE participation. New rows use the resolved physical workspace in workspace_id and the notebook workspace in the audit fields. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
 
 ## Column summary
 

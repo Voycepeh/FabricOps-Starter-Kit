@@ -258,6 +258,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
         table_id="table-a",
         contract_id="contract-a",
         contract_version=2,
+        context={"_pipeline_bindings": {"table-a": {"workspace_id": "remote"}}},
     )
 
     table_name, row = writes[0]
@@ -269,6 +270,8 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
     assert row["run_id"] == "run-1"
     assert row["execution_type"] == "governed"
     assert row["table_id"] == "table-a"
+    assert row["workspace_id"] == "remote"
+    assert row["_workspace_id"] != "remote"
     assert row["table_name"] == "orders"
     assert row["guardrail_type"] == "schema"
     assert row["rule_id"] == "schema-1"

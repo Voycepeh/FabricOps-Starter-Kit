@@ -372,13 +372,15 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
 
     spark = catalogue_df.sparkSession
     targets = spark.createDataFrame(
-        [(key, kind, get_store(config, workspace_id, key).workspace_id.lower())
-         for key, kind in target_store_kinds.items()],
+        [(key, kind, store.workspace_id.lower(), store.item_id.lower())
+         for key, kind in target_store_kinds.items()
+         for store in [get_store(config, workspace_id, key)]],
         T.StructType(
             [
                 T.StructField("_catalogue_target", T.StringType(), False),
                 T.StructField("_target_store_type", T.StringType(), False),
                 T.StructField("_catalogue_physical_workspace", T.StringType(), False),
+                T.StructField("_catalogue_physical_item", T.StringType(), False),
             ]
         ),
     )
@@ -399,6 +401,7 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
         .crossJoin(targets)
         .filter(
             (F.lower(F.col("workspace_id")) == F.col("_catalogue_physical_workspace"))
+            & (F.lower(F.col("item_id")) == F.col("_catalogue_physical_item"))
             & (F.lower(F.col("store_type")) == F.col("_target_store_type"))
             & (
                 F.col("table_id")
@@ -412,9 +415,10 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
         )
         .select(
             F.col("table_id").alias("_catalogue_table_id"),
+            F.col("workspace_id").alias("_catalogue_workspace_id"),
             F.col("_catalogue_target"),
             F.col("schema_name").alias("_catalogue_schema_name"),
             F.col("table_name").alias("_catalogue_table_name"),
         )
-        .dropDuplicates(["_catalogue_table_id"])
+        .dropDuplicates(["_catalogue_workspace_id", "_catalogue_table_id"])
     )

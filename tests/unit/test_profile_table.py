@@ -90,7 +90,8 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not reread"))
-    monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    canonical = Mock(side_effect=lambda profile, **kwargs: profile)
+    monkeypatch.setattr(module, "_canonical_profiled_dataframe", canonical)
     monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
     monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: None)
@@ -99,12 +100,14 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
-    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="remote", item_id="item"))
     monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=[])
 
     assert result["profile"].count() == 1
+    assert canonical.call_args.kwargs["workspace_id"] == "remote"
+    assert canonical.call_args.kwargs["active_workspace_id"] == "dev"
     output = capsys.readouterr().out
     assert "1. Table → source.dbo.orders" in output
     assert "   Input → supplied DataFrame" in output
@@ -168,7 +171,7 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
-    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(table_id=identity["table_id"], frequency_enabled=True, frequency_columns=["status"], frequency_top_n=2)
@@ -472,7 +475,7 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
     monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
-    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=[])
@@ -707,7 +710,7 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
         if failure_stage == "frequency" else events.append("frequency"),
     )
     monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
-    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(
         module,
         "merge_catalogue_asset",
@@ -785,7 +788,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
     for name in ("_stage_catalogue_profile_retry", "_replace_snapshot_rows",
                  "_replace_frequency_rows", "_frequency_metadata_dataframe", "merge_catalogue_asset"):
         monkeypatch.setattr(module, name, Mock())
-    monkeypatch.setattr(module, "get_store", lambda *a, **k: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **k: Mock(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module, "table_catalogue_observation", lambda *args, **kwargs: {"_committed_at": None})
     discovery = warehouse_discovery if backend == "warehouse" else spark_discovery
     kwargs = {} if backend == "warehouse" else {"dataframe": frame}
@@ -950,7 +953,7 @@ def test_grain_catalogue_update_retries_only_aborted_conflicts(spark_session, mo
     monkeypatch.setattr(module, "_key_candidate_evidence", lambda *a, **kw: {"candidates": []})
     monkeypatch.setattr(module, "encode_metadata_row", lambda table, row: {"profile_key_candidates_json": json.dumps(row)})
 
-    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev"))
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
 
     def persist():
         module._persist_grain_candidates({"table_id": "orders", "store": "Silver"}, [], max_columns=3,

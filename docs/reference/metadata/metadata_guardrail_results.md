@@ -30,7 +30,7 @@ via `run_id`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Captured context remains as observed at evaluation.
 
 ## Column summary
 

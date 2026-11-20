@@ -49,7 +49,7 @@ def test_file_selector_identity_and_active_catalogue_grain():
 
 @pytest.fixture
 def writer(monkeypatch):
-    audit = {"_activity_id": "fabric-activity", "_committed_at": datetime(2026, 1, 1)}
+    audit = {"_workspace_id": "notebook-workspace", "_activity_id": "fabric-activity", "_committed_at": datetime(2026, 1, 1)}
     spark, merge = Mock(), Mock()
     merge.alias.return_value = merge
     merge.merge.return_value = merge
@@ -77,11 +77,22 @@ def test_file_lineage_writer_has_exact_identity_and_activity(writer, role):
         file_identity=source, pipeline_role=role, context={})
     row = writer.spark.createDataFrame.call_args.args[0][0]
     assert row["lineage_id"] == identifier
+    assert row["workspace_id"] == "physical" and row["_workspace_id"] == "notebook-workspace"
     assert row["table_id"] == source["source_id"] and row["table_name"] == "a.csv"
     assert "source_id" not in row and row["asset_type"] == "FILE"
     assert row["_activity_id"] == "fabric-activity" and row["asset_name"] == "Bronze/Files/a.csv"
     assert writer.delta.forPath.call_args.args[1] == "configured-path"
     assert "lineage_id" in writer.merge.merge.call_args.args[1]
+
+
+def test_table_lineage_uses_resolved_binding_and_notebook_audit(writer):
+    """Keep the configured table destination separate from Fabric notebook identity."""
+    shared.persist_lineage_participation(table_id="orders", pipeline_role="source", context={
+        "_pipeline_bindings": {"orders": {"workspace_id": "Remote", "table_name": "orders"}},
+    })
+    row = writer.spark.createDataFrame.call_args.args[0][0]
+    assert (row["workspace_id"], row["table_id"], row["asset_type"]) == ("remote", "orders", "TABLE")
+    assert row["_workspace_id"] == "notebook-workspace"
 
 
 def test_file_catalogue_preserves_first_observation_and_extension_fields(writer):

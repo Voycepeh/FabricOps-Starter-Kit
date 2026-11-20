@@ -188,7 +188,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 274 |
+| Live-critical dependencies | 275 |
 
 ### Release history
 
@@ -338,6 +338,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._freshness_timestamp</code></li>
+<li><code>fabricops_kit.pipeline.shared._guardrail_asset_workspace</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._identifier</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
