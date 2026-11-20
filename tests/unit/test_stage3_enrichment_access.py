@@ -19,8 +19,8 @@ def test_latest_enrichment_is_environment_specific():
 def test_catalogue_table_options_are_environment_specific():
     """Keep workspace_id rows separate while retaining the shared logical table ID."""
     rows = [
-        {"metadata_level": "table", "table_id": "shared-id", "column_id": "", "workspace_id": "dev", "table_name": "Orders", "layer": "Development", "schema_name": "dbo", "is_active": True, "last_profiled_at": "2026-01-01"},
-        {"metadata_level": "table", "table_id": "shared-id", "column_id": "", "workspace_id": "prod", "table_name": "Orders", "layer": "Production", "schema_name": "dbo", "is_active": True, "last_profiled_at": "2026-01-01"},
+        {"asset_type": "TABLE", "columns_json": [], "table_id": "shared-id", "column_id": "", "workspace_id": "dev", "table_name": "Orders", "layer": "Development", "schema_name": "dbo", "is_active": True, "last_profiled_at": "2026-01-01"},
+        {"asset_type": "TABLE", "columns_json": [], "table_id": "shared-id", "column_id": "", "workspace_id": "prod", "table_name": "Orders", "layer": "Production", "schema_name": "dbo", "is_active": True, "last_profiled_at": "2026-01-01"},
     ]
     dev = enrichment_shared.catalogue_table_options(rows, workspace_id="dev")
     prod = enrichment_shared.catalogue_table_options(rows, workspace_id="prod")

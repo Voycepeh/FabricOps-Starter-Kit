@@ -84,10 +84,12 @@ def runtime(monkeypatch, spark_session):
     runtime_context = context
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
     monkeypatch.setattr(shared, "get_spark_session", lambda *a, **_kwargs: spark_session)
+    monkeypatch.setattr(shared, "resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title())
     monkeypatch.setattr(shared, "processing_state_path", lambda context: "private-state")
     monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.io"), "read_lakehouse_table", lambda *a, **kw: source)
     caller_snapshot = {"dataframe": None}
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
         dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch", "activity_id": kw["audit"]["_activity_id"],
@@ -100,7 +102,8 @@ def runtime(monkeypatch, spark_session):
     # Every mutation reachable from Read, validation, recovery and Write is observed.
     spies = {}
     for owner, names in ((shared, ["write_lakehouse_table"]),
-                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "_upsert_catalogue_identities", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
+                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "merge_catalogue_asset", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
+                         (read_module, ["merge_catalogue_asset"]),
                          (write_module, ["_persist_target_processing"]),
                          (importlib.import_module("fabricops_kit.io"), ["write_lakehouse_table", "write_warehouse_table"]),
                          (importlib.import_module("fabricops_kit.io.shared"), ["execute_warehouse_processing"])):

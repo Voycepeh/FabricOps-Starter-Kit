@@ -271,7 +271,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "The canonical metadata registry for table and file assets and their columns.",
-    "long_definition": "FabricOps Data Catalogue metadata identifies table and file assets and their columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.",
+    "long_definition": "The FabricOps Data Catalogue keeps one current entry per physical workspace, Table ID and asset type. It stores asset location, the latest observed column definitions and Engineering processing information used by profiling and Contract authoring.",
     "preferred_usage": "Use data catalogue for FabricOps table and file asset metadata and table columns.",
     "avoid_usage": "catalog when referring to the FabricOps metadata entity"
   },

@@ -130,9 +130,9 @@ OneLake permissions.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_onelake_access.py:158`
+`fabricops_kit/access_scanner/scan_onelake_access.py:160`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L158-L283">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_access.py#L160-L285">View on GitHub</a>
 </div>
 
 

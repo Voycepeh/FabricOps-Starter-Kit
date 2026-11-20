@@ -232,21 +232,21 @@ from pyspark.sql import functions as F
 participants = pipeline_participation(runs).alias("p")
 catalogue = read_lakehouse_table(
     "METADATA_DATA_CATALOGUE", store="Metadata", schema=engineering_schema,
-).filter(F.col("metadata_level").isin("table", "file")).alias("c")
+).alias("c")
 usage = participants.join(
     catalogue,
     (F.col("p.table_id") == F.col("c.table_id"))
-    & (F.col("p.catalogue_workspace_id") == F.col("c.workspace_id")),
+    & (F.col("p.catalogue_workspace_id") == F.col("c.workspace_id"))
+    & (F.col("p.asset_type") == F.col("c.asset_type")),
     "left",
 )
 ```
 
-Catalogue observations use the common asset ID and observation workspace. The
-projection's catalogue_workspace_id selects the execution scope for tables and
-the physical destination workspace for files;
-physical destination workspace/item/schema remain available under `destination`.
-A left join preserves unregistered tables and file participants. Files reuse their existing `source_id` as the projected `table_id` Catalogue asset key; released Run JSON fields are unchanged. Select one current table/file-level Catalogue
-observation per workspace/asset ID before joining if the consumer retains snapshots.
+The projection uses the physical workspace from the operation’s destination to
+join the Catalogue. The full destination also retains the item and schema.
+A left join preserves unregistered participants and attempts. Files reuse their
+existing `source_id` as the projected `table_id`. Released Run JSON retains the
+original descriptor fields.
 
 The projection excludes `not_started` declarations and includes successful,
 incomplete and failed attempts, even when the whole Run fails. Read-only runs and

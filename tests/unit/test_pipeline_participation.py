@@ -43,11 +43,12 @@ def test_three_reads_two_writes_and_catalogue_join(runtime, spark_session):
         assert all(r.run_status == 'failed' and r.operation_status == 'succeeded' for r in records)
         assert next(r for r in records if r.table_id == 'table3').publication_status == 'committed'
         catalogue = spark_session.createDataFrame(
-            [('canary', 'table0', 'table'), ('canary', 'table0', 'column'),
-             ('different', 'table0', 'table')], ['workspace_id', 'table_id', 'metadata_level'])
+            [('workspace', 'table0', 'TABLE'), ('workspace', 'table0', 'FILE'),
+             ('canary', 'table0', 'TABLE')], ['workspace_id', 'table_id', 'asset_type'])
         from pyspark.sql import functions as F
-        joined = participants.alias('p').join(catalogue.filter("metadata_level = 'table'").alias('c'),
+        joined = participants.alias('p').join(catalogue.alias('c'),
             (F.col('p.table_id') == F.col('c.table_id'))
+            & (F.col('p.asset_type') == F.col('c.asset_type'))
             & (F.col('p.catalogue_workspace_id') == F.col('c.workspace_id')))
         assert joined.count() == 1
         assert all(r.participant_workspace_id == 'workspace' for r in records)
@@ -98,13 +99,14 @@ def test_files_and_legacy_run_hashes(runtime, spark_session):
     assert result.source_id == result.table_id == 'file:example' and result.asset_type == 'FILE'
     assert result.catalogue_workspace_id == result.participant_workspace_id == 'workspace'
     catalogue = spark_session.createDataFrame(
-        [('workspace', 'file:example', 'file'), ('canary', 'file:other', 'file')],
-        ['workspace_id', 'table_id', 'metadata_level'])
+        [('workspace', 'file:example', 'FILE'), ('canary', 'file:example', 'FILE')],
+        ['workspace_id', 'table_id', 'asset_type'])
     from pyspark.sql import functions as F
     projected = shared.pipeline_participation(_frame(spark_session, [row])).alias('p')
     assert projected.join(catalogue.alias('c'),
         (F.col('p.table_id') == F.col('c.table_id'))
-        & (F.col('p.catalogue_workspace_id') == F.col('c.workspace_id'))).count() == 1
+        & (F.col('p.catalogue_workspace_id') == F.col('c.workspace_id'))
+        & (F.col('p.asset_type') == F.col('c.asset_type'))).count() == 1
     assert shared.canonical_pipeline_json(row) == before
     assert 'publication_status' not in shared.validate_pipeline_run(shared.pipeline_run_row(plan, status='incomplete'))['operations'][0]
 
@@ -173,11 +175,14 @@ def test_asset_usage_bounds_history_and_falls_back_to_run_time(runtime, spark_se
     old['operations'][0].update(started_at=None, completed_at=None)
     new = deepcopy(old)
     new.update(run_id='a-new', started_at=datetime(2026, 11, 20))
-    runs = _frame(spark_session, [old, new])
+    remote = deepcopy(new)
+    remote.update(run_id='z-remote', started_at=datetime(2026, 11, 21))
+    remote['operations'][0]['destination']['workspace_id'] = 'other-physical'
+    runs = _frame(spark_session, [old, new, remote])
     monkeypatch.setattr(contracts, 'read_lakehouse_table', lambda *a, **kw: runs)
     monkeypatch.setattr(contracts, '_metadata_io_context', lambda *a: {})
     rows = contracts.get_asset_pipeline_participation(config={}, routing_workspace_id='canary',
-        spark_session=spark_session, table_id='table0')
+        spark_session=spark_session, table_id='table0', physical_workspace_id='WORKSPACE')
     assert len(rows) == 1 and rows[0]['run_id'] == 'a-new'
     assert rows[0]['run_started_at'] == datetime(2026, 11, 20)
 

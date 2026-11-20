@@ -3947,7 +3947,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -3990,6 +3990,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -4058,6 +4070,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, target: str = 'source', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -4101,6 +4125,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -4161,7 +4197,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4173,7 +4209,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4323,6 +4359,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
@@ -4330,6 +4378,18 @@
             "Public API added."
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -4369,29 +4429,27 @@
           "signature_before": "widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Lifecycle changed: Preview to Live.",
-            "Parameter removed: spark."
+            "Preview public API removed."
           ],
-          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Lifecycle changed: Preview to Live.",
-            "Parameter removed: spark."
+            "Preview public API removed."
           ],
-          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
@@ -4420,13 +4478,13 @@
         }
       ],
       "summary": {
-        "added": 15,
-        "modified": 12,
-        "nonbreaking": 15,
-        "potentially_breaking": 12,
-        "removed": 14,
-        "review_required": 14,
-        "total": 41
+        "added": 20,
+        "modified": 10,
+        "nonbreaking": 20,
+        "potentially_breaking": 10,
+        "removed": 16,
+        "review_required": 16,
+        "total": 46
       },
       "target": "main"
     },
@@ -8261,7 +8319,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -8299,6 +8357,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -8361,6 +8431,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -8395,6 +8477,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -8489,7 +8583,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -8501,7 +8595,7 @@
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": null
         },
         {
@@ -8620,6 +8714,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_data_contract.widget_data_contract",
@@ -8630,27 +8736,39 @@
           "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Parameter removed: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Parameter removed: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
@@ -8679,13 +8797,13 @@
         }
       ],
       "summary": {
-        "added": 12,
-        "modified": 13,
-        "nonbreaking": 12,
+        "added": 17,
+        "modified": 11,
+        "nonbreaking": 17,
         "potentially_breaking": 16,
-        "removed": 13,
+        "removed": 15,
         "review_required": 10,
-        "total": 38
+        "total": 43
       },
       "target": "main"
     },
@@ -12439,7 +12557,7 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
@@ -12477,6 +12595,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
         },
         {
           "change_type": "modified",
@@ -12539,6 +12669,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, spark_session = None, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -12573,6 +12715,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
+          "signature_before": null
         },
         {
           "change_type": "removed",
@@ -12671,12 +12825,18 @@
             "Parameter removed: spark_session.",
             "Parameter removed: target_table_id.",
             "Optional parameter added: dq_diagnostics.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
             "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -12694,9 +12854,15 @@
             "Parameter removed: spark_session.",
             "Optional parameter added: dq_diagnostics.",
             "Optional parameter added: existing_mapping.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None.",
             "Default changed for verbose: True to False."
           ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]"
         },
         {
@@ -12797,6 +12963,18 @@
           "signature_before": null
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -12812,27 +12990,39 @@
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, spark_session: Any = None, context: Any = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Parameter removed: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Parameter removed: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": null,
           "signature_before": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
@@ -12861,13 +13051,13 @@
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 20,
-        "nonbreaking": 4,
+        "added": 9,
+        "modified": 18,
+        "nonbreaking": 9,
         "potentially_breaking": 23,
-        "removed": 11,
+        "removed": 13,
         "review_required": 8,
-        "total": 35
+        "total": 40
       },
       "target": "main"
     },
@@ -15279,13 +15469,49 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
             "Public API added."
           ],
           "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -15296,12 +15522,35 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -15388,6 +15637,18 @@
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -15400,16 +15661,52 @@
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 3,
-        "potentially_breaking": 4,
-        "removed": 2,
-        "review_required": 2,
-        "total": 9
+        "added": 7,
+        "modified": 6,
+        "nonbreaking": 8,
+        "potentially_breaking": 6,
+        "removed": 4,
+        "review_required": 3,
+        "total": 17
       },
       "target": "main"
     },
@@ -17518,13 +17815,49 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
             "Public API added."
           ],
           "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -17535,12 +17868,35 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -17627,6 +17983,18 @@
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict[str, Any]"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
@@ -17639,16 +18007,52 @@
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]",
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 3,
-        "potentially_breaking": 4,
-        "removed": 2,
-        "review_required": 2,
-        "total": 9
+        "added": 7,
+        "modified": 6,
+        "nonbreaking": 8,
+        "potentially_breaking": 6,
+        "removed": 4,
+        "review_required": 3,
+        "total": 17
       },
       "target": "main"
     },
@@ -19749,13 +20153,49 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
             "Public API added."
           ],
           "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -19766,12 +20206,35 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -19830,16 +20293,64 @@
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 1,
-        "modified": 3,
-        "nonbreaking": 1,
-        "potentially_breaking": 4,
-        "removed": 2,
-        "review_required": 1,
-        "total": 6
+        "added": 6,
+        "modified": 4,
+        "nonbreaking": 6,
+        "potentially_breaking": 6,
+        "removed": 4,
+        "review_required": 2,
+        "total": 14
       },
       "target": "main"
     },
@@ -21900,13 +22411,49 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
+          "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
             "Public API added."
           ],
           "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
           "signature_before": null
         },
         {
@@ -21917,12 +22464,35 @@
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
             "Parameter removed: target_table_id.",
+            "Optional parameter added: file_format.",
+            "Optional parameter added: read_options.",
+            "Optional parameter added: relative_path.",
             "Optional parameter added: target_schema.",
             "Optional parameter added: target_store.",
-            "Optional parameter added: target_table_name."
+            "Optional parameter added: target_table_name.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
           ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "review_required",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Optional parameter added: file_format.",
+            "Optional parameter added: relative_path.",
+            "Optional parameter added: write_options.",
+            "Parameter became optional: schema.",
+            "Parameter became optional: table_name.",
+            "Annotation changed for table_name: str to str | None."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -21981,16 +22551,64 @@
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 1,
-        "modified": 3,
-        "nonbreaking": 1,
-        "potentially_breaking": 4,
-        "removed": 2,
-        "review_required": 1,
-        "total": 6
+        "added": 6,
+        "modified": 4,
+        "nonbreaking": 6,
+        "potentially_breaking": 6,
+        "removed": 4,
+        "review_required": 2,
+        "total": 14
       },
       "target": "main"
     },
@@ -24728,132 +25346,26 @@
       "baseline": "v0.5.0",
       "changes": [
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
-          "reasons": [
-            "Lifecycle changed: Live to Preview."
-          ],
-          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-          "reasons": [
-            "Parameter removed: file_format.",
-            "Parameter removed: read_options.",
-            "Parameter removed: relative_path.",
-            "Parameter became required: schema.",
-            "Parameter became required: table_name.",
-            "Annotation changed for table_name: str | None to str."
-          ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-          "reasons": [
-            "Parameter removed: file_format.",
-            "Parameter removed: relative_path.",
-            "Parameter removed: write_options.",
-            "Parameter became required: schema.",
-            "Parameter became required: table_name.",
-            "Annotation changed for table_name: str | None to str."
-          ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
           "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
             "Public API added."
           ],
-          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
           "signature_before": null
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 3,
-        "nonbreaking": 2,
-        "potentially_breaking": 7,
-        "removed": 4,
+        "added": 1,
+        "modified": 0,
+        "nonbreaking": 1,
+        "potentially_breaking": 0,
+        "removed": 0,
         "review_required": 0,
-        "total": 9
+        "total": 1
       },
       "target": "main"
     },
@@ -24937,12 +25449,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -24981,6 +25493,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -25049,6 +25573,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -25092,6 +25628,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, target: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -25153,7 +25701,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -25165,7 +25713,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -25313,6 +25861,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
@@ -25322,6 +25882,18 @@
           ],
           "signature_after": null,
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -25360,30 +25932,28 @@
           "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
           "reasons": [
-            "Lifecycle changed: Live to Preview.",
-            "Required parameter added: spark."
+            "Public API added."
           ],
           "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Preview",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Lifecycle changed: Live to Preview.",
-            "Required parameter added: spark."
+            "Public API added."
           ],
           "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -25411,13 +25981,13 @@
         }
       ],
       "summary": {
-        "added": 14,
-        "modified": 12,
-        "nonbreaking": 14,
-        "potentially_breaking": 18,
-        "removed": 15,
+        "added": 16,
+        "modified": 10,
+        "nonbreaking": 16,
+        "potentially_breaking": 21,
+        "removed": 20,
         "review_required": 9,
-        "total": 41
+        "total": 46
       },
       "target": "v0.1.0"
     },
@@ -25486,12 +26056,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -25525,6 +26095,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -25587,6 +26169,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -25621,6 +26215,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -25716,7 +26322,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -25728,7 +26334,7 @@
             "Live public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -25845,6 +26451,18 @@
         },
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
@@ -25856,28 +26474,40 @@
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
           "reasons": [
-            "Required parameter added: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Required parameter added: spark."
+            "Public API added."
           ],
           "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -25905,13 +26535,13 @@
         }
       ],
       "summary": {
-        "added": 13,
-        "modified": 13,
-        "nonbreaking": 13,
-        "potentially_breaking": 17,
-        "removed": 12,
+        "added": 15,
+        "modified": 11,
+        "nonbreaking": 15,
+        "potentially_breaking": 20,
+        "removed": 17,
         "review_required": 8,
-        "total": 38
+        "total": 43
       },
       "target": "v0.2.0"
     },
@@ -25960,12 +26590,12 @@
         },
         {
           "change_type": "removed",
-          "classification": "review_required",
+          "classification": "potentially_breaking",
           "lifecycle_after": null,
-          "lifecycle_before": "Preview",
+          "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
           "reasons": [
-            "Preview public API removed."
+            "Live public API removed."
           ],
           "signature_after": null,
           "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
@@ -25999,6 +26629,18 @@
           ],
           "signature_after": "setup_notebook(config: FrameworkConfig | dict[str, Any], env: str = 'Sandbox', required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None) -> NotebookSetupContext",
           "signature_before": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -26061,6 +26703,18 @@
           "signature_before": "read_lakehouse_parquet(relative_path: str, *, store: str = 'Bronze', verbose: bool = True, context: dict[str, Any] | None = None, **options)"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Live",
@@ -26095,6 +26749,18 @@
           ],
           "signature_after": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', spark_session = None, context: dict[str, Any] | None = None, **options)",
           "signature_before": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "added",
@@ -26189,6 +26855,9 @@
           "reasons": [
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
@@ -26196,10 +26865,13 @@
             "Optional parameter added: frequency_top_n.",
             "Optional parameter added: spark_session.",
             "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str.",
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -26211,15 +26883,21 @@
             "Lifecycle changed: Live to Preview.",
             "Parameter removed: dq_diagnostics.",
             "Parameter removed: existing_mapping.",
+            "Parameter removed: file_format.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: write_options.",
             "Optional parameter added: contracts.",
             "Optional parameter added: frequency_enabled.",
             "Optional parameter added: frequency_top_n.",
             "Required parameter added: sources.",
             "Optional parameter added: spark_session.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str.",
             "Default changed for verbose: False to True."
           ],
           "signature_after": "orchestrate_write(dataframe: Any, *, sources: Iterable[dict[str, Any]], store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, contracts: dict[str, Any] | None = None, repartition_by: int | None = None, frequency_enabled: bool = True, frequency_top_n: int | None = 5, spark_session = None, verbose: bool = True) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -26319,6 +26997,18 @@
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -26334,28 +27024,40 @@
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
+          "change_type": "removed",
           "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
+          "lifecycle_after": null,
           "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
           "reasons": [
-            "Required parameter added: spark."
+            "Live public API removed."
           ],
-          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
           "reasons": [
-            "Required parameter added: spark."
+            "Public API added."
           ],
           "signature_after": "widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": null
         },
         {
           "change_type": "added",
@@ -26383,13 +27085,13 @@
         }
       ],
       "summary": {
-        "added": 11,
-        "modified": 20,
-        "nonbreaking": 12,
-        "potentially_breaking": 21,
-        "removed": 4,
+        "added": 13,
+        "modified": 18,
+        "nonbreaking": 14,
+        "potentially_breaking": 24,
+        "removed": 9,
         "review_required": 2,
-        "total": 35
+        "total": 40
       },
       "target": "v0.2.5"
     },
@@ -26398,15 +27100,51 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -26415,13 +27153,36 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -26508,6 +27269,18 @@
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -26520,16 +27293,52 @@
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 2,
-        "potentially_breaking": 3,
-        "removed": 2,
+        "added": 4,
+        "modified": 6,
+        "nonbreaking": 4,
+        "potentially_breaking": 9,
+        "removed": 7,
         "review_required": 4,
-        "total": 9
+        "total": 17
       },
       "target": "v0.3.0"
     },
@@ -26538,15 +27347,51 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -26555,13 +27400,36 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -26648,6 +27516,18 @@
           "signature_before": "widget_activate_pipeline(*, pipeline_id = None, context = None) -> dict"
         },
         {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -26660,16 +27540,52 @@
           ],
           "signature_after": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None) -> dict[str, Any]",
           "signature_before": "widget_data_contract(*, table_id: str | None = None, contract_version: int | None = None, context: Any = None, ai_model: str | None = None, ai_reasoning_effort: str | None = None, ai_verbosity: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 5,
-        "nonbreaking": 2,
-        "potentially_breaking": 3,
-        "removed": 2,
+        "added": 4,
+        "modified": 6,
+        "nonbreaking": 4,
+        "potentially_breaking": 9,
+        "removed": 7,
         "review_required": 4,
-        "total": 9
+        "total": 17
       },
       "target": "v0.3.1"
     },
@@ -26678,15 +27594,51 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -26695,13 +27647,36 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -26760,16 +27735,64 @@
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 3,
-        "nonbreaking": 2,
-        "potentially_breaking": 2,
-        "removed": 1,
+        "added": 4,
+        "modified": 4,
+        "nonbreaking": 4,
+        "potentially_breaking": 8,
+        "removed": 6,
         "review_required": 2,
-        "total": 6
+        "total": 14
       },
       "target": "v0.4.0"
     },
@@ -26778,15 +27801,51 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+        },
+        {
+          "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
             "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
         },
         {
           "change_type": "modified",
@@ -26795,13 +27854,36 @@
           "lifecycle_before": "Live",
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: read_options.",
+            "Parameter removed: relative_path.",
             "Parameter removed: target_schema.",
             "Parameter removed: target_store.",
             "Parameter removed: target_table_name.",
-            "Optional parameter added: target_table_id."
+            "Optional parameter added: target_table_id.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
           ],
           "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_table_id: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
+          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "modified",
+          "classification": "potentially_breaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
+          "reasons": [
+            "Parameter removed: file_format.",
+            "Parameter removed: relative_path.",
+            "Parameter removed: write_options.",
+            "Parameter became required: schema.",
+            "Parameter became required: table_name.",
+            "Annotation changed for table_name: str | None to str."
+          ],
+          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "added",
@@ -26860,16 +27942,64 @@
           ],
           "signature_after": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', observe_source: bool = False, source_observation_days: int | None = None)",
           "signature_before": "setup_pipeline(*, pipeline_mode: str = 'Ungoverned', profiling_enabled: bool = True, profiling_interval_days: int = 1, profiling_max_rows: int | None = None, grain_discovery_enabled: bool = False, frequency_enabled: bool = False, source_drift_enabled: bool = False, source_drift_interval_days: int = 1, source_drift_block: bool = True)"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "potentially_breaking",
+          "lifecycle_after": null,
+          "lifecycle_before": "Live",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
+          "reasons": [
+            "Live public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Live",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "signature_before": null
         }
       ],
       "summary": {
-        "added": 2,
-        "modified": 3,
-        "nonbreaking": 2,
-        "potentially_breaking": 2,
-        "removed": 1,
+        "added": 4,
+        "modified": 4,
+        "nonbreaking": 4,
+        "potentially_breaking": 8,
+        "removed": 6,
         "review_required": 2,
-        "total": 6
+        "total": 14
       },
       "target": "v0.4.1"
     },
@@ -26877,277 +28007,40 @@
       "baseline": "main",
       "changes": [
         {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
           "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
           "reasons": [
-            "Lifecycle changed: Preview to Live."
-          ],
-          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
-          "signature_before": null
-        },
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-          "reasons": [
-            "Optional parameter added: file_format.",
-            "Optional parameter added: read_options.",
-            "Optional parameter added: relative_path.",
-            "Parameter became optional: schema.",
-            "Parameter became optional: table_name.",
-            "Annotation changed for table_name: str to str | None."
-          ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-          "reasons": [
-            "Optional parameter added: file_format.",
-            "Optional parameter added: relative_path.",
-            "Optional parameter added: write_options.",
-            "Parameter became optional: schema.",
-            "Parameter became optional: table_name.",
-            "Annotation changed for table_name: str to str | None."
-          ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-          "reasons": [
-            "Live public API removed."
+            "Preview public API removed."
           ],
           "signature_after": null,
-          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
+          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
         }
       ],
       "summary": {
-        "added": 4,
-        "modified": 3,
-        "nonbreaking": 5,
-        "potentially_breaking": 2,
-        "removed": 2,
-        "review_required": 2,
-        "total": 9
+        "added": 0,
+        "modified": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "v0.5.0"
     },
     {
       "baseline": "main",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
-          "reasons": [
-            "Lifecycle changed: Preview to Live."
-          ],
-          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
-          "signature_before": null
-        },
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-          "reasons": [
-            "Optional parameter added: file_format.",
-            "Optional parameter added: read_options.",
-            "Optional parameter added: relative_path.",
-            "Parameter became optional: schema.",
-            "Parameter became optional: table_name.",
-            "Annotation changed for table_name: str to str | None."
-          ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "review_required",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-          "reasons": [
-            "Optional parameter added: file_format.",
-            "Optional parameter added: relative_path.",
-            "Optional parameter added: write_options.",
-            "Parameter became optional: schema.",
-            "Parameter became optional: table_name.",
-            "Annotation changed for table_name: str to str | None."
-          ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        }
-      ],
+      "changes": [],
       "summary": {
-        "added": 5,
-        "modified": 3,
-        "nonbreaking": 6,
-        "potentially_breaking": 2,
-        "removed": 2,
-        "review_required": 2,
-        "total": 10
+        "added": 0,
+        "modified": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 0,
+        "total": 0
       },
       "target": "working-tree"
     },
@@ -29787,146 +30680,15 @@
     },
     {
       "baseline": "working-tree",
-      "changes": [
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Preview",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
-          "reasons": [
-            "Lifecycle changed: Live to Preview."
-          ],
-          "signature_after": "orchestrate_demo_reset(*, reset: bool = False) -> None",
-          "signature_before": "orchestrate_demo_reset(*, reset: bool = False) -> None"
-        },
-        {
-          "change_type": "removed",
-          "classification": "review_required",
-          "lifecycle_after": null,
-          "lifecycle_before": "Preview",
-          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
-          "reasons": [
-            "Preview public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
-          "reasons": [
-            "Parameter removed: file_format.",
-            "Parameter removed: read_options.",
-            "Parameter removed: relative_path.",
-            "Parameter became required: schema.",
-            "Parameter became required: table_name.",
-            "Annotation changed for table_name: str | None to str."
-          ],
-          "signature_after": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "modified",
-          "classification": "potentially_breaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
-          "reasons": [
-            "Parameter removed: file_format.",
-            "Parameter removed: relative_path.",
-            "Parameter removed: write_options.",
-            "Parameter became required: schema.",
-            "Parameter became required: table_name.",
-            "Annotation changed for table_name: str | None to str."
-          ],
-          "signature_after": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
-          "signature_before": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "removed",
-          "classification": "potentially_breaking",
-          "lifecycle_after": null,
-          "lifecycle_before": "Live",
-          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
-          "reasons": [
-            "Live public API removed."
-          ],
-          "signature_after": null,
-          "signature_before": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]"
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        },
-        {
-          "change_type": "added",
-          "classification": "nonbreaking",
-          "lifecycle_after": "Live",
-          "lifecycle_before": null,
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-          "reasons": [
-            "Public API added."
-          ],
-          "signature_after": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "signature_before": null
-        }
-      ],
+      "changes": [],
       "summary": {
-        "added": 2,
-        "modified": 3,
-        "nonbreaking": 2,
-        "potentially_breaking": 7,
-        "removed": 5,
-        "review_required": 1,
-        "total": 10
+        "added": 0,
+        "modified": 0,
+        "nonbreaking": 0,
+        "potentially_breaking": 0,
+        "removed": 0,
+        "review_required": 0,
+        "total": 0
       },
       "target": "main"
     }
@@ -44006,7 +44768,7 @@
         {
           "certainty": "certain",
           "extraction_error": null,
-          "lifecycle": "Preview",
+          "lifecycle": "Live",
           "parameters": [
             {
               "annotation": "bool",
@@ -44142,6 +44904,34 @@
           "signature": "setup_notebook(config: FrameworkConfig | dict[str, Any] | None = None, workspace_id: str | None = None, required_targets: list[str] | None = None, notebook_name: str | None = None, run_id_prefix: str = 'run', local_fallback_name: str | None = None, *, config_workspace_id: str | None = None) -> NotebookSetupContext",
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
           "source_qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
+              "annotation": "FrameworkConfig | dict[str, Any]",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "config",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "workspace_id",
+              "required": true
+            }
+          ],
+          "qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state",
+          "return_annotation": "dict[str, Any]",
+          "signature": "setup_processing_state(*, config: FrameworkConfig | dict[str, Any], workspace_id: str) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/config/setup_processing_state.py",
+          "source_qualified_name": "fabricops_kit.config.setup_processing_state.setup_processing_state"
         },
         {
           "certainty": "certain",
@@ -44425,6 +45215,58 @@
           "lifecycle": "Live",
           "parameters": [
             {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "query",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "table_name",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": "'Bronze'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "schema",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query",
+          "return_annotation": null,
+          "signature": "read_lakehouse_query(query: str, *, table_name: str, store: str = 'Bronze', schema: str | None = None, context: dict[str, Any] | None = None)",
+          "source_path": "src/fabricops_kit/io/read_lakehouse_query.py",
+          "source_qualified_name": "fabricops_kit.io.read_lakehouse_query.read_lakehouse_query"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
               "annotation": "str | None",
               "default": "None",
               "has_default": true,
@@ -44574,6 +45416,90 @@
           "signature": "read_warehouse_table(schema: str, table_name: str, *, store: str = 'warehouse', context: dict[str, Any] | None = None, **options)",
           "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
           "source_qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "dataframe",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "relative_path",
+              "required": true
+            },
+            {
+              "annotation": null,
+              "default": "'Silver'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "store",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "'parquet'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "'overwrite'",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "mode",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "write_options",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "repartition_by",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "True",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "verbose",
+              "required": false
+            },
+            {
+              "annotation": null,
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file",
+          "return_annotation": null,
+          "signature": "write_lakehouse_file(dataframe, relative_path, *, store = 'Silver', file_format = 'parquet', mode = 'overwrite', write_options = None, repartition_by = None, verbose = True, context = None)",
+          "source_path": "src/fabricops_kit/io/write_lakehouse_file.py",
+          "source_qualified_name": "fabricops_kit.io.write_lakehouse_file.write_lakehouse_file"
         },
         {
           "certainty": "certain",
@@ -44786,19 +45712,19 @@
             },
             {
               "annotation": "str | None",
-              "default": null,
-              "has_default": false,
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "schema",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "table_name",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
@@ -44863,11 +45789,35 @@
               "kind": "keyword_only",
               "name": "dq_diagnostics",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "relative_path",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "read_options",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_read(*, store: str, schema: str | None, table_name: str, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_read(*, store: str, schema: str | None = None, table_name: str | None = None, read_mode: str = 'full', query: str | None = None, read_parameters: dict[str, Any] | None = None, target_store: str | None = None, target_schema: str | None = None, target_table_name: str | None = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, read_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_read.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_read.orchestrate_read"
         },
@@ -44894,19 +45844,19 @@
             },
             {
               "annotation": "str | None",
-              "default": null,
-              "has_default": false,
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "schema",
-              "required": true
+              "required": false
             },
             {
-              "annotation": "str",
-              "default": null,
-              "has_default": false,
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
               "kind": "keyword_only",
               "name": "table_name",
-              "required": true
+              "required": false
             },
             {
               "annotation": "str",
@@ -44955,11 +45905,35 @@
               "kind": "keyword_only",
               "name": "dq_diagnostics",
               "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "relative_path",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "file_format",
+              "required": false
+            },
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "write_options",
+              "required": false
             }
           ],
           "qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write",
           "return_annotation": "dict[str, Any]",
-          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None, table_name: str, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample') -> dict[str, Any]",
+          "signature": "orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping = None, verbose: bool = False, dq_diagnostics: str = 'sample', relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]",
           "source_path": "src/fabricops_kit/pipeline/orchestrate_write.py",
           "source_qualified_name": "fabricops_kit.pipeline.orchestrate_write.orchestrate_write"
         },
@@ -45254,6 +46228,26 @@
         {
           "certainty": "certain",
           "extraction_error": null,
+          "lifecycle": "Live",
+          "parameters": [
+            {
+              "annotation": "dict[str, Any] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "context",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement",
+          "return_annotation": "dict[str, Any]",
+          "signature": "widget_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_data_agreement.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_data_agreement.widget_data_agreement"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
           "lifecycle": "Preview",
           "parameters": [
             {
@@ -45325,37 +46319,17 @@
               "required": false
             }
           ],
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+          "qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward",
           "return_annotation": "dict[str, Any]",
-          "signature": "widget_render_data_agreement(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
-          "source_qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"
-        },
-        {
-          "certainty": "certain",
-          "extraction_error": null,
-          "lifecycle": "Live",
-          "parameters": [
-            {
-              "annotation": "dict[str, Any] | None",
-              "default": "None",
-              "has_default": true,
-              "kind": "keyword_only",
-              "name": "context",
-              "required": false
-            }
-          ],
-          "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-          "return_annotation": "dict[str, Any]",
-          "signature": "widget_render_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
-          "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-          "source_qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"
+          "signature": "widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/widgets/widget_data_steward.py",
+          "source_qualified_name": "fabricops_kit.widgets.widget_data_steward.widget_data_steward"
         }
       ],
       "certainty": "certain",
       "lifecycle_source": "public_api_registry",
       "notes": [],
-      "revision": "b8cbe1adc245f193754ed3bd898d93a90b7d2b99",
+      "revision": "6dce7678d950361d44a05425a2e61368ca36bd81",
       "source_kind": "git_branch",
       "version": "main"
     },
@@ -47152,7 +48126,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:d24d3002069853f14294fbb594afb7973d7c1615414e22717ef4f046c1cb6bff",
+      "source_digest": "sha256:3906ad336f425de047e5806d0b72bb3ab3df31f9e3f06aba08c3e624507d8279",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

@@ -144,10 +144,9 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (config, "dev", context))
     # The current Catalogue has drifted to string; the frozen contract remains bigint.
     catalogue = [
-        {"table_id": "orders", "table_name": "orders", "metadata_level": "table",
-         "workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo"},
-        {"table_id": "orders", "column_id": "col-id", "column_name": "id",
-         "metadata_level": "column", "workspace_id": "dev", "data_type": "string"},
+        {"table_id": "orders", "table_name": "orders", "asset_type": "TABLE",
+         "workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo",
+         "columns_json": [{"column_id": "col-id", "column_name": "id", "data_type": "string"}]},
     ]
     monkeypatch.setattr(
         shared, "read_lakehouse_table",

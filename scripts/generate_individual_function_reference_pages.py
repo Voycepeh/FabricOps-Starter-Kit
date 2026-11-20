@@ -49,8 +49,8 @@ CORE_TEMPLATE_KEYS = {"00_env_config", "00C_demo_setup", "01_governance", "02_pi
 AUDIT_FIELD_DESCRIPTIONS = {
     "_committed_by": "User principal or runtime identity that committed the metadata row.",
     "_committed_at": "Timestamp when the metadata row was committed.",
-    "_workspace_id": "Fabric workspace identifier captured from runtime audit context.",
-    "_workspace_name": "Fabric workspace name captured from runtime audit context.",
+    "_workspace_id": "ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.",
+    "_workspace_name": "Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.",
     "_notebook_id": "Fabric notebook identifier captured from runtime audit context.",
     "_notebook_name": "Fabric notebook name captured from runtime audit context.",
     "_metadata_lakehouse_name": "Configured metadata lakehouse name used for the write.",
@@ -90,8 +90,7 @@ METADATA_FIELD_DESCRIPTIONS = {
         "asset, and column context."
     ),
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
-    "workspace_id": "Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.",
-    "evidence_workspace_id": "Workspace observation used to author this global Contract version; never part of Contract identity.",
+    "evidence_workspace_id": "ID of the workspace whose Catalogue observation supplied the authoring evidence for this Contract version. The Contract version is identified by contract_id and contract_version.",
     "store_type": "Configured Fabric store type recorded for the profiled dataset.",
     "layer": "The configured medallion layer where the table is stored.",
     "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
@@ -101,12 +100,11 @@ METADATA_FIELD_DESCRIPTIONS = {
     "contract_id": "Stable identifier for the contract row.",
     "contract_version": "Version recorded for the contract row.",
     "contract_status": "Lifecycle status recorded for the contract row.",
-    "contract_payload_json": "String column containing the JSON definition for this exact table/contract version and authoring workspace, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table.",
+    "contract_payload_json": "JSON definition for the exact Contract version, including schema, Enrichment, and Guardrails. A draft is editable and a frozen payload is immutable. File Contracts retain the physical file selector in source.",
     "lineage_event_id": "Deterministic runtime lineage event identifier.",
     "activity_id": "Runtime Fabric activity identifier captured for the lineage row.",
     "notebook_id": "Fabric notebook identifier captured for the lineage row.",
     "notebook_name": "Fabric notebook name captured for the lineage row.",
-    "workspace_name": "Fabric workspace name captured for the lineage row.",
     "profile_role": "Whether the profiled dataset participated as a source or target.",
     "profiled_at": "Timestamp when the dataset profile snapshot was captured.",
     "committed_by": "Actor recorded on the lineage row before standard runtime audit fields are appended.",
@@ -220,13 +218,38 @@ METADATA_FIELD_DESCRIPTIONS = {
     "quality_notes": "Quality notes recorded for the row.",
 }
 
+PHYSICAL_ASSET_WORKSPACE_ID = "ID of the Fabric workspace that contains the physical asset."
+
+WORKSPACE_ID_DESCRIPTIONS = {
+    "METADATA_DATA_CATALOGUE": PHYSICAL_ASSET_WORKSPACE_ID,
+    **dict.fromkeys(
+        ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS"),
+        PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference. Historical rows may carry the earlier workspace scope.",
+    ),
+    "METADATA_DATA_CONTRACT_ACTIVATION": PHYSICAL_ASSET_WORKSPACE_ID + " The activation applies the selected frozen Contract to the asset in this workspace.",
+    "METADATA_PIPELINE_RUN": "ID of the execution workspace whose configuration selects the Run’s stores. Each operation records its physical asset workspace in operations[].destination.workspace_id.",
+    "METADATA_GUARDRAIL_RESULTS": "ID of the physical asset workspace for planned asset checks with a resolved binding. Pipeline-wide results and results without a binding record the execution workspace scope.",
+}
+
+PIPELINE_EXECUTION_WORKSPACE_ID = "ID of the destination workspace whose store configuration is reviewed for pipeline execution."
+
+CATALOGUE_FIELD_DESCRIPTIONS = {
+    "asset_type": "Part of the current asset key. TABLE identifies a table and FILE identifies a file selector.",
+    "workspace_name": "Display name of the Fabric workspace that contains the physical asset.",
+    "writer_workspace_id": "ID of the notebook workspace captured with the table’s last recorded pipeline write. Subsequent Catalogue observations have their own audit fields.",
+    "item_id": "Physical Lakehouse or Warehouse item that contains the asset.",
+    "columns_json": "Latest observed column definitions. SQL NULL is unobserved and [] is an observed empty schema.",
+    "first_observed_at": "First recorded asset observation, retained on subsequent registrations.",
+    "last_observed_at": "Most recent recorded asset observation.",
+}
+
 PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
-    "execution_workspace_id": "Destination workspace whose configuration resolves the approved logical stores.",
+    "execution_workspace_id": PIPELINE_EXECUTION_WORKSPACE_ID,
     "pipeline_id": "Stable logical Pipeline ID shared across versions and workspaces.",
     "pipeline_version": "Monotonically increasing immutable implementation version within an execution workspace.",
     "promotion_id": "Unique reviewed promotion operation ID, retained for safe replay.",
     "status": "active, superseded or retired; at most one active version per execution workspace/Pipeline ID.",
-    "source_workspace_id": "Workspace containing the manually tested development notebook.",
+    "source_workspace_id": "ID of the workspace containing the development notebook used for the reviewed Pipeline Promotion.",
     "source_notebook_id": "Development notebook identity; distinct from the Governed copy.",
     "governed_notebook_id": "Separate physical notebook item for this exact frozen version.",
     "snapshot_uri": "Exact write-once full promoted ipynb snapshot in Metadata Lakehouse Files.",
@@ -260,6 +283,7 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
 
 METADATA_JSON_EXAMPLES = {
     "METADATA_DATA_CATALOGUE": {
+        "columns_json": [{"column_id": "example-column-id", "column_name": "customer_id", "data_type": "int"}],
         "load_strategy_parameters_json": {"watermark_column": "modified_at", "key_columns": ["id"]},
         "scheduled_refresh_json": {"status": "configured", "schedules": [
             {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "UTC"},
@@ -4373,6 +4397,12 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
+    if column_name == "workspace_id" and table_name in WORKSPACE_ID_DESCRIPTIONS:
+        return WORKSPACE_ID_DESCRIPTIONS[table_name]
+    if table_name == "METADATA_PIPELINE_ACTIVATION" and column_name == "execution_workspace_id":
+        return PIPELINE_EXECUTION_WORKSPACE_ID
+    if table_name == "METADATA_DATA_CATALOGUE" and column_name in CATALOGUE_FIELD_DESCRIPTIONS:
+        return CATALOGUE_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
     if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:
@@ -4555,6 +4585,15 @@ def _metadata_relationships(
     return sorted(relationships.values(), key=lambda item: order[item["table"]])
 
 
+def _catalogue_reference_fields(model: dict[str, Any]) -> list[str]:
+    """Return the columns checked together against the physical Catalogue key."""
+    return next((
+        relationship["fields"] for relationship in model.get("relationships", [])
+        if relationship.get("related_table") == "METADATA_DATA_CATALOGUE"
+        and relationship.get("cardinality") == "N:1"
+    ), [])
+
+
 def _metadata_cardinality_display(cardinality: str) -> str:
     """Return a compact rendered cardinality arrow."""
     return cardinality.replace(":", " → ")
@@ -4564,6 +4603,7 @@ def render_metadata_reference_index(
     table_models: dict[str, dict[str, Any]],
     reference_order: list[str],
     table_purposes: dict[str, str],
+    field_names_by_table: dict[str, set[str]],
 ) -> str:
     """Render a compact interactive metadata map instead of redundant full table cards."""
     # Keep browser tooltips and join-key summaries on the same canonical
@@ -4579,6 +4619,11 @@ def render_metadata_reference_index(
             "write_entrypoints": write_entrypoints[name],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
+            "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
+            "asset_identity_fields": [
+                field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
+                if field in field_names_by_table[name]
+            ],
             "foreign_keys": [
                 {
                     "local_field": fk["local_field"],
@@ -4799,6 +4844,9 @@ def generate_metadata_reference_pages() -> None:
         for field_name in model["primary_key"]:
             if field_name not in field_names_by_table[table_name]:
                 raise RuntimeError(f"Primary key field {table_name}.{field_name} is not in the implemented schema")
+        catalogue_fields = _catalogue_reference_fields(model)
+        if catalogue_fields and catalogue_fields != table_models["METADATA_DATA_CATALOGUE"]["primary_key"]:
+            raise RuntimeError(f"{table_name} must reference the full physical Catalogue key in primary-key order")
         for foreign_key in model["foreign_keys"]:
             local_field = foreign_key["local_field"]
             referenced_table = foreign_key["referenced_table"]
@@ -4868,6 +4916,12 @@ def generate_metadata_reference_pages() -> None:
         if unknown_writers:
             raise ValueError(f"Unknown public metadata writers: {sorted(unknown_writers)}")
         writer_functions = sorted(set(writer_functions) | set(audited_writers))
+        catalogue_key = table_models["METADATA_DATA_CATALOGUE"]["primary_key"]
+        catalogue_fields = _catalogue_reference_fields(model)
+        primary_key = _model_key_text(model["primary_key"])
+        if len(model["primary_key"]) > 1 and (catalogue_fields or table_name == "METADATA_DATA_CATALOGUE"):
+            primary_key = f"composite ({primary_key})"
+
         lines = [
             f"# {table_name}",
             "",
@@ -4902,8 +4956,19 @@ def generate_metadata_reference_pages() -> None:
             "",
             f"**Grain:** {model['grain']}",
             "",
-            f"**Primary key:** {_model_key_text(model['primary_key'])}",
+            f"**Primary key:** {primary_key}",
             "",
+            *(
+                ["The three columns are stored separately and identify the physical asset together.", ""]
+                if table_name == "METADATA_DATA_CATALOGUE" else []
+            ),
+            *(
+                [f"**Composite foreign key (checked by FabricOps):** ({_model_key_text(catalogue_fields)}) "
+                 f"→ [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) ({_model_key_text(catalogue_key)}).",
+                 "FabricOps checks the three columns together against one active Catalogue row before saving new observations.",
+                 ""]
+                if catalogue_fields else []
+            ),
             "**Relationships:**",
             "",
             *_relationship_lines(table_name),
@@ -4968,7 +5033,7 @@ def generate_metadata_reference_pages() -> None:
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )
     METADATA_REFERENCE_INDEX_PATH.write_text(
-        render_metadata_reference_index(table_models, reference_order, table_purposes),
+        render_metadata_reference_index(table_models, reference_order, table_purposes, field_names_by_table),
         encoding="utf-8",
     )
 

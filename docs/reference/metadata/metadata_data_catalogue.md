@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-Lists registered table and file assets and their columns, their physical location and active status.
+Registers current table and file assets with their physical workspace, location and latest observed schema.
 
 ## Writer functions
 
@@ -18,21 +18,23 @@ No starter template or solution is traced for the public writer functions.
 
 **Default physical schema:** `engineering`
 
-**Grain:** One current table/file asset or one of its columns in one workspace.
+**Grain:** One current asset per physical workspace ID, Table ID and asset type.
 
-**Primary key:** `workspace_id` + `table_id` + `column_id`
+**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)
+
+The three columns are stored separately and identify the physical asset together.
 
 **Relationships:**
 
 No immediate table relationship is defined in the current implementation.
 
-**Implementation details:** The current structural registry of table and file assets. asset_type is TABLE or FILE; historical null types with table_id mean TABLE. table_id is the common asset key. File asset rows use metadata_level=file and their existing selector identity in table_id. Column rows use metadata_level=column, asset_type=FILE and canonical column_id derived from table_id and normalized column name. Physical workspace_id/item_id, layer and normalized relative_path identify the Lakehouse selector; replacement at the same path preserves identity. first_observed_at is retained and last_observed_at advances on successful observations. Both asset types use workspace_id + table_id + column_id. Asset rows have null column_id. Tabular files register their observed columns even when profiling is disabled; removed columns become inactive and reappearing columns reuse their IDs. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.
+**Implementation details:** workspace_id and workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">34</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">26</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">32</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">24</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -43,22 +45,26 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr class="metadata-column--engineering"><td><code>metadata_level</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>metadata_level</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
-<tr class="metadata-column--engineering"><td><code>item_id</code></td><td><code>string</code></td><td>Identifier stored for <code>item_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Part of the current asset key. TABLE identifies a table and FILE identifies a file selector.</td></tr>
+<tr class="metadata-column--engineering"><td><code>item_id</code></td><td><code>string</code></td><td>Physical Lakehouse or Warehouse item that contains the asset.</td></tr>
 <tr class="metadata-column--engineering"><td><code>relative_path</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>relative_path</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>file_format</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>file_format</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>first_observed_at</code></td><td><code>timestamp</code></td><td>First successful observation of a file selector; preserved on subsequent registration.</td></tr>
-<tr class="metadata-column--engineering"><td><code>last_observed_at</code></td><td><code>timestamp</code></td><td>Most recent successful observation of a file selector.</td></tr>
+<tr class="metadata-column--engineering"><td><code>first_observed_at</code></td><td><code>timestamp</code></td><td>First recorded asset observation, retained on subsequent registrations.</td></tr>
+<tr class="metadata-column--engineering"><td><code>last_observed_at</code></td><td><code>timestamp</code></td><td>Most recent recorded asset observation.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>column_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a column across workspace, dataset, asset, and column context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset.</td></tr>
+<tr class="metadata-column--engineering"><td><code>workspace_name</code></td><td><code>string</code></td><td>Display name of the Fabric workspace that contains the physical asset.</td></tr>
+<tr class="metadata-column--engineering"><td><code>columns_json</code></td><td><code>string</code><details class="metadata-structured-type"><summary>Logical JSON schema: <code>Array</code></summary><table class="metadata-nested-type" aria-label="Fields in columns_json"><thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead><tbody><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>column_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>column_name</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>data_type</code></td><td><code>string</code></td></tr></tbody></table><p>Representative JSON value (optional fields omitted):</p><pre><code class="language-json">[
+  {
+    &quot;column_id&quot;: &quot;example-column-id&quot;,
+    &quot;column_name&quot;: &quot;customer_id&quot;,
+    &quot;data_type&quot;: &quot;int&quot;
+  }
+]</code></pre></details></td><td>Latest observed column definitions. SQL NULL is unobserved and [] is an observed empty schema.</td></tr>
 <tr class="metadata-column--engineering"><td><code>store_type</code></td><td><code>string</code></td><td>Configured Fabric store type recorded for the profiled dataset.</td></tr>
 <tr class="metadata-column--engineering"><td><code>layer</code></td><td><code>string</code></td><td>The configured medallion layer where the table is stored.</td></tr>
 <tr class="metadata-column--engineering"><td><code>schema_name</code></td><td><code>string</code></td><td>Lakehouse or warehouse schema name recorded for the dataset when available.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--engineering"><td><code>column_name</code></td><td><code>string</code></td><td>Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--engineering"><td><code>data_type</code></td><td><code>string</code></td><td>Stable data type label recorded for the column.</td></tr>
 <tr class="metadata-column--engineering"><td><code>load_strategy</code></td><td><code>string</code></td><td>Metadata Data Catalogue field <code>load_strategy</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>load_strategy_parameters_json</code></td><td><code>string</code><details class="metadata-structured-type"><summary>Logical JSON schema: <code>Struct</code></summary><table class="metadata-nested-type" aria-label="Fields in load_strategy_parameters_json"><thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead><tbody><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>watermark_column</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>key_columns</code></td><td><code>array&lt;string&gt;</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>effective_column</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>tracked_columns</code></td><td><code>array&lt;string&gt;</code></td></tr></tbody></table><p>Representative JSON value (optional fields omitted):</p><pre><code class="language-json">{
   &quot;watermark_column&quot;: &quot;modified_at&quot;,
@@ -66,7 +72,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
     &quot;id&quot;
   ]
 }</code></pre></details></td><td>Validated JSON STRING containing optional watermark, key, effective and tracked columns; decoded to a logical object in application code.</td></tr>
-<tr class="metadata-column--engineering"><td><code>writer_workspace_id</code></td><td><code>string</code></td><td>Identifier stored for <code>writer_workspace_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>writer_workspace_id</code></td><td><code>string</code></td><td>ID of the notebook workspace captured with the table’s last recorded pipeline write. Subsequent Catalogue observations have their own audit fields.</td></tr>
 <tr class="metadata-column--engineering"><td><code>writer_notebook_id</code></td><td><code>string</code></td><td>Identifier stored for <code>writer_notebook_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>writer_notebook_name</code></td><td><code>string</code></td><td>Human-readable name stored for <code>writer_notebook_name</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>scheduled_refresh_json</code></td><td><code>string</code><details class="metadata-structured-type"><summary>Logical JSON schema: <code>Struct</code></summary><table class="metadata-nested-type" aria-label="Fields in scheduled_refresh_json"><thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead><tbody><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>status</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>schedules</code></td><td><code>Array</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>schedules.enabled</code></td><td><code>boolean</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>schedules.frequency</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>schedules.times</code></td><td><code>array&lt;string&gt;</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-1"><code>schedules.timezone</code></td><td><code>string</code></td></tr></tbody></table><p>Representative JSON value (optional fields omitted):</p><pre><code class="language-json">{
@@ -103,8 +109,8 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>is_active</code></td><td><code>boolean</code></td><td>Whether the row is currently active.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>

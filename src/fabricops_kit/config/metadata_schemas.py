@@ -141,6 +141,34 @@ def metadata_table_physical_schema(config: Any, table_name: str) -> str:
         raise ValueError(f"FrameworkConfig.{attribute} must be a non-empty schema name.")
     return schema_name
 
+def _require_catalogue_assets(references, *, context, table_name):
+    """Reject new child rows without exactly one active physical Catalogue parent."""
+    from pyspark.sql import functions as F
+
+    from fabricops_kit.io.read_lakehouse_table import read_lakehouse_table
+
+    fields = ["workspace_id", "table_id", "asset_type"]
+    keys = references.select(*fields).distinct()
+    if keys.isEmpty():
+        return
+    catalogue = "METADATA_DATA_CATALOGUE"
+    parents = read_lakehouse_table(
+        catalogue, store="Metadata", schema=metadata_table_physical_schema(context["config"], catalogue),
+        context={**context, "_spark_session": references.sparkSession, "_fabricops_suppress_io_log": True},
+    )
+    counts = (parents.join(keys, fields, "left_semi").groupBy(*fields)
+              .agg(F.count("*").alias("total"),
+                   F.count(F.when(F.coalesce(F.col("is_active"), F.lit(True)), 1)).alias("active")))
+    invalid = keys.join(counts, fields, "left").where(
+        F.col("total").isNull() | (F.col("total") != 1) | (F.col("active") != 1)
+    ).select(*fields).first()
+    if invalid is not None:
+        raise ValueError(
+            f"{table_name} requires exactly one active Catalogue asset for {invalid.asDict()!r}. "
+            "Register the physical asset or repair the conflicting Catalogue records before retrying."
+        )
+
+
 AUDIT_SCHEMA_FIELDS = [
     ("_committed_by", "string", False),
     ("_committed_at", "timestamp", False),
@@ -168,6 +196,11 @@ PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string",
 # Dicts denote structs; tuples denote native arrays. Lists retain the existing
 # array-of-struct contract used by other metadata tables.
 CATALOGUE_NESTED_FIELDS = {
+    "columns_json": [
+        ("column_id", "string", False),
+        ("column_name", "string", False),
+        ("data_type", "string", False),
+    ],
     "load_strategy_parameters_json": {
         "watermark_column": "string", "key_columns": ("array", "string"),
         "effective_column": "string", "tracked_columns": ("array", "string"),
@@ -327,7 +360,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         "METADATA_DATA_CATALOGUE": build_metadata_schema(
             "METADATA_DATA_CATALOGUE",
             [
-                ("metadata_level", "string"),
                 ("asset_type", "string"),
                 ("item_id", "string"),
                 ("relative_path", "string"),
@@ -335,14 +367,13 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("first_observed_at", "timestamp"),
                 ("last_observed_at", "timestamp"),
                 ("table_id", "string"),
-                ("column_id", "string"),
                 ("workspace_id", "string"),
+                ("workspace_name", "string"),
+                ("columns_json", CATALOGUE_NESTED_FIELDS["columns_json"]),
                 ("store_type", "string"),
                 ("layer", "string"),
                 ("schema_name", "string"),
                 ("table_name", "string"),
-                ("column_name", "string"),
-                ("data_type", "string"),
                 ("load_strategy", "string"),
                 ("load_strategy_parameters_json", CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"]),
                 ("writer_workspace_id", "string"),
@@ -420,6 +451,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_id", "string", False),
                 ("table_name", "string"),
                 ("workspace_id", "string", False),
+                ("asset_type", "string"),
                 ("access_level", "string", False),
                 ("access_value", "string", False),
                 ("access_state", "string", False),
@@ -718,9 +750,19 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         value = result[name]
         if isinstance(value, str):
             value = parse_metadata_json(value, field=name)
+            if name == "columns_json" and value is None:
+                raise ValueError("columns_json must be an array or SQL NULL.")
         if value is None and required:
             raise ValueError(f"{table_name}.{name} cannot be null.")
         result[name] = validate_metadata_value(value, kind, field=name)
+        if name == "columns_json" and result[name] is not None:
+            columns = result[name]
+            for column in columns:
+                if any(not member.strip() for member in column.values()):
+                    raise ValueError("columns_json requires non-empty column_id, column_name and data_type.")
+            if (len({column["column_id"] for column in columns}) != len(columns)
+                    or len({column["column_name"].strip().lower() for column in columns}) != len(columns)):
+                raise ValueError("columns_json contains duplicate column identities or names.")
         if required and name == "operations":
             for original, decoded in zip(value, result[name]):
                 for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids",

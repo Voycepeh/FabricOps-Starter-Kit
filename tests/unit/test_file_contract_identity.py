@@ -45,15 +45,18 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
 
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
     """Shared contract semantics use file source identity with no Catalogue table row."""
-    monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *args, **kwargs: [])
+    descriptor = source()
+    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "workspace_id": descriptor["workspace_id"],
+           "table_name": descriptor["relative_path"], "columns_json": json.dumps([
+               {"column_id": "id", "column_name": "id", "data_type": "long"}])}
+    monkeypatch.setattr(contracts, "read_lakehouse_table",
+                        lambda table, **kwargs: [row] if table == "METADATA_DATA_CATALOGUE" else [])
     monkeypatch.setattr(contracts, "write_lakehouse_table", lambda *args, **kwargs: None)
     monkeypatch.setattr(contracts, "build_runtime_audit_fields", lambda **kwargs: {})
     monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda table, row: row)
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
-    descriptor = source()
     draft = contracts.create_contract_draft(file_source=descriptor,
-        columns=[{"column_id": "id", "column_name": "id", "data_type": "long"}],
-        config={}, active_workspace_id="WORKSPACE", spark_session=spark)
+        config={}, active_workspace_id=descriptor["workspace_id"], spark_session=spark)
     assert draft["table_id"] is None and draft["source_id"] == descriptor["source_id"]
     payload = json.loads(draft["contract_payload_json"])
     assert "table_id" not in payload["table"] and "processing" not in payload["table"]

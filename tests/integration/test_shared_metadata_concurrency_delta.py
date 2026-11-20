@@ -32,7 +32,6 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)
     monkeypatch.setattr(shared, 'processing_state_path', lambda context: r.paths[PROCESSING_STATE_TABLE])
-    monkeypatch.setattr(shared, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_name': 'orders'})
     # Route all workspaces to the same paths while preserving their logical scope.
     monkeypatch.setattr(shared, 'persistence_permitted', lambda context: True)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: {**r.audit,
@@ -54,15 +53,14 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
             return r.spark.createDataFrame([{**row, **audit}], schemas[table])
         ready.wait(timeout=60)
         shared.persist_pipeline_run(plan, spark_session=r.spark)
+        catalogue = {**audit, 'workspace_id': workspace, 'workspace_name': workspace, 'table_id': 'orders', 'asset_type': 'TABLE',
+                     'table_name': 'orders', 'is_active': True, 'last_profiled_at': datetime(2026, 1, 1)}
+        shared.merge_catalogue_asset(catalogue, context=plan.runtime_context, spark_session=r.spark)
         profile = {'profile_id': workspace, 'profile_snapshot_id': workspace, 'table_id': 'orders',
                    'workspace_id': workspace, 'row_count': 7}
         for table, identity in [('METADATA_DATA_PROFILED', 'profile_id'), ('METADATA_DATA_PROFILED_FREQUENCY', 'frequency_id')]:
             shared._replace_snapshot_rows(dataframe=frame(table, {**profile, identity: workspace}),
                 table_name=table, row_id=identity, config={}, active_workspace_id=workspace, spark_session=r.spark)
-        catalogue = {'workspace_id': workspace, 'table_id': 'orders', 'metadata_level': 'table',
-                     'table_name': 'orders', 'is_active': True, 'last_profiled_at': datetime(2026, 1, 1)}
-        shared._upsert_catalogue_identities(catalogue_df=frame('METADATA_DATA_CATALOGUE', catalogue),
-            config={}, active_workspace_id=workspace, spark_session=r.spark)
         record = {**audit, 'record_id': workspace, 'record_type': 'source_observation', 'status': 'observed',
                   'workspace_id': workspace, 'run_id': plan.plan_id, 'source_table_id': 'orders'}
         shared._merge_source_observation_records([record], context=plan.runtime_context)

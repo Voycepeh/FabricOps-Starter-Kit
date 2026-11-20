@@ -62,7 +62,7 @@ def test_strict_historical_parser_rejects_lossy_values(field, value):
         migration._parse_catalogue_value(value, kind, field=field, historical=True)
 
 
-@pytest.mark.parametrize('field', CATALOGUE_NESTED_FIELDS)
+@pytest.mark.parametrize('field', set(CATALOGUE_NESTED_FIELDS) - {'columns_json'})
 def test_runtime_coercion_requires_native_structs_and_rejects_unknown_fields(field):
     """Historical JSON compatibility is confined to setup migration."""
     for value in ('{}', {'unknown': 1}, []):

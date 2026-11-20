@@ -190,6 +190,131 @@ def _parse_catalogue_value(value, data_type, *, field, historical):
     return validate_metadata_value(value, data_type, field=field)
 
 
+_LEGACY_CATALOGUE_FIELDS = {"metadata_level", "column_id", "column_name", "data_type"}
+
+
+def _migrate_catalogue_rows(rows, *, spark, convert, context):
+    """Validate legacy parent/child associations before projecting asset rows."""
+    from fabricops_kit.config.shared import build_table_id, resolve_asset_workspace_name
+    from fabricops_kit.data_contract.shared import file_source_identity
+
+    config = context["config"]
+    parents = {}
+    children = {}
+    for row in rows:
+        original = row.asDict(recursive=True)
+        # Catalogue migration must preserve stored column IDs. Older file
+        # records missing one are incomplete here, even if other tables can
+        # independently upgrade their identity columns.
+        level = original.get("metadata_level")
+        if level not in {"table", "file", "column"}:
+            raise ValueError(f"Catalogue has an invalid metadata_level {level!r}; inspect its legacy rows.")
+        identity = original.get("table_id") or original.get("source_id")
+        workspace = original.get("workspace_id")
+        kind = original.get("asset_type") or (
+            "FILE" if level == "file" or original.get("source_id") or str(identity).startswith("file:")
+            else "TABLE")
+        key = (workspace, identity, kind)
+        if (not all(isinstance(value, str) and value.strip() and value == value.strip() for value in key)
+                or kind not in {"TABLE", "FILE"} or (level != "column" and level.upper() != kind)):
+            raise ValueError(f"Catalogue has an invalid legacy asset identity {key!r}.")
+        values = convert(row)
+        if level == "column":
+            column = {name: original.get(name) for name in ("column_id", "column_name", "data_type")}
+            # Validate inactive definitions and duplicates before retiring them too.
+            encode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": [column]})
+            children.setdefault(key, []).append((column, original.get("is_active") is not False))
+        else:
+            if key in parents or any(original.get(name) is not None for name in ("column_id", "column_name", "data_type")):
+                raise ValueError(f"Catalogue has duplicate or conflicting parent rows for {key!r}.")
+            parents[key] = values
+
+    if orphans := children.keys() - parents.keys():
+        raise ValueError(f"Catalogue columns have no matching parent asset: {sorted(orphans)!r}.")
+    table_keys = {(workspace, identity) for workspace, identity, kind in parents if kind == "TABLE"}
+    known_locations = {}
+    if table_keys:
+        run_table = "METADATA_PIPELINE_RUN"
+        try:
+            runs = read_lakehouse_table(run_table, store="Metadata",
+                schema=metadata_table_physical_schema(config, run_table),
+                context={**context, "_spark_session": spark, "_fabricops_suppress_io_log": True})
+        except Exception as exc:
+            if not is_table_not_found_error(exc):
+                raise
+        else:
+            if {"operations", "workspace_id"}.issubset(runs.columns):
+                for run in runs.select("workspace_id", "operations").toLocalIterator():
+                    operations = run["operations"]
+                    if isinstance(operations, str):
+                        operations = parse_metadata_json(operations, field="METADATA_PIPELINE_RUN.operations")
+                    for operation in operations or []:
+                        operation = operation.asDict(recursive=True) if hasattr(operation, "asDict") else operation
+                        key = (run["workspace_id"], operation.get("table_id"))
+                        if (key not in table_keys or operation.get("source_type") == "file"
+                                or operation.get("status") != "succeeded"):
+                            continue
+                        binding = operation.get("destination") or {}
+                        workspace, item = binding.get("workspace_id"), binding.get("item_id")
+                        if workspace and item:
+                            known_locations.setdefault(key, set()).add((workspace.lower(), item.lower()))
+    resolved = set()
+    names = {}
+    for (workspace, identity, kind), parent in parents.items():
+        key = (workspace, identity, kind)
+        columns = children.get(key, [])
+        definitions = [column for column, _ in columns]
+        encode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": definitions})
+        active = sorted((column for column, is_active in columns if is_active), key=lambda column: column["column_name"])
+        observed = active if columns or (kind == "TABLE" and parent.get("last_profiled_at")) else None
+        if parent.get("columns_json") is not None:
+            retained = decode_metadata_row("METADATA_DATA_CATALOGUE", parent)["columns_json"]
+            if sorted(retained or [], key=lambda column: column["column_name"]) != active or retained is None:
+                raise ValueError(f"Catalogue columns_json conflicts with legacy columns for {key!r}.")
+            observed = retained
+        if kind == "TABLE":
+            layer = parent.get("layer")
+            try:
+                store = get_store(config, workspace, layer)
+                configured_location = (store.workspace_id.lower(), store.item_id.lower())
+                recorded_locations = known_locations.get((workspace, identity), set())
+                if not recorded_locations and not parent.get("item_id"):
+                    raise ValueError("The legacy row has neither a retained item ID nor a successful Run binding.")
+                if (store.kind != parent.get("store_type")
+                        or (parent.get("item_id") and parent["item_id"].lower() != configured_location[1])
+                        or (recorded_locations and recorded_locations != {configured_location})
+                        or not parent.get("table_name")
+                        or build_table_id(store.kind, layer, parent.get("schema_name"), parent["table_name"]) != identity):
+                    raise ValueError("Stored coordinates disagree with the configured store or Table ID.")
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Cannot establish the physical workspace for legacy Catalogue TABLE {key!r}, store {layer!r}. "
+                    f"{exc} Verify the original configuration-scope FabricStore mapping, stored coordinates and retained Pipeline Run destinations."
+                ) from exc
+            workspace = store.workspace_id.lower()
+            parent["item_id"] = parent.get("item_id") or store.item_id
+        else:
+            try:
+                file = file_source_identity(workspace_id=workspace, item_id=parent.get("item_id"),
+                    relative_path=parent.get("relative_path"), file_format=parent.get("file_format"))
+                if file["source_id"] != identity:
+                    raise ValueError("Stored file location disagrees with its identity.")
+                workspace = file["workspace_id"]
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Cannot verify the physical location of legacy Catalogue FILE {key!r}.") from exc
+        new_key = (workspace.lower(), identity, kind)
+        if new_key in resolved:
+            raise ValueError(f"Legacy Catalogue assets resolve to the same physical identity {new_key!r}.")
+        resolved.add(new_key)
+        if workspace not in names:
+            names[workspace] = resolve_asset_workspace_name(workspace, context=context)
+        parent.update(workspace_id=workspace, workspace_name=names[workspace], asset_type=kind, columns_json=observed)
+        replacement = encode_metadata_row("METADATA_DATA_CATALOGUE", parent)
+        if decode_metadata_row("METADATA_DATA_CATALOGUE", replacement)["columns_json"] != observed:
+            raise ValueError(f"Catalogue schema verification failed for {new_key!r}.")
+        yield replacement
+
+
 def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metadata_schema, context):
     """Convert JSON fields and remove declared retired columns atomically.
 
@@ -202,7 +327,10 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
 
     from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 
-    retirements = RETIRED_METADATA_COLUMNS.get(table_name, {})
+    catalogue = table_name == "METADATA_DATA_CATALOGUE"
+    retirements = dict(RETIRED_METADATA_COLUMNS.get(table_name, {}))
+    if catalogue:
+        retirements.update(dict.fromkeys(_LEGACY_CATALOGUE_FIELDS))
     retired = set(_table_column_names(table)) & set(retirements)
     if not hasattr(table, "schema"):
         if retired:
@@ -247,12 +375,11 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             if is_file:
                 values["asset_type"] = "FILE"
             if (is_file and values.get("column_name") and not values.get("column_id")
-                    and (table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}
-                         or values.get("metadata_level") == "column")):
+                    and table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}):
                 values["column_id"] = build_column_id(identity, values["column_name"])
         for name, kind in logical_fields.items():
             value = values.get(name)
-            if table_name == "METADATA_DATA_CATALOGUE" and isinstance(value, str):
+            if catalogue and name != "columns_json" and isinstance(value, str):
                 parsed = _parse_catalogue_value(value, kind, field=name, historical=True)
                 # Only historical blanks/list-only candidates require a JSON
                 # rewrite; supported object strings retain their original bytes.
@@ -272,11 +399,22 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             return set()
         changed = set()
         has_rows = False
+        catalogue_keys = set()
+        legacy_catalogue = catalogue and bool(set(_table_column_names(frame)) & _LEGACY_CATALOGUE_FIELDS)
         for row in frame.toLocalIterator():
             has_rows = True
             values = row.asDict(recursive=True)
             converted = convert(row)
             changed.update(name for name in logical_fields if converted.get(name) != values.get(name))
+            if catalogue and not legacy_catalogue:
+                key = tuple(values.get(name) for name in ("workspace_id", "table_id", "asset_type"))
+                if (not all(isinstance(value, str) and value.strip() and value == value.strip() for value in key)
+                        or key[2] not in {"TABLE", "FILE"} or not str(values.get("workspace_name") or "").strip()):
+                    raise ValueError(f"Catalogue has an incomplete physical asset identity {key!r}.")
+                key = (key[0].lower(), *key[1:])
+                if key in catalogue_keys:
+                    raise ValueError(f"Catalogue has duplicate physical asset identity {key!r}.")
+                catalogue_keys.add(key)
         if has_rows and table_name == "METADATA_PIPELINE_RUN" and frame.groupBy("run_id").count().where("count > 1").limit(1).count():
             raise ValueError("Duplicate Pipeline Run identities; existing history is preserved and schema evolution is blocked.")
         return changed
@@ -284,7 +422,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
     converted = inspect(table)
     # All-JSON schemas are validated on every setup, but never rewritten merely
     # to canonicalize whitespace/object-key order in retained evidence.
-    if not converted and not validate(table) and not retired:
+    if not converted and not retired and not validate(table):
         return table, None
 
     from pyspark.sql import functions as F
@@ -308,6 +446,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
         return source, None
     metadata = json.loads(txn.metadata().json())
     physical_schema = StructType.fromJson(json.loads(metadata["metaData"]["schemaString"]))
+    legacy_catalogue = catalogue and bool(retired & _LEGACY_CATALOGUE_FIELDS)
+    if legacy_catalogue and "metadata_level" not in retired:
+        raise ValueError("Catalogue has an incomplete legacy layout without metadata_level; existing data preserved.")
     if retired:
         properties = metadata["metaData"].get("configuration", {})
         if (retired & set(metadata["metaData"].get("partitionColumns", []))
@@ -315,7 +456,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 or any(key.startswith("delta.constraints.") for key in properties)
                 or any("delta.generationExpression" in field.metadata for field in physical_schema)):
             raise ValueError(f"{table_name}: retired columns require an unsupported partition, mapping or constraint migration; existing data preserved.")
-        for name in sorted(retired):
+        for name in sorted(retired - (_LEGACY_CATALOGUE_FIELDS if legacy_catalogue else set())):
             replacement_name = retirements[name]
             column = F.col('`' + name.replace('`', '``') + '`')
             safe = column.isNull()
@@ -338,10 +479,16 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
     fs = fs_path.getFileSystem(spark._jsc.hadoopConfiguration())
     try:
         retained_names = target_schema.fieldNames()
-        replacement = spark.createDataFrame(
-            source.rdd.map(convert).map(lambda row: {name: row.get(name) for name in retained_names}), target_schema)
+        if legacy_catalogue:
+            rows = _migrate_catalogue_rows(source.toLocalIterator(), spark=spark, convert=convert, context=context)
+            data = [{name: row.get(name) for name in retained_names} for row in rows]
+        else:
+            data = source.rdd.map(convert).map(lambda row: {name: row.get(name) for name in retained_names})
+        replacement = spark.createDataFrame(data, target_schema)
         replacement.write.mode("errorifexists").parquet(stage)
         replacement = spark.read.schema(target_schema).parquet(stage)
+        if legacy_catalogue:
+            validate(replacement)
         replacement_metadata_schema = StructType([
             StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
             if f.name in logical_fields else f for f in physical_schema.fields if f.name not in retired
@@ -385,6 +532,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             raise RuntimeError(f"{table_name} upgrade committed but data verification failed; inspect Delta history (pre-upgrade version {version}, committed version {committed_version}).")
         return spark.read.format("delta").load(path), {
             "pre_upgrade_version": version, "upgrade_version": committed_version,
+            **({"recovery_guidance": f"Pause Catalogue writers and inspect Delta history. To revert, use "
+                 f"RESTORE TABLE delta.`{path}` TO VERSION AS OF {version} after checking for later writes."}
+               if legacy_catalogue else {}),
             "converted_columns": sorted(converted), "removed_columns": sorted(retired),
             "added_columns": [f.name for f in expected_schema.fields if f.name not in actual],
         }
@@ -508,12 +658,10 @@ def setup_metadata_tables(
     and Contract Activation use Serializable isolation; Processing State is
     created or upgraded to Serializable for atomic Source Drift acceptance.
     Setup never manufactures
-    approvals, populates business metadata, deletes rows or replaces business
-    targets. Governance definitions and activation are independent workflows.
+    approvals, populates business metadata or replaces business targets. Governance definitions and activation are independent workflows.
 
     Compatible missing columns are added automatically. Only columns explicitly
-    listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
-    value is null or equals its declared canonical replacement. Other extension
+    declared for retirement are removed, following their table-specific validation. Other extension
     columns are preserved where the table's identity contract permits them.
     Operational file source_id values are copied into the common table_id and
     validated before source_id is retired. Conflicting identities block migration.
@@ -523,8 +671,11 @@ def setup_metadata_tables(
     Unproven populated retirements fail with data preserved. Cleanup and supported
     JSON conversions commit atomically, with the pre-upgrade Delta version
     returned for recovery before VACUUM or further writes. Setup never vacuums.
-    Catalogue and Pipeline
-    Run collection fields are stored as validated JSON strings; supported native
+    For legacy Catalogue rows, setup validates parent and column identities,
+    resolves physical workspaces, preserves stored column IDs in columns_json,
+    and retires the separate column records in the same Delta commit.
+    The per-table result returns the pre-upgrade version and recovery command.
+    Catalogue and Pipeline Run collection fields are stored as validated JSON strings; supported native
     collections are converted atomically with tracked Delta reads and exact
     schema/data readback. Existing rows, audit values, extension fields, table
     identity/properties and Delta transaction identities are preserved. Run

@@ -246,7 +246,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 139 |
+| Live-critical dependencies | 141 |
 
 ### Release history
 
@@ -263,6 +263,8 @@ distinct snapshot identity.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.access_scanner.shared.fabric_access_token</code></li>
+<li><code>fabricops_kit.access_scanner.shared.request_fabric_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared._strict_package_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
@@ -292,12 +294,9 @@ distinct snapshot identity.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
-<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._require_catalogue_assets</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
-<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
@@ -318,6 +317,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.resolve_asset_workspace_name</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
@@ -349,7 +349,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.shared._catalogue_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._delete_profile_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
@@ -369,7 +369,6 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._sql_identifier</code></li>
 <li><code>fabricops_kit.pipeline.shared._sql_string</code></li>
 <li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
-<li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_frequency_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_percentile_query</code></li>
@@ -379,6 +378,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared._warehouse_statistical_query</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_type_name</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.capture_profile_presentation</code></li>
@@ -386,6 +386,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared.execute_table_profile</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
+<li><code>fabricops_kit.pipeline.shared.merge_catalogue_asset</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
@@ -394,6 +395,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
+<li><code>fabricops_kit.pipeline.shared.table_catalogue_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>

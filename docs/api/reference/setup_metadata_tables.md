@@ -118,12 +118,10 @@ Missing tables are created empty with error-if-exists semantics. Registry
 and Contract Activation use Serializable isolation; Processing State is
 created or upgraded to Serializable for atomic Source Drift acceptance.
 Setup never manufactures
-approvals, populates business metadata, deletes rows or replaces business
-targets. Governance definitions and activation are independent workflows.
+approvals, populates business metadata or replaces business targets. Governance definitions and activation are independent workflows.
 
 Compatible missing columns are added automatically. Only columns explicitly
-listed in RETIRED_METADATA_COLUMNS are removed, after verifying that every
-value is null or equals its declared canonical replacement. Other extension
+declared for retirement are removed, following their table-specific validation. Other extension
 columns are preserved where the table's identity contract permits them.
 Operational file source_id values are copied into the common table_id and
 validated before source_id is retired. Conflicting identities block migration.
@@ -133,8 +131,11 @@ restores the returned pre-upgrade Delta version together with the prior code.
 Unproven populated retirements fail with data preserved. Cleanup and supported
 JSON conversions commit atomically, with the pre-upgrade Delta version
 returned for recovery before VACUUM or further writes. Setup never vacuums.
-Catalogue and Pipeline
-Run collection fields are stored as validated JSON strings; supported native
+For legacy Catalogue rows, setup validates parent and column identities,
+resolves physical workspaces, preserves stored column IDs in columns_json,
+and retires the separate column records in the same Delta commit.
+The per-table result returns the pre-upgrade version and recovery command.
+Catalogue and Pipeline Run collection fields are stored as validated JSON strings; supported native
 collections are converted atomically with tracked Delta reads and exact
 schema/data readback. Existing rows, audit values, extension fields, table
 identity/properties and Delta transaction identities are preserved. Run
@@ -164,9 +165,9 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:466`
+`fabricops_kit/config/setup_metadata_tables.py:616`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L466-L763">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L616-L914">View on GitHub</a>
 </div>
 
 
@@ -182,7 +183,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 51 |
+| Live-critical dependencies | 56 |
 
 ### Release history
 
@@ -200,6 +201,8 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.access_scanner.shared.fabric_access_token</code></li>
+<li><code>fabricops_kit.access_scanner.shared.request_fabric_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
@@ -215,6 +218,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._historical_table_warnings</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._migrate_catalogue_rows</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._parse_catalogue_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
@@ -229,9 +233,11 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.build_column_id</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
+<li><code>fabricops_kit.config.shared.resolve_asset_workspace_name</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
 <li><code>fabricops_kit.config.shared.validate_framework_config</code></li>

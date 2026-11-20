@@ -65,6 +65,10 @@ class _DeltaTransport:
         self.insert = True
         return self
 
+    def whenNotMatchedInsert(self, values):
+        self.insert = True
+        return self
+
     def whenMatchedUpdate(self, set=None, condition=None):
         self.updates, self.update_condition = set, condition
         return self
@@ -88,6 +92,10 @@ class _DeltaTransport:
                         match = re.search(r"source\.`?(\w+)", expression)
                         assert match or expression in {"true", "false"}, expression
                         value = source.get(match.group(1)) if match else expression == "true"
+                        if expression.startswith("coalesce(target.") and target.get(key) is not None:
+                            continue
+                        if expression.startswith(("CASE ", "greatest(")) and value is None:
+                            continue
                         if value is not None or not expression.startswith("coalesce("):
                             target[key] = value
             if not matches and self.insert:
@@ -163,6 +171,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         if module is None or not getattr(module, "__name__", "").startswith("fabricops_kit"):
             continue
         for name, replacement in (("read_lakehouse_table", read), ("write_lakehouse_table", write),
+                                  ("resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title()),
                                   ("resolve_fabric_context", resolve), ("build_runtime_audit_fields", audit_fields),
                                   ("get_spark_session", lambda *a, **k: spark_session),
                                   ("resolve_configured_lakehouse_table", path),
@@ -191,13 +200,15 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         identity = runtime.resolve_physical_table_identity(config, "dev", store=layer, schema="dbo", table_name=name)
         table_id = identity["table_id"]
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
-        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "metadata_level": "table",
-                 "column_id": None, "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
+        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "asset_type": "TABLE",
+                 "workspace_name": "Development", "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
                  "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
                  "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
+        table["columns_json"] = [
+            {"column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype}
+            for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string"))
+        ]
         state.metadata["METADATA_DATA_CATALOGUE"].append(table)
-        for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string")):
-            state.metadata["METADATA_DATA_CATALOGUE"].append({**table, "metadata_level": "column", "column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype})
     state.business["orders"] = spark_session.createDataFrame([
         (1, "one@example.test", now - timedelta(hours=1), str(now.date())),
         (2, "two@example.test", now - timedelta(hours=1), str(now.date())),

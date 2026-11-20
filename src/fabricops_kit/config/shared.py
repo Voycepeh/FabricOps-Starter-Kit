@@ -184,6 +184,34 @@ def resolve_runtime_context(
     }
 
 
+def resolve_asset_workspace_name(workspace_id: str, *, context: dict[str, Any] | None = None) -> str:
+    """Resolve the display name for a verified physical Fabric workspace ID."""
+    from uuid import UUID
+
+    supplied = context or {}
+    live = _get_fabric_runtime_metadata(notebook_name=None, local_fallback_name=None)
+    for runtime in (live, supplied.get("runtime_metadata") or {}, supplied):
+        name = runtime.get("workspace_name")
+        if (str(runtime.get("workspace_id") or "").lower() == workspace_id.lower()
+                and isinstance(name, str) and name.strip() and name.strip().lower() != "unknown"):
+            return name.strip()
+
+    from fabricops_kit.access_scanner.shared import FABRIC_API_ROOT, fabric_access_token, request_fabric_json
+
+    try:
+        workspace = request_fabric_json(
+            f"{FABRIC_API_ROOT}/workspaces/{UUID(workspace_id)}", access_token=fabric_access_token())
+        name = workspace.get("displayName")
+        if str(workspace.get("id") or "").lower() == workspace_id.lower() and isinstance(name, str) and name.strip():
+            return name.strip()
+    except (ValueError, RuntimeError) as exc:
+        raise ValueError(
+            f"Cannot resolve the display name of physical workspace {workspace_id!r}. "
+            "Verify the FabricStore workspace ID and grant the setup or pipeline identity access to that workspace."
+        ) from exc
+    raise ValueError(f"Fabric did not return a matching workspace with a display name for {workspace_id!r}.")
+
+
 # ---------------------------------------------------------------------------
 # Validator layer: audit and framework validation
 # ---------------------------------------------------------------------------

@@ -195,7 +195,7 @@ def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_del
     now = datetime(2026, 1, 1)
     record = {f.name: None if f.nullable else now if f.dataType.simpleString() == 'timestamp' else 'demo'
               for f in native}
-    record.update(metadata_level='table', table_id='target', workspace_id='dev', _notebook_id='notebook',
+    record.update(asset_type='TABLE', workspace_name='Development', table_id='target', workspace_id='dev', _notebook_id='notebook',
                   load_strategy_parameters_json={'watermark_column': 'modified_datetime'})
     path = str(run.root / table)
     run.spark.createDataFrame([record], native).write.format('delta').save(path)

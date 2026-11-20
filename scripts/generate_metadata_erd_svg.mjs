@@ -15,11 +15,11 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M815 464H785V388H365V218H335",[815,464],[335,218],"Run operations reference exact table contract versions"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
-    ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
+    ["DATA_CATALOGUE","DATA_CONTRACT","N-N","logical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by Table ID and execution workspace; not transformation dependencies"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","logical","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by physical workspace and asset identity"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]
@@ -51,7 +51,18 @@ function renderMetadataSvg(layout, models) {
     const nestedKeys = [...new Set(Object.values(models).flatMap(other => (other.foreign_keys || [])
       .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
-    const all=[...pk,...nestedKeys,...groupedFk,...(name === "DATA_CATALOGUE" ? [["", "asset_type: TABLE | FILE"]] : [])], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
+    const catalogueReference = model.catalogue_reference_fields || [];
+    const cataloguePrimary = name === "DATA_CATALOGUE";
+    const primaryRows = cataloguePrimary ? pk.map(([, field]) => ["", field])
+      : catalogueReference.length && pk.length > 1 ? [["PK", model.primary_key.join(" + ")]]
+      : pk;
+    const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
+    const identityFields = model.asset_identity_fields.filter(field =>
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !fk.some(([, value]) => value === field));
+    const fields = [...catalogueReference, ...identityFields].map(value => ["", value]);
+    if (cataloguePrimary) fields.push(["", "columns_json (current schema)"]);
+    const all = [...keys, ...fields];
+    const rows = all.length > 5 ? [...all.slice(0, 4), ["", `+${all.length - 4} more fields`]] : all;
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
       const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;
@@ -60,6 +71,16 @@ function renderMetadataSvg(layout, models) {
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
       return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
+    const groupFields = cataloguePrimary ? model.primary_key : catalogueReference;
+    if (groupFields.length) {
+      const kind = cataloguePrimary ? "PK" : "FK";
+      const color = cataloguePrimary ? "#7C3AED" : "#2563EB";
+      const firstBaseline = y + 57 + (cataloguePrimary ? 0 : keys.length * 24);
+      const lastBaseline = firstBaseline + (groupFields.length - 1) * 24;
+      const mid = (firstBaseline + lastBaseline) / 2;
+      const title = cataloguePrimary ? "Composite primary key" : "Composite foreign key to DATA_CATALOGUE, checked by FabricOps";
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+    }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");
@@ -94,6 +115,8 @@ function renderMetadataSvg(layout, models) {
   };
   const rendered=routes.map(r=>{
     const [from,to,card,kind,d,p0,p1,label]=r;
+    const referenceFields = from === "DATA_CATALOGUE" ? models[to].catalogue_reference_fields : [];
+    const referenceLabel = referenceFields?.length ? " through " + referenceFields.join(" + ") + " on new records" : "";
     const color=kind==="logical"?"#7C3AED":"#2563EB";
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
@@ -106,7 +129,7 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split("-") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

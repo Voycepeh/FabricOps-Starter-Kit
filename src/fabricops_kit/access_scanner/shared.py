@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.config.metadata_schemas import _require_catalogue_assets, metadata_table_physical_schema
 from fabricops_kit.config.shared import FabricStore, build_table_id, get_store
 from fabricops_kit.io.shared import read_warehouse_synapsesql, validate_select_query
 from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
@@ -355,28 +355,34 @@ def persist_access_rows(
     """Append one scanner's normalized observations to METADATA_DATA_ACCESS."""
     if not persist:
         return
+    write_context = {**context, "config": config, "scope_workspace_id": workspace_id}
+    _require_catalogue_assets(access_df, context=write_context, table_name=ACCESS_TABLE)
     write_lakehouse_table(
         access_df,
         ACCESS_TABLE,
         store="Metadata",
         schema=metadata_table_physical_schema(config, ACCESS_TABLE),
-        context={**context, "config": config, "scope_workspace_id": workspace_id},
+        context=write_context,
         mode="append",
     )
 
 
-def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dict[str, str]):
+def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_kinds: dict[str, str]):
     """Select active Catalogue tables belonging to configured scan targets."""
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
     spark = catalogue_df.sparkSession
     targets = spark.createDataFrame(
-        list(target_store_kinds.items()),
+        [(key, kind, store.workspace_id.lower(), store.item_id.lower())
+         for key, kind in target_store_kinds.items()
+         for store in [get_store(config, workspace_id, key)]],
         T.StructType(
             [
                 T.StructField("_catalogue_target", T.StringType(), False),
                 T.StructField("_target_store_type", T.StringType(), False),
+                T.StructField("_catalogue_physical_workspace", T.StringType(), False),
+                T.StructField("_catalogue_physical_item", T.StringType(), False),
             ]
         ),
     )
@@ -392,13 +398,13 @@ def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dic
 
     return (
         catalogue_df.filter(
-            (F.lower(F.col("metadata_level")) == F.lit("table"))
-            & (F.col("workspace_id") == F.lit(workspace_id))
-            & F.col("is_active")
+            (F.col("asset_type") == "TABLE") & F.coalesce(F.col("is_active"), F.lit(True))
         )
         .crossJoin(targets)
         .filter(
-            (F.lower(F.col("store_type")) == F.col("_target_store_type"))
+            (F.lower(F.col("workspace_id")) == F.col("_catalogue_physical_workspace"))
+            & (F.lower(F.col("item_id")) == F.col("_catalogue_physical_item"))
+            & (F.lower(F.col("store_type")) == F.col("_target_store_type"))
             & (
                 F.col("table_id")
                 == canonical_table_id(
@@ -411,9 +417,10 @@ def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dic
         )
         .select(
             F.col("table_id").alias("_catalogue_table_id"),
+            F.col("workspace_id").alias("_catalogue_workspace_id"),
             F.col("_catalogue_target"),
             F.col("schema_name").alias("_catalogue_schema_name"),
             F.col("table_name").alias("_catalogue_table_name"),
         )
-        .dropDuplicates(["_catalogue_table_id"])
+        .dropDuplicates(["_catalogue_workspace_id", "_catalogue_table_id"])
     )

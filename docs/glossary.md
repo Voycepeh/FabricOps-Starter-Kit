@@ -134,7 +134,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-catalogue">
 <summary><strong>Data Catalogue</strong> — The canonical metadata registry for table and file assets and their columns.</summary>
-<p>FabricOps Data Catalogue metadata identifies table and file assets and their columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
+<p>The FabricOps Data Catalogue keeps one current entry per physical workspace, Table ID and asset type. It stores asset location, the latest observed column definitions and Engineering processing information used by profiling and Contract authoring.</p>
 <p><strong>Also known as:</strong> Data Catalogue</p>
 </details>
 

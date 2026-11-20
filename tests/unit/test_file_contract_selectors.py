@@ -9,7 +9,7 @@ from fabricops_kit.pipeline import shared as pipeline
 from tests.unit.test_widget_data_contract import widget_runtime  # noqa: F401
 
 
-def test_unobserved_file_discovered_from_successful_pipeline_without_reading(widget_runtime, monkeypatch):  # noqa: F811
+def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_runtime, monkeypatch):  # noqa: F811
     source = contracts.file_source_identity(workspace_id="dev", item_id="item",
         relative_path="demo/orders.csv", file_format="csv",
         reader_options={"header": True, "inferSchema": True})
@@ -24,7 +24,10 @@ def test_unobserved_file_discovered_from_successful_pipeline_without_reading(wid
     import fabricops_kit.config.shared as config_shared
     monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
-        lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run]})
+        lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run],
+            "observations": [{**source, "workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
+                              "table_id": source["source_id"], "columns_json": [
+                                  {"column_id": "original-id", "column_name": "order_id", "data_type": "long"}]}]})
     state = module.widget_data_contract()
     labels = {value: label for label, value in state["_controls"]["table"].options}
     assert source["source_id"] in labels
@@ -34,7 +37,7 @@ def test_unobserved_file_discovered_from_successful_pipeline_without_reading(wid
 
 
 def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
-    table = {'table_id': 'table-orders', 'workspace_id': 'w', 'table_name': 'orders', 'metadata_level': 'table', 'layer': 'Bronze', 'schema_name': 'demo'}
+    table = {'table_id': 'table-orders', 'workspace_id': 'w', 'table_name': 'orders', 'asset_type': 'TABLE', 'layer': 'Bronze', 'schema_name': 'demo'}
     source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     source['store'] = 'Bronze'
     options = contracts.dataset_selector_options([table], [source], workspace_id='w')

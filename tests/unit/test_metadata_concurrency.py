@@ -175,7 +175,7 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
     if "contract" in destination:
         def read(table, **kwargs):
             reads.append((table, kwargs))
-            return ([{"table_id": "orders", "workspace_id": "dev", "metadata_level": "table", "is_active": True}]
+            return ([{"table_id": "orders", "workspace_id": "dev", "asset_type": "TABLE", "columns_json": [], "is_active": True}]
                     if table == "METADATA_DATA_CATALOGUE" else [])
 
         def audit(**kwargs):

@@ -454,7 +454,9 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     else:
         if not table_id or payload.get("source", {}).get("source_type") == "file" or payload.get("table", {}).get("table_id") != table_id:
             raise ValueError("Frozen payload Table ID does not match.")
-        identity = resolve_catalogue_table_identity(config, workspace, table_id, context=context, spark_session=spark_session)
+        identity = resolve_catalogue_table_identity(config, workspace, table_id,
+            context={**runtime, "scope_workspace_id": runtime.get("metadata_workspace_id") or workspace},
+            spark_session=spark_session, physical_workspace_id=workspace)
         destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=workspace)[table_id]
     if str(destination["workspace_id"]).casefold() != workspace.casefold():
         raise ValueError("Select the physical table workspace for Contract Activation.")

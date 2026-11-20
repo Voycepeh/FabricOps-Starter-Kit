@@ -282,16 +282,17 @@ def test_real_profiler_activities_publish_independent_metadata(activity,spark_se
     # Keep aggregate/distribution/grain calculations real, replace metadata transport.
     monkeypatch.setattr(module,'_canonical_profiled_dataframe',lambda profile,**kwargs: profile.withColumnRenamed('ROW_COUNT','row_count'))
     monkeypatch.setattr(module,'_frequency_metadata_dataframe',lambda frequency,**kwargs:frequency)
-    monkeypatch.setattr(module,'_catalogue_dataframe_from_profiled',lambda *args,**kwargs:object())
+    monkeypatch.setattr(module, 'table_catalogue_observation', lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, 'get_store', lambda *a, **kw: Mock(workspace_id="dev"))
     spies={}
-    for name in ['_replace_snapshot_rows','_replace_frequency_rows','_upsert_catalogue_identities','_persist_grain_candidates','_stage_catalogue_profile_retry']:
+    for name in ['_replace_snapshot_rows','_replace_frequency_rows','merge_catalogue_asset','_persist_grain_candidates','_stage_catalogue_profile_retry','_require_catalogue_assets']:
         spies[name]=Mock(return_value=False)
         monkeypatch.setattr(module,name,spies[name])
     result=module.execute_table_profile(table_id='orders',context={'config':{},'scope_workspace_id':'dev'},
         spark_session=spark_session,activities={'grain', 'frequency'} if activity == 'grain_frequency' else {activity},verbose=False)
     assert reader.call_args.kwargs['table_id']=='orders' and result['row_count']==3
     assert spies['_replace_snapshot_rows'].called is (activity=='standard')
-    assert spies['_upsert_catalogue_identities'].called is (activity=='standard')
+    assert spies['merge_catalogue_asset'].called is (activity=='standard')
     assert spies['_persist_grain_candidates'].called is (activity in {'grain', 'grain_frequency'})
     assert spies['_replace_frequency_rows'].called is (activity in {'frequency', 'grain_frequency'})
     if activity in {'frequency', 'grain_frequency'}:

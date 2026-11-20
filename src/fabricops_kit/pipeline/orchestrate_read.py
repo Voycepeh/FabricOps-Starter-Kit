@@ -33,8 +33,10 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     file_format and read_options. Files support full reads only and retain their
     stable Source ID in the public response. Shared metadata stores that same
     identity value in table_id with asset_type=FILE. Foundational readers remain independent.
-    Successful persistent Reads register the file in METADATA_DATA_CATALOGUE
-    and record participation in METADATA_PIPELINE_RUN.operations with the Run ID. File profiles
+    Persistent reads register their physical asset and observed schema in
+    METADATA_DATA_CATALOGUE independently of profiling. Query projections
+    leave the registered table schema intact. Run operations record participation
+    and its physical asset workspace. File profiles
     and frequency results use that common Table ID and stable Column IDs in
     METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
     in memory. Profiling uses the pipeline row limit and records selection scope.

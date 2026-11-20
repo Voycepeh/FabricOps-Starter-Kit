@@ -75,18 +75,16 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
     """Catalogue owns the physical table/column identity for one workspace_id."""
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
-        "metadata_level",
         "asset_type", "item_id", "relative_path", "file_format",
         "first_observed_at", "last_observed_at",
         "table_id",
-        "column_id",
         "workspace_id",
+        "workspace_name",
+        "columns_json",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
-        "column_name",
-        "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
         "writer_workspace_id",
@@ -238,6 +236,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "table_id",
         "table_name",
         "workspace_id",
+        "asset_type",
         "access_level",
         "access_value",
         "access_state",
@@ -268,7 +267,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "database_name",
         }
     )
-    assert all(field_by_name[name].nullable for name in {"role_name", "schema_name", "object_name", "object_type"})
+    assert all(field_by_name[name].nullable for name in {"asset_type", "role_name", "schema_name", "object_name", "object_type"})
     assert {
         "access_purpose",
         "approval_status",

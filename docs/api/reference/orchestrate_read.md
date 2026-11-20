@@ -126,8 +126,10 @@ Alternatively select a Lakehouse file, folder or wildcard using relative_path,
 file_format and read_options. Files support full reads only and retain their
 stable Source ID in the public response. Shared metadata stores that same
 identity value in table_id with asset_type=FILE. Foundational readers remain independent.
-Successful persistent Reads register the file in METADATA_DATA_CATALOGUE
-and record participation in METADATA_PIPELINE_RUN.operations with the Run ID. File profiles
+Persistent reads register their physical asset and observed schema in
+METADATA_DATA_CATALOGUE independently of profiling. Query projections
+leave the registered table schema intact. Run operations record participation
+and its physical asset workspace. File profiles
 and frequency results use that common Table ID and stable Column IDs in
 METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
 in memory. Profiling uses the pipeline row limit and records selection scope.
@@ -171,7 +173,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L238">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L240">View on GitHub</a>
 </div>
 
 
@@ -187,7 +189,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 270 |
+| Live-critical dependencies | 276 |
 
 ### Release history
 
@@ -203,6 +205,8 @@ No related guides documented.
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
+<li><code>fabricops_kit.access_scanner.shared.fabric_access_token</code></li>
+<li><code>fabricops_kit.access_scanner.shared.request_fabric_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared._strict_package_json</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.activation_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.agreement_definition</code></li>
@@ -234,6 +238,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._require_catalogue_assets</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
@@ -261,6 +266,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.shared.is_table_not_found_error</code></li>
 <li><code>fabricops_kit.config.shared.metadata_timestamp_sort_key</code></li>
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
+<li><code>fabricops_kit.config.shared.resolve_asset_workspace_name</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
@@ -309,7 +315,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_dq_rule_type</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.shared._catalogue_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._coerce_date</code></li>
 <li><code>fabricops_kit.pipeline.shared._coerce_datetime</code></li>
@@ -334,6 +340,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._freshness_timestamp</code></li>
+<li><code>fabricops_kit.pipeline.shared._guardrail_asset_workspace</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
 <li><code>fabricops_kit.pipeline.shared._identifier</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
@@ -390,7 +397,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
-<li><code>fabricops_kit.pipeline.shared._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared._validated_source_snapshot</code></li>
@@ -426,6 +432,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.freshness_check_core</code></li>
 <li><code>fabricops_kit.pipeline.shared.get_current_freshness_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared.merge_catalogue_asset</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.observe_full_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
@@ -464,6 +471,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.source_observation_run_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_context</code></li>
 <li><code>fabricops_kit.pipeline.shared.source_snapshot_projection</code></li>
+<li><code>fabricops_kit.pipeline.shared.table_catalogue_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>

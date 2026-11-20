@@ -73,7 +73,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         agreements = metadata_records("METADATA_DATA_AGREEMENT", context=base, spark_session=spark)
         initial_context = {**base, "scope_workspace_id": selected_workspace or current_workspace}
         history_rows = read_activation_history(context=initial_context, spark_session=spark)
-    tables = [row for row in catalogue if row.get("metadata_level") == "table" and row.get("is_active") is not False]
+    tables = [row for row in catalogue if row.get("asset_type") == "TABLE" and row.get("is_active") is not False]
     files = contract_file_datasets(contracts, config=config, workspace_id=current_workspace)
     datasets = [*tables, *files]
     frozen = [row for row in contracts if row.get("status") == "frozen"]
@@ -142,7 +142,8 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         if row.get("source_id"):
             destination = json.loads(row["contract_payload_json"])["source"]
         else:
-            identity = resolve_catalogue_table_identity(config, workspace.value, table.value, context=routed(), spark_session=spark)
+            identity = resolve_catalogue_table_identity(config, current_workspace, table.value, context=base,
+                spark_session=spark, physical_workspace_id=workspace.value)
             destination = pipeline_physical_bindings({table.value: identity}, config=config, workspace_id=workspace.value)[table.value]
         if str(destination["workspace_id"]).casefold() != workspace.value.casefold():
             raise ValueError("Select the physical table workspace before review.")

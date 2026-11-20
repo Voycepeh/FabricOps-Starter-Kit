@@ -11,6 +11,9 @@ from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, read_wa
 from fabricops_kit.pipeline.shared import (
     capture_source_observation,
     observe_full_source,
+    merge_catalogue_asset,
+    persistence_permitted,
+    table_catalogue_observation,
     resolve_catalogue_table_identity,
     resolve_incremental_source_scope,
     resolve_pipeline_data_contract,
@@ -617,6 +620,11 @@ def pipeline_read(
         rows_read = _measure_returned_rows(dataframe, context=context)
         if rows_read is not None:
             measurement_source = "returned_dataframe"
+
+    if persistence_permitted(context) and getattr(getattr(dataframe, "schema", None), "fields", None) is not None:
+        # A projection is not authoritative for the physical table schema.
+        row = table_catalogue_observation(identity, context=context, dataframe=dataframe if query is None else None)
+        merge_catalogue_asset(row, context=context, spark_session=spark_session)
 
     return {
         "source_observation_recovery": recovery,

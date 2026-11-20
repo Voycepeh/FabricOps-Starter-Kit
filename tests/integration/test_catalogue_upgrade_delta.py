@@ -14,6 +14,8 @@ import pytest
 
 from fabricops_kit.config.metadata_schemas import CATALOGUE_NESTED_FIELDS, metadata_table_schema_registry, decode_metadata_row, encode_metadata_row
 from tests.helpers import framework_config
+from fabricops_kit.config import shared as config_shared
+from fabricops_kit.data_contract.shared import file_source_identity
 
 pytestmark = pytest.mark.spark
 setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
@@ -40,12 +42,20 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     logical_schema = metadata_table_schema_registry(logical=True)[TABLE]
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering',
                      governance_metadata_schema='custom_governance')
+    config.path_config.paths["prod"] = {
+        "Silver": replace(config.path_config.paths["dev"]["Silver"], workspace_id="prod-physical"),
+    }
+    def resolve_name(workspace, **kwargs):
+        return {"dev": "Development", "prod-physical": "Production", "files": "Files"}.get(workspace, workspace)
+    monkeypatch.setattr(config_shared, 'resolve_asset_workspace_name', resolve_name)
+    from fabricops_kit.pipeline import shared as pipeline
+    monkeypatch.setattr(pipeline, 'resolve_asset_workspace_name', resolve_name)
+
     def read(name, **kwargs):
         if name not in registry:
             raise RuntimeError('[PATH_NOT_FOUND]')
-        assert kwargs['schema'] == ('custom_engineering' if name == TABLE else
-            ('custom_governance' if name in {'METADATA_DATA_STEWARD', 'METADATA_DATA_AGREEMENT',
-                                           'METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_ACTIVATION'} else 'custom_engineering'))
+        if name == TABLE:
+            assert kwargs['schema'] == 'custom_engineering'
         if name == TABLE:
             return spark_session.read.format('delta').load(path)
         if name == 'METADATA_PROCESSING_STATE':
@@ -63,12 +73,16 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     def row(**values):
         audit = {field.name: datetime(2020, 2, 3, 4, 5, 6, 123456) if field.name == '_committed_at' else 'original-' + field.name
                  for field in schema.fields if not field.nullable}
-        return {'metadata_level': 'table', 'table_id': 'table', 'workspace_id': 'dev',
+        return {'asset_type': 'TABLE', 'table_id': 'table', 'workspace_id': 'dev', 'workspace_name': 'Development',
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
-    def seed(rows, native=(), extra=True, retired=False):
+    def seed(rows, native=(), extra=True, retired=False, legacy=False):
         physical = StructType([StructField(f.name, logical_schema[f.name].dataType if f.name in native else f.dataType, True, {'comment': 'original ' + f.name})
             for f in schema.fields] + ([StructField('extension', StringType(), True, {'comment': 'keep'})] if extra else []))
+        if legacy:
+            physical = StructType([field for field in physical if field.name not in {"columns_json", "workspace_name"}])
+            for name in ("metadata_level", "column_id", "column_name", "data_type"):
+                physical.add(StructField(name, StringType(), True))
         if retired:
             physical.add(StructField('metadata_key', StringType(), True))
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
@@ -82,8 +96,174 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         from delta.tables import DeltaTable
         return DeltaTable.forPath(spark_session, path).history(1).first()['version']
     return SimpleNamespace(spark=spark_session, path=path, schema=schema, row=row, seed=seed,
-                           run=run, upgrade=upgrade, version=version,
+                           run=run, upgrade=upgrade, version=version, config=config,
                            read=lambda: spark_session.read.format('delta').load(path))
+
+
+def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
+    """Migrate TABLE and FILE assets with exact IDs, scoped schemas and intact audit."""
+    rt = catalogue_delta
+    table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
+    file = file_source_identity(workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
+    dev = rt.row(table_id=table_id, asset_type=None, metadata_level="table", layer="Silver", store_type="lakehouse",
+                 schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id, writer_workspace_id="writing-notebook-workspace", extension="keep",
+                 load_strategy_parameters_json='{"key_columns":["id"]}')
+    prod = {**dev, "workspace_id": "prod"}
+    file_row = rt.row(table_id=file["source_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
+                      item_id="item", relative_path="orders.csv", file_format="csv")
+    def child(parent, id_, name, dtype, **values):
+        return {**parent, "metadata_level": "column", "column_id": id_, "column_name": name, "data_type": dtype, **values}
+    rt.seed([dev, prod, file_row,
+             child(dev, "exact-table-column-id", "id", "int"),
+             child(dev, "historical-id", "retired", "long", is_active=False),
+             child(prod, "exact-other-workspace-id", "name", "string"),
+             child(file_row, "exact-file-column-id", "id", "double")], legacy=True)
+    version = rt.version()
+    result = rt.run()
+    upgrade = result["table_results"][TABLE]
+    assert result["status"] == "ready", upgrade
+    assert upgrade["pre_upgrade_version"] == version
+    assert f"VERSION AS OF {version}" in upgrade["recovery_guidance"]
+    assert {"metadata_level", "column_id", "column_name", "data_type"}.isdisjoint(rt.read().columns)
+    rows = {row["workspace_id"]: row.asDict() for row in rt.read().collect()}
+    assert len(rows) == 3
+    assert rows["dev"]["table_id"] == rows["prod-physical"]["table_id"] == table_id
+    assert rows["prod-physical"]["workspace_name"] == "Production"
+    assert rows["prod-physical"]["_workspace_name"] == dev["_workspace_name"]
+    assert rows["prod-physical"]["writer_workspace_id"] == dev["writer_workspace_id"]
+    assert rows["prod-physical"]["load_strategy_parameters_json"] == dev["load_strategy_parameters_json"]
+    assert rows["prod-physical"]["extension"] == "keep"
+    assert rows["files"]["relative_path"] == "orders.csv"
+    for workspace, column_id, name, dtype in (
+            ("dev", "exact-table-column-id", "id", "int"),
+            ("prod-physical", "exact-other-workspace-id", "name", "string"),
+            ("files", "exact-file-column-id", "id", "double")):
+        assert json.loads(rows[workspace]["columns_json"]) == [
+            {"column_id": column_id, "column_name": name, "data_type": dtype}]
+    assert rt.spark.read.format("delta").option("versionAsOf", version).load(rt.path).count() == 7
+    assert rt.run()["status"] == "ready"
+    assert rt.version() == version + 1
+
+
+@pytest.mark.parametrize(("problem", "diagnostic"), [
+    ("unmapped", "Cannot establish the physical workspace"),
+    ("missing_binding", "neither a retained item ID nor a successful Run binding"),
+    ("duplicate_asset", "duplicate or conflicting parent"),
+    ("duplicate_column", "duplicate column identities"),
+    ("missing_id", "column_id"),
+    ("orphan", "no matching parent"),
+])
+def test_legacy_catalogue_migration_fails_closed(catalogue_delta, problem, diagnostic):
+    """Legacy ambiguities leave the source version available for correction."""
+    rt = catalogue_delta
+    workspace = "unmapped" if problem == "unmapped" else "dev"
+    table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
+    row = rt.row(table_id=table_id, workspace_id=workspace, metadata_level="table",
+                 layer="Silver", store_type="lakehouse", schema_name="sales",
+                 item_id=None if problem == "missing_binding" else rt.config.path_config.paths["dev"]["Silver"].item_id)
+    column = {**row, "metadata_level": "column", "column_id": "legacy",
+              "column_name": "customer_id", "data_type": "int"}
+    rows = [row, column]
+    if problem == "duplicate_asset":
+        rows.append(row)
+    elif problem == "duplicate_column":
+        rows.append(column)
+    elif problem == "missing_id":
+        column["column_id"] = None
+    elif problem == "orphan":
+        rows = [column]
+    rt.seed(rows, legacy=True)
+    version = rt.version()
+    result = rt.run()["table_results"][TABLE]
+    assert result["status"] == "failed"
+    assert diagnostic in result["message"]
+    assert rt.version() == version
+
+
+
+def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, monkeypatch):
+    """Existing frozen Contracts, profiling, Lineage and Guardrail records stay intact."""
+    from delta.tables import DeltaTable
+
+    rt = catalogue_delta
+    table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
+    parent = rt.row(table_id=table_id, metadata_level="table", layer="Silver", store_type="lakehouse",
+                    schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id)
+    column = {**parent, "metadata_level": "column", "column_id": "retired-id",
+              "column_name": "retired", "data_type": "int", "is_active": False}
+    rt.seed([parent, column], legacy=True)
+    frozen_payload = '{"table":{"columns":[{"column_id":"retired-id","column_name":"retired","data_type":"int"}]}}'
+    history = {
+        "METADATA_DATA_CONTRACT": {"contract_id": "orders", "contract_version": 2, "status": "frozen",
+                                   "evidence_workspace_id": "dev", "contract_payload_json": frozen_payload},
+        "METADATA_DATA_PROFILED": {"profile_id": "profile", "column_id": "retired-id", "row_count": 20},
+        "METADATA_DATA_PROFILED_FREQUENCY": {"frequency_id": "frequency", "profile_id": "profile",
+                                             "column_id": "retired-id"},
+        "METADATA_DATA_LINEAGE": {"lineage_id": "lineage", "pipeline_role": "source"},
+        "METADATA_GUARDRAIL_RESULTS": {"guardrail_result_id": "result", "guardrail_rule_id": "rule",
+            "guardrail_version": 1, "contract_id": "orders", "contract_version": 2,
+            "can_continue": True, "status": "passed", "guardrail_type": "schema",
+            "execution_type": "ungoverned", "run_id": "run", "severity": "warning", "result_payload_json": "{}"},
+    }
+    paths = {}
+    original = {}
+    audit = {key: value for key, value in parent.items() if key.startswith("_")}
+    registry = metadata_table_schema_registry()
+    from pyspark.sql.types import StringType, StructField, StructType
+    legacy_lineage = StructType([
+        *[StructField(name, StringType()) for name in ("workspace_id", "table_id", "lineage_id", "pipeline_role")],
+        *[field for field in registry[TABLE] if field.name in audit],
+    ])
+    for name, values in history.items():
+        paths[name] = rt.path + "-" + name
+        row = {**audit, "table_id": table_id, "workspace_id": "dev", **values}
+        schema = legacy_lineage if name == "METADATA_DATA_LINEAGE" else registry[name]
+        rt.spark.createDataFrame([row], schema).write.format("delta").save(paths[name])
+        original[name] = rt.spark.read.format("delta").load(paths[name]).collect()
+    read = setup.read_lakehouse_table
+    monkeypatch.setattr(setup, "read_lakehouse_table",
+        lambda name, **kwargs: rt.spark.read.format("delta").load(paths[name]) if name in paths else read(name, **kwargs))
+
+    result = rt.run()
+    assert result["status"] == "ready", result["table_results"]
+    assert rt.read().first()["columns_json"] == "[]"
+    for name, path in paths.items():
+        assert DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 0
+        assert rt.spark.read.format("delta").load(path).collect() == original[name]
+
+
+@pytest.mark.parametrize("conflicting", [False, True])
+def test_legacy_catalogue_validates_retained_run_binding(catalogue_delta, monkeypatch, conflicting):
+    """Resolve a legacy row without an item ID only from a matching successful operation."""
+    rt = catalogue_delta
+    table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
+    row = rt.row(table_id=table_id, metadata_level="table", layer="Silver", store_type="lakehouse",
+                 schema_name="sales", workspace_id="prod")
+    rt.seed([row], legacy=True)
+    version = rt.version()
+    read = setup.read_lakehouse_table
+    store = rt.config.path_config.paths["prod"]["Silver"]
+    operations = json.dumps([{"table_id": table_id, "status": "succeeded",
+        "destination": {
+            "workspace_id": "original-physical" if conflicting else store.workspace_id,
+            "item_id": "original-item" if conflicting else store.item_id,
+        }}])
+
+    def read_with_run(name, **kwargs):
+        if name == "METADATA_PIPELINE_RUN":
+            return rt.spark.createDataFrame([("prod", operations)], "workspace_id string, operations string")
+        return read(name, **kwargs)
+
+    monkeypatch.setattr(setup, "read_lakehouse_table", read_with_run)
+    if conflicting:
+        with pytest.raises(ValueError, match="retained Pipeline Run destinations"):
+            rt.upgrade()
+        assert rt.version() == version
+    else:
+        rt.upgrade()
+        migrated = rt.read().first()
+        assert (migrated["workspace_id"], migrated["item_id"]) == (store.workspace_id, store.item_id)
+        assert rt.version() == version + 1
 
 
 def test_fresh_setup_uses_json_and_repeated_setup_is_noop(catalogue_delta):
@@ -113,8 +293,7 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
         profile_key_candidates_json=json.dumps({'status': 'resolved', 'max_combination_width': 3,
                                                'candidates': [CANDIDATE, {**CANDIDATE, 'columns': ['id', 'tenant']}] }))
         for index, (params, strategy) in enumerate(processing)]
-    rows += [rt.row(table_id='inactive', metadata_level='column', column_id='col', column_name='retired',
-                    data_type='decimal(18,2)', is_active=False, extension='unrelated')]
+    rows += [rt.row(table_id='inactive', is_active=False, extension='unrelated')]
     rt.seed(rows)
     original = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in rt.read().collect()}
     from delta.tables import DeltaTable
@@ -177,6 +356,8 @@ def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
 
 
 @pytest.mark.parametrize(('field', 'value'), [
+    ('columns_json', '{broken'),
+    ('columns_json', '[{"column_id":"c","column_name":"","data_type":"int"}]'),
     ('load_strategy_parameters_json', '{broken'),
     ('load_strategy_parameters_json', '{"partition_column":"date"}'),
     ('load_strategy_parameters_json', '{"key_columns":[1]}'),
@@ -309,7 +490,6 @@ def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgr
     context = {'config': config, 'scope_workspace_id': 'dev'}
     def resolve(*args, **kwargs):
         return None, TABLE, 'custom_engineering', rt.path
-    monkeypatch.setattr(write, 'resolve_configured_lakehouse_table', resolve)
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', resolve)
     audit = {name: value for name, value in original_row.items() if name.startswith('_')}
     monkeypatch.setattr(write, 'build_runtime_audit_fields', lambda **kw: audit)
@@ -326,11 +506,10 @@ def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgr
     assert current['profile_key_candidates_json']['candidates'] == [CANDIDATE]
     assert shared.catalogue_authored_processing(current) == {'load_strategy': 'scd2', **parameters}
     # Profiling's ordinary merge preserves captured processing/schedules and extra columns.
-    from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
-    profile_row = {**original_row, 'load_strategy': None, 'load_strategy_parameters_json': None,
-                   'profile_key_candidates_json': {'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}}
-    frame = rt.spark.createDataFrame([encode_metadata_row(TABLE, coerce_metadata_row_types(TABLE, profile_row))], rt.schema)
-    shared._upsert_catalogue_identities(catalogue_df=frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
+    profile_row = {name: original_row[name] for name in ('workspace_id', 'workspace_name', 'table_id', 'asset_type')}
+    profile_row.update(audit)
+    profile_row['profile_key_candidates_json'] = {'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
+    shared.merge_catalogue_asset(profile_row, context=context, spark_session=rt.spark)
     current = decode_metadata_row(TABLE, rt.read().first().asDict(recursive=True))
     assert current['extension'] == 'keep' and current['scheduled_refresh_json'] == SCHEDULE
     assert current['profile_key_candidates_json'] == decode_metadata_row(TABLE, profile_row)['profile_key_candidates_json']
@@ -352,11 +531,11 @@ def test_widget_reads_json_candidates_and_preserves_schedule(catalogue_delta, wi
                  load_strategy_parameters_json='{}', scheduled_refresh_json=json.dumps(SCHEDULE),
                  profile_key_candidates_json=json.dumps({'status': 'resolved', 'max_combination_width': 3,
                     'candidates': [{**CANDIDATE, 'columns': ['column_0', 'column_1']}]}))
-    columns = [rt.row(**row) for row in widget_runtime['catalogue'][1:]]
-    rt.seed([table, *columns])
+    table['columns_json'] = json.dumps(table['columns_json'])
+    rt.seed([table])
     rt.upgrade()
     rows = [decode_metadata_row(TABLE, row.asDict(recursive=True)) for row in rt.read().collect()]
-    widget_runtime['catalogue'][:] = sorted(rows, key=lambda row: row.get('column_id') is not None)
+    widget_runtime['catalogue'][:] = rows
     state = widget_runtime['open']()
     assert 'scheduled_refresh' not in state
     assert decode_metadata_row(TABLE, widget_runtime['catalogue'][0])['scheduled_refresh_json'] == SCHEDULE
@@ -374,8 +553,8 @@ def test_unsupported_physical_type_aborts_without_mutation(catalogue_delta):
     assert TABLE in rt.run()['failed_tables'] and rt.version() == version
 
 
-def test_duplicate_rows_and_unrelated_nested_columns_survive(catalogue_delta):
-    """Verification preserves duplicate multiplicity and unrelated nested values."""
+def test_unrelated_nested_columns_survive(catalogue_delta):
+    """Distinct assets retain exact extension values during verification."""
     from decimal import Decimal
     from pyspark.sql.types import MapType, StringType, DecimalType, StructType, StructField
     rt = catalogue_delta
@@ -384,10 +563,10 @@ def test_duplicate_rows_and_unrelated_nested_columns_survive(catalogue_delta):
                          StructField('precise_value', DecimalType(30, 12))])
     row = rt.row(load_strategy_parameters_json='{}', annotations={'z': 'last', 'a': None},
                  precise_value=Decimal('123456789012345.123456789012'))
-    rt.spark.createDataFrame([row, row], legacy).write.format('delta').save(rt.path)
+    rt.spark.createDataFrame([row, {**row, 'table_id': 'other'}], legacy).write.format('delta').save(rt.path)
     frame, _info = rt.upgrade()
     values = frame.collect()
-    assert len(values) == 2 and values[0] == values[1]
+    assert len(values) == 2 and {value['table_id'] for value in values} == {'table', 'other'}
     assert values[0]['annotations'] == row['annotations']
     assert values[0]['precise_value'] == row['precise_value']
     assert values[0]['_committed_at'] == row['_committed_at']
@@ -452,13 +631,24 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     audit = {name: value for name, value in original.items() if name.startswith('_')}
     def resolve(*args, **kwargs):
         return None, TABLE, 'custom_engineering', rt.path
-    monkeypatch.setattr(writer, 'resolve_configured_lakehouse_table', resolve)
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', resolve)
     monkeypatch.setattr(writer, 'build_runtime_audit_fields', lambda **kw: audit)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: audit)
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: rt.read())
     identity = shared.resolve_catalogue_table_identity(config, 'dev', 'table', spark_session=rt.spark, context=context)
     assert shared.catalogue_authored_processing(identity) == {'load_strategy': 'overwrite'}
+    reader = importlib.import_module("fabricops_kit.pipeline.pipeline_read")
+    business = rt.spark.createDataFrame([(1, "a")], "id int, name string")
+    monkeypatch.setattr(reader, "read_lakehouse_table", lambda *a, **kw: business)
+    monkeypatch.setattr(reader, "resolve_pipeline_data_contract", lambda *a, **kw: None)
+    monkeypatch.setattr(reader, "observe_full_source", lambda *a, **kw: {"status": "disabled"})
+    monkeypatch.setattr(shared, "build_pipeline_audit_fields", lambda **kw: audit)
+    monkeypatch.setattr(reader, "persistence_permitted", lambda context: True)
+    result = reader.pipeline_read(table_id="table", context={**context, "_spark_session": rt.spark}, verbose=False)
+    assert result["dataframe"] is business
+    table = decode_metadata_row(TABLE, rt.read().where("table_id='table'").first().asDict())
+    assert [column["column_name"] for column in table["columns_json"]] == ["id", "name"]
+    assert table["last_profiled_at"] is None
     # Insert a new target identity using the actual target-processing merge.
     inserted = {**identity, 'table_id': 'inserted', 'table_name': 'new_orders'}
     writer._persist_target_processing(identity=inserted, processing={'load_strategy': 'scd1', 'key_columns': ['id']},
@@ -473,17 +663,13 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
     assert decode_metadata_row(TABLE, rt.read().where("table_id='table'").first().asDict(recursive=True))['profile_key_candidates_json'] == {
         'status': 'unresolved', 'max_combination_width': 2, 'candidates': [],
         'profile_scope': None, 'profiling_max_rows': None}
-    # Build and insert real profile table/column identities, retaining processing.
+    # Profile and write update the same current schema without changing processing.
     business = rt.spark.createDataFrame([(1, 'a')], ['id', 'name'])
-    source = rt.read().where("table_id='inserted'")
-    profile_frame = shared._catalogue_dataframe_from_profiled(source, source_df=business,
-        store_type='lakehouse', layer='Silver', schema_name='sales', table_name='new_orders',
-        profile_key_candidates_json={'status': 'resolved', 'max_combination_width': 2,
-                                     'candidates': [{**CANDIDATE, 'columns': ['id'], 'column_count': 1}]})
-    shared._upsert_catalogue_identities(catalogue_df=profile_frame, config=config, active_workspace_id='dev', spark_session=rt.spark)
-    inserted_rows = [decode_metadata_row(TABLE, row.asDict(recursive=True)) for row in rt.read().where("table_id='inserted'").collect()]
-    assert len(inserted_rows) == 3
-    assert {row['column_name'] for row in inserted_rows if row['column_id']} == {'id', 'name'}
+    observed = shared.table_catalogue_observation(inserted, context=context, dataframe=business, audit=audit)
+    observed['profile_key_candidates_json'] = {'status': 'resolved', 'max_combination_width': 2,
+        'candidates': [{**CANDIDATE, 'columns': ['id'], 'column_count': 1}]}
+    shared.merge_catalogue_asset(observed, context=context, spark_session=rt.spark)
+    assert rt.read().where("table_id='inserted'").count() == 1
     resolved = shared.resolve_catalogue_table_identity(config, 'dev', 'inserted', spark_session=rt.spark, context=context)
     assert resolved['scheduled_refresh_json'] == SCHEDULE
     assert resolved['profile_key_candidates_json']['candidates'][0]['columns'] == ['id']
@@ -511,3 +697,21 @@ def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_de
         spark_session=rt.spark, context=context, schema='governance')
     assert reopened['contract_payload_json'] == draft['contract_payload_json']
     assert rt.spark.read.format('delta').load(contract_path).count() == 1
+
+
+def test_same_asset_key_cannot_rebind_to_another_item(catalogue_delta, monkeypatch):
+    """Reject a Fabric item collision without changing the current asset."""
+    from fabricops_kit.pipeline import shared as pipeline
+
+    rt = catalogue_delta
+    monkeypatch.setattr(pipeline, "resolve_configured_lakehouse_table",
+                        lambda *args, **kwargs: (None, TABLE, "custom_engineering", rt.path))
+    parent = rt.row(item_id="original-item", load_strategy="scd1")
+    rt.seed([parent])
+    version = rt.version()
+    with pytest.raises(Exception, match="already registered to a different Fabric item"):
+        pipeline.merge_catalogue_asset({**parent, "item_id": "different-item", "load_strategy": "overwrite"},
+            context={"config": rt.config, "scope_workspace_id": "dev"}, spark_session=rt.spark)
+    assert rt.version() == version
+    row = rt.read().first()
+    assert (row["item_id"], row["load_strategy"]) == ("original-item", "scd1")

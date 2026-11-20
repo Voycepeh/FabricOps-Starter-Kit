@@ -61,6 +61,8 @@ def publication_input_runtime(monkeypatch, spark_session):
     monkeypatch.setattr(shared, "_physical_target_has_publication", lambda *a, **kw: state.confirmed and state.fail != "confirmation")
     monkeypatch.setattr(shared, "stage_pipeline_write_observations", lambda *a: None)
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda *a: None)
+    monkeypatch.setattr(io, "read_lakehouse_table", lambda *a, **kw: state.target)
+    monkeypatch.setattr(io, "read_warehouse_query", lambda *a, **kw: state.target.limit(0))
     monkeypatch.setattr(io, "write_lakehouse_table", publish)
     monkeypatch.setattr(io, "write_warehouse_table", publish)
     monkeypatch.setattr(shared, "execute_lakehouse_processing", publish)

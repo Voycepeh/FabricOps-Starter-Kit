@@ -304,6 +304,8 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append_all", 
         lambda **_kwargs: {"status": "not_configured", "schedules": []},
     )
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
+    monkeypatch.setattr(io_package, "read_lakehouse_table", lambda *_a, **_kw: None)
+    monkeypatch.setattr(io_package, "read_warehouse_query", lambda *_a, **_kw: None)
     return identity, context
 
 
@@ -548,6 +550,8 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
     monkeypatch.setattr(shared_module, "commit_pipeline_write_success", lambda value: None)
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **kwargs: persisted.append(kwargs))
     dataframe = spark_session.createDataFrame([(1,)], ["id"])
+    published = dataframe.withColumnRenamed("id", "persisted_id")
+    monkeypatch.setattr(io_package, "read_lakehouse_table", lambda *_a, **_kw: published)
 
     write_module.pipeline_write(
         dataframe,
@@ -557,7 +561,7 @@ def test_pipeline_write_persists_resolved_target_processing(monkeypatch, spark_s
 
     assert persisted[0]["identity"] == identity
     assert persisted[0]["processing"] is processing
-    assert persisted[0]["dataframe"] is dataframe
+    assert persisted[0]["dataframe"] is published
 
 
 @pytest.mark.parametrize("conflict", [None, "python", "jvm", "structured"])
@@ -592,7 +596,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     class Spark:
         def createDataFrame(self, values, *, schema):
             rows.extend(values)
-            assert schema == "catalogue-schema"
+            assert "columns_json" in schema.fieldNames()
             return Source()
 
     class DataFrame:
@@ -641,13 +645,12 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         "build_runtime_audit_fields",
         lambda **_kwargs: metadata_audit,
     )
-    monkeypatch.setattr(write_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(shared_module, "resolve_asset_workspace_name", lambda *args, **kwargs: "Physical Workspace")
+    monkeypatch.setattr(shared_module, "get_store", lambda *args, **kwargs: types.SimpleNamespace(
+        workspace_id="physical", item_id="physical-item"))
+    monkeypatch.setattr(shared_module, "metadata_table_physical_schema", lambda *_args: None)
     monkeypatch.setattr(
-        write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"}
-    )
-    monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: None)
-    monkeypatch.setattr(
-        write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
+        shared_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
     )
 
     write_module._persist_target_processing(
@@ -668,7 +671,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         context={"workspace_name": "Workspace"},
     )
 
-    assert rows[0]["metadata_level"] == "table"
+    assert rows[0]["asset_type"] == "TABLE" and rows[0]["workspace_id"] == "physical"
     assert rows[0]["load_strategy"] == "scd2"
     assert rows[0]["_workspace_name"] == "Workspace"
     assert rows[0]["_metadata_lakehouse_name"] == "Metadata"

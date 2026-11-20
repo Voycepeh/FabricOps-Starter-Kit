@@ -87,6 +87,9 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         {'load_strategy': state['mode'], 'key_columns': ['id'], **({'effective_column': 'modified', 'tracked_columns': ['value']} if state['mode'] == 'scd2' else {})}))
     monkeypatch.setattr(writer, '_writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})
     monkeypatch.setattr(writer, '_persist_target_processing', lambda **kw: None)
+    reader = import_module('fabricops_kit.pipeline.pipeline_read')
+    monkeypatch.setattr(reader, 'table_catalogue_observation', lambda *args, **kw: {})
+    monkeypatch.setattr(reader, 'merge_catalogue_asset', lambda *args, **kw: None)
     monkeypatch.setattr(shared, 'record_pipeline_publication', lambda **kw: None)
     monkeypatch.setattr(shared, '_merge_source_observation_records', merge_metadata)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: None)
@@ -403,7 +406,8 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
                 incoming = run.spark.read.option('header', True).option('inferSchema', True).csv(str(assets / f'inventory_day{day}.csv'))
                 staged = incoming if day == 1 else run.read('source').unionByName(incoming).dropDuplicates(['movement_id'])
                 staged.write.format('delta').mode('overwrite').save(str(run.path / 'source'))
-            source = reader.pipeline_read(table_id='source', read_mode='incremental', target_table_id='target', verbose=False)
+            source = reader.pipeline_read(table_id='source', read_mode='incremental', target_table_id='target',
+                                          read_parameters={'watermark_column': 'modified_datetime'}, verbose=False)
             assert source['dataframe'].count() == batch_rows
             if day >= 2:
                 assert source['scope']['through'] == '2026-10-07T02:30:00.000000Z'
@@ -487,6 +491,7 @@ def warehouse_publication_runtime(publication_runtime, monkeypatch):
         return target.where((F.col('_activity_id') == activity) & (F.col('_committed_at') == F.lit(stamp))).agg(F.count('*').alias('fabricops_publication_rows'))
 
     monkeypatch.setattr(io, 'read_warehouse_table', lambda schema, name, **kw: run.read(name))
+    monkeypatch.setattr(io, 'read_warehouse_query', lambda sql, **kw: run.read('target').limit(0))
     monkeypatch.setattr(io, 'write_warehouse_table', warehouse_write)
     monkeypatch.setattr(shared, 'read_warehouse_query', warehouse_query)
     return run
@@ -933,3 +938,23 @@ def test_full_overwrite_replaces_legacy_schema_with_mandatory_hash(publication_r
     assert target.count() == frame.count()
     assert target.schema['_row_hash'].dataType.simpleString() == 'string'
     assert target.where('_row_hash IS NULL').count() == 0
+
+
+
+def test_append_registers_complete_published_schema(publication_runtime, monkeypatch):
+    """A Delta append can retain columns absent from the incoming batch."""
+    from pyspark.sql import functions as F
+
+    run = publication_runtime
+    schemas = []
+    monkeypatch.setattr(writer, "_persist_target_processing", lambda **kwargs: schemas.append(kwargs["dataframe"].schema))
+    first = run.stage(1, incremental=False).withColumn("retained", F.lit("value"))
+    run.publish(first)
+    run.context["execution_plan"].plan_id = "next-run"
+    second = run.stage(2, incremental=False)
+    run.publish(second)
+
+    target = run.read("target")
+    assert "retained" not in second.columns
+    assert "retained" in target.columns
+    assert schemas[-1] == target.schema
