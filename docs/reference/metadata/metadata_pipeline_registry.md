@@ -45,12 +45,12 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr class="metadata-column--engineering"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>Destination workspace whose configuration resolves the approved logical stores.</td></tr>
+<tr class="metadata-column--engineering"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>ID of the destination workspace whose store configuration is reviewed for pipeline execution.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_id</code></td><td><code>string</code></td><td>Stable logical Pipeline ID shared across versions and workspaces.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_version</code></td><td><code>integer</code></td><td>Monotonically increasing immutable implementation version within an execution workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promotion_id</code></td><td><code>string</code></td><td>Unique reviewed promotion operation ID, retained for safe replay.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>active, superseded or retired; at most one active version per execution workspace/Pipeline ID.</td></tr>
-<tr class="metadata-column--engineering"><td><code>source_workspace_id</code></td><td><code>string</code></td><td>Workspace containing the manually tested development notebook.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_workspace_id</code></td><td><code>string</code></td><td>ID of the workspace containing the development notebook used for the reviewed Pipeline Promotion.</td></tr>
 <tr class="metadata-column--engineering"><td><code>source_notebook_id</code></td><td><code>string</code></td><td>Development notebook identity; distinct from the Governed copy.</td></tr>
 <tr class="metadata-column--engineering"><td><code>governed_notebook_id</code></td><td><code>string</code></td><td>Separate physical notebook item for this exact frozen version.</td></tr>
 <tr class="metadata-column--engineering"><td><code>snapshot_uri</code></td><td><code>string</code></td><td>Exact write-once full promoted ipynb snapshot in Metadata Lakehouse Files.</td></tr>
@@ -68,8 +68,8 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>promoted_at</code></td><td><code>timestamp</code></td><td>Time the promotion was prepared for atomic activation.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>

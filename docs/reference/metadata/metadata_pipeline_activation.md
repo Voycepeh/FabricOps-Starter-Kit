@@ -44,7 +44,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--governance"><td><code>approval_id</code></td><td><code>string</code></td><td>Identifier stored for <code>approval_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>submission_id</code></td><td><code>string</code></td><td>Identifier stored for <code>submission_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>submission_sha256</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>submission_sha256</code>.</td></tr>
-<tr class="metadata-column--governance"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>Identifier stored for <code>execution_workspace_id</code>.</td></tr>
+<tr class="metadata-column--governance"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>ID of the destination workspace whose store configuration is reviewed for pipeline execution.</td></tr>
 <tr class="metadata-column--governance"><td><code>pipeline_id</code></td><td><code>string</code></td><td>Identifier stored for <code>pipeline_id</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>revision</code></td><td><code>integer</code></td><td>Metadata Pipeline Activation field <code>revision</code>.</td></tr>
 <tr class="metadata-column--governance"><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
@@ -58,8 +58,8 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--governance"><td><code>review_note</code></td><td><code>string</code></td><td>Metadata Pipeline Activation field <code>review_note</code>.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>

@@ -75,6 +75,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<div class="metadata-table-grid">' not in first_landing
     assert 'data-metadata-explorer' in first_landing
     assert '<nav class="metadata-explorer-fallback"' in first_landing
+    assert "## Workspace columns" in first_landing
+    assert "Contract authoring evidence" in first_landing
+    assert "Notebook audit" in first_landing
     assert "## Metadata relationships" in first_landing
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
@@ -159,6 +162,21 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     } == first_pages
     assert len(first_pages) == len(CANONICAL_METADATA_TABLES)
 
+
+
+def test_workspace_id_descriptions_follow_the_persisted_roles() -> None:
+    """Identify every top-level workspace ID and keep Contract evidence distinct."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    registry = metadata_table_schema_registry()
+    assert set(generator.WORKSPACE_ID_DESCRIPTIONS) == {
+        name for name, schema in registry.items() if "workspace_id" in schema.fieldNames()
+    }
+    describe = generator._metadata_field_description
+    assert "authoring evidence" in describe("METADATA_DATA_CONTRACT", "evidence_workspace_id")
+    assert "physical asset" in describe("METADATA_DATA_CONTRACT_ACTIVATION", "workspace_id")
+    assert "operations[].destination.workspace_id" in describe("METADATA_PIPELINE_RUN", "workspace_id")
+    assert "executing notebook" in describe("METADATA_DATA_CATALOGUE", "_workspace_name")
 
 
 def test_metadata_nested_types_are_rendered_as_field_tables() -> None:

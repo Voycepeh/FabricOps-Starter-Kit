@@ -117,7 +117,19 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 - **Governance** stores authored governance definitions.
 - **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
 
-`table_id` is the common operational table/file asset key, distinguished by `asset_type`. Registered columns of either type use deterministic `column_id`. Released file source descriptors in Contracts, activations and Run operations retain `source_id`; operational writers store that same identity value in `table_id`. `contract_id` and `contract_version` identify one exact Data Contract version."""
+`table_id` is the common operational table/file asset key, distinguished by `asset_type`. Registered columns of either type use deterministic `column_id`. Released file source descriptors in Contracts, activations and Run operations retain `source_id`; operational writers store that same identity value in `table_id`. `contract_id` and `contract_version` identify one exact Data Contract version.
+
+## Workspace columns
+
+| Role | Columns | Meaning |
+| --- | --- | --- |
+| Physical asset workspace | `workspace_id` and Catalogue `workspace_name` | The Fabric workspace that contains the table or file. Used by the Catalogue, new asset observations, and Contract Activation. |
+| Contract authoring evidence | `evidence_workspace_id` on Data Contract | The selected Catalogue observation used to author the version. Contract Activation records where the frozen version applies. |
+| Pipeline execution scope | `workspace_id` on Pipeline Run, `execution_workspace_id` on Pipeline Activation and Registry | The workspace whose configuration resolves the pipeline’s stores. Read and Write operations record their own physical asset workspaces. |
+| Notebook audit | `_workspace_id` and `_workspace_name` | The executing notebook’s workspace when the metadata row was written. |
+| Retained notebook provenance | Catalogue `writer_workspace_id` and Pipeline Registry `source_workspace_id` | The workspace of the recorded table-writing notebook or reviewed development notebook, respectively. |
+
+Look up the physical workspace display name on the matching Catalogue row when an observation stores only the ID. Guardrail Results use the physical workspace for planned asset checks with a binding and execution scope for pipeline-wide checks or checks without a binding."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -137,7 +149,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT_ACTIVATION": {
         "purpose": "Selects one exact globally frozen Contract for each physical table or file source.",
         "grain": "One retained activation revision per workspace and Table ID or file source_id; one current active selection.",
-        "implementation_notes": "Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
+        "implementation_notes": "workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
         "primary_key": ["activation_id"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Optional exact Agreement governing this physical frozen Contract selection."},
@@ -204,7 +216,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT": {
         "purpose": "Defines one immutable table or file dataset contract history. Workspace observations supply authoring evidence; physical activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table or file-backed dataset.",
-        "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id; their exact selector, format and reader options are frozen in the payload. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
+        "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id identifies the Catalogue observation selected for authoring. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id; their exact selector, format and reader options are frozen in the payload. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
         "primary_key": ["contract_id", "contract_version"],
         "foreign_keys": [],
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
