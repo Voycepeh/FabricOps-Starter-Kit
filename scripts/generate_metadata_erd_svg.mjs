@@ -51,7 +51,13 @@ function renderMetadataSvg(layout, models) {
     const nestedKeys = [...new Set(Object.values(models).flatMap(other => (other.foreign_keys || [])
       .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
-    const all=[...pk,...nestedKeys,...groupedFk,...(name === "DATA_CATALOGUE" ? [["", "columns_json (current schema)"]] : [])], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
+    const keys = [...pk, ...nestedKeys, ...groupedFk];
+    const identityFields = model.asset_identity_fields.filter(value =>
+      !pk.some(([, field]) => field === value) && !fk.some(([, field]) => field === value));
+    const fields = identityFields.map(value => ["", value]);
+    if (name === "DATA_CATALOGUE") fields.push(["", "columns_json (current schema)"]);
+    const all = [...keys, ...fields];
+    const rows = all.length > 5 ? [...all.slice(0, 4), ["", `+${all.length - 4} more fields`]] : all;
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
       const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;

@@ -4578,6 +4578,7 @@ def render_metadata_reference_index(
     table_models: dict[str, dict[str, Any]],
     reference_order: list[str],
     table_purposes: dict[str, str],
+    field_names_by_table: dict[str, set[str]],
 ) -> str:
     """Render a compact interactive metadata map instead of redundant full table cards."""
     # Keep browser tooltips and join-key summaries on the same canonical
@@ -4593,6 +4594,10 @@ def render_metadata_reference_index(
             "write_entrypoints": write_entrypoints[name],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
+            "asset_identity_fields": [
+                field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
+                if field in field_names_by_table[name]
+            ],
             "foreign_keys": [
                 {
                     "local_field": fk["local_field"],
@@ -4982,7 +4987,7 @@ def generate_metadata_reference_pages() -> None:
             "\n".join(lines).rstrip() + "\n", encoding="utf-8"
         )
     METADATA_REFERENCE_INDEX_PATH.write_text(
-        render_metadata_reference_index(table_models, reference_order, table_purposes),
+        render_metadata_reference_index(table_models, reference_order, table_purposes, field_names_by_table),
         encoding="utf-8",
     )
 

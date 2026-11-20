@@ -216,9 +216,6 @@
       return links.filter(edge => edge[0] === name || edge[1] === name);
     }
 
-    const logicalJoinKeys = {
-      "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id → DATA_CATALOGUE.table_id (logical asset reference)"]
-    };
     const keyJoinRows = (from, to) => {
       const rows = [];
       for (const child of [from, to]) {
@@ -236,7 +233,12 @@
         rows.push("PIPELINE_RUN.promotion_id → PIPELINE_REGISTRY.promotion_id (exact immutable per-workspace Pipeline Promotion)");
       }
       if (rows.length) return rows;
-      return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];
+      const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
+      if (assetTable) {
+        const identityFields = modelFor(assetTable).asset_identity_fields || [];
+        return identityFields.map(field => assetTable + "." + field + " → DATA_CATALOGUE.table_id (logical asset reference)");
+      }
+      return ["Logical relationship; no physical FK declared"];
     };
     function renderRelationships(name) {
       const relationshipsForTable = relationships(name);
@@ -246,10 +248,11 @@
           const other = edge[0] === name ? edge[1] : edge[0];
           const joinLines = keyJoinRows(edge[0], edge[1]);
           const referenceOnly = !edge[2];
+          const relationshipKind = edge[0] === "DATA_CATALOGUE" ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +
-            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + '; Application-enforced identity reference') + '">' +
+            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + ' · ' + relationshipKind) + '">' +
             escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +
@@ -300,6 +303,9 @@
         '<div class="metadata-explorer-detail-facts">' +
         '<div><strong>One row represents</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
         '<div><strong>Primary key</strong><code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></div>' +
+        ((model.asset_identity_fields || []).length
+          ? '<div><strong>Asset identity fields</strong><code>' + escapeHtml(model.asset_identity_fields.join(" · ")) + '</code></div>'
+          : '') +
         '<div><strong>Written via</strong><span>' + (writers || "See activation authority") + '</span></div>' +
         '</div></div>' +
         '<div class="metadata-explorer-relationship-summary"><h4>Relationships</h4>' +

@@ -257,6 +257,10 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
             (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
             for fk in model["foreign_keys"]
         ]
+    assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
+    assert payload["DATA_CONTRACT"]["foreign_keys"] == []
+    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["table_id"]
+    assert payload["PIPELINE_RUN"]["asset_identity_fields"] == ["operations[].table_id", "operations[].source_id"]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [
         "provider_steward_id", "recipient_steward_id"
@@ -275,7 +279,7 @@ def test_metadata_explorer_compact_details_and_hover_summary() -> None:
     assert "mouseenter" in js and "focus" in js and "showTooltip" in js
     assert "model.grain" in js and "model.purpose" in js
     assert "keyJoinRows" in js and "fk.referenced_field" in js
-    assert "logicalJoinKeys" in js
+    assert "modelFor(assetTable).asset_identity_fields" in js
     assert "metadata-explorer-related-joins" in js
     assert "metadata-explorer-detail-quick" not in js
     assert "metadata-explorer-tooltip[hidden]" in css
@@ -407,6 +411,11 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
     }
+
+    for name in ("DATA_CONTRACT", "DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
+        box = next(node for node in svg_tree.findall(f".//{namespace}a")
+                   if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
+        assert "table_id" in {node.text for node in box.findall(f"{namespace}text")}
 
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
