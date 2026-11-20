@@ -285,7 +285,7 @@ def test_real_profiler_activities_publish_independent_metadata(activity,spark_se
     monkeypatch.setattr(module, 'table_catalogue_observation', lambda *a, **kw: {"_committed_at": None})
     monkeypatch.setattr(module, 'get_store', lambda *a, **kw: Mock(workspace_id="dev"))
     spies={}
-    for name in ['_replace_snapshot_rows','_replace_frequency_rows','merge_catalogue_asset','_persist_grain_candidates','_stage_catalogue_profile_retry']:
+    for name in ['_replace_snapshot_rows','_replace_frequency_rows','merge_catalogue_asset','_persist_grain_candidates','_stage_catalogue_profile_retry','_require_catalogue_assets']:
         spies[name]=Mock(return_value=False)
         monkeypatch.setattr(module,name,spies[name])
     result=module.execute_table_profile(table_id='orders',context={'config':{},'scope_workspace_id':'dev'},

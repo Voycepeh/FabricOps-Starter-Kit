@@ -136,6 +136,34 @@ def metadata_table_physical_schema(config: Any, table_name: str) -> str:
         raise ValueError(f"FrameworkConfig.{attribute} must be a non-empty schema name.")
     return schema_name
 
+def _require_catalogue_assets(references, *, context, table_name):
+    """Reject new child rows without exactly one active physical Catalogue parent."""
+    from pyspark.sql import functions as F
+
+    from fabricops_kit.io.read_lakehouse_table import read_lakehouse_table
+
+    fields = ["workspace_id", "table_id", "asset_type"]
+    keys = references.select(*fields).distinct()
+    if keys.isEmpty():
+        return
+    catalogue = "METADATA_DATA_CATALOGUE"
+    parents = read_lakehouse_table(
+        catalogue, store="Metadata", schema=metadata_table_physical_schema(context["config"], catalogue),
+        context={**context, "_spark_session": references.sparkSession, "_fabricops_suppress_io_log": True},
+    )
+    counts = (parents.join(keys, fields, "left_semi").groupBy(*fields)
+              .agg(F.count("*").alias("total"),
+                   F.count(F.when(F.coalesce(F.col("is_active"), F.lit(True)), 1)).alias("active")))
+    invalid = keys.join(counts, fields, "left").where(
+        F.col("total").isNull() | (F.col("total") != 1) | (F.col("active") != 1)
+    ).select(*fields).first()
+    if invalid is not None:
+        raise ValueError(
+            f"{table_name} requires exactly one active Catalogue asset for {invalid.asDict()!r}. "
+            "Register the physical asset or repair the conflicting Catalogue records before retrying."
+        )
+
+
 AUDIT_SCHEMA_FIELDS = [
     ("_committed_by", "string", False),
     ("_committed_at", "timestamp", False),

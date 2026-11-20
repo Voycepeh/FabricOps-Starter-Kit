@@ -402,7 +402,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
     Persistent evidence is committed only at the applicable execution and finalization boundaries. Multiple target writes are independent publications, not one cross-target atomic transaction. Whole-table profiling, Frequency distributions and full Source Observation add compute and should be scheduled deliberately.
 
-    The pipeline resolves each asset’s store through the active configuration. New Profile, Frequency, Lineage, and Access records reference the Data Catalogue through `workspace_id + table_id + asset_type`. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Lineage captures source and target participation.
+    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, Lineage, and Access records using `workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Lineage captures source and target participation.
 
     Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile and Lineage lookups. Existing frozen Contracts and historical observations keep their saved payloads.
 

@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import _require_catalogue_assets, metadata_table_schema_registry
 from fabricops_kit.data_contract.shared import file_source_identity
 from fabricops_kit.pipeline import shared
 from tests.integration.test_catalogue_upgrade_delta import catalogue_delta  # noqa: F401
@@ -32,6 +32,7 @@ def profile_runtime(spark_session, monkeypatch):
     def capture(*, dataframe, table_name, **kw):
         rows[table_name] = [row.asDict(recursive=True) for row in dataframe.collect()]
     monkeypatch.setattr(shared, "_replace_snapshot_rows", capture)
+    monkeypatch.setattr(shared, "_require_catalogue_assets", Mock())
     plan.evidence["profiling_configuration"] = {"frequency_enabled": True, "grain_discovery_enabled": True}
     return SimpleNamespace(spark=spark_session, context=context, plan=plan, identity=identity, rows=rows)
 
@@ -127,7 +128,13 @@ def test_real_delta_file_catalogue_and_lineage_merges_are_idempotent(catalogue_d
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, table, schema, **kw:
         (store, table, schema, paths[table]))
+    reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
     identity = {**file_source_identity(workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
+    with pytest.raises(ValueError, match="requires exactly one active Catalogue asset"):
+        shared.persist_lineage_participation(asset_type='FILE', table_id=identity['source_id'],
+            file_identity=identity, pipeline_role='source', context={})
+    assert r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).count() == 0
     for role in ('source', 'target', 'source'):
         shared.persist_file_catalogue(identity, context={})
         shared.persist_lineage_participation(asset_type='FILE', table_id=identity['source_id'],
@@ -166,6 +173,8 @@ def test_orchestrated_read_commits_real_delta_lineage_before_finalization(catalo
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: dict(audit))
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, table, schema, **kw:
         (store, table, schema, paths[table]))
+    reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
     monkeypatch.setattr(shared, 'persist_file_catalogue', FILE_CATALOGUE_WRITER)
     monkeypatch.setattr(shared, 'persist_lineage_participation', LINEAGE_WRITER)
     files.readers['csv'].return_value = r.spark.createDataFrame([], 'id long, name string')
@@ -189,7 +198,7 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     r = profile_runtime
     registry = metadata_table_schema_registry()
     paths = {table: catalogue_delta.path + '-profiles-' + table for table in
-             ('METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY')}
+             ('METADATA_DATA_CATALOGUE', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY')}
     for table, path in paths.items():
         r.spark.createDataFrame([], registry[table]).write.format('delta').save(path)
     monkeypatch.setattr(shared, '_replace_snapshot_rows', REPLACE_SNAPSHOT_WRITER)
@@ -199,6 +208,12 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     frame = r.spark.createDataFrame([(1, 'a'), (2, 'a')], 'id int, label string')
     result = shared.schedule_file_profiling(frame, source_id=r.identity['source_id'],
         context=r.context, presentations=[])
+    reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
+    monkeypatch.setattr(shared, "_require_catalogue_assets", _require_catalogue_assets)
+    with pytest.raises(ValueError, match="requires exactly one active Catalogue asset"):
+        shared._persist_file_profile(r.identity, operation='read', context=r.context)
+    shared.persist_file_catalogue(r.identity, context=r.context)
     for _attempt in range(2):
         shared._persist_file_profile(r.identity, operation='read', context=r.context)
     profiles = r.spark.read.format('delta').load(paths['METADATA_DATA_PROFILED']).collect()

@@ -267,6 +267,7 @@ from ..io.shared import (
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_column_id, build_table_id, get_store, resolve_asset_workspace_name
 from ..config.metadata_schemas import (
+    _require_catalogue_assets,
     audit_schema_fields,
     build_metadata_schema,
     coerce_schema_row_types,
@@ -658,6 +659,7 @@ def persist_lineage_participation(
         raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
     spark = get_spark_session(context=resolved_context)
     frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
+    _require_catalogue_assets(frame, context=resolved_context, table_name=_LINEAGE_TABLE)
     _store, _table, _schema, path = resolve_configured_lakehouse_table(
         "Metadata",
         _LINEAGE_TABLE,
@@ -6125,6 +6127,7 @@ def _persist_file_profile(identity, *, operation, context):
     profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
         active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["workspace_id"],
         table_id=identity["source_id"], asset_type="FILE", profile_snapshot_id=snapshot)
+    _require_catalogue_assets(profiled, context=context, table_name="FILE profiling")
     if "standard" in pending["activities"]:
         _replace_snapshot_rows(dataframe=profiled, table_name=PROFILED_TABLE, row_id="profile_id",
             config=context["config"], active_workspace_id=plan.workspace_id, spark_session=spark)
@@ -6624,13 +6627,16 @@ class PipelineOperation:
             context = {**self.plan.runtime_context, "execution_plan": self.plan,
                        "_spark_session": self.arguments.get("spark_session")}
             try:
-                profile = _persist_file_profile(self.physical_identity,
-                    operation="read" if self.role == "source" else "write", context=context)
+                operation = "read" if self.role == "source" else "write"
+                profile = self.plan.evidence.get("pending_file_profiles", {}).get(
+                    (self.physical_identity["source_id"], operation)
+                )
                 columns = (json.loads(self.record["observed_columns_json"]) if self.role == "source" and self.record.get("observed_columns_json") is not None
                            else None if self.role == "source"
                            else [{"column_name": field.name, "data_type": field.dataType.simpleString()}
                                  for field in getattr(getattr(self.arguments.get("dataframe"), "schema", None), "fields", [])])
                 persist_file_catalogue(self.physical_identity, context=context, profile_summary=profile, columns=columns)
+                _persist_file_profile(self.physical_identity, operation=operation, context=context)
                 persist_lineage_participation(asset_type="FILE", table_id=self.physical_identity["source_id"],
                     file_identity=self.physical_identity, pipeline_role=self.role, context=context)
                 if self.role == "target":
@@ -8436,44 +8442,38 @@ def _delete_profile_snapshot(
          .whenMatchedDelete().execute()))
 
 
-def _stage_catalogue_profile_retry(
-    *, profiled_df: Any, config: Any, active_workspace_id: str, physical_workspace_id: str, spark_session: Any
-) -> bool:
-    """Return whether this activity is a retry and hide its prior completion marker."""
+def _stage_catalogue_profile_retry(*, catalogue_asset, context, spark_session) -> bool:
+    """Validate or register the physical parent before replacing a profile snapshot."""
     from delta.tables import DeltaTable
     from pyspark.sql import functions as F
 
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+    config = context["config"]
+    workspace_id, table_id = catalogue_asset["workspace_id"], catalogue_asset["table_id"]
+    _, _, _, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+        context=context,
     )
-    activities = profiled_df.select(
-        "workspace_id", "table_id", "_activity_id"
-    ).dropDuplicates().withColumn("workspace_id", F.lit(physical_workspace_id))
+    key = ((F.col("asset_type") == "TABLE") & (F.col("workspace_id") == workspace_id)
+           & (F.col("table_id") == table_id))
     target = DeltaTable.forPath(spark_session, path)
-    same_activity_retry = bool(
-        target.toDF().where("asset_type = 'TABLE'")
-        .select("workspace_id", "table_id", "_activity_id")
-        .join(
-            activities,
-            on=["workspace_id", "table_id", "_activity_id"],
-            how="inner",
-        )
-        .limit(1)
-        .count()
-    )
-    (
-        retry_delta_metadata(lambda: target.alias("target")
-        .merge(
-            activities.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.asset_type = 'TABLE' AND target.table_id = source.table_id "
-            "AND target._activity_id = source._activity_id",
-        )
-        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
-        .execute())
-    )
-    return same_activity_retry
+    existing = target.toDF().where(key).select("item_id", "is_active", "_activity_id").limit(2).collect()
+    if len(existing) > 1:
+        raise ValueError(f"Profiling requires one Catalogue parent for {table_id!r} in {workspace_id!r}.")
+    if not existing or existing[0]["is_active"] is False:
+        merge_catalogue_asset(catalogue_asset, context=context, spark_session=spark_session)
+        return False
+    item = existing[0]["item_id"]
+    if item and item.lower() != catalogue_asset["item_id"].lower():
+        raise ValueError(f"Profiling Catalogue item disagrees with the resolved store for {table_id!r}.")
+    activity_id = catalogue_asset["_activity_id"]
+    if existing[0]["_activity_id"] != activity_id:
+        return False
+
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).update(
+        condition=key & (F.col("_activity_id") == activity_id),
+        set={"last_profiled_at": F.lit(None).cast("timestamp")},
+    ))
+    return True
 
 
 def _profile_snapshot_id(*, config: Any, active_workspace_id: str, context: dict[str, Any], table_id: str) -> str:
@@ -8785,6 +8785,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
                 runtime_context=context,
             )
         if "standard" not in selected_activities:
+            _require_catalogue_assets(profiled_df, context=context, table_name=PROFILED_FREQUENCY_TABLE)
             if "grain" in selected_activities:
                 _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
                     config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
@@ -8800,12 +8801,12 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             finally:
                 profiled_df.unpersist()
 
+        row = table_catalogue_observation(identity, context=context,
+            dataframe=observation["source_df"], fields=observation["source_fields"])
         summary_persisted = False
         try:
             same_activity_retry = _stage_catalogue_profile_retry(
-                profiled_df=profiled_df,
-                physical_workspace_id=physical_workspace_id, config=config,
-                active_workspace_id=active_workspace_id, spark_session=spark_session
+                catalogue_asset=row, context=context, spark_session=spark_session,
             )
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
@@ -8830,8 +8831,6 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             else:
                 frequency_action = "skipped; no frequency profile generated"
             emit(f"6. Frequency profile metadata → {frequency_action}")
-            row = table_catalogue_observation(identity, context=context,
-                dataframe=observation["source_df"], fields=observation["source_fields"])
             row.update(first_profiled_at=row["_committed_at"], last_profiled_at=row["_committed_at"])
             if grain_discovery_enabled:
                 row["profile_key_candidates_json"] = _key_candidate_evidence(

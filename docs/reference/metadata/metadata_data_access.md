@@ -27,7 +27,7 @@ Records permissions observed for governed tables across Workspace, OneLake and S
 `METADATA_DATA_CATALOGUE` **(N → 1)**
 via `workspace_id` + `table_id` + `asset_type`
 
-**Implementation details:** See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
+**Implementation details:** Before saving access observations, FabricOps verifies one active physical Catalogue asset. See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.
 
 ## Column summary
 

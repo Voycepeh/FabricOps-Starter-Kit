@@ -254,7 +254,8 @@
           const other = edge[0] === name ? edge[1] : edge[0];
           const joinLines = keyJoinRows(edge[0], edge[1]);
           const referenceOnly = !edge[2];
-          const relationshipKind = edge[0] === "DATA_CATALOGUE" ? "Logical asset reference" : "Application-enforced identity reference";
+          const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
+          const relationshipKind = logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +

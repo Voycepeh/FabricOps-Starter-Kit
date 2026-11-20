@@ -580,10 +580,6 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     """Detect a same-activity retry before clearing its Catalogue completion marker."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     updates = []
-    activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
-    )
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
         ["workspace_id", "table_id", "_activity_id"],
@@ -592,21 +588,13 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     class Merge:
         def toDF(self):
             from pyspark.sql import functions as F
-            return catalogue.withColumn("asset_type", F.lit("TABLE"))
+            return (catalogue.withColumn("asset_type", F.lit("TABLE"))
+                    .withColumn("item_id", F.lit("item"))
+                    .withColumn("is_active", F.lit(True)))
 
-        def alias(self, _name):
-            return self
-
-        def merge(self, _source, condition):
-            assert "target._activity_id = source._activity_id" in condition
-            return self
-
-        def whenMatchedUpdate(self, *, set):
+        def update(self, *, condition, set):
+            assert "_activity_id" in str(condition)
             updates.append(set)
-            return self
-
-        def execute(self):
-            return None
 
     import sys
     import types
@@ -620,41 +608,29 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, active_workspace_id="dev", physical_workspace_id="dev", spark_session=spark_session
+        catalogue_asset={"workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-1"},
+        context={"config": {}}, spark_session=spark_session,
     )
 
     assert is_retry is True
-    assert updates == [{"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}]
+    assert len(updates) == 1 and set(updates[0]) == {"last_profiled_at"}
 
 
-def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch):
+@pytest.mark.parametrize("parent_exists", [True, False])
+def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch, parent_exists):
     """Distinguish a new profiling activity from an idempotent same-activity retry."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
-    activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-2")],
-        ["workspace_id", "table_id", "_activity_id"],
-    )
     catalogue = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-1")] if parent_exists else [],
+        "workspace_id string, table_id string, _activity_id string",
     )
 
     class Merge:
         def toDF(self):
             from pyspark.sql import functions as F
-            return catalogue.withColumn("asset_type", F.lit("TABLE"))
-
-        def alias(self, _name):
-            return self
-
-        def merge(self, *_args):
-            return self
-
-        def whenMatchedUpdate(self, **_kwargs):
-            return self
-
-        def execute(self):
-            return None
+            return (catalogue.withColumn("asset_type", F.lit("TABLE"))
+                    .withColumn("item_id", F.lit("item"))
+                    .withColumn("is_active", F.lit(True)))
 
     import sys
     import types
@@ -667,11 +643,15 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
+    register = Mock()
+    monkeypatch.setattr(module, "merge_catalogue_asset", register)
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, active_workspace_id="dev", physical_workspace_id="dev", spark_session=spark_session
+        catalogue_asset={"workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-2"},
+        context={"config": {}}, spark_session=spark_session,
     )
 
     assert is_retry is False
+    assert register.called is (not parent_exists)
 
 
 

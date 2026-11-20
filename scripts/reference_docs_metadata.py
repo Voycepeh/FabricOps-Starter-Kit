@@ -216,48 +216,48 @@ METADATA_TABLE_MODELS = {
         "primary_key": ["workspace_id", "table_id", "asset_type"],
         "foreign_keys": [],
         "relationships": [
-            {"cardinality": "1:N", "statement": "New Profile, Frequency, Lineage and Access records reference the full physical Catalogue key. Retained observations may carry legacy execution scope. Use exact retained Run evidence to resolve historical Profile and Lineage references across workspaces."},
+            {"cardinality": "1:N", "statement": "FabricOps requires an active Catalogue parent for new Profile, Frequency, Lineage and Access records using the full physical key. Retained observations may carry legacy execution scope. Use exact retained Run evidence to resolve historical Profile and Lineage references across workspaces."},
         ],
     },
     "METADATA_DATA_PROFILED": {
         "purpose": "Stores column statistics for table or file profiling snapshots, with an explicit asset type and canonical identity.",
         "grain": "One column's statistics from one profiling snapshot.",
-        "implementation_notes": "Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
+        "implementation_notes": "New snapshots require one active physical Catalogue asset. Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
         "primary_key": ["profile_id"],
         "foreign_keys": [],
         "relationships": [
-            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "New column statistics reference one resolved physical asset. Retained workspace values may describe legacy execution scope."},
+            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new column statistics, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."},
             {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:N", "statement": "A combined standalone statistical Profile may link multiple ranked frequency-value rows through profile_id. Independently scheduled Frequency Profiling has its own snapshot and leaves profile_id null."},
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
         "purpose": "Shows which values appear most often in a column and how frequently they occur.",
         "grain": "One recorded value and its frequency for a column in a profiling snapshot.",
-        "implementation_notes": "Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
+        "implementation_notes": "New frequency snapshots require one active physical Catalogue asset. Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
         "primary_key": ["frequency_id"],
         "foreign_keys": [
             {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
         ],
         "relationships": [
             {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id"], "cardinality": "N:1", "statement": "Combined standalone distributions optionally reference their statistical Profile. Independent scheduled distributions leave that reference null."},
-            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "New frequency observations reference one resolved physical asset. Retained workspace values may describe legacy execution scope."}
+            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new frequency observations, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."}
         ],
     },
     "METADATA_DATA_LINEAGE": {
         "purpose": "Records TABLE and FILE source/target participation within a Fabric Activity.",
         "grain": "One asset identity and role within one Fabric Activity.",
-        "implementation_notes": "asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path for FILE participation. New rows use the resolved physical workspace in workspace_id and the notebook workspace in the audit fields. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
+        "implementation_notes": "Before saving new participation, FabricOps verifies one active physical Catalogue asset. asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path for FILE participation. New rows use the resolved physical workspace in workspace_id and the notebook workspace in the audit fields. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
         "primary_key": ["workspace_id", "lineage_id"],
         "foreign_keys": [],
-        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "New participation references one resolved physical asset. Retained workspace values may describe legacy execution scope."}],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new participation, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."}],
     },
     "METADATA_DATA_ACCESS": {
         "purpose": "Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.",
         "grain": "One observed permission for a principal or access selector on a table during one scan.",
-        "implementation_notes": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
+        "implementation_notes": "Before saving access observations, FabricOps verifies one active physical Catalogue asset. See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "primary_key": ["access_id"],
         "foreign_keys": [],
-        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "New scan rows reference one physical TABLE matched by Fabric workspace and item. Legacy rows may retain observation scope and an empty asset_type."}],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new scan rows, FabricOps checks for an active physical Catalogue TABLE matched by workspace and Table ID. The scan also matches the Fabric item. Legacy rows may retain observation scope and an empty asset_type."}],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",

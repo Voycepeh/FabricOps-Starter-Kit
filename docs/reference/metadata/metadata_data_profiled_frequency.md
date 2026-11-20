@@ -30,7 +30,7 @@ via `workspace_id` + `table_id` + `asset_type`
 `METADATA_DATA_PROFILED` **(N → 1)**
 via `profile_id`
 
-**Implementation details:** Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
+**Implementation details:** New frequency snapshots require one active physical Catalogue asset. Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.
 
 ## Column summary
 

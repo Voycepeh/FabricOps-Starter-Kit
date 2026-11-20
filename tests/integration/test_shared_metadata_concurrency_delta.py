@@ -28,6 +28,9 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         r.spark.createDataFrame([], (processing_state_schema() if table == PROCESSING_STATE_TABLE else schemas[table])).write.format('delta').save(r.paths[table])
     import importlib
     writer = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
+    reader = importlib.import_module('fabricops_kit.io.read_lakehouse_table')
+    monkeypatch.setattr(reader, 'resolve_configured_lakehouse_table',
+        lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(writer, 'resolve_configured_lakehouse_table',
         lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)

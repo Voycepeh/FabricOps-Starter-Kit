@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
+from fabricops_kit.config.metadata_schemas import _require_catalogue_assets, metadata_table_physical_schema
 from fabricops_kit.config.shared import FabricStore, build_table_id, get_store
 from fabricops_kit.io.shared import read_warehouse_synapsesql, validate_select_query
 from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
@@ -355,12 +355,14 @@ def persist_access_rows(
     """Append one scanner's normalized observations to METADATA_DATA_ACCESS."""
     if not persist:
         return
+    write_context = {**context, "config": config, "scope_workspace_id": workspace_id}
+    _require_catalogue_assets(access_df, context=write_context, table_name=ACCESS_TABLE)
     write_lakehouse_table(
         access_df,
         ACCESS_TABLE,
         store="Metadata",
         schema=metadata_table_physical_schema(config, ACCESS_TABLE),
-        context={**context, "config": config, "scope_workspace_id": workspace_id},
+        context=write_context,
         mode="append",
     )
 

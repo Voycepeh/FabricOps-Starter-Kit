@@ -30,7 +30,7 @@ via `workspace_id` + `table_id` + `asset_type`
 `METADATA_DATA_PROFILED_FREQUENCY` **(1 → N)**
 via `profile_id`
 
-**Implementation details:** Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.
+**Implementation details:** New snapshots require one active physical Catalogue asset. Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.
 
 ## Column summary
 

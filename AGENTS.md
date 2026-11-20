@@ -17,7 +17,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
   - `METADATA_DATA_CATALOGUE` stores one current TABLE or FILE per physical `workspace_id`, `table_id` and `asset_type`. Its validated `columns_json` stores the latest observed active schema. Files reuse their existing selector identity in `table_id`. Unprefixed workspace fields describe the asset, while audit fields describe the executing notebook.
-  - New Profile, Frequency, Lineage and Access rows reference the Catalogue through physical `workspace_id + table_id + asset_type`. Resolve the workspace from the asset’s FabricStore and preserve the notebook workspace in the audit fields. Retained history may require exact Pipeline Run evidence for physical association.
+  - New Profile, Frequency, Lineage and Access rows reference the Catalogue through physical `workspace_id + table_id + asset_type`. Require one active Catalogue parent before saving a new observation. Resolve the workspace from the asset’s FabricStore and preserve the notebook workspace in the audit fields. Retained history may require exact Pipeline Run evidence for physical association.
   - `METADATA_DATA_PROFILED` stores table-column or file-column snapshot metrics. Both types use table_id and column_id, distinguished by asset_type.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
   - `METADATA_DATA_LINEAGE` stores typed table/file source/target pipeline participation within a Fabric Activity, not proven DataFrame transformation dependencies.

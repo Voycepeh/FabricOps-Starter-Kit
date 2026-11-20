@@ -64,6 +64,7 @@ def writer(monkeypatch):
     monkeypatch.setattr(shared, "resolve_asset_workspace_name", lambda *a, **kw: "Physical Workspace")
     monkeypatch.setattr(shared, "build_pipeline_audit_fields", lambda **kw: dict(audit))
     monkeypatch.setattr(shared, "get_spark_session", lambda **kw: spark)
+    monkeypatch.setattr(shared, "_require_catalogue_assets", Mock())
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: "configured_engineering")
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda *a, **kw: (*a, "configured-path"))
     identity = {**file_source_identity(workspace_id="physical", item_id="lakehouse", relative_path="a.csv", file_format="csv"), "store": "Bronze"}
@@ -81,6 +82,7 @@ def test_file_lineage_writer_has_exact_identity_and_activity(writer, role):
     assert row["table_id"] == source["source_id"] and row["table_name"] == "a.csv"
     assert "source_id" not in row and row["asset_type"] == "FILE"
     assert row["_activity_id"] == "fabric-activity" and row["asset_name"] == "Bronze/Files/a.csv"
+    shared._require_catalogue_assets.assert_called_once()
     assert writer.delta.forPath.call_args.args[1] == "configured-path"
     assert "lineage_id" in writer.merge.merge.call_args.args[1]
 
