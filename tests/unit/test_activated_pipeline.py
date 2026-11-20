@@ -25,7 +25,7 @@ def operation(role="target", table="orders", mode="overwrite", workspace="DEV"):
 
 def contract_candidate(workspace="DEV"):
     """Return an independent per-physical-workspace Contract Activation."""
-    return dict(workspace_id=workspace, table_id="orders", contract_id="contract", contract_version=1,
+    return dict(asset_workspace_id=workspace, table_id="orders", contract_id="contract", contract_version=1,
         payload_sha256="a" * 64, activation_id="activation-"+workspace, revision=1, status="active",
         destination_json=json.dumps(operation(workspace=workspace)["destination"]), _committed_by="governance",
         activated_at=datetime(2026, 1, 1))

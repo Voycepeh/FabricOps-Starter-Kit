@@ -39,7 +39,7 @@ def metadata(monkeypatch):
         history_reads.append(activity)
         key, _descriptor = shared.profiling_context_key(table_id, context=context)
         result_ids = {kind: {row['profile_snapshot_id'] for row in rows[table]
-                            if row['table_id'] == table_id and row['workspace_id'] == context['scope_workspace_id']}
+                            if row['table_id'] == table_id and row['asset_workspace_id'] == context['scope_workspace_id']}
                       for kind, table in [('standard', 'METADATA_DATA_PROFILED'), ('frequency', 'METADATA_DATA_PROFILED_FREQUENCY')]}
         completed = {}
         for run in rows['METADATA_PIPELINE_RUN'].values():
@@ -72,7 +72,7 @@ def metadata(monkeypatch):
         if shared.persistence_permitted(context) and activity != 'grain':
             table = 'METADATA_DATA_PROFILED' if activity == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
             with lock:
-                rows[table].append({'table_id': table_id, 'workspace_id': context['scope_workspace_id'],
+                rows[table].append({'table_id': table_id, 'asset_workspace_id': context['scope_workspace_id'],
                                     'profile_snapshot_id': context['_profile_snapshot_id']})
         return {'row_count': 100}
     profiler = Mock(side_effect=execute)
@@ -380,11 +380,11 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
         'run_id': 'test-observation', 'execution_mode': 'testing', 'workspace_id': 'dev', 'profiling': [
             {**event, 'completed_at': '2099-01-01T00:00:00+00:00'}
             for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling'] if event['status'] == 'passed']}
-    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
+    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'asset_workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []
     def reader(table, **kwargs):
@@ -552,7 +552,7 @@ def test_real_history_filters_bounded_completion_scope_in_spark(metadata, spark_
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = requested_limit
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
@@ -572,14 +572,14 @@ def test_newer_sample_does_not_replace_latest_full_completion_for_history(metada
                 'completed_at': datetime.now(UTC).isoformat(), 'profile_snapshot_id': 'sample-' + event['activity']})
             if event['activity'] != 'grain':
                 table = 'METADATA_DATA_PROFILED' if event['activity'] == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
-                metadata.rows[table].append({'table_id': 'orders', 'workspace_id': 'dev',
+                metadata.rows[table].append({'table_id': 'orders', 'asset_workspace_id': 'dev',
                     'profile_snapshot_id': 'sample-' + event['activity']})
     metadata.rows['METADATA_PIPELINE_RUN']['sample'] = {
         'run_id': 'sample', 'workspace_id': 'dev', 'execution_mode': 'live', 'profiling': sample_events}
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')

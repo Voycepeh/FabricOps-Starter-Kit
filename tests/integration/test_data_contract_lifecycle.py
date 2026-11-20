@@ -200,8 +200,8 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         identity = runtime.resolve_physical_table_identity(config, "dev", store=layer, schema="dbo", table_name=name)
         table_id = identity["table_id"]
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
-        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "asset_type": "TABLE",
-                 "workspace_name": "Development", "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
+        table = {"table_id": table_id, "table_name": name, "asset_workspace_id": "dev", "asset_type": "TABLE",
+                 "asset_workspace_name": "Development", "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
                  "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
                  "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
         table["columns_json"] = [

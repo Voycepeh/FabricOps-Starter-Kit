@@ -134,6 +134,9 @@ returned for recovery before VACUUM or further writes. Setup never vacuums.
 For legacy Catalogue rows, setup validates parent and column identities,
 resolves physical workspaces, preserves stored column IDs in columns_json,
 and retires the separate column records in the same Delta commit.
+Setup standardizes physical asset workspace columns when their scope is known.
+Historical workspace values without sufficient proof remain in legacy_workspace_id.
+Contract activation destinations and notebook audit fields retain their original values.
 The per-table result returns the pre-upgrade version and recovery command.
 Catalogue and Pipeline Run collection fields are stored as validated JSON strings; supported native
 collections are converted atomically with tracked Delta reads and exact
@@ -165,9 +168,9 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:616`
+`fabricops_kit/config/setup_metadata_tables.py:655`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L616-L914">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L655-L957">View on GitHub</a>
 </div>
 
 

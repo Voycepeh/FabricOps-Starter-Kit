@@ -2717,9 +2717,11 @@ def check_sensitive_data_rules(
         raise
 
 
-def _guardrail_asset_workspace(context, table_id, active_workspace_id):
+def _guardrail_workspace_fields(context, table_id, active_workspace_id):
     binding = ((context or {}).get("_pipeline_bindings") or {}).get(table_id)
-    return str(binding["workspace_id"]).lower() if binding else active_workspace_id
+    if binding:
+        return {"asset_workspace_id": str(binding["workspace_id"]).lower()}
+    return {"execution_workspace_id": active_workspace_id}
 
 
 def write_guardrail_result_row(
@@ -2793,7 +2795,7 @@ def write_guardrail_result_row(
         "contract_version": int(contract_version or result.get("contract_version") or 0),
         "execution_type": resolved_execution_type,
         "run_id": resolved_run_id,
-        "workspace_id": _guardrail_asset_workspace(context, asset_identity, active_workspace_id),
+        **_guardrail_workspace_fields(context, asset_identity, active_workspace_id),
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
@@ -3354,7 +3356,7 @@ def resolve_catalogue_table_id(
         row = _row_to_dict(raw)
         actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
         if (
-            str(row.get("workspace_id") or "").lower() == physical_workspace_id
+            str(row.get("asset_workspace_id") or "").lower() == physical_workspace_id
             and row.get("asset_type") == "TABLE"
             and row.get("is_active") is not False
             and actual == expected
@@ -3414,7 +3416,7 @@ def resolve_catalogue_table_identity(
                 physical = store.workspace_id
             except ValueError:
                 continue
-        if str(row.get("workspace_id") or "").lower() == physical.lower():
+        if str(row.get("asset_workspace_id") or "").lower() == physical.lower():
             if physical_workspace_id is None and row.get("item_id") not in (None, store.item_id):
                 raise ValueError(f"Configured store item disagrees with Catalogue TABLE {canonical_id!r} in {physical!r}.")
             matches.append(decode_metadata_row(CATALOGUE_TABLE, row))
@@ -4906,7 +4908,7 @@ def check_dq_runtime(
     if plan is not None:
         resolved_run_id = plan.plan_id
     result["run_id"] = resolved_run_id
-    asset_workspace_id = _guardrail_asset_workspace(context, table_id, active_workspace_id)
+    result_workspace = _guardrail_workspace_fields(context, table_id, active_workspace_id)
     summary_rows = []
     for rule, check in zip(rules, checks, strict=True):
         summary_rows.append({
@@ -4921,7 +4923,7 @@ def check_dq_runtime(
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "workspace_id": asset_workspace_id,
+            **result_workspace,
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": ",".join(rule["columns"]),
@@ -5896,8 +5898,8 @@ def persist_file_catalogue(identity, *, context, profile_summary=None, columns=N
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=workspace_id, runtime_context=runtime)
     asset = {
         "asset_type": "FILE", "table_id": table_id,
-        "workspace_id": expected["workspace_id"], "item_id": expected["item_id"],
-        "workspace_name": resolve_asset_workspace_name(expected["workspace_id"], context=runtime),
+        "asset_workspace_id": expected["workspace_id"], "item_id": expected["item_id"],
+        "asset_workspace_name": resolve_asset_workspace_name(expected["workspace_id"], context=runtime),
         "columns_json": _catalogue_columns(table_id, None if columns is None else
             [(column.get("column_name"), column.get("data_type")) for column in columns]),
         "layer": identity["store"], "store_type": "lakehouse", "table_name": expected["relative_path"],
@@ -6057,7 +6059,7 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
                                   "reader_options_json": canonical_pipeline_json(source["reader_options"])}
             continue
         if item.get("asset_type") == "TABLE" and item.get("item_id"):
-            bindings[table_id] = {"workspace_id": item["workspace_id"], "item_id": item["item_id"],
+            bindings[table_id] = {"workspace_id": item["asset_workspace_id"], "item_id": item["item_id"],
                                   "kind": item["store_type"], "schema": item.get("schema"), "table_name": item["table_name"]}
             continue
         store = get_store(config, workspace_id, item["store"])
@@ -6271,7 +6273,7 @@ def pipeline_participation(runs):
         F.col("operation.completed_at").alias("operation_completed_at"),
         F.col("operation.destination").alias("destination"),
         F.col("operation.destination.workspace_id").alias("participant_workspace_id"),
-        F.lower(F.col("operation.destination.workspace_id")).alias("catalogue_workspace_id"),
+        F.lower(F.col("operation.destination.workspace_id")).alias("asset_workspace_id"),
     )
 
 
@@ -8233,7 +8235,8 @@ def _canonical_profiled_dataframe(
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
-        F.lit(workspace_id).cast("string").alias("workspace_id"),
+        F.lit(workspace_id).cast("string").alias("asset_workspace_id"),
+        F.lit(None).cast("string").alias("legacy_workspace_id"),
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
@@ -8272,7 +8275,7 @@ def _frequency_metadata_dataframe(
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select(
         "column_id", "column_name", "table_id", "table_name", "data_type",
-        "workspace_id", "profile_id", "profile_snapshot_id", "asset_type", "run_id", "pipeline_role",
+        "asset_workspace_id", "profile_id", "profile_snapshot_id", "asset_type", "run_id", "pipeline_role",
     )
     source = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME")))
     joined = source.join(
@@ -8296,7 +8299,8 @@ def _frequency_metadata_dataframe(
         identities.table_name.cast("string").alias("table_name"),
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
-        identities.workspace_id.cast("string").alias("workspace_id"),
+        identities.asset_workspace_id.cast("string").alias("asset_workspace_id"),
+        F.lit(None).cast("string").alias("legacy_workspace_id"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         F.col("VALUE").cast("string").alias("value"),
@@ -8389,12 +8393,12 @@ def _stage_catalogue_profile_retry(*, catalogue_asset, context, spark_session) -
     from pyspark.sql import functions as F
 
     config = context["config"]
-    workspace_id, table_id = catalogue_asset["workspace_id"], catalogue_asset["table_id"]
+    workspace_id, table_id = catalogue_asset["asset_workspace_id"], catalogue_asset["table_id"]
     _, _, _, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
         context=context,
     )
-    key = ((F.col("asset_type") == "TABLE") & (F.col("workspace_id") == workspace_id)
+    key = ((F.col("asset_type") == "TABLE") & (F.col("asset_workspace_id") == workspace_id)
            & (F.col("table_id") == table_id))
     target = DeltaTable.forPath(spark_session, path)
     existing = target.toDF().where(key).select("item_id", "is_active", "_activity_id").limit(2).collect()
@@ -8445,8 +8449,8 @@ def table_catalogue_observation(identity, *, context, dataframe=None, fields=Non
     if fields is None and getattr(getattr(dataframe, "schema", None), "fields", None) is not None:
         fields = [(field.name, field.dataType.simpleString()) for field in dataframe.schema.fields]
     return {
-        "asset_type": "TABLE", "workspace_id": workspace,
-        "workspace_name": resolve_asset_workspace_name(workspace, context=runtime), "item_id": store.item_id,
+        "asset_type": "TABLE", "asset_workspace_id": workspace,
+        "asset_workspace_name": resolve_asset_workspace_name(workspace, context=runtime), "item_id": store.item_id,
         "table_id": identity["table_id"], "store_type": identity.get("store_kind") or identity["store_type"],
         "layer": identity["store"], "schema_name": identity.get("schema"), "table_name": identity["table_name"],
         "columns_json": _catalogue_columns(identity["table_id"], fields),
@@ -8467,7 +8471,7 @@ def merge_catalogue_asset(row, *, context, spark_session):
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context,
     )
     updates = {name: f"source.{name}" for name in row
-               if name not in {"workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
+               if name not in {"asset_workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
     if row.get("item_id"):
         updates["item_id"] = (
             "CASE WHEN target.item_id IS NOT NULL AND lower(target.item_id) <> lower(source.item_id) "
@@ -8485,7 +8489,7 @@ def merge_catalogue_asset(row, *, context, spark_session):
         )
         updates["last_observed_at"] = "greatest(target.last_observed_at, source.last_observed_at)"
     retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).alias("target")
-        .merge(source.alias("source"), "target.workspace_id = source.workspace_id "
+        .merge(source.alias("source"), "target.asset_workspace_id = source.asset_workspace_id "
                "AND target.table_id = source.table_id AND target.asset_type = source.asset_type")
         .whenMatchedUpdate(set=updates)
         .whenNotMatchedInsert(values={name: f"source.{name}" for name in schema.fieldNames()})
@@ -8810,7 +8814,7 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
         metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
     table = DeltaTable.forPath(spark_session, path)
     store = get_store(config, active_workspace_id, identity["store"])
-    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == store.workspace_id.lower())
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("asset_workspace_id") == store.workspace_id.lower())
                  & (F.col("asset_type") == "TABLE")
                  & (F.col("item_id").isNull() | (F.lower(F.col("item_id")) == store.item_id.lower())))
     if table.toDF().where(condition).limit(2).count() != 1:

@@ -25,7 +25,7 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
     monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
         lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run],
-            "observations": [{**source, "workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
+            "observations": [{**source, "asset_workspace_id": source["workspace_id"], "asset_workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
                               "table_id": source["source_id"], "columns_json": [
                                   {"column_id": "original-id", "column_name": "order_id", "data_type": "long"}]}]})
     state = module.widget_data_contract()
@@ -37,7 +37,7 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
 
 
 def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
-    table = {'table_id': 'table-orders', 'workspace_id': 'w', 'table_name': 'orders', 'asset_type': 'TABLE', 'layer': 'Bronze', 'schema_name': 'demo'}
+    table = {'table_id': 'table-orders', 'asset_workspace_id': 'w', 'table_name': 'orders', 'asset_type': 'TABLE', 'layer': 'Bronze', 'schema_name': 'demo'}
     source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     source['store'] = 'Bronze'
     options = contracts.dataset_selector_options([table], [source], workspace_id='w')

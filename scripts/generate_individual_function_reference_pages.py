@@ -220,22 +220,21 @@ METADATA_FIELD_DESCRIPTIONS = {
 
 PHYSICAL_ASSET_WORKSPACE_ID = "ID of the Fabric workspace that contains the physical asset."
 
-WORKSPACE_ID_DESCRIPTIONS = {
+ASSET_WORKSPACE_DESCRIPTIONS = {
     "METADATA_DATA_CATALOGUE": PHYSICAL_ASSET_WORKSPACE_ID,
     **dict.fromkeys(
         ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS"),
-        PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference. Historical rows may carry the earlier workspace scope.",
+        PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference.",
     ),
     "METADATA_DATA_CONTRACT_ACTIVATION": PHYSICAL_ASSET_WORKSPACE_ID + " The activation applies the selected frozen Contract to the asset in this workspace.",
-    "METADATA_PIPELINE_RUN": "ID of the execution workspace whose configuration selects the Run’s stores. Each operation records its physical asset workspace in operations[].destination.workspace_id.",
-    "METADATA_GUARDRAIL_RESULTS": "ID of the physical asset workspace for planned asset checks with a resolved binding. Pipeline-wide results and results without a binding record the execution workspace scope.",
+    "METADATA_GUARDRAIL_RESULTS": "ID of the physical asset workspace for planned asset checks with a resolved binding.",
 }
 
 PIPELINE_EXECUTION_WORKSPACE_ID = "ID of the destination workspace whose store configuration is reviewed for pipeline execution."
 
 CATALOGUE_FIELD_DESCRIPTIONS = {
     "asset_type": "Part of the current asset key. TABLE identifies a table and FILE identifies a file selector.",
-    "workspace_name": "Display name of the Fabric workspace that contains the physical asset.",
+    "asset_workspace_name": "Display name of the Fabric workspace that contains the physical asset.",
     "writer_workspace_id": "ID of the notebook workspace captured with the table’s last recorded pipeline write. Subsequent Catalogue observations have their own audit fields.",
     "item_id": "Physical Lakehouse or Warehouse item that contains the asset.",
     "columns_json": "Latest observed column definitions. SQL NULL is unobserved and [] is an observed empty schema.",
@@ -4397,8 +4396,14 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
-    if column_name == "workspace_id" and table_name in WORKSPACE_ID_DESCRIPTIONS:
-        return WORKSPACE_ID_DESCRIPTIONS[table_name]
+    if column_name == "asset_workspace_id" and table_name in ASSET_WORKSPACE_DESCRIPTIONS:
+        return ASSET_WORKSPACE_DESCRIPTIONS[table_name]
+    if column_name == "legacy_workspace_id":
+        return "Original workspace value retained from an older record whose physical asset workspace was not established by the stored fields."
+    if table_name == "METADATA_PIPELINE_RUN" and column_name == "workspace_id":
+        return "ID of the execution workspace whose configuration selects the Run’s stores. Each operation records its physical asset workspace in operations[].destination.workspace_id."
+    if table_name == "METADATA_GUARDRAIL_RESULTS" and column_name == "execution_workspace_id":
+        return "ID of the execution workspace for pipeline-wide results and results without a resolved physical binding."
     if table_name == "METADATA_PIPELINE_ACTIVATION" and column_name == "execution_workspace_id":
         return PIPELINE_EXECUTION_WORKSPACE_ID
     if table_name == "METADATA_DATA_CATALOGUE" and column_name in CATALOGUE_FIELD_DESCRIPTIONS:
@@ -4621,7 +4626,8 @@ def render_metadata_reference_index(
             "primary_key": table_models[name]["primary_key"],
             "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
             "asset_identity_fields": [
-                field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
+                field for field in ("asset_workspace_id", "table_id", "source_id",
+                    "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id")
                 if field in field_names_by_table[name]
             ],
             "foreign_keys": [

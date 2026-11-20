@@ -62,10 +62,11 @@ function renderMetadataSvg(layout, models) {
     const fields = [...catalogueReference, ...identityFields].map(value => ["", value]);
     if (cataloguePrimary) fields.push(["", "columns_json (current schema)"]);
     const all = [...keys, ...fields];
-    const rows = all.length > 5 ? [...all.slice(0, 4), ["", `+${all.length - 4} more fields`]] : all;
+    const rows = all.length > 6 ? [...all.slice(0, 5), ["", `+${all.length - 5} more fields`]] : all;
+    const rowSpacing = name === "PIPELINE_REGISTRY" || rows.length === 6 ? 20 : 24;
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
-      const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;
+      const baseline=y+57+rowSpacing*i;
       const label=kind?`<text x="${x+13}" y="${baseline}" fill="${kind==="PK"?"#7C3AED":"#2563EB"}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text>\n`:"";
       const normalized=String(value);
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
@@ -75,8 +76,8 @@ function renderMetadataSvg(layout, models) {
     if (groupFields.length) {
       const kind = cataloguePrimary ? "PK" : "FK";
       const color = cataloguePrimary ? "#7C3AED" : "#2563EB";
-      const firstBaseline = y + 57 + (cataloguePrimary ? 0 : keys.length * 24);
-      const lastBaseline = firstBaseline + (groupFields.length - 1) * 24;
+      const firstBaseline = y + 57 + (cataloguePrimary ? 0 : keys.length * rowSpacing);
+      const lastBaseline = firstBaseline + (groupFields.length - 1) * rowSpacing;
       const mid = (firstBaseline + lastBaseline) / 2;
       const title = cataloguePrimary ? "Composite primary key" : "Composite foreign key to DATA_CATALOGUE, checked by FabricOps";
       lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;

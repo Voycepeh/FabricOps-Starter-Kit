@@ -387,8 +387,8 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
-<li><code>fabricops_kit.pipeline.shared._guardrail_asset_workspace</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
+<li><code>fabricops_kit.pipeline.shared._guardrail_workspace_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_payload</code></li>

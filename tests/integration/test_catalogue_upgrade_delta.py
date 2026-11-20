@@ -73,14 +73,18 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     def row(**values):
         audit = {field.name: datetime(2020, 2, 3, 4, 5, 6, 123456) if field.name == '_committed_at' else 'original-' + field.name
                  for field in schema.fields if not field.nullable}
-        return {'asset_type': 'TABLE', 'table_id': 'table', 'workspace_id': 'dev', 'workspace_name': 'Development',
+        return {'asset_type': 'TABLE', 'table_id': 'table', 'asset_workspace_id': 'dev', 'asset_workspace_name': 'Development',
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
-    def seed(rows, native=(), extra=True, retired=False, legacy=False):
+    def seed(rows, native=(), extra=True, retired=False, legacy=False, old_workspace=False):
         physical = StructType([StructField(f.name, logical_schema[f.name].dataType if f.name in native else f.dataType, True, {'comment': 'original ' + f.name})
             for f in schema.fields] + ([StructField('extension', StringType(), True, {'comment': 'keep'})] if extra else []))
+        if legacy or old_workspace:
+            aliases = {"asset_workspace_id": "workspace_id", "asset_workspace_name": "workspace_name"}
+            physical = StructType([StructField(aliases.get(field.name, field.name), field.dataType, field.nullable, field.metadata)
+                                   for field in physical if not legacy or field.name not in {"columns_json", "asset_workspace_name"}])
+            rows = [{**{old: row.get(new) for new, old in aliases.items()}, **row} for row in rows]
         if legacy:
-            physical = StructType([field for field in physical if field.name not in {"columns_json", "workspace_name"}])
             for name in ("metadata_level", "column_id", "column_name", "data_type"):
                 physical.add(StructField(name, StringType(), True))
         if retired:
@@ -98,6 +102,68 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     return SimpleNamespace(spark=spark_session, path=path, schema=schema, row=row, seed=seed,
                            run=run, upgrade=upgrade, version=version, config=config,
                            read=lambda: spark_session.read.format('delta').load(path))
+
+
+def test_setup_migrates_existing_physical_workspace_columns(catalogue_delta, monkeypatch):
+    """Upgrade the existing physical Catalogue and mixed history without guessing."""
+    from delta.tables import DeltaTable
+    from fabricops_kit.io import shared as io
+    from pyspark.sql.types import StructField, StructType
+
+    rt = catalogue_delta
+    original_catalogue = rt.row(columns_json='[{"column_id":"stored-id","column_name":"id","data_type":"int"}]')
+    rt.seed([original_catalogue], old_workspace=True)
+    original_version = rt.version()
+    paths = {}
+    registry = metadata_table_schema_registry()
+    audit = {key: value for key, value in original_catalogue.items() if key.startswith("_")}
+    sources = {
+        "METADATA_DATA_PROFILED": [
+            {"asset_type": "TABLE", "table_id": "table", "profile_id": "table-profile", "workspace_id": "executor"},
+            {"asset_type": "FILE", "table_id": "file:old", "profile_id": "file-profile", "workspace_id": "physical-file"}],
+        "METADATA_DATA_ACCESS": [
+            {"table_id": "table", "access_id": "legacy-access", "workspace_id": "executor"},
+            {"asset_type": "TABLE", "table_id": "table", "access_id": "new-access", "workspace_id": "dev"}],
+        "METADATA_DATA_CONTRACT_ACTIVATION": [
+            {"table_id": "table", "activation_id": "activation", "workspace_id": "dev",
+             "destination_json": '{"workspace_id":"dev"}'}],
+    }
+    for name, rows in sources.items():
+        paths[name] = rt.path + "-" + name
+        schema = StructType([StructField("workspace_id" if field.name == "asset_workspace_id" else field.name,
+                                         field.dataType, True)
+                             for field in registry[name] if field.name != "legacy_workspace_id"])
+        rt.spark.createDataFrame([{**audit, **row} for row in rows], schema).write.format("delta").save(paths[name])
+
+    read = setup.read_lakehouse_table
+    resolve = io.resolve_configured_lakehouse_table
+    monkeypatch.setattr(setup, "read_lakehouse_table",
+        lambda name, **kwargs: rt.spark.read.format("delta").load(paths[name]) if name in paths else read(name, **kwargs))
+    monkeypatch.setattr(io, "resolve_configured_lakehouse_table",
+        lambda store, name, schema, **kwargs: (None, name, schema, paths[name]) if name in paths
+        else resolve(store, name, schema, **kwargs))
+
+    result = rt.run()
+    assert result["status"] == "ready", result["failed_tables"]
+    assert result["table_results"][TABLE]["pre_upgrade_version"] == original_version
+    assert {key: rt.read().first()[key] for key in original_catalogue} == original_catalogue
+    for name, original in sources.items():
+        upgrade = result["table_results"][name]
+        assert upgrade["pre_upgrade_version"] == 0
+        assert "VERSION AS OF 0" in upgrade["recovery_guidance"]
+        records = rt.spark.read.format("delta").load(paths[name]).collect()
+        assert all({key: row[key] for key in audit} == audit for row in records)
+        assert sorted(row["workspace_id"] for row in rt.spark.read.format("delta").option("versionAsOf", 0).load(paths[name]).collect()) == sorted(row["workspace_id"] for row in original)
+        if name == "METADATA_DATA_CONTRACT_ACTIVATION":
+            assert records[0]["asset_workspace_id"] == "dev"
+            assert records[0]["destination_json"] == original[0]["destination_json"]
+        else:
+            assert {row["asset_workspace_id"] for row in records} == {None, original[1]["workspace_id"]}
+            assert {row["legacy_workspace_id"] for row in records} == {None, original[0]["workspace_id"]}
+
+    assert rt.run()["status"] == "ready"
+    assert rt.version() == original_version + 1
+    assert all(DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 1 for path in paths.values())
 
 
 def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
@@ -125,10 +191,10 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     assert upgrade["pre_upgrade_version"] == version
     assert f"VERSION AS OF {version}" in upgrade["recovery_guidance"]
     assert {"metadata_level", "column_id", "column_name", "data_type"}.isdisjoint(rt.read().columns)
-    rows = {row["workspace_id"]: row.asDict() for row in rt.read().collect()}
+    rows = {row["asset_workspace_id"]: row.asDict() for row in rt.read().collect()}
     assert len(rows) == 3
     assert rows["dev"]["table_id"] == rows["prod-physical"]["table_id"] == table_id
-    assert rows["prod-physical"]["workspace_name"] == "Production"
+    assert rows["prod-physical"]["asset_workspace_name"] == "Production"
     assert rows["prod-physical"]["_workspace_name"] == dev["_workspace_name"]
     assert rows["prod-physical"]["writer_workspace_id"] == dev["writer_workspace_id"]
     assert rows["prod-physical"]["load_strategy_parameters_json"] == dev["load_strategy_parameters_json"]
@@ -196,14 +262,15 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
     history = {
         "METADATA_DATA_CONTRACT": {"contract_id": "orders", "contract_version": 2, "status": "frozen",
                                    "evidence_workspace_id": "dev", "contract_payload_json": frozen_payload},
-        "METADATA_DATA_PROFILED": {"profile_id": "profile", "column_id": "retired-id", "row_count": 20},
+        "METADATA_DATA_PROFILED": {"profile_id": "profile", "column_id": "retired-id", "row_count": 20, "legacy_workspace_id": "dev"},
         "METADATA_DATA_PROFILED_FREQUENCY": {"frequency_id": "frequency", "profile_id": "profile",
-                                             "column_id": "retired-id"},
+                                             "column_id": "retired-id", "legacy_workspace_id": "dev"},
         "METADATA_DATA_LINEAGE": {"lineage_id": "lineage", "pipeline_role": "source"},
         "METADATA_GUARDRAIL_RESULTS": {"guardrail_result_id": "result", "guardrail_rule_id": "rule",
             "guardrail_version": 1, "contract_id": "orders", "contract_version": 2,
             "can_continue": True, "status": "passed", "guardrail_type": "schema",
-            "execution_type": "ungoverned", "run_id": "run", "severity": "warning", "result_payload_json": "{}"},
+            "execution_type": "ungoverned", "run_id": "run", "severity": "warning", "result_payload_json": "{}",
+            "execution_workspace_id": "dev"},
     }
     paths = {}
     original = {}
@@ -262,7 +329,7 @@ def test_legacy_catalogue_validates_retained_run_binding(catalogue_delta, monkey
     else:
         rt.upgrade()
         migrated = rt.read().first()
-        assert (migrated["workspace_id"], migrated["item_id"]) == (store.workspace_id, store.item_id)
+        assert (migrated["asset_workspace_id"], migrated["item_id"]) == (store.workspace_id, store.item_id)
         assert rt.version() == version + 1
 
 
@@ -506,7 +573,7 @@ def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgr
     assert current['profile_key_candidates_json']['candidates'] == [CANDIDATE]
     assert shared.catalogue_authored_processing(current) == {'load_strategy': 'scd2', **parameters}
     # Profiling's ordinary merge preserves captured processing/schedules and extra columns.
-    profile_row = {name: original_row[name] for name in ('workspace_id', 'workspace_name', 'table_id', 'asset_type')}
+    profile_row = {name: original_row[name] for name in ('asset_workspace_id', 'asset_workspace_name', 'table_id', 'asset_type')}
     profile_row.update(audit)
     profile_row['profile_key_candidates_json'] = {'status': 'unresolved', 'max_combination_width': 2, 'candidates': []}
     shared.merge_catalogue_asset(profile_row, context=context, spark_session=rt.spark)

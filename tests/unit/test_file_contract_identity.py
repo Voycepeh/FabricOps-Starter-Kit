@@ -46,7 +46,7 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
     """Shared contract semantics use file source identity with no Catalogue table row."""
     descriptor = source()
-    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "workspace_id": descriptor["workspace_id"],
+    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "asset_workspace_id": descriptor["workspace_id"],
            "table_name": descriptor["relative_path"], "columns_json": json.dumps([
                {"column_id": "id", "column_name": "id", "data_type": "long"}])}
     monkeypatch.setattr(contracts, "read_lakehouse_table",
@@ -126,7 +126,7 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
         activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context,
         file_configuration_workspace_id="configuration-route")
     assert file_scopes == ["configuration-route"]
-    assert result["workspace_id"] == "workspace"
+    assert result["asset_workspace_id"] == "workspace"
     assert result["table_id"] is None and result["source_id"] == descriptor["source_id"]
     assert json.loads(result["destination_json"]) == descriptor
     store.item_id = "other-item"

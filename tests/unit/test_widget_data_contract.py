@@ -14,11 +14,11 @@ module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
 
 def _catalogue_rows(count: int = 2) -> list[dict]:
     return [{
-        "table_id": "orders", "workspace_id": "dev", "asset_type": "TABLE",
+        "table_id": "orders", "asset_workspace_id": "dev", "asset_type": "TABLE",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append_all",
         "load_strategy_parameters_json": {}, "is_active": True,
-        "workspace_name": "Development", "_workspace_id": "workspace-id", "_workspace_name": "Execution",
+        "asset_workspace_name": "Development", "_workspace_id": "workspace-id", "_workspace_name": "Execution",
         "_notebook_id": "writer-notebook-id",
         "columns_json": [
             {"column_id": f"col-{index}", "column_name": f"column_{index}",
@@ -246,7 +246,7 @@ def widget_runtime(monkeypatch):
 
     def review(**_kwargs):
         calls["review"].append(dict(_kwargs))
-        catalogue_workspace_id = str(catalogue[0]["workspace_id"])
+        catalogue_workspace_id = str(catalogue[0]["asset_workspace_id"])
         if contract["status"] == "draft":
             return {
                 "contract": dict(contract), "contract_id": contract["contract_id"],
@@ -348,7 +348,7 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",
-            "workspace_id": "PROD",
+            "asset_workspace_id": "PROD",
             "pipeline_name": "02_pipeline",
             "committed_by": "voyce@example.com",
             "committed_at": "2026-09-26T02:45:00",
@@ -593,7 +593,7 @@ def test_unregistered_workspace_uses_central_metadata_without_taking_ownership(
         lambda **_kwargs: (widget_runtime["config"], "governance-authoring", origin),
     )
     for row in widget_runtime["catalogue"]:
-        row["workspace_id"] = "engineering-prod"
+        row["asset_workspace_id"] = "engineering-prod"
     widget_runtime["contract"]["workspace_id"] = "engineering-prod"
     payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
     payload["table"]["workspace_id"] = "engineering-prod"
@@ -647,7 +647,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     source = module.contracts.file_source_identity(
         workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
     )
-    dataset = {**source, "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    dataset = {**source, "asset_workspace_id": source["workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
     monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
     original_review = module.contracts.get_contract_review_state
 
@@ -686,7 +686,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
 def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_runtime):
     """An unnamed workspace has one useful fallback instead of ID (ID)."""
     for row in widget_runtime["catalogue"]:
-        row.pop("workspace_name", None)
+        row.pop("asset_workspace_name", None)
     state = widget_runtime["start"]()
     assert ("dev", "dev") in state["_controls"]["workspace_select"].options
 
@@ -711,8 +711,8 @@ def test_editor_keeps_one_columns_heading_and_navigation_for_frozen_contracts(wi
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):
     """Table and Workspace filtering clears stale selections in either direction."""
     rows = [dict(widget_runtime["catalogue"][0]),
-            {**widget_runtime["catalogue"][0], "table_id": "inventory", "table_name": "inventory", "workspace_id": "other"},
-            {**widget_runtime["catalogue"][0], "workspace_id": "other"}]
+            {**widget_runtime["catalogue"][0], "table_id": "inventory", "table_name": "inventory", "asset_workspace_id": "other"},
+            {**widget_runtime["catalogue"][0], "asset_workspace_id": "other"}]
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {"tables": rows, "contracts": [widget_runtime["contract"]]})
     state = module.widget_data_contract()
     controls = state["_controls"]
@@ -4452,7 +4452,7 @@ def test_profile_cache_keeps_workspace_results_separate(widget_runtime, monkeypa
     original = module.contracts.list_contract_governance_state
     def list_state(**kwargs):
         result = original(**kwargs)
-        result["tables"] = [*result["tables"], {**result["tables"][0], "workspace_id": "prod"}]
+        result["tables"] = [*result["tables"], {**result["tables"][0], "asset_workspace_id": "prod"}]
         return result
     calls = []
     def profile_context(*, active_workspace_id, **_kwargs):
@@ -4747,7 +4747,7 @@ def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeyp
     from fabricops_kit.config.shared import build_column_id
     source = module.contracts.file_source_identity(
         workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
-    dataset = {**source, 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+    dataset = {**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
     monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
     original = module.contracts.get_contract_review_state
     def file_review(**kwargs):

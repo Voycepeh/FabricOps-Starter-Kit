@@ -145,7 +145,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     # The current Catalogue has drifted to string; the frozen contract remains bigint.
     catalogue = [
         {"table_id": "orders", "table_name": "orders", "asset_type": "TABLE",
-         "workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo",
+         "asset_workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo",
          "columns_json": [{"column_id": "col-id", "column_name": "id", "data_type": "string"}]},
     ]
     monkeypatch.setattr(

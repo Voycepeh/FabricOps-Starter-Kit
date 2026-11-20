@@ -78,8 +78,8 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
         "asset_type", "item_id", "relative_path", "file_format",
         "first_observed_at", "last_observed_at",
         "table_id",
-        "workspace_id",
-        "workspace_name",
+        "asset_workspace_id",
+        "asset_workspace_name",
         "columns_json",
         "store_type",
         "layer",
@@ -103,13 +103,14 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:24] == [
+    assert fields[:25] == [
         "asset_type", "run_id", "pipeline_role",
         "profile_id",
         "profile_snapshot_id",
         "table_id",
         "column_id",
-        "workspace_id",
+        "asset_workspace_id",
+        "legacy_workspace_id",
         "data_type",
         "table_name",
         "column_name",
@@ -156,7 +157,8 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "table_name",
         "column_name",
         "data_type",
-        "workspace_id",
+        "asset_workspace_id",
+        "legacy_workspace_id",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -235,7 +237,8 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "user_principal",
         "table_id",
         "table_name",
-        "workspace_id",
+        "asset_workspace_id",
+        "legacy_workspace_id",
         "asset_type",
         "access_level",
         "access_value",
@@ -257,7 +260,6 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "access_id",
             "user_principal",
             "table_id",
-            "workspace_id",
             "access_level",
             "access_value",
             "access_state",
@@ -338,10 +340,10 @@ def test_incompatible_metadata_schema_reports_wrong_column_types():
     setup = import_module("fabricops_kit.config.setup_metadata_tables")
     expected = metadata_table_schema_registry()["METADATA_DATA_CONTRACT_ACTIVATION"]
     existing = StructType([
-        StructField(field.name, IntegerType() if field.name == "workspace_id" else field.dataType)
+        StructField(field.name, IntegerType() if field.name == "asset_workspace_id" else field.dataType)
         for field in expected.fields
     ])
-    with pytest.raises(ValueError, match="workspace_id: expected string, found integer"):
+    with pytest.raises(ValueError, match="asset_workspace_id: expected string, found integer"):
         setup._validate_existing_metadata_schema("METADATA_DATA_CONTRACT_ACTIVATION", existing, expected)
 
 

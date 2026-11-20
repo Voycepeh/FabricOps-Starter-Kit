@@ -123,13 +123,13 @@ METADATA_REFERENCE_OVERVIEW_INTRO = """FabricOps metadata is stored in one Metad
 
 | Role | Columns | Meaning |
 | --- | --- | --- |
-| Physical asset workspace | `workspace_id` and Catalogue `workspace_name` | The Fabric workspace that contains the table or file. Used by the Catalogue, new asset observations, and Contract Activation. |
+| Physical asset workspace | `asset_workspace_id` and Catalogue `asset_workspace_name` | The Fabric workspace that contains the table or file. Used by the Catalogue, new asset observations, and Contract Activation. |
 | Contract authoring evidence | `evidence_workspace_id` on Data Contract | The selected Catalogue observation used to author the version. Contract Activation records where the frozen version applies. |
 | Pipeline execution scope | `workspace_id` on Pipeline Run, `execution_workspace_id` on Pipeline Activation and Registry | The workspace whose configuration resolves the pipeline’s stores. Read and Write operations record their own physical asset workspaces. |
 | Notebook audit | `_workspace_id` and `_workspace_name` | The executing notebook’s workspace when the metadata row was written. |
 | Retained notebook provenance | Catalogue `writer_workspace_id` and Pipeline Registry `source_workspace_id` | The workspace of the recorded table-writing notebook or reviewed development notebook, respectively. |
 
-Look up the physical workspace display name on the matching Catalogue row when an observation stores only the ID. Guardrail Results use the physical workspace for planned asset checks with a binding and execution scope for pipeline-wide checks or checks without a binding."""
+Look up the physical workspace display name on the matching Catalogue row when an observation stores only the ID. Guardrail Results use `asset_workspace_id` for planned asset checks with a binding and `execution_workspace_id` for pipeline-wide checks or checks without a binding. Historical Profile, Frequency, Access and Guardrail records may retain their original value in `legacy_workspace_id`."""
 
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
@@ -149,7 +149,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CONTRACT_ACTIVATION": {
         "purpose": "Selects one exact globally frozen Contract for each physical table or file source.",
         "grain": "One retained activation revision per workspace and Table ID or file source_id; one current active selection.",
-        "implementation_notes": "workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
+        "implementation_notes": "asset_workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
         "primary_key": ["activation_id"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Optional exact Agreement governing this physical frozen Contract selection."},
@@ -225,8 +225,8 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_CATALOGUE": {
         "purpose": "Registers current table and file assets with their physical workspace, location and latest observed schema.",
         "grain": "One current asset per physical workspace ID, Table ID and asset type.",
-        "implementation_notes": "workspace_id and workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.",
-        "primary_key": ["workspace_id", "table_id", "asset_type"],
+        "implementation_notes": "asset_workspace_id and asset_workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.",
+        "primary_key": ["asset_workspace_id", "table_id", "asset_type"],
         "foreign_keys": [],
         "relationships": [
             {"cardinality": "1:N", "statement": "FabricOps requires an active Catalogue parent for new Profile, Frequency and Access records using the full physical key. Retained observations may carry legacy execution scope. Use exact retained Run evidence to resolve historical Profile references across workspaces."},
@@ -239,7 +239,7 @@ METADATA_TABLE_MODELS = {
         "primary_key": ["profile_id"],
         "foreign_keys": [],
         "relationships": [
-            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new column statistics, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."},
+            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new column statistics, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."},
             {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:N", "statement": "A combined standalone statistical Profile may link multiple ranked frequency-value rows through profile_id. Independently scheduled Frequency Profiling has its own snapshot and leaves profile_id null."},
         ],
     },
@@ -253,7 +253,7 @@ METADATA_TABLE_MODELS = {
         ],
         "relationships": [
             {"related_table": "METADATA_DATA_PROFILED", "fields": ["profile_id"], "cardinality": "N:1", "statement": "Combined standalone distributions optionally reference their statistical Profile. Independent scheduled distributions leave that reference null."},
-            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new frequency observations, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."}
+            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new frequency observations, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."}
         ],
     },
     "METADATA_DATA_ACCESS": {
@@ -262,7 +262,7 @@ METADATA_TABLE_MODELS = {
         "implementation_notes": "Before saving access observations, FabricOps verifies one active physical Catalogue asset. See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "primary_key": ["access_id"],
         "foreign_keys": [],
-        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new scan rows, FabricOps checks for an active physical Catalogue TABLE matched by workspace and Table ID. The scan also matches the Fabric item. Legacy rows may retain observation scope and an empty asset_type."}],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new scan rows, FabricOps checks for an active physical Catalogue TABLE matched by workspace and Table ID. The scan also matches the Fabric item. Legacy rows may retain observation scope and an empty asset_type."}],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
@@ -410,7 +410,7 @@ METADATA_COLUMN_OWNERS = {
         "table_name": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
         "column_name": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
         "data_type": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
-        "workspace_id": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
+        "asset_workspace_id": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
         ],
@@ -512,7 +512,7 @@ METADATA_COLUMN_OWNERS = {
         "action": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "run_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
-        "workspace_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+        "asset_workspace_id": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "status": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "can_continue": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "severity": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],

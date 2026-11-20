@@ -94,7 +94,7 @@ def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, s
         identity = files.catalogue.call_args.args[0]
         return spark_session.createDataFrame(
             [(identity["workspace_id"], identity["source_id"], "FILE", True)],
-            "workspace_id string, table_id string, asset_type string, is_active boolean",
+            "asset_workspace_id string, table_id string, asset_type string, is_active boolean",
         )
 
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")

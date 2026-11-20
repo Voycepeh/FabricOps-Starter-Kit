@@ -402,7 +402,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
     Persistent evidence is committed only at the applicable execution and finalization boundaries. Multiple target writes are independent publications, not one cross-target atomic transaction. Whole-table profiling, Frequency distributions and full Source Observation add compute and should be scheduled deliberately.
 
-    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, and Access records using `workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Run operations record source and target participation with the physical destination workspace.
+    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, and Access records using `asset_workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Run operations record source and target participation with the physical destination workspace.
 
     Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile lookups. Existing frozen Contracts and historical observations keep their saved payloads.
 
@@ -410,6 +410,19 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 
 ### Upgrade an existing Data Catalogue
+
+Pause writers, then run `setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)` to upgrade the shared Metadata Lakehouse. Resume writers on the upgraded package after setup reports `ready`. Rerun setup after resolving any reported error. Tables that already upgraded retain their current Delta version.
+The Catalogue and Contract Activation rename their physical workspace columns in
+place. Existing Profile, Frequency, Access and Guardrail rows keep unverified
+workspace values as `legacy_workspace_id`. Setup can identify physical file
+profiles by their existing FILE identity and physical Access observations by
+their TABLE marker. Contract authoring can use retained Run evidence to resolve
+legacy profile locations.
+
+Each upgraded table reports its pre-upgrade Delta version. Keep writers paused
+while reconciling any later writes and restoring affected tables to the reported
+versions. For direct metadata queries, use `asset_workspace_id` in the Catalogue
+join and look up `asset_workspace_name` on the matching Catalogue row.
 
 Pause pipelines that write to the shared Metadata Lakehouse and run `setup_metadata_tables()` with the original configuration-scope FabricStore mappings available. Setup checks each legacy TABLE row against its original FabricStore mapping and requires a matching stored item ID or retained successful Pipeline Run binding. Resolve any missing or conflicting evidence before proceeding. FILE rows are validated against their stored physical selector. The setup identity needs permission to read the display names of remote workspaces.
 
@@ -467,7 +480,7 @@ and retained Run/Contract JSON remain intact. Repeated setup is safe.
 
 | Table | Common identity and schema changes |
 | --- | --- |
-| Catalogue | One row per physical `workspace_id`, `table_id` and `asset_type`. Successful full-schema observations update `columns_json` even when profiling is disabled. |
+| Catalogue | One row per physical `asset_workspace_id`, `table_id` and `asset_type`. Successful full-schema observations update `columns_json` even when profiling is disabled. |
 | Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
 | Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |
 | Pipeline Run | Released file operation JSON retains `source_id`. New profiling entries use common `table_id` and `asset_type`; historical JSON is unchanged. |

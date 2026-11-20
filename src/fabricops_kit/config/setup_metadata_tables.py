@@ -20,6 +20,8 @@ from .metadata_schemas import (
     HISTORICAL_METADATA_TABLES,
     RETIRED_METADATA_COLUMNS,
     UNIFIED_ASSET_TABLES,
+    PHYSICAL_WORKSPACE_COLUMNS,
+    LEGACY_WORKSPACE_TABLES,
     GOVERNANCE_METADATA_TABLES,
     ENGINEERING_METADATA_TABLES,
     metadata_table_physical_schema,
@@ -308,7 +310,7 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
         resolved.add(new_key)
         if workspace not in names:
             names[workspace] = resolve_asset_workspace_name(workspace, context=context)
-        parent.update(workspace_id=workspace, workspace_name=names[workspace], asset_type=kind, columns_json=observed)
+        parent.update(asset_workspace_id=workspace, asset_workspace_name=names[workspace], asset_type=kind, columns_json=observed)
         replacement = encode_metadata_row("METADATA_DATA_CATALOGUE", parent)
         if decode_metadata_row("METADATA_DATA_CATALOGUE", replacement)["columns_json"] != observed:
             raise ValueError(f"Catalogue schema verification failed for {new_key!r}.")
@@ -331,6 +333,10 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
     retirements = dict(RETIRED_METADATA_COLUMNS.get(table_name, {}))
     if catalogue:
         retirements.update(dict.fromkeys(_LEGACY_CATALOGUE_FIELDS))
+    renames = PHYSICAL_WORKSPACE_COLUMNS.get(table_name, {})
+    if table_name in LEGACY_WORKSPACE_TABLES:
+        renames = {"workspace_id": "legacy_workspace_id"}
+    retirements.update(renames)
     retired = set(_table_column_names(table)) & set(retirements)
     if not hasattr(table, "schema"):
         if retired:
@@ -344,6 +350,14 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
         raise ValueError(f"Unsafe column retirement declaration for {table_name}.")
 
     def inspect(frame):
+        from pyspark.sql.types import StructField
+
+        physical_names = set(_table_column_names(frame))
+        for old, new in renames.items():
+            if old in physical_names and (new in physical_names
+                    or table_name in LEGACY_WORKSPACE_TABLES and "asset_workspace_id" in physical_names):
+                raise ValueError(f"{table_name} contains both {old} and {new}; existing data preserved.")
+
         actual = _schema_fields_by_name(frame.schema)
         converted = set()
         for name, kind in logical_fields.items():
@@ -354,12 +368,17 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 converted.add(name)
             elif physical != "string":
                 raise ValueError(f"Unsupported {table_name} physical type for {name}: {physical}.")
-        compatible = frame.schema.__class__([expected[f.name] if f.name in converted else f for f in frame.schema.fields])
+        compatible = frame.schema.__class__([
+            expected[f.name] if f.name in converted
+            else StructField(renames[f.name], f.dataType, f.nullable, f.metadata) if f.name in renames else f
+            for f in frame.schema.fields
+        ])
         _validate_existing_metadata_schema(table_name, compatible, expected_schema, allow_missing=True)
         return converted
 
     def convert(row):
         values = row.asDict(recursive=True)
+        has_legacy_workspace = "workspace_id" in values
         if table_name in UNIFIED_ASSET_TABLES:
             from fabricops_kit.config.shared import build_column_id
             old_source = values.get("source_id")
@@ -377,6 +396,21 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             if (is_file and values.get("column_name") and not values.get("column_id")
                     and table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}):
                 values["column_id"] = build_column_id(identity, values["column_name"])
+        for old, new in renames.items():
+            if old in values:
+                values[new] = values.pop(old)
+        if table_name in LEGACY_WORKSPACE_TABLES and has_legacy_workspace:
+            # FILE profiling was physical from its first release. Data Access added
+            # TABLE together with physical workspace resolution in the prior schema.
+            physical_profile = table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"} and values.get("asset_type") == "FILE"
+            physical_access = table_name == "METADATA_DATA_ACCESS" and values.get("asset_type") == "TABLE"
+            if physical_profile or physical_access:
+                values["asset_workspace_id"] = values.pop("legacy_workspace_id")
+        if table_name == "METADATA_DATA_CONTRACT_ACTIVATION" and has_legacy_workspace:
+            destination = parse_metadata_json(values["destination_json"], field="destination_json")
+            workspace = str(values.get("asset_workspace_id") or "").casefold()
+            if not workspace or not isinstance(destination, dict) or workspace != str(destination.get("workspace_id") or "").casefold():
+                raise ValueError("Contract Activation workspace conflicts with its retained physical destination.")
         for name, kind in logical_fields.items():
             value = values.get(name)
             if catalogue and name != "columns_json" and isinstance(value, str):
@@ -407,9 +441,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             converted = convert(row)
             changed.update(name for name in logical_fields if converted.get(name) != values.get(name))
             if catalogue and not legacy_catalogue:
-                key = tuple(values.get(name) for name in ("workspace_id", "table_id", "asset_type"))
+                key = tuple(converted.get(name) for name in ("asset_workspace_id", "table_id", "asset_type"))
                 if (not all(isinstance(value, str) and value.strip() and value == value.strip() for value in key)
-                        or key[2] not in {"TABLE", "FILE"} or not str(values.get("workspace_name") or "").strip()):
+                        or key[2] not in {"TABLE", "FILE"} or not str(converted.get("asset_workspace_name") or "").strip()):
                     raise ValueError(f"Catalogue has an incomplete physical asset identity {key!r}.")
                 key = (key[0].lower(), *key[1:])
                 if key in catalogue_keys:
@@ -456,7 +490,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 or any(key.startswith("delta.constraints.") for key in properties)
                 or any("delta.generationExpression" in field.metadata for field in physical_schema)):
             raise ValueError(f"{table_name}: retired columns require an unsupported partition, mapping or constraint migration; existing data preserved.")
-        for name in sorted(retired - (_LEGACY_CATALOGUE_FIELDS if legacy_catalogue else set())):
+        for name in sorted(retired - set(renames) - (_LEGACY_CATALOGUE_FIELDS if legacy_catalogue else set())):
             replacement_name = retirements[name]
             column = F.col('`' + name.replace('`', '``') + '`')
             safe = column.isNull()
@@ -470,10 +504,18 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                     safe = safe | (F.col(replacement_name).isNull() & (F.length(F.trim(column)) > 0))
             if source.where(~safe).limit(1).count():
                 raise ValueError(f"{table_name}.{name}: populated retired column is not provably redundant; existing data preserved.")
-    target_schema = StructType([
-        StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
-        if f.name in logical_fields else f for f in source.schema.fields if f.name not in retired
-    ] + [StructField(f.name, f.dataType, True, f.metadata) for f in expected_schema.fields if f.name not in actual])
+    def replacement_schema(schema):
+        retained = [
+            StructField(renames[f.name], f.dataType, f.nullable, f.metadata) if f.name in renames
+            else StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata) if f.name in logical_fields else f
+            for f in schema.fields if f.name not in retired or f.name in renames
+        ]
+        present = {f.name for f in retained}
+        return StructType(retained + [
+            StructField(f.name, f.dataType, True, f.metadata) for f in expected_schema.fields if f.name not in present
+        ])
+
+    target_schema = replacement_schema(source.schema)
     stage = path.rstrip("/") + "_metadata_upgrade_staging/" + str(uuid4())
     fs_path = jvm.org.apache.hadoop.fs.Path(stage)
     fs = fs_path.getFileSystem(spark._jsc.hadoopConfiguration())
@@ -489,10 +531,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
         replacement = spark.read.schema(target_schema).parquet(stage)
         if legacy_catalogue:
             validate(replacement)
-        replacement_metadata_schema = StructType([
-            StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata)
-            if f.name in logical_fields else f for f in physical_schema.fields if f.name not in retired
-        ] + [f for f in target_schema.fields if f.name not in actual])
+        replacement_metadata_schema = replacement_schema(physical_schema)
         metadata["metaData"]["schemaString"] = replacement_metadata_schema.json()
         txn.updateMetadata(delta.actions.Action.fromJson(json.dumps(metadata)), False)
         added = txn.writeFiles(replacement._jdf)
@@ -532,9 +571,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             raise RuntimeError(f"{table_name} upgrade committed but data verification failed; inspect Delta history (pre-upgrade version {version}, committed version {committed_version}).")
         return spark.read.format("delta").load(path), {
             "pre_upgrade_version": version, "upgrade_version": committed_version,
-            **({"recovery_guidance": f"Pause Catalogue writers and inspect Delta history. To revert, use "
+            **({"recovery_guidance": f"Pause metadata writers and inspect Delta history. To revert, use "
                  f"RESTORE TABLE delta.`{path}` TO VERSION AS OF {version} after checking for later writes."}
-               if legacy_catalogue else {}),
+               if legacy_catalogue or retired & set(renames) else {}),
             "converted_columns": sorted(converted), "removed_columns": sorted(retired),
             "added_columns": [f.name for f in expected_schema.fields if f.name not in actual],
         }
@@ -674,6 +713,9 @@ def setup_metadata_tables(
     For legacy Catalogue rows, setup validates parent and column identities,
     resolves physical workspaces, preserves stored column IDs in columns_json,
     and retires the separate column records in the same Delta commit.
+    Setup standardizes physical asset workspace columns when their scope is known.
+    Historical workspace values without sufficient proof remain in legacy_workspace_id.
+    Contract activation destinations and notebook audit fields retain their original values.
     The per-table result returns the pre-upgrade version and recovery command.
     Catalogue and Pipeline Run collection fields are stored as validated JSON strings; supported native
     collections are converted atomically with tracked Delta reads and exact
@@ -755,9 +797,10 @@ def setup_metadata_tables(
                     table_name, store="Metadata", schema=resolved_metadata_schema, context={**(context or {}), "_spark_session": spark}
                 )
             upgrade = None
-            if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"}:
+            if not created and hasattr(table, "schema") and table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_PIPELINE_ACTIVATION"}:
                 _validate_existing_metadata_schema(table_name, table.schema, schema)
-            if metadata_json_schema(table_name) or RETIRED_METADATA_COLUMNS.get(table_name):
+            if (metadata_json_schema(table_name) or RETIRED_METADATA_COLUMNS.get(table_name)
+                    or table_name in PHYSICAL_WORKSPACE_COLUMNS or table_name in LEGACY_WORKSPACE_TABLES):
                 table, upgrade = _upgrade_metadata_table(
                     spark=spark, table=table, table_name=table_name, expected_schema=schema,
                     metadata_schema=resolved_metadata_schema, context=context)

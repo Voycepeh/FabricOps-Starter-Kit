@@ -1086,7 +1086,7 @@ def catalogue_table_options(catalogue_rows: Any, *, workspace_id: str) -> list[d
     """Return current table-level Catalogue options for one workspace_id."""
     latest: dict[str, dict[str, Any]] = {}
     for row in _rows(catalogue_rows):
-        if str(row.get("workspace_id") or "") != str(workspace_id):
+        if str(row.get("asset_workspace_id") or "") != str(workspace_id):
             continue
         if row.get("asset_type") != "TABLE":
             continue
@@ -1166,7 +1166,7 @@ def catalogue_table_browser_state(
     """Return one physical Catalogue table and its current observed columns."""
     rows = [row for row in _rows(catalogue_rows)
             if row.get("asset_type") == "TABLE" and row.get("is_active") is not False
-            and row.get("workspace_id") == workspace_id and row.get("table_id") == table_id]
+            and row.get("asset_workspace_id") == workspace_id and row.get("table_id") == table_id]
     if len(rows) != 1:
         raise ValueError(f"Expected one active Catalogue TABLE {table_id!r} in workspace {workspace_id!r}.")
     table_row = rows[0]

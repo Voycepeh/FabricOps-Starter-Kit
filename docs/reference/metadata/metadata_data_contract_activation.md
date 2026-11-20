@@ -28,7 +28,7 @@ via `agreement_id` + `agreement_version`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.
+**Implementation details:** asset_workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Files have source_id and no Table ID. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.
 
 ## Column summary
 
@@ -45,7 +45,7 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr class="metadata-column--governance"><td><code>workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset. The activation applies the selected frozen Contract to the asset in this workspace.</td></tr>
+<tr class="metadata-column--governance"><td><code>asset_workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset. The activation applies the selected frozen Contract to the asset in this workspace.</td></tr>
 <tr class="metadata-column--governance"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
 <tr class="metadata-column--governance"><td><code>source_id</code></td><td><code>string</code></td><td>Stable file identity retained by released source descriptors and historical Run operations; operational tables store this same value in table_id.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>

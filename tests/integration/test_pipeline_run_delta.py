@@ -87,7 +87,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         plan.evidence['guardrail_history'] = [
             {'guardrail_result_id': str(uuid4()), 'guardrail_rule_id': 'schema-' + table, 'guardrail_version': 1,
              'table_id': table, 'table_name': table, 'contract_id': 'contract-' + table, 'contract_version': 1,
-             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'workspace_id': 'DEV',
+             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'execution_workspace_id': 'DEV',
              'status': 'passed', 'can_continue': True, 'severity': 'blocking', 'result_payload_json': '{}'}
             for table in json.loads(plan.participants_json)]
         plan.evidence['boundary_completed'] = True

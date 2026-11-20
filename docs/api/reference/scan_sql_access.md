@@ -58,7 +58,7 @@ Required describes the Python signature. An optional parameter may still be need
 | --- | --- | --- | --- | --- |
 | `catalogue_df` | `pyspark.sql.DataFrame` | Yes | `—` | ``METADATA_DATA_CATALOGUE`` rows used to resolve observed SQL objects to canonical FabricOps ``table_id`` values. |
 | `targets` | `str \| list[str] \| tuple[str, ...]` | No | `'warehouse'` | One or more configured Warehouse or Lakehouse target keys from ``00_env_config`` whose SQL endpoints expose the supported catalogue views. |
-| `workspace_id` | `str \| None` | No | `None` | FabricOps configuration workspace_id used for target resolution, catalogue filtering, and workspace_id-labelled access rows. Defaults to the active FabricOps workspace_id. Fabric authentication and execution identity continue to come from the active runtime. |
+| `workspace_id` | `str \| None` | No | `None` | FabricOps configuration workspace used to resolve target stores. Access rows record the physical target workspace as asset_workspace_id. Defaults to the active FabricOps workspace. Fabric authentication and execution identity continue to come from the active runtime. |
 | `access_snapshot_id` | `str \| None` | No | `None` | Identifier shared by all rows in this scan. A UUID is generated when omitted. |
 | `persist` | `bool` | No | `True` | Append normalized access rows to METADATA_DATA_ACCESS when True. |
 | `context` | `dict[str, Any] \| None` | No | `None` | Active FabricOps context override. |
@@ -151,9 +151,9 @@ physical item identifier.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_sql_access.py:269`
+`fabricops_kit/access_scanner/scan_sql_access.py:270`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L269-L397">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L270-L398">View on GitHub</a>
 </div>
 
 

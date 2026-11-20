@@ -402,7 +402,7 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
         )
         .crossJoin(targets)
         .filter(
-            (F.lower(F.col("workspace_id")) == F.col("_catalogue_physical_workspace"))
+            (F.lower(F.col("asset_workspace_id")) == F.col("_catalogue_physical_workspace"))
             & (F.lower(F.col("item_id")) == F.col("_catalogue_physical_item"))
             & (F.lower(F.col("store_type")) == F.col("_target_store_type"))
             & (
@@ -417,7 +417,7 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
         )
         .select(
             F.col("table_id").alias("_catalogue_table_id"),
-            F.col("workspace_id").alias("_catalogue_workspace_id"),
+            F.col("asset_workspace_id").alias("_catalogue_workspace_id"),
             F.col("_catalogue_target"),
             F.col("schema_name").alias("_catalogue_schema_name"),
             F.col("table_name").alias("_catalogue_table_name"),

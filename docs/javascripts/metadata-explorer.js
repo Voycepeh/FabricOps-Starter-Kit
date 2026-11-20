@@ -7,12 +7,12 @@
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], [], "metadata_data_contract/"],
-    ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id", "revision"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
+    ["DATA_CONTRACT_ACTIVATION", "governance", ["activation_id"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
     ["PIPELINE_ACTIVATION", "governance", ["approval_id"], [], "metadata_pipeline_activation/"],
     ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["approval_id"], "metadata_pipeline_registry/"],
     ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
-    ["DATA_CATALOGUE", "engineering", ["workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
+    ["DATA_CATALOGUE", "engineering", ["asset_workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
     ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
@@ -235,7 +235,7 @@
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
       if (assetTable === "PIPELINE_RUN") {
         return [
-          "operations[].destination.workspace_id → DATA_CATALOGUE.workspace_id",
+          "operations[].destination.workspace_id → DATA_CATALOGUE.asset_workspace_id",
           "operations[].table_id or source_id → DATA_CATALOGUE.table_id",
           "operations[].source_type → DATA_CATALOGUE.asset_type (TABLE or FILE)",
         ];

@@ -53,11 +53,11 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
             return r.spark.createDataFrame([{**row, **audit}], schemas[table])
         ready.wait(timeout=60)
         shared.persist_pipeline_run(plan, spark_session=r.spark)
-        catalogue = {**audit, 'workspace_id': workspace, 'workspace_name': workspace, 'table_id': 'orders', 'asset_type': 'TABLE',
+        catalogue = {**audit, 'asset_workspace_id': workspace, 'asset_workspace_name': workspace, 'table_id': 'orders', 'asset_type': 'TABLE',
                      'table_name': 'orders', 'is_active': True, 'last_profiled_at': datetime(2026, 1, 1)}
         shared.merge_catalogue_asset(catalogue, context=plan.runtime_context, spark_session=r.spark)
         profile = {'profile_id': workspace, 'profile_snapshot_id': workspace, 'table_id': 'orders',
-                   'workspace_id': workspace, 'row_count': 7}
+                   'asset_workspace_id': workspace, 'row_count': 7}
         for table, identity in [('METADATA_DATA_PROFILED', 'profile_id'), ('METADATA_DATA_PROFILED_FREQUENCY', 'frequency_id')]:
             shared._replace_snapshot_rows(dataframe=frame(table, {**profile, identity: workspace}),
                 table_name=table, row_id=identity, config={}, active_workspace_id=workspace, spark_session=r.spark)
@@ -66,7 +66,7 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         shared._merge_source_observation_records([record], context=plan.runtime_context)
         guardrail = {'guardrail_result_id': workspace, 'guardrail_rule_id': 'rule', 'guardrail_version': 1,
             'table_id': 'orders', 'contract_id': 'contract', 'contract_version': 1,
-            'execution_type': 'ungoverned', 'run_id': plan.plan_id, 'workspace_id': workspace,
+            'execution_type': 'ungoverned', 'run_id': plan.plan_id, 'execution_workspace_id': workspace,
             'status': 'passed', 'can_continue': True, 'severity': 'warning', 'result_payload_json': '{}'}
         writer.write_lakehouse_table(frame('METADATA_GUARDRAIL_RESULTS', guardrail),
             'METADATA_GUARDRAIL_RESULTS', store='Metadata', schema='engineering',
@@ -85,7 +85,11 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     for table in extra:
         retained = r.spark.read.format('delta').load(r.paths[table])
         assert retained.count() == parallelism, table
-        assert retained.select('workspace_id').distinct().count() == parallelism, table
+        workspace_field = {
+            PROCESSING_STATE_TABLE: 'workspace_id',
+            'METADATA_GUARDRAIL_RESULTS': 'execution_workspace_id',
+        }.get(table, 'asset_workspace_id')
+        assert retained.select(workspace_field).distinct().count() == parallelism, table
 
 
 def test_checkpoint_and_receipt_packages_remain_atomic_across_workspaces(runs_delta, monkeypatch):

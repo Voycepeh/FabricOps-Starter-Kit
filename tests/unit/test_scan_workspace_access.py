@@ -178,7 +178,7 @@ def test_access_append_requires_one_physical_catalogue_parent(monkeypatch, spark
     """Reject missing or duplicate Catalogue parents before appending observations."""
     shared = importlib.import_module("fabricops_kit.access_scanner.shared")
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
-    fields = "workspace_id string, table_id string, asset_type string"
+    fields = "asset_workspace_id string, table_id string, asset_type string"
     reference = ("physical", "orders", "TABLE")
     access = spark_session.createDataFrame([reference], fields)
     parents = spark_session.createDataFrame(
