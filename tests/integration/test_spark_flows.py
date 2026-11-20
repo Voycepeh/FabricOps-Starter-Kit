@@ -198,7 +198,8 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     assert writes[0][2:4] == ("Metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
     assert written_row["guardrail_rule_id"] == "freshness-rule"
-    assert written_row["workspace_id"] == "dev"
+    assert written_row["execution_workspace_id"] == "dev"
+    assert written_row["asset_workspace_id"] is None
     assert written_row["status"] == "failed"
     assert written_row["can_continue"] is False
     assert written_row["severity"] == "blocking"

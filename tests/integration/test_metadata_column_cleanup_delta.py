@@ -59,11 +59,17 @@ def cleanup_delta(spark_session, monkeypatch, tmp_path):
         row.update({name: datetime(2020, 1, 2, 3, 4, 5, 123456) if kind == 'timestamp' else 'original'
                     for name, kind, _ in AUDIT_SCHEMA_FIELDS})
         row['consumer_extension'] = ' keep exact bytes \n '
+        row['table_id'] = 'orders'
+        if table == 'METADATA_DATA_CATALOGUE':
+            row.update(asset_workspace_id='dev', asset_workspace_name='Development', asset_type='TABLE')
         for name, replacement in RETIRED_METADATA_COLUMNS[table].items():
-            row[name] = row[replacement] if replacement else None
-        if bad:
+            row[name] = row[replacement] if replacement and name != 'source_id' else None
+        if bad == 'source_id':
+            row[bad] = 'file:different'
+        elif bad:
             row[bad] = datetime(2021, 1, 1) if RETIRED_METADATA_COLUMNS[table][bad] else 'unique historical data'
-        writer = spark_session.createDataFrame([] if empty else [row, row], StructType(fields)).write.format('delta')
+        second = {**row, 'table_id': 'customers'} if table == 'METADATA_DATA_CATALOGUE' else row
+        writer = spark_session.createDataFrame([] if empty else [row, second], StructType(fields)).write.format('delta')
         if layout == 'partition':
             writer = writer.partitionBy('metadata_id')
         if layout == 'mapping':
@@ -128,8 +134,11 @@ def test_unique_retired_values_fail_before_mutation(cleanup_delta, table, bad):
     before, version = state.read().collect(), state.version()
     result = rt.run()
     assert result['failed_tables'] == [table]
-    assert bad in result['table_results'][table]['message']
-    assert 'not provably redundant' in result['table_results'][table]['message']
+    message = result['table_results'][table]['message']
+    if bad == 'source_id':
+        assert 'conflicting asset identities' in message
+    else:
+        assert bad in message and 'not provably redundant' in message
     assert state.version() == version and state.read().collect() == before
 
 
