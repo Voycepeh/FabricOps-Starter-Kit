@@ -141,6 +141,7 @@
 <text x="476" y="504" fill="#19243A" font-size="12" font-family="Segoe UI, Arial, sans-serif">operations[].asset_workspace_id</text>
 <text x="476" y="528" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].table_id</text>
 <text x="476" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].asset_type</text>
+<g data-key-role="FK" data-key-fields="operations[].asset_workspace_id,operations[].table_id,operations[].asset_type"><title>Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint</title><path d="M470 494H464V556H470" fill="none" stroke="#2563EB"/><text x="438" y="528" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text></g>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">

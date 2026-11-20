@@ -471,6 +471,15 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         assert key is not None and key.get("data-key-fields") == expected_key
         assert key.find(f"{namespace}path") is not None
 
+    run = next(node for node in svg_tree.findall(f".//{namespace}a")
+               if node.find(f"{namespace}title").text == "Open metadata documentation: PIPELINE_RUN")
+    operation_key = run.find(f"{namespace}g[@data-key-role='FK']")
+    assert operation_key is not None
+    assert operation_key.get("data-key-fields") == "operations[].asset_workspace_id,operations[].table_id,operations[].asset_type"
+    assert operation_key.find(f"{namespace}path") is not None
+    assert operation_key.find(f"{namespace}text").text == "FK"
+    assert "each operations[] entry" in operation_key.find(f"{namespace}title").text
+
     contract = next(node for node in svg_tree.findall(f".//{namespace}a")
                     if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_CONTRACT")
     assert {"table_id", "asset_type"} <= {node.text for node in contract.findall(f"{namespace}text")}

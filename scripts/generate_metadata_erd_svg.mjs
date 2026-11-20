@@ -52,6 +52,7 @@ function renderMetadataSvg(layout, models) {
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
     const catalogueReference = model.catalogue_reference_fields || [];
     const cataloguePrimary = name === "DATA_CATALOGUE";
+    const operationReference = name === "PIPELINE_RUN" ? model.asset_identity_fields : [];
     const authoringReference = model.catalogue_authoring_fields || [];
     const optionalReference = model.catalogue_optional_fields || [];
     const groupedPrimary = cataloguePrimary || authoringReference.length > 0;
@@ -60,9 +61,10 @@ function renderMetadataSvg(layout, models) {
       : pk;
     const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
     const identityFields = model.asset_identity_fields.filter(field =>
-      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !authoringReference.includes(field) && !optionalReference.includes(field) && !fk.some(([, value]) => value === field));
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !operationReference.includes(field) && !authoringReference.includes(field) && !optionalReference.includes(field) && !fk.some(([, value]) => value === field));
     const fields = [
       ...catalogueReference,
+      ...operationReference,
       ...authoringReference,
       ...optionalReference,
       ...identityFields,
@@ -82,6 +84,7 @@ function renderMetadataSvg(layout, models) {
     const groups = [
       ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
       ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
+      ["FK", operationReference, keys.length, "Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint"],
       ["REF", authoringReference, keys.length, "Catalogue authoring reference checked at draft creation"],
       ["REF", optionalReference, keys.length, "Optional physical Catalogue asset reference; pipeline-wide results may have none"],
     ];
