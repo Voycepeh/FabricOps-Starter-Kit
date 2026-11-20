@@ -230,7 +230,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="workspace">
 <summary><strong>Workspace</strong> — A collaborative container that brings related Fabric items together and controls access to them.</summary>
-<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps uses stable workspace_id for local observations, profiling, Testing and activation. Names are labels; global Data Contract identity does not include workspace.</p>
+<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps stores the physical table or file workspace as asset_workspace_id and uses separate workspace fields for execution, Contract authoring evidence and notebook audit. Names are labels; global Data Contract identity does not include workspace.</p>
 <p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces">Official documentation</a></p>
 <p><strong>Also known as:</strong> workspaces</p>
 </details>

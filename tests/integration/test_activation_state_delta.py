@@ -122,7 +122,11 @@ def contract_activation_delta(authority_delta, monkeypatch):
     from tests.unit.test_activated_pipeline import operation
     r = authority_delta
     r.ensure(service.ACTIVATION_TABLE)
-    payload = json.dumps({"table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}}})
+    payload = json.dumps({
+        "table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}},
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    })
     contract = {"table_id": "orders", "contract_id": "contract", "contract_version": 1,
         "status": "frozen", "contract_payload_json": payload}
     original = service.metadata_records
