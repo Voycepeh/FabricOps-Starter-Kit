@@ -5,8 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
-  // Show direct keys plus the Catalogue links for nested Run participation
-  // and optional asset Guardrail outcomes. Draft authoring and promotion details stay scoped.
+  // Show direct keys plus the Catalogue link for Run operation participation.
+  // Guardrail Results link through their exact Contract and Run.
   const directKey = (name, field) => !field.local_field.includes("[]") && !field.referenced_field.includes("[]") &&
     !(name === "PIPELINE_RUN" && field.local_field === "promotion_id" && field.referenced_table === "METADATA_PIPELINE_REGISTRY");
   const routes = [
@@ -19,9 +19,8 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
-    ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M185 253V310H1355V510H1115",[185,253],[1115,510],"Contract versions to their Guardrail results"],
+    ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V360H965V423",[335,194],[965,423],"Contract versions to their Guardrail results"],
     ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M335 515H425",[335,515],[425,515],"Run asset participation via operations: asset_workspace_id + table_id + asset_type; participation does not prove transformation dependencies"],
-    ["DATA_CATALOGUE","GUARDRAIL_RESULTS","0..1-N","optional","M260 423V360H965V423",[260,423],[965,423],"Optional Catalogue asset for Guardrail outcomes through asset_workspace_id + table_id + asset_type; pipeline-wide checks may have no asset"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const source = layout.indexOf("<a ");
@@ -54,19 +53,17 @@ function renderMetadataSvg(layout, models) {
     const cataloguePrimary = name === "DATA_CATALOGUE";
     const operationReference = name === "PIPELINE_RUN" ? model.asset_identity_fields : [];
     const authoringReference = model.catalogue_authoring_fields || [];
-    const optionalReference = model.catalogue_optional_fields || [];
     const groupedPrimary = cataloguePrimary || authoringReference.length > 0;
     const primaryRows = groupedPrimary ? pk.map(([, field]) => ["", field])
       : catalogueReference.length && pk.length > 1 ? [["PK", model.primary_key.join(" + ")]]
       : pk;
     const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
     const identityFields = model.asset_identity_fields.filter(field =>
-      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !operationReference.includes(field) && !authoringReference.includes(field) && !optionalReference.includes(field) && !fk.some(([, value]) => value === field));
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !operationReference.includes(field) && !authoringReference.includes(field) && !fk.some(([, value]) => value === field));
     const fields = [
       ...catalogueReference,
       ...operationReference,
       ...authoringReference,
-      ...optionalReference,
       ...identityFields,
     ].map(value => ["", value]);
     if (cataloguePrimary) fields.push(["", "asset_workspace_name"], ["", "columns_json (current schema)"]);
@@ -86,7 +83,6 @@ function renderMetadataSvg(layout, models) {
       ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
       ["FK", operationReference, keys.length, "Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint"],
       ["REF", authoringReference, keys.length, "Catalogue authoring reference checked at draft creation"],
-      ["REF", optionalReference, keys.length, "Optional physical Catalogue asset reference; pipeline-wide results may have none"],
     ];
     for (const [kind, groupFields, firstRow, title] of groups) {
       if (!groupFields.length) continue;
@@ -125,9 +121,8 @@ function renderMetadataSvg(layout, models) {
     if (!edgeSet.has([name, "DATA_CATALOGUE"].sort().join("|")))
       throw Error("Missing Catalogue parent connector: " + name);
   }
-  // Keep both requested links grounded in the canonical asset reference fields.
+  // Keep the Run link grounded in the canonical operation asset fields.
   for (const [name, fields] of [
-    ["GUARDRAIL_RESULTS", ["asset_workspace_id", "table_id", "asset_type"]],
     ["PIPELINE_RUN", ["operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"]],
   ]) {
     if (JSON.stringify(models[name].asset_identity_fields) !== JSON.stringify(fields))

@@ -300,7 +300,7 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
         assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
     assert payload["GUARDRAIL_RESULTS"]["catalogue_authoring_fields"] == []
-    assert payload["GUARDRAIL_RESULTS"]["catalogue_optional_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
+    assert "catalogue_optional_fields" not in payload["GUARDRAIL_RESULTS"]
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
         "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"
     ]
@@ -490,7 +490,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) == 12
+    assert len(connectors) == 11
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
@@ -505,8 +505,12 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         assert omitted not in actual
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "nested"
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-cardinality") == "N-N"
-    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-kind") == "optional"
-    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-cardinality") == "0..1-N"
+    assert ("DATA_CATALOGUE", "GUARDRAIL_RESULTS") not in actual
+    assert ("DATA_CONTRACT", "GUARDRAIL_RESULTS") in actual
+    assert ("PIPELINE_RUN", "GUARDRAIL_RESULTS") in actual
+    guardrail = next(node for node in svg_tree.findall(f".//{namespace}a")
+                     if node.find(f"{namespace}title").text == "Open metadata documentation: GUARDRAIL_RESULTS")
+    assert guardrail.find(f"{namespace}g[@data-key-role='REF']") is None
     for name, x in (("PIPELINE_RUN", "425"), ("GUARDRAIL_RESULTS", "815")):
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
@@ -615,7 +619,7 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
     svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
     edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
-    assert len(edges) == 12
+    assert len(edges) == 11
     assert {edge.get("data-from") for edge in edges} | {edge.get("data-to") for edge in edges} <= set(names)
     assert 'Array.from(svg.querySelectorAll(".metadata-er-relationship")' in js
     assert "const links = [" not in js

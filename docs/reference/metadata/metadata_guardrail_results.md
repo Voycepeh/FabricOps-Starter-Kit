@@ -30,10 +30,7 @@ via `run_id`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-`METADATA_DATA_CATALOGUE` **(N → 0..1)**
-via `asset_workspace_id` + `table_id` + `asset_type`
-
-**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Captured context remains as observed at evaluation.
+**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Catalogue registration is checked when creating the Contract draft. Results reference the exact Contract and Run without a separate Catalogue parent check. Captured context remains as observed at evaluation.
 
 ## Column summary
 

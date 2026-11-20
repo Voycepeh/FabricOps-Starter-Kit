@@ -4621,12 +4621,6 @@ def render_metadata_reference_index(
                 and relation.get("related_table") == "METADATA_DATA_CATALOGUE"
                 and relation.get("cardinality") == "N:0..1"
             ), []),
-            "catalogue_optional_fields": next((
-                relation["fields"] for relation in table_models[name].get("relationships", [])
-                if name != "METADATA_DATA_CONTRACT"
-                and relation.get("related_table") == "METADATA_DATA_CATALOGUE"
-                and relation.get("cardinality") == "N:0..1"
-            ), []),
             "asset_identity_fields": [
                 field for field in ("asset_workspace_id", "table_id", "asset_type",
                     "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type")

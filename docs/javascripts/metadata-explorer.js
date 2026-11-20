@@ -235,14 +235,6 @@
           "operations[].asset_type → DATA_CATALOGUE.asset_type",
         ];
       }
-      if (assetTable === "GUARDRAIL_RESULTS") {
-        return [
-          "GUARDRAIL_RESULTS.asset_workspace_id → DATA_CATALOGUE.asset_workspace_id",
-          "GUARDRAIL_RESULTS.table_id → DATA_CATALOGUE.table_id",
-          "GUARDRAIL_RESULTS.asset_type → DATA_CATALOGUE.asset_type",
-          "Optional: pipeline-wide checks may have no Catalogue asset",
-        ];
-      }
       if (assetTable) {
         const model = modelFor(assetTable);
         const physicalFields = model.catalogue_reference_fields || [];
@@ -267,7 +259,6 @@
           const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
             ? "Authoring reference checked at draft creation"
             : edge[0] === "DATA_CATALOGUE" && edge[1] === "PIPELINE_RUN" ? "Asset participation via operations"
-            : edge[0] === "DATA_CATALOGUE" && edge[1] === "GUARDRAIL_RESULTS" ? "Optional Catalogue asset reference"
             : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +

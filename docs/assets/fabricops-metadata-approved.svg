@@ -52,18 +52,13 @@
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT" data-to="GUARDRAIL_RESULTS" data-cardinality="1-N" data-kind="physical">
 <title>Contract versions to their Guardrail results (1-N; keyed reference; application-enforced)</title>
-<path d="M185 253V310H1355V510H1115" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="172" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="185" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1127" y="499" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1140" y="514.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
+<path d="M335 194H395V360H965V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="347" y="183" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="198.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="952" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="965" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="PIPELINE_RUN" data-cardinality="N-N" data-kind="nested">
 <title>Run asset participation via operations: asset_workspace_id + table_id + asset_type; participation does not prove transformation dependencies (N-N; nested asset participation; join by identity)</title>
 <path d="M335 515H425" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
 <rect x="347" y="504" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="387" y="504" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="519.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><text x="380" y="482" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">via</text><text x="380" y="497" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">operations</text>
-</g>
-<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="GUARDRAIL_RESULTS" data-cardinality="0..1-N" data-kind="optional">
-<title>Optional Catalogue asset for Guardrail outcomes through asset_workspace_id + table_id + asset_type; pipeline-wide checks may have no asset (0..1-N; optional physical asset reference)</title>
-<path d="M260 423V360H965V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="241" y="387" width="38" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="260" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">0..1</text><rect x="952" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="965" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
 </g>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_steward/" target="_blank">
@@ -129,7 +124,6 @@
 <text x="866" y="540" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_workspace_id</text>
 <text x="866" y="560" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">table_id</text>
 <text x="866" y="580" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">asset_type</text>
-<g data-key-role="REF" data-key-fields="asset_workspace_id,table_id,asset_type"><title>Optional physical Catalogue asset reference; pipeline-wide results may have none</title><path d="M860 530H854V584H860" fill="none" stroke="#7C3AED"/><text x="828" y="560" fill="#7C3AED" font-weight="700" font-size="12" font-family="Segoe UI, Arial, sans-serif">REF</text></g>
 <title>Open metadata documentation: GUARDRAIL_RESULTS</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_pipeline_run/" target="_blank">
@@ -219,5 +213,5 @@
 <text x="1608" y="585" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
-<text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · REF: Catalogue reference · Brackets group fields · Dashed: optional / via operations · Key references are application-enforced · Delta tables commit independently</text>
+<text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · REF: Catalogue reference · Brackets group fields · Dashed: via operations · Key references are application-enforced · Delta tables commit independently</text>
 </svg>

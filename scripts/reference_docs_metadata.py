@@ -252,14 +252,14 @@ METADATA_TABLE_MODELS = {
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
         "grain": "One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.",
-        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Captured context remains as observed at evaluation.",
+        "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Catalogue registration is checked when creating the Contract draft. Results reference the exact Contract and Run without a separate Catalogue parent check. Captured context remains as observed at evaluation.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
             {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Together with contract_version, identifies the immutable payload containing the evaluated guardrail_rule_id and guardrail_version."},
             {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Results retain the exact evaluated contract version and rule revision even after a new draft is authored."},
         ],
-        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:0..1", "statement": "Asset-level outcomes can join the physical Catalogue asset using the full key. Pipeline-wide checks and outcomes without a resolved binding may have no Catalogue asset; retained results do not require a current Catalogue row."}],
+        "relationships": [],
     },
 }
 
