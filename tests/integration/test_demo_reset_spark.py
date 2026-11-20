@@ -94,6 +94,7 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     env.state._metadata = env.setup.paths['Metadata']
     env.state.spark = run.spark
     env.state._demo_table_ids = {table for store, table in [*API._DEMO_SOURCES, *API._DEMO_OUTPUTS]}
+    env.state._demo_source_ids = set()
     env.state._demo_workspaces = {'dev', 'governance'}
     monkeypatch.setattr(API, 'get_spark_session', lambda: run.spark)
     for name, function in {'read_lakehouse_table': read, 'read_warehouse_table': read,
@@ -232,6 +233,7 @@ def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
     state = SimpleNamespace(_demo_config=object(), context=object(), _demo_runtime={}, spark=demo_csv)
     state._metadata = SimpleNamespace(root=str(tmp_path))
     state._demo_table_ids = {'orders'}
+    state._demo_source_ids = set()
     state._demo_workspaces = {'dev'}
     folder = tmp_path / 'Files/fabricops/engineering/submissions'
     folder.mkdir(parents=True)
