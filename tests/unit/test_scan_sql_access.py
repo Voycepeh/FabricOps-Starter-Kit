@@ -181,6 +181,10 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     """Map object, schema, and database permissions to governed tables."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     calls = []
+    config = {"paths": {"dev": {
+        "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+        "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+    }}}
 
     def fake_read(query, *, store, spark_session=None, context=None, **options):
         calls.append((query, store, context))
@@ -190,7 +194,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({"config": "test"}, "dev", {"config": {"config": "test"}, "scope_workspace_id": "dev"}),
+        lambda **kwargs: (config, "dev", {"config": config, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"warehouse": "warehouse"})
@@ -250,6 +254,10 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
     """Scan each unique configured workspace data item target once."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     calls = []
+    config = {"paths": {"dev": {
+        "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+        "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+    }}}
 
     empty = _observations(spark_session).limit(0)
 
@@ -261,7 +269,7 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({}, "dev", {"config": {}, "scope_workspace_id": "dev"}),
+        lambda **kwargs: (config, "dev", {"config": config, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(

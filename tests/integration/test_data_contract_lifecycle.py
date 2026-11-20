@@ -65,6 +65,10 @@ class _DeltaTransport:
         self.insert = True
         return self
 
+    def whenNotMatchedInsert(self, values):
+        self.insert = True
+        return self
+
     def whenMatchedUpdate(self, set=None, condition=None):
         self.updates, self.update_condition = set, condition
         return self
@@ -88,6 +92,10 @@ class _DeltaTransport:
                         match = re.search(r"source\.`?(\w+)", expression)
                         assert match or expression in {"true", "false"}, expression
                         value = source.get(match.group(1)) if match else expression == "true"
+                        if expression.startswith("coalesce(target.") and target.get(key) is not None:
+                            continue
+                        if expression.startswith(("CASE ", "greatest(")) and value is None:
+                            continue
                         if value is not None or not expression.startswith("coalesce("):
                             target[key] = value
             if not matches and self.insert:
@@ -163,6 +171,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         if module is None or not getattr(module, "__name__", "").startswith("fabricops_kit"):
             continue
         for name, replacement in (("read_lakehouse_table", read), ("write_lakehouse_table", write),
+                                  ("resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title()),
                                   ("resolve_fabric_context", resolve), ("build_runtime_audit_fields", audit_fields),
                                   ("get_spark_session", lambda *a, **k: spark_session),
                                   ("resolve_configured_lakehouse_table", path),

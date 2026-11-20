@@ -111,7 +111,7 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     assert "2. Profiling backend → PySpark" in output
     assert "5. Profile snapshot → created new activity snapshot" in output
     assert "6. Frequency profile metadata → skipped; no frequency profile generated" in output
-    assert "7. Catalogue → registered or updated table and column metadata" in output
+    assert "7. Catalogue → registered or updated table schema" in output
     assert "existing load strategy and parameters preserved" in output
 
 

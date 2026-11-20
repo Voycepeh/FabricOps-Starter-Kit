@@ -33,6 +33,7 @@ def test_source_drift_receives_complete_source_independent_of_read_scope(spark_s
             assert dataframe.count() == 2
         return {'status': 'baseline_pending', 'row_count': 2}
     monkeypatch.setattr(read, 'observe_full_source', observe)
+    monkeypatch.setattr(read, 'persistence_permitted', lambda context: False)
     result = read.pipeline_read(store='Bronze', schema='dbo', table_name='source',
         read_mode='incremental' if 'incremental' in scope else 'full',
         read_parameters={'watermark_column': 'id'} if 'incremental' in scope else None,

@@ -179,6 +179,51 @@ def test_legacy_catalogue_migration_fails_closed(catalogue_delta, problem, diagn
 
 
 
+def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, monkeypatch):
+    """Existing frozen Contracts, profiling, Lineage and Guardrail records stay intact."""
+    from delta.tables import DeltaTable
+
+    rt = catalogue_delta
+    table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
+    parent = rt.row(table_id=table_id, metadata_level="table", layer="Silver", store_type="lakehouse",
+                    schema_name="sales")
+    column = {**parent, "metadata_level": "column", "column_id": "retired-id",
+              "column_name": "retired", "data_type": "int", "is_active": False}
+    rt.seed([parent, column], legacy=True)
+    frozen_payload = '{"table":{"columns":[{"column_id":"retired-id","column_name":"retired","data_type":"int"}]}}'
+    history = {
+        "METADATA_DATA_CONTRACT": {"contract_id": "orders", "contract_version": 2, "status": "frozen",
+                                   "evidence_workspace_id": "dev", "contract_payload_json": frozen_payload},
+        "METADATA_DATA_PROFILED": {"profile_id": "profile", "column_id": "retired-id", "row_count": 20},
+        "METADATA_DATA_PROFILED_FREQUENCY": {"frequency_id": "frequency", "profile_id": "profile",
+                                             "column_id": "retired-id"},
+        "METADATA_DATA_LINEAGE": {"lineage_id": "lineage", "pipeline_role": "source"},
+        "METADATA_GUARDRAIL_RESULTS": {"guardrail_result_id": "result", "guardrail_rule_id": "rule",
+            "guardrail_version": 1, "contract_id": "orders", "contract_version": 2,
+            "can_continue": True, "status": "passed", "guardrail_type": "schema",
+            "execution_type": "ungoverned", "run_id": "run", "severity": "warning", "result_payload_json": "{}"},
+    }
+    paths = {}
+    original = {}
+    audit = {key: value for key, value in parent.items() if key.startswith("_")}
+    registry = metadata_table_schema_registry()
+    for name, values in history.items():
+        paths[name] = rt.path + "-" + name
+        row = {**audit, "table_id": table_id, "workspace_id": "dev", **values}
+        rt.spark.createDataFrame([row], registry[name]).write.format("delta").save(paths[name])
+        original[name] = rt.spark.read.format("delta").load(paths[name]).collect()
+    read = setup.read_lakehouse_table
+    monkeypatch.setattr(setup, "read_lakehouse_table",
+        lambda name, **kwargs: rt.spark.read.format("delta").load(paths[name]) if name in paths else read(name, **kwargs))
+
+    result = rt.run()
+    assert result["status"] == "ready", result["table_results"]
+    assert rt.read().first()["columns_json"] == "[]"
+    for name, path in paths.items():
+        assert DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 0
+        assert rt.spark.read.format("delta").load(path).collect() == original[name]
+
+
 def test_legacy_catalogue_rejects_conflicting_retained_run_binding(catalogue_delta, monkeypatch):
     """A changed configuration cannot silently redirect a legacy asset with retained provenance."""
     rt = catalogue_delta
