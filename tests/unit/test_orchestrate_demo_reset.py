@@ -396,3 +396,13 @@ def test_reset_scope_rejects_foreign_file_source_ids(monkeypatch):
     API._demo_check_metadata_scope(state, {'source_id': 'file:demo-orders', 'workspace_id': 'dev'})
     with pytest.raises(RuntimeError, match='Non-demo file source'):
         API._demo_check_metadata_scope(state, {'source_ids': ['file:another-project']})
+
+
+def test_reset_preserves_archived_lineage_rows(monkeypatch):
+    """Retired activity history is outside the canonical and operational reset scope."""
+    env = _ready(monkeypatch)
+    historical = [{'lineage_id': 'archived-activity', 'table_id': 'retained'}]
+    env.rows['METADATA_DATA_LINEAGE'] = deepcopy(historical)
+    API.orchestrate_demo_reset(reset=True)
+    assert env.rows['METADATA_DATA_LINEAGE'] == historical
+    assert 'METADATA_DATA_LINEAGE' not in env.removed

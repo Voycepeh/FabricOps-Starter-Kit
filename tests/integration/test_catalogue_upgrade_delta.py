@@ -209,10 +209,16 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
     original = {}
     audit = {key: value for key, value in parent.items() if key.startswith("_")}
     registry = metadata_table_schema_registry()
+    from pyspark.sql.types import StringType, StructField, StructType
+    legacy_lineage = StructType([
+        *[StructField(name, StringType()) for name in ("workspace_id", "table_id", "lineage_id", "pipeline_role")],
+        *[field for field in registry[TABLE] if field.name in audit],
+    ])
     for name, values in history.items():
         paths[name] = rt.path + "-" + name
         row = {**audit, "table_id": table_id, "workspace_id": "dev", **values}
-        rt.spark.createDataFrame([row], registry[name]).write.format("delta").save(paths[name])
+        schema = legacy_lineage if name == "METADATA_DATA_LINEAGE" else registry[name]
+        rt.spark.createDataFrame([row], schema).write.format("delta").save(paths[name])
         original[name] = rt.spark.read.format("delta").load(paths[name]).collect()
     read = setup.read_lakehouse_table
     monkeypatch.setattr(setup, "read_lakehouse_table",

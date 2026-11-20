@@ -80,7 +80,6 @@ def test_populated_legacy_catalogue_adds_asset_fields_without_losing_processing(
 
 
 @pytest.mark.parametrize('table,added', [
-    ('METADATA_DATA_LINEAGE', {'asset_type', 'asset_name'}),
     ('METADATA_DATA_PROFILED', {'asset_type', 'run_id', 'pipeline_role'}),
     ('METADATA_DATA_PROFILED_FREQUENCY', {'asset_type', 'run_id', 'pipeline_role'}),
 ])
@@ -110,12 +109,12 @@ def test_additive_file_schema_upgrade_preserves_populated_rows_and_extensions(ca
     assert setup._validate_existing_metadata_schema(table, read().schema, expected, allow_missing=True) == []
 
 
-def test_real_delta_file_catalogue_and_lineage_merges_are_idempotent(catalogue_delta, monkeypatch):
+def test_real_delta_file_catalogue_merges_are_idempotent(catalogue_delta, monkeypatch):
     from delta.tables import DeltaTable
     from pyspark.sql.types import StructType, StructField, StringType
     r = catalogue_delta
     registry = metadata_table_schema_registry()
-    tables = ('METADATA_DATA_CATALOGUE', 'METADATA_DATA_LINEAGE')
+    tables = ('METADATA_DATA_CATALOGUE',)
     paths = {name: r.path + '-' + name for name in tables}
     audit = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'audit-' + field.name
              for field in registry[tables[0]] if field.name.startswith('_')}
@@ -131,14 +130,8 @@ def test_real_delta_file_catalogue_and_lineage_merges_are_idempotent(catalogue_d
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
     monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
     identity = {**file_source_identity(workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
-    with pytest.raises(ValueError, match="requires exactly one active Catalogue asset"):
-        shared.persist_lineage_participation(asset_type='FILE', table_id=identity['source_id'],
-            file_identity=identity, pipeline_role='source', context={})
-    assert r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).count() == 0
-    for role in ('source', 'target', 'source'):
+    for _attempt in range(3):
         shared.persist_file_catalogue(identity, context={})
-        shared.persist_lineage_participation(asset_type='FILE', table_id=identity['source_id'],
-            file_identity=identity, pipeline_role=role, context={})
     catalogue = r.spark.read.format('delta').load(paths[tables[0]])
     assert catalogue.count() == 1
     first = catalogue.first().asDict()
@@ -148,27 +141,23 @@ def test_real_delta_file_catalogue_and_lineage_merges_are_idempotent(catalogue_d
     latest = r.spark.read.format('delta').load(paths[tables[0]]).first().asDict()
     assert latest['first_observed_at'] == first['first_observed_at']
     assert latest['last_observed_at'] > first['last_observed_at'] and latest['extension'] == 'keep'
-    lineage = r.spark.read.format('delta').load(paths[tables[1]])
-    assert lineage.count() == 2
-    assert {row['pipeline_role'] for row in lineage.collect()} == {'source', 'target'}
-    assert all(row['table_id'] == identity['source_id'] and row['asset_type'] == 'FILE' for row in lineage.collect())
 
 
 # Keep the real writers available while the orchestration fixture isolates Fabric IO.
 FILE_CATALOGUE_WRITER = shared.persist_file_catalogue
-LINEAGE_WRITER = shared.persist_lineage_participation
+RUN_WRITER = shared._merge_pipeline_run_row
 
 
-def test_orchestrated_read_commits_real_delta_lineage_before_finalization(catalogue_delta, files, monkeypatch):
+def test_orchestrated_file_read_commits_run_participation_before_finalization(catalogue_delta, files, monkeypatch):
     from fabricops_kit import setup_pipeline, orchestrate_read, finalize_pipeline
     r = catalogue_delta
     registry = metadata_table_schema_registry()
     paths = {table: r.path + '-orchestrated-' + table for table in
-             ('METADATA_DATA_CATALOGUE', 'METADATA_DATA_LINEAGE')}
+             ('METADATA_DATA_CATALOGUE', 'METADATA_PIPELINE_RUN')}
     for table, path in paths.items():
         r.spark.createDataFrame([], registry[table]).write.format('delta').save(path)
     audit = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'audit-' + field.name
-             for field in registry['METADATA_DATA_LINEAGE'] if field.name.startswith('_')}
+             for field in registry['METADATA_PIPELINE_RUN'] if field.name.startswith('_')}
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: dict(audit))
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, table, schema, **kw:
@@ -176,19 +165,22 @@ def test_orchestrated_read_commits_real_delta_lineage_before_finalization(catalo
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
     monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
     monkeypatch.setattr(shared, 'persist_file_catalogue', FILE_CATALOGUE_WRITER)
-    monkeypatch.setattr(shared, 'persist_lineage_participation', LINEAGE_WRITER)
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', RUN_WRITER)
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kw: r.spark.read.format('delta').load(paths[table]))
     files.readers['csv'].return_value = r.spark.createDataFrame([], 'id long, name string')
     session = setup_pipeline(pipeline_mode='Ungoverned', profiling_enabled=False)
     result = orchestrate_read(store='Bronze', relative_path='inventory/inventory.csv', file_format='csv')
-    lineage = r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).first().asDict()
-    assert lineage['table_id'] == result['source_id'] and lineage['pipeline_role'] == 'source'
-    assert lineage['_activity_id'] == audit['_activity_id']
+    runs = r.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN'])
+    participant = shared.pipeline_participation(runs).first().asDict()
+    assert participant['table_id'] == result['source_id'] and participant['pipeline_role'] == 'source'
+    assert participant['run_id'] == session.plan.plan_id and participant['asset_type'] == 'FILE'
+    assert participant['_activity_id'] == audit['_activity_id']
     rows = r.spark.read.format('delta').load(paths['METADATA_DATA_CATALOGUE']).collect()
     assert len(rows) == 1
     assert [column["column_name"] for column in json.loads(rows[0]["columns_json"])] == ["id", "name"]
     finalize_pipeline(session)
     finalize_pipeline(session)
-    assert r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).count() == 1
+    assert r.spark.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).count() == 1
 
 
 REPLACE_SNAPSHOT_WRITER = shared._replace_snapshot_rows
@@ -225,7 +217,7 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     assert result['results_persisted'] is True
 
 
-@pytest.mark.parametrize('table', ['METADATA_DATA_LINEAGE',
+@pytest.mark.parametrize('table', [
     'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY', 'METADATA_GUARDRAIL_RESULTS'])
 def test_legacy_file_identity_consolidates_atomically_with_history_preserved(catalogue_delta, monkeypatch, table):
     from pyspark.sql.types import StructType, StructField, StringType

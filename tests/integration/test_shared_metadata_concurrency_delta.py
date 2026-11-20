@@ -22,15 +22,12 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     r = runs_delta
     schemas = metadata_table_schema_registry()
     extra = ['METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY',
-             'METADATA_DATA_CATALOGUE', PROCESSING_STATE_TABLE, 'METADATA_DATA_LINEAGE']
+             'METADATA_DATA_CATALOGUE', PROCESSING_STATE_TABLE]
     for table in extra:
         r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + f'-lakehouse/Tables/{PROCESSING_STATE_SCHEMA}/' + table if table == PROCESSING_STATE_TABLE else r.paths['METADATA_PIPELINE_RUN'] + '-' + table
         r.spark.createDataFrame([], (processing_state_schema() if table == PROCESSING_STATE_TABLE else schemas[table])).write.format('delta').save(r.paths[table])
     import importlib
     writer = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
-    reader = importlib.import_module('fabricops_kit.io.read_lakehouse_table')
-    monkeypatch.setattr(reader, 'resolve_configured_lakehouse_table',
-        lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(writer, 'resolve_configured_lakehouse_table',
         lambda store, table, schema, **kw: (store, table, schema, r.paths[table]))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *a, **kw: r.spark)
@@ -45,12 +42,8 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         workspace = f'workspace-{index}'
         plan = replace(plan, workspace_id=workspace, runtime_context={**plan.runtime_context,
             'scope_workspace_id': workspace, 'user_id': f'engineer-{index}',
-            '_pipeline_bindings': {
-                **{key: {**binding, 'workspace_id': workspace}
-                   for key, binding in plan.runtime_context['_pipeline_bindings'].items()},
-                'orders': {**plan.runtime_context['_pipeline_bindings']['table0'],
-                           'workspace_id': workspace, 'table_name': 'orders'},
-            }})
+            '_pipeline_bindings': {key: {**binding, 'workspace_id': workspace}
+                for key, binding in plan.runtime_context['_pipeline_bindings'].items()}})
         plans.append(plan)
     ready = Barrier(parallelism)
     def execute(plan):
@@ -71,8 +64,6 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         record = {**audit, 'record_id': workspace, 'record_type': 'source_observation', 'status': 'observed',
                   'workspace_id': workspace, 'run_id': plan.plan_id, 'source_table_id': 'orders'}
         shared._merge_source_observation_records([record], context=plan.runtime_context)
-        shared.persist_lineage_participation(table_id='orders', pipeline_role='source',
-            activity_id=workspace, context=plan.runtime_context)
         guardrail = {'guardrail_result_id': workspace, 'guardrail_rule_id': 'rule', 'guardrail_version': 1,
             'table_id': 'orders', 'contract_id': 'contract', 'contract_version': 1,
             'execution_type': 'ungoverned', 'run_id': plan.plan_id, 'workspace_id': workspace,
@@ -88,6 +79,9 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     assert len(rows) == parallelism
     assert {row['workspace_id'] for row in rows} == {plan.workspace_id for plan in plans}
     assert all(row['status'] == 'succeeded' and len(row['operations']) == 2 for row in rows)
+    participants = shared.pipeline_participation(r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_RUN"]))
+    assert participants.count() == parallelism * 2
+    assert participants.select("run_id").distinct().count() == parallelism
     for table in extra:
         retained = r.spark.read.format('delta').load(r.paths[table])
         assert retained.count() == parallelism, table

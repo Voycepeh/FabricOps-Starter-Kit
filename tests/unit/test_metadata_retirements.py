@@ -13,6 +13,7 @@ import yaml
 from fabricops_kit.config.metadata_schemas import (
     CANONICAL_METADATA_TABLES,
     RETIRED_PREVIEW_METADATA_TABLES,
+    HISTORICAL_METADATA_TABLES,
     metadata_table_schema_registry,
 )
 from tests.helpers import framework_config
@@ -24,12 +25,15 @@ def test_retirement_inventory_matches_released_lifecycle():
     released = {item['name'] for manifest in inventories for item in manifest['metadata_tables']}
     retired = RETIRED_PREVIEW_METADATA_TABLES
     relocated = "METADATA_PROCESSING_STATE"
-    assert set(retired) | {relocated} == released - set(CANONICAL_METADATA_TABLES)
+    assert set(retired) | {relocated} | set(HISTORICAL_METADATA_TABLES) == released - set(CANONICAL_METADATA_TABLES)
     for name in ('METADATA_ENRICHMENT', 'METADATA_GUARDRAIL', 'METADATA_SOURCE_OBSERVATION'):
         assert retired[name]['retired_in'] == '0.3.0'
     for manifest in inventories:
         for item in manifest['metadata_tables']:
             name = item['name']
+            if name in HISTORICAL_METADATA_TABLES:
+                assert name not in CANONICAL_METADATA_TABLES
+                continue
             if item['status'] == 'live':
                 assert name in CANONICAL_METADATA_TABLES or name == relocated
                 assert name not in retired

@@ -102,7 +102,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
             assert "**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)" in page
         elif table_name in {
             "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
-            "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
+            "METADATA_DATA_ACCESS",
         }:
             assert ("**Composite foreign key (checked by FabricOps):** "
                     "(`workspace_id` + `table_id` + `asset_type`) "
@@ -229,8 +229,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 13
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
+    assert len(links) == 12
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
@@ -288,7 +288,7 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
     assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["table_id"]
-    for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"):
+    for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         assert payload[table]["catalogue_reference_fields"] == ["workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == ["operations[].table_id", "operations[].source_id"]
@@ -438,20 +438,20 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
     }
 
-    for name in ("DATA_CONTRACT", "DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
+    for name in ("DATA_CONTRACT", "DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
         assert "table_id" in {node.text for node in box.findall(f"{namespace}text")}
 
     expected_key = "workspace_id,table_id,asset_type"
     for name, role in (("DATA_CATALOGUE", "PK"), ("DATA_PROFILED", "FK"),
-                       ("DATA_PROFILED_FREQUENCY", "FK"), ("DATA_LINEAGE", "FK"),
+                       ("DATA_PROFILED_FREQUENCY", "FK"),
                        ("DATA_ACCESS", "FK")):
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
@@ -474,7 +474,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
-    for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"):
+    for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         edge = actual[("DATA_CATALOGUE", table)]
         assert edge.get("data-kind") == "physical"
         assert edge.get("data-cardinality") == "1-N"
@@ -495,7 +495,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     expected_rows = [
         ["DATA_CONTRACT", "DATA_CONTRACT_ACTIVATION", "DATA_AGREEMENT", "DATA_STEWARD", "PIPELINE_ACTIVATION"],
         ["DATA_CATALOGUE", None, "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
-        ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"],
+        ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"],
     ]
     for names in expected_rows:
         for column, name in enumerate(names):

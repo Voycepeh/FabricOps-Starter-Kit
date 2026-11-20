@@ -17,6 +17,7 @@ from .metadata_schemas import (
     encode_metadata_row,
     parse_metadata_json,
     RETIRED_PREVIEW_METADATA_TABLES,
+    HISTORICAL_METADATA_TABLES,
     RETIRED_METADATA_COLUMNS,
     UNIFIED_ASSET_TABLES,
     GOVERNANCE_METADATA_TABLES,
@@ -84,6 +85,23 @@ def _retired_preview_warnings(*, config, spark, context):
                     "these tables do not participate in current runtime authority. "
                     "Setup never deletes their contents or treats them as canonical metadata."
                 )
+    return warnings
+
+
+def _historical_table_warnings(*, config, spark, context):
+    """Report retained participation history without reading rows or changing it."""
+    warnings = []
+    for table, retirement in HISTORICAL_METADATA_TABLES.items():
+        try:
+            read_lakehouse_table(table, store="Metadata", schema=config.engineering_metadata_schema,
+                                 context={**context, "_spark_session": spark})
+        except Exception as exc:
+            if not _retired_table_is_missing(exc):
+                warnings.append(f"Unable to inspect historical {table}: {type(exc).__name__}. "
+                                "Presence is unknown; existing data is untouched.")
+        else:
+            warnings.append(f"{table} is retained historical metadata. {retirement['guidance']} "
+                            "Setup never creates, updates or deletes this table.")
     return warnings
 
 
@@ -603,7 +621,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the 13 canonical metadata tables.
+    """Create, validate and safely evolve the 12 canonical metadata tables.
 
     Parameters
     ----------
@@ -648,7 +666,7 @@ def setup_metadata_tables(
     Operational file source_id values are copied into the common table_id and
     validated before source_id is retired. Conflicting identities block migration.
     File profile columns gain deterministic Column IDs without changing retained
-    profile or lineage IDs. Stop pipelines for this schema migration; recovery
+    profile IDs. Stop pipelines for this schema migration; recovery
     restores the returned pre-upgrade Delta version together with the prior code.
     Unproven populated retirements fail with data preserved. Cleanup and supported
     JSON conversions commit atomically, with the pre-upgrade Delta version
@@ -673,7 +691,9 @@ def setup_metadata_tables(
 
     Governed admission remains blocked pending signed-in Fabric acceptance.
     Retirement presence diagnostics are advisory; unsupported tables are never
-    read as canonical authority or automatically deleted.
+    read as canonical authority or automatically deleted. METADATA_DATA_LINEAGE
+    is retained unchanged as historical activity metadata. Current participation
+    is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 
     Examples
     --------
@@ -694,6 +714,7 @@ def setup_metadata_tables(
     registry = metadata_table_schema_registry()
 
     warnings = _retired_preview_warnings(config=normalized, spark=spark, context=context)
+    warnings.extend(_historical_table_warnings(config=normalized, spark=spark, context=context))
 
     table_results: dict[str, dict[str, Any]] = {}
     created_tables: list[str] = []

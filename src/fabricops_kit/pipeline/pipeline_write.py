@@ -169,11 +169,11 @@ def _target_has_rows(
 
 
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
-    """Return unique canonical source identities explicitly owned by this target."""
+    """Return unique source participant identities associated with this target."""
     if not isinstance(values, list | tuple):
         raise ValueError(
-            "source_table_ids must identify the governed sources that feed this target. "
-            "FabricOps does not infer source ownership from activity-wide reads or Spark plans."
+            "source_table_ids must identify registered source participants for this target. "
+            "Use [] for a source-free publication; participation does not prove transformation dependencies."
         )
     source_ids: list[str] = []
     for value in values:
@@ -211,7 +211,8 @@ def pipeline_write(
     the governed target once; FabricOps resolves its canonical identity and
     configured store, validates Engineering processing parameters independently
     of Data Contracts, and selects the physical publication path. It commits
-    Lineage and Source Observation metadata only after publication succeeds.
+    publication receipts and Source Observation metadata only after publication succeeds.
+    Orchestration records participation in METADATA_PIPELINE_RUN.operations.
 
     Parameters
     ----------
@@ -237,11 +238,10 @@ def pipeline_write(
         ``effective_column`` and may specify ``tracked_columns``.
     source_table_ids : list[str] or tuple[str, ...], optional
         Required for every call despite its None default. Use [] only for a
-        source-free target. Canonical identities of the exact sources that feed this
-        target publication. Supply identities returned by ``pipeline_read``.
-        FabricOps requires this explicit association because activity-wide
-        reads and Spark transformation plans cannot reliably identify which
-        source subset produced a particular target DataFrame.
+        source-free target. Canonical source participant identities associated with
+        this publication. Orchestration supplies successful Reads registered
+        so far. This association does not prove which sources contributed to
+        the target DataFrame; no transformation dependency is inferred.
     repartition_by : int or str or list[str] or tuple[str, ...], optional
         Optional Spark repartitioning passed to simple physical writes.
     options : dict, optional
@@ -323,15 +323,15 @@ def pipeline_write(
     10. Persist the resolved target load strategy and parameters on the
         physical asset's ``METADATA_DATA_CATALOGUE`` row alongside its observed schema.
     11. Only after physical and Catalogue success, idempotently commit target
-        Lineage and accepted Source Observation/write-success metadata.
+        publication receipts and accepted Source Observation/write-success metadata.
     12. Return a small publication result with no hidden profiling state.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
-    context, or manually commit Lineage or Source Observation metadata. Callers
-    provide only the canonical identities of the sources that actually feed
-    this target, rather than internal read or preparation dictionaries. This
-    keeps multiple target writes in one activity exact and independent.
+    context, or manually commit Run participation or Source Observation metadata. Callers
+    provide canonical source participant identities associated with this target,
+    rather than internal read or preparation dictionaries. Publication receipts
+    and accepted checkpoints remain target-specific.
 
     Overwrite replaces the entire target and Append All appends every incoming row,
     including duplicates. Identical content in a new full-read execution publishes
@@ -714,6 +714,7 @@ def pipeline_write(
                 write_metrics.update(versions_inserted=0, versions_expired=0)
             else:
                 write_metrics["rows_inserted"] = 0
+        record_pipeline_publication(target_table_id, "published", receipt=batch.receipt, context=context)
         # Receipt counts become committed metrics only after physical confirmation.
         # Keyed merges cannot infer business changes from their input cardinality.
         if (store_kind == "warehouse" and strategy in {"overwrite", "append_all", "append_new_only"}
@@ -754,7 +755,7 @@ def pipeline_write(
 
             commit_pipeline_write_success(success_context)
             if verbose:
-                print("7. Success metadata → Lineage and accepted Source Observation state committed")
+                print("7. Success metadata → publication receipt and accepted Source Observation state committed")
                 print("Result → target published; checks and profiling remain explicit notebook steps.")
 
         except Exception as exc:

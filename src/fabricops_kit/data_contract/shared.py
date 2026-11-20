@@ -1090,7 +1090,6 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
     asset_type = "FILE" if table_id.startswith("file:") else "TABLE"
     workspace = workspace_id.casefold()
     profile_locations = {}
-    lineage_locations = {}
     runs_loaded = False
 
     def read(table_name, *predicates):
@@ -1112,7 +1111,7 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
         runs_loaded = True
         # Run fields are JSON on Delta. Filter the journal before decoding candidate rows.
         run_table = "METADATA_PIPELINE_RUN"
-        for record in read(run_table, f"instr(concat_ws(' ', operations, profiling), {_sql_literal(table_id)}) > 0"):
+        for record in read(run_table, f"instr(profiling, {_sql_literal(table_id)}) > 0"):
             events = record.get("profiling")
             if isinstance(events, str):
                 events = parse_metadata_json(events, field="METADATA_PIPELINE_RUN.profiling")
@@ -1122,16 +1121,6 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
                 if (event.get("table_id") == table_id and snapshot and destination
                         and event.get("status") == "passed" and event.get("results_persisted")):
                     profile_locations.setdefault(snapshot, set()).add(destination.casefold())
-            operations = record.get("operations")
-            if isinstance(operations, str):
-                operations = parse_metadata_json(operations, field="METADATA_PIPELINE_RUN.operations")
-            for operation in operations or []:
-                activity = record.get("_activity_id")
-                destination = (operation.get("destination") or {}).get("workspace_id")
-                if (operation.get("table_id") == table_id and activity and destination
-                        and operation.get("status") == "succeeded"):
-                    key = (activity, operation.get("pipeline_role"))
-                    lineage_locations.setdefault(key, set()).add(destination.casefold())
 
     def asset_rows(table_name, *predicates):
         rows = [
@@ -1147,15 +1136,36 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
             load_runs()
 
         def matches(row):
-            if table_name == "METADATA_DATA_PROFILED":
-                proven = profile_locations.get(row.get("profile_snapshot_id"))
-            else:
-                proven = lineage_locations.get((row.get("_activity_id"), row.get("pipeline_role")))
+            proven = profile_locations.get(row.get("profile_snapshot_id"))
             return proven == {workspace} if proven else str(row.get("workspace_id") or "").casefold() == workspace
 
         return [row for row in rows if matches(row)]
 
     return asset_rows
+
+
+def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id, physical_workspace_id=None):
+    """Load the latest asset attempt per pipeline/workspace/role, bounded in Spark."""
+    from pyspark.sql import functions as F
+    from pyspark.sql import Window
+    from fabricops_kit.pipeline.shared import pipeline_participation
+
+    context = {**(_metadata_io_context(config, routing_workspace_id) or {}), "_spark_session": spark_session}
+    runs = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
+    participants = pipeline_participation(runs).filter(F.col("table_id") == table_id)
+    if physical_workspace_id is not None:
+        participants = participants.filter(F.col("catalogue_workspace_id") == physical_workspace_id.lower())
+    latest = Window.partitionBy("execution_workspace_id", "pipeline_id", "pipeline_role").orderBy(
+        # Released naive operation timestamps are UTC, independently of Spark's session zone.
+        F.coalesce(*[F.from_json(F.to_json(F.struct(F.col(name).alias("at"))),
+            "at TIMESTAMP", {"timeZone": "UTC", "mode": "FAILFAST"})["at"]
+            for name in ("operation_completed_at", "operation_started_at")],
+            F.col("run_completed_at"), F.col("run_started_at")).desc(),
+        F.col("run_id").desc(),
+    )
+    return row_dicts(participants.withColumn("_participation_rank", F.row_number().over(latest))
+                    .filter(F.col("_participation_rank") == 1).drop("_participation_rank"))
 
 
 def get_asset_runtime_context(
@@ -1166,8 +1176,9 @@ def get_asset_runtime_context(
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
+    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
     table_rows = _asset_history_reader(
-        config, metadata_workspace_id or active_workspace_id, spark_session, table_identity, active_workspace_id,
+        config, routing_workspace_id, spark_session, table_identity, active_workspace_id,
     )
 
     profiled = table_rows("METADATA_DATA_PROFILED")
@@ -1302,19 +1313,22 @@ def get_asset_runtime_context(
         }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for row in table_rows("METADATA_DATA_LINEAGE"):
+    for row in get_asset_pipeline_participation(config=config, routing_workspace_id=routing_workspace_id,
+                                               spark_session=spark_session, table_id=table_identity,
+                                               physical_workspace_id=active_workspace_id):
         raw_role = str(row.get("pipeline_role") or "").strip().lower()
         relationship = "Writer" if raw_role == "target" else "Reader" if raw_role == "source" else ""
         if not relationship:
             continue
         pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
-        workspace_id = str(row.get("_workspace_id") or row.get("workspace_id") or "").strip()
-        key = (workspace_id, relationship, pipeline_name)
+        workspace_id = str(row.get("execution_workspace_id") or "").strip()
+        pipeline_id = str(row.get("pipeline_id") or row.get("_notebook_id") or "").strip()
+        key = (workspace_id, relationship, pipeline_id)
         previous = grouped.get(key)
-        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at")), str(row.get("run_id") or ""))
         previous_rank = (
             metadata_timestamp_sort_key(previous.get("last_seen")),
-            str(previous.get("_activity_id") or ""),
+            str(previous.get("run_id") or ""),
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
@@ -1322,12 +1336,16 @@ def get_asset_runtime_context(
                 "workspace_name": str(row.get("_workspace_name") or ""),
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
-                "last_seen": row.get("_committed_at"),
-                "_activity_id": str(row.get("_activity_id") or ""),
+                "pipeline_id": pipeline_id,
+                "run_id": row["run_id"],
+                "operation_status": row["operation_status"],
+                "run_status": row["run_status"],
+                "publication_status": row.get("publication_status"),
+                "last_seen": row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at"),
             }
 
-    lineage = [
-        {name: value for name, value in row.items() if name != "_activity_id"}
+    participation = [
+        dict(row)
         for row in sorted(
             grouped.values(),
             key=lambda row: (
@@ -1338,12 +1356,12 @@ def get_asset_runtime_context(
         )
     ]
     writers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Writer"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Writer"
     }
     readers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Reader"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Reader"
     }
     return {
         "latest_profile": latest_profile,
@@ -1351,7 +1369,7 @@ def get_asset_runtime_context(
         "profile_contexts": profile_contexts,
         "writer_count": len(writers),
         "reader_count": len(readers),
-        "lineage": lineage,
+        "participation": participation,
     }
 
 

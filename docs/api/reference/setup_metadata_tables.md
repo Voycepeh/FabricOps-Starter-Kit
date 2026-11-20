@@ -126,7 +126,7 @@ columns are preserved where the table's identity contract permits them.
 Operational file source_id values are copied into the common table_id and
 validated before source_id is retired. Conflicting identities block migration.
 File profile columns gain deterministic Column IDs without changing retained
-profile or lineage IDs. Stop pipelines for this schema migration; recovery
+profile IDs. Stop pipelines for this schema migration; recovery
 restores the returned pre-upgrade Delta version together with the prior code.
 Unproven populated retirements fail with data preserved. Cleanup and supported
 JSON conversions commit atomically, with the pre-upgrade Delta version
@@ -151,7 +151,9 @@ Physical nullability and field order are not rewritten.
 
 Governed admission remains blocked pending signed-in Fabric acceptance.
 Retirement presence diagnostics are advisory; unsupported tables are never
-read as canonical authority or automatically deleted.
+read as canonical authority or automatically deleted. METADATA_DATA_LINEAGE
+is retained unchanged as historical activity metadata. Current participation
+is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 
 </div>
 
@@ -163,9 +165,9 @@ read as canonical authority or automatically deleted.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:598`
+`fabricops_kit/config/setup_metadata_tables.py:616`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L598-L893">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L616-L914">View on GitHub</a>
 </div>
 
 
@@ -181,7 +183,7 @@ read as canonical authority or automatically deleted.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 55 |
+| Live-critical dependencies | 56 |
 
 ### Release history
 
@@ -215,6 +217,7 @@ read as canonical authority or automatically deleted.
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._historical_table_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._migrate_catalogue_rows</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._parse_catalogue_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>

@@ -114,7 +114,7 @@ def test_publication_coordination_is_removed():
     from pathlib import Path
     from fabricops_kit.activated_pipeline import shared
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
-    assert len(CANONICAL_METADATA_TABLES) == 13
+    assert len(CANONICAL_METADATA_TABLES) == 12
     assert not hasattr(shared, 'publication_claim')
     assert not hasattr(shared, 'release_pipeline_lease')
     assert 'publication_coordination' not in Path(shared.__file__).read_text()

@@ -65,7 +65,7 @@ def cleanup_delta(spark_session, monkeypatch, tmp_path):
             row[bad] = datetime(2021, 1, 1) if RETIRED_METADATA_COLUMNS[table][bad] else 'unique historical data'
         writer = spark_session.createDataFrame([] if empty else [row, row], StructType(fields)).write.format('delta')
         if layout == 'partition':
-            writer = writer.partitionBy('lineage_event_id')
+            writer = writer.partitionBy('metadata_id')
         if layout == 'mapping':
             writer = writer.option('delta.columnMapping.mode', 'name')
         writer.save(path)
@@ -137,7 +137,7 @@ def test_unique_retired_values_fail_before_mutation(cleanup_delta, table, bad):
 def test_unsupported_layout_fails_without_modifying_metadata(cleanup_delta, layout):
     """Complex physical layouts require a separately reviewed migration."""
     rt = cleanup_delta
-    table = 'METADATA_DATA_LINEAGE'
+    table = 'METADATA_DATA_CATALOGUE'
     state = rt.seed(table, layout=layout)
     if layout == 'constraint':
         rt.spark.sql(f"ALTER TABLE delta.`{state.path}` ADD CONSTRAINT keep_extension CHECK (consumer_extension IS NOT NULL)")

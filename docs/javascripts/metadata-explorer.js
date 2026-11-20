@@ -15,7 +15,6 @@
     ["DATA_CATALOGUE", "engineering", ["workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
-    ["DATA_LINEAGE", "engineering", ["lineage_id"], [], "metadata_data_lineage/"],
     ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
   ];
 
@@ -29,13 +28,13 @@
     ["PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION", "N-N", "Logical physical workspace/Table ID association"],
     ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
+    ["DATA_CATALOGUE", "PIPELINE_RUN", "N-N", "Asset participation via operations and physical workspace and asset identity"],
     ["DATA_CATALOGUE", "DATA_CONTRACT", "N-N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
     ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
     ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
     ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
   ];
@@ -234,6 +233,13 @@
       }
       if (rows.length) return rows;
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
+      if (assetTable === "PIPELINE_RUN") {
+        return [
+          "operations[].destination.workspace_id → DATA_CATALOGUE.workspace_id",
+          "operations[].table_id or source_id → DATA_CATALOGUE.table_id",
+          "operations[].source_type → DATA_CATALOGUE.asset_type (TABLE or FILE)",
+        ];
+      }
       if (assetTable) {
         const model = modelFor(assetTable);
         const physicalFields = model.catalogue_reference_fields || [];

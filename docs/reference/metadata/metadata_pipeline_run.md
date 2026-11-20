@@ -1,10 +1,13 @@
 # METADATA_PIPELINE_RUN
 
-Records actual pipeline execution outcomes and exact per-operation Contract versions.
+Records Run participation, execution outcomes and exact per-operation Contract versions.
 
 ## Writer functions
 
 * [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
+* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
+* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`setup_pipeline`](../../api/reference/setup_pipeline.md)
 
 ## Used in Workflow Template
 
@@ -28,6 +31,9 @@ via `promotion_id`
 `METADATA_DATA_CONTRACT` **(N → M)**
 via `operations`
 
+`METADATA_DATA_CATALOGUE` **(N → M)**
+via `operations[].destination.workspace_id` + `operations[].table_id` + `operations[].source_id`
+
 **Nested references (application-enforced):**
 
 | Local field | Referenced field | Meaning |
@@ -35,7 +41,7 @@ via `operations`
 | `operations[].contract_id` | `METADATA_DATA_CONTRACT.contract_id` | Composite exact per-operation Contract identity with version and payload SHA. |
 | `operations[].contract_version` | `METADATA_DATA_CONTRACT.contract_version` | Exact frozen version used by the operation. |
 
-**Implementation details:** Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.
+**Implementation details:** Fresh runs use schema version 3 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using the physical destination workspace, common table_id and asset_type. File participants reuse their existing Source ID as the common Catalogue asset key; released Run descriptors are unchanged. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.
 
 ## Column summary
 

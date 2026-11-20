@@ -51,7 +51,6 @@ retry handling. An uncertain target commit must be reconciled, not replayed.
 | `METADATA_DATA_PROFILED` | Retry deterministic snapshot/row-ID replacement MERGE and uncommitted-snapshot cleanup. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Retry snapshot-scoped replacement and deletion; never retry the entire profiling workflow. |
 | Processing State | Retry one atomic record-ID MERGE; checkpoint/baseline progress still requires its publication receipt and physical target marker. |
-| `METADATA_DATA_LINEAGE` | Retry workspace/lineage-ID MERGE. |
 | `METADATA_GUARDRAIL_RESULTS` | Retry canonical Metadata append of aggregate results. |
 | `METADATA_DATA_ACCESS` | Retry canonical Metadata append of scanner observations. |
 | `METADATA_DATA_STEWARD` | Retry canonical Metadata append from authoring widgets, including configured Steward table aliases. |
@@ -178,3 +177,92 @@ nested execution facts, content-hash rules, Contract references or provenance ar
 retired by this change. Registry, activation and Processing State identity layouts
 retain their existing fail-closed checks. Retired Preview tables remain advisory
 and are never deleted by this column cleanup.
+
+
+## Run participation migration
+
+`METADATA_PIPELINE_RUN.operations` is the authoritative source/target participation
+record. No second participant JSON column, participation table or mandatory SQL
+view is created. Arbitrary pandas/PySpark transformations do not affect the Reads
+and Writes recorded by orchestration. Direct foundational I/O bypasses Run tracking.
+`pipeline_read()` and `pipeline_write()` are internal helpers, not public notebook
+entrypoints; use `orchestrate_read()` and `orchestrate_write()` within `setup_pipeline()`.
+
+### Cutover and historical records
+
+1. Stop affected executions and deploy the same package to every Engineering writer
+   and Governance reader of the shared Metadata Lakehouse.
+2. Run `setup_metadata_tables()`. It validates the current canonical tables and
+   reports any old `METADATA_DATA_LINEAGE` table. It never creates, alters, cleans
+   up columns in, or deletes that historical table. Repeating setup is safe.
+3. Inspect historical coverage using the read-only reconciliation below. Matching
+   requires activity ID, execution workspace, physical notebook ID, Table ID and
+   role. Multiple Runs in one activity are ambiguous. Unmatched/ambiguous records
+   remain archived; never assign an activity ID as a Run ID or rewrite signed Runs.
+4. Point consumers to flattened Run operations. The Data Contract inspector now
+   shows pipeline participation, latest Run ID, operation status and publication
+   status. Its Reader/Writer counts count distinct stable pipeline identities,
+   including attempted operations; they are not counts of confirmed publications.
+5. Verify a three-Read/two-Write Run, a Read-only Run, and publication followed by
+   failure in Fabric before resuming normal schedules.
+
+```python
+from fabricops_kit.io import read_lakehouse_table
+from fabricops_kit.pipeline.shared import (
+    pipeline_participation, reconcile_pipeline_participation,
+)
+
+# Supply the configured Engineering metadata schema; do not assume its name.
+runs = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata", schema=engineering_schema)
+legacy = read_lakehouse_table("METADATA_DATA_LINEAGE", store="Metadata", schema=engineering_schema)
+report = reconcile_pipeline_participation(legacy, runs)
+display(report)  # matched / ambiguous / unmatched, candidate count and nullable run_id
+```
+
+The reconciliation helpers are internal migration/query utilities, not additional
+public workflow APIs. Save the report in the deployment's chosen audit location
+if required; reconciliation itself performs no writes. Existing legacy rows and
+released Run JSON bytes/hashes are preserved. No historical Run is fabricated.
+
+### Catalogue joins and status interpretation
+
+```python
+from pyspark.sql import functions as F
+
+participants = pipeline_participation(runs).alias("p")
+catalogue = read_lakehouse_table(
+    "METADATA_DATA_CATALOGUE", store="Metadata", schema=engineering_schema,
+).alias("c")
+usage = participants.join(
+    catalogue,
+    (F.col("p.table_id") == F.col("c.table_id"))
+    & (F.col("p.catalogue_workspace_id") == F.col("c.workspace_id"))
+    & (F.col("p.asset_type") == F.col("c.asset_type")),
+    "left",
+)
+```
+
+The projection uses the physical workspace from the operation’s destination to
+join the Catalogue. The full destination also retains the item and schema.
+A left join preserves unregistered participants and attempts. Files reuse their
+existing `source_id` as the projected `table_id`. Released Run JSON retains the
+original descriptor fields.
+
+The projection excludes `not_started` declarations and includes successful,
+incomplete and failed attempts, even when the whole Run fails. Read-only runs and
+unused Reads remain visible. Source/target associations do not prove dependency
+edges. Dry Run participation is available in its in-memory result, not persisted.
+
+New table Writes retain known publication status in the existing optional operation
+JSON member. `published` means the physical publication was confirmed; `committed`
+means publication and its success metadata were confirmed. A later failure does
+not remove participation. No-op statuses are not publications. Missing publication
+status in old Runs means unknown; never infer publication solely from Run success.
+
+### Rollback boundary
+
+Keep the historical table and the pre-deployment package until Fabric acceptance
+passes. Do not drop/rebuild metadata or restore old Run snapshots. Rolling the
+package back does not backfill its old lineage table with Runs produced after
+cutover; retain those Runs and reconcile any reporting gap explicitly. Old consumers
+must migrate before historical-table deletion, which is a separate action.

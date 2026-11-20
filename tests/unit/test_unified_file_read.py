@@ -35,11 +35,10 @@ def files(runtime, monkeypatch):  # noqa: F811
         readers[fmt] = reader
     monkeypatch.setattr(runtime.read, 'schedule_file_profiling', lambda *a, **kw:
         {'status': 'completed', 'row_count': 2, 'results_persisted': False})
-    catalogue, lineage = Mock(), Mock()
+    catalogue = Mock()
     monkeypatch.setattr(shared, 'persist_file_catalogue', catalogue)
-    monkeypatch.setattr(shared, 'persist_lineage_participation', lineage)
     return SimpleNamespace(runtime=runtime, readers=readers, configured=configured,
-                           catalogue=catalogue, lineage=lineage)
+                           catalogue=catalogue)
 
 
 @pytest.mark.parametrize('fmt', ['csv', 'json', 'parquet', 'excel'])

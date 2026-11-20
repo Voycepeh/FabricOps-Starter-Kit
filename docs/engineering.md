@@ -72,7 +72,7 @@ Fabric notebooks can of course read multiple DataFrames directly. The missing co
 
 Lakehouse files use the same `orchestrate_read()` lifecycle. For example, `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True})` returns the familiar `dataframe`, a distinct file `source_id`, location, format, stage results, Guardrail outcomes and profiling metrics. CSV, JSON, Parquet and Excel dispatch to the existing foundational readers, which remain usable independently of Setup Pipeline. File selectors are confined beneath the configured Files root, preserve cross-workspace routing and reject Warehouse stores. Single files, folders and wildcard patterns such as `incoming/*.csv` are supported; brace expansion such as `{incoming/,../}*.csv` is rejected before reading.
 
-Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_DATA_LINEAGE`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
+Files support Full Read only. Their stable selector identity does not imply immutable content, exactly-once ingestion, file checkpoints or deduplication. File Read and subsequent target Write operations retain typed Source ID participation in `METADATA_PIPELINE_RUN.operations`; successful file operations also persist FILE participation in `METADATA_PIPELINE_RUN.operations`, without claiming transformation dependencies. Source Drift remains a physical-table capability. File profiles use the pipeline settings and explicit row limit, persist common Table/Column ID snapshots after successful operations and do not consume durable table profiling schedules. Dry Run stays in memory. Bounded profile counts do not claim total file rows read.
 
 For registered table pipelines, the same [`orchestrate_read()`](api/reference/orchestrate_read.md) call shape works across configured Lakehouse and Warehouse stores. FabricOps resolves the store type internally:
 
@@ -346,7 +346,7 @@ Engineering can select an exact frozen contract in Dry Run and exercise the real
 | Publication | Uses the explicitly configured Engineering Write strategy and parameters; any applicable activated Contract Guardrails still govern the prepared data. |
 | Profiling | Follows `setup_pipeline()` settings, not a frozen Data Contract schedule: Standard is enabled by default; Grain discovery and Frequency are opt-in. |
 
-Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [Processing State](maintainer/processing-state.md) progress.
+Dry Run returns stage outcomes, prepared DataFrames, profiles and Guardrail diagnostics in the session but commits no target rows, [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md) snapshots, [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) or [Processing State](maintainer/processing-state.md) progress.
 
 Ungoverned can publish without contract-dependent checks, but it cannot write a Table ID or physical destination already protected by an activation. Governed mode resolves activated contracts, an independently approved submission and the deployed notebook identity; it currently fails closed pending signed-in Fabric acceptance.
 
@@ -393,7 +393,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 - physical table and file identity, latest observed schema and processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
-- registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
+- registered source/target pipeline participation in [`METADATA_PIPELINE_RUN.operations`](reference/metadata/metadata_pipeline_run.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
 - publication receipts, accepted checkpoints and Source Drift baselines in [Processing State](maintainer/processing-state.md);
 - the authoritative complete, failed or incomplete outcome in [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md).
@@ -402,9 +402,9 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
     Persistent evidence is committed only at the applicable execution and finalization boundaries. Multiple target writes are independent publications, not one cross-target atomic transaction. Whole-table profiling, Frequency distributions and full Source Observation add compute and should be scheduled deliberately.
 
-    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, Lineage, and Access records using `workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Lineage captures source and target participation.
+    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, and Access records using `workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Run operations record source and target participation with the physical destination workspace.
 
-    Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile and Lineage lookups. Existing frozen Contracts and historical observations keep their saved payloads.
+    Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile lookups. Existing frozen Contracts and historical observations keep their saved payloads.
 
 </div>
 
@@ -429,11 +429,10 @@ that selector identity. Format and reader options do not change it.
 | Metadata table | File behavior |
 | --- | --- |
 | `METADATA_DATA_CATALOGUE` | One `FILE` row per physical selector with workspace, item, path, format, active flag and observation timestamps. The existing file identity is stored in `table_id` and the latest observed fields are stored in `columns_json`. |
-| `METADATA_DATA_LINEAGE` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
 | `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file. Each profiling observation records per-column statistics. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Ranked file distributions linked to the profile snapshot; independent frequency work has no statistical `profile_id`. |
 | `METADATA_GUARDRAIL_RESULTS` | Schema, Data Quality, Grain and Freshness writers retain common Table IDs and explicit asset_type and exact selected Contract and rule versions. Failed checks remain outcomes, not successful lineage. No Contract means no invented checks. |
-| `METADATA_PIPELINE_RUN` | Existing typed file operations and source associations; profiling JSON also records file identity and committed snapshots. Run ID identifies the attempt; `_activity_id` correlates the Fabric activity used by Lineage. |
+| `METADATA_PIPELINE_RUN` | Existing typed file operations and source associations; profiling JSON also records file identity and committed snapshots. Run ID identifies the attempt, and `_activity_id` correlates it with Fabric activity. The operation records the physical asset workspace. |
 | `METADATA_DATA_CONTRACT`, `METADATA_DATA_CONTRACT_ACTIVATION` | Existing file source selectors and authored/activated Contract versions; execution does not manufacture Contracts or Governance decisions. |
 | `METADATA_PIPELINE_ACTIVATION`, `METADATA_PIPELINE_REGISTRY` | Existing reviewed file Read configuration. Governed file targets remain unsupported and fail closed. |
 | Processing State | Table incremental checkpoints, Source Drift baselines and publication receipts retain their existing semantics; files have no equivalent incremental/SCD implementation. |
@@ -451,10 +450,9 @@ Dry Run and standalone foundational file IO do not persist these records.
 Repeated merges use deterministic participation and snapshot IDs. Finalization
 does not replay file IO or insert duplicate participants.
 
-Table publication keeps its existing lineage lifecycle. A table Read followed by
-a file Write also registers the table source. Multiple sources are participants
-in the same activity: this does not prove which DataFrame transformations connect
-each source to each target.
+A table Read followed by a file Write records both assets in the same Run.
+The operation records show participation and retain the physical destination.
+Exact DataFrame transformations are defined by the notebook code.
 
 ### Upgrade existing metadata
 
@@ -470,7 +468,6 @@ and retained Run/Contract JSON remain intact. Repeated setup is safe.
 | Table | Common identity and schema changes |
 | --- | --- |
 | Catalogue | One row per physical `workspace_id`, `table_id` and `asset_type`. Successful full-schema observations update `columns_json` even when profiling is disabled. |
-| Lineage | Common `table_id`, `asset_type`, `asset_name`; table and file participation share the existing activity lifecycle. |
 | Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
 | Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |
 | Pipeline Run | Released file operation JSON retains `source_id`. New profiling entries use common `table_id` and `asset_type`; historical JSON is unchanged. |
@@ -504,6 +501,6 @@ finalize_pipeline(pipeline)
 The second example records a TABLE source and FILE target. File profiles describe
 the supplied Write DataFrame, not a post-publication scan of an appended dataset.
 The Data Contract editor reads persisted file profiles and frequency values by
-the shared Table/Column IDs, and reads file usage from the same Lineage table.
+the shared Table/Column IDs. It reads file participation from Run operations.
 File profiling eligibility remains per execution because selectors can change
 contents without changing identity. Bounded profiles never claim full coverage.

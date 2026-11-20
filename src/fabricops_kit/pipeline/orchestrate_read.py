@@ -35,8 +35,8 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     identity value in table_id with asset_type=FILE. Foundational readers remain independent.
     Persistent reads register their physical asset and observed schema in
     METADATA_DATA_CATALOGUE independently of profiling. Query projections
-    leave the registered table schema intact. Successful file Reads register
-    METADATA_DATA_LINEAGE under the existing Fabric Activity ID. File profiles
+    leave the registered table schema intact. Run operations record participation
+    and its physical asset workspace. File profiles
     and frequency results use that common Table ID and stable Column IDs in
     METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
     in memory. Profiling uses the pipeline row limit and records selection scope.
@@ -44,6 +44,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     immutable-file guarantee is provided.
     Spark, execution authority and reporting come from setup_pipeline. The result
     retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+    record their own participation in METADATA_PIPELINE_RUN.operations and
     register pipeline-level participation for subsequent Writes; this is not
     exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
     FabricOps resolves source and target Table IDs through configured workspace routing.

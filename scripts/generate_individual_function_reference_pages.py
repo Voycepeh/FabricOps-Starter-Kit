@@ -223,7 +223,7 @@ PHYSICAL_ASSET_WORKSPACE_ID = "ID of the Fabric workspace that contains the phys
 WORKSPACE_ID_DESCRIPTIONS = {
     "METADATA_DATA_CATALOGUE": PHYSICAL_ASSET_WORKSPACE_ID,
     **dict.fromkeys(
-        ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS"),
+        ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS"),
         PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference. Historical rows may carry the earlier workspace scope.",
     ),
     "METADATA_DATA_CONTRACT_ACTIVATION": PHYSICAL_ASSET_WORKSPACE_ID + " The activation applies the selected frozen Contract to the asset in this workspace.",
@@ -312,7 +312,6 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_CONTRACT": ["widget_data_contract"],
     "METADATA_DATA_CATALOGUE": ["profile_table", "widget_data_contract"],
     "METADATA_DATA_PROFILED": ["profile_table"],
-    "METADATA_DATA_LINEAGE": ["pipeline_read"],
     "METADATA_DATA_STEWARD": ["widget_data_steward"],
     "METADATA_GUARDRAIL_RESULTS": [
         "check_schema", "check_freshness", "orchestrate_read", "orchestrate_write", "finalize_pipeline", "check_dq",
