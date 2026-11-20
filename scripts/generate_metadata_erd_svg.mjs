@@ -19,7 +19,7 @@ function renderMetadataSvg(layout, models) {
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by physical workspace and asset identity"],
+    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","logical","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by physical workspace and asset identity"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]

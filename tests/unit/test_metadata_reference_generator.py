@@ -474,6 +474,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
+    assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "logical"
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         edge = actual[("DATA_CATALOGUE", table)]
         assert edge.get("data-kind") == "physical"
