@@ -506,7 +506,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 raise ValueError(f"{table_name}.{name}: populated retired column is not provably redundant; existing data preserved.")
     def replacement_schema(schema):
         retained = [
-            StructField(renames[f.name], f.dataType, f.nullable, f.metadata) if f.name in renames
+            StructField(renames[f.name], f.dataType, f.nullable or renames[f.name] == "legacy_workspace_id", f.metadata) if f.name in renames
             else StructField(f.name, expected[f.name].dataType, f.nullable, f.metadata) if f.name in logical_fields else f
             for f in schema.fields if f.name not in retired or f.name in renames
         ]
@@ -557,7 +557,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             operation = delta.DeltaOperations.Write(*write_args)
         committed_version = int(txn.commit(seq, operation))
         committed = spark.read.format("delta").option("versionAsOf", committed_version).load(path)
-        if committed.schema != replacement.schema:
+        if committed.schema != target_schema:
             raise RuntimeError(f"{table_name} upgrade committed but schema verification failed; inspect Delta history (pre-upgrade version {version}, committed version {committed_version}).")
 
         def serialized(frame):

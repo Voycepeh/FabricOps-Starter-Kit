@@ -1023,7 +1023,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, file_author
     for authorization in manifest["file_authorizations"]:
         source = authorization["source"]
         activation = exact_record(read_activations(context=routed, spark_session=spark_session),
-            workspace_id=source["workspace_id"], source_id=source["source_id"])
+            asset_workspace_id=source["workspace_id"], source_id=source["source_id"])
         package["contracts"][source["source_id"]] = resolve_activation_contract(activation, context=routed, spark_session=spark_session)
     package["submission_sha256"] = manifest_digest(package)
     package = validate_submission(canonical_pipeline_json(package))
@@ -1195,7 +1195,7 @@ def review_submission_policy(package, *, context, spark_session=None):
         if (configured.workspace_id.lower(), configured.item_id.lower(), relative_path) != (source["workspace_id"], source["item_id"], source["relative_path"]):
             raise ValueError("File physical authorization changed after submission.")
         activation = exact_record(read_activations(context=routed, spark_session=spark_session),
-            workspace_id=source["workspace_id"], source_id=source["source_id"])
+            asset_workspace_id=source["workspace_id"], source_id=source["source_id"])
         if any(activation.get(key) != authorization[key] for key in ("contract_id", "contract_version", "payload_sha256")):
             raise ValueError("File Contract selection changed after submission.")
         if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != normalized_destination(source):

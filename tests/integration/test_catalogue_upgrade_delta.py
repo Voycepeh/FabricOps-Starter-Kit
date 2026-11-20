@@ -166,6 +166,51 @@ def test_setup_migrates_existing_physical_workspace_columns(catalogue_delta, mon
     assert all(DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 1 for path in paths.values())
 
 
+@pytest.mark.parametrize('table_name', ['METADATA_DATA_ACCESS', 'METADATA_GUARDRAIL_RESULTS'])
+def test_workspace_upgrade_relaxes_only_legacy_workspace_nullability(catalogue_delta, monkeypatch, table_name):
+    """Migrate NOT NULL workspace columns, retain audit constraints and accept new rows."""
+    from delta.tables import DeltaTable
+    from fabricops_kit.io import shared as io
+    from pyspark.sql.types import StructField, StructType
+
+    rt = catalogue_delta
+    expected = metadata_table_schema_registry()[table_name]
+    path = rt.path + '-' + table_name
+    fields = [StructField('workspace_id' if field.name == 'asset_workspace_id' else field.name,
+        field.dataType, field.name not in {'asset_workspace_id', '_committed_at'}, field.metadata)
+        for field in expected if field.name not in {'legacy_workspace_id', 'execution_workspace_id'}]
+    old_schema = StructType(fields)
+    columns = ', '.join(f'`{field.name}` {field.dataType.simpleString()}'
+        + ('' if field.nullable else ' NOT NULL') for field in fields)
+    rt.spark.sql(f'CREATE TABLE delta.`{path}` ({columns}) USING DELTA')
+    original = {'workspace_id': 'dev', 'table_id': 'orders', 'asset_type': 'TABLE',
+        '_committed_at': datetime(2020, 2, 3, 4, 5, 6, 123456)}
+    if table_name == 'METADATA_GUARDRAIL_RESULTS':
+        original['result_payload_json'] = '{}'
+    rt.spark.createDataFrame([original], old_schema).write.format('delta').mode('append').save(path)
+    monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table_name, 'engineering', path))
+
+    def upgrade():
+        return setup._upgrade_metadata_table(spark=rt.spark, table=rt.spark.read.format('delta').load(path),
+            table_name=table_name, expected_schema=expected, metadata_schema='engineering', context={})
+
+    frame, result = upgrade()
+    assert result['pre_upgrade_version'] == 1
+    assert frame.schema['legacy_workspace_id'].nullable
+    assert not frame.schema['_committed_at'].nullable
+    migrated = frame.first().asDict()
+    physical_access = table_name == 'METADATA_DATA_ACCESS'
+    assert migrated['asset_workspace_id'] == ('dev' if physical_access else None)
+    assert migrated['legacy_workspace_id'] == (None if physical_access else 'dev')
+    assert migrated['_committed_at'] == original['_committed_at']
+    # Match the current writer: it emits no legacy workspace value.
+    current = {**migrated, 'asset_workspace_id': 'dev', 'legacy_workspace_id': None}
+    rt.spark.createDataFrame([current], frame.schema).write.format('delta').mode('append').save(path)
+    version = DeltaTable.forPath(rt.spark, path).history(1).first()['version']
+    assert upgrade()[1] is None
+    assert DeltaTable.forPath(rt.spark, path).history(1).first()['version'] == version
+
+
 def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     """Migrate TABLE and FILE assets with exact IDs, scoped schemas and intact audit."""
     rt = catalogue_delta
