@@ -58,6 +58,8 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     table. Governed requires activated contracts, ownership and a pinned revision.
     Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
     available. The result includes publication metrics and Guardrail diagnostics.
+    Every attempted Write is recorded in METADATA_PIPELINE_RUN.operations;
+    known table publication status survives later operation or notebook failure.
     A successful Write does not imply successful completion of the notebook.
 
     Dry Run profiles the prepared DataFrame in memory without publishing the target.

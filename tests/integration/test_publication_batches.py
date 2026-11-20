@@ -81,7 +81,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
         {'load_strategy': state['mode'], 'key_columns': ['id'], **({'effective_column': 'modified', 'tracked_columns': ['value']} if state['mode'] == 'scd2' else {})}))
     monkeypatch.setattr(writer, '_writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})
     monkeypatch.setattr(writer, '_persist_target_processing', lambda **kw: None)
-    monkeypatch.setattr(shared, 'persist_lineage_participation', lambda **kw: None)
+    monkeypatch.setattr(shared, 'record_pipeline_publication', lambda **kw: None)
     monkeypatch.setattr(shared, '_merge_source_observation_records', merge_metadata)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: None)
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, name, schema, **kw: (store, name, schema, str(tmp_path / name)))

@@ -19,7 +19,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
   - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
   - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
-  - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
+  - `METADATA_PIPELINE_RUN.operations` stores source/target participation for each Run; flatten operations for Catalogue joins. `METADATA_DATA_LINEAGE` is retained historical activity metadata and is never written or deleted by current workflows.
   - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
   - `METADATA_DATA_CONTRACT_ACTIVATION` stores retained Governance-owned exact frozen Contract selections and scoped Agreement associations per physical workspace/Table ID.
   - `METADATA_PIPELINE_ACTIVATION` stores immutable accepted submission packages and conditional Governance decision history. Governance owns the whole Metadata Lakehouse; Engineering has scoped writes only.

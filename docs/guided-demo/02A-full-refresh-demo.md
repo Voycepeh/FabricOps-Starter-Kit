@@ -216,7 +216,7 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the governed sources and targets, plus applicable target processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for the three Full Read sources and both published targets when profiling completes. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Source and target participation recorded for this notebook pipeline. |
+| `METADATA_PIPELINE_RUN.operations` | Source and target participation recorded for this notebook pipeline. |
 | `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
 

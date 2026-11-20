@@ -191,13 +191,13 @@ _CONTRACT_STYLE = """<style>
     border-radius:6px; padding:12px;
 }
 .fabricops-data-contract .fabricops-dq-parameter-box { gap:8px; }
-.fabricops-data-contract .fabricops-lineage-table {
+.fabricops-data-contract .fabricops-participation-table {
     width:100%; min-width:340px; table-layout:fixed; border-collapse:collapse; font-size:11px;
 }
-.fabricops-data-contract .fabricops-lineage-table th {
+.fabricops-data-contract .fabricops-participation-table th {
     white-space:nowrap; overflow-wrap:normal; overflow:hidden; text-overflow:ellipsis;
 }
-.fabricops-data-contract .fabricops-lineage-table td {
+.fabricops-data-contract .fabricops-participation-table td {
     white-space:nowrap; overflow-wrap:normal; overflow:hidden; text-overflow:ellipsis;
 }
 .fabricops-data-contract .fabricops-dq-editor-heading {
@@ -2531,10 +2531,10 @@ def widget_data_contract(
             reader_count = int(runtime_context.get("reader_count") or 0)
             writer_label = "write" if writer_count == 1 else "writes"
             reader_label = "read" if reader_count == 1 else "reads"
-            lineage_rows = list(runtime_context.get("lineage") or [])
-            if lineage_rows:
-                lineage_cells = []
-                for item in lineage_rows:
+            participation_rows = list(runtime_context.get("participation") or [])
+            if participation_rows:
+                participation_cells = []
+                for item in participation_rows:
                     workspace_id = str(item.get("workspace_id") or "")
                     workspace_value = str(item.get("workspace_name") or "").strip()
                     if not workspace_value:
@@ -2554,31 +2554,35 @@ def widget_data_contract(
                     )
                     last_seen_value = context_timestamp(item.get("last_seen"))
                     values = (
-                        workspace_value, pipeline_value, role_value, last_seen_value,
+                        workspace_value, pipeline_value, role_value,
+                        str(item.get("run_id") or "Unknown"),
+                        str(item.get("operation_status") or "unknown"),
+                        str(item.get("publication_status") or "unknown"), last_seen_value,
                     )
-                    lineage_cells.append(
+                    participation_cells.append(
                         "<tr>" + "".join(
                             f"<td style='padding:5px 8px;' title='{html.escape(value, quote=True)}'>"
                             f"{html.escape(value)}</td>"
                             for value in values
                         ) + "</tr>"
                     )
-                rows_html = "".join(lineage_cells)
+                rows_html = "".join(participation_cells)
                 detail_html = (
                     "<details style='margin-top:5px;'>"
-                    "<summary style='cursor:pointer;color:var(--form-accent);font-size:12px;'>View lineage</summary>"
+                    "<summary style='cursor:pointer;color:var(--form-accent);font-size:12px;'>View pipeline participation</summary>"
                     "<div style='overflow-x:auto;margin-top:6px;'>"
-                    "<table class='fabricops-lineage-table'>"
-                    "<colgroup><col style='width:31%'><col style='width:25%'>"
-                    "<col style='width:12%'><col style='width:32%'></colgroup>"
+                    "<table class='fabricops-participation-table'>"
                     "<thead><tr><th style='text-align:left;padding:5px 8px;'>Workspace</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Pipeline</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Role</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Run ID</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Operation status</th>"
+                    "<th style='text-align:left;padding:5px 8px;'>Publication status</th>"
                     "<th style='text-align:left;padding:5px 8px;'>Last seen</th></tr></thead>"
                     f"<tbody>{rows_html}</tbody></table></div></details>"
                 )
             else:
-                detail_html = "<div style='color:#667085;font-size:12px;margin-top:3px;'>No lineage recorded</div>"
+                detail_html = "<div style='color:#667085;font-size:12px;margin-top:3px;'>No participation recorded</div>"
             return (
                 profile_html
                 + "<div style='margin-top:14px;'>"
@@ -2896,7 +2900,7 @@ def widget_data_contract(
 
         runtime_summary_html = (
             "<div style='color:#667085;font-size:12px;margin-top:14px;'>"
-            "Expand to read saved profile, lineage and pipeline usage metadata.</div>"
+            "Expand to read saved profile, participation and pipeline usage metadata.</div>"
         )
 
         def render_table_summary(_change: dict[str, Any] | None = None) -> None:
@@ -2949,7 +2953,7 @@ def widget_data_contract(
         for freshness_control in table_rules["freshness"]["parameters"]:
             freshness_control.observe(render_table_summary, names="value")
 
-        @busy_action("Reading profile, lineage and pipeline usage metadata…")
+        @busy_action("Reading profile, participation and pipeline usage metadata…")
         def ensure_runtime_context() -> None:
             nonlocal runtime_context, runtime_summary_html
             if runtime_context:

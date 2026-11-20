@@ -359,7 +359,7 @@ def widget_runtime(monkeypatch):
         },
         "writer_count": 1,
         "reader_count": 2,
-        "lineage": [
+        "participation": [
             {
                 "workspace_id": "DEV", "relationship": "Writer",
                 "pipeline_name": "02_pipeline", "last_seen": "2026-09-26T03:00:00",
@@ -976,14 +976,15 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
     assert "1 write · 2 reads" in table_summary
-    assert "View lineage" in table_summary
-    assert "class='fabricops-lineage-table'" in table_summary
-    assert "<colgroup><col style='width:31%'><col style='width:25%'>" in table_summary
-    assert "<col style='width:12%'><col style='width:32%'></colgroup>" in table_summary
+    assert "View pipeline participation" in table_summary
+    assert "class='fabricops-participation-table'" in table_summary
     assert "title='04_reporting'" in table_summary
     assert ">Workspace</th>" in table_summary
     assert ">Pipeline</th>" in table_summary
     assert ">Role</th>" in table_summary
+    assert ">Run ID</th>" in table_summary
+    assert ">Operation status</th>" in table_summary
+    assert ">Publication status</th>" in table_summary
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
@@ -994,7 +995,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert controls["guardrail_disclosure"].selected_index is None
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
-    assert ".fabricops-lineage-table th" in page_style
+    assert ".fabricops-participation-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
     assert table_summary.index("Grain") < table_summary.index("Classification")
     assert table_summary.index("Classification") < table_summary.index("Row Key")
@@ -4079,12 +4080,12 @@ def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtim
     ("unparseable", "unparseable"),
 ])
 def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, value, expected):
-    """Profile provenance and lineage use the same configured audit zone."""
+    """Profile provenance and participation use the same configured audit zone."""
     widget_runtime["config"].audit_timezone = "Asia/Singapore"
     module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
     monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
         "latest_profile": {"committed_at": value},
-        "lineage": [{"last_seen": value}],
+        "participation": [{"last_seen": value}],
     })
     controls = widget_runtime["open"]()["_controls"]
     controls["table_context"].selected_index = 0
@@ -4093,7 +4094,7 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
     assert f"title='{expected}'>{expected}</td>" in summary
 
 
-def test_open_loads_profile_and_lineage_once_for_expanded_context(widget_runtime, monkeypatch):
+def test_open_loads_profile_and_participation_once_for_expanded_context(widget_runtime, monkeypatch):
     """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
     original = module.contracts.get_table_runtime_context

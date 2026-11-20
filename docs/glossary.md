@@ -198,7 +198,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="lineage">
 <summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
-<p>FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.</p>
+<p>Data lineage describes source-to-target dependencies, optionally at column level. FabricOps currently records Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 

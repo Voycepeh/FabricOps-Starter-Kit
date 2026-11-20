@@ -228,7 +228,7 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
     | Deployed pipeline versions and notebook identity | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
     | Table identity and observed processing context (table sources) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
     | Profiling trends | [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
-    | Pipeline participation and outcomes | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
+    | Pipeline participation and outcomes | [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
     | Guardrail status and continuation | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
     | Accepted checkpoints and Source Drift baselines | [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) |
 

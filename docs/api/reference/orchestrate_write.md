@@ -164,6 +164,8 @@ Ungoverned writes without contract checks but cannot target an already governed
 table. Governed requires activated contracts, ownership and a pinned revision.
 Advanced repartitioning, Sensitive Data mapping and DQ diagnostics remain
 available. The result includes publication metrics and Guardrail diagnostics.
+Every attempted Write is recorded in METADATA_PIPELINE_RUN.operations;
+known table publication status survives later operation or notebook failure.
 A successful Write does not imply successful completion of the notebook.
 
 Dry Run profiles the prepared DataFrame in memory without publishing the target.
@@ -192,7 +194,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:30`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L346">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L30-L348">View on GitHub</a>
 </div>
 
 
@@ -208,7 +210,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 279 |
+| Live-critical dependencies | 277 |
 
 ### Release history
 
@@ -450,11 +452,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
-<li><code>fabricops_kit.pipeline.shared.lineage_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
-<li><code>fabricops_kit.pipeline.shared.persist_lineage_participation</code></li>
 <li><code>fabricops_kit.pipeline.shared.persist_pipeline_run</code></li>
 <li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_guardrail_types</code></li>

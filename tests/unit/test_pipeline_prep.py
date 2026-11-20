@@ -430,7 +430,7 @@ def test_pipeline_write_resolves_identity_dispatches_and_commits_after_success(
     assert "4. Audit → runtime audit fields applied" in output
     assert f"5. Physical publication → write_{store_type}_table" in output
     assert "6. Catalogue → load strategy and Scheduled Refresh persisted" in output
-    assert "7. Success metadata → Lineage and accepted Source Observation state committed" in output
+    assert "7. Success metadata → publication receipt and accepted Source Observation state committed" in output
 
 
 def test_pipeline_write_does_not_run_source_drift(monkeypatch):

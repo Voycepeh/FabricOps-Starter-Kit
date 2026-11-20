@@ -323,7 +323,6 @@ _TARGET_TECHNICAL_COLUMNS = {
 }
 
 
-_LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 _PROCESSING_STATE_TABLE = "METADATA_PROCESSING_STATE"
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
@@ -562,79 +561,6 @@ def get_current_freshness_evidence(
             f"No current freshness evidence exists for {table_id!r}; call orchestrate_read() first."
         )
     return _CURRENT_FRESHNESS_EVIDENCE[key]
-
-
-def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
-    """Return the deterministic identity for pipeline participation."""
-    values = {
-        "activity_id": str(activity_id or "").strip(),
-        "table_id": str(table_id or "").strip(),
-        "pipeline_role": str(pipeline_role or "").strip().lower(),
-    }
-    if not values["activity_id"] or not values["table_id"]:
-        raise ValueError("activity_id and table_id must be non-empty strings.")
-    if values["pipeline_role"] not in {"source", "target"}:
-        raise ValueError("pipeline_role must be source or target.")
-    return hashlib.sha256(
-        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
-
-
-def persist_lineage_participation(
-    *,
-    table_id: str,
-    pipeline_role: str,
-    activity_id: str | None = None,
-    context: dict[str, Any] | None = None,
-) -> str:
-    """Upsert one canonical source or target participant for an activity."""
-    if not persistence_permitted(context):
-        raise RuntimeError("Dry Run cannot commit Lineage.")
-    config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
-    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=resolved_context)
-    effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
-    audit["_activity_id"] = effective_activity_id
-    identifier = lineage_id(
-        activity_id=effective_activity_id,
-        table_id=table_id,
-        pipeline_role=pipeline_role,
-    )
-    record = coerce_metadata_row_types(
-        _LINEAGE_TABLE,
-        {
-            "lineage_id": identifier,
-            "table_id": str(table_id).strip(),
-            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=resolved_context).get("table_name"),
-            "workspace_id": active_workspace_id,
-            "pipeline_role": str(pipeline_role).strip().lower(),
-            **audit,
-        },
-    )
-    from ..config.metadata_schemas import metadata_table_schema_registry
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
-    spark = get_spark_session(context=resolved_context)
-    frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        _LINEAGE_TABLE,
-        metadata_table_physical_schema(config, _LINEAGE_TABLE),
-        context=resolved_context,
-    )
-    (
-        retry_delta_metadata(lambda: DeltaTable.forPath(spark, path)
-        .alias("target")
-        .merge(
-            frame.alias("source"),
-            "target.workspace_id = source.workspace_id AND target.lineage_id = source.lineage_id",
-        )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .execute())
-    )
-    return identifier
 
 
 def resolve_physical_table_identity(
@@ -905,7 +831,6 @@ def build_profile_dataframe(df, *, exclude_columns=None):
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
@@ -2365,7 +2290,7 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
 
 
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Commit target Lineage and acknowledge the publication's original source members."""
+    """Acknowledge the publication's original source members; Run owns participation."""
     if not isinstance(success_context, Mapping):
         raise ValueError("success_context must be returned by write_pipeline_prep().")
     target_table_id = str(success_context.get("target_table_id") or "").strip()
@@ -2380,19 +2305,6 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     audit["_activity_id"] = activity_id
     snapshot = success_context["observation_snapshot"]
     records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="committed")
-    for source_table_id in source_table_ids:
-        persist_lineage_participation(
-            table_id=source_table_id,
-            pipeline_role="source",
-            activity_id=activity_id,
-            context=context,
-        )
-    persist_lineage_participation(
-        table_id=target_table_id,
-        pipeline_role="target",
-        activity_id=activity_id,
-        context=context,
-    )
     _merge_source_observation_records(records, config=config, context=context)
     record_pipeline_publication(target_table_id, "committed", receipt=success_context.get("publication"), context=context)
     for source_table_id in source_table_ids:
@@ -6159,6 +6071,66 @@ def validate_pipeline_run(row):
     return row
 
 
+def pipeline_participation(runs):
+    """Project persisted Run operations into queryable participant rows in Spark.
+
+    Declared but unstarted operations are excluded. Failed attempts remain visible;
+    neither overall Run success nor source associations imply data dependencies.
+    Destination workspace identifies the physical participant, independently of
+    the execution workspace. Files retain Source IDs without fabricated Table IDs.
+    """
+    from pyspark.sql import functions as F
+
+    decoded = decode_metadata_dataframe("METADATA_PIPELINE_RUN", runs)
+    operations = decoded.select("*", F.explode("operations").alias("operation"))
+    return operations.filter(F.col("operation.status") != "not_started").select(
+        "run_id", "pipeline_id", F.col("workspace_id").alias("execution_workspace_id"),
+        F.col("status").alias("run_status"), "execution_mode",
+        "_activity_id", "_notebook_id", "_notebook_name", "_workspace_name",
+        F.col("operation.operation_key").alias("operation_key"),
+        F.col("operation.table_id").alias("table_id"),
+        F.coalesce(F.col("operation.source_type"), F.lit("table")).alias("source_type"),
+        F.col("operation.source_id").alias("source_id"),
+        F.col("operation.pipeline_role").alias("pipeline_role"),
+        F.col("operation.status").alias("operation_status"),
+        F.col("operation.publication_status").alias("publication_status"),
+        F.col("operation.started_at").alias("operation_started_at"),
+        F.col("operation.completed_at").alias("operation_completed_at"),
+        F.col("operation.destination").alias("destination"),
+        F.col("operation.destination.workspace_id").alias("participant_workspace_id"),
+    )
+
+
+def reconcile_pipeline_participation(legacy, runs):
+    """Classify archived activity participation without modifying either input.
+
+    A match requires the activity, execution workspace, physical notebook, Table
+    ID and role. More than one candidate Run is ambiguous; no Run ID is invented.
+    This is a migration report, never a runtime fallback or a dependency graph.
+    """
+    from pyspark.sql import functions as F
+
+    candidates = pipeline_participation(runs).filter(F.col("table_id").isNotNull()).alias("run")
+    historical = legacy.alias("legacy")
+    condition = (
+        (F.col("legacy._activity_id") == F.col("run._activity_id"))
+        & (F.col("legacy.workspace_id") == F.col("run.execution_workspace_id"))
+        & (F.col("legacy._notebook_id") == F.col("run._notebook_id"))
+        & (F.length(F.trim(F.col("legacy._activity_id"))) > 0)
+        & (F.length(F.trim(F.col("legacy._notebook_id"))) > 0)
+        & (F.col("legacy.table_id") == F.col("run.table_id"))
+        & (F.col("legacy.pipeline_role") == F.col("run.pipeline_role"))
+    )
+    matches = historical.join(candidates, condition, "left").groupBy(
+        F.col("legacy.workspace_id").alias("workspace_id"),
+        F.col("legacy.lineage_id").alias("lineage_id"),
+    ).agg(F.countDistinct("run.run_id").alias("candidate_run_count"), F.min("run.run_id").alias("candidate_run_id"))
+    return legacy.join(matches, ["workspace_id", "lineage_id"], "left").withColumn(
+        "match_status", F.when(F.col("candidate_run_count") == 1, "matched")
+        .when(F.col("candidate_run_count") > 1, "ambiguous").otherwise("unmatched")
+    ).withColumn("run_id", F.when(F.col("candidate_run_count") == 1, F.col("candidate_run_id"))).drop("candidate_run_id")
+
+
 def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
     """Capture actual table/contract participation and governed settings."""
     identities, contracts = json.loads(plan.participants_json), json.loads(plan.contracts_json)
@@ -6174,7 +6146,9 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "contract_id": contract["contract_id"] if contract else None,
                 "contract_version": contract["contract_version"] if contract else None,
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
-                **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path", "publication_status")}
+                **({"publication_status": actual.get("publication_status") or plan.evidence.get("publication_outcomes", {}).get(table_id, {}).get("status")}
+                   if role == "target" and (actual.get("publication_status") or table_id in plan.evidence.get("publication_outcomes", {})) else {}),
+                **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path")}
                    if role == "target" and identity.get("source_type") == "file" else {}),
                 "destination": plan.runtime_context["_pipeline_bindings"][table_id],
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
@@ -6429,9 +6403,9 @@ class PipelineOperation:
                 if self.role == "target" and getattr(exc, "published", False):
                     write_metrics = getattr(exc, "write_metrics", {}) or {}
                     self.capture_metrics(write_metrics)
+                    self.record["publication_status"] = "published"
                     if self.arguments.get("relative_path") is not None:
                         self.record["output_path"] = getattr(exc, "resolved_path", None) or self.record.get("output_path")
-                        self.record["publication_status"] = "published"
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))

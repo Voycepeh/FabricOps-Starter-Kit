@@ -369,7 +369,6 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo_order = (
         "METADATA_GUARDRAIL_RESULTS",
         "METADATA_PROCESSING_STATE",
-        "METADATA_DATA_LINEAGE",
         "METADATA_DATA_ACCESS",
         "METADATA_PIPELINE_RUN",
         "METADATA_PIPELINE_REGISTRY",

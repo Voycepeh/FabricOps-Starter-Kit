@@ -266,7 +266,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert not before["state"]["rows"] and not before["state"]["deployments"]
     assert before["ready"] is False
     assert "signed-in Fabric" in before["reason"]
-    assert not state.metadata["METADATA_DATA_LINEAGE"]
+    assert "METADATA_DATA_LINEAGE" not in state.metadata
     coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],

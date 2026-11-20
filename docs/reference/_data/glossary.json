@@ -724,7 +724,7 @@
     ],
     "category": "FabricOps concepts",
     "short_definition": "Metadata that records how governed data moves from source to target through a pipeline.",
-    "long_definition": "FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.",
+    "long_definition": "Data lineage describes source-to-target dependencies, optionally at column level. FabricOps currently records Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.",
     "preferred_usage": "Use lineage for recorded source-to-target relationships.",
     "avoid_usage": "dependency when recorded data movement is meant",
     "tooltip_labels": [

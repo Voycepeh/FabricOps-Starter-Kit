@@ -27,7 +27,6 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
-        "METADATA_DATA_LINEAGE": "engineering",
         "METADATA_DATA_ACCESS": "engineering",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_PIPELINE_RUN": "engineering",
@@ -170,19 +169,11 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
     assert {"metadata_column_key", "profiled_at"}.isdisjoint(fields)
 
 
-def test_stage2_lineage_schema_uses_pipeline_language():
-    """Lineage describes pipeline participation and uses the standard commit timestamp."""
-    fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
-    assert fields == [
-        "lineage_id",
-        "table_id",
-        "table_name",
-        "workspace_id",
-        "pipeline_role",
-        *[name for name, _kind, _nullable in audit_schema_fields()],
-    ]
-    assert {"lineage_event_id", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
-    assert "_committed_at" in fields
+def test_participation_is_nested_in_run_operations():
+    """Participation has a Run ID through its existing operation records."""
+    registry = metadata_table_schema_registry()
+    assert "METADATA_DATA_LINEAGE" not in registry
+    assert {"run_id", "operations"} <= set(registry["METADATA_PIPELINE_RUN"].fieldNames())
 
 
 def test_stage2_source_observation_schema_is_guardrail_independent():

@@ -38,6 +38,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     immutable-file guarantee is provided.
     Spark, execution authority and reporting come from setup_pipeline. The result
     retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+    record their own participation in METADATA_PIPELINE_RUN.operations and
     register pipeline-level participation for subsequent Writes; this is not
     exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
     FabricOps resolves source and target Table IDs through configured workspace routing.

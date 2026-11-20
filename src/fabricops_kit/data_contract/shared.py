@@ -1116,6 +1116,17 @@ def get_contract_review_state(
     }
 
 
+def get_table_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id):
+    """Load table participation across execution workspaces, filtering in Spark."""
+    from pyspark.sql import functions as F
+    from fabricops_kit.pipeline.shared import pipeline_participation
+
+    context = {**(_metadata_io_context(config, routing_workspace_id) or {}), "_spark_session": spark_session}
+    runs = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
+    return row_dicts(pipeline_participation(runs).filter(F.col("table_id") == table_id))
+
+
 def get_table_runtime_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     metadata_workspace_id: str | None = None,
@@ -1144,11 +1155,10 @@ def get_table_runtime_context(
         return [
             row for row in _scoped_rows(
                 frame, f"table_id = {_sql_literal(table_identity)}",
-                "" if table_name == "METADATA_DATA_LINEAGE"
-                else f"workspace_id = {_sql_literal(active_workspace_id)}",
+                f"workspace_id = {_sql_literal(active_workspace_id)}",
             )
             if str(row.get("table_id") or "") == table_identity
-            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
+            and str(row.get("workspace_id") or "") == active_workspace_id
         ]
 
     profiled = table_rows("METADATA_DATA_PROFILED")
@@ -1307,19 +1317,21 @@ def get_table_runtime_context(
         }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for row in table_rows("METADATA_DATA_LINEAGE"):
+    for row in get_table_pipeline_participation(config=config, routing_workspace_id=routing_workspace_id,
+                                               spark_session=spark_session, table_id=table_identity):
         raw_role = str(row.get("pipeline_role") or "").strip().lower()
         relationship = "Writer" if raw_role == "target" else "Reader" if raw_role == "source" else ""
         if not relationship:
             continue
         pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
-        workspace_id = str(row.get("workspace_id") or "").strip()
-        key = (workspace_id, relationship, pipeline_name)
+        workspace_id = str(row.get("execution_workspace_id") or "").strip()
+        pipeline_id = str(row.get("pipeline_id") or row.get("_notebook_id") or "").strip()
+        key = (workspace_id, relationship, pipeline_id)
         previous = grouped.get(key)
-        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("operation_completed_at") or row.get("operation_started_at")), str(row.get("run_id") or ""))
         previous_rank = (
             metadata_timestamp_sort_key(previous.get("last_seen")),
-            str(previous.get("_activity_id") or ""),
+            str(previous.get("run_id") or ""),
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
@@ -1327,12 +1339,16 @@ def get_table_runtime_context(
                 "workspace_name": str(row.get("_workspace_name") or ""),
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
-                "last_seen": row.get("_committed_at"),
-                "_activity_id": str(row.get("_activity_id") or ""),
+                "pipeline_id": pipeline_id,
+                "run_id": row["run_id"],
+                "operation_status": row["operation_status"],
+                "run_status": row["run_status"],
+                "publication_status": row.get("publication_status"),
+                "last_seen": row.get("operation_completed_at") or row.get("operation_started_at"),
             }
 
-    lineage = [
-        {name: value for name, value in row.items() if name != "_activity_id"}
+    participation = [
+        dict(row)
         for row in sorted(
             grouped.values(),
             key=lambda row: (
@@ -1343,12 +1359,12 @@ def get_table_runtime_context(
         )
     ]
     writers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Writer"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Writer"
     }
     readers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Reader"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Reader"
     }
     return {
         "latest_profile": latest_profile,
@@ -1356,7 +1372,7 @@ def get_table_runtime_context(
         "profile_contexts": profile_contexts,
         "writer_count": len(writers),
         "reader_count": len(readers),
-        "lineage": lineage,
+        "participation": participation,
     }
 
 

@@ -882,7 +882,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
     assert result["status"] == "ready"
     expected_evolved = {
         "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
-        "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
+        "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS",
         "METADATA_GUARDRAIL_RESULTS",
     }
     expected_evolved.add("METADATA_DATA_CATALOGUE")
@@ -1374,29 +1374,12 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
             )
 
 
-def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
-    """Verify the breaking lineage schema has one authoritative execution context."""
-    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
+def test_lineage_table_is_retained_history_not_canonical():
+    """Run operations replace standalone participation without deleting history."""
+    from fabricops_kit.config.metadata_schemas import HISTORICAL_METADATA_TABLES, metadata_table_schema_registry
 
-    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
-    audit_names = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
-    assert schema.fieldNames() == [
-        "lineage_id",
-        "table_id",
-        "table_name",
-        "workspace_id",
-        "pipeline_role",
-        *audit_names,
-    ]
-    assert all(not field.nullable for field in schema.fields if field.name in audit_names)
-    assert {
-        "activity_id",
-        "notebook_id",
-        "notebook_name",
-        "workspace_name",
-        "committed_by",
-        "metadata_lakehouse_name",
-    }.isdisjoint(schema.fieldNames())
+    assert "METADATA_DATA_LINEAGE" not in metadata_table_schema_registry()
+    assert "METADATA_DATA_LINEAGE" in HISTORICAL_METADATA_TABLES
 
 
 def test_metadata_audit_schema_nullability_contract():

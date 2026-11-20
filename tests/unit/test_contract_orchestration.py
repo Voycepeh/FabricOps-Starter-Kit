@@ -97,7 +97,7 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(write_module, "_target_has_rows", lambda **kw: False)
     # Every mutation reachable from Read, validation, recovery and Write is observed.
     spies = {}
-    for owner, names in ((shared, ["write_lakehouse_table", "persist_lineage_participation"]),
+    for owner, names in ((shared, ["write_lakehouse_table"]),
                          (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "_upsert_catalogue_identities", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
                          (write_module, ["_persist_target_processing"]),
                          (importlib.import_module("fabricops_kit.io"), ["write_lakehouse_table", "write_warehouse_table"]),
@@ -272,7 +272,7 @@ def test_initial_publication_publishes_and_commits_lineage(runtime, spark_sessio
     result = write(plan, source, spark_session)
     assert result["published"] and result["execution_mode"] == mode
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
-    assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
+    assert next(iter(plan.evidence["publication_outcomes"].values()))["status"] == "committed"
     assert spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_count == 1
     capture = spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_args.kwargs["scheduled_refresh"]
     assert capture == {"status": "not_configured" if schedule_available else "unavailable", "schedules": []}

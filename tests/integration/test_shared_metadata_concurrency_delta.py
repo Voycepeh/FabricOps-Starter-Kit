@@ -21,7 +21,7 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     r = runs_delta
     schemas = metadata_table_schema_registry()
     extra = ['METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY',
-             'METADATA_DATA_CATALOGUE', 'METADATA_PROCESSING_STATE', 'METADATA_DATA_LINEAGE']
+             'METADATA_DATA_CATALOGUE', 'METADATA_PROCESSING_STATE']
     for table in extra:
         r.paths[table] = r.paths['METADATA_PIPELINE_RUN'] + '-' + table
         r.spark.createDataFrame([], schemas[table]).write.format('delta').save(r.paths[table])
@@ -64,8 +64,6 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         record = {**audit, 'record_id': workspace, 'record_type': 'source_observation', 'status': 'observed',
                   'workspace_id': workspace, 'run_id': plan.plan_id, 'source_table_id': 'orders'}
         shared._merge_source_observation_records([record], config={}, context=plan.runtime_context)
-        shared.persist_lineage_participation(table_id='orders', pipeline_role='source',
-            activity_id=workspace, context=plan.runtime_context)
         guardrail = {'guardrail_result_id': workspace, 'guardrail_rule_id': 'rule', 'guardrail_version': 1,
             'table_id': 'orders', 'contract_id': 'contract', 'contract_version': 1,
             'execution_type': 'ungoverned', 'run_id': plan.plan_id, 'workspace_id': workspace,
@@ -81,6 +79,9 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
     assert len(rows) == parallelism
     assert {row['workspace_id'] for row in rows} == {plan.workspace_id for plan in plans}
     assert all(row['status'] == 'succeeded' and len(row['operations']) == 2 for row in rows)
+    participants = shared.pipeline_participation(r.spark.read.format("delta").load(r.paths["METADATA_PIPELINE_RUN"]))
+    assert participants.count() == parallelism * 2
+    assert participants.select("run_id").distinct().count() == parallelism
     for table in extra:
         retained = r.spark.read.format('delta').load(r.paths[table])
         assert retained.count() == parallelism, table
