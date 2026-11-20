@@ -226,25 +226,38 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
         assert rt.spark.read.format("delta").load(path).collect() == original[name]
 
 
-def test_legacy_catalogue_rejects_conflicting_retained_run_binding(catalogue_delta, monkeypatch):
-    """A changed configuration cannot silently redirect a legacy asset with retained provenance."""
+@pytest.mark.parametrize("conflicting", [False, True])
+def test_legacy_catalogue_validates_retained_run_binding(catalogue_delta, monkeypatch, conflicting):
+    """Resolve a legacy row without an item ID only from a matching successful operation."""
     rt = catalogue_delta
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
     row = rt.row(table_id=table_id, metadata_level="table", layer="Silver", store_type="lakehouse",
-                 schema_name="sales")
+                 schema_name="sales", workspace_id="prod")
     rt.seed([row], legacy=True)
     version = rt.version()
     read = setup.read_lakehouse_table
+    store = rt.config.path_config.paths["prod"]["Silver"]
     operations = json.dumps([{"table_id": table_id, "status": "succeeded",
-                             "destination": {"workspace_id": "original-physical", "item_id": "original-item"}}])
+        "destination": {
+            "workspace_id": "original-physical" if conflicting else store.workspace_id,
+            "item_id": "original-item" if conflicting else store.item_id,
+        }}])
+
     def read_with_run(name, **kwargs):
         if name == "METADATA_PIPELINE_RUN":
-            return rt.spark.createDataFrame([("dev", operations)], "workspace_id string, operations string")
+            return rt.spark.createDataFrame([("prod", operations)], "workspace_id string, operations string")
         return read(name, **kwargs)
+
     monkeypatch.setattr(setup, "read_lakehouse_table", read_with_run)
-    with pytest.raises(ValueError, match="retained Pipeline Run destinations"):
+    if conflicting:
+        with pytest.raises(ValueError, match="retained Pipeline Run destinations"):
+            rt.upgrade()
+        assert rt.version() == version
+    else:
         rt.upgrade()
-    assert rt.version() == version
+        migrated = rt.read().first()
+        assert (migrated["workspace_id"], migrated["item_id"]) == (store.workspace_id, store.item_id)
+        assert rt.version() == version + 1
 
 
 def test_fresh_setup_uses_json_and_repeated_setup_is_noop(catalogue_delta):

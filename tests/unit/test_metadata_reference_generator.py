@@ -260,6 +260,9 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
     assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["table_id"]
+    for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_LINEAGE", "DATA_ACCESS"):
+        assert payload[table]["catalogue_reference_fields"] == ["workspace_id", "table_id", "asset_type"]
+    assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == ["operations[].table_id", "operations[].source_id"]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [
@@ -279,7 +282,8 @@ def test_metadata_explorer_compact_details_and_hover_summary() -> None:
     assert "mouseenter" in js and "focus" in js and "showTooltip" in js
     assert "model.grain" in js and "model.purpose" in js
     assert "keyJoinRows" in js and "fk.referenced_field" in js
-    assert "modelFor(assetTable).asset_identity_fields" in js
+    assert "model.catalogue_reference_fields" in js
+    assert "model.asset_identity_fields" in js
     assert "metadata-explorer-related-joins" in js
     assert "metadata-explorer-detail-quick" not in js
     assert "metadata-explorer-tooltip[hidden]" in css
