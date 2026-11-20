@@ -645,9 +645,9 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
 def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, monkeypatch, path, kind):
     """Files use configured item names and known workspace names without changing their identity."""
     source = module.contracts.file_source_identity(
-        workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
+        asset_workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
     )
-    dataset = {**source, "asset_workspace_id": source["workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    dataset = {**source, "asset_workspace_id": source["asset_workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
     monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
     original_review = module.contracts.get_contract_review_state
 
@@ -3342,7 +3342,7 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
         loaded = original_review(**kwargs)
         loaded["payload"] = {
             "source": module.contracts.file_source_identity(
-                workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
+                asset_workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
             ),
             "table": {"table_id": "orders"},
         }
@@ -4746,8 +4746,8 @@ def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeyp
     from unittest.mock import Mock
     from fabricops_kit.config.shared import build_column_id
     source = module.contracts.file_source_identity(
-        workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
-    dataset = {**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+        asset_workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
+    dataset = {**source, 'asset_workspace_id': source['asset_workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
     monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
     original = module.contracts.get_contract_review_state
     def file_review(**kwargs):

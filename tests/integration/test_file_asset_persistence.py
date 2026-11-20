@@ -20,7 +20,7 @@ from tests.unit.test_unified_file_read import files  # noqa: F401
 @pytest.fixture
 def profile_runtime(spark_session, monkeypatch):
     config = {}
-    identity = {**file_source_identity(workspace_id="physical", item_id="lakehouse", relative_path="input/a.csv", file_format="csv"), "store": "Bronze"}
+    identity = {**file_source_identity(asset_workspace_id="physical", item_id="lakehouse", relative_path="input/a.csv", file_format="csv"), "store": "Bronze"}
     audit = {field.name: datetime(2026, 1, 1) if field.name == "_committed_at" else "audit-" + field.name
              for field in metadata_table_schema_registry()["METADATA_DATA_PROFILED"] if field.name.startswith("_")}
     context = {"config": config, "scope_workspace_id": "execution", **{k[1:]: v for k, v in audit.items()}}
@@ -129,7 +129,7 @@ def test_real_delta_file_catalogue_merges_are_idempotent(catalogue_delta, monkey
         (store, table, schema, paths[table]))
     reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
     monkeypatch.setattr(reader, "resolve_configured_lakehouse_table", shared.resolve_configured_lakehouse_table)
-    identity = {**file_source_identity(workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
+    identity = {**file_source_identity(asset_workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
     for _attempt in range(3):
         shared.persist_file_catalogue(identity, context={})
     catalogue = r.spark.read.format('delta').load(paths[tables[0]])
@@ -284,7 +284,7 @@ def test_file_columns_keep_ids_across_schema_changes_and_reappearance(catalogue_
     from fabricops_kit.config.shared import build_column_id
     r = catalogue_delta
     r.spark.createDataFrame([], r.schema).write.format('delta').save(r.path)
-    identity = {**file_source_identity(workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
+    identity = {**file_source_identity(asset_workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
     audit = {f.name: datetime(2026, 1, 1) if f.name == '_committed_at' else 'audit-' + f.name
              for f in r.schema if f.name.startswith('_')}
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: ({}, 'execution', {'config': {}, **(context or {})}))

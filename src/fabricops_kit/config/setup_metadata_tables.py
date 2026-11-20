@@ -254,13 +254,13 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
                     if isinstance(operations, str):
                         operations = parse_metadata_json(operations, field="METADATA_PIPELINE_RUN.operations")
                     for operation in operations or []:
-                        operation = operation.asDict(recursive=True) if hasattr(operation, "asDict") else operation
+                        operation = migrate_asset_references(operation.asDict(recursive=True) if hasattr(operation, "asDict") else operation)
                         key = (run["workspace_id"], operation.get("table_id"))
-                        if (key not in table_keys or operation.get("source_type") == "file"
+                        if (key not in table_keys or operation.get("asset_type") == "FILE"
                                 or operation.get("status") != "succeeded"):
                             continue
-                        binding = operation.get("destination") or {}
-                        workspace, item = binding.get("workspace_id"), binding.get("item_id")
+                        binding = migrate_asset_references(operation.get("destination") or {})
+                        workspace, item = operation.get("asset_workspace_id"), binding.get("item_id")
                         if workspace and item:
                             known_locations.setdefault(key, set()).add((workspace.lower(), item.lower()))
     resolved = set()
@@ -300,11 +300,11 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
             parent["item_id"] = parent.get("item_id") or store.item_id
         else:
             try:
-                file = file_source_identity(workspace_id=workspace, item_id=parent.get("item_id"),
+                file = file_source_identity(asset_workspace_id=workspace, item_id=parent.get("item_id"),
                     relative_path=parent.get("relative_path"), file_format=parent.get("file_format"))
                 if file["table_id"] != identity:
                     raise ValueError("Stored file location disagrees with its identity.")
-                workspace = file["workspace_id"]
+                workspace = file["asset_workspace_id"]
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"Cannot verify the physical location of legacy Catalogue FILE {key!r}.") from exc
         new_key = (workspace.lower(), identity, kind)
@@ -412,9 +412,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             if physical_profile or physical_access:
                 values["asset_workspace_id"] = values.pop("legacy_workspace_id")
         if table_name == "METADATA_DATA_CONTRACT_ACTIVATION" and has_legacy_workspace:
-            destination = parse_metadata_json(values["destination_json"], field="destination_json")
+            destination = migrate_asset_references(parse_metadata_json(values["destination_json"], field="destination_json"))
             workspace = str(values.get("asset_workspace_id") or "").casefold()
-            if not workspace or not isinstance(destination, dict) or workspace != str(destination.get("workspace_id") or "").casefold():
+            if not workspace or not isinstance(destination, dict) or workspace != str(destination.get("asset_workspace_id") or "").casefold():
                 raise ValueError("Contract Activation workspace conflicts with its retained physical destination.")
         for name, kind in logical_fields.items():
             value = values.get(name)

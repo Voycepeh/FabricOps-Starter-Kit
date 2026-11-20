@@ -10,7 +10,7 @@ from fabricops_kit.data_contract.shared import file_source_identity, validate_co
 
 def source(path="incoming/*.csv", **changes):
     """Return a physical file selector suitable for Governance review."""
-    return file_source_identity(workspace_id="WORKSPACE", item_id="ITEM", relative_path=path, file_format="csv", **changes)
+    return file_source_identity(asset_workspace_id="WORKSPACE", item_id="ITEM", relative_path=path, file_format="csv", **changes)
 
 
 def test_identity_is_stable_case_sensitive_and_independent_of_reader_options():
@@ -46,7 +46,7 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
     """Shared contract semantics use file source identity with no Catalogue table row."""
     descriptor = source()
-    row = {"asset_type": "FILE", "table_id": descriptor["table_id"], "asset_workspace_id": descriptor["workspace_id"],
+    row = {"asset_type": "FILE", "table_id": descriptor["table_id"], "asset_workspace_id": descriptor["asset_workspace_id"],
            "table_name": descriptor["relative_path"], "columns_json": json.dumps([
                {"column_id": "id", "column_name": "id", "data_type": "long"}])}
     monkeypatch.setattr(contracts, "read_lakehouse_table",
@@ -57,10 +57,10 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
     draft = contracts.create_contract_draft(file_source=descriptor,
         config={}, active_workspace_id="authoring-workspace", spark_session=spark)
-    assert draft["evidence_workspace_id"] == descriptor["workspace_id"]
+    assert draft["evidence_workspace_id"] == descriptor["asset_workspace_id"]
     assert draft["asset_type"] == "FILE" and draft["table_id"] == descriptor["table_id"]
     payload = json.loads(draft["contract_payload_json"])
-    assert payload["table"]["evidence_workspace_id"] == descriptor["workspace_id"]
+    assert payload["table"]["evidence_workspace_id"] == descriptor["asset_workspace_id"]
     assert payload["table"]["table_id"] == descriptor["table_id"] and "processing" not in payload["table"]
     payload["guardrails"] = [{"guardrail_rule_id": "grain", "guardrail_type": "grain", "rule_type": "uniqueness",
         "rule_parameters": {"columns": ["id"]}, "action": "Block", "is_active": True},

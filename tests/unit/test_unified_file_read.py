@@ -55,7 +55,7 @@ def test_formats_participate_in_read_write_and_finalize(files, fmt):
     assert call.kwargs['context']['_spark_session'] is files.runtime.spark
     assert call.kwargs['store'] == 'Bronze'
     assert all(call.kwargs[key] == value for key, value in options.items())
-    assert result['source_location']['workspace_id'] == 'physical-workspace'
+    assert result['source_location']['asset_workspace_id'] == 'physical-workspace'
     write = orchestrate_write(result['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
     assert write['source_assets'] == [{'table_id': result['table_id'], 'asset_type': 'FILE'}]
     assert write['source_association'] == 'pipeline_participation'
@@ -65,6 +65,8 @@ def test_formats_participate_in_read_write_and_finalize(files, fmt):
     source = next(op for op in run['operations'] if op['pipeline_role'] == 'source')
     target = next(op for op in run['operations'] if op['pipeline_role'] == 'target')
     assert source['table_id'] == result['table_id'] and source['asset_type'] == 'FILE'
+    assert source['asset_workspace_id'] == 'physical-workspace'
+    assert 'asset_workspace_id' not in source['destination']
     assert target['source_assets'] == [{'table_id': result['table_id'], 'asset_type': 'FILE'}] and 'source_ids' not in target
     shared.validate_pipeline_run(run)
 
@@ -100,7 +102,7 @@ def test_file_failure_records_failed_operation_and_closes_session(files):
 
 def test_frozen_file_contract_compares_reader_options(files, monkeypatch):
     session = setup_pipeline(pipeline_mode='Dry Run')
-    descriptor = file_source_identity(workspace_id='physical-workspace', item_id='physical-item',
+    descriptor = file_source_identity(asset_workspace_id='physical-workspace', item_id='physical-item',
         relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     payload = {'source': descriptor, 'table': {'columns': []}, 'enrichment': {'table': [], 'columns': []}, 'guardrails': []}
     contract = {'table_id': descriptor['table_id'], 'contract_id': 'orders-file', 'contract_version': 1,
@@ -114,7 +116,7 @@ def test_frozen_file_contract_compares_reader_options(files, monkeypatch):
 
 def test_approved_file_boundary_binds_exact_plan_and_options():
     from fabricops_kit.activated_pipeline import shared as activation
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     content = json.dumps({'source': source})
     binding = {**{k: v for k, v in source.items() if k != 'reader_options'}, 'reader_options_json': json.dumps(source['reader_options'])}
     contract = {'contract_id': 'c', 'contract_version': 1, 'contract_payload_json': content}
@@ -263,10 +265,10 @@ def test_file_pipeline_submission_round_trips_typed_operation_and_write_associat
     from tests.unit.test_pipeline_handoff import package_candidate, resign
     from tests.unit.test_activated_pipeline import operation
     package = package_candidate()
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     content = json.dumps({'source': source, 'table': {'columns': []}, 'enrichment': {'table': [], 'columns': []}, 'guardrails': []})
     source_op = operation(role='source')
-    source_op.update(operation_key='source:Bronze/Files/demo/orders.csv', asset_type='FILE', table_id=source['table_id'], requested_schema=None, destination={**{k: v for k, v in source.items() if k != 'reader_options'},
+    source_op.update(operation_key='source:Bronze/Files/demo/orders.csv', asset_type='FILE', table_id=source['table_id'], asset_workspace_id=source['asset_workspace_id'], requested_schema=None, destination={**{k: v for k, v in source.items() if k not in {'reader_options', 'asset_type', 'table_id', 'asset_workspace_id'}},
                                                           'reader_options_json': json.dumps(source['reader_options'])})
     for field in ['operations', 'tested_operations']:
         package['manifest'][field].append(deepcopy(source_op))
@@ -290,6 +292,7 @@ def test_file_pipeline_submission_round_trips_typed_operation_and_write_associat
     old_source = {**source, 'source_type': 'file', 'source_id': source['table_id']}
     old_source.pop('table_id')
     old_source.pop('asset_type')
+    old_source['workspace_id'] = old_source.pop('asset_workspace_id')
     old_content = json.dumps({'source': old_source, 'table': {'columns': []},
                               'enrichment': {'table': [], 'columns': []}, 'guardrails': []}, indent=2)
     legacy['contracts'][source['table_id']].update(table_id=None, source_id=source['table_id'], contract_payload_json=old_content)
@@ -336,7 +339,7 @@ def test_explicit_file_participant_plan_uses_same_source_identity(files):
 def test_selected_file_contract_is_enforced_before_associated_table_write(files, spark_session, monkeypatch):
     from datetime import datetime, UTC
     from fabricops_kit.pipeline.shared import contract_guardrail_rows
-    source = file_source_identity(workspace_id='physical-workspace', item_id='physical-item', relative_path='demo/orders.csv', file_format='csv')
+    source = file_source_identity(asset_workspace_id='physical-workspace', item_id='physical-item', relative_path='demo/orders.csv', file_format='csv')
     payload = {'source': source, 'table': {'columns': [{'column_id': 'id', 'column_name': 'id', 'data_type': 'int'}]},
                'enrichment': {'table': [], 'columns': []}, 'guardrails': []}
     contract = {'table_id': source['table_id'], 'contract_id': 'selected-file', 'contract_version': 1,
@@ -369,7 +372,7 @@ def test_selected_file_contract_is_enforced_before_associated_table_write(files,
 def test_persisted_file_guardrail_uses_explicit_nullable_identity_schema(files, spark_session, monkeypatch):
     from datetime import datetime
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     audit = {name: datetime(2026, 1, 1) if kind == 'timestamp' else 'test' for name, kind, _nullable in AUDIT_SCHEMA_FIELDS}
     monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: audit)
     written = Mock()

@@ -551,11 +551,11 @@ def test_table_runtime_context_uses_exact_physical_profile_and_participation(mon
 
     assert context["latest_profile"] == {
         "profile_snapshot_id": "snapshot-prod",
-        "workspace_id": "CONFIG",
+        "asset_workspace_id": "PROD",
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
-        "activity_id": "prod-profile", "notebook_id": "", "workspace_name": "",
+        "activity_id": "prod-profile", "notebook_id": "", "execution_workspace_name": "",
     }
     assert context["column_profiles"] == {
         "amount": {

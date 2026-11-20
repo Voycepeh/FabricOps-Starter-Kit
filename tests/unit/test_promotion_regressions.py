@@ -26,7 +26,7 @@ def _config(dev_schema='demo', prod_schema='demo', item='item-B', physical_works
 @pytest.fixture
 def consumer_metadata(monkeypatch):
     """Keep consumer validation real while supplying registered metadata records."""
-    binding = dict(workspace_id='DEV', item_id='item-A', kind='warehouse', schema='demo', table_name='orders')
+    binding = dict(asset_workspace_id='DEV', item_id='item-A', kind='warehouse', schema='demo', table_name='orders')
     payload = json.dumps({'table': {'table_id': 'orders', 'columns': []}, 'enrichment': {}, 'guardrails': []})
     contract = dict(table_id='orders', asset_type='TABLE', contract_id='contract', contract_version=1, status='frozen', contract_payload_json=payload)
     activation = dict(asset_workspace_id='DEV', table_id='orders', asset_type='TABLE', contract_id='contract', contract_version=1,
@@ -59,12 +59,12 @@ def test_consumer_accepts_exact_physical_binding(consumer_metadata):
 def test_consumer_uses_physical_workspace_for_remote_contract(consumer_metadata):
     """Remote store routing selects its physical activation without changing execution scope."""
     fixture = consumer_metadata
-    fixture.binding['workspace_id'] = 'REMOTE'
+    fixture.binding['asset_workspace_id'] = 'REMOTE'
     fixture.activation.update(asset_workspace_id='REMOTE', destination_json=json.dumps(fixture.binding))
     fixture.op['destination'] = dict(fixture.binding)
     fixture.row.update(operations_json=json.dumps([fixture.op]), bindings_sha256=authority.manifest_digest([fixture.op]))
     result = agent.consumer_context(_config(item='item-A', physical_workspace='REMOTE'), 'orders', workspace_id='DEV')
-    assert result['source']['workspace_id'] == 'REMOTE'
+    assert result['source']['asset_workspace_id'] == 'REMOTE'
 
 
 

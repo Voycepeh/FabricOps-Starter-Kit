@@ -101,6 +101,7 @@ def _demo_check_metadata_scope(_state, value):
                     raise RuntimeError("Non-demo source references; metadata is preserved.")
             elif key in {
                 "workspace_id",
+                "asset_workspace_id",
                 "_workspace_id",
                 "execution_workspace_id",
                 "source_workspace_id",
@@ -374,7 +375,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     }
     from fabricops_kit.data_contract.shared import file_source_identity
     _demo._demo_source_ids = {
-        file_source_identity(workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
+        file_source_identity(asset_workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
             relative_path=f"demo/orders.{extension}", file_format=kind)["table_id"]
         for stores in _demo._demo_config.path_config.paths.values() if "Bronze" in stores
         for extension, kind in (("csv", "csv"), ("json", "json"), ("parquet", "parquet"), ("xlsx", "excel"))

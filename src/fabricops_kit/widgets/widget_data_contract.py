@@ -1487,7 +1487,7 @@ def widget_data_contract(
         file_source = next((row for row in file_rows if row["table_id"] == dataset), None)
         selection = {"table_id": dataset} if file_source is None else {
             "file_source": {key: file_source[key] for key in
-                ("asset_type", "table_id", "workspace_id", "item_id", "relative_path", "file_format", "reader_options")},
+                ("asset_type", "table_id", "asset_workspace_id", "item_id", "relative_path", "file_format", "reader_options")},
         }
         draft = contracts.create_contract_draft(
             **selection, config=config, active_workspace_id=state["workspace_id"],
@@ -1644,7 +1644,7 @@ def widget_data_contract(
                                   if item["column_id"] == selected_column)
                     from fabricops_kit.config.shared import build_column_id
                     profile_arguments = {"table_id": selected_table, "column_id": build_column_id(selected_table, column["column_name"])}
-                    profile_workspace = source["workspace_id"]
+                    profile_workspace = source["asset_workspace_id"]
                 profile_cache[cache_key] = contracts.get_column_profile_context(
                     config=config, active_workspace_id=profile_workspace, spark_session=spark,
                     **profile_arguments,
@@ -2520,14 +2520,14 @@ def widget_data_contract(
         def runtime_context_html() -> str:
             profile = runtime_context.get("latest_profile")
             if profile:
-                workspace_id = str(profile.get("workspace_id") or "")
-                workspace_name = str(profile.get("workspace_name") or "").strip()
+                workspace_id = str(profile.get("asset_workspace_id") or "")
+                workspace_name = str(workspace_names.get(workspace_id) or "").strip()
                 if not workspace_name:
                     workspace_name = next((
-                        str(observation.get("workspace_name") or "").strip()
+                        str(observation.get("asset_workspace_name") or "").strip()
                         for observation in table_rows
-                        if str(observation.get("workspace_id") or "") == workspace_id
-                        and observation.get("workspace_name")
+                        if str(observation.get("asset_workspace_id") or "") == workspace_id
+                        and observation.get("asset_workspace_name")
                     ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 selected_workspace_name = str(
@@ -2573,10 +2573,10 @@ def widget_data_contract(
                     workspace_value = str(item.get("workspace_name") or "").strip()
                     if not workspace_value:
                         workspace_value = next((
-                            str(observation.get("workspace_name") or "").strip()
+                            str(observation.get("asset_workspace_name") or "").strip()
                             for observation in table_rows
-                            if str(observation.get("workspace_id") or "") == workspace_id
-                            and observation.get("workspace_name")
+                            if str(observation.get("asset_workspace_id") or "") == workspace_id
+                            and observation.get("asset_workspace_name")
                         ), "") or "Unknown workspace"
                     pipeline_value = str(item.get("pipeline_name") or "")
                     relationship = str(item.get("relationship") or "")
@@ -2970,7 +2970,7 @@ def widget_data_contract(
             identity_arguments = ({"table_id": source["table_id"]} if is_file
                                   else {"table_id": str(state.get("dataset_id") or "")})
             loaded = contracts.get_asset_runtime_context(
-                config=config, active_workspace_id=source["workspace_id"] if is_file else active_workspace_id,
+                config=config, active_workspace_id=source["asset_workspace_id"] if is_file else active_workspace_id,
                 spark_session=spark, **identity_arguments,
                 metadata_workspace_id=routing_workspace_id,
             )

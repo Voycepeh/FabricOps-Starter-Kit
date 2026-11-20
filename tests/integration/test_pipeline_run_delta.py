@@ -66,7 +66,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                             'rule_parameters': {'required_columns': ['id-col']}, 'action': 'Block', 'is_active': True}]}
             contracts[table] = {'contract_id': 'contract-' + table, 'contract_version': 1, 'table_id': table,
                 'status': 'frozen', 'evidence_workspace_id': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
-            bindings[table] = {'workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
+            bindings[table] = {'asset_workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
         for contract in contracts.values():
             key = (contract['contract_id'], contract['contract_version'])
             if key not in retained:

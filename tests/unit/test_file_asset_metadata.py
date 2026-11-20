@@ -22,10 +22,10 @@ from tests.unit.test_unified_file_read import files  # noqa: F401
 
 def test_file_selector_identity_and_active_catalogue_grain():
     def identity(**kw):
-        return file_source_identity(**{**dict(workspace_id="w", item_id="i", relative_path="a/./b.csv", file_format="csv"), **kw})
+        return file_source_identity(**{**dict(asset_workspace_id="w", item_id="i", relative_path="a/./b.csv", file_format="csv"), **kw})
     source = identity()
     assert source["table_id"] == identity(relative_path="a/b.csv", file_format="json")["table_id"]
-    assert len({source["table_id"], identity(workspace_id="other")["table_id"], identity(item_id="other")["table_id"]}) == 3
+    assert len({source["table_id"], identity(asset_workspace_id="other")["table_id"], identity(item_id="other")["table_id"]}) == 3
     rows = [dict(asset_type="FILE", table_id=identity(relative_path=path)["table_id"],
                  asset_workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
     rows += [dict(asset_type="TABLE", asset_workspace_id="w", table_id="legacy", is_active=True)]
@@ -54,7 +54,7 @@ def writer(monkeypatch):
     monkeypatch.setattr(shared, "_require_catalogue_assets", Mock())
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: "configured_engineering")
     monkeypatch.setattr(shared, "resolve_configured_lakehouse_table", lambda *a, **kw: (*a, "configured-path"))
-    identity = {**file_source_identity(workspace_id="physical", item_id="lakehouse", relative_path="a.csv", file_format="csv"), "store": "Bronze"}
+    identity = {**file_source_identity(asset_workspace_id="physical", item_id="lakehouse", relative_path="a.csv", file_format="csv"), "store": "Bronze"}
     return SimpleNamespace(spark=spark, merge=merge, delta=delta, identity=identity)
 
 

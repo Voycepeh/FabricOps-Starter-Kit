@@ -46,15 +46,15 @@ ENRICHMENT_TYPES_BY_LEVEL = {
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
-def file_source_identity(*, workspace_id, item_id, relative_path, file_format, reader_options=None):
+def file_source_identity(*, asset_workspace_id, item_id, relative_path, file_format, reader_options=None):
     """Identify a Lakehouse Files selector using the common asset identity.
 
     Identity includes physical workspace/item and a case-sensitive normalized
     relative selector. Folder/wildcard membership may change without changing
     the selector identity. Format and reader options are approved separately.
     """
-    if any(not isinstance(value, str) or not value.strip() for value in (workspace_id, item_id, relative_path)):
-        raise ValueError("File source requires workspace_id, item_id and relative_path.")
+    if any(not isinstance(value, str) or not value.strip() for value in (asset_workspace_id, item_id, relative_path)):
+        raise ValueError("File source requires asset_workspace_id, item_id and relative_path.")
     if relative_path.startswith(("/", "\\")) or ":" in relative_path or "\\" in relative_path or ".." in relative_path.split("/"):
         raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
     if any(ord(character) < 32 for character in relative_path) or "%" in relative_path:
@@ -68,10 +68,11 @@ def file_source_identity(*, workspace_id, item_id, relative_path, file_format, r
         raise ValueError("Unsupported file source format.")
     if reader_options is not None and not isinstance(reader_options, dict):
         raise ValueError("File reader_options must be an object.")
-    physical = {"workspace_id": workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
+    # Keep the released hash projection; emitted selectors use asset_workspace_id.
+    physical = {"workspace_id": asset_workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
     digest = hashlib.sha256(json.dumps(physical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     options = json.loads(json.dumps(reader_options or {}, allow_nan=False, sort_keys=True))
-    return {"asset_type": "FILE", "table_id": "file:" + digest, **physical,
+    return {"asset_type": "FILE", "table_id": "file:" + digest, "asset_workspace_id": physical["workspace_id"], "item_id": physical["item_id"], "relative_path": physical["relative_path"],
             "file_format": file_format, "reader_options": options}
 
 
@@ -87,7 +88,7 @@ def validate_contract_source(payload):
             raise ValueError("Table source must preserve the canonical Table ID.")
     elif source.get("asset_type") == "FILE":
         expected = file_source_identity(**{key: source.get(key) for key in
-            ("workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
+            ("asset_workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
         if expected != source or payload.get("table", {}).get("table_id") not in (None, source["table_id"]):
             raise ValueError("File source must retain its stable asset identity.")
     else:
@@ -140,12 +141,12 @@ def contract_file_datasets(rows, *, config, workspace_id):
         for route in paths:
             for key in paths[route]:
                 store = get_store(config, route, key)
-                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
                     stores.append((str(route), key))
         if not stores:
             continue
         route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
-        datasets[source["table_id"]] = {**source, "asset_workspace_id": source["workspace_id"], "store": store_key, "configuration_workspace_id": route,
+        datasets[source["table_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
             "columns": payload.get("table", {}).get("columns", [])}
     return list(datasets.values())
 
@@ -177,7 +178,7 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
             continue
         _, raw_options = reader_settings.get((row["table_id"], row["file_format"]), ("", None))
         source = file_source_identity(
-            workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
+            asset_workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
             relative_path=row["relative_path"], file_format=row["file_format"],
             reader_options=_json_value(raw_options, field="reader_options_json", default={}),
         )
@@ -187,11 +188,11 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
         for route, targets in paths.items():
             for key in targets:
                 store = get_store(config, route, key)
-                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
                     stores.append((route, key))
         if stores:
             route, key = min(stores, key=lambda match: (match[0] != workspace_id, match[1] != row["layer"], *match))
-            datasets.append({**source, "asset_workspace_id": source["workspace_id"], "store": key, "configuration_workspace_id": route,
+            datasets.append({**source, "store": key, "configuration_workspace_id": route,
                              "asset_workspace_name": row["asset_workspace_name"], "columns": columns})
     return sorted(datasets, key=lambda row: row["relative_path"])
 
@@ -200,8 +201,8 @@ def dataset_selector_options(tables, files, *, table_id=None, workspace_id=None)
     """Combine typed dataset choices while preserving the table observation selector."""
     options = observation_selector_options(tables, table_id=table_id, workspace_id=workspace_id)
     return {"tables": sorted(set(options["tables"]) | {row["table_id"] for row in files
-                if not workspace_id or row["workspace_id"] == workspace_id}),
-            "workspaces": sorted(set(options["workspaces"]) | {row["workspace_id"] for row in files
+                if not workspace_id or row["asset_workspace_id"] == workspace_id}),
+            "workspaces": sorted(set(options["workspaces"]) | {row["asset_workspace_id"] for row in files
                 if not table_id or row["table_id"] == table_id})}
 
 
@@ -210,7 +211,7 @@ def dataset_display_name(dataset):
     if dataset.get("asset_type") == "FILE":
         path = dataset["relative_path"]
         kind = "Folder" if path.endswith("/") else "File selector" if any(char in path for char in "*?[") else "File"
-        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['workspace_id']} / {dataset['item_id']}"
+        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['asset_workspace_id']} / {dataset['item_id']}"
     name = dataset.get("table_name") or dataset.get("table_id") or ""
     location = " / ".join(str(value) for value in (dataset.get("layer") or dataset.get("store"), dataset.get("schema_name") or dataset.get("schema")) if value)
     return f"{name} — {location} — Table · {dataset.get('asset_workspace_name') or dataset.get('asset_workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
@@ -253,7 +254,7 @@ def create_contract_draft(
         context={**runtime_context, "_spark_session": spark_session},
     )
     kind, identity, workspace = (
-        ("FILE", file_source["table_id"], file_source["workspace_id"]) if file_source is not None
+        ("FILE", file_source["table_id"], file_source["asset_workspace_id"]) if file_source is not None
         else ("TABLE", str(table_id).strip(), active_workspace_id)
     )
     table = next((row for row in current_catalogue_observations(catalogue_rows)
@@ -1125,7 +1126,7 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
                 events = parse_metadata_json(events, field="METADATA_PIPELINE_RUN.profiling")
             for event in migrate_asset_references(events or []):
                 snapshot = event.get("profile_snapshot_id")
-                destination = (event.get("physical") or {}).get("workspace_id")
+                destination = (event.get("physical") or {}).get("asset_workspace_id")
                 if (event.get("table_id") == table_id and snapshot and destination
                         and event.get("status") == "passed" and event.get("results_persisted")):
                     profile_locations.setdefault(snapshot, set()).add(destination.casefold())
@@ -1222,8 +1223,8 @@ def get_asset_runtime_context(
         latest_profile = {
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "workspace_id": str(latest_profile_row.get("asset_workspace_id") or latest_profile_row.get("legacy_workspace_id") or ""),
-            "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
+            "asset_workspace_id": str(latest_profile_row.get("asset_workspace_id") or active_workspace_id),
+            "execution_workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")

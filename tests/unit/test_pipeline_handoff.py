@@ -531,10 +531,10 @@ def test_file_authorization_survives_export_and_independent_policy_review(author
     candidate = package_candidate()
     candidate['dry_run']['workspace_id'] = 'dev'
     for op in candidate['dry_run']['operations']:
-        op['destination']['workspace_id'] = 'dev'
+        op['asset_workspace_id'] = 'dev'
     for op in candidate['manifest']['tested_operations']:
-        op['destination']['workspace_id'] = 'dev'
-    source = file_source_identity(workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
+        op['asset_workspace_id'] = 'dev'
+    source = file_source_identity(asset_workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
     payload = canonical_pipeline_json({'source': source, 'table': {'columns': []},
         'enrichment': {'table': [], 'columns': []}, 'guardrails': []})
     contract = dict(contract_id='files', contract_version=1, table_id=source['table_id'], asset_type='FILE', status='frozen', contract_payload_json=payload)

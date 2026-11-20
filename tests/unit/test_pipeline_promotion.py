@@ -157,7 +157,8 @@ def test_destination_configuration_resolves_physical_workspace_and_item():
     identity = pipeline.resolve_physical_table_identity(config, "DEV", store="Silver", schema="demo", table_name="orders")
     op = operation(); op["table_id"] = identity["table_id"]
     resolved = service.resolve_promoted_operations([op], context={"config": config, "scope_workspace_id": "PROD"})
-    assert resolved[0]["destination"] == {"workspace_id": "REMOTE", "item_id": "approved-item", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
+    assert resolved[0]["asset_workspace_id"] == "REMOTE"
+    assert resolved[0]["destination"] == {"item_id": "approved-item", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
     assert resolved[0]["table_id"] == identity["table_id"]
     with pytest.raises(ValueError, match="not found"):
         service.resolve_promoted_operations([op], context={"config": config, "scope_workspace_id": "MISSING"})

@@ -402,7 +402,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
     Persistent evidence is committed only at the applicable execution and finalization boundaries. Multiple target writes are independent publications, not one cross-target atomic transaction. Whole-table profiling, Frequency distributions and full Source Observation add compute and should be scheduled deliberately.
 
-    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, and Access records using `asset_workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Run operations record source and target participation with the physical destination workspace.
+    The pipeline resolves each asset’s store through the active configuration. FabricOps requires one active Data Catalogue parent for new Profile, Frequency, and Access records using `asset_workspace_id + table_id + asset_type`. Delta stores each table independently. The solid lines in the ERD indicate application-level validation. Pipeline Run routing stays scoped to the active configuration. `_workspace_id` and `_workspace_name` describe the executing notebook. Run operations record source and target participation with `operations[].asset_workspace_id`.
 
     Retained evidence may use the old workspace convention. Data Contract authoring uses exact retained Run bindings for cross-workspace Profile lookups. Existing frozen Contracts and historical observations keep their saved payloads.
 
@@ -484,7 +484,7 @@ and retained Run/Contract JSON remain intact. Repeated setup is safe.
 | Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
 | Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |
 | Contracts and activations | Common `table_id` and `asset_type`; frozen historical payload bytes and hashes remain unchanged. New payloads use format version 2. |
-| Pipeline Run | New version 4 operations use `table_id`, `asset_type` and typed `source_assets` for table and file inputs. Historical JSON is unchanged. |
+| Pipeline Run | New version 4 operations use `table_id`, `asset_type` and typed `source_assets` for table and file inputs. Run operations store `asset_workspace_id` directly beside `table_id` and `asset_type`; file selectors and profiling bindings use the same field name. Retained JSON and approved package hashes are preserved. Historical JSON is unchanged. |
 
 For tables, historical null asset types are interpreted as TABLE. Source descriptors
 in new authored Contracts, activations and public file results all use

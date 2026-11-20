@@ -4,6 +4,7 @@ import hashlib
 from unittest.mock import Mock
 
 from tests.unit.test_activated_pipeline import operation
+from fabricops_kit.config.metadata_schemas import operation_physical_binding
 
 
 def test_reviewed_contract_binding_and_payload_are_passed_to_atomic_action(monkeypatch):
@@ -18,7 +19,7 @@ def test_reviewed_contract_binding_and_payload_are_passed_to_atomic_action(monke
     contract = dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json='{}')
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [contract] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    binding = operation()['destination']
+    binding = operation_physical_binding(operation())
     monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': binding})
     action = Mock(return_value={'status': 'active'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
@@ -48,9 +49,9 @@ def test_explicit_physical_workspace_keeps_governance_metadata_routing(monkeypat
     monkeypatch.setattr(module, 'read_activation_history', activations)
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json='{}')] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation(workspace=kw['workspace_id'])['destination']})
+    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation_physical_binding(operation(workspace=kw['workspace_id']))})
     ui = module.widget_activate_data_contract('orders', 'contract', 1, workspace_id='PROD')
-    assert ui['destination']['workspace_id'] == 'PROD'
+    assert ui['destination']['asset_workspace_id'] == 'PROD'
     assert observed[0]['scope_workspace_id'] == 'PROD'
     assert observed[0]['metadata_workspace_id'] == 'CENTRAL'
 
@@ -71,7 +72,7 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     }
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: data[table])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation()['destination']})
+    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation_physical_binding(operation())})
     action = Mock(return_value={'status': 'active'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()
@@ -93,7 +94,7 @@ def test_named_file_activation_uses_common_asset_identity(monkeypatch):
     import json
     from fabricops_kit.data_contract import shared as contracts
     module = importlib.import_module('fabricops_kit.widgets.widget_activate_data_contract')
-    source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    source = contracts.file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     frozen = dict(table_id=source['table_id'], asset_type='FILE', contract_id='file-contract', contract_version=1,
                   status='frozen', contract_payload_json=json.dumps({'source': source, 'table': {'columns': []}}))
     from IPython import display as ip
@@ -102,7 +103,7 @@ def test_named_file_activation_uses_common_asset_identity(monkeypatch):
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
-    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
+    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'asset_workspace_id': source['asset_workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
     action = Mock(return_value={'status': 'active', 'table_id': source['table_id'], 'asset_type': 'FILE'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()

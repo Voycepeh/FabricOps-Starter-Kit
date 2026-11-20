@@ -44,7 +44,22 @@ RETIRED_METADATA_COLUMNS.update({
     },
 })
 
-def migrate_asset_references(value):
+def has_retained_asset_workspaces(value, *, physical=False):
+    """Detect historical physical workspace keys without inspecting authored options."""
+    if isinstance(value, list):
+        return any(has_retained_asset_workspaces(item) for item in value)
+    if not isinstance(value, dict):
+        return False
+    if "operation_key" in value and isinstance(value.get("destination"), dict) and "asset_workspace_id" in value["destination"]:
+        return True
+    if value.get("workspace_id") is not None and (physical or value.get("asset_type") == "FILE"
+            or "item_id" in value and ("kind" in value or "relative_path" in value)):
+        return True
+    return any(has_retained_asset_workspaces(value.get(key), physical=key in {"destination", "source", "physical"}) for key in
+               ("destination", "source", "physical", "operations", "profiling"))
+
+
+def migrate_asset_references(value, *, physical=False):
     """Interpret retained pre-unification asset records without rewriting stored JSON.
 
     Conflicting populated identities are never guessed. The file selector hash
@@ -57,8 +72,8 @@ def migrate_asset_references(value):
     # Only metadata containers carry asset references. User-authored rule
     # parameters, reader options, Enrichment and notebook parameters are opaque.
     containers = {"manifest", "dry_run", "operations", "tested_operations", "source",
-                  "table", "destination", "profiling", "source_assets", "file_authorizations"}
-    result = {key: migrate_asset_references(item) if key in containers else item
+                  "table", "destination", "profiling", "source_assets", "file_authorizations", "physical", "source_location"}
+    result = {key: migrate_asset_references(item, physical=key in {"destination", "source", "physical", "source_location"}) if key in containers else item
               for key, item in value.items()}
     if isinstance(result.get("contracts"), dict):
         result["contracts"] = {key: migrate_asset_references(item)
@@ -82,7 +97,23 @@ def migrate_asset_references(value):
         if result.get("asset_type") not in (None, kind):
             raise ValueError("Asset identity conflicts with asset_type.")
         result["asset_type"] = kind
+    if has_retained_asset_workspaces({key: item for key, item in result.items()
+                                      if key not in containers}, physical=physical) and "workspace_id" in result:
+        old_workspace = result.pop("workspace_id")
+        if result.get("asset_workspace_id") not in (None, old_workspace):
+            raise ValueError("Conflicting physical asset workspace identities.")
+        result["asset_workspace_id"] = old_workspace
     if "operation_key" in result:
+        destination = result.get("destination")
+        if isinstance(destination, dict):
+            for field in ("asset_workspace_id", "table_id", "asset_type"):
+                if field not in destination:
+                    continue
+                nested = destination.pop(field)
+                if nested is not None:
+                    if result.get(field) not in (None, nested):
+                        raise ValueError("Conflicting operation asset identity and destination binding.")
+                    result[field] = nested
         ids = [*result.pop("source_table_ids", []), * (result.pop("source_ids", []) or [])]
         refs = [{"table_id": identity, "asset_type": "FILE" if identity.startswith("file:") else "TABLE"}
                 for identity in sorted(set(ids))]
@@ -96,6 +127,14 @@ def migrate_asset_references(value):
             raise ValueError("Conflicting retained file Contract identities.")
         result["table"].update(table_id=source["table_id"], asset_type="FILE")
     return result
+
+
+def operation_physical_binding(operation):
+    """Combine an operation's common asset key with its physical location details."""
+    binding = {"asset_workspace_id": operation["asset_workspace_id"], **operation["destination"]}
+    if operation["asset_type"] == "FILE":
+        binding.update(table_id=operation["table_id"], asset_type="FILE")
+    return binding
 
 
 # Approved identity consolidation: migration copies and validates the file identity
@@ -249,7 +288,7 @@ AUDIT_SCHEMA_FIELDS = [
 
 
 # Native collections share a single authority commit. None contain hidden JSON authority.
-BINDING_FIELDS = [("table_id", "string", False), ("workspace_id", "string", False),
+BINDING_FIELDS = [("table_id", "string", False), ("asset_workspace_id", "string", False),
                   ("item_id", "string", False), ("kind", "string", False),
                   ("schema", "string", True), ("table_name", "string", False)]
 PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
@@ -257,7 +296,7 @@ PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string",
                         ("status", "string", False), ("results_persisted", "boolean"),
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
                         ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
-                        ("row_count", "long"), ("profile_scope", "string"), ("profiling_max_rows", "long"), ("trigger", "string"), ("workspace_id", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
+                        ("row_count", "long"), ("asset_workspace_id", "string"), ("profile_scope", "string"), ("profiling_max_rows", "long"), ("trigger", "string"), ("workspace_id", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
                         ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]})]
 # Dicts denote structs; tuples denote native arrays. Lists retain the existing
 # array-of-struct contract used by other metadata tables.
@@ -582,10 +621,10 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ("promotion_id", "string"), ("governed_notebook_id", "string"), ("execution_identity", "string"),
              ("run_schema_version", "integer"),
              ("operations", [("operation_key", "string", False),
-                 ("table_id", "string", False), ("asset_type", "string", False), ("pipeline_role", "string", False),
+                 ("table_id", "string", False), ("asset_type", "string", False), ("asset_workspace_id", "string", False), ("pipeline_role", "string", False),
                  ("contract_id", "string"), ("contract_version", "integer"), ("payload_sha256", "string"),
-                 ("destination", {"struct": [(n,t,True if n in {"kind", "table_name"} else z) for n,t,z in BINDING_FIELDS if n != "table_id"] +
-                     [("asset_type", "string"), ("table_id", "string"), ("relative_path", "string"),
+                 ("destination", {"struct": [(n,t,True if n in {"kind", "table_name"} else z) for n,t,z in BINDING_FIELDS if n not in {"table_id", "asset_workspace_id"}] +
+                     [("relative_path", "string"),
                       ("file_format", "string"), ("reader_options_json", "string")]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
                  ("observed_columns_json", "string"),
@@ -816,7 +855,9 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
     """
     result = dict(row)
     required = table_name == "METADATA_PIPELINE_RUN"
-    legacy_run = required and row.get("run_schema_version") != 4
+    legacy_run = required and (row.get("run_schema_version") != 4 or any(
+        has_retained_asset_workspaces(parse_metadata_json(row[name], field=name)
+            if isinstance(row.get(name), str) else row.get(name)) for name in ("operations", "profiling")))
     for name, kind in metadata_json_schema(table_name).items():
         if name not in result:
             continue
@@ -828,7 +869,7 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         if value is None and required:
             raise ValueError(f"{table_name}.{name} cannot be null.")
         retained_value = value
-        if required and not legacy_run and name == "operations" and any(
+        if required and row.get("run_schema_version") == 4 and name == "operations" and any(
                 ({"source_id", "source_type", "source_ids", "source_table_ids"} & operation.keys()
                  or not {"table_id", "asset_type", "source_assets"} <= operation.keys()) for operation in value):
             raise ValueError("Run version 4 requires table_id, asset_type and typed source_assets.")

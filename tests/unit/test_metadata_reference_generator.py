@@ -176,7 +176,7 @@ def test_workspace_id_descriptions_follow_the_persisted_roles() -> None:
     describe = generator._metadata_field_description
     assert "authoring evidence" in describe("METADATA_DATA_CONTRACT", "evidence_workspace_id")
     assert "physical asset" in describe("METADATA_DATA_CONTRACT_ACTIVATION", "asset_workspace_id")
-    assert "operations[].destination.workspace_id" in describe("METADATA_PIPELINE_RUN", "workspace_id")
+    assert "operations[].asset_workspace_id" in describe("METADATA_PIPELINE_RUN", "workspace_id")
     assert "executing notebook" in describe("METADATA_DATA_CATALOGUE", "_workspace_name")
 
 
@@ -302,7 +302,7 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     assert payload["GUARDRAIL_RESULTS"]["catalogue_authoring_fields"] == []
     assert payload["GUARDRAIL_RESULTS"]["catalogue_optional_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
-        "operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type"
+        "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"
     ]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [

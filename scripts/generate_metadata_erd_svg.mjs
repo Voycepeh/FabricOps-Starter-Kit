@@ -20,7 +20,7 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M185 253V310H1355V510H1115",[185,253],[1115,510],"Contract versions to their Guardrail results"],
-    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M335 515H425",[335,515],[425,515],"Run asset participation via operations: destination.workspace_id + table_id + asset_type; participation does not prove transformation dependencies"],
+    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M335 515H425",[335,515],[425,515],"Run asset participation via operations: asset_workspace_id + table_id + asset_type; participation does not prove transformation dependencies"],
     ["DATA_CATALOGUE","GUARDRAIL_RESULTS","0..1-N","optional","M260 423V360H965V423",[260,423],[965,423],"Optional Catalogue asset for Guardrail outcomes through asset_workspace_id + table_id + asset_type; pipeline-wide checks may have no asset"]
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -77,7 +77,7 @@ function renderMetadataSvg(layout, models) {
       const label=kind?`<text x="${x+13}" y="${baseline}" fill="${kind==="PK"?"#7C3AED":"#2563EB"}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text>\n`:"";
       const normalized=String(value);
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
-      return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
+      return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 30 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
     const groups = [
       ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
@@ -125,7 +125,7 @@ function renderMetadataSvg(layout, models) {
   // Keep both requested links grounded in the canonical asset reference fields.
   for (const [name, fields] of [
     ["GUARDRAIL_RESULTS", ["asset_workspace_id", "table_id", "asset_type"]],
-    ["PIPELINE_RUN", ["operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type"]],
+    ["PIPELINE_RUN", ["operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"]],
   ]) {
     if (JSON.stringify(models[name].asset_identity_fields) !== JSON.stringify(fields))
       throw Error("Catalogue asset reference changed; review connector: " + name);

@@ -10,13 +10,13 @@ from tests.unit.test_widget_data_contract import widget_runtime  # noqa: F401
 
 
 def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_runtime, monkeypatch):  # noqa: F811
-    source = contracts.file_source_identity(workspace_id="dev", item_id="item",
+    source = contracts.file_source_identity(asset_workspace_id="dev", item_id="item",
         relative_path="demo/orders.csv", file_format="csv",
         reader_options={"header": True, "inferSchema": True})
     run = {"completed_at": "2026-11-12T10:00:00Z", "operations": json.dumps([{
         "pipeline_role": "source", "asset_type": "FILE", "table_id": source["table_id"],
         "status": "succeeded", "destination": {
-            **{key: source[key] for key in ("workspace_id", "item_id", "relative_path", "file_format")},
+            **{key: source[key] for key in ("asset_workspace_id", "item_id", "relative_path", "file_format")},
             "reader_options_json": json.dumps(source["reader_options"])},
         "observed_columns_json": json.dumps([{"column_name": "id", "data_type": "int"}])
     }])}
@@ -25,7 +25,7 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
     monkeypatch.setattr(config_shared, "get_store", lambda config, route, key: SimpleNamespace(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(module.contracts, "list_contract_governance_state",
         lambda **kwargs: {"tables": [], "contracts": [], "pipeline_runs": [run],
-            "observations": [{**source, "asset_workspace_id": source["workspace_id"], "asset_workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
+            "observations": [{**source, "asset_workspace_id": source["asset_workspace_id"], "asset_workspace_name": "Development", "layer": "Bronze", "asset_type": "FILE",
                               "table_id": source["table_id"], "columns_json": [
                                   {"column_id": "original-id", "column_name": "order_id", "data_type": "long"}]}]})
     state = module.widget_data_contract()
@@ -38,7 +38,7 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
 
 def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
     table = {'table_id': 'table-orders', 'asset_workspace_id': 'w', 'table_name': 'orders', 'asset_type': 'TABLE', 'layer': 'Bronze', 'schema_name': 'demo'}
-    source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    source = contracts.file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     source['store'] = 'Bronze'
     options = contracts.dataset_selector_options([table], [source], workspace_id='w')
     assert set(options['tables']) == {'table-orders', source['table_id']}
@@ -49,7 +49,7 @@ def test_file_and_table_names_are_distinct_and_filter_by_physical_workspace():
 
 def test_authored_file_keeps_physical_identity_and_separate_configuration_route(monkeypatch):
     import fabricops_kit.config.shared as config_shared
-    source = contracts.file_source_identity(workspace_id='physical-source', item_id='item', relative_path='demo/orders.csv', file_format='csv')
+    source = contracts.file_source_identity(asset_workspace_id='physical-source', item_id='item', relative_path='demo/orders.csv', file_format='csv')
     stores = {'gov': {'Metadata': SimpleNamespace(workspace_id='gov', item_id='meta')},
               'engineering': {'Bronze': SimpleNamespace(workspace_id='physical-source', item_id='item')}}
     monkeypatch.setattr(config_shared, 'get_store', lambda config, route, key: stores[route][key])
@@ -58,5 +58,5 @@ def test_authored_file_keeps_physical_identity_and_separate_configuration_route(
     datasets = contracts.contract_file_datasets(rows, config={'path_config': {'paths': stores}}, workspace_id='gov')
     assert len(datasets) == 1
     assert datasets[0]['configuration_workspace_id'] == 'engineering'
-    assert datasets[0]['workspace_id'] == 'physical-source'
+    assert datasets[0]['asset_workspace_id'] == 'physical-source'
     assert datasets[0]['table_id'] == source['table_id'] and datasets[0]['asset_type'] == 'FILE'

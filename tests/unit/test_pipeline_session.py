@@ -32,7 +32,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(activation_identity, 'resolve_pipeline_identity', lambda **kwargs: (context['notebook_id'], {'role': 'source', 'row': None}))
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_workspace_id': 'workspace', '_notebook_id': 'notebook'})
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, active_workspace_id, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
-    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'workspace_id': 'dev', 'item_id': value['store'], 'kind': 'lakehouse', 'schema': value.get('schema'), 'table_name': value['table_name']} for key, value in identities.items()})
+    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'asset_workspace_id': 'dev', 'item_id': value['store'], 'kind': 'lakehouse', 'schema': value.get('schema'), 'table_name': value['table_name']} for key, value in identities.items()})
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *args, **kwargs: [])
     monkeypatch.setattr(shared, 'read_lakehouse_table', Mock(side_effect=AssertionError('unexpected metadata read')))
     writes = Mock()
@@ -597,8 +597,8 @@ def test_incremental_coordinates_register_new_target_and_preserve_routing(coordi
     assert identities[target_id]["schema"] == ("demo" if store == "Silver" else None)
     assert coordinate_runtime.reader.call_args.kwargs["target_table_id"] == target_id
     bindings = session.plan.runtime_context["_pipeline_bindings"]
-    assert bindings[source_id]["workspace_id"] == "dev"
-    assert bindings[target_id]["workspace_id"] == ("remote-target-workspace" if store == "Silver" else "dev")
+    assert bindings[source_id]["asset_workspace_id"] == "dev"
+    assert bindings[target_id]["asset_workspace_id"] == ("remote-target-workspace" if store == "Silver" else "dev")
     assert session.plan.evidence["operations"]["source:Bronze/orders"]["incremental_target_table_id"] == target_id
     runtime_context = coordinate_runtime.reader.call_args.kwargs["context"]
     assert runtime_context["scope_workspace_id"] == "dev"

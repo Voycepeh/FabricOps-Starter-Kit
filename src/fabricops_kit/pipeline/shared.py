@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.config.metadata_schemas import migrate_asset_references
+from fabricops_kit.config.metadata_schemas import migrate_asset_references, has_retained_asset_workspaces, operation_physical_binding
 
 from fabricops_kit.io.shared import retry_delta_metadata
 
@@ -1128,7 +1128,10 @@ def source_snapshot_context(identity, *, context):
     physical = pipeline_physical_bindings({identity["table_id"]: identity},
         config=context["config"], workspace_id=plan.workspace_id)[identity["table_id"]]
     descriptor = {"workspace_id": plan.workspace_id, "table_id": identity["table_id"], "physical": physical}
-    return _metadata_hash(descriptor), descriptor
+    # Preserve released context hashes so the rename does not reset accepted history.
+    hash_physical = {"workspace_id": physical["asset_workspace_id"],
+                     **{key: value for key, value in physical.items() if key != "asset_workspace_id"}}
+    return _metadata_hash({**descriptor, "physical": hash_physical}), descriptor
 
 
 def _source_snapshot_state(context):
@@ -2721,7 +2724,7 @@ def check_sensitive_data_rules(
 def _guardrail_workspace_fields(context, table_id, active_workspace_id):
     binding = ((context or {}).get("_pipeline_bindings") or {}).get(table_id)
     return {
-        "asset_workspace_id": str(binding["workspace_id"]).lower() if binding else None,
+        "asset_workspace_id": str(binding["asset_workspace_id"]).lower() if binding else None,
         "execution_workspace_id": None if binding else active_workspace_id,
         "legacy_workspace_id": None,
     }
@@ -5867,7 +5870,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
     from fabricops_kit.io.shared import resolve_configured_file_path
     from fabricops_kit.data_contract.shared import file_source_identity
     # Validate before path resolution, including traversal that a path normalizer could hide.
-    file_source_identity(workspace_id="validation", item_id="validation", relative_path=relative_path,
+    file_source_identity(asset_workspace_id="validation", item_id="validation", relative_path=relative_path,
                          file_format=file_format, reader_options=read_options)
     options = dict(read_options or {})
     if any(str(key).lower() in {"path", "paths", "context", "store", "relative_path"} for key in options):
@@ -5875,7 +5878,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
     configured, path, _ = resolve_configured_file_path(store, relative_path, context=context)
     if str(configured.kind).lower() != "lakehouse":
         raise ValueError("File reads require a Lakehouse store; Warehouse file routing is unsupported.")
-    source = file_source_identity(workspace_id=configured.workspace_id, item_id=configured.item_id,
+    source = file_source_identity(asset_workspace_id=configured.workspace_id, item_id=configured.item_id,
         relative_path=path, file_format=file_format, reader_options=options)
     return {**source, "store": store, "logical_id": f"{store}/Files/{source['relative_path']}"}
 
@@ -5893,7 +5896,7 @@ def persist_file_catalogue(identity, *, context, profile_summary=None, columns=N
         raise RuntimeError("Dry Run cannot commit Catalogue.")
     from fabricops_kit.data_contract.shared import file_source_identity
     expected = file_source_identity(**{key: identity.get(key) for key in
-        ("workspace_id", "item_id", "relative_path", "file_format")})
+        ("asset_workspace_id", "item_id", "relative_path", "file_format")})
     table_id = expected["table_id"]
     if table_id != identity.get("table_id") or not identity.get("store"):
         raise ValueError("File Catalogue requires a resolved file participant.")
@@ -5901,8 +5904,8 @@ def persist_file_catalogue(identity, *, context, profile_summary=None, columns=N
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=workspace_id, runtime_context=runtime)
     asset = {
         "asset_type": "FILE", "table_id": table_id,
-        "asset_workspace_id": expected["workspace_id"], "item_id": expected["item_id"],
-        "asset_workspace_name": resolve_asset_workspace_name(expected["workspace_id"], context=runtime),
+        "asset_workspace_id": expected["asset_workspace_id"], "item_id": expected["item_id"],
+        "asset_workspace_name": resolve_asset_workspace_name(expected["asset_workspace_id"], context=runtime),
         "columns_json": _catalogue_columns(table_id, None if columns is None else
             [(column.get("column_name"), column.get("data_type")) for column in columns]),
         "layer": identity["store"], "store_type": "lakehouse", "table_name": expected["relative_path"],
@@ -5927,7 +5930,7 @@ def read_file_participant(identity, *, context, spark_session):
     frame = readers[identity["file_format"]](identity["relative_path"], store=identity["store"],
         context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}, **identity["reader_options"])
     return {**file_participant_source(identity), "store": identity["store"], "dataframe": frame,
-            "source_location": {"workspace_id": identity["workspace_id"], "item_id": identity["item_id"],
+            "source_location": {"asset_workspace_id": identity["asset_workspace_id"], "item_id": identity["item_id"],
                                 "relative_path": identity["relative_path"]},
             "resolved_path": path, "read_mode": "full", "is_query": False,
             "_reader_name": readers[identity["file_format"]].__name__,
@@ -6009,7 +6012,7 @@ def _persist_file_profile(identity, *, operation, context):
                "_profile_role": role, "table_name": identity["relative_path"]}
     spark = pending["profile"].sparkSession
     profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
-        active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["workspace_id"],
+        active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["asset_workspace_id"],
         table_id=identity["table_id"], asset_type="FILE", profile_snapshot_id=snapshot)
     _require_catalogue_assets(profiled, context=context, table_name="FILE profiling")
     if "standard" in pending["activities"]:
@@ -6030,7 +6033,7 @@ def _persist_file_profile(identity, *, operation, context):
             "activity": activity, "status": "passed", "results_persisted": True,
             "profile_snapshot_id": snapshot if activity != "grain" else None,
             "trigger": operation, "pipeline_run_id": plan.plan_id,
-            "workspace_id": identity["workspace_id"], "row_count": pending["result"]["row_count"],
+            "asset_workspace_id": identity["asset_workspace_id"], "row_count": pending["result"]["row_count"],
             **pending["scope"]}
         journal = plan.evidence.setdefault("profiling", [])
         if event not in journal:
@@ -6040,7 +6043,7 @@ def _persist_file_profile(identity, *, operation, context):
 
 def file_participant_source(identity):
     """Extract the common asset identity and physical file selector for approval comparison."""
-    return {key: identity[key] for key in ("asset_type", "table_id", "workspace_id", "item_id",
+    return {key: identity[key] for key in ("asset_type", "table_id", "asset_workspace_id", "item_id",
                                          "relative_path", "file_format", "reader_options")}
 
 
@@ -6062,11 +6065,11 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
                                   "reader_options_json": canonical_pipeline_json(source["reader_options"])}
             continue
         if item.get("asset_type") == "TABLE" and item.get("item_id"):
-            bindings[table_id] = {"workspace_id": item["asset_workspace_id"], "item_id": item["item_id"],
+            bindings[table_id] = {"asset_workspace_id": item["asset_workspace_id"], "item_id": item["item_id"],
                                   "kind": item["store_type"], "schema": item.get("schema"), "table_name": item["table_name"]}
             continue
         store = get_store(config, workspace_id, item["store"])
-        bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
+        bindings[table_id] = {"asset_workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
 
@@ -6209,7 +6212,7 @@ def validate_pipeline_run(row):
             raise ValueError("Pipeline Run requires exact participant roles and destinations.")
         if item.get("asset_type") == "FILE":
             from fabricops_kit.data_contract.shared import validate_contract_source
-            source = file_binding_source(item["destination"])
+            source = file_binding_source(operation_physical_binding(item))
             validate_contract_source({"source": source, "table": {}})
             if item["table_id"] != source["table_id"]:
                 raise ValueError("File operation table_id must match its physical selector identity.")
@@ -6245,7 +6248,7 @@ def validate_pipeline_run(row):
                    or stage.get("evaluation_status") == "not_fully_evaluated" for stage in item["stages"])
             for item in operations)):
         raise ValueError("Pipeline Run success requires complete whole-run operation results.")
-    return retained if retained.get("run_schema_version") != 4 else row
+    return retained if retained.get("run_schema_version") != 4 or has_retained_asset_workspaces(retained) else row
 
 
 def pipeline_participation(runs):
@@ -6253,7 +6256,7 @@ def pipeline_participation(runs):
 
     Declared but unstarted operations are excluded. Failed attempts remain visible;
     neither overall Run success nor source associations imply data dependencies.
-    Destination workspace identifies the physical participant, independently of
+    Each operation’s asset_workspace_id identifies the physical participant, independently of
     the execution workspace. Files reuse their existing Source ID as the common Catalogue asset key.
     Released Run descriptors keep their original source_id/table_id fields.
     """
@@ -6276,8 +6279,7 @@ def pipeline_participation(runs):
         F.col("operation.started_at").alias("operation_started_at"),
         F.col("operation.completed_at").alias("operation_completed_at"),
         F.col("operation.destination").alias("destination"),
-        F.col("operation.destination.workspace_id").alias("participant_workspace_id"),
-        F.lower(F.col("operation.destination.workspace_id")).alias("asset_workspace_id"),
+        F.lower(F.col("operation.asset_workspace_id")).alias("asset_workspace_id"),
     )
 
 
@@ -6324,6 +6326,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
             actual = plan.evidence["operations"][key]
             operations.append({"operation_key": key,
                 "table_id": table_id, "asset_type": identity.get("asset_type", "TABLE"),
+                "asset_workspace_id": plan.runtime_context["_pipeline_bindings"][table_id]["asset_workspace_id"],
                 "pipeline_role": role,
                 "contract_id": contract["contract_id"] if contract else None,
                 "contract_version": contract["contract_version"] if contract else None,
@@ -6332,7 +6335,8 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                    if role == "target" and (actual.get("publication_status") or table_id in plan.evidence.get("publication_outcomes", {})) else {}),
                 **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path")}
                    if role == "target" and identity.get("asset_type") == "FILE" else {}),
-                "destination": plan.runtime_context["_pipeline_bindings"][table_id],
+                "destination": {key: value for key, value in plan.runtime_context["_pipeline_bindings"][table_id].items()
+                                if key not in {"asset_workspace_id", "table_id", "asset_type"}},
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
                     "started_at", "completed_at", "rows_read", "rows_written", "observed_columns_json")},
                 "metrics": dict(actual.get("metrics") or {}),
@@ -7112,7 +7116,10 @@ def profiling_context_key(table_id, *, context, spark_session=None):
         config, active_workspace_id, table_id, context=runtime, spark_session=spark_session)
     physical = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
     descriptor = {"table_id": table_id, "workspace_id": active_workspace_id, "physical": physical}
-    return _metadata_hash(descriptor), descriptor
+    # Preserve released context hashes so the rename does not reset accepted history.
+    hash_physical = {"workspace_id": physical["asset_workspace_id"],
+                     **{key: value for key, value in physical.items() if key != "asset_workspace_id"}}
+    return _metadata_hash({**descriptor, "physical": hash_physical}), descriptor
 
 
 def profiling_completion_history(table_id, *, context, spark_session=None, activity=None):

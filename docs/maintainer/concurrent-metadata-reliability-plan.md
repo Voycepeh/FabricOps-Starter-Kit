@@ -242,8 +242,7 @@ usage = participants.join(
 )
 ```
 
-The projection uses the physical workspace from the operation’s destination to
-join the Catalogue. The full destination also retains the item and schema.
+The projection uses `operations[].asset_workspace_id` to join the Catalogue. The full destination also retains the item and schema.
 A left join preserves unregistered participants and attempts. Files reuse their
 existing selector hash as `table_id`, distinguished by `asset_type="FILE"`.
 New version 4 Runs use these common fields; released Run JSON retains its

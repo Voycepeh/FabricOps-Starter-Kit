@@ -932,7 +932,7 @@ def convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)
 def validate_file_write(relative_path, file_format, mode, write_options=None):
     """Validate an exact writable Files destination without reader selectors."""
     from fabricops_kit.data_contract.shared import file_source_identity
-    file_source_identity(workspace_id="validation", item_id="validation", relative_path=relative_path,
+    file_source_identity(asset_workspace_id="validation", item_id="validation", relative_path=relative_path,
                          file_format=file_format)
     if file_format not in {"csv", "parquet", "json"}:
         raise ValueError("file_format must be csv, parquet or json.")

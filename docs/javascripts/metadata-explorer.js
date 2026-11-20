@@ -230,7 +230,7 @@
       }
       if (assetTable === "PIPELINE_RUN") {
         return [
-          "operations[].destination.workspace_id → DATA_CATALOGUE.asset_workspace_id",
+          "operations[].asset_workspace_id → DATA_CATALOGUE.asset_workspace_id",
           "operations[].table_id → DATA_CATALOGUE.table_id",
           "operations[].asset_type → DATA_CATALOGUE.asset_type",
         ];

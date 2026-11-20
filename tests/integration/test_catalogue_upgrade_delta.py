@@ -215,7 +215,7 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     """Migrate TABLE and FILE assets with exact IDs, scoped schemas and intact audit."""
     rt = catalogue_delta
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
-    file = file_source_identity(workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
+    file = file_source_identity(asset_workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
     dev = rt.row(table_id=table_id, asset_type=None, metadata_level="table", layer="Silver", store_type="lakehouse",
                  schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id, writer_workspace_id="writing-notebook-workspace", extension="keep",
                  load_strategy_parameters_json='{"key_columns":["id"]}')
@@ -839,10 +839,11 @@ def test_asset_identity_upgrade_preserves_frozen_json_and_exact_ids(catalogue_de
     rt = catalogue_delta
     expected = metadata_table_schema_registry()[table_name]
     path = rt.path + '-identity-' + table_name
-    source = file_source_identity(workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
+    source = file_source_identity(asset_workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
     asset_id = source['table_id']
     old_source = {key: value for key, value in source.items() if key not in {'table_id', 'asset_type'}}
     old_source.update(source_id=asset_id, source_type='file')
+    old_source['workspace_id'] = old_source.pop('asset_workspace_id')
     payload = json.dumps({'source': old_source, 'table': {'columns': []}}, indent=3)
     destination = json.dumps(old_source, indent=2)
     fields = [StructField(field.name, field.dataType, True) for field in expected if field.name != 'asset_type']

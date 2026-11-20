@@ -425,9 +425,9 @@ def test_ungoverned_file_protection_ignores_format_and_options(monkeypatch, prot
     import json
     from fabricops_kit.data_contract.shared import file_source_identity
     activation = importlib.import_module('fabricops_kit.activated_pipeline.shared')
-    protected = file_source_identity(workspace_id='workspace', item_id='item', relative_path=protected_path,
+    protected = file_source_identity(asset_workspace_id='workspace', item_id='item', relative_path=protected_path,
         file_format='json', reader_options={'multiLine': True})
-    destination = file_source_identity(workspace_id='workspace', item_id='item', relative_path='nested/orders.csv', file_format='csv')
+    destination = file_source_identity(asset_workspace_id='workspace', item_id='item', relative_path='nested/orders.csv', file_format='csv')
     monkeypatch.setattr(activation, 'read_activations', lambda **kw: [{'asset_workspace_id': 'workspace',
         'destination_json': json.dumps(protected)}])
     with pytest.raises(ValueError, match='protected file'):

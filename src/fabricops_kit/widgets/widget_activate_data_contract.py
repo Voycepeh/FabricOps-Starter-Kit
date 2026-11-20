@@ -147,7 +147,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
             identity = resolve_catalogue_table_identity(config, current_workspace, table.value, context=base,
                 spark_session=spark, physical_workspace_id=workspace.value)
             destination = pipeline_physical_bindings({table.value: identity}, config=config, workspace_id=workspace.value)[table.value]
-        if str(destination["workspace_id"]).casefold() != workspace.value.casefold():
+        if str(destination["asset_workspace_id"]).casefold() != workspace.value.casefold():
             raise ValueError("Select the physical table workspace before review.")
         state["destination"] = destination
         result["destination"] = destination
