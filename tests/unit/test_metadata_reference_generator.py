@@ -75,9 +75,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<div class="metadata-table-grid">' not in first_landing
     assert 'data-metadata-explorer' in first_landing
     assert '<nav class="metadata-explorer-fallback"' in first_landing
-    assert "## Workspace columns" in first_landing
-    assert "Contract authoring evidence" in first_landing
-    assert "Notebook audit" in first_landing
+    assert first_landing.startswith("# List of Metadata Tables\n\n## Metadata relationships\n")
+    assert "## Workspace columns" not in first_landing
+    assert "Look up the physical workspace display name" not in first_landing
+    assert "profiling is configured by setup_pipeline" not in first_landing
     assert "## Metadata relationships" in first_landing
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
@@ -233,6 +234,10 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
+    table_titles = [link.find("{http://www.w3.org/2000/svg}title").text for link in links]
+    assert {title.removeprefix("Open metadata documentation: ") for title in table_titles} == {
+        name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES
+    }
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
     assert "const layoutOrder" not in js
     assert 'class: "metadata-explorer-cardinality"' not in js

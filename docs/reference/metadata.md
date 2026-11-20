@@ -1,26 +1,5 @@
 # List of Metadata Tables
 
-FabricOps metadata is stored in one Metadata Lakehouse with two physical schemas:
-
-- **Governance** stores authored governance definitions.
-- **Engineering** stores technical observations, profiling, lineage, access observations, and runtime results.
-
-`table_id` is the common operational table/file asset key, distinguished by `asset_type`. Registered columns of either type use deterministic `column_id`. Released file source descriptors in Contracts, activations and Run operations retain `source_id`; operational writers store that same identity value in `table_id`. `contract_id` and `contract_version` identify one exact Data Contract version.
-
-## Workspace columns
-
-| Role | Columns | Meaning |
-| --- | --- | --- |
-| Physical asset workspace | `asset_workspace_id` and Catalogue `asset_workspace_name` | The Fabric workspace that contains the table or file. Used by the Catalogue, new asset observations, and Contract Activation. |
-| Contract authoring evidence | `evidence_workspace_id` on Data Contract | The physical workspace of the selected Catalogue observation. The Catalogue stores its display name in `asset_workspace_name`. Contract Activation records where the frozen version applies. |
-| Pipeline execution scope | `workspace_id` on Pipeline Run, `execution_workspace_id` on Pipeline Activation and Registry | The workspace whose configuration resolves the pipeline’s stores. Read and Write operations record their own physical asset workspaces. |
-| Notebook audit | `_workspace_id` and `_workspace_name` | The executing notebook’s workspace when the metadata row was written. |
-| Retained notebook provenance | Catalogue `writer_workspace_id` and Pipeline Registry `source_workspace_id` | The workspace of the recorded table-writing notebook or reviewed development notebook, respectively. |
-
-Look up the physical workspace display name on the matching Catalogue row when an observation stores only the ID. Guardrail Results use `asset_workspace_id` for planned asset checks with a binding and `execution_workspace_id` for pipeline-wide checks or checks without a binding. Historical Profile, Frequency, Access and Guardrail records may retain their original value in `legacy_workspace_id`.
-
-`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column containing authored Guardrails and Enrichment for each contract version; profiling is configured by setup_pipeline.
-
 ## Metadata relationships
 
 <div class="fabricops-metadata-explorer" data-metadata-explorer>

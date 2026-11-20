@@ -1055,16 +1055,6 @@ def parse_usage_note_metadata() -> tuple[dict[str, str], dict[str, str]]:
     )
 
 
-def parse_metadata_reference_overview() -> list[str]:
-    """Parse the concise Metadata Table Overview content."""
-    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
-    intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
-    caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
-    if not intro or not caption:
-        raise RuntimeError("Metadata reference overview content must include intro and caption")
-    return [intro, "", caption]
-
-
 def parse_metadata_reference_contract() -> tuple[dict[str, str], dict[str, dict[str, list[Any]]]]:
     """Parse metadata table purpose and column-owner contracts."""
     namespace = runpy.run_path(str(DOCS_METADATA_PATH))
@@ -4652,8 +4642,6 @@ def render_metadata_reference_index(
     )
     lines = [
         "# List of Metadata Tables",
-        "",
-        *parse_metadata_reference_overview(),
         "",
         "## Metadata relationships",
         "",

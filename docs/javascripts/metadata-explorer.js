@@ -157,7 +157,6 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 980";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();
@@ -168,7 +167,7 @@
       svg.classList.add("metadata-explorer-approved-svg");
       svg.setAttribute("aria-label", "FabricOps metadata ERD. Select a table to inspect its details.");
       svg.querySelectorAll("a").forEach(link => {
-        const nativeTitle = link.querySelector("title");
+        const nativeTitle = link.querySelector(":scope > title");
         const caption = nativeTitle?.textContent || "";
         const name = caption.split("Open metadata documentation: ").pop().trim();
         if (!byName.has(name)) return;
@@ -199,11 +198,12 @@
       graph.replaceChildren(svg);
       select("DATA_AGREEMENT");
     }).catch(() => {
+      graph.style.minWidth = "0";
       graph.innerHTML = '<p class="metadata-explorer-loading">Unable to load the diagram. Open a metadata table directly:</p>' +
-        '<nav aria-label="Metadata table references">' +
+        '<nav class="metadata-explorer-fallback" aria-label="Metadata table references">' +
         definitions.filter(row => row[4])
           .map(row => '<a href="' + escapeHtml(row[4]) + '">METADATA_' + escapeHtml(row[0]) + '</a>')
-          .join(" · ") + '</nav>';
+          .join("") + '</nav>';
       select("DATA_AGREEMENT");
     });
 
