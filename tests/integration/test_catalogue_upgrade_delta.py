@@ -109,7 +109,7 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
                  schema_name="sales", writer_workspace_id="writing-notebook-workspace", extension="keep",
                  load_strategy_parameters_json='{"key_columns":["id"]}')
     prod = {**dev, "workspace_id": "prod"}
-    file_row = rt.row(table_id=file["source_id"], asset_type="FILE", metadata_level="file", workspace_id="files",
+    file_row = rt.row(table_id=file["source_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
                       item_id="item", relative_path="orders.csv", file_format="csv")
     def child(parent, id_, name, dtype, **values):
         return {**parent, "metadata_level": "column", "column_id": id_, "column_name": name, "data_type": dtype, **values}

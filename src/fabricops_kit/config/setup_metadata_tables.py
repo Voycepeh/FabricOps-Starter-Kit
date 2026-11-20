@@ -279,6 +279,7 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
                     relative_path=parent.get("relative_path"), file_format=parent.get("file_format"))
                 if file["source_id"] != identity:
                     raise ValueError("Stored file location disagrees with its identity.")
+                workspace = file["workspace_id"]
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"Cannot verify the physical location of legacy Catalogue FILE {key!r}.") from exc
         new_key = (workspace.lower(), identity, kind)
