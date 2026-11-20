@@ -150,7 +150,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "via `approval_id`" in activated_page
     assert "`METADATA_DATA_CATALOGUE` **(N → 0..1)**" in contract_page
     assert "Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id" in contract_page
-    assert "via `evidence_workspace_id` + `table_id` + `source_id`" in contract_page
+    assert "via `evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
     assert "monotonically increasing" not in contract_page
 
@@ -449,7 +449,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         for name in CANONICAL_METADATA_TABLES
     }
 
-    for name in ("DATA_CONTRACT", "DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
+    for name in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
         assert "table_id" in {node.text for node in box.findall(f"{namespace}text")}
@@ -466,6 +466,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
 
     contract = next(node for node in svg_tree.findall(f".//{namespace}a")
                     if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_CONTRACT")
+    assert {"table_id (TABLE)", "source_id (FILE)"} <= {node.text for node in contract.findall(f"{namespace}text")}
     for role, fields in (("PK", "contract_id,contract_version"), ("REF", "evidence_workspace_id,table_id,source_id")):
         assert contract.find(f"{namespace}g[@data-key-role='{role}']").get("data-key-fields") == fields
     assert contract.find(f"{namespace}g[@data-key-role='FK']") is None

@@ -61,7 +61,12 @@ function renderMetadataSvg(layout, models) {
     const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
     const identityFields = model.asset_identity_fields.filter(field =>
       !model.primary_key.includes(field) && !catalogueReference.includes(field) && !authoringReference.includes(field) && !fk.some(([, value]) => value === field));
-    const fields = [...catalogueReference, ...authoringReference, ...identityFields].map(value => ["", value]);
+    const authoringLabels = {table_id: "table_id (TABLE)", source_id: "source_id (FILE)"};
+    const fields = [
+      ...catalogueReference,
+      ...authoringReference.map(field => authoringLabels[field] || field),
+      ...identityFields,
+    ].map(value => ["", value]);
     if (cataloguePrimary) fields.push(["", "asset_workspace_name"], ["", "columns_json (current schema)"]);
     const all = [...keys, ...fields];
     const rows = all.length > 6 ? [...all.slice(0, 5), ["", `+${all.length - 5} more fields`]] : all;

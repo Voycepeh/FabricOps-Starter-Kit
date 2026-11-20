@@ -4771,10 +4771,13 @@ def generate_metadata_reference_pages() -> None:
         for relationship in _metadata_relationships(
             table_name, table_models, include_inbound=False
         ):
+            reference = _model_key_text(relationship["fields"])
+            if table_name == "METADATA_DATA_CONTRACT" and relationship["table"] == "METADATA_DATA_CATALOGUE":
+                reference = "`evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)"
             rendered.extend([
                 f"`{relationship['table']}` "
                 f"**({_metadata_cardinality_display(relationship['cardinality'])})**",
-                f"via {_model_key_text(relationship['fields'])}",
+                f"via {reference}",
                 "",
             ])
         for relationship in table_models[table_name].get("relationships", []):
