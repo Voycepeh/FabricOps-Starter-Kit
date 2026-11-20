@@ -5,21 +5,18 @@ import fs from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
-  // Fan-out ports follow destination order: the farthest target takes the outer
-  // corridor, keeping nearer routes nested instead of crossing their stems.
+  // The overview shows direct scalar key references. Nested Run participation,
+  // draft authoring, and optional promotion provenance stay in the table details.
+  const directKey = (name, field) => !field.local_field.includes("[]") && !field.referenced_field.includes("[]") &&
+    !(name === "PIPELINE_RUN" && field.local_field === "promotion_id" && field.referenced_table === "METADATA_PIPELINE_REGISTRY");
   const routes = [
     ["DATA_STEWARD","DATA_AGREEMENT","1-N","physical","M1205 170H1115",[1205,170],[1115,170],"One steward may participate in many agreements"],
     ["DATA_AGREEMENT","DATA_CONTRACT_ACTIVATION","1-N","physical","M815 170H725",[815,170],[725,170],"One exact Agreement version may govern many physical frozen Contract selections"],
     ["PIPELINE_ACTIVATION","PIPELINE_REGISTRY","1-N","physical","M1745 253V423",[1745,253],[1745,423],"Exact independently approved package authorizes Engineering deployment; approval does not deploy"],
-    ["PIPELINE_REGISTRY","DATA_CONTRACT_ACTIVATION","N-N","logical","M1630 423V300H575V253",[1630,423],[575,253],"Logical approved physical workspace/Table ID association; active Contract selection is independent"],
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
-    ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M815 464H785V388H365V218H335",[815,464],[335,218],"Run operations reference exact table contract versions"],
-    ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
-    ["DATA_CATALOGUE","DATA_CONTRACT","0..1-N","logical","M185 423V253",[185,423],[185,253],"Draft authoring checks one active Catalogue asset using evidence_workspace_id and table_id (TABLE) or source_id (FILE). A retained version may have no current match."],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","PIPELINE_RUN","N-N","logical","M270 423V400H915V423",[270,423],[915,423],"Run asset participation by physical workspace and asset identity"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H965V735",[305,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]
@@ -42,7 +39,7 @@ function renderMetadataSvg(layout, models) {
     const transform=block.match(/transform="translate\(\s*0\s+(-?[\d.]+)\s*\)"/);
     boxes[name]=[Number(rect[1]),Number(rect[2])+(transform?Number(transform[1]):0),Number(rect[3]),Number(rect[4])];
     const pk=(model.primary_key||[]).map(value=>["PK",value]);
-    const fk=(model.foreign_keys||[]).filter(row=>!pk.some(k=>k[1]===row.local_field)).map(row=>["FK",row.local_field]);
+    const fk=(model.foreign_keys||[]).filter(row=>directKey(name,row)).filter(row=>!pk.some(k=>k[1]===row.local_field)).map(row=>["FK",row.local_field]);
     // Show composite version references together without hiding either key.
     const groupedFk = fk.filter(([, value]) => !value.endsWith("_version") ||
       !fk.some(([, other]) => other === value.replace(/_version$/, "_id")))
@@ -100,11 +97,11 @@ function renderMetadataSvg(layout, models) {
   const named=Object.keys(models);
   if(named.length!==12||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
-  // Every canonical cross-table physical FK requires a visible connector; logical links
-  // are also deliberate and carry explanatory SVG <title> tooltips.
+  // Every direct scalar key reference in this overview needs one connector.
+  // Optional promotion provenance and nested references remain in the full schema.
   const edgeSet=new Set(routes.map(r=>[r[0],r[1]].sort().join("|")));
   for(const [name,model] of Object.entries(models)){
-    for(const fk of model.foreign_keys||[]){
+    for(const fk of (model.foreign_keys||[]).filter(field=>directKey(name,field))){
       const target=fk.referenced_table.replace(/^METADATA_/,"");
       // Same-table record references appear in the box's FK fields, not as cross-table connectors.
       if(target===name){
@@ -113,6 +110,13 @@ function renderMetadataSvg(layout, models) {
       }
       if(!edgeSet.has([name,target].sort().join("|")))throw Error("Missing FK connector: "+name+" -> "+target);
     }
+  }
+  for (const [name, model] of Object.entries(models)) {
+    if (!(model.catalogue_reference_fields || []).length) continue;
+    if (JSON.stringify(model.catalogue_reference_fields) !== JSON.stringify(models.DATA_CATALOGUE.primary_key))
+      throw Error("Catalogue parent reference differs from its unique asset key: " + name);
+    if (!edgeSet.has([name, "DATA_CATALOGUE"].sort().join("|")))
+      throw Error("Missing Catalogue parent connector: " + name);
   }
   const badge=(x,y,label,color)=>{
     if(!label)return "";

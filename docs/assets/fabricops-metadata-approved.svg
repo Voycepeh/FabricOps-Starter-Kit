@@ -20,30 +20,10 @@
 <path d="M1745 253V423" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
 <rect x="1732" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="1732" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="1745" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
 </g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="DATA_CONTRACT_ACTIVATION" data-cardinality="N-N" data-kind="logical">
-<title>Logical approved physical workspace/Table ID association; active Contract selection is independent (N-N; logical identity reference)</title>
-<path d="M1630 423V300H575V253" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="1617" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1630" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text><rect x="562" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="575" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
-</g>
 <g class="metadata-er-relationship" data-from="DATA_CONTRACT_ACTIVATION" data-to="DATA_CONTRACT" data-cardinality="N-1" data-kind="physical">
 <title>Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion (N-1; keyed reference; application-enforced)</title>
 <path d="M425 170H335" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
 <rect x="387" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="400" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="347" y="159" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="174.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text>
-</g>
-<g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="DATA_CONTRACT" data-cardinality="N-N" data-kind="nested">
-<title>Run operations reference exact table contract versions (N-N; exact nested reference; application-enforced)</title>
-<path d="M815 464H785V388H365V218H335" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-<rect x="777" y="453" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="790" y="468.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text><rect x="347" y="207" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="360" y="222.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
-</g>
-<g class="metadata-er-relationship" data-from="PIPELINE_REGISTRY" data-to="PIPELINE_RUN" data-cardinality="1-N" data-kind="logical">
-<title>Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending (1-N; logical identity reference)</title>
-<path d="M1595 475H1548V380H1363Q1355 372 1347 380H965V423" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="1557" y="464" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="1570" y="479.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">1</text><rect x="952" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="965" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
-</g>
-<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_CONTRACT" data-cardinality="0..1-N" data-kind="logical">
-<title>Draft authoring checks one active Catalogue asset using evidence_workspace_id and table_id (TABLE) or source_id (FILE). A retained version may have no current match. (0..1-N; logical identity reference)</title>
-<path d="M185 423V253" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="166" y="387" width="38" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="185" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">0..1</text><rect x="172" y="267" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="185" y="282.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text><text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Draft authoring</text>
 </g>
 <g class="metadata-er-relationship" data-from="PIPELINE_RUN" data-to="GUARDRAIL_RESULTS" data-cardinality="1-N" data-kind="physical">
 <title>Pipeline run to recorded guardrail outcomes (1-N; keyed reference; application-enforced)</title>
@@ -59,11 +39,6 @@
 <title>Catalogue asset to frequency observations through asset_workspace_id + table_id + asset_type on new records (1-N; keyed reference; application-enforced)</title>
 <path d="M235 598V680H575V735" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
 <rect x="222" y="612" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="235" y="627.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">1</text><rect x="562" y="699" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.4"/><text x="575" y="714.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#2563EB">N</text>
-</g>
-<g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="PIPELINE_RUN" data-cardinality="N-N" data-kind="logical">
-<title>Run asset participation by physical workspace and asset identity (N-N; logical identity reference)</title>
-<path d="M270 423V400H915V423" fill="none" stroke="#7C3AED" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
-<rect x="257" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="270" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text><rect x="902" y="387" width="26" height="22" rx="6" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.4"/><text x="915" y="402.5" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="#7C3AED">N</text>
 </g>
 <g class="metadata-er-relationship" data-from="DATA_CATALOGUE" data-to="DATA_ACCESS" data-cardinality="1-N" data-kind="physical">
 <title>Catalogue table to observed permissions through asset_workspace_id + table_id + asset_type on new records (1-N; keyed reference; application-enforced)</title>
@@ -151,13 +126,9 @@
 <text x="965" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">PIPELINE_RUN</text>
 <text x="828" y="480" fill="#7C3AED" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">PK</text>
 <text x="866" y="480" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">run_id</text>
-<text x="828" y="500" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="866" y="500" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">promotion_id</text>
-<text x="828" y="520" fill="#2563EB" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">FK</text>
-<text x="866" y="520" fill="#19243A" font-size="12" font-family="Segoe UI, Arial, sans-serif">operations[].contract_id/version</text>
-<text x="866" y="540" fill="#19243A" font-size="11" font-family="Segoe UI, Arial, sans-serif">operations[].destination.workspace_id</text>
-<text x="866" y="560" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].table_id</text>
-<text x="866" y="580" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].source_id</text>
+<text x="866" y="504" fill="#19243A" font-size="11" font-family="Segoe UI, Arial, sans-serif">operations[].destination.workspace_id</text>
+<text x="866" y="528" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].table_id</text>
+<text x="866" y="552" fill="#19243A" font-size="14" font-family="Segoe UI, Arial, sans-serif">operations[].source_id</text>
 <title>Open metadata documentation: PIPELINE_RUN</title>
 </a>
 <a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_catalogue/" target="_blank">
@@ -235,5 +206,5 @@
 <text x="1608" y="585" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
-<text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · REF: authoring reference · Brackets group fields · Solid: key references · Dashed: logical associations · Delta tables commit independently</text>
+<text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · REF: authoring reference · Brackets group fields · Key references are application-enforced · Delta tables commit independently</text>
 </svg>

@@ -18,26 +18,8 @@
     ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
   ];
 
-  // Cardinalities always follow the declared parent-to-child direction.
-  // Relationship tooltips identify that direction when inspecting either table.
-  // Registry cardinalities describe separate activation records; control is internal.
-  const links = [
-    ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "DATA_CONTRACT_ACTIVATION", "1-N", "Exact Agreement governing a physical frozen Contract selection"],
-    ["PIPELINE_ACTIVATION", "PIPELINE_REGISTRY", "1-N", "Independent approval authorizes Engineering deployment"],
-    ["PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION", "N-N", "Logical physical workspace/Table ID association"],
-    ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
-    ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
-    ["DATA_CATALOGUE", "PIPELINE_RUN", "N-N", "Asset participation via operations and physical workspace and asset identity"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "0..1-N", "Catalogue asset used to draft a Contract version"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
-    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
-    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
-    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
-  ];
+  // The approved SVG owns the overview's direct key relationships.
+  let links = [];
 
   const byName = new Map(definitions.map(row => [row[0], row]));
   const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({
@@ -106,7 +88,7 @@
     root.innerHTML =
       '<div class="metadata-explorer-topbar">' +
       '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering</span>' +
-      '<span class="metadata-explorer-hint">Solid: keyed joins · Dashed: conceptual references</span>' +
+      '<span class="metadata-explorer-hint">Application-level key references · Delta does not enforce PK/FK</span>' +
       '</div>' +
       '<div class="metadata-explorer-layout">' +
       '<div class="metadata-explorer-viewport" role="region" tabindex="0" aria-label="Scrollable metadata relationship diagram">' +
@@ -193,6 +175,12 @@
           }
         });
         buttons[name] = link;
+      });
+      links = Array.from(svg.querySelectorAll(".metadata-er-relationship"), group => {
+        const from = group.getAttribute("data-from");
+        const to = group.getAttribute("data-to");
+        if (!byName.has(from) || !byName.has(to)) throw new Error("Unknown ERD relationship");
+        return [from, to, group.getAttribute("data-cardinality"), group.querySelector("title")?.textContent || ""];
       });
       if (Object.keys(buttons).length !== definitions.length) throw new Error("Unexpected approved diagram table count");
       graph.replaceChildren(svg);
