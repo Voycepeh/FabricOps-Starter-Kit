@@ -6,17 +6,17 @@
   const definitions = [
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
-    ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
+    ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], [], "metadata_data_contract/"],
     ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id", "revision"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
     ["PIPELINE_ACTIVATION", "governance", ["approval_id"], [], "metadata_pipeline_activation/"],
     ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["approval_id"], "metadata_pipeline_registry/"],
     ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
-    ["DATA_CATALOGUE", "engineering", ["environment_name", "table_id", "column_id"], [], "metadata_data_catalogue/"],
-    ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
-    ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id", "table_id"], "metadata_data_profiled_frequency/"],
-    ["DATA_LINEAGE", "engineering", ["lineage_id"], ["table_id"], "metadata_data_lineage/"],
-    ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
+    ["DATA_CATALOGUE", "engineering", ["workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
+    ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
+    ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
+    ["DATA_LINEAGE", "engineering", ["lineage_id"], [], "metadata_data_lineage/"],
+    ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
   ];
 
   // Cardinalities always follow the declared parent-to-child direction.
@@ -29,14 +29,14 @@
     ["PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION", "N-N", "Logical physical workspace/Table ID association"],
     ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "N-N", "Contracts for a table"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED", "N-N", "Profile snapshots"],
+    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "N-N", "Frequency snapshots"],
     ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
+    ["DATA_CATALOGUE", "DATA_LINEAGE", "N-N", "Lineage records"],
+    ["DATA_CATALOGUE", "DATA_ACCESS", "N-N", "Access observations"],
     ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
   ];
 
@@ -217,7 +217,7 @@
     }
 
     const logicalJoinKeys = {
-      "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
+      "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id → DATA_CATALOGUE.table_id (logical asset reference)"]
     };
     const keyJoinRows = (from, to) => {
       const rows = [];

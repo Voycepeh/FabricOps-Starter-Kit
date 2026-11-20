@@ -65,7 +65,7 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
     data = {
-        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', workspace_id='DEV', metadata_level='table', is_active=True)],
+        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', workspace_id='DEV', asset_type='TABLE', is_active=True)],
         'METADATA_DATA_CONTRACT': [dict(table_id='orders', contract_id='contract', contract_version=2, status='frozen', contract_payload_json='{}')],
         'METADATA_DATA_AGREEMENT': [],
     }

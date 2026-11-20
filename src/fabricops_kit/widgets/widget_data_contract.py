@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import decode_metadata_row
+
 import html
 import traceback
 import json
@@ -1194,7 +1196,8 @@ def widget_data_contract(
         )
         table_rows = catalogue["tables"]
         file_rows = contracts.contract_file_datasets(catalogue["contracts"], config=config, workspace_id=active_workspace_id)
-        observed_files = contracts.pipeline_file_datasets(catalogue.get("pipeline_runs", []), config=config, workspace_id=active_workspace_id)
+        observed_files = contracts.catalogue_file_datasets(catalogue.get("observations", ()), config=config,
+            workspace_id=active_workspace_id, pipeline_runs=catalogue.get("pipeline_runs", []))
         existing_files = {row["source_id"]: row for row in file_rows}
         for row in observed_files:
             existing_files.setdefault(row["source_id"], row)
@@ -1339,7 +1342,7 @@ def widget_data_contract(
                 "ai_usage_metadata": {"table_id": None if str(state.get("dataset_id")).startswith("file:") else state.get("dataset_id"), "column_id": column_id,
                                       "contract_id": contract.get("contract_id"),
                                       "contract_version": state.get("contract_version"),
-                                      "evidence_workspace_id": active_workspace_id}}
+                                      "evidence_workspace_id": contract.get("evidence_workspace_id") or state["workspace_id"]}}
 
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)
@@ -1457,7 +1460,7 @@ def widget_data_contract(
         began = perf_counter()
         try:
             state["current"] = contracts.get_contract_review_state(
-                config=config, active_workspace_id=active_workspace_id, spark_session=spark,
+                config=config, active_workspace_id=state["workspace_id"] or active_workspace_id, spark_session=spark,
                 contract_id=str(chosen["contract_id"]), contract_version=state["contract_version"],
                 metadata_workspace_id=routing_workspace_id,
             )
@@ -1478,13 +1481,15 @@ def widget_data_contract(
     def new_draft() -> dict[str, Any]:
         if not state.get("dataset_id") or not state.get("workspace_id"):
             raise ValueError("Select a dataset and workspace before creating a draft.")
+        dataset = str(state["dataset_id"])
+        file_source = next((row for row in file_rows if row["source_id"] == dataset), None)
+        selection = {"table_id": dataset} if file_source is None else {
+            "file_source": {key: file_source[key] for key in
+                ("source_type", "source_id", "workspace_id", "item_id", "relative_path", "file_format", "reader_options")},
+        }
         draft = contracts.create_contract_draft(
-            **({"file_source": {key: value for key, value in next(row for row in file_rows if row["source_id"] == state["dataset_id"]).items()
-                 if key not in {"store", "columns", "configuration_workspace_id"}}, "columns": next(row["columns"] for row in file_rows if row["source_id"] == state["dataset_id"])}
-                if str(state["dataset_id"]).startswith("file:") else {"table_id": str(state["dataset_id"])}),
-            config=config, active_workspace_id=active_workspace_id,
-            spark_session=spark, context=resolved,
-            metadata_workspace_id=routing_workspace_id,
+            **selection, config=config, active_workspace_id=state["workspace_id"],
+            spark_session=spark, context=resolved, metadata_workspace_id=routing_workspace_id,
         )
         state["contracts"] = [draft, *[
             row for row in state["contracts"]
@@ -1782,9 +1787,9 @@ def widget_data_contract(
         )
 
     workspace_names = {
-        str(row["workspace_id"]): str(row["_workspace_name"])
+        str(row["workspace_id"]): str(row["workspace_name"])
         for row in [*table_rows, *file_rows]
-        if row.get("workspace_id") and row.get("_workspace_name")
+        if row.get("workspace_id") and row.get("workspace_name")
     }
     runtime_metadata = resolved.get("runtime_metadata") or resolved
     if runtime_metadata.get("workspace_id") and runtime_metadata.get("workspace_name"):
@@ -1928,6 +1933,9 @@ def widget_data_contract(
             for column in columns
             if not str(column.get("column_name") or "").startswith("_")
         ]
+        catalogue_asset = next((item for item in current.get("catalogue_rows", [])
+                                if item.get("is_active") is not False), {})
+        observed_columns = decode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": catalogue_asset.get("columns_json")})["columns_json"] or []
         resolution_controls = ()
         available_ids = {str(column.get("column_id") or "") for column in columns}
         unresolved = [
@@ -1938,7 +1946,7 @@ def widget_data_contract(
         if editable and unresolved:
             names_by_id = {
                 str(item.get("column_id") or ""): str(item.get("column_name") or item.get("column_id"))
-                for item in current.get("catalogue_rows", []) if item.get("column_id")
+                for item in observed_columns
             }
             details = "<br>".join(html.escape(
                 f"{names_by_id.get(str(item['column_id']), str(item['column_id']))}: "
@@ -1972,7 +1980,7 @@ def widget_data_contract(
             remove_unavailable.on_click(remove_unavailable_clicked)
             state["_controls"]["remove_unavailable_definitions"] = remove_unavailable
             resolution_controls = (notice, remove_unavailable)
-        table = next((item for item in current.get("catalogue_rows", []) if not item.get("column_id")), {})
+        table = catalogue_asset
         if not table:
             table = (state.get("manifest") or {}).get("table", {})
         source = current.get("payload", {}).get("source", {})
@@ -1981,10 +1989,7 @@ def widget_data_contract(
             # Display physical file context without changing the authored payload.
             dataset = next((item for item in file_rows if item["source_id"] == source["source_id"]), source)
             table = {**table, **dataset, "table_name": source["relative_path"]}
-        observed_names = {str(item.get("column_name")) for item in current.get("catalogue_rows", [])
-                          if item.get("column_id") and item.get("is_active") is not False}
-        if current.get("payload", {}).get("source", {}).get("source_type") == "file":
-            observed_names = {str(item.get("column_name")) for item in current.get("available_columns", [])}
+        observed_names = {item["column_name"] for item in observed_columns}
         contracted_names = {str(item.get("column_name")) for item in columns}
         state["observation_difference"] = {"unaccounted_columns": sorted(observed_names - contracted_names),
                                            "missing_contracted_columns": sorted(contracted_names - observed_names)}
@@ -2002,7 +2007,6 @@ def widget_data_contract(
         column_names = [
             str(column.get("column_name") or "") for column in authoring_columns
         ]
-        from fabricops_kit.config.metadata_schemas import decode_metadata_row
         discovery = decode_metadata_row("METADATA_DATA_CATALOGUE", {
             "profile_key_candidates_json": table.get("profile_key_candidates_json"),
         })["profile_key_candidates_json"] or {}
@@ -2518,10 +2522,10 @@ def widget_data_contract(
                 workspace_name = str(profile.get("workspace_name") or "").strip()
                 if not workspace_name:
                     workspace_name = next((
-                        str(observation.get("_workspace_name") or "").strip()
+                        str(observation.get("workspace_name") or "").strip()
                         for observation in table_rows
                         if str(observation.get("workspace_id") or "") == workspace_id
-                        and observation.get("_workspace_name")
+                        and observation.get("workspace_name")
                     ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 selected_workspace_name = str(
@@ -2567,10 +2571,10 @@ def widget_data_contract(
                     workspace_value = str(item.get("workspace_name") or "").strip()
                     if not workspace_value:
                         workspace_value = next((
-                            str(observation.get("_workspace_name") or "").strip()
+                            str(observation.get("workspace_name") or "").strip()
                             for observation in table_rows
                             if str(observation.get("workspace_id") or "") == workspace_id
-                            and observation.get("_workspace_name")
+                            and observation.get("workspace_name")
                         ), "") or "Unknown workspace"
                     pipeline_value = str(item.get("pipeline_name") or "")
                     relationship = str(item.get("relationship") or "")
@@ -3252,7 +3256,7 @@ def widget_data_contract(
         }
         observed_types = {
             str(item.get("column_id") or ""): str(item.get("data_type") or "")
-            for item in current.get("catalogue_rows", []) if item.get("column_id") and item.get("is_active") is not False
+            for item in observed_columns
         }
         observed_types = {str(column["column_id"]): observed_types.get(str(column["column_id"]), "") for column in columns}
         contracted_types = {

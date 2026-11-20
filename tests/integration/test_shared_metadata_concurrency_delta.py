@@ -59,10 +59,9 @@ def test_parallel_workspaces_keep_runs_profiles_catalogue_and_processing_state(r
         for table, identity in [('METADATA_DATA_PROFILED', 'profile_id'), ('METADATA_DATA_PROFILED_FREQUENCY', 'frequency_id')]:
             shared._replace_snapshot_rows(dataframe=frame(table, {**profile, identity: workspace}),
                 table_name=table, row_id=identity, config={}, active_workspace_id=workspace, spark_session=r.spark)
-        catalogue = {'workspace_id': workspace, 'table_id': 'orders', 'metadata_level': 'table',
+        catalogue = {**audit, 'workspace_id': workspace, 'workspace_name': workspace, 'table_id': 'orders', 'asset_type': 'TABLE',
                      'table_name': 'orders', 'is_active': True, 'last_profiled_at': datetime(2026, 1, 1)}
-        shared._upsert_catalogue_identities(catalogue_df=frame('METADATA_DATA_CATALOGUE', catalogue),
-            config={}, active_workspace_id=workspace, spark_session=r.spark)
+        shared.merge_catalogue_asset(catalogue, context=plan.runtime_context, spark_session=r.spark)
         record = {**audit, 'record_id': workspace, 'record_type': 'source_observation', 'status': 'observed',
                   'workspace_id': workspace, 'run_id': plan.plan_id, 'source_table_id': 'orders'}
         shared._merge_source_observation_records([record], context=plan.runtime_context)

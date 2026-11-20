@@ -131,7 +131,7 @@ inspect the result without writing metadata.
 
 `fabricops_kit/access_scanner/scan_workspace_access.py:145`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L145-L270">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L145-L271">View on GitHub</a>
 </div>
 
 

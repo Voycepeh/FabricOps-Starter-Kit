@@ -16,7 +16,7 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
-  - `METADATA_DATA_CATALOGUE` stores typed TABLE/FILE assets: one common table_id asset key and deterministic column_id for either type, physical location, data type, and table processing-definition fields. Files reuse their existing selector identity as table_id; released source descriptors retain source_id.
+  - `METADATA_DATA_CATALOGUE` stores one current TABLE or FILE per physical `workspace_id`, `table_id` and `asset_type`. Its validated `columns_json` stores the latest observed active schema. Files reuse their existing selector identity in `table_id`. Unprefixed workspace fields describe the asset, while audit fields describe the executing notebook.
   - `METADATA_DATA_PROFILED` stores table-column or file-column snapshot metrics. Both types use table_id and column_id, distinguished by asset_type.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
   - `METADATA_DATA_LINEAGE` stores typed table/file source/target pipeline participation within a Fabric Activity, not proven DataFrame transformation dependencies.

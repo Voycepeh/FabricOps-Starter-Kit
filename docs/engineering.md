@@ -391,7 +391,7 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 
 ![Typed operational outcomes, profiling, lineage, guardrails, and checkpoints.](assets/engineering/operational-evidence.svg){ .fabricops-section-evidence }
 
-- technical table and column identity plus observed processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
+- physical table and file identity, latest observed schema and processing information in [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md);
 - Standard and Grain profile outcomes in [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), plus Frequency results in [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md);
 - registered source/target pipeline participation in [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md);
 - aggregate Guardrail results and continuation decisions in [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md);
@@ -407,6 +407,14 @@ This is not generic notebook time travel. Only the notebook is frozen—imported
 </div>
 
 
+### Upgrade an existing Data Catalogue
+
+Pause pipelines that write to the shared Metadata Lakehouse and run `setup_metadata_tables()` with the original configuration-scope FabricStore mappings available. Setup uses each legacy TABLE row's configuration workspace and store to resolve its physical workspace, and checks retained successful Pipeline Run bindings where available. FILE rows are validated against their stored physical selector. The setup identity needs permission to read the display names of remote workspaces.
+
+Setup validates active and inactive legacy column definitions, copies the active definitions and their original IDs to `columns_json`, then retires the legacy rows and fields in one Delta commit. SQL NULL means the schema has not been observed. An empty JSON array means the observed schema is empty. If setup reports a missing or conflicting mapping, verify the original store and asset records before rerunning.
+
+Record the Catalogue result's `pre_upgrade_version`. To roll back, keep writers paused, check for writes after the upgrade, restore that Delta version using the returned recovery command, and run the matching prior FabricOps version. Later Catalogue writes require reconciliation before restore. Retain the Delta files for the rollback window.
+
 ## How is file metadata persisted?
 
 **Files use the same metadata tables and operation boundary as tables.** `asset_type`
@@ -418,7 +426,7 @@ that selector identity. Format and reader options do not change it.
 
 | Metadata table | File behavior |
 | --- | --- |
-| `METADATA_DATA_CATALOGUE` | One `metadata_level=file` row per selector; physical workspace/item, store, path, format, active flag and first/last observations. The common `table_id` identifies the file; observed fields register `column_id` rows. |
+| `METADATA_DATA_CATALOGUE` | One `FILE` row per physical selector with workspace, item, path, format, active flag and observation timestamps. The existing file identity is stored in `table_id` and the latest observed fields are stored in `columns_json`. |
 | `METADATA_DATA_LINEAGE` | Successful source and target participation, with `asset_type=FILE`, common Table ID, readable asset reference and the existing `_activity_id`. |
 | `METADATA_DATA_PROFILED` | Per-column file snapshot metrics, common Table/Column IDs, column name, Run ID, role and selection scope. The common `table_id` identifies the file; observed fields register `column_id` rows. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Ranked file distributions linked to the profile snapshot; independent frequency work has no statistical `profile_id`. |
@@ -459,7 +467,7 @@ and retained Run/Contract JSON remain intact. Repeated setup is safe.
 
 | Table | Common identity and schema changes |
 | --- | --- |
-| Catalogue | `table_id` and `column_id` apply to tables and files; `asset_type`, file coordinates and observation timestamps describe the asset. File columns register even when profiling is disabled. |
+| Catalogue | One row per physical `workspace_id`, `table_id` and `asset_type`. Successful full-schema observations update `columns_json` even when profiling is disabled. |
 | Lineage | Common `table_id`, `asset_type`, `asset_name`; table and file participation share the existing activity lifecycle. |
 | Profile and Frequency | Common `table_id` and `column_id`, plus `asset_type`, file `run_id` and role. |
 | Guardrail Results | Existing file `source_id` values move into common `table_id`; `asset_type` distinguishes files. |

@@ -1002,18 +1002,16 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     }
 
     assert catalogue_names == [
-        "metadata_level",
         "asset_type", "item_id", "relative_path", "file_format",
         "first_observed_at", "last_observed_at",
         "table_id",
-        "column_id",
         "workspace_id",
+        "workspace_name",
+        "columns_json",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
-        "column_name",
-        "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
         "writer_workspace_id",
@@ -1034,7 +1032,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "_activity_id",
     ]
     assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
-    assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
+    assert {"asset_type", "table_id", "workspace_name", "columns_json", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
     assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "workspace_id", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))

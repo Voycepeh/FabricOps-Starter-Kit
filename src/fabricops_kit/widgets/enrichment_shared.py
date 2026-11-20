@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import decode_metadata_row
+
 import ast
 from datetime import UTC, datetime
 import logging
@@ -1086,7 +1088,7 @@ def catalogue_table_options(catalogue_rows: Any, *, workspace_id: str) -> list[d
     for row in _rows(catalogue_rows):
         if str(row.get("workspace_id") or "") != str(workspace_id):
             continue
-        if str(row.get("metadata_level") or "").lower() != "table":
+        if row.get("asset_type") != "TABLE":
             continue
         table_id = str(row.get("table_id") or "").strip()
         if not table_id:
@@ -1161,53 +1163,21 @@ def catalogue_table_browser_state(
     contract_version: int,
     current_values: dict[tuple[str, str, int, str, str], dict[str, Any]],
 ) -> dict[str, Any]:
-    """Return one workspace-specific Catalogue table and its column history."""
-    rows = [
-        row
-        for row in _rows(catalogue_rows)
-        if str(row.get("workspace_id") or "") == str(workspace_id)
-        and str(row.get("table_id") or "") == str(table_id)
-    ]
-    if not rows:
-        raise ValueError(f"No Catalogue rows found for table_id={table_id!r} in workspace_id {workspace_id!r}.")
-    table_rows = [row for row in rows if str(row.get("metadata_level") or "").lower() == "table"]
-    if not table_rows:
-        raise ValueError(f"Catalogue table identity {table_id!r} has no table-level row in workspace_id {workspace_id!r}.")
-    table_row = max(
-        table_rows,
-        key=lambda row: (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or "")),
-    )
-    columns: list[dict[str, Any]] = []
-    latest_columns: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if str(row.get("metadata_level") or "").lower() != "column":
-            continue
-        column_id = str(row.get("column_id") or "").strip()
-        if not column_id:
-            continue
-        order = (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
-        current = latest_columns.get(column_id)
-        if current is None or order > current["_sort_key"]:
-            latest_columns[column_id] = {**row, "_sort_key": order}
-    for column_id, row in latest_columns.items():
-        active = row.get("is_active") is not False
-        columns.append(
-            {
-                "column_id": column_id,
-                "column_name": str(row.get("column_name") or column_id),
-                "status": "current" if active else "removed",
-                "last_observed_at": row.get("last_profiled_at"),
-                "catalogue_row": dict(row),
-                "enrichment_values": _enrichment_values(
-                    current_values,
-                    level="column",
-                    contract_id=contract_id,
-                    contract_version=contract_version,
-                    column_id=column_id,
-                ),
-            }
-        )
-    columns.sort(key=lambda row: (row["status"] != "current", row["column_name"].casefold(), row["column_id"]))
+    """Return one physical Catalogue table and its current observed columns."""
+    rows = [row for row in _rows(catalogue_rows)
+            if row.get("asset_type") == "TABLE" and row.get("is_active") is not False
+            and row.get("workspace_id") == workspace_id and row.get("table_id") == table_id]
+    if len(rows) != 1:
+        raise ValueError(f"Expected one active Catalogue TABLE {table_id!r} in workspace {workspace_id!r}.")
+    table_row = rows[0]
+    observed = decode_metadata_row("METADATA_DATA_CATALOGUE", table_row).get("columns_json")
+    columns = [{
+        "column_id": column["column_id"], "column_name": column["column_name"], "status": "current",
+        "last_observed_at": table_row.get("last_observed_at"), "catalogue_row": dict(column),
+        "enrichment_values": _enrichment_values(current_values, level="column", contract_id=contract_id,
+                                                contract_version=contract_version, column_id=column["column_id"]),
+    } for column in observed or []]
+    columns.sort(key=lambda row: (row["column_name"].casefold(), row["column_id"]))
     return {
         "table_id": table_id,
         "contract_id": contract_id,

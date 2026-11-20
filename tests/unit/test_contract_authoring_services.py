@@ -25,7 +25,7 @@ def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{
         "table_id": "orders", "workspace_id": "dev",
-        "metadata_level": "table", "is_active": True,
+        "asset_type": "TABLE", "columns_json": [], "is_active": True,
     }]
     contracts: list[dict] = []
     writes = []
@@ -81,7 +81,7 @@ def test_new_version_excludes_processing_from_scan_and_previous_contract(monkeyp
         "contract_payload_json": json.dumps(previous_payload),
     }
     catalogue = [{
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+        "table_id": "orders", "workspace_id": "dev", "asset_type": "TABLE", "columns_json": [],
         "load_strategy": None, "load_strategy_parameters_json": {}, "is_active": True,
     }]
     rows = [frozen]
@@ -172,8 +172,8 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     tables = {
         service.DATA_CONTRACT_TABLE: contracts,
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "dev-t", "workspace_id": "dev", "metadata_level": "table"},
-            {"table_id": "prod-t", "workspace_id": "prod", "metadata_level": "table"},
+            {"table_id": "dev-t", "workspace_id": "dev", "asset_type": "TABLE", "columns_json": []},
+            {"table_id": "prod-t", "workspace_id": "prod", "asset_type": "TABLE", "columns_json": []},
         ],
         "enrichment": [],
         "guardrails": [],
@@ -381,7 +381,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
     }
     tables = {
         "METADATA_DATA_CATALOGUE": [{
-            "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+            "table_id": "orders", "workspace_id": "dev", "asset_type": "TABLE", "columns_json": [],
             "schema_name": "sales", "table_name": "orders", "load_strategy": "append_all",
             "load_strategy_parameters_json": {}, "is_active": True,
         }],
@@ -589,7 +589,7 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
         "action": "Warn", "is_active": True,
     }
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "orders", "metadata_level": "table", "workspace_id": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
+        draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "orders", "asset_type": "TABLE", "columns_json": [], "workspace_id": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"

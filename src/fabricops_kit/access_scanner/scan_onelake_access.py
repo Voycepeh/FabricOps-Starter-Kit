@@ -253,6 +253,7 @@ def scan_onelake_access(
     observations = _observations_df(catalogue_df.sparkSession, rows)
     registered_tables = catalogue_tables(
         catalogue_df,
+        config=config,
         workspace_id=resolved_workspace_id,
         target_store_kinds=resolved_store_kinds,
     )

@@ -6,6 +6,7 @@ import pytest
 from pathlib import Path
 
 from fabricops_kit.pipeline import shared
+from tests.helpers import framework_config
 
 pytestmark = pytest.mark.unit
 
@@ -25,9 +26,8 @@ class Frame:
 def catalogue_row(table_id: str, table_name: str, *, active=True, level="table") -> dict:
     """Return one registered Catalogue test row."""
     return {
-        "metadata_level": level,
+        "asset_type": "TABLE" if level == "table" else "FILE",
         "table_id": table_id,
-        "column_id": None,
         "workspace_id": "dev",
         "store_type": "lakehouse",
         "layer": "Silver",
@@ -45,7 +45,7 @@ def test_catalogue_resolver_isolates_canonical_table_id(monkeypatch):
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *args: None)
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: Frame(rows))
 
-    identity = shared.resolve_catalogue_table_identity(object(), "dev", "table-a")
+    identity = shared.resolve_catalogue_table_identity(framework_config(), "dev", "table-a")
 
     assert identity["table_id"] == "table-a"
     assert identity["table_name"] == "orders"
@@ -66,7 +66,7 @@ def test_catalogue_resolver_suppresses_internal_io_log(monkeypatch):
     monkeypatch.setattr(shared, "read_lakehouse_table", _read)
 
     shared.resolve_catalogue_table_identity(
-        object(),
+        framework_config(),
         "dev",
         "table-a",
         context={"config": "config", "scope_workspace_id": "dev"},
@@ -79,7 +79,7 @@ def test_catalogue_resolver_suppresses_internal_io_log(monkeypatch):
 def test_catalogue_resolver_rejects_blank_table_id(table_id):
     """Reject blank canonical identities before metadata IO."""
     with pytest.raises(ValueError, match="table_id must be a non-empty"):
-        shared.resolve_catalogue_table_identity(object(), "dev", table_id)
+        shared.resolve_catalogue_table_identity(framework_config(), "dev", table_id)
 
 
 def test_catalogue_resolver_rejects_missing_duplicate_and_non_table_rows(monkeypatch):
@@ -88,11 +88,11 @@ def test_catalogue_resolver_rejects_missing_duplicate_and_non_table_rows(monkeyp
     rows = [catalogue_row("table-a", "orders", level="column")]
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda *args, **kwargs: Frame(rows))
     with pytest.raises(ValueError, match="No active registered Catalogue table"):
-        shared.resolve_catalogue_table_identity(object(), "dev", "table-a")
+        shared.resolve_catalogue_table_identity(framework_config(), "dev", "table-a")
 
     rows[:] = [catalogue_row("table-a", "orders"), catalogue_row("table-a", "orders-copy")]
     with pytest.raises(RuntimeError, match="resolves to 2 active table identities"):
-        shared.resolve_catalogue_table_identity(object(), "dev", "table-a")
+        shared.resolve_catalogue_table_identity(framework_config(), "dev", "table-a")
 
 
 def test_governed_check_modules_have_no_legacy_table_identity_name():

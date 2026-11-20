@@ -12,9 +12,9 @@ from fabricops_kit.pipeline import shared as pipeline
 def observation(workspace, table, columns):
     """Build one current physical observation without requiring any profile."""
     base = {"workspace_id": workspace, "table_id": table, "is_active": True, "_committed_at": "2026-10-27T00:00:00Z"}
-    return [{**base, "metadata_level": "table", "table_name": table}, *[
-        {**base, "metadata_level": "column", "column_id": name, "column_name": name, "data_type": datatype}
-        for name, datatype in columns]]
+    return [{**base, "asset_type": "TABLE", "table_name": table, "columns_json": [
+        {"column_id": name, "column_name": name, "data_type": datatype}
+        for name, datatype in columns]}]
 
 
 def test_bidirectional_observation_choices():
@@ -25,12 +25,11 @@ def test_bidirectional_observation_choices():
     assert contracts.observation_selector_options(rows, table_id="customer")["workspaces"] == ["A", "B"]
 
 
-def test_inactive_latest_column_never_revives_historical_column():
-    """Latest tombstones win before filtering active rows."""
-    rows = observation("A", "customer", [("removed", "int"), ("current", "string")])
-    rows.append({**rows[1], "is_active": False, "_committed_at": "2026-10-27T01:00:00Z"})
-    current = contracts.current_catalogue_observations(rows)
-    assert {row.get("column_id") for row in current} == {None, "current"}
+def test_catalogue_duplicate_physical_grain_is_rejected():
+    """Current Catalogue consumers fail closed on conflicting asset rows."""
+    rows = observation("A", "customer", [("current", "string")])
+    with pytest.raises(ValueError, match="Duplicate Catalogue asset identity"):
+        contracts.current_catalogue_observations([*rows, {**rows[0], "is_active": False}])
 
 
 @pytest.mark.parametrize("actual,passed", [

@@ -76,18 +76,16 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
     """Catalogue owns the physical table/column identity for one workspace_id."""
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
-        "metadata_level",
         "asset_type", "item_id", "relative_path", "file_format",
         "first_observed_at", "last_observed_at",
         "table_id",
-        "column_id",
         "workspace_id",
+        "workspace_name",
+        "columns_json",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
-        "column_name",
-        "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
         "writer_workspace_id",

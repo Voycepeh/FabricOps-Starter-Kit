@@ -76,7 +76,7 @@ The configured Metadata Lakehouse holds five Governance-owned tables and eight E
 
 ??? info "Under the Hood — identity, timing and transaction boundaries"
 
-    `METADATA_DATA_CATALOGUE` is the canonical table/column and physical-location record. Profile snapshots link back through `table_id` and `column_id`; lineage records a table's pipeline participation. `METADATA_DATA_CONTRACT` stores one exact authored payload per version, while `METADATA_DATA_CONTRACT_ACTIVATION` selects it for a physical workspace/table and applicable Agreement.
+    `METADATA_DATA_CATALOGUE` keeps one current row per physical `workspace_id`, `table_id` and `asset_type`. Current column definitions live in `columns_json`. Profile snapshots retain their own historical column identities and statistics, and lineage records asset participation in a pipeline. `METADATA_DATA_CONTRACT` stores one exact authored payload per version, while `METADATA_DATA_CONTRACT_ACTIVATION` selects it for a physical workspace/table and applicable Agreement.
 
     Governance decisions in `METADATA_PIPELINE_ACTIVATION`, Engineering deployments in `METADATA_PIPELINE_REGISTRY`, business-table publication and metadata progress are deliberately separate boundaries. FabricOps accepts incremental checkpoints and publication receipts in Processing State only after it can verify publication. Pipeline-owned Source Drift baseline heads wait for successful whole-run finalization and every required verified target publication; all candidate heads advance in one Serializable conditional transaction. The Pipeline Registry coordinates managed mutations in a Serializable transaction, but multiple target writes are not one cross-target atomic transaction.
 

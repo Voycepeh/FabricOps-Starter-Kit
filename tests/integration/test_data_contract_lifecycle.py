@@ -191,13 +191,15 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         identity = runtime.resolve_physical_table_identity(config, "dev", store=layer, schema="dbo", table_name=name)
         table_id = identity["table_id"]
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
-        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "metadata_level": "table",
-                 "column_id": None, "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
+        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "asset_type": "TABLE",
+                 "workspace_name": "Development", "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
                  "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
                  "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
+        table["columns_json"] = [
+            {"column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype}
+            for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string"))
+        ]
         state.metadata["METADATA_DATA_CATALOGUE"].append(table)
-        for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string")):
-            state.metadata["METADATA_DATA_CATALOGUE"].append({**table, "metadata_level": "column", "column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype})
     state.business["orders"] = spark_session.createDataFrame([
         (1, "one@example.test", now - timedelta(hours=1), str(now.date())),
         (2, "two@example.test", now - timedelta(hours=1), str(now.date())),

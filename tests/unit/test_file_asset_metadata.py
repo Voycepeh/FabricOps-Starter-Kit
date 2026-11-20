@@ -40,8 +40,8 @@ def test_file_selector_identity_and_active_catalogue_grain():
     assert source["source_id"] == identity(relative_path="a/b.csv", file_format="json")["source_id"]
     assert len({source["source_id"], identity(workspace_id="other")["source_id"], identity(item_id="other")["source_id"]}) == 3
     rows = [dict(asset_type="FILE", table_id=identity(relative_path=path)["source_id"],
-                 metadata_level="file", workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
-    rows += [dict(metadata_level="table", workspace_id="w", table_id="legacy", is_active=True)]
+                 workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
+    rows += [dict(asset_type="TABLE", workspace_id="w", table_id="legacy", is_active=True)]
     assert len(current_catalogue_observations(rows)) == 3
     rows[0]["is_active"] = False
     assert len(current_catalogue_observations(rows)) == 2
@@ -60,7 +60,8 @@ def writer(monkeypatch):
     spark.createDataFrame.return_value = frame
     delta = SimpleNamespace(forPath=Mock(return_value=merge))
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=delta))
-    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: ({}, "execution-workspace", context or {}))
+    monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: ({}, "execution-workspace", {"config": {}, **(context or {})}))
+    monkeypatch.setattr(shared, "resolve_asset_workspace_name", lambda *a, **kw: "Physical Workspace")
     monkeypatch.setattr(shared, "build_pipeline_audit_fields", lambda **kw: dict(audit))
     monkeypatch.setattr(shared, "get_spark_session", lambda **kw: spark)
     monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: "configured_engineering")
@@ -86,12 +87,13 @@ def test_file_lineage_writer_has_exact_identity_and_activity(writer, role):
 def test_file_catalogue_preserves_first_observation_and_extension_fields(writer):
     shared.persist_file_catalogue(writer.identity, context={})
     row = writer.spark.createDataFrame.call_args.args[0][0]
-    assert row["column_id"] is None
+    assert row["columns_json"] is None
     assert row["table_id"] == writer.identity["source_id"]
     assert row["workspace_id"] == "physical" and row["item_id"] == "lakehouse"
     assert row["first_observed_at"] == row["last_observed_at"]
     updates = writer.merge.whenMatchedUpdate.call_args.kwargs["set"]
-    assert "first_observed_at" not in updates and "extension" not in updates
+    assert updates["first_observed_at"] == "coalesce(target.first_observed_at, source.first_observed_at)"
+    assert "extension" not in updates
 
 
 @pytest.mark.parametrize("mode", ["Dry Run", "Ungoverned"])
@@ -205,13 +207,11 @@ def test_file_profile_commit_rechecks_persistence_policy():
 
 def test_file_catalogue_registers_deterministic_columns(writer):
     from fabricops_kit.config.shared import build_column_id
-    writer.merge.whenNotMatchedBySourceUpdate.return_value = writer.merge
     shared.persist_file_catalogue(writer.identity, context={}, columns=[
-        {'column_name': 'id', 'data_type': 'bigint'}, {'column_name': 'name', 'data_type': 'string'}])
+        {"column_name": "id", "data_type": "bigint"}, {"column_name": "name", "data_type": "string"}])
     rows = writer.spark.createDataFrame.call_args.args[0]
-    assert len(rows) == 3
-    assert {row['metadata_level'] for row in rows} == {'file', 'column'}
-    assert all(row['table_id'] == writer.identity['source_id'] and row['asset_type'] == 'FILE' for row in rows)
-    assert rows[1]['column_id'] == build_column_id(writer.identity['source_id'], 'id')
-    assert rows[2]['column_id'] == build_column_id(writer.identity['source_id'], 'name')
-    writer.merge.whenNotMatchedBySourceUpdate.assert_called_once()
+    assert len(rows) == 1
+    assert rows[0]["table_id"] == writer.identity["source_id"] and rows[0]["asset_type"] == "FILE"
+    columns = json.loads(rows[0]["columns_json"])
+    assert [row["column_id"] for row in columns] == [
+        build_column_id(writer.identity["source_id"], name) for name in ("id", "name")]

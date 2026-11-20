@@ -365,18 +365,20 @@ def persist_access_rows(
     )
 
 
-def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dict[str, str]):
+def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_kinds: dict[str, str]):
     """Select active Catalogue tables belonging to configured scan targets."""
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
     spark = catalogue_df.sparkSession
     targets = spark.createDataFrame(
-        list(target_store_kinds.items()),
+        [(key, kind, get_store(config, workspace_id, key).workspace_id.lower())
+         for key, kind in target_store_kinds.items()],
         T.StructType(
             [
                 T.StructField("_catalogue_target", T.StringType(), False),
                 T.StructField("_target_store_type", T.StringType(), False),
+                T.StructField("_catalogue_physical_workspace", T.StringType(), False),
             ]
         ),
     )
@@ -392,13 +394,12 @@ def catalogue_tables(catalogue_df, *, workspace_id: str, target_store_kinds: dic
 
     return (
         catalogue_df.filter(
-            (F.lower(F.col("metadata_level")) == F.lit("table"))
-            & (F.col("workspace_id") == F.lit(workspace_id))
-            & F.col("is_active")
+            (F.col("asset_type") == "TABLE") & F.coalesce(F.col("is_active"), F.lit(True))
         )
         .crossJoin(targets)
         .filter(
-            (F.lower(F.col("store_type")) == F.col("_target_store_type"))
+            (F.lower(F.col("workspace_id")) == F.col("_catalogue_physical_workspace"))
+            & (F.lower(F.col("store_type")) == F.col("_target_store_type"))
             & (
                 F.col("table_id")
                 == canonical_table_id(

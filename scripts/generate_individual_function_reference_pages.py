@@ -220,6 +220,16 @@ METADATA_FIELD_DESCRIPTIONS = {
     "quality_notes": "Quality notes recorded for the row.",
 }
 
+CATALOGUE_FIELD_DESCRIPTIONS = {
+    "asset_type": "Part of the current asset key. TABLE identifies a table and FILE identifies a file selector.",
+    "workspace_id": "Stable ID of the physical workspace containing this asset.",
+    "workspace_name": "Readable Fabric display name of the physical asset workspace.",
+    "item_id": "Physical Lakehouse or Warehouse item that contains the asset.",
+    "columns_json": "Latest observed column definitions. SQL NULL is unobserved and [] is an observed empty schema.",
+    "first_observed_at": "First recorded asset observation, retained on subsequent registrations.",
+    "last_observed_at": "Most recent recorded asset observation.",
+}
+
 PIPELINE_REGISTRY_FIELD_DESCRIPTIONS = {
     "execution_workspace_id": "Destination workspace whose configuration resolves the approved logical stores.",
     "pipeline_id": "Stable logical Pipeline ID shared across versions and workspaces.",
@@ -260,6 +270,7 @@ PIPELINE_METADATA_FIELD_DESCRIPTIONS = {
 
 METADATA_JSON_EXAMPLES = {
     "METADATA_DATA_CATALOGUE": {
+        "columns_json": [{"column_id": "example-column-id", "column_name": "customer_id", "data_type": "int"}],
         "load_strategy_parameters_json": {"watermark_column": "modified_at", "key_columns": ["id"]},
         "scheduled_refresh_json": {"status": "configured", "schedules": [
             {"enabled": True, "frequency": "daily", "times": ["08:00"], "timezone": "UTC"},
@@ -4374,6 +4385,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_DATA_CATALOGUE" and column_name in CATALOGUE_FIELD_DESCRIPTIONS:
+        return CATALOGUE_FIELD_DESCRIPTIONS[column_name]
     if table_name == "METADATA_PIPELINE_REGISTRY" and column_name in PIPELINE_REGISTRY_FIELD_DESCRIPTIONS:
         return PIPELINE_REGISTRY_FIELD_DESCRIPTIONS[column_name]
     if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY"} and column_name in PIPELINE_METADATA_FIELD_DESCRIPTIONS:

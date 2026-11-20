@@ -153,7 +153,7 @@ physical item identifier.
 
 `fabricops_kit/access_scanner/scan_sql_access.py:268`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L268-L396">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_sql_access.py#L268-L397">View on GitHub</a>
 </div>
 
 

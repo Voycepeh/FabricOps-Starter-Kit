@@ -2,26 +2,21 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session, retry_delta_metadata
+from fabricops_kit.io.shared import get_spark_session
 
 import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import (
-    coerce_metadata_row_types,
-    encode_metadata_row,
-    metadata_table_physical_schema,
-    metadata_table_schema_registry,
-)
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     add_row_hash,
     filter_unpublished_rows,
     validate_target_row_hash,
     catalogue_authored_processing,
+    merge_catalogue_asset,
+    table_catalogue_observation,
     incremental_publication_scopes,
     record_pipeline_publication,
     resolve_catalogue_table_identity,
@@ -29,8 +24,6 @@ from fabricops_kit.pipeline.shared import (
     validated_processing,
     resolve_target_audit_fields,
 )
-
-CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
 def _writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
@@ -71,11 +64,6 @@ def _persist_target_processing(
     spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
-
     parameter_names = {
         "watermark_column",
         "key_columns",
@@ -85,6 +73,8 @@ def _persist_target_processing(
     parameters = {name: processing[name] for name in parameter_names if name in processing}
     runtime_context = {
         **dict(context or {}),
+        "config": config,
+        "scope_workspace_id": active_workspace_id,
         "activity_id": audit["_activity_id"],
         "workspace_id": audit["_workspace_id"],
         "notebook_id": audit["_notebook_id"],
@@ -97,76 +87,16 @@ def _persist_target_processing(
         committed_at=audit["_committed_at"],
         runtime_context=runtime_context,
     )
-    row = coerce_metadata_row_types(
-        CATALOGUE_TABLE,
-        {
-            "metadata_level": "table",
-            "table_id": str(identity["table_id"]),
-            "column_id": None,
-            "workspace_id": active_workspace_id,
-            "store_type": str(identity.get("store_type") or identity.get("store_kind") or "").lower(),
-            "layer": str(identity["store"]),
-            "schema_name": identity.get("schema"),
-            "table_name": str(identity["table_name"]),
-            "column_name": None,
-            "data_type": None,
-            "load_strategy": str(processing["load_strategy"]),
-            "load_strategy_parameters_json": parameters,
-            "writer_workspace_id": audit["_workspace_id"],
-            "writer_notebook_id": audit["_notebook_id"],
-            "writer_notebook_name": audit["_notebook_name"],
-            "scheduled_refresh_json": scheduled_refresh,
-            "profile_key_candidates_json": None,
-            "first_profiled_at": None,
-            "last_profiled_at": None,
-            "is_active": True,
-            **metadata_audit,
-        },
+    row = table_catalogue_observation(identity, context=runtime_context, dataframe=dataframe, audit=metadata_audit)
+    row.update(
+        load_strategy=str(processing["load_strategy"]),
+        load_strategy_parameters_json=parameters,
+        writer_workspace_id=audit["_workspace_id"],
+        writer_notebook_id=audit["_notebook_id"],
+        writer_notebook_name=audit["_notebook_name"],
+        scheduled_refresh_json=scheduled_refresh,
     )
-    spark_session = spark_session or dataframe.sparkSession
-    source = spark_session.createDataFrame([encode_metadata_row(CATALOGUE_TABLE, row)],
-        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
-    )
-    retry_delta_metadata(lambda: (
-        DeltaTable.forPath(spark_session, path).alias("target")
-        .merge(
-            source.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.metadata_level = 'table' "
-            "AND target.table_id = source.table_id "
-            "AND target.column_id IS NULL",
-        )
-        .whenMatchedUpdate(
-            set={
-                "store_type": "source.store_type",
-                "layer": "source.layer",
-                "schema_name": "source.schema_name",
-                "table_name": "source.table_name",
-                "load_strategy": "source.load_strategy",
-                "load_strategy_parameters_json": "source.load_strategy_parameters_json",
-                "writer_workspace_id": "source.writer_workspace_id",
-                "writer_notebook_id": "source.writer_notebook_id",
-                "writer_notebook_name": "source.writer_notebook_name",
-                "scheduled_refresh_json": "source.scheduled_refresh_json",
-                "is_active": "true",
-                "_committed_by": "source._committed_by",
-                "_committed_at": "source._committed_at",
-                "_workspace_id": "source._workspace_id",
-                "_workspace_name": "source._workspace_name",
-                "_notebook_id": "source._notebook_id",
-                "_notebook_name": "source._notebook_name",
-                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
-                "_activity_id": "source._activity_id",
-            }
-        )
-        .whenNotMatchedInsert(values={name: f"source.{name}" for name in row})
-        .execute()
-    ))
+    merge_catalogue_asset(row, context=runtime_context, spark_session=spark_session or dataframe.sparkSession)
 
 
 def _write_scope() -> dict[str, Any]:
@@ -391,7 +321,7 @@ def pipeline_write(
     8. Identify the exact prepared publication batch and its durable receipt.
     9. Perform physical processing unless the exact batch is verified in the target.
     10. Persist the resolved target load strategy and parameters on the
-        table-level ``METADATA_DATA_CATALOGUE`` row.
+        physical asset's ``METADATA_DATA_CATALOGUE`` row alongside its observed schema.
     11. Only after physical and Catalogue success, idempotently commit target
         Lineage and accepted Source Observation/write-success metadata.
     12. Return a small publication result with no hidden profiling state.
@@ -802,7 +732,7 @@ def pipeline_write(
                 audit=audit,
                 config=config,
                 active_workspace_id=active_workspace_id,
-                dataframe=df,
+                dataframe=prepared_df,
                 context=context,
                 spark_session=spark_session,
             )

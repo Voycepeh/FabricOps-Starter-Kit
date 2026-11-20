@@ -587,7 +587,7 @@ def test_json_metadata_documents_all_logical_fields_and_valid_examples(tmp_path,
             validate_metadata_value(example, kind, field=column)
             documented.add((table, column))
         assert page.count("Logical JSON schema:") == len(columns)
-    assert len(documented) == 6
+    assert len(documented) == 7
 
 
 def test_json_metadata_logical_schema_follows_registry_changes(tmp_path, monkeypatch) -> None:

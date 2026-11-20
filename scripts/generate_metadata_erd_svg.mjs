@@ -15,12 +15,12 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M815 464H785V388H365V218H335",[815,464],[335,218],"Run operations reference exact table contract versions"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
-    ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
+    ["DATA_CATALOGUE","DATA_CONTRACT","N-N","logical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
-    ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","1-N","physical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
-    ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M305 598V630H1355V735",[305,598],[1355,735],"Catalogue table to observed permissions"],
+    ["DATA_CATALOGUE","DATA_PROFILED","N-N","logical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","N-N","logical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","N-N","logical","M270 598V655H965V735",[270,598],[965,735],"Catalogue asset to source and target participation"],
+    ["DATA_CATALOGUE","DATA_ACCESS","N-N","logical","M305 598V630H1355V735",[305,598],[1355,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V363H1355V423",[335,194],[1355,423],"Contract versions to their Guardrail results"]
   ];
@@ -51,7 +51,7 @@ function renderMetadataSvg(layout, models) {
     const nestedKeys = [...new Set(Object.values(models).flatMap(other => (other.foreign_keys || [])
       .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
-    const all=[...pk,...nestedKeys,...groupedFk,...(name === "DATA_CATALOGUE" ? [["", "asset_type: TABLE | FILE"]] : [])], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
+    const all=[...pk,...nestedKeys,...groupedFk,...(name === "DATA_CATALOGUE" ? [["", "columns_json (current schema)"]] : [])], rows=all.length>5?[...all.slice(0,4),["",`+${all.length-4} more keys`]]:all;
     const x=Number(rect[1]), y=Number(rect[2]);
     let lines=rows.map(([kind,value],i)=>{
       const baseline=y+57+(name === "PIPELINE_REGISTRY" ? 20 : 24)*i;

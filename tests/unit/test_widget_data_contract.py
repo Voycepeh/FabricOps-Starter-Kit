@@ -13,28 +13,24 @@ module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
 
 
 def _catalogue_rows(count: int = 2) -> list[dict]:
-    rows = [{
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+    return [{
+        "table_id": "orders", "workspace_id": "dev", "asset_type": "TABLE",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append_all",
         "load_strategy_parameters_json": {}, "is_active": True,
-        "_workspace_id": "workspace-id", "_workspace_name": "Development",
+        "workspace_name": "Development", "_workspace_id": "workspace-id", "_workspace_name": "Execution",
         "_notebook_id": "writer-notebook-id",
+        "columns_json": [
+            {"column_id": f"col-{index}", "column_name": f"column_{index}",
+             "data_type": "long" if index == 0 else "timestamp" if index == 1 else "string"}
+            for index in range(count)
+        ],
     }]
-    for index in range(count):
-        rows.append({
-            "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
-            "column_id": f"col-{index}", "column_name": f"column_{index}",
-            "data_type": (
-                "long" if index == 0 else "timestamp" if index == 1 else "string"
-            ), "is_active": True,
-        })
-    return rows
 
 
 def _use_text_identifier(runtime):
     """Use a categorical identifier when exercising mask-specific controls."""
-    runtime["catalogue"][1]["data_type"] = "string"
+    runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     payload = json.loads(runtime["contract"]["contract_payload_json"])
     payload["table"]["columns"][0]["data_type"] = "string"
     runtime["contract"]["contract_payload_json"] = json.dumps(payload)
@@ -47,7 +43,7 @@ def _use_text_identifier(runtime):
 def _capture_fixture_columns(runtime):
     """Simulate creating a draft after the test's Engineering schema change."""
     payload = json.loads(runtime["contract"]["contract_payload_json"])
-    payload["table"]["columns"] = [{**row, "presence": "required"} for row in runtime["catalogue"][1:]]
+    payload["table"]["columns"] = [{**row, "presence": "required"} for row in runtime["catalogue"][0]["columns_json"]]
     runtime["contract"]["contract_payload_json"] = json.dumps(payload)
 
 
@@ -202,7 +198,7 @@ def widget_runtime(monkeypatch):
             **catalogue[0],
             "processing": {"load_strategy": "append_all"},
             "processing_source": "catalogue",
-            "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[1:])],
+            "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[0]["columns_json"])],
         },
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
@@ -278,7 +274,7 @@ def widget_runtime(monkeypatch):
                 **catalogue[0],
                 "processing": dict(saved.get("table", {}).get("processing") or {}),
                 "processing_source": str(saved.get("table", {}).get("processing_source") or "default"),
-                "columns": [dict(row) for row in catalogue[1:]],
+                "columns": [dict(row) for row in catalogue[0]["columns_json"]],
             },
             "enrichment": {
                 "table": [dict(row) for row in enrichment if not row.get("column_id")],
@@ -690,7 +686,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
 def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_runtime):
     """An unnamed workspace has one useful fallback instead of ID (ID)."""
     for row in widget_runtime["catalogue"]:
-        row.pop("_workspace_name", None)
+        row.pop("workspace_name", None)
     state = widget_runtime["start"]()
     assert ("dev", "dev") in state["_controls"]["workspace_select"].options
 
@@ -1583,10 +1579,8 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
 
 def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     """FabricOps-managed underscore columns stay out of governance authoring controls."""
-    widget_runtime["catalogue"].append({
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
-        "column_id": "col-technical", "column_name": "_row_hash",
-        "data_type": "string", "is_active": True,
+    widget_runtime["catalogue"][0]["columns_json"].append({
+        "column_id": "col-technical", "column_name": "_row_hash", "data_type": "string",
     })
     _capture_fixture_columns(widget_runtime)
 
@@ -3227,7 +3221,7 @@ def test_table_classification_stays_in_the_authoring_control_without_context_dup
 
 def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
     """Observed datatype drift stays red and does not silently replace the contract type."""
-    widget_runtime["catalogue"][1]["data_type"] = "string"
+    widget_runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -3377,7 +3371,7 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
 def test_warehouse_freshness_is_metadata_only_without_temporal_columns(widget_runtime):
     """Warehouse authoring never offers column-based freshness or requires a date field."""
     widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
-    for column in widget_runtime["catalogue"][1:]:
+    for column in widget_runtime["catalogue"][0]["columns_json"]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
@@ -3551,7 +3545,7 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
             return original_review(**kwargs)
         return {"contract": other_contract, "contract_id": "contract-inventory", "contract_version": 1,
                 "table_id": "inventory", "workspace_id": "dev", "catalogue_rows": other_catalogue,
-                "available_columns": other_catalogue[1:], "enrichment": [], "guardrails": []}
+                "available_columns": other_catalogue[0]["columns_json"], "enrichment": [], "guardrails": []}
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kw: {
         "tables": [widget_runtime["catalogue"][0], other_catalogue[0]],
@@ -4430,7 +4424,7 @@ def test_column_search_avoids_transient_selection_and_preserves_edits(monkeypatc
 
 def test_datatype_change_keeps_profile_visible_without_new_reads(widget_runtime):
     """Rehydrating the active Column editor must not leave the profile placeholder behind."""
-    widget_runtime["catalogue"][1]["data_type"] = "string"
+    widget_runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["top_nav"].value = "Columns"
@@ -4726,7 +4720,7 @@ def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widg
 
 def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     """Lakehouse tables use existing Delta history without requiring temporal columns."""
-    for column in widget_runtime["catalogue"][1:]:
+    for column in widget_runtime["catalogue"][0]["columns_json"]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()

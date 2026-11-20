@@ -24,7 +24,7 @@ Records permissions observed for governed tables across Workspace, OneLake and S
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → 1)**
+`METADATA_DATA_CATALOGUE` **(N → M)**
 via `table_id`
 
 **Implementation details:** See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.

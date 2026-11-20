@@ -36,7 +36,7 @@ def test_dataset_popup_follows_input_width_and_supports_search_and_keyboard(monk
         for i in range(15)
     )
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kwargs: {
-        "tables": [row for row in runtime["catalogue"] if row.get("metadata_level") == "table"],
+        "tables": [row for row in runtime["catalogue"] if row.get("asset_type") == "TABLE"],
         "contracts": [runtime["contract"]],
     })
     state = runtime["start"]()

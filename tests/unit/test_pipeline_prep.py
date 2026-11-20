@@ -592,7 +592,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     class Spark:
         def createDataFrame(self, values, *, schema):
             rows.extend(values)
-            assert schema == "catalogue-schema"
+            assert "columns_json" in schema.fieldNames()
             return Source()
 
     class DataFrame:
@@ -641,13 +641,12 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         "build_runtime_audit_fields",
         lambda **_kwargs: metadata_audit,
     )
-    monkeypatch.setattr(write_module, "coerce_metadata_row_types", lambda _table, row: row)
+    monkeypatch.setattr(shared_module, "resolve_asset_workspace_name", lambda *args, **kwargs: "Physical Workspace")
+    monkeypatch.setattr(shared_module, "get_store", lambda *args, **kwargs: types.SimpleNamespace(
+        workspace_id="physical", item_id="physical-item"))
+    monkeypatch.setattr(shared_module, "metadata_table_physical_schema", lambda *_args: None)
     monkeypatch.setattr(
-        write_module, "metadata_table_schema_registry", lambda: {"METADATA_DATA_CATALOGUE": "catalogue-schema"}
-    )
-    monkeypatch.setattr(write_module, "metadata_table_physical_schema", lambda *_args: None)
-    monkeypatch.setattr(
-        write_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
+        shared_module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue")
     )
 
     write_module._persist_target_processing(
@@ -668,7 +667,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         context={"workspace_name": "Workspace"},
     )
 
-    assert rows[0]["metadata_level"] == "table"
+    assert rows[0]["asset_type"] == "TABLE" and rows[0]["workspace_id"] == "physical"
     assert rows[0]["load_strategy"] == "scd2"
     assert rows[0]["_workspace_name"] == "Workspace"
     assert rows[0]["_metadata_lakehouse_name"] == "Metadata"

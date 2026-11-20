@@ -210,13 +210,13 @@ METADATA_TABLE_MODELS = {
         "relationships": [{"cardinality": "N:M", "related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "statement": "Global logical table_id relates Contract versions to workspace observations; table_id alone is not a unique physical Catalogue key."}, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "Lists registered table and file assets and their columns, their physical location and active status.",
-        "grain": "One current table/file asset or one of its columns in one workspace.",
-        "implementation_notes": "The current structural registry of table and file assets. asset_type is TABLE or FILE; historical null types with table_id mean TABLE. table_id is the common asset key. File asset rows use metadata_level=file and their existing selector identity in table_id. Column rows use metadata_level=column, asset_type=FILE and canonical column_id derived from table_id and normalized column name. Physical workspace_id/item_id, layer and normalized relative_path identify the Lakehouse selector; replacement at the same path preserves identity. first_observed_at is retained and last_observed_at advances on successful observations. Both asset types use workspace_id + table_id + column_id. Asset rows have null column_id. Tabular files register their observed columns even when profiling is disabled; removed columns become inactive and reappearing columns reuse their IDs. Processing parameters, Scheduled Refresh and key-candidate discovery use validated physical JSON strings with logical dictionaries/lists in application code. table_id identifies the logical table, and column_id identifies the logical column while its normalized column name remains the same. data_type stores the current structural datatype, and is_active indicates whether the asset currently exists. Datatype changes preserve column_id, removed columns become inactive, and returning columns reuse their deterministic ID. METADATA_DATA_PROFILED retains historical observations.",
-        "primary_key": ["workspace_id", "table_id", "column_id"],
+        "purpose": "Registers current table and file assets with their physical workspace, location and latest observed schema.",
+        "grain": "One current asset per physical workspace ID, Table ID and asset type.",
+        "implementation_notes": "workspace_id and workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.",
+        "primary_key": ["workspace_id", "table_id", "asset_type"],
         "foreign_keys": [],
         "relationships": [
-            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Enrichment, Access and Guardrail rows over time."},
+            {"cardinality": "N:M", "statement": "Historical Profile, Lineage, Access and Guardrail records use logical asset identity. The full physical Catalogue key is required to identify a current row."},
         ],
     },
     "METADATA_DATA_PROFILED": {
@@ -224,11 +224,9 @@ METADATA_TABLE_MODELS = {
         "grain": "One column's statistics from one profiling snapshot.",
         "implementation_notes": "Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
         "primary_key": ["profile_id"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many column profile snapshots can describe the same logical Catalogue table over time."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical Catalogue column over time."},
-        ],
+        "foreign_keys": [],
         "relationships": [
+            {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "cardinality": "N:M", "statement": "Profile snapshots retain Table ID and Column ID as historical observations. The Catalogue can represent the same logical asset in multiple physical workspaces."},
             {"related_table": "METADATA_DATA_PROFILED_FREQUENCY", "fields": ["profile_id"], "cardinality": "1:N", "statement": "A combined standalone statistical Profile may link multiple ranked frequency-value rows through profile_id. Independently scheduled Frequency Profiling has its own snapshot and leaves profile_id null."},
         ],
     },
@@ -249,20 +247,16 @@ METADATA_TABLE_MODELS = {
         "grain": "One asset identity and role within one Fabric Activity.",
         "implementation_notes": "asset_type is TABLE or FILE. table_id identifies either asset type; historical null asset_type rows with table_id remain TABLE. Released table lineage hashes are unchanged; file hashes include the FILE discriminator, the existing file identity value, Activity ID and role. Successful file operations persist participation before returning, independently of finalization. asset_name retains store/Files/relative_path and table_id joins the Catalogue asset. Run ID remains in METADATA_PIPELINE_RUN; its _activity_id correlates the same Fabric activity. Participation does not prove exact DataFrame dependencies or create transformation edges; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.",
         "primary_key": ["lineage_id"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many lineage participation records can refer to the same logical Catalogue table identity."},
-        ],
-        "relationships": [],
+        "foreign_keys": [],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "cardinality": "N:M", "statement": "Participation records use logical asset identity. Their workspace describes execution scope."}],
     },
     "METADATA_DATA_ACCESS": {
         "purpose": "Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.",
         "grain": "One observed permission for a principal or access selector on a table during one scan.",
         "implementation_notes": "See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
         "primary_key": ["access_id"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many observed SQL permission rows can reference the same logical Catalogue table identity in a workspace."},
-        ],
-        "relationships": [],
+        "foreign_keys": [],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["table_id"], "cardinality": "N:M", "statement": "Scan records retain logical Table ID and observation scope. Access scanning matches the physical Catalogue workspace using the configured target stores."}],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
@@ -385,30 +379,14 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
     "METADATA_DATA_CATALOGUE": {
-        "__default__": [
-            "fabricops_kit.pipeline.shared.execute_table_profile",
-            "fabricops_kit.pipeline.shared.persist_file_catalogue",
-            "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled",
-        ],
+        "__default__": ["fabricops_kit.pipeline.shared.table_catalogue_observation", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
         **{field: ["fabricops_kit.pipeline.shared.persist_file_catalogue"] for field in
-           ("item_id", "relative_path", "file_format", "first_observed_at", "last_observed_at")},
-        "asset_type": ["fabricops_kit.pipeline.shared.persist_file_catalogue", "fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled"],
-        "__audit__": ["fabricops_kit.pipeline.shared._audit_literal_columns", "fabricops_kit.pipeline.shared._persist_grain_candidates", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
-        "profile_key_candidates_json": ["fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled", "fabricops_kit.pipeline.shared._persist_grain_candidates", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
-        "data_type": ["fabricops_kit.pipeline.shared._catalogue_dataframe_from_profiled"],
-        "table_id": [
-            "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_table_id",
-        ],
-        "column_id": [
-            "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
-            "fabricops_kit.config.shared.build_column_id",
-        ],
-        "table_name": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
-        "column_name": ["fabricops_kit.pipeline.shared._canonical_profiled_dataframe"],
-        "schema_fingerprint": [
-            "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
-        ],
+           ("item_id", "relative_path", "file_format")},
+        **{field: ["fabricops_kit.pipeline.pipeline_write._persist_target_processing"] for field in
+           ("load_strategy", "load_strategy_parameters_json", "writer_workspace_id", "writer_notebook_id",
+            "writer_notebook_name", "scheduled_refresh_json")},
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "profile_key_candidates_json": ["fabricops_kit.pipeline.shared._persist_profile_observation", "fabricops_kit.pipeline.shared._persist_grain_candidates", "fabricops_kit.pipeline.shared.persist_file_catalogue"],
     },
     "METADATA_DATA_PROFILED": {
         "__default__": [

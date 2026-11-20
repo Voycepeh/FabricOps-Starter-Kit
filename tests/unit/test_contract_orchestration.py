@@ -100,7 +100,7 @@ def runtime(monkeypatch, spark_session):
     # Every mutation reachable from Read, validation, recovery and Write is observed.
     spies = {}
     for owner, names in ((shared, ["write_lakehouse_table", "persist_lineage_participation"]),
-                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "_upsert_catalogue_identities", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
+                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "merge_catalogue_asset", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
                          (write_module, ["_persist_target_processing"]),
                          (importlib.import_module("fabricops_kit.io"), ["write_lakehouse_table", "write_warehouse_table"]),
                          (importlib.import_module("fabricops_kit.io.shared"), ["execute_warehouse_processing"])):

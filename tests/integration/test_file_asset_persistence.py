@@ -5,6 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import Mock
 import importlib
+import json
 
 import pytest
 
@@ -57,18 +58,21 @@ def test_file_profile_and_frequency_use_common_ids_and_commit_only_after_success
     assert len(r.plan.evidence["profiling"]) == 3
 
 
-def test_populated_legacy_catalogue_adds_file_columns_without_replacement(catalogue_delta):
+def test_populated_legacy_catalogue_adds_asset_fields_without_losing_processing(catalogue_delta):
+    from fabricops_kit.config.shared import build_table_id
+
     r = catalogue_delta
-    from pyspark.sql.types import StructType, StructField, StringType
-    new = {"asset_type", "item_id", "relative_path", "file_format", "first_observed_at", "last_observed_at"}
-    old = StructType([field for field in r.schema if field.name not in new] + [StructField("extension", StringType())])
-    r.spark.createDataFrame([r.row(table_id="retained", extension="keep")], old).write.format("delta").save(r.path)
+    row = r.row(table_id=build_table_id("lakehouse", "Silver", "sales", "orders"),
+                asset_type=None, metadata_level="table", store_type="lakehouse",
+                layer="Silver", schema_name="sales", extension="keep")
+    r.seed([row], legacy=True)
     before = r.read().first().asDict(recursive=True)
     result = r.run()
-    assert result["status"] == "ready", result["table_results"]
+    assert result["status"] == "ready", result["table_results"]["METADATA_DATA_CATALOGUE"]
     current = r.read().first().asDict(recursive=True)
-    assert all(current[key] == value for key, value in before.items())
-    assert all(current[key] is None for key in new)
+    assert all(current[key] == value for key, value in before.items()
+               if key not in {"asset_type", "item_id"} and key in current)
+    assert current["asset_type"] == "TABLE" and current["columns_json"] is None
     version = r.version()
     assert r.run()["status"] == "ready"
     assert r.version() == version
@@ -118,7 +122,7 @@ def test_real_delta_file_catalogue_and_lineage_merges_are_idempotent(catalogue_d
         schema = StructType([*registry[table], StructField('extension', StringType())])
         r.spark.createDataFrame([], schema).write.format('delta').save(paths[table])
     monkeypatch.setattr(shared, 'get_spark_session', lambda **kw: r.spark)
-    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: ({}, 'execution', context or {}))
+    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: ({}, 'execution', {'config': {}, **(context or {})}))
     monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: dict(audit))
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, table, schema, **kw:
@@ -170,7 +174,9 @@ def test_orchestrated_read_commits_real_delta_lineage_before_finalization(catalo
     lineage = r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).first().asDict()
     assert lineage['table_id'] == result['source_id'] and lineage['pipeline_role'] == 'source'
     assert lineage['_activity_id'] == audit['_activity_id']
-    assert r.spark.read.format('delta').load(paths['METADATA_DATA_CATALOGUE']).count() == 3
+    rows = r.spark.read.format('delta').load(paths['METADATA_DATA_CATALOGUE']).collect()
+    assert len(rows) == 1
+    assert [column["column_name"] for column in json.loads(rows[0]["columns_json"])] == ["id", "name"]
     finalize_pipeline(session)
     finalize_pipeline(session)
     assert r.spark.read.format('delta').load(paths['METADATA_DATA_LINEAGE']).count() == 1
@@ -204,7 +210,7 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
     assert result['results_persisted'] is True
 
 
-@pytest.mark.parametrize('table', ['METADATA_DATA_CATALOGUE', 'METADATA_DATA_LINEAGE',
+@pytest.mark.parametrize('table', ['METADATA_DATA_LINEAGE',
     'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY', 'METADATA_GUARDRAIL_RESULTS'])
 def test_legacy_file_identity_consolidates_atomically_with_history_preserved(catalogue_delta, monkeypatch, table):
     from pyspark.sql.types import StructType, StructField, StringType
@@ -256,7 +262,7 @@ def test_conflicting_legacy_asset_identities_block_migration_without_changes(cat
     monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'resolve_configured_lakehouse_table',
         lambda *a, **kw: (None, table, 'engineering', path))
     version = DeltaTable.forPath(r.spark, path).history(1).first()['version']
-    with pytest.raises(ValueError, match='conflicting asset identities|not provably redundant'):
+    with pytest.raises(ValueError, match='conflicting asset|incomplete physical asset identity|not provably redundant'):
         setup._upgrade_metadata_table(spark=r.spark, table=r.spark.read.format('delta').load(path),
             table_name=table, expected_schema=r.schema, metadata_schema='engineering', context={})
     assert DeltaTable.forPath(r.spark, path).history(1).first()['version'] == version
@@ -270,20 +276,23 @@ def test_file_columns_keep_ids_across_schema_changes_and_reappearance(catalogue_
     identity = {**file_source_identity(workspace_id='physical', item_id='item', relative_path='a.csv', file_format='csv'), 'store': 'Bronze'}
     audit = {f.name: datetime(2026, 1, 1) if f.name == '_committed_at' else 'audit-' + f.name
              for f in r.schema if f.name.startswith('_')}
-    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: ({}, 'execution', context or {}))
+    monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: ({}, 'execution', {'config': {}, **(context or {})}))
     monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: dict(audit))
     monkeypatch.setattr(shared, 'get_spark_session', lambda **kw: r.spark)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *a, **kw: (*a, r.path))
+    monkeypatch.setattr(shared, 'resolve_asset_workspace_name', lambda *a, **kw: 'Physical Workspace')
     def observe(columns):
         shared.persist_file_catalogue(identity, context={}, columns=[
             dict(column_name=name, data_type=kind) for name, kind in columns])
-        return {row['column_name']: row.asDict() for row in r.read().collect() if row['metadata_level'] == 'column'}
+        return {column['column_name']: column for column in json.loads(r.read().first()['columns_json'])}
     initial = observe([('id', 'bigint'), ('name', 'string')])
     changed = observe([('ID', 'string')])
     assert changed['ID']['column_id'] == initial['id']['column_id'] == build_column_id(identity['source_id'], 'id')
     assert changed['ID']['data_type'] == 'string'
-    assert changed['name']['is_active'] is False
+    assert 'name' not in changed
     restored = observe([('id', 'bigint'), ('name', 'string')])
-    assert restored['name']['column_id'] == initial['name']['column_id'] and restored['name']['is_active'] is True
-    assert r.read().count() == 3
+    assert restored['name']['column_id'] == initial['name']['column_id']
+    assert observe([]) == {}
+    assert r.read().first()['columns_json'] == '[]'
+    assert r.read().count() == 1

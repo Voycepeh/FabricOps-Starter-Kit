@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.config.shared import build_table_id
+from fabricops_kit.config.shared import build_table_id, FabricStore
 
 
 AUDIT_FIELDS = {
@@ -37,7 +37,7 @@ def _catalogue(spark_session):
     return spark_session.createDataFrame(
         [
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
                 "workspace_id": "dev",
                 "store_type": "Warehouse",
@@ -47,7 +47,7 @@ def _catalogue(spark_session):
                 "is_active": True,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
                 "workspace_id": "dev",
                 "store_type": "Warehouse",
@@ -57,7 +57,7 @@ def _catalogue(spark_session):
                 "is_active": True,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
                 "workspace_id": "dev",
                 "store_type": "Warehouse",
@@ -67,7 +67,7 @@ def _catalogue(spark_session):
                 "is_active": False,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
                 "workspace_id": "dev",
                 "store_type": "Lakehouse",
@@ -311,7 +311,7 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
 
     monkeypatch.setattr(module, "_scan_targets", fake_scan_targets)
 
-    def fakecatalogue_tables(frame, *, workspace_id, target_store_kinds):
+    def fakecatalogue_tables(frame, *, config, workspace_id, target_store_kinds):
         calls["catalogue"] = (frame, workspace_id, target_store_kinds)
         return "catalogue_tables"
 
@@ -434,6 +434,10 @@ def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_sessi
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
+        config={"paths": {"dev": {
+            "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+            "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+        }}},
         workspace_id="dev",
         target_store_kinds={"curated_lakehouse": "lakehouse"},
     )
@@ -449,6 +453,10 @@ def test_catalogue_relates_mixed_targets_by_canonical_physical_identity(spark_se
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
+        config={"paths": {"dev": {
+            "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+            "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+        }}},
         workspace_id="dev",
         target_store_kinds={"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
     )

@@ -265,7 +265,7 @@ from ..io.shared import (
     resolve_warehouse_table_location,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.shared import build_column_id, build_table_id, get_store
+from ..config.shared import build_column_id, build_table_id, get_store, resolve_asset_workspace_name
 from ..config.metadata_schemas import (
     audit_schema_fields,
     build_metadata_schema,
@@ -3458,14 +3458,14 @@ def resolve_catalogue_table_id(
         context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
+    physical_workspace_id = get_store(config, active_workspace_id, layer).workspace_id.lower()
     matches = []
     for raw in frame.collect():
         row = _row_to_dict(raw)
         actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
         if (
-            str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("asset_type") or "TABLE").upper() == "TABLE"
-            and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+            str(row.get("workspace_id") or "").lower() == physical_workspace_id
+            and row.get("asset_type") == "TABLE"
             and row.get("is_active") is not False
             and actual == expected
         ):
@@ -3488,13 +3488,14 @@ def resolve_catalogue_table_identity(
     *,
     spark_session=None,
     context: Mapping[str, Any] | None = None,
+    physical_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Resolve one active registered Catalogue table by canonical table identity."""
     canonical_id = str(table_id or "").strip()
     if not canonical_id:
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
     cache = (context or {}).get("_pipeline_identities")
-    if cache is not None and canonical_id in cache:
+    if physical_workspace_id is None and cache is not None and canonical_id in cache:
         return cache[canonical_id]
     frame = read_lakehouse_table(
         CATALOGUE_TABLE,
@@ -3507,19 +3508,26 @@ def resolve_catalogue_table_identity(
         },
     )
     matches = []
+    scope = str((context or {}).get("scope_workspace_id") or active_workspace_id)
     if hasattr(frame, "where"):
         from pyspark.sql import functions as F
-        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("workspace_id") == active_workspace_id) & (F.col("metadata_level") == "table"))
+        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("asset_type") == "TABLE"))
     for raw in frame.collect():
-        row = decode_metadata_row(CATALOGUE_TABLE, _row_to_dict(raw))
-        if (
-            str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "").strip() == canonical_id
-            and str(row.get("metadata_level") or "").strip().lower() == "table"
-            and not str(row.get("column_id") or "").strip()
-            and row.get("is_active") is not False
-        ):
-            matches.append(row)
+        row = _row_to_dict(raw)
+        if row.get("asset_type") != "TABLE" or row.get("table_id") != canonical_id or row.get("is_active") is False:
+            continue
+        if physical_workspace_id is not None:
+            physical = physical_workspace_id
+        else:
+            try:
+                store = get_store(config, scope, str(row.get("layer") or ""))
+                physical = store.workspace_id
+            except ValueError:
+                continue
+        if str(row.get("workspace_id") or "").lower() == physical.lower():
+            if physical_workspace_id is None and row.get("item_id") not in (None, store.item_id):
+                raise ValueError(f"Configured store item disagrees with Catalogue TABLE {canonical_id!r} in {physical!r}.")
+            matches.append(decode_metadata_row(CATALOGUE_TABLE, row))
     if not matches:
         raise ValueError(
             f"No active registered Catalogue table exists for table_id {canonical_id!r} "
@@ -3552,7 +3560,7 @@ def resolve_catalogue_table_identity(
         "table_name": str(row["table_name"]).strip(),
     }
 
-    if cache is not None:
+    if physical_workspace_id is None and cache is not None:
         cache[canonical_id] = identity
     return identity
 
@@ -5984,10 +5992,9 @@ def resolve_file_write_participant(*, store, relative_path, file_format, context
 
 
 def persist_file_catalogue(identity, *, context, profile_summary=None, columns=None):
-    """Upsert a FILE asset and its observed columns using the shared identity grain."""
+    """Upsert the current FILE asset and its latest observed schema."""
     if not persistence_permitted(context):
         raise RuntimeError("Dry Run cannot commit Catalogue.")
-    from delta.tables import DeltaTable
     from fabricops_kit.data_contract.shared import file_source_identity
     expected = file_source_identity(**{key: identity.get(key) for key in
         ("workspace_id", "item_id", "relative_path", "file_format")})
@@ -5996,51 +6003,21 @@ def persist_file_catalogue(identity, *, context, profile_summary=None, columns=N
         raise ValueError("File Catalogue requires a resolved file participant.")
     config, workspace_id, runtime = resolve_fabric_context(context=context)
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=workspace_id, runtime_context=runtime)
-    common = {
+    asset = {
         "asset_type": "FILE", "table_id": table_id,
         "workspace_id": expected["workspace_id"], "item_id": expected["item_id"],
+        "workspace_name": resolve_asset_workspace_name(expected["workspace_id"], context=runtime),
+        "columns_json": _catalogue_columns(table_id, None if columns is None else
+            [(column.get("column_name"), column.get("data_type")) for column in columns]),
         "layer": identity["store"], "store_type": "lakehouse", "table_name": expected["relative_path"],
         "relative_path": expected["relative_path"], "file_format": expected["file_format"], "is_active": True,
-        "first_observed_at": audit["_committed_at"], "last_observed_at": audit["_committed_at"], **audit,
+        "first_observed_at": audit["_committed_at"],
+        "last_observed_at": audit["_committed_at"], **audit,
     }
-    asset = {**common, "metadata_level": "file", "column_id": None}
     if profile_summary and "grain" in profile_summary.get("activities", []):
         asset["profile_key_candidates_json"] = {"status": "resolved", "max_combination_width": 3,
             **profile_summary["scope"], "candidates": profile_summary["grain_candidates"]}
-    rows = [asset]
-    for column in columns or []:
-        if not column.get("column_name") or not column.get("data_type"):
-            raise ValueError("Observed file columns require column_name and data_type.")
-        rows.append({**common, "metadata_level": "column", "column_name": column["column_name"],
-            "column_id": build_column_id(table_id, column["column_name"]), "data_type": column["data_type"]})
-    if len({row["column_id"] for row in rows}) != len(rows):
-        raise ValueError("Observed file column names collide after canonical normalization.")
-    spark = get_spark_session(context=runtime)
-    frame = spark.createDataFrame([encode_metadata_row(CATALOGUE_TABLE,
-        coerce_metadata_row_types(CATALOGUE_TABLE, row)) for row in rows],
-        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    _, _, _, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE), context=runtime)
-    updates = {name: f"source.{name}" for name in set().union(*(row.keys() for row in rows))
-               if name not in {"first_observed_at", "table_id", "column_id", "profile_key_candidates_json"}}
-    updates["last_observed_at"] = "greatest(target.last_observed_at, source.last_observed_at)"
-    if "profile_key_candidates_json" in asset:
-        updates["profile_key_candidates_json"] = "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
-    def commit():
-        mutation = (DeltaTable.forPath(spark, path).alias("target")
-            .merge(frame.alias("source"), "target.workspace_id = source.workspace_id "
-                "AND target.table_id = source.table_id AND target.metadata_level = source.metadata_level "
-                "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')")
-            .whenMatchedUpdate(set=updates)
-            .whenNotMatchedInsert(values={name: f"source.{name}" for name in
-                metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()}))
-        if columns is not None:
-            mutation = mutation.whenNotMatchedBySourceUpdate(condition=(
-                f"target.table_id = '{table_id}' AND target.asset_type = 'FILE' "
-                "AND target.metadata_level = 'column' AND target.is_active = true"),
-                set={"is_active": "false"})
-        mutation.execute()
-    retry_delta_metadata(commit)
+    merge_catalogue_asset(asset, context=runtime, spark_session=get_spark_session(context=runtime))
     return table_id
 
 
@@ -6182,12 +6159,16 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
     """Capture each participant's configured physical destination independently of execution scope."""
     bindings = {}
     for table_id, item in identities.items():
-        store = get_store(config, workspace_id, item["store"])
         if item.get("source_type") == "file":
             source = file_participant_source(item)
             bindings[table_id] = {**{key: value for key, value in source.items() if key != "reader_options"},
                                   "reader_options_json": canonical_pipeline_json(source["reader_options"])}
             continue
+        if item.get("asset_type") == "TABLE" and item.get("item_id"):
+            bindings[table_id] = {"workspace_id": item["workspace_id"], "item_id": item["item_id"],
+                                  "kind": item["store_type"], "schema": item.get("schema"), "table_name": item["table_name"]}
+            continue
+        store = get_store(config, workspace_id, item["store"])
         bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
@@ -7578,7 +7559,6 @@ PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
 
 
-CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
 LOAD_STRATEGIES = {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
@@ -8448,10 +8428,11 @@ def _delete_profile_snapshot(
 
 
 def _stage_catalogue_profile_retry(
-    *, profiled_df: Any, config: Any, active_workspace_id: str, spark_session: Any
+    *, profiled_df: Any, config: Any, active_workspace_id: str, physical_workspace_id: str, spark_session: Any
 ) -> bool:
     """Return whether this activity is a retry and hide its prior completion marker."""
     from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
 
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
@@ -8459,10 +8440,10 @@ def _stage_catalogue_profile_retry(
     )
     activities = profiled_df.select(
         "workspace_id", "table_id", "_activity_id"
-    ).dropDuplicates()
+    ).dropDuplicates().withColumn("workspace_id", F.lit(physical_workspace_id))
     target = DeltaTable.forPath(spark_session, path)
     same_activity_retry = bool(
-        target.toDF()
+        target.toDF().where("asset_type = 'TABLE'")
         .select("workspace_id", "table_id", "_activity_id")
         .join(
             activities,
@@ -8477,7 +8458,7 @@ def _stage_catalogue_profile_retry(
         .merge(
             activities.alias("source"),
             "target.workspace_id = source.workspace_id "
-            "AND target.table_id = source.table_id "
+            "AND target.asset_type = 'TABLE' AND target.table_id = source.table_id "
             "AND target._activity_id = source._activity_id",
         )
         .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
@@ -8496,182 +8477,63 @@ def _profile_snapshot_id(*, config: Any, active_workspace_id: str, context: dict
     return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{active_workspace_id}|{table_id}|{activity_id}"))
 
 
-def _catalogue_dataframe_from_profiled(
-    profiled_df,
-    *,
-    source_df: Any,
-    store_type: str,
-    layer: str,
-    schema_name: str | None,
-    table_name: str,
-    load_strategy: str | None = None,
-    load_strategy_parameters_json: dict[str, Any] | None = None,
-    writer_workspace_id: str | None = None,
-    writer_notebook_id: str | None = None,
-    writer_notebook_name: str | None = None,
-    scheduled_refresh_json: dict[str, Any] | None = None,
-    profile_key_candidates_json: dict[str, Any] | None = None,
-    source_fields: Sequence[tuple[str, str]] | None = None,
-):
-    """Return one table row and one row for each observed column asset."""
-    from pyspark.sql import functions as F
+def _catalogue_columns(table_id, fields):
+    """Build the current schema while retaining the established column ID algorithm."""
+    if fields is None:
+        return None
+    return [{"column_id": build_column_id(table_id, name), "column_name": name, "data_type": dtype}
+            for name, dtype in fields]
 
-    first = profiled_df.select(
-        "table_id",
-        "workspace_id",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ).first()
-    if first is None:
-        return profiled_df.sparkSession.createDataFrame([], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    audit = {name: first[name] for name in CATALOGUE_COLUMNS if name.startswith("_")}
-    common = {
-        "asset_type": "TABLE",
-        "table_id": first["table_id"],
-        "workspace_id": first["workspace_id"],
-        "store_type": store_type,
-        "layer": layer,
-        "schema_name": schema_name,
-        "table_name": table_name,
-        "first_profiled_at": first["_committed_at"],
-        "last_profiled_at": first["_committed_at"],
-        "is_active": True,
-        **audit,
+
+def table_catalogue_observation(identity, *, context, dataframe=None, fields=None, audit=None):
+    """Build a physical TABLE registration with optional full schema observation."""
+    config, scope, runtime = resolve_fabric_context(context=context)
+    if audit is None:
+        audit = build_pipeline_audit_fields(config=config, active_workspace_id=scope, runtime_context=runtime)
+    store = get_store(config, scope, identity["store"])
+    workspace = store.workspace_id.lower()
+    if fields is None and getattr(getattr(dataframe, "schema", None), "fields", None) is not None:
+        fields = [(field.name, field.dataType.simpleString()) for field in dataframe.schema.fields]
+    return {
+        "asset_type": "TABLE", "workspace_id": workspace,
+        "workspace_name": resolve_asset_workspace_name(workspace, context=runtime), "item_id": store.item_id,
+        "table_id": identity["table_id"], "store_type": identity.get("store_kind") or identity["store_type"],
+        "layer": identity["store"], "schema_name": identity.get("schema"), "table_name": identity["table_name"],
+        "columns_json": _catalogue_columns(identity["table_id"], fields),
+        "first_observed_at": audit["_committed_at"] if fields is not None else None,
+        "last_observed_at": audit["_committed_at"] if fields is not None else None,
+        "is_active": True, **audit,
     }
-    rows = [
-        coerce_metadata_row_types(
-            CATALOGUE_TABLE,
-            {
-                **common,
-                "metadata_level": "table",
-                "column_id": None,
-                "column_name": None,
-                "data_type": None,
-                "load_strategy": load_strategy,
-                "load_strategy_parameters_json": load_strategy_parameters_json,
-                "writer_workspace_id": writer_workspace_id,
-                "writer_notebook_id": writer_notebook_id,
-                "writer_notebook_name": writer_notebook_name,
-                "scheduled_refresh_json": scheduled_refresh_json,
-                "profile_key_candidates_json": profile_key_candidates_json,
-            },
-        )
-    ]
-    fields = source_fields or [(field.name, field.dataType.simpleString()) for field in source_df.schema.fields]
-    for column_name, data_type in fields:
-        column_id = build_column_id(first["table_id"], column_name)
-        rows.append(
-            coerce_metadata_row_types(
-                CATALOGUE_TABLE,
-                {
-                    **common,
-                    "metadata_level": "column",
-                    "column_id": column_id,
-                    "column_name": column_name,
-                    "data_type": data_type,
-                    "load_strategy": None,
-                    "load_strategy_parameters_json": None,
-                    "writer_workspace_id": None,
-                    "writer_notebook_id": None,
-                    "writer_notebook_name": None,
-                    "scheduled_refresh_json": None,
-                    "profile_key_candidates_json": None,
-                },
-            )
-        )
-    return profiled_df.sparkSession.createDataFrame(
-        [encode_metadata_row(CATALOGUE_TABLE, row) for row in rows],
-        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
 
 
-def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_workspace_id: str, spark_session: Any) -> None:
-    """Upsert Catalogue rows by workspace-aware asset grain and deactivate missing columns."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(
-            "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
-        ) from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+def merge_catalogue_asset(row, *, context, spark_session):
+    """Merge one asset, preserving schema when no new full schema was observed."""
+    from delta.tables import DeltaTable
+
+    config = context["config"]
+    schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
+    source = spark_session.createDataFrame([encode_metadata_row(CATALOGUE_TABLE, row)], schema=schema)
+    _, _, _, path = resolve_configured_lakehouse_table(
+        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context,
     )
-    first = catalogue_df.select("workspace_id", "table_id").first()
-    if first is None:
-        return
-    workspace_id = str(first["workspace_id"]).replace("'", "''")
-    table_id = str(first["table_id"]).replace("'", "''")
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        retry_delta_metadata(lambda: target.alias("target")
-        .merge(
-            catalogue_df.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.metadata_level = source.metadata_level "
-            "AND target.table_id = source.table_id "
-            "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
+    updates = {name: f"source.{name}" for name in row
+               if name not in {"workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
+    for name in ("first_observed_at", "first_profiled_at"):
+        if name in row:
+            updates[name] = f"coalesce(target.{name}, source.{name})"
+    if "columns_json" in row:
+        updates["columns_json"] = (
+            "CASE WHEN source.columns_json IS NOT NULL AND "
+            "(target.columns_json IS NULL OR target.last_observed_at IS NULL OR source.last_observed_at >= target.last_observed_at) "
+            "THEN source.columns_json ELSE target.columns_json END"
         )
-        .whenMatchedUpdate(
-            set={
-                "asset_type": "source.asset_type",
-                "store_type": "source.store_type",
-                "layer": "source.layer",
-                "schema_name": "source.schema_name",
-                "table_name": "source.table_name",
-                "column_name": "source.column_name",
-                "data_type": "source.data_type",
-                "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
-                "load_strategy_parameters_json": (
-                    "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
-                ),
-                "writer_workspace_id": (
-                    "coalesce(source.writer_workspace_id, target.writer_workspace_id)"
-                ),
-                "writer_notebook_id": (
-                    "coalesce(source.writer_notebook_id, target.writer_notebook_id)"
-                ),
-                "writer_notebook_name": (
-                    "coalesce(source.writer_notebook_name, target.writer_notebook_name)"
-                ),
-                "scheduled_refresh_json": (
-                    "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
-                ),
-                "profile_key_candidates_json": (
-                    "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
-                ),
-                "last_profiled_at": "source.last_profiled_at",
-                "is_active": "true",
-                "_committed_by": "source._committed_by",
-                "_committed_at": "source._committed_at",
-                "_workspace_id": "source._workspace_id",
-                "_workspace_name": "source._workspace_name",
-                "_notebook_id": "source._notebook_id",
-                "_notebook_name": "source._notebook_name",
-                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
-                "_activity_id": "source._activity_id",
-            }
-        )
-        .whenNotMatchedInsert(values={
-            field.name: f"source.{field.name}"
-            for field in metadata_table_schema_registry()[CATALOGUE_TABLE].fields
-        })
-        .whenNotMatchedBySourceUpdate(
-            condition=(
-                f"target.workspace_id = '{workspace_id}' AND target.table_id = '{table_id}' "
-                "AND target.metadata_level = 'column' AND target.is_active = true"
-            ),
-            set={"is_active": "false"},
-        )
+        updates["last_observed_at"] = "greatest(target.last_observed_at, source.last_observed_at)"
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).alias("target")
+        .merge(source.alias("source"), "target.workspace_id = source.workspace_id "
+               "AND target.table_id = source.table_id AND target.asset_type = source.asset_type")
+        .whenMatchedUpdate(set=updates)
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in schema.fieldNames()})
         .execute())
-    )
 
 
 def execute_table_profile(
@@ -8925,7 +8787,8 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
         summary_persisted = False
         try:
             same_activity_retry = _stage_catalogue_profile_retry(
-                profiled_df=profiled_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
+                profiled_df=profiled_df,
+                physical_workspace_id=get_store(config, active_workspace_id, identity["store"]).workspace_id.lower(), config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
             )
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
@@ -8950,23 +8813,13 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             else:
                 frequency_action = "skipped; no frequency profile generated"
             emit(f"6. Frequency profile metadata → {frequency_action}")
-            catalogue_df = _catalogue_dataframe_from_profiled(
-                profiled_df, source_df=observation.get("source_df"), store_type=identity["store_kind"],
-                layer=identity["store"], schema_name=identity["schema"],
-                table_name=identity["table_name"], load_strategy=None,
-                load_strategy_parameters_json=None,
-                writer_workspace_id=None,
-                writer_notebook_id=None,
-                writer_notebook_name=None,
-                scheduled_refresh_json=None,
-                profile_key_candidates_json=_key_candidate_evidence(
-                    profile_key_candidates, max_columns=grain_discovery_max_columns, scope=context.get("_profile_scope")
-                ) if grain_discovery_enabled else None,
-                source_fields=observation["source_fields"],
-            )
-            _upsert_catalogue_identities(
-                catalogue_df=catalogue_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
-            )
+            row = table_catalogue_observation(identity, context=context,
+                dataframe=observation["source_df"], fields=observation["source_fields"])
+            row.update(first_profiled_at=row["_committed_at"], last_profiled_at=row["_committed_at"])
+            if grain_discovery_enabled:
+                row["profile_key_candidates_json"] = _key_candidate_evidence(
+                    profile_key_candidates, max_columns=grain_discovery_max_columns, scope=context.get("_profile_scope"))
+            merge_catalogue_asset(row, context=context, spark_session=spark_session)
         except Exception:
             if summary_persisted:
                 try:
@@ -8982,7 +8835,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             raise
         catalogue_action = "updated" if same_activity_retry else "registered or updated"
         emit(
-            f"7. Catalogue → {catalogue_action} table and column metadata; "
+            f"7. Catalogue → {catalogue_action} table schema; "
             "existing load strategy and parameters preserved"
         )
         emit("Result → Profile completed and metadata saved.")
@@ -8999,8 +8852,9 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
     table = DeltaTable.forPath(spark_session, path)
-    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == active_workspace_id)
-                 & (F.col("metadata_level") == "table"))
+    workspace = get_store(config, active_workspace_id, identity["store"]).workspace_id.lower()
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == workspace)
+                 & (F.col("asset_type") == "TABLE"))
     if table.toDF().where(condition).limit(2).count() != 1:
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
