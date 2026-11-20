@@ -89,6 +89,7 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.io"), "read_lakehouse_table", lambda *a, **kw: source)
     caller_snapshot = {"dataframe": None}
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
         dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch", "activity_id": kw["audit"]["_activity_id"],

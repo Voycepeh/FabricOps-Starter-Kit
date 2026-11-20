@@ -1415,12 +1415,13 @@ def test_metadata_audit_schema_nullability_contract():
         assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
-    assert access_fields[:8] == [
+    assert access_fields[:9] == [
         "access_id",
         "user_principal",
         "table_id",
         "table_name",
         "workspace_id",
+        "asset_type",
         "access_level",
         "access_value",
         "access_state",

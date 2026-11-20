@@ -246,6 +246,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "table_id",
         "table_name",
         "workspace_id",
+        "asset_type",
         "access_level",
         "access_value",
         "access_state",
@@ -276,7 +277,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "database_name",
         }
     )
-    assert all(field_by_name[name].nullable for name in {"role_name", "schema_name", "object_name", "object_type"})
+    assert all(field_by_name[name].nullable for name in {"asset_type", "role_name", "schema_name", "object_name", "object_type"})
     assert {
         "access_purpose",
         "approval_status",
