@@ -406,7 +406,8 @@ def test_02b_inventory_snapshots_through_incremental_read(publication_runtime, m
                 incoming = run.spark.read.option('header', True).option('inferSchema', True).csv(str(assets / f'inventory_day{day}.csv'))
                 staged = incoming if day == 1 else run.read('source').unionByName(incoming).dropDuplicates(['movement_id'])
                 staged.write.format('delta').mode('overwrite').save(str(run.path / 'source'))
-            source = reader.pipeline_read(table_id='source', read_mode='incremental', target_table_id='target', verbose=False)
+            source = reader.pipeline_read(table_id='source', read_mode='incremental', target_table_id='target',
+                                          read_parameters={'watermark_column': 'modified_datetime'}, verbose=False)
             assert source['dataframe'].count() == batch_rows
             if day >= 2:
                 assert source['scope']['through'] == '2026-10-07T02:30:00.000000Z'
