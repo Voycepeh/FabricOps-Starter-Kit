@@ -15,7 +15,7 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","DATA_CONTRACT","N-N","nested","M815 464H785V388H365V218H335",[815,464],[335,218],"Run operations reference exact table contract versions"],
     ["PIPELINE_REGISTRY","PIPELINE_RUN","1-N","logical","M1595 475H1548V380H1363Q1355 372 1347 380H965V423",[1595,475],[965,423],"Governed provenance pins an immutable promotion_id and per-workspace Pipeline version; signed-in Fabric validation remains pending"],
-    ["DATA_CATALOGUE","DATA_CONTRACT","N-N","logical","M185 423V253",[185,423],[185,253],"Catalogue table to contract versions"],
+    ["DATA_CATALOGUE","DATA_CONTRACT","0..1-N","logical","M185 423V253",[185,423],[185,253],"Draft authoring checks one active Catalogue asset using evidence_workspace_id and table_id (TABLE) or source_id (FILE). A retained version may have no current match."],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M185 598V735",[185,598],[185,735],"Catalogue asset to column statistics"],
     ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M235 598V680H575V735",[235,598],[575,735],"Catalogue asset to frequency observations"],
@@ -53,14 +53,16 @@ function renderMetadataSvg(layout, models) {
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
     const catalogueReference = model.catalogue_reference_fields || [];
     const cataloguePrimary = name === "DATA_CATALOGUE";
-    const primaryRows = cataloguePrimary ? pk.map(([, field]) => ["", field])
+    const authoringReference = model.catalogue_authoring_fields || [];
+    const groupedPrimary = cataloguePrimary || authoringReference.length > 0;
+    const primaryRows = groupedPrimary ? pk.map(([, field]) => ["", field])
       : catalogueReference.length && pk.length > 1 ? [["PK", model.primary_key.join(" + ")]]
       : pk;
     const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
     const identityFields = model.asset_identity_fields.filter(field =>
-      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !fk.some(([, value]) => value === field));
-    const fields = [...catalogueReference, ...identityFields].map(value => ["", value]);
-    if (cataloguePrimary) fields.push(["", "columns_json (current schema)"]);
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !authoringReference.includes(field) && !fk.some(([, value]) => value === field));
+    const fields = [...catalogueReference, ...authoringReference, ...identityFields].map(value => ["", value]);
+    if (cataloguePrimary) fields.push(["", "asset_workspace_name"], ["", "columns_json (current schema)"]);
     const all = [...keys, ...fields];
     const rows = all.length > 6 ? [...all.slice(0, 5), ["", `+${all.length - 5} more fields`]] : all;
     const rowSpacing = name === "PIPELINE_REGISTRY" || rows.length === 6 ? 20 : 24;
@@ -72,15 +74,18 @@ function renderMetadataSvg(layout, models) {
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
       return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
-    const groupFields = cataloguePrimary ? model.primary_key : catalogueReference;
-    if (groupFields.length) {
-      const kind = cataloguePrimary ? "PK" : "FK";
-      const color = cataloguePrimary ? "#7C3AED" : "#2563EB";
-      const firstBaseline = y + 57 + (cataloguePrimary ? 0 : keys.length * rowSpacing);
+    const groups = [
+      ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
+      ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
+      ["REF", authoringReference, keys.length, "Catalogue authoring reference checked at draft creation"],
+    ];
+    for (const [kind, groupFields, firstRow, title] of groups) {
+      if (!groupFields.length) continue;
+      const color = kind === "FK" ? "#2563EB" : "#7C3AED";
+      const firstBaseline = y + 57 + firstRow * rowSpacing;
       const lastBaseline = firstBaseline + (groupFields.length - 1) * rowSpacing;
       const mid = (firstBaseline + lastBaseline) / 2;
-      const title = cataloguePrimary ? "Composite primary key" : "Composite foreign key to DATA_CATALOGUE, checked by FabricOps";
-      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="${kind === "REF" ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
     }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
@@ -107,7 +112,8 @@ function renderMetadataSvg(layout, models) {
   const badge=(x,y,label,color)=>{
     if(!label)return "";
     const str=esc(label);
-    return `<rect x="${x-13}" y="${y-11}" width="26" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="${color}">${str}</text>`;
+    const halfWidth = label.length > 1 ? 19 : 13;
+    return `<rect x="${x-halfWidth}" y="${y-11}" width="${halfWidth*2}" height="22" rx="6" fill="#FFFFFF" stroke="${color}" stroke-width="1.4"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="${color}">${str}</text>`;
   };
   const direction=(a,b)=>{
     const dx=b[0]-a[0],dy=b[1]-a[1];
@@ -130,7 +136,10 @@ function renderMetadataSvg(layout, models) {
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
     const [one,many]=card ? card.split("-") : ["", ""];
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}\n</g>`;
+    const authoringLabel = from === "DATA_CATALOGUE" && to === "DATA_CONTRACT"
+      ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Draft authoring</text>'
+      : "";
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "exact nested reference; application-enforced" : kind === "logical" ? "logical identity reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind==="logical"?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${authoringLabel}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

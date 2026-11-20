@@ -29,7 +29,7 @@
     ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
     ["DATA_CATALOGUE", "PIPELINE_RUN", "N-N", "Asset participation via operations and physical workspace and asset identity"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "N-N", "Contracts for a table"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "0..1-N", "Catalogue asset used to draft a Contract version"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
@@ -233,6 +233,13 @@
       }
       if (rows.length) return rows;
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
+      if (assetTable === "DATA_CONTRACT") {
+        return [
+          "DATA_CONTRACT.evidence_workspace_id → DATA_CATALOGUE.asset_workspace_id",
+          "DATA_CONTRACT.table_id → DATA_CATALOGUE.table_id for TABLE",
+          "DATA_CONTRACT.source_id → DATA_CATALOGUE.table_id for FILE",
+        ];
+      }
       if (assetTable === "PIPELINE_RUN") {
         return [
           "operations[].destination.workspace_id → DATA_CATALOGUE.asset_workspace_id",
@@ -261,7 +268,9 @@
           const joinLines = keyJoinRows(edge[0], edge[1]);
           const referenceOnly = !edge[2];
           const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
-          const relationshipKind = logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
+          const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
+            ? "Authoring reference checked at draft creation"
+            : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +

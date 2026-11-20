@@ -330,7 +330,7 @@ def create_contract_draft(
         "table": {
             **dict(seed.get("table") or {}),
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
-            "evidence_workspace_id": active_workspace_id,
+            "evidence_workspace_id": workspace,
             "columns": columns,
             "writer": {
                 "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
@@ -367,7 +367,7 @@ def create_contract_draft(
         "table_id": str(table_id).strip() if table_id else None,
         "source_id": file_source["source_id"] if file_source is not None else None,
         "table_name": payload_table_name,
-        "evidence_workspace_id": active_workspace_id,
+        "evidence_workspace_id": workspace,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
         **audit,

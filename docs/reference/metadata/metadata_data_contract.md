@@ -25,10 +25,10 @@ Defines one immutable table or file dataset contract history. Workspace observat
 `METADATA_PIPELINE_RUN` **(N → M)**
 via Not defined in the current implementation.
 
-`METADATA_DATA_CATALOGUE` **(N → M)**
-via `table_id`
+`METADATA_DATA_CATALOGUE` **(N → 0..1)**
+via `evidence_workspace_id` + `table_id` + `source_id`
 
-**Implementation details:** Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id identifies the Catalogue observation selected for authoring. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id; their exact selector, format and reader options are frozen in the payload. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.
+**Implementation details:** Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id records the physical workspace of the Catalogue asset selected at draft creation. The Catalogue supplies asset_workspace_name. Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id and Catalogue table_id to the Contract table_id for TABLE or source_id for FILE. New drafts require one active Catalogue asset with an observed schema. Frozen versions retain their captured schema and remain usable independently of the current Catalogue row. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id. Their exact selector, format and reader options are frozen in the payload. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.
 
 ## Column summary
 

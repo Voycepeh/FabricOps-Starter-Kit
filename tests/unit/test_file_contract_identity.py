@@ -56,9 +56,11 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda table, row: row)
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
     draft = contracts.create_contract_draft(file_source=descriptor,
-        config={}, active_workspace_id=descriptor["workspace_id"], spark_session=spark)
+        config={}, active_workspace_id="authoring-workspace", spark_session=spark)
+    assert draft["evidence_workspace_id"] == descriptor["workspace_id"]
     assert draft["table_id"] is None and draft["source_id"] == descriptor["source_id"]
     payload = json.loads(draft["contract_payload_json"])
+    assert payload["table"]["evidence_workspace_id"] == descriptor["workspace_id"]
     assert "table_id" not in payload["table"] and "processing" not in payload["table"]
     payload["guardrails"] = [{"guardrail_rule_id": "grain", "guardrail_type": "grain", "rule_type": "uniqueness",
         "rule_parameters": {"columns": ["id"]}, "action": "Block", "is_active": True},

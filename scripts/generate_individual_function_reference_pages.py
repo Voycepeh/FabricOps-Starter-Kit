@@ -4568,7 +4568,7 @@ def _metadata_relationships(
         }
 
     if include_inbound:
-        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N", "N:M": "N:M"}
+        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N", "N:M": "N:M", "N:0..1": "0..1:N"}
         for other_table in table_models:
             if other_table == table_name:
                 continue
@@ -4625,6 +4625,11 @@ def render_metadata_reference_index(
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
             "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
+            "catalogue_authoring_fields": next((
+                relation["fields"] for relation in table_models[name].get("relationships", [])
+                if relation.get("related_table") == "METADATA_DATA_CATALOGUE"
+                and relation.get("cardinality") == "N:0..1"
+            ), []),
             "asset_identity_fields": [
                 field for field in ("asset_workspace_id", "table_id", "source_id",
                     "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id")
@@ -4819,7 +4824,7 @@ def generate_metadata_reference_pages() -> None:
     if len(reference_order) != len(canonical_tables) or set(reference_order) != set(canonical_tables):
         raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
 
-    valid_cardinalities = {"1:1", "1:N", "N:1", "N:M"}
+    valid_cardinalities = {"1:1", "1:N", "N:1", "N:M", "N:0..1", "0..1:N"}
     def schema_paths(schema, prefix=""):
         paths = set()
         for field in getattr(schema, "fields", []):
