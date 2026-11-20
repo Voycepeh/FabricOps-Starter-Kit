@@ -224,15 +224,15 @@
       if (assetTable === "DATA_CONTRACT") {
         return [
           "DATA_CONTRACT.evidence_workspace_id → DATA_CATALOGUE.asset_workspace_id",
-          "DATA_CONTRACT.table_id → DATA_CATALOGUE.table_id for TABLE",
-          "DATA_CONTRACT.source_id → DATA_CATALOGUE.table_id for FILE",
+          "DATA_CONTRACT.table_id → DATA_CATALOGUE.table_id",
+          "DATA_CONTRACT.asset_type → DATA_CATALOGUE.asset_type",
         ];
       }
       if (assetTable === "PIPELINE_RUN") {
         return [
-          "operations[].destination.workspace_id → DATA_CATALOGUE.asset_workspace_id",
-          "operations[].table_id or source_id → DATA_CATALOGUE.table_id",
-          "operations[].source_type → DATA_CATALOGUE.asset_type (TABLE or FILE)",
+          "operations[].asset_workspace_id → DATA_CATALOGUE.asset_workspace_id",
+          "operations[].table_id → DATA_CATALOGUE.table_id",
+          "operations[].asset_type → DATA_CATALOGUE.asset_type",
         ];
       }
       if (assetTable) {
@@ -258,6 +258,7 @@
           const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
           const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
             ? "Authoring reference checked at draft creation"
+            : edge[0] === "DATA_CATALOGUE" && edge[1] === "PIPELINE_RUN" ? "Asset participation via operations"
             : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +

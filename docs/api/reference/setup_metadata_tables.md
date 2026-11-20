@@ -168,9 +168,9 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:655`
+`fabricops_kit/config/setup_metadata_tables.py:660`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L655-L957">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L660-L962">View on GitHub</a>
 </div>
 
 
@@ -186,7 +186,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 56 |
+| Live-critical dependencies | 59 |
 
 ### Release history
 
@@ -210,12 +210,15 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>

@@ -31,8 +31,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     Define store, schema, table_name and any full/incremental/query options.
     Alternatively select a Lakehouse file, folder or wildcard using relative_path,
     file_format and read_options. Files support full reads only and retain their
-    stable Source ID in the public response. Shared metadata stores that same
-    identity value in table_id with asset_type=FILE. Foundational readers remain independent.
+    stable identity in table_id with asset_type=FILE in the response and shared metadata. Foundational readers remain independent.
     Persistent reads register their physical asset and observed schema in
     METADATA_DATA_CATALOGUE independently of profiling. Query projections
     leave the registered table schema intact. Run operations record participation
@@ -43,7 +42,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     A replaced file can be read again in a new execution; no exactly-once or
     immutable-file guarantee is provided.
     Spark, execution authority and reporting come from setup_pipeline. The result
-    retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+    retains its dataframe, common asset Table ID and asset type and Guardrail diagnostics. Reads
     record their own participation in METADATA_PIPELINE_RUN.operations and
     register pipeline-level participation for subsequent Writes; this is not
     exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
@@ -168,7 +167,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         summary = ExecutionSummary("READ", verbose=verbose)
         presentations = []
         source_name = relative_path if is_file else table_name
-        table_id = file_identity["source_id"] if is_file else resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
+        table_id = file_identity["table_id"] if is_file else resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([table_id], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
         if "source" not in context["_pipeline_identities"][table_id]["roles"]:
@@ -180,7 +179,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         # A new Read supersedes earlier evidence even if evaluation cannot complete.
         read_types = {kind for kind, _label in labels}
         execution_plan.results[:] = [row for row in execution_plan.results
-                                    if (row.get("source_id") or row.get("table_id")) != table_id or row.get("guardrail_type") not in read_types]
+                                    if (row.get("table_id")) != table_id or row.get("guardrail_type") not in read_types]
         names = ["Read", *[label for kind, label in labels if kind in active]]
         names.append("Profile")
         stages = []
@@ -237,4 +236,4 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         display_profile_presentations(presentations)
         operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
 
-        return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})
+        return session.register_source({**source, "asset_type": "FILE" if is_file else "TABLE", **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

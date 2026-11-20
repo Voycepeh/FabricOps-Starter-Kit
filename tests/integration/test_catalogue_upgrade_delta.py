@@ -215,12 +215,12 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     """Migrate TABLE and FILE assets with exact IDs, scoped schemas and intact audit."""
     rt = catalogue_delta
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
-    file = file_source_identity(workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
+    file = file_source_identity(asset_workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
     dev = rt.row(table_id=table_id, asset_type=None, metadata_level="table", layer="Silver", store_type="lakehouse",
                  schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id, writer_workspace_id="writing-notebook-workspace", extension="keep",
                  load_strategy_parameters_json='{"key_columns":["id"]}')
     prod = {**dev, "workspace_id": "prod"}
-    file_row = rt.row(table_id=file["source_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
+    file_row = rt.row(table_id=file["table_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
                       item_id="item", relative_path="orders.csv", file_format="csv")
     def child(parent, id_, name, dtype, **values):
         return {**parent, "metadata_level": "column", "column_id": id_, "column_name": name, "data_type": dtype, **values}
@@ -827,3 +827,47 @@ def test_same_asset_key_cannot_rebind_to_another_item(catalogue_delta, monkeypat
     assert rt.version() == version
     row = rt.read().first()
     assert (row["item_id"], row["load_strategy"]) == ("original-item", "scd1")
+
+
+@pytest.mark.parametrize('table_name', ['METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION'])
+def test_asset_identity_upgrade_preserves_frozen_json_and_exact_ids(catalogue_delta, monkeypatch, table_name):
+    """Migrate current asset indices while leaving frozen version/destination bytes intact."""
+    from delta.tables import DeltaTable
+    from fabricops_kit.io import shared as io
+    from pyspark.sql.types import StructField, StructType, StringType
+
+    rt = catalogue_delta
+    expected = metadata_table_schema_registry()[table_name]
+    path = rt.path + '-identity-' + table_name
+    source = file_source_identity(asset_workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
+    asset_id = source['table_id']
+    old_source = {key: value for key, value in source.items() if key not in {'table_id', 'asset_type'}}
+    old_source.update(source_id=asset_id, source_type='file')
+    old_source['workspace_id'] = old_source.pop('asset_workspace_id')
+    payload = json.dumps({'source': old_source, 'table': {'columns': []}}, indent=3)
+    destination = json.dumps(old_source, indent=2)
+    fields = [StructField(field.name, field.dataType, True) for field in expected if field.name != 'asset_type']
+    fields.append(StructField('source_id', StringType(), True))
+    audit = {key: value for key, value in rt.row().items() if key.startswith('_')}
+    row = {**audit, 'table_id': None, 'source_id': asset_id, 'asset_workspace_id': 'dev',
+        'contract_id': 'files', 'contract_version': 1, 'status': 'frozen', 'contract_payload_json': payload,
+        'destination_json': destination, 'activation_id': 'activation', 'revision': 1}
+    rt.spark.createDataFrame([row], StructType(fields)).write.format('delta').save(path)
+    monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table_name, 'metadata', path))
+
+    def upgrade():
+        return setup._upgrade_metadata_table(spark=rt.spark, table=rt.spark.read.format('delta').load(path),
+            table_name=table_name, expected_schema=expected, metadata_schema='metadata', context={})
+
+    frame, change = upgrade()
+    assert change['pre_upgrade_version'] == 0
+    assert 'source_id' not in frame.columns
+    migrated = frame.first().asDict()
+    assert migrated['table_id'] == asset_id and migrated['asset_type'] == 'FILE'
+    frozen_field = 'contract_payload_json' if table_name == 'METADATA_DATA_CONTRACT' else 'destination_json'
+    assert migrated[frozen_field] == row[frozen_field]
+    assert {key: migrated[key] for key in audit} == audit
+    assert rt.spark.read.format('delta').option('versionAsOf', 0).load(path).first()['source_id'] == asset_id
+    version = DeltaTable.forPath(rt.spark, path).history(1).first()['version']
+    assert upgrade()[1] is None
+    assert DeltaTable.forPath(rt.spark, path).history(1).first()['version'] == version

@@ -25,7 +25,7 @@
 
 This pipeline combines **CSV file, Lakehouse table and Warehouse table** Reads before its existing retail transformations, two table Writes, and a Silver Lakehouse CSV Write. READ 1 calls `orchestrate_read(store="Bronze", relative_path="demo/orders.csv", file_format="csv", read_options={"header": True, "inferSchema": True, "timestampFormat": "yyyy-MM-dd'T'HH:mm:ss"})`. The timestamp format preserves the fixture timestamp columns. Products and Order History keep their existing table reads, joins, aggregations and destinations.
 
-File Reads use execution planning, applicable Data Contract checks and Read-stage reporting. They return `dataframe` with a stable `source_id`, without a fabricated `table_id`. Full Read is the only supported file mode; file checkpoints, change detection, deduplication and exactly-once guarantees are outside this workflow.
+File Reads use execution planning, applicable Data Contract checks and Read-stage reporting. They return `dataframe` with a stable file selector `table_id` and `asset_type="FILE"`. Full Read is the only supported file mode; file checkpoints, change detection, deduplication and exactly-once guarantees are outside this workflow.
 
 ## The big picture
 

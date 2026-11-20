@@ -1,6 +1,7 @@
 """Public completion boundary for a pipeline execution."""
 
 import json
+from fabricops_kit.config.metadata_schemas import migrate_asset_references
 from datetime import datetime, timezone
 
 from fabricops_kit.pipeline.shared import (
@@ -52,11 +53,12 @@ def _operation_summary_rows(result, *, pipeline=None):
         runtime_operations = pipeline.plan.evidence.get("operations", {})
 
     for operation in result.get("operations") or []:
-        identity = identities.get(operation.get("source_id") or operation.get("table_id"), {})
+        operation = migrate_asset_references(operation)
+        identity = identities.get(operation.get("table_id"), {})
         runtime = runtime_operations.get(operation.get("operation_key"), {})
         destination = operation.get("destination") or {}
-        is_file = (operation.get("source_type") or identity.get("source_type")
-                   or destination.get("source_type")) == "file"
+        is_file = (operation.get("asset_type") or identity.get("asset_type")
+                   or destination.get("asset_type")) == "FILE"
         role = str(operation.get("pipeline_role") or "").lower()
         is_read = role == "source"
         is_write = role == "target"

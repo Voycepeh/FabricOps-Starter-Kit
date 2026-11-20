@@ -28,6 +28,7 @@ from .metadata_schemas import (
     metadata_schema_type_name,
     metadata_table_field_names,
     metadata_table_schema_registry,
+    migrate_asset_references,
 )
 from .shared import FrameworkConfig, get_store, is_table_not_found_error, validate_framework_config
 
@@ -143,7 +144,9 @@ def _validate_existing_metadata_schema(
     provenance = {"pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version"}
     supported_run_addition = (table_name == "METADATA_PIPELINE_RUN" and allow_missing
         and not unexpected and set(missing) <= provenance)
-    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} and (missing or unexpected) and not supported_run_addition:
+    supported_asset_addition = (table_name == "METADATA_DATA_CONTRACT_ACTIVATION" and allow_missing
+        and not unexpected and set(missing) <= {"asset_type"})
+    if table_name in {"METADATA_PIPELINE_RUN", "METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION"} and (missing or unexpected) and not supported_run_addition and not supported_asset_addition:
         raise ValueError(
             f"Incompatible {table_name} physical schema. {detail}. "
             "Existing data has been preserved; automatic schema evolution is unsafe for this layout. "
@@ -251,13 +254,13 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
                     if isinstance(operations, str):
                         operations = parse_metadata_json(operations, field="METADATA_PIPELINE_RUN.operations")
                     for operation in operations or []:
-                        operation = operation.asDict(recursive=True) if hasattr(operation, "asDict") else operation
+                        operation = migrate_asset_references(operation.asDict(recursive=True) if hasattr(operation, "asDict") else operation)
                         key = (run["workspace_id"], operation.get("table_id"))
-                        if (key not in table_keys or operation.get("source_type") == "file"
+                        if (key not in table_keys or operation.get("asset_type") == "FILE"
                                 or operation.get("status") != "succeeded"):
                             continue
-                        binding = operation.get("destination") or {}
-                        workspace, item = binding.get("workspace_id"), binding.get("item_id")
+                        binding = migrate_asset_references(operation.get("destination") or {})
+                        workspace, item = operation.get("asset_workspace_id"), binding.get("item_id")
                         if workspace and item:
                             known_locations.setdefault(key, set()).add((workspace.lower(), item.lower()))
     resolved = set()
@@ -297,11 +300,11 @@ def _migrate_catalogue_rows(rows, *, spark, convert, context):
             parent["item_id"] = parent.get("item_id") or store.item_id
         else:
             try:
-                file = file_source_identity(workspace_id=workspace, item_id=parent.get("item_id"),
+                file = file_source_identity(asset_workspace_id=workspace, item_id=parent.get("item_id"),
                     relative_path=parent.get("relative_path"), file_format=parent.get("file_format"))
-                if file["source_id"] != identity:
+                if file["table_id"] != identity:
                     raise ValueError("Stored file location disagrees with its identity.")
-                workspace = file["workspace_id"]
+                workspace = file["asset_workspace_id"]
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"Cannot verify the physical location of legacy Catalogue FILE {key!r}.") from exc
         new_key = (workspace.lower(), identity, kind)
@@ -371,7 +374,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
         compatible = frame.schema.__class__([
             expected[f.name] if f.name in converted
             else StructField(renames[f.name], f.dataType, f.nullable, f.metadata) if f.name in renames else f
-            for f in frame.schema.fields
+            for f in frame.schema.fields if f.name not in retirements or f.name in renames
         ])
         _validate_existing_metadata_schema(table_name, compatible, expected_schema, allow_missing=True)
         return converted
@@ -396,6 +399,8 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             if (is_file and values.get("column_name") and not values.get("column_id")
                     and table_name in {"METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY"}):
                 values["column_id"] = build_column_id(identity, values["column_name"])
+        if table_name in {"METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION"}:
+            values = migrate_asset_references(values)
         for old, new in renames.items():
             if old in values:
                 values[new] = values.pop(old)
@@ -407,9 +412,9 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             if physical_profile or physical_access:
                 values["asset_workspace_id"] = values.pop("legacy_workspace_id")
         if table_name == "METADATA_DATA_CONTRACT_ACTIVATION" and has_legacy_workspace:
-            destination = parse_metadata_json(values["destination_json"], field="destination_json")
+            destination = migrate_asset_references(parse_metadata_json(values["destination_json"], field="destination_json"))
             workspace = str(values.get("asset_workspace_id") or "").casefold()
-            if not workspace or not isinstance(destination, dict) or workspace != str(destination.get("workspace_id") or "").casefold():
+            if not workspace or not isinstance(destination, dict) or workspace != str(destination.get("asset_workspace_id") or "").casefold():
                 raise ValueError("Contract Activation workspace conflicts with its retained physical destination.")
         for name, kind in logical_fields.items():
             value = values.get(name)
@@ -573,7 +578,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
             "pre_upgrade_version": version, "upgrade_version": committed_version,
             **({"recovery_guidance": f"Pause metadata writers and inspect Delta history. To revert, use "
                  f"RESTORE TABLE delta.`{path}` TO VERSION AS OF {version} after checking for later writes."}
-               if legacy_catalogue or retired & set(renames) else {}),
+               if legacy_catalogue or retired & set(renames) or "source_id" in retired else {}),
             "converted_columns": sorted(converted), "removed_columns": sorted(retired),
             "added_columns": [f.name for f in expected_schema.fields if f.name not in actual],
         }

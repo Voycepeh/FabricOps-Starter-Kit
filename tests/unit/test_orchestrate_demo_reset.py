@@ -153,7 +153,7 @@ def test_foreign_metadata_blocks_true_before_any_deletion(monkeypatch, table, ro
 
 def test_owned_contract_and_activation_references_are_in_scope(monkeypatch):
     state = _environment(monkeypatch).state
-    state._demo_table_ids = {'orders'}; state._demo_workspaces = {'dev', 'governance'}
+    state._demo_table_ids = {'orders'}; state._demo_source_ids = set(); state._demo_workspaces = {'dev', 'governance'}
     API._demo_check_metadata_scope(state, {'table_id': 'orders', 'workspace_id': 'DEV',
         'contract_payload_json': '{"table":{"table_id":"orders"}}',
         'package_json': '{"manifest":{"operations":[{"table_id":"orders"}]}}'})

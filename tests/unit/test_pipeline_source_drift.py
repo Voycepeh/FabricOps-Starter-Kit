@@ -90,7 +90,7 @@ def test_mixed_file_table_acceptance_requires_only_complete_table_observations(m
     storage = Mock(side_effect=RuntimeError('snapshot storage boundary'))
     monkeypatch.setattr(shared, '_source_snapshot_state', storage)
     participants = {'orders': {'roles': ['source']},
-                    'file:orders-csv': {'source_type': 'file', 'roles': ['source']}}
+                    'file:orders-csv': {'asset_type': 'FILE', 'roles': ['source']}}
     if missing_table:
         participants['unread-table'] = {'roles': ['source']}
     plan = SimpleNamespace(permits_persistence=True, runtime_context={}, participants_json=json.dumps(participants),

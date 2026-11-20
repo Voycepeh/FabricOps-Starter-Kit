@@ -26,8 +26,8 @@ def files(runtime, monkeypatch):  # noqa: F811
     original = shared.pipeline_physical_bindings
     real = __import__('tests.unit.test_pipeline_session', fromlist=['PHYSICAL_BINDINGS']).PHYSICAL_BINDINGS
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kw:
-        {**original({k: v for k, v in identities.items() if v.get('source_type') != 'file'}, **kw),
-         **real({k: v for k, v in identities.items() if v.get('source_type') == 'file'}, **kw)})
+        {**original({k: v for k, v in identities.items() if v.get('asset_type') != "FILE"}, **kw),
+         **real({k: v for k, v in identities.items() if v.get('asset_type') == "FILE"}, **kw)})
     readers = {}
     for fmt in ('csv', 'json', 'parquet', 'excel'):
         reader = Mock(return_value=runtime.frame, __name__='read_lakehouse_' + fmt)
@@ -48,24 +48,26 @@ def test_formats_participate_in_read_write_and_finalize(files, fmt):
     result = orchestrate_read(store='Bronze', relative_path='demo/orders.' + fmt,
                               file_format=fmt, read_options=options)
     assert result['dataframe'] is files.runtime.frame
-    assert result['source_type'] == 'file' and result['source_id'].startswith('file:')
-    assert 'table_id' not in result and result['execution_plan_id'] == session.plan.plan_id
+    assert result['asset_type'] == "FILE" and result['table_id'].startswith('file:')
+    assert result['asset_type'] == 'FILE' and 'source_id' not in result and result['execution_plan_id'] == session.plan.plan_id
     assert [stage['stage'] for stage in result['orchestration_stages']] == ['Read', 'Profile']
     call = files.readers[fmt].call_args
     assert call.kwargs['context']['_spark_session'] is files.runtime.spark
     assert call.kwargs['store'] == 'Bronze'
     assert all(call.kwargs[key] == value for key, value in options.items())
-    assert result['source_location']['workspace_id'] == 'physical-workspace'
+    assert result['source_location']['asset_workspace_id'] == 'physical-workspace'
     write = orchestrate_write(result['dataframe'], store='Gold', schema='demo', table_name='summary', write_mode='overwrite')
-    assert write['source_ids'] == [result['source_id']]
+    assert write['source_assets'] == [{'table_id': result['table_id'], 'asset_type': 'FILE'}]
     assert write['source_association'] == 'pipeline_participation'
     assert files.runtime.publication.call_args.kwargs['source_table_ids'] == []
     run = finalize_pipeline(session)
     assert run['status'] == 'dry_run_completed'
     source = next(op for op in run['operations'] if op['pipeline_role'] == 'source')
     target = next(op for op in run['operations'] if op['pipeline_role'] == 'target')
-    assert source['source_id'] == result['source_id'] and source['table_id'] is None
-    assert target['source_ids'] == [result['source_id']] and target['source_table_ids'] == []
+    assert source['table_id'] == result['table_id'] and source['asset_type'] == 'FILE'
+    assert source['asset_workspace_id'] == 'physical-workspace'
+    assert 'asset_workspace_id' not in source['destination']
+    assert target['source_assets'] == [{'table_id': result['table_id'], 'asset_type': 'FILE'}] and 'source_ids' not in target
     shared.validate_pipeline_run(run)
 
 
@@ -100,13 +102,13 @@ def test_file_failure_records_failed_operation_and_closes_session(files):
 
 def test_frozen_file_contract_compares_reader_options(files, monkeypatch):
     session = setup_pipeline(pipeline_mode='Dry Run')
-    descriptor = file_source_identity(workspace_id='physical-workspace', item_id='physical-item',
+    descriptor = file_source_identity(asset_workspace_id='physical-workspace', item_id='physical-item',
         relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     payload = {'source': descriptor, 'table': {'columns': []}, 'enrichment': {'table': [], 'columns': []}, 'guardrails': []}
-    contract = {'source_id': descriptor['source_id'], 'table_id': None, 'contract_id': 'orders-file', 'contract_version': 1,
+    contract = {'table_id': descriptor['table_id'], 'contract_id': 'orders-file', 'contract_version': 1,
         'status': 'frozen', 'contract_payload': payload, 'contract_payload_json': json.dumps(payload)}
     monkeypatch.setattr(shared, 'resolve_data_contract_version', lambda *a, **kw: contract)
-    session.select_contract(descriptor['source_id'], 'orders-file', 1)
+    session.select_contract(descriptor['table_id'], 'orders-file', 1)
     with pytest.raises(ValueError, match='reader options differ'):
         orchestrate_read(store='Bronze', relative_path='demo/orders.csv', file_format='csv', read_options={'header': False})
     files.readers['csv'].assert_not_called()
@@ -114,12 +116,12 @@ def test_frozen_file_contract_compares_reader_options(files, monkeypatch):
 
 def test_approved_file_boundary_binds_exact_plan_and_options():
     from fabricops_kit.activated_pipeline import shared as activation
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     content = json.dumps({'source': source})
     binding = {**{k: v for k, v in source.items() if k != 'reader_options'}, 'reader_options_json': json.dumps(source['reader_options'])}
     contract = {'contract_id': 'c', 'contract_version': 1, 'contract_payload_json': content}
-    package = {'contracts': {source['source_id']: contract}, 'manifest': {
-        'operations': [{'source_type': 'file', 'source_id': source['source_id'], 'table_id': None,
+    package = {'contracts': {source['table_id']: contract}, 'manifest': {
+        'operations': [{'asset_type': "FILE", 'table_id': source['table_id'],
             'destination': binding, 'pipeline_role': 'source', 'read_mode': 'full', 'operation_key': 'source:Bronze/Files/demo/orders.csv'}],
         'file_authorizations': [{'source': source, 'store': 'Bronze', 'contract_id': 'c', 'contract_version': 1,
             'payload_sha256': activation.hashlib.sha256(content.encode()).hexdigest()}]}}
@@ -188,7 +190,7 @@ def test_file_contract_shared_schema_dq_grain_and_metadata_freshness(files, spar
     from fabricops_kit.pipeline.check_freshness import check_freshness
     session = setup_pipeline(pipeline_mode='Dry Run')
     identity = shared.resolve_file_participant(store='Bronze', relative_path='demo/orders.csv', file_format='csv', context=session.plan.runtime_context)
-    source_id = identity['source_id']
+    source_id = identity['table_id']
     columns = [{'column_id': name, 'column_name': name, 'data_type': typ} for name, typ in [('id', 'int'), ('modified', 'timestamp')]]
     payload = {'source': shared.file_participant_source(identity), 'table': {'columns': columns},
         'enrichment': {'table': [], 'columns': []}, 'guardrails': [
@@ -197,7 +199,7 @@ def test_file_contract_shared_schema_dq_grain_and_metadata_freshness(files, spar
             {'guardrail_rule_id': 'fresh', 'guardrail_type': 'freshness', 'rule_type': 'freshness', 'action': 'Warn',
              'rule_parameters': {'evidence_method': 'metadata', 'evaluation_scope': 'full_dataset',
                                  'maximum_age': 2, 'maximum_age_unit': 'hours'}, 'is_active': True}]}
-    contract = {'source_id': source_id, 'table_id': None, 'contract_id': 'c', 'contract_version': 1,
+    contract = {'table_id': source_id, 'contract_id': 'c', 'contract_version': 1,
                 'contract_payload_json': json.dumps(payload), 'contract_payload': payload}
     rules = shared.contract_guardrail_rows(contract, workspace_id='dev', table_id=source_id)
     # Same shared engines and result writer; only runtime/audit access is isolated.
@@ -263,29 +265,58 @@ def test_file_pipeline_submission_round_trips_typed_operation_and_write_associat
     from tests.unit.test_pipeline_handoff import package_candidate, resign
     from tests.unit.test_activated_pipeline import operation
     package = package_candidate()
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv', reader_options={'header': True})
     content = json.dumps({'source': source, 'table': {'columns': []}, 'enrichment': {'table': [], 'columns': []}, 'guardrails': []})
     source_op = operation(role='source')
-    source_op.update(operation_key='source:Bronze/Files/demo/orders.csv', source_type='file', source_id=source['source_id'],
-        table_id=None, requested_schema=None, destination={**{k: v for k, v in source.items() if k != 'reader_options'},
+    source_op.update(operation_key='source:Bronze/Files/demo/orders.csv', asset_type='FILE', table_id=source['table_id'], asset_workspace_id=source['asset_workspace_id'], requested_schema=None, destination={**{k: v for k, v in source.items() if k not in {'reader_options', 'asset_type', 'table_id', 'asset_workspace_id'}},
                                                           'reader_options_json': json.dumps(source['reader_options'])})
     for field in ['operations', 'tested_operations']:
         package['manifest'][field].append(deepcopy(source_op))
-        package['manifest'][field][0]['source_ids'] = [source['source_id']]
+        package['manifest'][field][0]['source_assets'] = [{'table_id': source['table_id'], 'asset_type': 'FILE'}]
     run_op = {key: value for key, value in source_op.items() if key != 'requested_schema'}
     run_op.update(contract_id='file-contract', contract_version=1, payload_sha256=activation.hashlib.sha256(content.encode()).hexdigest(),
         status='succeeded', stages=[{'stage': 'Read', 'status': 'passed'}])
     package['dry_run']['operations'].append(run_op)
-    package['dry_run']['operations'][0]['source_ids'] = [source['source_id']]
-    package['contracts'][source['source_id']] = {'contract_id': 'file-contract', 'contract_version': 1,
-        'status': 'frozen', 'source_id': source['source_id'], 'table_id': None, 'contract_payload_json': content}
+    package['dry_run']['operations'][0]['source_assets'] = [{'table_id': source['table_id'], 'asset_type': 'FILE'}]
+    package['contracts'][source['table_id']] = {'contract_id': 'file-contract', 'contract_version': 1,
+        'status': 'frozen', 'table_id': source['table_id'], 'asset_type': 'FILE', 'contract_payload_json': content}
     package['manifest']['file_authorizations'] = [{'source': source, 'store': 'Bronze', 'contract_id': 'file-contract',
         'contract_version': 1, 'payload_sha256': run_op['payload_sha256']}]
     validated = activation.validate_submission(resign(package))
     activation.validate_file_execution_authorizations(validated)
-    assert validated['manifest']['operations'][0]['source_table_ids'] == []
+    assert validated['manifest']['operations'][0]['source_assets'] == [{'table_id': source['table_id'], 'asset_type': 'FILE'}]
+    # A previously approved v1 file package keeps its frozen bytes and digest.
+    legacy = deepcopy(package)
+    legacy['manifest']['format_version'] = 1
+    legacy['dry_run']['run_schema_version'] = 3
+    old_source = {**source, 'source_type': 'file', 'source_id': source['table_id']}
+    old_source.pop('table_id')
+    old_source.pop('asset_type')
+    old_source['workspace_id'] = old_source.pop('asset_workspace_id')
+    old_content = json.dumps({'source': old_source, 'table': {'columns': []},
+                              'enrichment': {'table': [], 'columns': []}, 'guardrails': []}, indent=2)
+    legacy['contracts'][source['table_id']].update(table_id=None, source_id=source['table_id'], contract_payload_json=old_content)
+    legacy['contracts'][source['table_id']].pop('asset_type')
+    authorization = legacy['manifest']['file_authorizations'][0]
+    authorization.update(source=old_source, payload_sha256=activation.hashlib.sha256(old_content.encode()).hexdigest())
+    for operations in (legacy['manifest']['operations'], legacy['manifest']['tested_operations'], legacy['dry_run']['operations']):
+        for op in operations:
+            if 'source_assets' not in op:
+                continue
+            refs = op.pop('source_assets')
+            op['source_table_ids'] = [ref['table_id'] for ref in refs if ref['asset_type'] == 'TABLE']
+            op['source_ids'] = [ref['table_id'] for ref in refs if ref['asset_type'] == 'FILE']
+            if op.pop('asset_type') == 'FILE':
+                op.update(table_id=None, source_id=source['table_id'], source_type='file')
+                op['destination'] = {**{key: value for key, value in old_source.items() if key != 'reader_options'},
+                                     'reader_options_json': json.dumps(old_source['reader_options'])}
+                if 'payload_sha256' in op:
+                    op['payload_sha256'] = authorization['payload_sha256']
+    resign(legacy)
+    assert activation.validate_submission(legacy) == legacy
+    activation.validate_file_execution_authorizations(legacy)
     changed = deepcopy(package)
-    changed['manifest']['operations'][0]['source_ids'] = []
+    changed['manifest']['operations'][0]['source_assets'] = []
     with pytest.raises(ValueError, match='associations differ|inconsistent operation evidence'):
         activation.validate_submission(resign(changed))
 
@@ -298,20 +329,20 @@ def test_explicit_file_participant_plan_uses_same_source_identity(files):
         pipeline_id='00000000-0000-4000-8000-000000000001',
         context={'config': {}, 'scope_workspace_id': 'dev', 'notebook_id': ''}, spark_session=files.runtime.spark)
     participants = json.loads(plan.participants_json)
-    assert list(participants) == [identity['source_id']]
-    assert 'table_id' not in participants[identity['source_id']]
+    assert list(participants) == [identity['table_id']]
+    assert participants[identity['table_id']]['asset_type'] == 'FILE'
     run = shared.pipeline_run_row(plan, status='incomplete')
     assert run['operations'][0]['status'] == 'not_started'
-    assert shared.validate_pipeline_run(run)['operations'][0]['source_id'] == identity['source_id']
+    assert shared.validate_pipeline_run(run)['operations'][0]['table_id'] == identity['table_id']
 
 
 def test_selected_file_contract_is_enforced_before_associated_table_write(files, spark_session, monkeypatch):
     from datetime import datetime, UTC
     from fabricops_kit.pipeline.shared import contract_guardrail_rows
-    source = file_source_identity(workspace_id='physical-workspace', item_id='physical-item', relative_path='demo/orders.csv', file_format='csv')
+    source = file_source_identity(asset_workspace_id='physical-workspace', item_id='physical-item', relative_path='demo/orders.csv', file_format='csv')
     payload = {'source': source, 'table': {'columns': [{'column_id': 'id', 'column_name': 'id', 'data_type': 'int'}]},
                'enrichment': {'table': [], 'columns': []}, 'guardrails': []}
-    contract = {'table_id': None, 'source_id': source['source_id'], 'contract_id': 'selected-file', 'contract_version': 1,
+    contract = {'table_id': source['table_id'], 'contract_id': 'selected-file', 'contract_version': 1,
                 'status': 'frozen', 'contract_payload': payload, 'contract_payload_json': json.dumps(payload)}
     monkeypatch.setattr(shared, 'resolve_data_contract_version', lambda *a, **kw: contract)
     def load_rules(*a, table_id, context, **kw):
@@ -326,32 +357,32 @@ def test_selected_file_contract_is_enforced_before_associated_table_write(files,
     files.readers['csv'].return_value = frame
     session = setup_pipeline(pipeline_mode='Dry Run')
     session.spark = spark_session
-    session.select_contract(source['source_id'], 'selected-file', 1)
+    session.select_contract(source['table_id'], 'selected-file', 1)
     read = orchestrate_read(store='Bronze', relative_path='demo/orders.csv', file_format='csv')
     assert read['selected_contract'] == {'contract_id': 'selected-file', 'contract_version': 1}
-    assert read['schema_result']['source_id'] == source['source_id']
-    assert read['guardrail_outcomes'][0]['source_id'] == source['source_id']
+    assert read['schema_result']['table_id'] == source['table_id']
+    assert read['guardrail_outcomes'][0]['table_id'] == source['table_id']
     write = orchestrate_write(read['dataframe'], store='Silver', schema='demo', table_name='curated_orders', write_mode='overwrite')
     assert write['source_guardrail_results'][0]['can_continue'] is True
-    assert source['source_id'] in write['tested_contracts']
-    assert write['source_ids'] == [source['source_id']]
+    assert source['table_id'] in write['tested_contracts']
+    assert write['source_assets'] == [{'table_id': source['table_id'], 'asset_type': 'FILE'}]
     assert finalize_pipeline(session)['status'] == 'dry_run_completed'
 
 
 def test_persisted_file_guardrail_uses_explicit_nullable_identity_schema(files, spark_session, monkeypatch):
     from datetime import datetime
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS
-    source = file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    source = file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
     audit = {name: datetime(2026, 1, 1) if kind == 'timestamp' else 'test' for name, kind, _nullable in AUDIT_SCHEMA_FIELDS}
     monkeypatch.setattr(shared, 'build_pipeline_audit_fields', lambda **kw: audit)
     written = Mock()
     monkeypatch.setattr(shared, 'write_lakehouse_table', written)
     shared.write_guardrail_result_row(spark_session=spark_session, config={}, active_workspace_id='dev', run_id='run',
         dataset_name='', table_name='demo/orders.csv', store_type='file', layer='Bronze', guardrail_type='schema',
-        rule_type='strict', table_id=source['source_id'], contract_id='file-contract', contract_version=1,
+        rule_type='strict', table_id=source['table_id'], contract_id='file-contract', contract_version=1,
         result={'guardrail_rule_id': 'schema', 'guardrail_version': 1, 'status': 'passed', 'can_continue': True},
         context={'config': {}, 'scope_workspace_id': 'dev'})
     frame = written.call_args.args[0]
     assert frame.schema['table_id'].nullable and 'source_id' not in frame.columns
     row = frame.first()
-    assert row['table_id'] == source['source_id'] and row['asset_type'] == 'FILE'
+    assert row['table_id'] == source['table_id'] and row['asset_type'] == 'FILE'

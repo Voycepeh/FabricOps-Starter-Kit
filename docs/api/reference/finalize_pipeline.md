@@ -135,9 +135,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:219`
+`fabricops_kit/pipeline/finalize_pipeline.py:221`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L219-L338">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L221-L340">View on GitHub</a>
 </div>
 
 
@@ -153,7 +153,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 122 |
+| Live-critical dependencies | 125 |
 
 ### Release history
 
@@ -222,11 +222,14 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>

@@ -132,7 +132,7 @@ def _responses(*responses):
 
 
 def _agent_context(source_type="lakehouse"):
-    return {"table_id": "orders-id", "source": {"type": source_type, "workspace_id": "source-workspace", "item_id": "source-item", "schema": "dbo", "table": "orders"}, "columns": []}
+    return {"table_id": "orders-id", "source": {"type": source_type, "asset_workspace_id": "source-workspace", "item_id": "source-item", "schema": "dbo", "table": "orders"}, "columns": []}
 
 
 def test_create_data_agent_is_the_only_public_data_agent_function():

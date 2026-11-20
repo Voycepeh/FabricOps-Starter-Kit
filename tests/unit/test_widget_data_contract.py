@@ -460,7 +460,7 @@ def test_selector_is_explicit_and_pending_selection_cannot_change_active_contrac
 
     assert state["current"] is None
     assert state["table_id"] is None
-    assert state["pending_table_id"] == "orders"
+    assert state["pending_dataset_id"] == "orders"
     assert controls["workspace_select"].value == ""
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -558,14 +558,14 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     assert controls["table"].value == ""
     assert controls["table_search"].value == ""
     assert any("demo.orders" in option for option in controls["table_search"].options)
-    assert state["pending_table_id"] is None
+    assert state["pending_dataset_id"] is None
 
     table_option = next(
         option for option in controls["table_search"].options if "demo.orders" in option
     )
     controls["table_search"].value = table_option
     assert controls["table"].value == "orders"
-    assert state["pending_table_id"] == "orders"
+    assert state["pending_dataset_id"] == "orders"
 
 
 def test_configured_workspace_routes_authoring_to_its_metadata_mapping(widget_runtime):
@@ -645,9 +645,9 @@ def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime)
 def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, monkeypatch, path, kind):
     """Files use configured item names and known workspace names without changing their identity."""
     source = module.contracts.file_source_identity(
-        workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
+        asset_workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
     )
-    dataset = {**source, "asset_workspace_id": source["workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    dataset = {**source, "asset_workspace_id": source["asset_workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
     monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
     original_review = module.contracts.get_contract_review_state
 
@@ -662,7 +662,7 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     state = widget_runtime["open"]()
     controls = state["_controls"]
     labels = {value: label for label, value in controls["table"].options}
-    assert labels[source["source_id"]] == f"Raw Lakehouse · {path} — {kind} · Development"
+    assert labels[source["table_id"]] == f"Raw Lakehouse · {path} — {kind} · Development"
     assert labels["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
     assert ("Development", "dev") in controls["workspace_select"].options
     context = controls["table_context"].children[0].value
@@ -762,7 +762,7 @@ def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypat
     assert "Lakehouse:" not in labels_by_value["orders"]
     assert "Warehouse:" not in labels_by_value["audit-orders"]
     controls["table"].value = "audit-orders"
-    assert state["pending_table_id"] == "audit-orders"
+    assert state["pending_dataset_id"] == "audit-orders"
 
 
 @pytest.mark.parametrize('strategy', ['append_all', 'append_new_only'])
@@ -3342,7 +3342,7 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
         loaded = original_review(**kwargs)
         loaded["payload"] = {
             "source": module.contracts.file_source_identity(
-                workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
+                asset_workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
             ),
             "table": {"table_id": "orders"},
         }
@@ -4746,8 +4746,8 @@ def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeyp
     from unittest.mock import Mock
     from fabricops_kit.config.shared import build_column_id
     source = module.contracts.file_source_identity(
-        workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
-    dataset = {**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+        asset_workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
+    dataset = {**source, 'asset_workspace_id': source['asset_workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
     monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
     original = module.contracts.get_contract_review_state
     def file_review(**kwargs):
@@ -4756,12 +4756,12 @@ def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeyp
         loaded['payload'] = {**json.loads(loaded['contract']['contract_payload_json']), 'source': source}
         return loaded
     monkeypatch.setattr(module.contracts, 'get_contract_review_state', file_review)
-    profile = {'kind': 'profile', 'profile': {'row_count': 42, 'table_id': source['source_id'],
-                                           'column_id': build_column_id(source['source_id'], 'column_0')}}
+    profile = {'kind': 'profile', 'profile': {'row_count': 42, 'table_id': source['table_id'],
+                                           'column_id': build_column_id(source['table_id'], 'column_0')}}
     reader = Mock(return_value={'latest_profile': None, 'column_profiles': {},
-        'profile_contexts': {build_column_id(source['source_id'], 'column_0'): profile}, 'lineage': [], 'reader_count': 1, 'writer_count': 0})
+        'profile_contexts': {build_column_id(source['table_id'], 'column_0'): profile}, 'lineage': [], 'reader_count': 1, 'writer_count': 0})
     monkeypatch.setattr(module.contracts, 'get_asset_runtime_context', reader)
     state = widget_runtime['open']()
-    assert reader.call_args.kwargs['table_id'] == source['source_id']
+    assert reader.call_args.kwargs['table_id'] == source['table_id']
     assert 'source_id' not in reader.call_args.kwargs
     assert state['load_profile_context']('col-0') == profile

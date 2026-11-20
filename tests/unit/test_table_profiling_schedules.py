@@ -31,7 +31,7 @@ def metadata(monkeypatch):
             'execution_plan': SimpleNamespace(plan_id=run_id, permits_persistence=True, evidence={"profiling_configuration": {"grain_discovery_enabled": True, "frequency_enabled": True}}), **overrides}
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
-        table_id: {'workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
+        table_id: {'asset_workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
                    'kind': 'lakehouse', 'schema': identity['schema'], 'table_name': identity['table_name']}
         for table_id, identity in identities.items()})
     history_reads = []

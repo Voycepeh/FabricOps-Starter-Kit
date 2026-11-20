@@ -260,7 +260,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
         table_id="table-a",
         contract_id="contract-a",
         contract_version=2,
-        context={"_pipeline_bindings": {"table-a": {"workspace_id": "remote"}}},
+        context={"_pipeline_bindings": {"table-a": {"asset_workspace_id": "remote"}}},
     )
 
     table_name, row = writes[0]

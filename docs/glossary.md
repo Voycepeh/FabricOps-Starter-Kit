@@ -204,7 +204,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="table-id">
 <summary><strong>table_id</strong> — The shared FabricOps identifier for a table or file asset, distinguished by asset_type.</summary>
-<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Released file source descriptors keep the field name source_id.</p>
+<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Contracts, activations and new Pipeline Run operations use the same table_id and asset_type fields, with asset_workspace_id in physical bindings and file selectors. Released JSON keeps its original bytes and hashes and is interpreted when read.</p>
 <p><strong>Also known as:</strong> table ID</p>
 </details>
 
@@ -357,7 +357,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 4 uses asset_workspace_id directly on each operation beside table_id and asset_type; it records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.</p>
 </details>
 
 <details id="pyspark">

@@ -67,7 +67,7 @@ def check_dq(
         identity.get("relative_path") or identity["table_name"],
         table_id=table_id,
         store=identity["store"],
-        store_type=identity.get("source_type") or identity["store_type"],
+        store_type="file" if identity.get("asset_type") == "FILE" else identity["store_type"],
         schema_name=identity.get("schema"),
         dataset_name=dataset_name,
         run_id=run_id,

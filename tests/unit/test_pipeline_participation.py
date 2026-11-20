@@ -51,7 +51,8 @@ def test_three_reads_two_writes_and_catalogue_join(runtime, spark_session):
             & (F.col('p.asset_type') == F.col('c.asset_type'))
             & (F.col('p.asset_workspace_id') == F.col('c.asset_workspace_id')))
         assert joined.count() == 1
-        assert all(r.participant_workspace_id == 'workspace' for r in records)
+        assert all(r.asset_workspace_id == 'workspace' for r in records)
+        assert 'participant_workspace_id' not in participants.columns
     finally:
         participants.unpersist()
 
@@ -93,11 +94,13 @@ def test_files_and_legacy_run_hashes(runtime, spark_session):
     plan = make(mode='ungoverned', roles=('source',))
     operation(plan, 0)
     row = shared.pipeline_run_row(plan, status='incomplete')
+    row['run_schema_version'] = 3
+    row['operations'][0].pop('asset_type')
     row['operations'][0].update(source_type='file', source_id='file:example', table_id=None)
     before = shared.canonical_pipeline_json(row)
     result = shared.pipeline_participation(_frame(spark_session, [row])).first()
-    assert result.source_id == result.table_id == 'file:example' and result.asset_type == 'FILE'
-    assert result.asset_workspace_id == result.participant_workspace_id == 'workspace'
+    assert result.table_id == 'file:example' and result.asset_type == 'FILE'
+    assert result.asset_workspace_id == 'workspace'
     catalogue = spark_session.createDataFrame(
         [('workspace', 'file:example', 'FILE'), ('canary', 'file:example', 'FILE')],
         ['asset_workspace_id', 'table_id', 'asset_type'])
@@ -177,7 +180,7 @@ def test_asset_usage_bounds_history_and_falls_back_to_run_time(runtime, spark_se
     new.update(run_id='a-new', started_at=datetime(2026, 11, 20))
     remote = deepcopy(new)
     remote.update(run_id='z-remote', started_at=datetime(2026, 11, 21))
-    remote['operations'][0]['destination']['workspace_id'] = 'other-physical'
+    remote['operations'][0]['asset_workspace_id'] = 'other-physical'
     runs = _frame(spark_session, [old, new, remote])
     monkeypatch.setattr(contracts, 'read_lakehouse_table', lambda *a, **kw: runs)
     monkeypatch.setattr(contracts, '_metadata_io_context', lambda *a: {})

@@ -124,8 +124,7 @@ Not documented yet
 Define store, schema, table_name and any full/incremental/query options.
 Alternatively select a Lakehouse file, folder or wildcard using relative_path,
 file_format and read_options. Files support full reads only and retain their
-stable Source ID in the public response. Shared metadata stores that same
-identity value in table_id with asset_type=FILE. Foundational readers remain independent.
+stable identity in table_id with asset_type=FILE in the response and shared metadata. Foundational readers remain independent.
 Persistent reads register their physical asset and observed schema in
 METADATA_DATA_CATALOGUE independently of profiling. Query projections
 leave the registered table schema intact. Run operations record participation
@@ -136,7 +135,7 @@ in memory. Profiling uses the pipeline row limit and records selection scope.
 A replaced file can be read again in a new execution; no exactly-once or
 immutable-file guarantee is provided.
 Spark, execution authority and reporting come from setup_pipeline. The result
-retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+retains its dataframe, common asset Table ID and asset type and Guardrail diagnostics. Reads
 record their own participation in METADATA_PIPELINE_RUN.operations and
 register pipeline-level participation for subsequent Writes; this is not
 exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
@@ -173,7 +172,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L240">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L239">View on GitHub</a>
 </div>
 
 
@@ -189,7 +188,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 276 |
+| Live-critical dependencies | 279 |
 
 ### Release history
 
@@ -246,11 +245,14 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_dataframe</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>

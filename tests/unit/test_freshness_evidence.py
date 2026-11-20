@@ -90,7 +90,7 @@ def test_file_folder_and_wildcard_metadata(selector):
     root = SimpleNamespace(getFileSystem=lambda config: fs)
     jvm = SimpleNamespace(org=SimpleNamespace(apache=SimpleNamespace(hadoop=SimpleNamespace(fs=SimpleNamespace(Path=lambda path: root)))))
     spark = SimpleNamespace(_jvm=jvm, _jsc=SimpleNamespace(hadoopConfiguration=lambda: None))
-    evidence = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": selector}, spark_session=spark)
+    evidence = collect_freshness_evidence(parameters("metadata"), source={"asset_type": "FILE", "resolved_path": selector}, spark_session=spark)
     assert evidence["outcome"] == "available"
     assert evidence["file_count"] == 2
     assert evidence["latest_value"] == "2026-11-11T09:00:00+00:00"
@@ -100,7 +100,7 @@ def test_file_folder_and_wildcard_metadata(selector):
 
 def test_failed_file_access_remains_unavailable():
     """An unreadable resolved selector cannot silently use a column or old profile."""
-    result = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": "denied"}, spark_session=object())
+    result = collect_freshness_evidence(parameters("metadata"), source={"asset_type": "FILE", "resolved_path": "denied"}, spark_session=object())
     assert result["outcome"] == "unavailable"
     assert evaluate_freshness_evidence(result, parameters("metadata"), action="Block")["can_continue"] is False
 
@@ -111,7 +111,7 @@ def test_no_resolved_files_is_unavailable():
     root = SimpleNamespace(getFileSystem=lambda config: fs)
     jvm = SimpleNamespace(org=SimpleNamespace(apache=SimpleNamespace(hadoop=SimpleNamespace(fs=SimpleNamespace(Path=lambda path: root)))))
     spark = SimpleNamespace(_jvm=jvm, _jsc=SimpleNamespace(hadoopConfiguration=lambda: None))
-    evidence = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": "empty/*.csv"}, spark_session=spark)
+    evidence = collect_freshness_evidence(parameters("metadata"), source={"asset_type": "FILE", "resolved_path": "empty/*.csv"}, spark_session=spark)
     assert evidence["outcome"] == "unavailable" and "no data files" in evidence["reason"]
 
 
@@ -134,7 +134,7 @@ def test_table_metadata_excludes_maintenance_updates(spark_session, monkeypatch,
 
 def test_file_metadata_does_not_ignore_reader_selection_options():
     """An unresolved reader filter cannot silently broaden metadata evidence scope."""
-    evidence = collect_freshness_evidence(parameters("metadata"), source={"source_type": "file", "resolved_path": "folder",
+    evidence = collect_freshness_evidence(parameters("metadata"), source={"asset_type": "FILE", "resolved_path": "folder",
         "reader_options": {"pathGlobFilter": "*.csv"}}, spark_session=object())
     assert evidence["outcome"] == "unavailable" and "reader-resolved" in evidence["reason"]
 

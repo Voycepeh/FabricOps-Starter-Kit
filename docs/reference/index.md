@@ -35,8 +35,8 @@ Use the finder below to search 30 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 54
-    - Total callables: 855
-    - Supporting functions: 462
+    - Total callables: 858
+    - Supporting functions: 465
     - Private helpers to review: 356
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.

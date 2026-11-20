@@ -66,7 +66,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                             'rule_parameters': {'required_columns': ['id-col']}, 'action': 'Block', 'is_active': True}]}
             contracts[table] = {'contract_id': 'contract-' + table, 'contract_version': 1, 'table_id': table,
                 'status': 'frozen', 'evidence_workspace_id': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
-            bindings[table] = {'workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
+            bindings[table] = {'asset_workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
         for contract in contracts.values():
             key = (contract['contract_id'], contract['contract_version'])
             if key not in retained:
@@ -80,8 +80,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
             operation.update(status='succeeded', read_mode='full' if key.startswith('source:') else None,
-                write_mode='overwrite' if key.startswith('target:') else None, source_table_ids=sorted(
-                    table for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']) if key.startswith('target:') else [],
+                write_mode='overwrite' if key.startswith('target:') else None, source_assets=sorted(
+                    [{'table_id': table, 'asset_type': 'TABLE'} for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']], key=lambda ref: ref['table_id']) if key.startswith('target:') else [],
                 stages=[{'stage': 'Read' if key.startswith('source:') else 'Processing', 'status': 'passed'},
                         {'stage': 'Schema', 'status': 'passed'}, {'stage': 'Profile', 'status': 'passed'}])
         plan.evidence['guardrail_history'] = [

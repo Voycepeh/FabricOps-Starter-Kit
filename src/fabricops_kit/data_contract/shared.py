@@ -6,6 +6,8 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import migrate_asset_references
+
 from time import perf_counter
 
 from fabricops_kit.io.shared import retry_delta_metadata
@@ -44,15 +46,15 @@ ENRICHMENT_TYPES_BY_LEVEL = {
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
-def file_source_identity(*, workspace_id, item_id, relative_path, file_format, reader_options=None):
-    """Identify a Lakehouse Files selector without manufacturing a Table ID.
+def file_source_identity(*, asset_workspace_id, item_id, relative_path, file_format, reader_options=None):
+    """Identify a Lakehouse Files selector using the common asset identity.
 
     Identity includes physical workspace/item and a case-sensitive normalized
     relative selector. Folder/wildcard membership may change without changing
     the selector identity. Format and reader options are approved separately.
     """
-    if any(not isinstance(value, str) or not value.strip() for value in (workspace_id, item_id, relative_path)):
-        raise ValueError("File source requires workspace_id, item_id and relative_path.")
+    if any(not isinstance(value, str) or not value.strip() for value in (asset_workspace_id, item_id, relative_path)):
+        raise ValueError("File source requires asset_workspace_id, item_id and relative_path.")
     if relative_path.startswith(("/", "\\")) or ":" in relative_path or "\\" in relative_path or ".." in relative_path.split("/"):
         raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
     if any(ord(character) < 32 for character in relative_path) or "%" in relative_path:
@@ -66,30 +68,31 @@ def file_source_identity(*, workspace_id, item_id, relative_path, file_format, r
         raise ValueError("Unsupported file source format.")
     if reader_options is not None and not isinstance(reader_options, dict):
         raise ValueError("File reader_options must be an object.")
-    physical = {"workspace_id": workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
+    # Keep the released hash projection; emitted selectors use asset_workspace_id.
+    physical = {"workspace_id": asset_workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
     digest = hashlib.sha256(json.dumps(physical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     options = json.loads(json.dumps(reader_options or {}, allow_nan=False, sort_keys=True))
-    return {"source_type": "file", "source_id": "file:" + digest, **physical,
+    return {"asset_type": "FILE", "table_id": "file:" + digest, "asset_workspace_id": physical["workspace_id"], "item_id": physical["item_id"], "relative_path": physical["relative_path"],
             "file_format": file_format, "reader_options": options}
 
 
 def validate_contract_source(payload):
-    """Validate physical Table IDs or a distinct stable file selector identity."""
+    """Validate the common asset identity and exact physical file selector."""
     source = payload.get("source")
     if source is None:
         return  # Physical table contracts retain their canonical Table ID.
     if not isinstance(source, dict):
         raise ValueError("Data Contract source must be an object.")
-    if source.get("source_type") == "table":
+    if source.get("asset_type") == "TABLE":
         if not source.get("table_id") or source["table_id"] != payload.get("table", {}).get("table_id"):
             raise ValueError("Table source must preserve the canonical Table ID.")
-    elif source.get("source_type") == "file":
+    elif source.get("asset_type") == "FILE":
         expected = file_source_identity(**{key: source.get(key) for key in
-            ("workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
-        if expected != source or payload.get("table", {}).get("table_id"):
-            raise ValueError("File source must use its stable file identity, without a Table ID.")
+            ("asset_workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
+        if expected != source or payload.get("table", {}).get("table_id") not in (None, source["table_id"]):
+            raise ValueError("File source must retain its stable asset identity.")
     else:
-        raise ValueError("Data Contract source_type must be table or file.")
+        raise ValueError("Data Contract asset_type must be TABLE or FILE.")
 
 
 def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any]:
@@ -128,22 +131,22 @@ def contract_file_datasets(rows, *, config, workspace_id):
     for row in rows:
         payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default={})
         source = payload.get("source", {})
-        if source.get("source_type") != "file":
+        if source.get("asset_type") != "FILE":
             continue
         validate_contract_source(payload)
-        if versions.get(source["source_id"], -1) >= int(row.get("contract_version") or 0):
+        if versions.get(source["table_id"], -1) >= int(row.get("contract_version") or 0):
             continue
-        versions[source["source_id"]] = int(row.get("contract_version") or 0)
+        versions[source["table_id"]] = int(row.get("contract_version") or 0)
         stores = []
         for route in paths:
             for key in paths[route]:
                 store = get_store(config, route, key)
-                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
                     stores.append((str(route), key))
         if not stores:
             continue
         route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
-        datasets[source["source_id"]] = {**source, "asset_workspace_id": source["workspace_id"], "store": store_key, "configuration_workspace_id": route,
+        datasets[source["table_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
             "columns": payload.get("table", {}).get("columns", [])}
     return list(datasets.values())
 
@@ -157,11 +160,11 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
     reader_settings = {}
     for run in pipeline_runs:
         for operation in _json_value(run.get("operations"), field="operations", default=[]):
-            if (operation.get("pipeline_role"), operation.get("source_type"), operation.get("status")) != (
-                    "source", "file", "succeeded"):
+            if (operation.get("pipeline_role"), operation.get("asset_type"), operation.get("status")) != (
+                    "source", "FILE", "succeeded"):
                 continue
             binding = operation.get("destination") or {}
-            key = (operation.get("source_id"), binding.get("file_format"))
+            key = (operation.get("table_id"), binding.get("file_format"))
             timestamp = str(operation.get("completed_at") or run.get("completed_at") or "")
             if key not in reader_settings or timestamp > reader_settings[key][0]:
                 reader_settings[key] = (timestamp, binding.get("reader_options_json"))
@@ -175,21 +178,21 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
             continue
         _, raw_options = reader_settings.get((row["table_id"], row["file_format"]), ("", None))
         source = file_source_identity(
-            workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
+            asset_workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
             relative_path=row["relative_path"], file_format=row["file_format"],
             reader_options=_json_value(raw_options, field="reader_options_json", default={}),
         )
-        if source["source_id"] != row["table_id"]:
+        if source["table_id"] != row["table_id"]:
             raise ValueError(f"Invalid Catalogue file location for {row['table_id']!r}.")
         stores = []
         for route, targets in paths.items():
             for key in targets:
                 store = get_store(config, route, key)
-                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
                     stores.append((route, key))
         if stores:
             route, key = min(stores, key=lambda match: (match[0] != workspace_id, match[1] != row["layer"], *match))
-            datasets.append({**source, "asset_workspace_id": source["workspace_id"], "store": key, "configuration_workspace_id": route,
+            datasets.append({**source, "store": key, "configuration_workspace_id": route,
                              "asset_workspace_name": row["asset_workspace_name"], "columns": columns})
     return sorted(datasets, key=lambda row: row["relative_path"])
 
@@ -197,18 +200,18 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
 def dataset_selector_options(tables, files, *, table_id=None, workspace_id=None):
     """Combine typed dataset choices while preserving the table observation selector."""
     options = observation_selector_options(tables, table_id=table_id, workspace_id=workspace_id)
-    return {"tables": sorted(set(options["tables"]) | {row["source_id"] for row in files
-                if not workspace_id or row["workspace_id"] == workspace_id}),
-            "workspaces": sorted(set(options["workspaces"]) | {row["workspace_id"] for row in files
-                if not table_id or row["source_id"] == table_id})}
+    return {"tables": sorted(set(options["tables"]) | {row["table_id"] for row in files
+                if not workspace_id or row["asset_workspace_id"] == workspace_id}),
+            "workspaces": sorted(set(options["workspaces"]) | {row["asset_workspace_id"] for row in files
+                if not table_id or row["table_id"] == table_id})}
 
 
 def dataset_display_name(dataset):
     """Describe a dataset with its readable name, store, schema/path and physical context."""
-    if dataset.get("source_type") == "file":
+    if dataset.get("asset_type") == "FILE":
         path = dataset["relative_path"]
         kind = "Folder" if path.endswith("/") else "File selector" if any(char in path for char in "*?[") else "File"
-        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['workspace_id']} / {dataset['item_id']}"
+        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['asset_workspace_id']} / {dataset['item_id']}"
     name = dataset.get("table_name") or dataset.get("table_id") or ""
     location = " / ".join(str(value) for value in (dataset.get("layer") or dataset.get("store"), dataset.get("schema_name") or dataset.get("schema")) if value)
     return f"{name} — {location} — Table · {dataset.get('asset_workspace_name') or dataset.get('asset_workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
@@ -231,13 +234,13 @@ def create_contract_draft(
     """Create or reopen one mutable table or file dataset draft without processing.
 
     File sources require a validated physical selector and an explicitly observed
-    schema; they use source_id with no artificial Table ID.
+    schema; they use table_id and asset_type=FILE.
     """
     if file_source is not None:
         if table_id:
             raise ValueError("Select a physical table or file source, not both.")
         validate_contract_source({"source": dict(file_source), "table": {}})
-        lifecycle_id = str(uuid.uuid5(_CONTRACT_NAMESPACE, file_source["source_id"]))
+        lifecycle_id = str(uuid.uuid5(_CONTRACT_NAMESPACE, file_source["table_id"]))
     else:
         lifecycle_id = contract_lifecycle_id(table_id)
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
@@ -251,7 +254,7 @@ def create_contract_draft(
         context={**runtime_context, "_spark_session": spark_session},
     )
     kind, identity, workspace = (
-        ("FILE", file_source["source_id"], file_source["workspace_id"]) if file_source is not None
+        ("FILE", file_source["table_id"], file_source["asset_workspace_id"]) if file_source is not None
         else ("TABLE", str(table_id).strip(), active_workspace_id)
     )
     table = next((row for row in current_catalogue_observations(catalogue_rows)
@@ -321,7 +324,7 @@ def create_contract_draft(
                                                           if column.get("presence", "required") == "required"]})
 
     payload = {
-        **seed,
+        **seed, "format_version": 2,
         "contract": {
             "contract_id": lifecycle_id,
             "contract_version": version,
@@ -331,6 +334,7 @@ def create_contract_draft(
             **dict(seed.get("table") or {}),
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
             "evidence_workspace_id": workspace,
+            "table_id": identity, "asset_type": kind,
             "columns": columns,
             "writer": {
                 "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
@@ -342,7 +346,8 @@ def create_contract_draft(
     }
     if file_source is not None:
         payload["source"] = dict(file_source)
-        payload["table"].pop("table_id", None)
+        payload["table"]["table_id"] = identity
+        payload["table"]["asset_type"] = "FILE"
         payload["table"]["store_type"] = "file"
     payload.pop("profiling", None)
     payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
@@ -364,8 +369,8 @@ def create_contract_draft(
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
-        "table_id": str(table_id).strip() if table_id else None,
-        "source_id": file_source["source_id"] if file_source is not None else None,
+        "table_id": identity,
+        "asset_type": kind,
         "table_name": payload_table_name,
         "evidence_workspace_id": workspace,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
@@ -407,7 +412,7 @@ def row_dicts(value: Any) -> list[dict[str, Any]]:
     if value is None:
         return []
     source = value.collect() if hasattr(value, "collect") else value
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source]
+    return [migrate_asset_references(row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)) for row in source]
 
 
 def parse_approved_usages(value: Any) -> list[str]:
@@ -437,7 +442,8 @@ def _json_value(value: Any, *, field: str, default: Any) -> Any:
     if value in (None, ""):
         return default
     try:
-        return json.loads(str(value))
+        parsed = json.loads(str(value))
+        return migrate_asset_references(parsed) if field in {"contract_payload_json", "operations"} else parsed
     except (TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"{field} must contain valid JSON.") from exc
 
@@ -631,6 +637,9 @@ def save_contract_draft(
         raise ValueError("Only a draft Data Contract version can be saved.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
+    canonical["format_version"] = 2
+    if isinstance(canonical.get("table"), dict):
+        canonical["table"]["asset_type"] = draft.get("asset_type") or "TABLE"
     canonical.get("table", {}).pop("processing", None)
     canonical.get("table", {}).pop("processing_source", None)
     canonical.pop("profiling", None)
@@ -642,7 +651,7 @@ def save_contract_draft(
     }
     if not isinstance(canonical.get("table"), dict):
         raise ValueError("Data Contract payload must contain one table definition.")
-    if draft.get("source_id") and canonical.get("source", {}).get("source_id") != draft["source_id"]:
+    if draft.get("asset_type") == "FILE" and canonical.get("source", {}).get("table_id") != draft["table_id"]:
         raise ValueError("Data Contract file source identity must match the draft row.")
     if str(canonical["table"].get("table_id") or "") != str(draft.get("table_id") or ""):
         raise ValueError("Data Contract payload table_id must match the draft row.")
@@ -966,8 +975,8 @@ def get_contract_authoring_state(
         draft = matches[0]
 
     table_id = str(draft.get("table_id") or "")
-    catalogue_id = str(draft.get("source_id") or table_id)
-    asset_type = "FILE" if draft.get("source_id") else "TABLE"
+    catalogue_id = str(draft.get("table_id") or table_id)
+    asset_type = draft.get("asset_type") or "TABLE"
     catalogue_frame = read_lakehouse_table(
         "METADATA_DATA_CATALOGUE", store="Metadata",
         schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
@@ -1115,9 +1124,9 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
             events = record.get("profiling")
             if isinstance(events, str):
                 events = parse_metadata_json(events, field="METADATA_PIPELINE_RUN.profiling")
-            for event in events or []:
+            for event in migrate_asset_references(events or []):
                 snapshot = event.get("profile_snapshot_id")
-                destination = (event.get("physical") or {}).get("workspace_id")
+                destination = (event.get("physical") or {}).get("asset_workspace_id")
                 if (event.get("table_id") == table_id and snapshot and destination
                         and event.get("status") == "passed" and event.get("results_persisted")):
                     profile_locations.setdefault(snapshot, set()).add(destination.casefold())
@@ -1214,8 +1223,8 @@ def get_asset_runtime_context(
         latest_profile = {
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "workspace_id": str(latest_profile_row.get("asset_workspace_id") or latest_profile_row.get("legacy_workspace_id") or ""),
-            "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
+            "asset_workspace_id": str(latest_profile_row.get("asset_workspace_id") or active_workspace_id),
+            "execution_workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")
@@ -1534,12 +1543,13 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
+    payload["format_version"] = 2
     payload.get("table", {}).pop("processing", None)
     payload.get("table", {}).pop("processing_source", None)
     payload.get("table", {}).pop("scheduled_refresh", None)
     payload.pop("profiling", None)
     payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
-    if draft.get("source_id") and payload.get("source", {}).get("source_id") != draft["source_id"]:
+    if draft.get("asset_type") == "FILE" and payload.get("source", {}).get("table_id") != draft["table_id"]:
         raise ValueError("Frozen file source identity must match the draft row.")
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
@@ -1646,6 +1656,7 @@ def assemble_contract_payload(
         guardrail_docs.append(item)
 
     payload = {
+        "format_version": 2,
         "contract": {
             "contract_id": contract_id,
             "contract_version": contract_version,
@@ -1654,6 +1665,7 @@ def assemble_contract_payload(
         "table": {
             **dict(draft_payload.get("table") or _fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name"))),
             **({"table_id": table_id} if table_id else {}),
+            "asset_type": draft.get("asset_type") or "TABLE",
             "evidence_workspace_id": draft.get("evidence_workspace_id") or workspace_id,
             "columns": column_docs,
             "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
@@ -1672,8 +1684,9 @@ def assemble_contract_payload(
     payload["table"].pop("scheduled_refresh", None)
     if draft_payload.get("source") is not None:
         payload["source"] = dict(draft_payload["source"])
-        if payload["source"].get("source_type") == "file":
-            payload["table"].pop("table_id", None)
+        if payload["source"].get("asset_type") == "FILE":
+            payload["table"]["table_id"] = payload["source"]["table_id"]
+            payload["table"]["asset_type"] = "FILE"
     if not allow_incomplete_grain:
         validate_grain_contract(payload)
     warnings = []

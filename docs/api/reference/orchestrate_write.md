@@ -115,7 +115,7 @@ dict
     the exact physical writer input. It remains inspectable after publication;
     call ``result["dataframe"].unpersist()`` when inspection is complete.
     File results instead return the supplied DataFrame without caching or
-    table preparation, a source_id, resolved_path and filesystem write_metrics.
+    table preparation, a table_id, asset_type=FILE, resolved_path and filesystem write_metrics.
     File output_layout, overflow_occurred and overflow_reason describe the actual
     publication and are retained in file_write_parameters_json on the operation.
     Dry Run leaves actual layout and overflow unknown (None) and returns a
@@ -166,9 +166,8 @@ participation in METADATA_PIPELINE_RUN.operations and the selector in METADATA_D
 A successful file Write leaves the pipeline open for finalize_pipeline().
 All reads registered in this execution are associated with this target as
 pipeline participants, not proven transformation dependencies. File participation
-is returned under source_ids and retained separately from source_table_ids in
-Run operations as source_ids. The participation projection reuses these as
-common table_id asset keys and retains the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
+is returned in source_assets as typed table_id/asset_type references and retained
+in the same form in Run operations with the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
 processing and applicable Guardrails without publishing or committing metadata.
 Ungoverned writes without contract checks but cannot target an already governed
 table. Governed requires activated contracts, ownership and a pinned revision.
@@ -204,7 +203,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:32`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L356">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L354">View on GitHub</a>
 </div>
 
 
@@ -220,7 +219,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 285 |
+| Live-critical dependencies | 288 |
 
 ### Release history
 
@@ -277,11 +276,14 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_dataframe</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.encode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>

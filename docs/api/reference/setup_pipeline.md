@@ -160,7 +160,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 100 |
+| Live-critical dependencies | 103 |
 
 ### Release history
 
@@ -208,11 +208,14 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
