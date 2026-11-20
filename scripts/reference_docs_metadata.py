@@ -259,7 +259,7 @@ METADATA_TABLE_MODELS = {
             {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Together with contract_version, identifies the immutable payload containing the evaluated guardrail_rule_id and guardrail_version."},
             {"local_field": "contract_version", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_version", "cardinality": "N:1", "statement": "Results retain the exact evaluated contract version and rule revision even after a new draft is authored."},
         ],
-        "relationships": [],
+        "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:0..1", "statement": "Asset-level outcomes can join the physical Catalogue asset using the full key. Pipeline-wide checks and outcomes without a resolved binding may have no Catalogue asset; retained results do not require a current Catalogue row."}],
     },
 }
 

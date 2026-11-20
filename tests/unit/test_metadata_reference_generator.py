@@ -299,6 +299,8 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
+    assert payload["GUARDRAIL_RESULTS"]["catalogue_authoring_fields"] == []
+    assert payload["GUARDRAIL_RESULTS"]["catalogue_optional_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
         "operations[].destination.workspace_id", "operations[].table_id", "operations[].asset_type"
     ]
@@ -479,7 +481,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) == 10
+    assert len(connectors) == 12
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
@@ -489,10 +491,17 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert all(edge.get("data-cardinality") in {"1-N", "N-1", "N-N", "0..1-N"} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
     for omitted in (("PIPELINE_REGISTRY", "PIPELINE_RUN"), ("PIPELINE_RUN", "DATA_CONTRACT"),
-                    ("DATA_CATALOGUE", "PIPELINE_RUN"), ("DATA_CATALOGUE", "DATA_CONTRACT"),
+                    ("DATA_CATALOGUE", "DATA_CONTRACT"),
                     ("PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION")):
         assert omitted not in actual
-    assert all(edge.get("data-kind") == "physical" for edge in connectors)
+    assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "nested"
+    assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-cardinality") == "N-N"
+    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-kind") == "optional"
+    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-cardinality") == "0..1-N"
+    for name, x in (("PIPELINE_RUN", "425"), ("GUARDRAIL_RESULTS", "815")):
+        box = next(node for node in svg_tree.findall(f".//{namespace}a")
+                   if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
+        assert box.find(f"{namespace}rect").get("x") == x
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         edge = actual[("DATA_CATALOGUE", table)]
         assert edge.get("data-kind") == "physical"
@@ -510,7 +519,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         a.find(f"{namespace}rect") for a in svg_tree.findall(f".//{namespace}a")}
     expected_rows = [
         ["DATA_CONTRACT", "DATA_CONTRACT_ACTIVATION", "DATA_AGREEMENT", "DATA_STEWARD", "PIPELINE_ACTIVATION"],
-        ["DATA_CATALOGUE", None, "PIPELINE_RUN", "GUARDRAIL_RESULTS", "PIPELINE_REGISTRY"],
+        ["DATA_CATALOGUE", "PIPELINE_RUN", "GUARDRAIL_RESULTS", None, "PIPELINE_REGISTRY"],
         ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"],
     ]
     for names in expected_rows:
@@ -597,7 +606,7 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
     svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
     edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
-    assert len(edges) == 10
+    assert len(edges) == 12
     assert {edge.get("data-from") for edge in edges} | {edge.get("data-to") for edge in edges} <= set(names)
     assert 'Array.from(svg.querySelectorAll(".metadata-er-relationship")' in js
     assert "const links = [" not in js
