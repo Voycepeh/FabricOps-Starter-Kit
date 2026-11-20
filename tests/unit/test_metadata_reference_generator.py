@@ -95,6 +95,16 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "## Model" in page
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
+        if table_name == "METADATA_DATA_CATALOGUE":
+            assert "**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)" in page
+        elif table_name in {
+            "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
+            "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
+        }:
+            assert ("**Composite foreign key (checked by FabricOps):** "
+                    "(`workspace_id` + `table_id` + `asset_type`) "
+                    "→ [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) "
+                    "(`workspace_id` + `table_id` + `asset_type`).") in page
         assert "**Relationships:**" in page
         assert "## Column summary" in page
         assert '<div class="metadata-column-kpis" aria-label="Column counts by responsibility">' in page
@@ -420,6 +430,16 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
         assert "table_id" in {node.text for node in box.findall(f"{namespace}text")}
+
+    expected_key = "workspace_id,table_id,asset_type"
+    for name, role in (("DATA_CATALOGUE", "PK"), ("DATA_PROFILED", "FK"),
+                       ("DATA_PROFILED_FREQUENCY", "FK"), ("DATA_LINEAGE", "FK"),
+                       ("DATA_ACCESS", "FK")):
+        box = next(node for node in svg_tree.findall(f".//{namespace}a")
+                   if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
+        key = box.find(f"{namespace}g[@data-key-role='{role}']")
+        assert key is not None and key.get("data-key-fields") == expected_key
+        assert key.find(f"{namespace}path") is not None
 
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"

@@ -4569,6 +4569,15 @@ def _metadata_relationships(
     return sorted(relationships.values(), key=lambda item: order[item["table"]])
 
 
+def _catalogue_reference_fields(model: dict[str, Any]) -> list[str]:
+    """Return the columns checked together against the physical Catalogue key."""
+    return next((
+        relationship["fields"] for relationship in model.get("relationships", [])
+        if relationship.get("related_table") == "METADATA_DATA_CATALOGUE"
+        and relationship.get("cardinality") == "N:1"
+    ), [])
+
+
 def _metadata_cardinality_display(cardinality: str) -> str:
     """Return a compact rendered cardinality arrow."""
     return cardinality.replace(":", " → ")
@@ -4594,11 +4603,7 @@ def render_metadata_reference_index(
             "write_entrypoints": write_entrypoints[name],
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
-            "catalogue_reference_fields": next((
-                relationship["fields"] for relationship in table_models[name].get("relationships", [])
-                if relationship.get("related_table") == "METADATA_DATA_CATALOGUE"
-                and relationship.get("cardinality") == "N:1"
-            ), []),
+            "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
             "asset_identity_fields": [
                 field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
                 if field in field_names_by_table[name]
@@ -4823,6 +4828,9 @@ def generate_metadata_reference_pages() -> None:
         for field_name in model["primary_key"]:
             if field_name not in field_names_by_table[table_name]:
                 raise RuntimeError(f"Primary key field {table_name}.{field_name} is not in the implemented schema")
+        catalogue_fields = _catalogue_reference_fields(model)
+        if catalogue_fields and catalogue_fields != table_models["METADATA_DATA_CATALOGUE"]["primary_key"]:
+            raise RuntimeError(f"{table_name} must reference the full physical Catalogue key in primary-key order")
         for foreign_key in model["foreign_keys"]:
             local_field = foreign_key["local_field"]
             referenced_table = foreign_key["referenced_table"]
@@ -4892,6 +4900,12 @@ def generate_metadata_reference_pages() -> None:
         if unknown_writers:
             raise ValueError(f"Unknown public metadata writers: {sorted(unknown_writers)}")
         writer_functions = sorted(set(writer_functions) | set(audited_writers))
+        catalogue_key = table_models["METADATA_DATA_CATALOGUE"]["primary_key"]
+        catalogue_fields = _catalogue_reference_fields(model)
+        primary_key = _model_key_text(model["primary_key"])
+        if len(model["primary_key"]) > 1 and (catalogue_fields or table_name == "METADATA_DATA_CATALOGUE"):
+            primary_key = f"composite ({primary_key})"
+
         lines = [
             f"# {table_name}",
             "",
@@ -4926,8 +4940,19 @@ def generate_metadata_reference_pages() -> None:
             "",
             f"**Grain:** {model['grain']}",
             "",
-            f"**Primary key:** {_model_key_text(model['primary_key'])}",
+            f"**Primary key:** {primary_key}",
             "",
+            *(
+                ["The three columns are stored separately and identify the physical asset together.", ""]
+                if table_name == "METADATA_DATA_CATALOGUE" else []
+            ),
+            *(
+                [f"**Composite foreign key (checked by FabricOps):** ({_model_key_text(catalogue_fields)}) "
+                 f"→ [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) ({_model_key_text(catalogue_key)}).",
+                 "FabricOps checks the three columns together against one active Catalogue row before saving new observations.",
+                 ""]
+                if catalogue_fields else []
+            ),
             "**Relationships:**",
             "",
             *_relationship_lines(table_name),

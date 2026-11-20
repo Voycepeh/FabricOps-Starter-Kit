@@ -51,11 +51,16 @@ function renderMetadataSvg(layout, models) {
     const nestedKeys = [...new Set(Object.values(models).flatMap(other => (other.foreign_keys || [])
       .filter(fk => fk.referenced_table === "METADATA_" + name && fk.referenced_field.includes("[]"))
       .map(fk => fk.referenced_field)))].map(value => ["UK", value]);
-    const keys = [...pk, ...nestedKeys, ...groupedFk];
-    const identityFields = [...new Set([...(model.catalogue_reference_fields || []), ...model.asset_identity_fields])].filter(value =>
-      !pk.some(([, field]) => field === value) && !fk.some(([, field]) => field === value));
-    const fields = identityFields.map(value => ["", value]);
-    if (name === "DATA_CATALOGUE") fields.push(["", "columns_json (current schema)"]);
+    const catalogueReference = model.catalogue_reference_fields || [];
+    const cataloguePrimary = name === "DATA_CATALOGUE";
+    const primaryRows = cataloguePrimary ? pk.map(([, field]) => ["", field])
+      : catalogueReference.length && pk.length > 1 ? [["PK", model.primary_key.join(" + ")]]
+      : pk;
+    const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
+    const identityFields = model.asset_identity_fields.filter(field =>
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !fk.some(([, value]) => value === field));
+    const fields = [...catalogueReference, ...identityFields].map(value => ["", value]);
+    if (cataloguePrimary) fields.push(["", "columns_json (current schema)"]);
     const all = [...keys, ...fields];
     const rows = all.length > 5 ? [...all.slice(0, 4), ["", `+${all.length - 4} more fields`]] : all;
     const x=Number(rect[1]), y=Number(rect[2]);
@@ -66,6 +71,16 @@ function renderMetadataSvg(layout, models) {
       const visible=normalized.length>42?normalized.slice(0,39)+"…":normalized;
       return label+`<text x="${x+51}" y="${baseline}" fill="#19243A" font-size="${normalized.length > 35 ? 11 : normalized.length > 31 ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${esc(visible)}</text>`;
     }).join("\n");
+    const groupFields = cataloguePrimary ? model.primary_key : catalogueReference;
+    if (groupFields.length) {
+      const kind = cataloguePrimary ? "PK" : "FK";
+      const color = cataloguePrimary ? "#7C3AED" : "#2563EB";
+      const firstBaseline = y + 57 + (cataloguePrimary ? 0 : keys.length * 24);
+      const lastBaseline = firstBaseline + (groupFields.length - 1) * 24;
+      const mid = (firstBaseline + lastBaseline) / 2;
+      const title = cataloguePrimary ? "Composite primary key" : "Composite foreign key to DATA_CATALOGUE, checked by FabricOps";
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+    }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
     block=block.replace(/<title>Open metadata documentation:/,lines+(lines?"\n":"")+"<title>Open metadata documentation:");

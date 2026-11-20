@@ -20,7 +20,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Grain:** One current asset per physical workspace ID, Table ID and asset type.
 
-**Primary key:** `workspace_id` + `table_id` + `asset_type`
+**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)
+
+The three columns are stored separately and identify the physical asset together.
 
 **Relationships:**
 

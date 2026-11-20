@@ -22,6 +22,9 @@ No starter template or solution is traced for the public writer functions.
 
 **Primary key:** `profile_id`
 
+**Composite foreign key (checked by FabricOps):** (`workspace_id` + `table_id` + `asset_type`) → [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) (`workspace_id` + `table_id` + `asset_type`).
+FabricOps checks the three columns together against one active Catalogue row before saving new observations.
+
 **Relationships:**
 
 `METADATA_DATA_CATALOGUE` **(N → 1)**

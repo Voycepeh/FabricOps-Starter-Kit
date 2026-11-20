@@ -309,8 +309,12 @@
         '<p class="metadata-explorer-purpose">' + escapeHtml(model.purpose || status || "") + '</p>' +
         '<div class="metadata-explorer-detail-facts">' +
         '<div><strong>One row represents</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
-        '<div><strong>Primary key</strong><code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></div>' +
-        ((model.asset_identity_fields || []).length
+        '<div><strong>' + ((model.primary_key || pk).length > 1 ? 'Composite primary key' : 'Primary key') +
+        '</strong><code>' + escapeHtml((model.primary_key || pk).join(" + ")) + '</code></div>' +
+        (model.catalogue_reference_fields?.length
+          ? '<div><strong>Composite foreign key to Data Catalogue</strong><code>' +
+            escapeHtml(model.catalogue_reference_fields.join(" + ")) + '</code></div>'
+          : (model.asset_identity_fields || []).length
           ? '<div><strong>Asset identity fields</strong><code>' + escapeHtml(model.asset_identity_fields.join(" · ")) + '</code></div>'
           : '') +
         '<div><strong>Written via</strong><span>' + (writers || "See activation authority") + '</span></div>' +

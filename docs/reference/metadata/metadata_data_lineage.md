@@ -20,7 +20,10 @@ Records TABLE and FILE source/target participation within a Fabric Activity.
 
 **Grain:** One asset identity and role within one Fabric Activity.
 
-**Primary key:** `workspace_id` + `lineage_id`
+**Primary key:** composite (`workspace_id` + `lineage_id`)
+
+**Composite foreign key (checked by FabricOps):** (`workspace_id` + `table_id` + `asset_type`) → [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) (`workspace_id` + `table_id` + `asset_type`).
+FabricOps checks the three columns together against one active Catalogue row before saving new observations.
 
 **Relationships:**
 
