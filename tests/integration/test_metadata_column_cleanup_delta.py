@@ -135,7 +135,7 @@ def test_unique_retired_values_fail_before_mutation(cleanup_delta, table, bad):
     result = rt.run()
     assert result['failed_tables'] == [table]
     message = result['table_results'][table]['message']
-    if bad == 'source_id':
+    if bad == 'source_id' and table == 'METADATA_DATA_CATALOGUE':
         assert 'conflicting asset identities' in message
     else:
         assert bad in message and 'not provably redundant' in message
