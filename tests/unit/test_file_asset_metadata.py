@@ -65,7 +65,7 @@ def test_file_catalogue_preserves_first_observation_and_extension_fields(writer)
     row = writer.spark.createDataFrame.call_args.args[0][0]
     assert row["columns_json"] is None
     assert row["table_id"] == writer.identity["source_id"]
-    assert row["workspace_id"] == "physical" and row["item_id"] == "lakehouse"
+    assert row["asset_workspace_id"] == "physical" and row["item_id"] == "lakehouse"
     assert row["first_observed_at"] == row["last_observed_at"]
     updates = writer.merge.whenMatchedUpdate.call_args.kwargs["set"]
     assert updates["first_observed_at"] == "coalesce(target.first_observed_at, source.first_observed_at)"

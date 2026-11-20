@@ -60,7 +60,7 @@ def test_consumer_uses_physical_workspace_for_remote_contract(consumer_metadata)
     """Remote store routing selects its physical activation without changing execution scope."""
     fixture = consumer_metadata
     fixture.binding['workspace_id'] = 'REMOTE'
-    fixture.activation.update(workspace_id='REMOTE', destination_json=json.dumps(fixture.binding))
+    fixture.activation.update(asset_workspace_id='REMOTE', destination_json=json.dumps(fixture.binding))
     fixture.op['destination'] = dict(fixture.binding)
     fixture.row.update(operations_json=json.dumps([fixture.op]), bindings_sha256=authority.manifest_digest([fixture.op]))
     result = agent.consumer_context(_config(item='item-A', physical_workspace='REMOTE'), 'orders', workspace_id='DEV')

@@ -287,11 +287,13 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
         ]
     assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
-    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["table_id"]
+    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["asset_workspace_id", "table_id"]
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
-    assert payload["PIPELINE_RUN"]["asset_identity_fields"] == ["operations[].table_id", "operations[].source_id"]
+    assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
+        "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id"
+    ]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [
         "provider_steward_id", "recipient_steward_id"

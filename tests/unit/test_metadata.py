@@ -413,7 +413,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
         )
 
     assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]
-    assert [frame.rows[0]["workspace_id"] for frame in writes] == ["dev", "prod"]
+    assert [frame.rows[0]["execution_workspace_id"] for frame in writes] == ["dev", "prod"]
 
 
 def test_persistent_checkpoint_tables_are_not_registered():

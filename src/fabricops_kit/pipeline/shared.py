@@ -2719,9 +2719,11 @@ def check_sensitive_data_rules(
 
 def _guardrail_workspace_fields(context, table_id, active_workspace_id):
     binding = ((context or {}).get("_pipeline_bindings") or {}).get(table_id)
-    if binding:
-        return {"asset_workspace_id": str(binding["workspace_id"]).lower()}
-    return {"execution_workspace_id": active_workspace_id}
+    return {
+        "asset_workspace_id": str(binding["workspace_id"]).lower() if binding else None,
+        "execution_workspace_id": None if binding else active_workspace_id,
+        "legacy_workspace_id": None,
+    }
 
 
 def write_guardrail_result_row(

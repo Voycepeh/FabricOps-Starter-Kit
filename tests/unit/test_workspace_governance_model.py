@@ -11,7 +11,7 @@ from fabricops_kit.pipeline import shared as pipeline
 
 def observation(workspace, table, columns):
     """Build one current physical observation without requiring any profile."""
-    base = {"workspace_id": workspace, "table_id": table, "is_active": True, "_committed_at": "2026-10-27T00:00:00Z"}
+    base = {"asset_workspace_id": workspace, "table_id": table, "is_active": True, "_committed_at": "2026-10-27T00:00:00Z"}
     return [{**base, "asset_type": "TABLE", "table_name": table, "columns_json": [
         {"column_id": name, "column_name": name, "data_type": datatype}
         for name, datatype in columns]}]

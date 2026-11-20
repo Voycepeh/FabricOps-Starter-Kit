@@ -273,7 +273,7 @@ def test_full_deployment_readback_retry_and_distinct_identities(authority, monke
 
 def test_agreement_association_not_engineering_registry_is_authority(monkeypatch):
     """Cross-workspace operations fail closed without the active Contract's exact Agreement."""
-    activation = {"workspace_id": "OTHER"}
+    activation = {"asset_workspace_id": "OTHER"}
     with pytest.raises(ValueError, match="Agreement"):
         service.check_contract_agreement(activation, execution_workspace_id="DEV", context={})
     today = datetime.now(UTC).date()
