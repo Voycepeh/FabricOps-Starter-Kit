@@ -65,7 +65,12 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     All reads registered in this execution are associated with this target as
     pipeline participants, not proven transformation dependencies. File participation
     is returned in source_assets as typed table_id/asset_type references and retained
-    in the same form in Run operations with the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
+    in the same form in Run operations with the execution Run ID. Each prepared Write
+    also captures a bounded Catalyst dependency graph in operations[].lineage, with
+    source-column identities, expression/operator steps and per-output coverage.
+    This graph describes the Write input; retained append/SCD target rows are outside
+    its scope. Opaque Python/pandas boundaries and unsupported plans are explicit
+    gaps. Introspection failure never blocks publication. Dry Run evaluates
     processing and applicable Guardrails without publishing or committing metadata.
     Ungoverned writes without contract checks but cannot target an already governed
     table. Governed requires activated contracts, ownership and a pinned revision.
@@ -385,6 +390,8 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
             allow_blocked=not execution_plan.permits_persistence)
         stages.append(record)
         return result
+    from fabricops_kit.pipeline.shared import capture_write_lineage
+    capture_write_lineage(dataframe, context=context, table_id=target_id, write_mode=write_mode)
     _, _, path = resolve_configured_file_path(store, relative_path, context=context)
     profile = None
     if execution_plan.permits_persistence and write_mode == "overwrite":

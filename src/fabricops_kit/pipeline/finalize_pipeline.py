@@ -275,7 +275,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         requires inspection of immutable acceptance history before retrying.
         Each operation retains legacy rows_read/rows_written plus its available
         detailed Read or strategy-specific Write metrics. Missing fields on
-        historical records remain valid and display as not captured.
+        historical records remain valid and display as not captured. Prepared Writes
+        additionally retain operations[].lineage: a versioned graph of source columns,
+        transformations and explicit coverage gaps. Dry Run retains it only in memory.
         When no session is active, returns the resolved pipeline_id and handoff
         (the displayed controls and their state/actions), without a Run record.
 

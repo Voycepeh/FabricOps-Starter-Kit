@@ -291,6 +291,22 @@ AUDIT_SCHEMA_FIELDS = [
 BINDING_FIELDS = [("table_id", "string", False), ("asset_workspace_id", "string", False),
                   ("item_id", "string", False), ("kind", "string", False),
                   ("schema", "string", True), ("table_name", "string", False)]
+# Optional v1 per-Write graph. Absent members stay absent in released Run content.
+LINEAGE_GRAPH_FIELDS = [
+    ("version", "integer", False), ("detector", "string", False), ("scope", "string", False),
+    ("write_mode", "string", False), ("status", "string", False),
+    ("output_count", "integer", False), ("omitted_output_count", "integer", False), ("gaps", "strings", False),
+    ("outputs", [("column_id", "string", False), ("column_name", "string", False),
+        ("node_id", "string", False), ("status", "string", False),
+        ("sources", [("node_id", "string", False), ("dependency_types", "strings", False)], False),
+        ("gaps", "strings", False), ("transformation_node_ids", "strings", False)], False),
+    ("nodes", [("node_id", "string", False), ("node_type", "string", False), ("operation", "string", False),
+        ("name", "string"), ("data_type", "string"), ("asset_workspace_id", "string"),
+        ("table_id", "string"), ("asset_type", "string"), ("column_id", "string"), ("gap_code", "string")], False),
+    ("edges", [("source_node_id", "string", False), ("target_node_id", "string", False),
+        ("dependency_type", "string", False)], False),
+]
+
 PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string", False),
                         ("asset_type", "string"),
                         ("status", "string", False), ("results_persisted", "boolean"),
@@ -628,6 +644,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                       ("file_format", "string"), ("reader_options_json", "string")]}, False),
                  ("read_mode", "string"), ("write_mode", "string"), ("query_sha256", "string"),
                  ("observed_columns_json", "string"),
+                 ("lineage", {"struct": LINEAGE_GRAPH_FIELDS}),
                  ("file_write_parameters_json", "string"), ("output_path", "string"), ("publication_status", "string"),
                  ("read_parameters", {"struct": [("watermark_column", "string")]}),
                  ("write_parameters", {"struct": [(key, kind) for key, kind in CATALOGUE_NESTED_FIELDS["load_strategy_parameters_json"].items()]}),
@@ -894,7 +911,7 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
         if required and not legacy_run and name == "operations":
             for original, decoded in zip(value, result[name]):
                 for field in ("read_parameters", "write_parameters", "repartition_by", "source_type", "source_id", "source_ids",
-                              "file_write_parameters_json", "output_path", "publication_status"):
+                              "file_write_parameters_json", "output_path", "publication_status", "lineage"):
                     if field not in original:
                         decoded.pop(field, None)
                     elif isinstance(original[field], dict):

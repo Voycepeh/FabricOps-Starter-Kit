@@ -197,8 +197,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="lineage">
-<summary><strong>Lineage</strong> — Metadata recording table and file source/target participation within a pipeline activity.</summary>
-<p>Data lineage describes source-to-target dependencies, optionally at column level. FabricOps records typed table/file Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.</p>
+<summary><strong>Lineage</strong> — Source-to-output dependencies captured for each prepared Write within a pipeline Run.</summary>
+<p>FabricOps stores automatic Spark column dependencies and expression/operator steps in METADATA_PIPELINE_RUN.operations[].lineage. Each output records complete, partial or unknown coverage and explicit gaps. The graph describes the Write input; operation publication status determines whether it was published. Typed table/file participation remains separate in operations and source_assets. Historical METADATA_DATA_LINEAGE rows are retained unchanged.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 

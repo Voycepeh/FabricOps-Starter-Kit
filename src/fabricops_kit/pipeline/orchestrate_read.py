@@ -35,7 +35,8 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     Persistent reads register their physical asset and observed schema in
     METADATA_DATA_CATALOGUE independently of profiling. Query projections
     leave the registered table schema intact. Run operations record participation
-    and its physical asset workspace. File profiles
+    and its physical asset workspace. Successful Reads also register trusted plan
+    boundaries for automatic per-Write column lineage; this performs no row action. File profiles
     and frequency results use that common Table ID and stable Column IDs in
     METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
     in memory. Profiling uses the pipeline row limit and records selection scope.
